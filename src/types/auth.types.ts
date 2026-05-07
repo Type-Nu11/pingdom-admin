@@ -14,6 +14,15 @@ export type SignupField = 'username' | 'name' | 'email' | 'password'
 
 export type SignupFieldErrors = Partial<Record<SignupField, string>>
 
+export interface AuthErrorResponse<
+  TCode extends string = string,
+  TErrors = Record<string, string>,
+> {
+  message?: string
+  code?: TCode
+  errors?: TErrors
+}
+
 export interface EmailVerifyRequest {
   email: string
   code: string
@@ -48,26 +57,10 @@ export interface ValidationErrorResponse {
   errors: Record<string, string>
 }
 
-export interface LoginErrorResponse {
-  message: string
-  code?: 'INVALID_CREDENTIALS'
-  errors?: Record<string, string>
-}
+export type LoginErrorResponse = AuthErrorResponse<'INVALID_CREDENTIALS'>
 
-export interface SignupErrorResponse {
-  message: string
-  code?: 'DUPLICATE_USERNAME'
-  errors?: SignupFieldErrors
-}
+export type SignupErrorResponse = AuthErrorResponse<'DUPLICATE_USERNAME', SignupFieldErrors>
 
-export interface EmailVerifyErrorResponse {
-  message: string
-  code?: 'USER_NOT_FOUND'
-  errors?: Record<string, string>
-}
+export type EmailVerifyErrorResponse = AuthErrorResponse<'USER_NOT_FOUND' | 'INVALID_TOKEN'>
 
-export interface RefreshTokenErrorResponse {
-  message: string
-  code?: 'INVALID_TOKEN' | 'USER_NOT_FOUND'
-  errors?: Record<string, string>
-}
+export type RefreshTokenErrorResponse = AuthErrorResponse<'INVALID_TOKEN' | 'USER_NOT_FOUND'>

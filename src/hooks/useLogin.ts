@@ -1,28 +1,16 @@
 import { useState } from 'react'
+import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
-import type { ApiError } from '../api/customAxios'
 import { login } from '../api/authApi'
 import type { LoginErrorResponse, LoginRequest } from '../types/auth.types'
 
-function getLoginErrorMessage(error: ApiError<LoginErrorResponse>) {
-  if (error.response?.data?.code === 'INVALID_CREDENTIALS') {
-    return error.response.data.message
-  }
-
-  switch (error.category) {
-    case 'unauthorized':
-      return '아이디 또는 비밀번호가 올바르지 않습니다.'
-    case 'network':
-      return '네트워크 연결을 확인해주세요.'
-    case 'timeout':
-      return '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.'
-    case 'server':
-      return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
-    case 'bad-request':
-      return '입력값을 다시 확인해주세요.'
-    default:
-      return '로그인 중 오류가 발생했습니다.'
-  }
+const LOGIN_ERROR_MESSAGE = '로그인 중 오류가 발생했습니다.'
+const LOGIN_CATEGORY_MESSAGES = {
+  unauthorized: '아이디 또는 비밀번호가 올바르지 않습니다.',
+  network: '네트워크 연결을 확인해주세요.',
+  timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
+  server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+  'bad-request': '입력값을 다시 확인해주세요.',
 }
 
 export function useLogin() {
@@ -70,10 +58,15 @@ export function useLogin() {
       setIsError(true)
 
       if (isApiError<LoginErrorResponse>(error)) {
-        setErrorMessage(getLoginErrorMessage(error))
+        setErrorMessage(
+          getAuthErrorMessage(error, {
+            fallbackMessage: LOGIN_ERROR_MESSAGE,
+            categoryMessages: LOGIN_CATEGORY_MESSAGES,
+          })
+        )
         console.error('로그인 실패', error)
       } else {
-        setErrorMessage('로그인 중 오류가 발생했습니다.')
+        setErrorMessage(LOGIN_ERROR_MESSAGE)
         console.error('로그인 실패', error)
       }
 

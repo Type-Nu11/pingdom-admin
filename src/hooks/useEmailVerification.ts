@@ -1,30 +1,17 @@
 import { useState } from 'react'
+import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
-import type { ApiError } from '../api/customAxios'
 import { verifyEmail } from '../api/authApi'
 import type { EmailVerifyErrorResponse, EmailVerifyRequest } from '../types/auth.types'
 
-function getEmailVerificationErrorMessage(error: ApiError<EmailVerifyErrorResponse>) {
-  if (error.response?.data?.message) {
-    return error.response.data.message
-  }
-
-  switch (error.category) {
-    case 'network':
-      return '네트워크 연결을 확인해주세요.'
-    case 'timeout':
-      return '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.'
-    case 'unauthorized':
-      return '인증 코드가 올바르지 않거나 만료되었습니다.'
-    case 'not-found':
-      return '사용자를 찾을 수 없습니다.'
-    case 'bad-request':
-      return '인증 코드를 다시 확인해주세요.'
-    case 'server':
-      return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
-    default:
-      return '이메일 인증 중 오류가 발생했습니다.'
-  }
+const EMAIL_VERIFICATION_ERROR_MESSAGE = '이메일 인증 중 오류가 발생했습니다.'
+const EMAIL_VERIFICATION_CATEGORY_MESSAGES = {
+  network: '네트워크 연결을 확인해주세요.',
+  timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
+  unauthorized: '인증 코드가 올바르지 않거나 만료되었습니다.',
+  'not-found': '사용자를 찾을 수 없습니다.',
+  'bad-request': '인증 코드를 다시 확인해주세요.',
+  server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
 }
 
 export function useEmailVerification() {
@@ -69,10 +56,15 @@ export function useEmailVerification() {
       setIsError(true)
 
       if (isApiError<EmailVerifyErrorResponse>(error)) {
-        setErrorMessage(getEmailVerificationErrorMessage(error))
+        setErrorMessage(
+          getAuthErrorMessage(error, {
+            fallbackMessage: EMAIL_VERIFICATION_ERROR_MESSAGE,
+            categoryMessages: EMAIL_VERIFICATION_CATEGORY_MESSAGES,
+          })
+        )
         console.error('이메일 인증 실패', error)
       } else {
-        setErrorMessage('이메일 인증 중 오류가 발생했습니다.')
+        setErrorMessage(EMAIL_VERIFICATION_ERROR_MESSAGE)
         console.error('이메일 인증 실패', error)
       }
 

@@ -52,10 +52,21 @@ const customAxios = axios.create({
   timeout: 10000,
 })
 
+const AUTH_EXCLUDED_PATHS = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/email/verify',
+  '/auth/token/refresh',
+]
+
+function shouldAttachAccessToken(url = '') {
+  return !AUTH_EXCLUDED_PATHS.some((path) => url.startsWith(path))
+}
+
 customAxios.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem('accessToken')
 
-  if (accessToken) {
+  if (accessToken && shouldAttachAccessToken(config.url)) {
     config.headers.Authorization = `Bearer ${accessToken}`
   }
 

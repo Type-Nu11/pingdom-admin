@@ -14,16 +14,16 @@ export function getAuthErrorMessage<T extends AuthErrorResponse>(
   error: ApiError<T>,
   options: GetAuthErrorMessageOptions
 ) {
-  const responseMessage = error.response?.data?.message
-
-  if (responseMessage) {
-    return responseMessage
-  }
-
   const responseCode = error.response?.data?.code
 
   if (responseCode && options.codeMessages?.[responseCode]) {
     return options.codeMessages[responseCode] ?? options.fallbackMessage
+  }
+
+  const responseMessage = error.response?.data?.message
+
+  if (responseMessage) {
+    return responseMessage
   }
 
   if (error.category && options.categoryMessages?.[error.category]) {

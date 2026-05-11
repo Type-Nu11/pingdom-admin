@@ -2,7 +2,7 @@ import customAxios from './customAxios'
 import type {
   ChangePasswordRequest,
   ChangeUsernameRequest,
-  UserProfileResponse,
+  MyPageResponse,
 } from '../types/user.types'
 
 const USER_PROFILE_API_PATH = '/users/me'
@@ -10,7 +10,7 @@ const USER_CHANGE_ID_API_PATH = '/users/change-id'
 const USER_CHANGE_PW_API_PATH = '/users/change-pw'
 
 export async function getUserProfile() {
-  const { data } = await customAxios.get<UserProfileResponse>(USER_PROFILE_API_PATH)
+  const { data } = await customAxios.get<MyPageResponse>(USER_PROFILE_API_PATH)
   return data
 }
 

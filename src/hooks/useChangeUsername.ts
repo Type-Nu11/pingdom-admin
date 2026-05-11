@@ -18,6 +18,21 @@ const CHANGE_USERNAME_CATEGORY_MESSAGES = {
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   'bad-request': '입력값을 다시 확인해주세요.',
 }
+const CHANGE_USERNAME_CODE_MESSAGES = {
+  USERNAME_ALREADY_EXISTS: '이미 사용 중인 아이디입니다.',
+}
+
+function validateChangeUsername(newUsername: string) {
+  const nextFieldErrors: ChangeUsernameFieldErrors = {}
+
+  if (!newUsername) {
+    nextFieldErrors.newUsername = '새 아이디를 입력해주세요.'
+  } else if (newUsername.length < 4 || newUsername.length > 50) {
+    nextFieldErrors.newUsername = '아이디는 4자 이상 50자 이하여야 합니다.'
+  }
+
+  return nextFieldErrors
+}
 
 export function useChangeUsername() {
   const [newUsername, setNewUsername] = useState('')
@@ -34,18 +49,12 @@ export function useChangeUsername() {
     setFieldErrors({})
 
     const trimmedUsername = newUsername.trim()
+    const nextFieldErrors = validateChangeUsername(trimmedUsername)
 
-    if (!trimmedUsername) {
-      setIsError(true)
-      setFieldErrors({ newUsername: '새 아이디를 입력해주세요.' })
+    if (Object.keys(nextFieldErrors).length > 0) {
       setErrorMessage('입력값을 다시 확인해주세요.')
-      return false
-    }
-
-    if (trimmedUsername.length < 4 || trimmedUsername.length > 50) {
+      setFieldErrors(nextFieldErrors)
       setIsError(true)
-      setFieldErrors({ newUsername: '아이디는 4자 이상 50자 이하여야 합니다.' })
-      setErrorMessage('입력값을 다시 확인해주세요.')
       return false
     }
 
@@ -70,6 +79,7 @@ export function useChangeUsername() {
         setErrorMessage(
           getAuthErrorMessage(error, {
             fallbackMessage: CHANGE_USERNAME_ERROR_MESSAGE,
+            codeMessages: CHANGE_USERNAME_CODE_MESSAGES,
             categoryMessages: CHANGE_USERNAME_CATEGORY_MESSAGES,
           })
         )

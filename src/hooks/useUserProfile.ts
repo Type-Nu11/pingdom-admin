@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { getUserProfile } from '../api/userApi'
-import type { UserProfileErrorResponse, UserProfileResponse } from '../types/user.types'
+import type { MyPageErrorResponse, MyPageResponse } from '../types/user.types'
 
 const USER_PROFILE_ERROR_MESSAGE = '내 정보를 불러오는 중 오류가 발생했습니다.'
 const USER_PROFILE_CATEGORY_MESSAGES = {
@@ -14,7 +14,7 @@ const USER_PROFILE_CATEGORY_MESSAGES = {
 }
 
 export function useUserProfile() {
-  const [profile, setProfile] = useState<UserProfileResponse | null>(null)
+  const [profile, setProfile] = useState<MyPageResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -36,6 +36,7 @@ export function useUserProfile() {
       setIsLoading(true)
 
       const data = await getUserProfile()
+
       setProfile(data)
 
       return true
@@ -43,7 +44,7 @@ export function useUserProfile() {
       setProfile(null)
       setIsError(true)
 
-      if (isApiError<UserProfileErrorResponse>(error)) {
+      if (isApiError<MyPageErrorResponse>(error)) {
         setErrorMessage(
           getAuthErrorMessage(error, {
             fallbackMessage: USER_PROFILE_ERROR_MESSAGE,

@@ -1,6 +1,6 @@
 import type { AuthErrorResponse } from './auth.types'
 
-export interface UserProfileResponse {
+export interface MyPageResponse {
   id: number
   username: string
   name: string
@@ -25,7 +25,7 @@ export type ChangePasswordField = 'currentPassword' | 'newPassword' | 'confirmPa
 
 export type ChangePasswordFieldErrors = Partial<Record<ChangePasswordField, string>>
 
-export type UserProfileErrorResponse = AuthErrorResponse<'INVALID_TOKEN'>
+export type MyPageErrorResponse = AuthErrorResponse<'INVALID_TOKEN'>
 
 export type ChangeUsernameErrorResponse = AuthErrorResponse<
   'INVALID_TOKEN' | 'USERNAME_ALREADY_EXISTS',

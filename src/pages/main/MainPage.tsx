@@ -1,4 +1,5 @@
 import { Link, Navigate } from 'react-router-dom'
+import KakaoMap from '../../components/map/KakaoMap'
 
 function MainPage() {
   const accessToken = localStorage.getItem('accessToken')
@@ -16,6 +17,7 @@ function MainPage() {
       <p>username: {username ?? '-'}</p>
       <p>name: {name ?? '-'}</p>
       <Link to="/profile">프로필 페이지로 이동</Link>
+      <KakaoMap />
     </main>
   )
 }

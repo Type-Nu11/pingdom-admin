@@ -18,6 +18,8 @@ export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
   return axios.isAxiosError(error)
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 function classifyApiError(error: AxiosError): ApiErrorCategory {
   const status = error.response?.status
 
@@ -48,7 +50,7 @@ function classifyApiError(error: AxiosError): ApiErrorCategory {
 }
 
 const customAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
+  baseURL: API_BASE_URL,
   timeout: 10000,
 })
 

@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 
 function MainPage() {
   const accessToken = localStorage.getItem('accessToken')
@@ -15,6 +15,7 @@ function MainPage() {
       <p>로그인 성공</p>
       <p>username: {username ?? '-'}</p>
       <p>name: {name ?? '-'}</p>
+      <Link to="/profile">프로필 페이지로 이동</Link>
     </main>
   )
 }

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useLogin } from '../../hooks/useLogin'
 
 function LoginPage() {
@@ -55,6 +55,10 @@ function LoginPage() {
           {isLoading ? '로그인 중...' : '로그인'}
         </button>
       </form>
+
+      <p>
+        아직 계정이 없나요? <Link to="/signup">회원가입하러 가기</Link>
+      </p>
     </main>
   )
 }

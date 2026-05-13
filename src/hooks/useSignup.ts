@@ -12,10 +12,13 @@ import type {
 const SIGNUP_FIELD_KEYS: SignupField[] = ['username', 'name', 'email', 'password']
 const SIGNUP_ERROR_MESSAGE = '회원가입 중 오류가 발생했습니다.'
 const SIGNUP_CATEGORY_MESSAGES = {
-  network: '네트워크 연결을 확인해주세요.',
+  network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   'bad-request': '입력값을 다시 확인해주세요.',
+}
+const SIGNUP_CODE_MESSAGES = {
+  DUPLICATE_USERNAME: '이미 사용 중인 아이디입니다.',
 }
 
 function isValidEmail(email: string) {
@@ -92,6 +95,7 @@ export function useSignup() {
         setErrorMessage(
           getAuthErrorMessage(error, {
             fallbackMessage: SIGNUP_ERROR_MESSAGE,
+            codeMessages: SIGNUP_CODE_MESSAGES,
             categoryMessages: SIGNUP_CATEGORY_MESSAGES,
           })
         )

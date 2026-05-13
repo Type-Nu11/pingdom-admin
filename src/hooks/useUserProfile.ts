@@ -7,10 +7,13 @@ import type { MyPageErrorResponse, MyPageResponse } from '../types/user.types'
 const USER_PROFILE_ERROR_MESSAGE = '내 정보를 불러오는 중 오류가 발생했습니다.'
 const USER_PROFILE_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다.',
-  network: '네트워크 연결을 확인해주세요.',
+  network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   forbidden: '접근 권한이 없습니다.',
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+}
+const USER_PROFILE_CODE_MESSAGES = {
+  INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
 }
 
 export function useUserProfile() {
@@ -48,6 +51,7 @@ export function useUserProfile() {
         setErrorMessage(
           getAuthErrorMessage(error, {
             fallbackMessage: USER_PROFILE_ERROR_MESSAGE,
+            codeMessages: USER_PROFILE_CODE_MESSAGES,
             categoryMessages: USER_PROFILE_CATEGORY_MESSAGES,
           })
         )

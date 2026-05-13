@@ -7,10 +7,13 @@ import type { LoginErrorResponse, LoginRequest } from '../types/auth.types'
 const LOGIN_ERROR_MESSAGE = '로그인 중 오류가 발생했습니다.'
 const LOGIN_CATEGORY_MESSAGES = {
   unauthorized: '아이디 또는 비밀번호가 올바르지 않습니다.',
-  network: '네트워크 연결을 확인해주세요.',
+  network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   'bad-request': '입력값을 다시 확인해주세요.',
+}
+const LOGIN_CODE_MESSAGES = {
+  INVALID_CREDENTIALS: '아이디 또는 비밀번호가 올바르지 않습니다.',
 }
 
 export function useLogin() {
@@ -61,6 +64,7 @@ export function useLogin() {
         setErrorMessage(
           getAuthErrorMessage(error, {
             fallbackMessage: LOGIN_ERROR_MESSAGE,
+            codeMessages: LOGIN_CODE_MESSAGES,
             categoryMessages: LOGIN_CATEGORY_MESSAGES,
           })
         )

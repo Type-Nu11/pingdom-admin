@@ -6,12 +6,16 @@ import type { EmailVerifyErrorResponse, EmailVerifyRequest } from '../types/auth
 
 const EMAIL_VERIFICATION_ERROR_MESSAGE = '이메일 인증 중 오류가 발생했습니다.'
 const EMAIL_VERIFICATION_CATEGORY_MESSAGES = {
-  network: '네트워크 연결을 확인해주세요.',
+  network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   unauthorized: '인증 코드가 올바르지 않거나 만료되었습니다.',
   'not-found': '사용자를 찾을 수 없습니다.',
   'bad-request': '인증 코드를 다시 확인해주세요.',
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+}
+const EMAIL_VERIFICATION_CODE_MESSAGES = {
+  INVALID_TOKEN: '인증 코드가 올바르지 않거나 만료되었습니다.',
+  USER_NOT_FOUND: '사용자를 찾을 수 없습니다.',
 }
 
 export function useEmailVerification() {
@@ -59,6 +63,7 @@ export function useEmailVerification() {
         setErrorMessage(
           getAuthErrorMessage(error, {
             fallbackMessage: EMAIL_VERIFICATION_ERROR_MESSAGE,
+            codeMessages: EMAIL_VERIFICATION_CODE_MESSAGES,
             categoryMessages: EMAIL_VERIFICATION_CATEGORY_MESSAGES,
           })
         )

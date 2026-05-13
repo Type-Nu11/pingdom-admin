@@ -17,7 +17,7 @@ const CHANGE_PASSWORD_FIELD_KEYS: ChangePasswordField[] = [
 const CHANGE_PASSWORD_ERROR_MESSAGE = '비밀번호 변경 중 오류가 발생했습니다.'
 const CHANGE_PASSWORD_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
-  network: '네트워크 연결을 확인해주세요.',
+  network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   'bad-request': '입력값을 다시 확인해주세요.',

@@ -13,12 +13,13 @@ const CHANGE_USERNAME_FIELD_KEYS: ChangeUsernameField[] = ['newUsername']
 const CHANGE_USERNAME_ERROR_MESSAGE = '아이디 변경 중 오류가 발생했습니다.'
 const CHANGE_USERNAME_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
-  network: '네트워크 연결을 확인해주세요.',
+  network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   server: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   'bad-request': '입력값을 다시 확인해주세요.',
 }
 const CHANGE_USERNAME_CODE_MESSAGES = {
+  INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
   USERNAME_ALREADY_EXISTS: '이미 사용 중인 아이디입니다.',
 }
 

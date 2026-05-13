@@ -2,16 +2,21 @@ import axios, { AxiosError } from 'axios'
 
 export type ApiErrorCategory =
   | 'timeout'
+  | 'offline'
+  | 'request-blocked'
   | 'network'
   | 'bad-request'
   | 'unauthorized'
   | 'forbidden'
   | 'not-found'
+  | 'conflict'
+  | 'too-many-requests'
   | 'server'
   | 'unknown'
 
 export type ApiError<T = unknown> = AxiosError<T> & {
   category?: ApiErrorCategory
+  status?: number
 }
 
 export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
@@ -20,14 +25,30 @@ export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+function isBrowserOffline() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false
+}
+
+function hasRequestWithoutResponse(error: AxiosError) {
+  return Boolean(error.request) && !error.response
+}
+
 function classifyApiError(error: AxiosError): ApiErrorCategory {
   const status = error.response?.status
 
-  if (error.code === 'ECONNABORTED') {
+  if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
     return 'timeout'
   }
 
+  if (isBrowserOffline()) {
+    return 'offline'
+  }
+
   if (!error.response) {
+    if (error.code === 'ERR_NETWORK' || hasRequestWithoutResponse(error)) {
+      return 'request-blocked'
+    }
+
     return 'network'
   }
 
@@ -40,6 +61,10 @@ function classifyApiError(error: AxiosError): ApiErrorCategory {
       return 'forbidden'
     case 404:
       return 'not-found'
+    case 409:
+      return 'conflict'
+    case 429:
+      return 'too-many-requests'
     default:
       if (typeof status === 'number' && status >= 500) {
         return 'server'
@@ -81,6 +106,7 @@ customAxios.interceptors.response.use(
   (error: AxiosError) => {
     const apiError = error as ApiError
     apiError.category = classifyApiError(error)
+    apiError.status = error.response?.status
 
     return Promise.reject(apiError)
   }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { getUserProfile } from '../api/userApi'
@@ -16,17 +16,42 @@ const USER_PROFILE_CODE_MESSAGES = {
   INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
 }
 
-export function useUserProfile() {
+interface UseUserProfileOptions {
+  enabled?: boolean
+}
+
+function getStoredAccessToken() {
+  return localStorage.getItem('accessToken')?.trim() ?? ''
+}
+
+function getUserProfileErrorMessage(error: unknown) {
+  if (!isApiError<MyPageErrorResponse>(error)) {
+    return USER_PROFILE_ERROR_MESSAGE
+  }
+
+  return getAuthErrorMessage(error, {
+    fallbackMessage: USER_PROFILE_ERROR_MESSAGE,
+    codeMessages: USER_PROFILE_CODE_MESSAGES,
+    categoryMessages: USER_PROFILE_CATEGORY_MESSAGES,
+  })
+}
+
+export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
   const [profile, setProfile] = useState<MyPageResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const hasFetchedOnMountRef = useRef(false)
+  const latestRequestIdRef = useRef(0)
 
   const fetchUserProfile = useCallback(async () => {
+    const requestId = latestRequestIdRef.current + 1
+    latestRequestIdRef.current = requestId
+
     setIsError(false)
     setErrorMessage('')
 
-    const accessToken = localStorage.getItem('accessToken')
+    const accessToken = getStoredAccessToken()
 
     if (!accessToken) {
       setProfile(null)
@@ -40,36 +65,36 @@ export function useUserProfile() {
 
       const data = await getUserProfile()
 
-      setProfile(data)
+      if (requestId === latestRequestIdRef.current) {
+        setProfile(data)
+      }
 
       return true
     } catch (error) {
-      setProfile(null)
-      setIsError(true)
-
-      if (isApiError<MyPageErrorResponse>(error)) {
-        setErrorMessage(
-          getAuthErrorMessage(error, {
-            fallbackMessage: USER_PROFILE_ERROR_MESSAGE,
-            codeMessages: USER_PROFILE_CODE_MESSAGES,
-            categoryMessages: USER_PROFILE_CATEGORY_MESSAGES,
-          })
-        )
-        console.error('내 정보 조회 실패', error)
-      } else {
-        setErrorMessage(USER_PROFILE_ERROR_MESSAGE)
-        console.error('내 정보 조회 실패', error)
+      if (requestId === latestRequestIdRef.current) {
+        setProfile(null)
+        setIsError(true)
+        setErrorMessage(getUserProfileErrorMessage(error))
       }
+
+      console.error('내 정보 조회 실패', error)
 
       return false
     } finally {
-      setIsLoading(false)
+      if (requestId === latestRequestIdRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
   useEffect(() => {
+    if (!enabled || hasFetchedOnMountRef.current) {
+      return
+    }
+
+    hasFetchedOnMountRef.current = true
     void fetchUserProfile()
-  }, [fetchUserProfile])
+  }, [enabled, fetchUserProfile])
 
   return {
     profile,

@@ -11,11 +11,12 @@ import * as S from './ProfilePage.styles'
 
 function ProfilePage() {
   const accessToken = localStorage.getItem('accessToken')
-  const profileState = useUserProfile()
+  const isAuthenticated = Boolean(accessToken)
+  const profileState = useUserProfile({ enabled: isAuthenticated })
   const changeUsernameState = useChangeUsername()
   const changePasswordState = useChangePassword()
 
-  if (!accessToken) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

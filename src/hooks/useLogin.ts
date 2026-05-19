@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
-import { login } from '../api/authApi'
+import { login as requestLogin } from '../api/authApi'
+import { useAuth } from './useAuth'
 import type { LoginErrorResponse, LoginRequest } from '../types/auth.types'
 
 const LOGIN_ERROR_MESSAGE = '로그인 중 오류가 발생했습니다.'
@@ -17,6 +18,7 @@ const LOGIN_CODE_MESSAGES = {
 }
 
 export function useLogin() {
+  const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -49,12 +51,9 @@ export function useLogin() {
         password,
       }
 
-      const data = await login(payload)
+      const data = await requestLogin(payload)
 
-      localStorage.setItem('accessToken', data.accessToken)
-      localStorage.setItem('refreshToken', data.refreshToken)
-      localStorage.setItem('username', data.username)
-      localStorage.setItem('name', data.name)
+      login(data)
 
       return true
     } catch (error) {

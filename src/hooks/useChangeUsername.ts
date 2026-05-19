@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getAuthErrorMessage, normalizeFieldErrors } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { changeUsername } from '../api/userApi'
+import { useAuth } from './useAuth'
 import type {
   ChangeUsernameErrorResponse,
   ChangeUsernameField,
@@ -36,6 +37,7 @@ function validateChangeUsername(newUsername: string) {
 }
 
 export function useChangeUsername() {
+  const { updateUser } = useAuth()
   const [newUsername, setNewUsername] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
@@ -68,7 +70,7 @@ export function useChangeUsername() {
 
       const message = await changeUsername(payload)
 
-      localStorage.setItem('username', trimmedUsername)
+      updateUser({ username: trimmedUsername })
       setNewUsername('')
       setSuccessMessage(message || '아이디가 변경되었습니다.')
 

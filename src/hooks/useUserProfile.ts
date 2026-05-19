@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { getUserProfile } from '../api/userApi'
+import { useAuth } from './useAuth'
 import type { MyPageErrorResponse, MyPageResponse } from '../types/user.types'
 
 const USER_PROFILE_ERROR_MESSAGE = '내 정보를 불러오는 중 오류가 발생했습니다.'
@@ -20,10 +21,6 @@ interface UseUserProfileOptions {
   enabled?: boolean
 }
 
-function getStoredAccessToken() {
-  return localStorage.getItem('accessToken')?.trim() ?? ''
-}
-
 function getUserProfileErrorMessage(error: unknown) {
   if (!isApiError<MyPageErrorResponse>(error)) {
     return USER_PROFILE_ERROR_MESSAGE
@@ -36,7 +33,15 @@ function getUserProfileErrorMessage(error: unknown) {
   })
 }
 
+function shouldClearAuth(error: unknown) {
+  return (
+    isApiError<MyPageErrorResponse>(error) &&
+    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
+  )
+}
+
 export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
+  const { accessToken, clearAuth, updateUser } = useAuth()
   const [profile, setProfile] = useState<MyPageResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
@@ -51,9 +56,9 @@ export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
     setIsError(false)
     setErrorMessage('')
 
-    const accessToken = getStoredAccessToken()
+    const currentAccessToken = accessToken.trim()
 
-    if (!accessToken) {
+    if (!currentAccessToken) {
       setProfile(null)
       setIsError(true)
       setErrorMessage('로그인이 필요합니다.')
@@ -67,6 +72,11 @@ export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
 
       if (requestId === latestRequestIdRef.current) {
         setProfile(data)
+        updateUser({
+          id: data.id,
+          username: data.username,
+          name: data.name,
+        })
       }
 
       return true
@@ -75,6 +85,10 @@ export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
         setProfile(null)
         setIsError(true)
         setErrorMessage(getUserProfileErrorMessage(error))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
       }
 
       console.error('내 정보 조회 실패', error)
@@ -85,7 +99,7 @@ export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
         setIsLoading(false)
       }
     }
-  }, [])
+  }, [accessToken, clearAuth, updateUser])
 
   useEffect(() => {
     if (!enabled || hasFetchedOnMountRef.current) {

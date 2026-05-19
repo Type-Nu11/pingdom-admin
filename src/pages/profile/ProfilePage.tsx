@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useChangePassword } from '../../hooks/useChangePassword'
 import { useChangeUsername } from '../../hooks/useChangeUsername'
+import { useAuth } from '../../hooks/useAuth'
 import { useUserProfile } from '../../hooks/useUserProfile'
 import {
   ChangePasswordSection,
@@ -10,8 +11,7 @@ import {
 import * as S from './ProfilePage.styles'
 
 function ProfilePage() {
-  const accessToken = localStorage.getItem('accessToken')
-  const isAuthenticated = Boolean(accessToken)
+  const { isAuthenticated } = useAuth()
   const profileState = useUserProfile({ enabled: isAuthenticated })
   const changeUsernameState = useChangeUsername()
   const changePasswordState = useChangePassword()

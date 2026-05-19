@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getAuthErrorMessage, normalizeFieldErrors } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { changePassword } from '../api/userApi'
+import { MIN_PASSWORD_LENGTH } from '../constants/auth'
 import type {
   ChangePasswordErrorResponse,
   ChangePasswordField,
@@ -36,8 +37,8 @@ function validateChangePassword(payload: ChangePasswordRequest) {
 
   if (!payload.newPassword) {
     nextFieldErrors.newPassword = '새 비밀번호를 입력해주세요.'
-  } else if (payload.newPassword.length < 8) {
-    nextFieldErrors.newPassword = '비밀번호는 8자 이상이어야 합니다.'
+  } else if (payload.newPassword.length < MIN_PASSWORD_LENGTH) {
+    nextFieldErrors.newPassword = `비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`
   }
 
   if (!payload.confirmPassword) {

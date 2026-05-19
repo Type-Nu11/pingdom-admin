@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type PropsWithChildren } from 'react'
+import { AUTH_STORAGE_KEYS } from '../../constants/auth'
 import type { LoginResponse } from '../../types/auth.types'
 import {
-  AUTH_STORAGE_KEYS,
   AuthContext,
   EMPTY_AUTH_STATE,
   type AuthContextValue,
@@ -14,7 +14,8 @@ function getInitialAuthState(): AuthState {
   const refreshToken = localStorage.getItem(AUTH_STORAGE_KEYS.refreshToken) ?? ''
   const username = localStorage.getItem(AUTH_STORAGE_KEYS.username) ?? ''
   const name = localStorage.getItem(AUTH_STORAGE_KEYS.name) ?? ''
-  const userId = Number(localStorage.getItem(AUTH_STORAGE_KEYS.userId))
+  const userIdFromStorage = localStorage.getItem(AUTH_STORAGE_KEYS.userId)
+  const userId = userIdFromStorage ? Number(userIdFromStorage) : NaN
 
   if (!accessToken) {
     return EMPTY_AUTH_STATE

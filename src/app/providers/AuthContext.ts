@@ -21,14 +21,6 @@ export interface AuthContextValue extends AuthState {
   updateUser: (user: Partial<AuthUser>) => void
 }
 
-export const AUTH_STORAGE_KEYS = {
-  accessToken: 'accessToken',
-  refreshToken: 'refreshToken',
-  userId: 'userId',
-  username: 'username',
-  name: 'name',
-} as const
-
 export const EMPTY_AUTH_STATE: AuthState = {
   accessToken: '',
   refreshToken: '',

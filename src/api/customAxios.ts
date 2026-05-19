@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios'
+import { AUTH_STORAGE_KEYS } from '../constants/auth'
 
 export type ApiErrorCategory =
   | 'timeout'
@@ -91,7 +92,7 @@ function shouldAttachAccessToken(url = '') {
 }
 
 customAxios.interceptors.request.use((config) => {
-  const accessToken = localStorage.getItem('accessToken')
+  const accessToken = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken)
 
   if (accessToken && shouldAttachAccessToken(config.url)) {
     config.headers.Authorization = `Bearer ${accessToken}`

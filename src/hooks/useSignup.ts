@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getAuthErrorMessage, normalizeFieldErrors } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { signup } from '../api/authApi'
+import { MIN_PASSWORD_LENGTH } from '../constants/auth'
 import type {
   SignupField,
   SignupFieldErrors,
@@ -64,8 +65,8 @@ export function useSignup() {
 
     if (!password) {
       nextFieldErrors.password = '비밀번호를 입력해주세요.'
-    } else if (password.length < 8) {
-      nextFieldErrors.password = '비밀번호는 8자 이상이어야 합니다.'
+    } else if (password.length < MIN_PASSWORD_LENGTH) {
+      nextFieldErrors.password = `비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {

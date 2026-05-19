@@ -1,7 +1,5 @@
-import { Navigate } from 'react-router-dom'
 import { useChangePassword } from '../../hooks/useChangePassword'
 import { useChangeUsername } from '../../hooks/useChangeUsername'
-import { useAuth } from '../../hooks/useAuth'
 import { useUserProfile } from '../../hooks/useUserProfile'
 import {
   ChangePasswordSection,
@@ -11,14 +9,9 @@ import {
 import * as S from './ProfilePage.styles'
 
 function ProfilePage() {
-  const { isAuthenticated } = useAuth()
-  const profileState = useUserProfile({ enabled: isAuthenticated })
+  const profileState = useUserProfile()
   const changeUsernameState = useChangeUsername()
   const changePasswordState = useChangePassword()
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
 
   return (
     <S.Page>

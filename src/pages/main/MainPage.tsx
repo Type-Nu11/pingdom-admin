@@ -1,13 +1,9 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import KakaoMap from '../../components/map/KakaoMap'
 import { useAuth } from '../../hooks/useAuth'
 
 function MainPage() {
-  const { isAuthenticated, user } = useAuth()
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
+  const { user } = useAuth()
 
   return (
     <main>

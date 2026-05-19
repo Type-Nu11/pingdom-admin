@@ -4,7 +4,7 @@ import { useEmailVerification } from '../../hooks/useEmailVerification'
 import { useSignup } from '../../hooks/useSignup'
 
 function SignupPage() {
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [isSignupSuccess, setIsSignupSuccess] = useState(false)
   const [signupEmail, setSignupEmail] = useState('')
   const {
     username,
@@ -27,9 +27,16 @@ function SignupPage() {
     isLoading: isVerifyLoading,
     isError: isVerifyError,
     errorMessage: verifyErrorMessage,
-    isSuccess: isVerifySuccess,
+    isSuccess: isEmailVerificationSuccess,
+    resetEmailVerification,
     handleVerifyEmail,
   } = useEmailVerification()
+
+  const handleEditSignupInfo = () => {
+    setIsSignupSuccess(false)
+    setSignupEmail('')
+    resetEmailVerification()
+  }
 
   return (
     <main>
@@ -53,13 +60,13 @@ function SignupPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
           onSubmit={async (event) => {
             event.preventDefault()
-            setIsSuccess(false)
+            setIsSignupSuccess(false)
 
             const result = await handleSignup()
 
             if (result) {
               setSignupEmail(email.trim())
-              setIsSuccess(true)
+              setIsSignupSuccess(true)
             }
           }}
         >
@@ -71,7 +78,7 @@ function SignupPage() {
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
-              disabled={isSuccess}
+              disabled={isSignupSuccess}
               style={{ padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px' }}
             />
             {fieldErrors.username ? (
@@ -89,7 +96,7 @@ function SignupPage() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               autoComplete="name"
-              disabled={isSuccess}
+              disabled={isSignupSuccess}
               style={{ padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px' }}
             />
             {fieldErrors.name ? (
@@ -107,7 +114,7 @@ function SignupPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
-              disabled={isSuccess}
+              disabled={isSignupSuccess}
               style={{ padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px' }}
             />
             {fieldErrors.email ? (
@@ -125,7 +132,7 @@ function SignupPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="new-password"
-              disabled={isSuccess}
+              disabled={isSignupSuccess}
               style={{ padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px' }}
             />
             {fieldErrors.password ? (
@@ -149,7 +156,7 @@ function SignupPage() {
             </p>
           ) : null}
 
-          {isSuccess ? (
+          {isSignupSuccess ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <p
                 style={{
@@ -162,6 +169,22 @@ function SignupPage() {
               >
                 회원가입이 완료되었습니다. 이메일로 받은 인증 코드를 입력해주세요.
               </p>
+
+              <button
+                type="button"
+                onClick={handleEditSignupInfo}
+                disabled={isVerifyLoading}
+                style={{
+                  padding: '12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  background: '#ffffff',
+                  color: '#374151',
+                  cursor: isVerifyLoading ? 'default' : 'pointer',
+                }}
+              >
+                정보 수정
+              </button>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label htmlFor="verification-code">인증 코드</label>
@@ -188,7 +211,7 @@ function SignupPage() {
                 </p>
               ) : null}
 
-              {isVerifySuccess ? (
+              {isEmailVerificationSuccess ? (
                 <p
                   style={{
                     margin: 0,
@@ -222,7 +245,7 @@ function SignupPage() {
             </div>
           ) : null}
 
-          {!isSuccess ? (
+          {!isSignupSuccess ? (
             <button
               type="submit"
               disabled={isLoading}

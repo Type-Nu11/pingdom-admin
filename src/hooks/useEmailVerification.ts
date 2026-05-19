@@ -25,6 +25,13 @@ export function useEmailVerification() {
   const [errorMessage, setErrorMessage] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
 
+  const resetEmailVerification = () => {
+    setCode('')
+    setIsError(false)
+    setErrorMessage('')
+    setIsSuccess(false)
+  }
+
   const handleVerifyEmail = async (email: string) => {
     setIsError(false)
     setErrorMessage('')
@@ -86,6 +93,7 @@ export function useEmailVerification() {
     isError,
     errorMessage,
     isSuccess,
+    resetEmailVerification,
     handleVerifyEmail,
   }
 }

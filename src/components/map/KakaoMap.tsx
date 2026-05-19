@@ -87,21 +87,24 @@ function loadKakaoMapScript(appKey: string) {
 function KakaoMap() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDelayed, setIsDelayed] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     let isMounted = true
-    let loadingFallbackTimer: number | undefined
+    let delayedMessageTimer: number | undefined
 
     async function initializeMap() {
       if (!KAKAO_MAP_APP_KEY) {
         setErrorMessage('카카오 지도 키가 설정되지 않았습니다.')
         setIsLoading(false)
+        setIsDelayed(false)
         return
       }
 
       try {
         setIsLoading(true)
+        setIsDelayed(false)
         setErrorMessage('')
         await loadKakaoMapScript(KAKAO_MAP_APP_KEY)
 
@@ -119,19 +122,20 @@ function KakaoMap() {
           level: 3,
         })
 
-        loadingFallbackTimer = window.setTimeout(() => {
+        delayedMessageTimer = window.setTimeout(() => {
           if (isMounted) {
-            setIsLoading(false)
+            setIsDelayed(true)
           }
-        }, 1500)
+        }, 3000)
 
         window.kakao.maps.event.addListener(map, 'tilesloaded', () => {
-          if (loadingFallbackTimer) {
-            window.clearTimeout(loadingFallbackTimer)
+          if (delayedMessageTimer) {
+            window.clearTimeout(delayedMessageTimer)
           }
 
           if (isMounted) {
             setIsLoading(false)
+            setIsDelayed(false)
           }
         })
       } catch (error) {
@@ -139,6 +143,7 @@ function KakaoMap() {
 
         if (isMounted) {
           setIsLoading(false)
+          setIsDelayed(false)
           setErrorMessage('카카오 지도 서비스 설정을 확인해주세요.')
         }
       }
@@ -149,8 +154,8 @@ function KakaoMap() {
     return () => {
       isMounted = false
 
-      if (loadingFallbackTimer) {
-        window.clearTimeout(loadingFallbackTimer)
+      if (delayedMessageTimer) {
+        window.clearTimeout(delayedMessageTimer)
       }
     }
   }, [])
@@ -158,7 +163,13 @@ function KakaoMap() {
   return (
     <MapFrame>
       <MapCanvas ref={mapContainerRef} />
-      {isLoading ? <MapMessage>카카오 지도를 불러오는 중입니다.</MapMessage> : null}
+      {isLoading ? (
+        <MapMessage>
+          {isDelayed
+            ? '지도 로딩이 지연되고 있습니다. 네트워크 상태를 확인해주세요.'
+            : '카카오 지도를 불러오는 중입니다.'}
+        </MapMessage>
+      ) : null}
       {errorMessage ? <MapMessage>{errorMessage}</MapMessage> : null}
     </MapFrame>
   )

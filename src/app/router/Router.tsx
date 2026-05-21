@@ -1,21 +1,21 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from '../../pages/login/LoginPage'
 import MainPage from '../../pages/main/MainPage'
+import NotFoundPage from '../../pages/notFound/NotFoundPage'
 import ProfilePage from '../../pages/profile/ProfilePage'
-import SignupPage from '../../pages/signup/SignupPage'
 import { ProtectedRoute } from './ProtectedRoute'
 
-// 로그인과 회원가입 중심의 최소 라우팅 구조를 관리합니다.
+// 관리자 인증과 보호 라우팅 구조를 관리합니다.
 export function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/main" replace />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/main" element={<MainPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -82,8 +82,6 @@ const customAxios = axios.create({
 
 const AUTH_EXCLUDED_PATHS = [
   '/auth/login',
-  '/auth/signup',
-  '/auth/email/verify',
   '/auth/token/refresh',
 ]
 

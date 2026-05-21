@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminPictures } from '../../hooks/useAdminPictures'
 import { useAuth } from '../../hooks/useAuth'
@@ -24,9 +24,17 @@ function getPictureOwner(picture: AdminPicture) {
   return '작성자 정보 없음'
 }
 
+function safeDecodeURIComponent(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 function getPictureName(picture: AdminPicture) {
   if (picture.s3Key) {
-    return decodeURIComponent(picture.s3Key.split('/').pop() ?? picture.s3Key)
+    return safeDecodeURIComponent(picture.s3Key.split('/').pop() ?? picture.s3Key)
   }
 
   const pictureUrl = getPictureUrl(picture)
@@ -35,12 +43,13 @@ function getPictureName(picture: AdminPicture) {
     return `사진-${picture.id}`
   }
 
-  return decodeURIComponent(pictureUrl.split('/').pop() ?? `사진-${picture.id}`)
+  return safeDecodeURIComponent(pictureUrl.split('/').pop() ?? `사진-${picture.id}`)
 }
 
 function MainPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const pageContentRef = useRef<HTMLElement | null>(null)
   const [selectedPicture, setSelectedPicture] = useState<AdminPicture | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const {
@@ -62,6 +71,17 @@ function MainPage() {
     pageStartIndex + ADMIN_PICTURE_PAGE_SIZE
   )
   const showPagination = pictures.length > ADMIN_PICTURE_PAGE_SIZE
+  const handlePageChange = (nextPage: number) => {
+    const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
+
+    setCurrentPage(nextPageNumber)
+    window.requestAnimationFrame(() => {
+      pageContentRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
 
   useEffect(() => {
     if (!selectedPicture) {
@@ -151,7 +171,7 @@ function MainPage() {
           </S.TopActions>
         </S.TopBar>
 
-        <S.PageContent>
+        <S.PageContent ref={pageContentRef}>
           <S.PageHeader>
             <div>
               <S.PageTitle>업로드 미디어</S.PageTitle>
@@ -228,7 +248,12 @@ function MainPage() {
                   >
                     <S.MediaPreview>
                       {pictureUrl ? (
-                        <S.MediaImage src={pictureUrl} alt={`업로드 사진 ${picture.id}`} />
+                        <S.MediaImage
+                          src={pictureUrl}
+                          alt={`업로드 사진 ${picture.id}`}
+                          loading="lazy"
+                          decoding="async"
+                        />
                       ) : (
                         <S.MediaFallback>이미지 없음</S.MediaFallback>
                       )}
@@ -295,7 +320,7 @@ function MainPage() {
               <S.PaginationButton
                 type="button"
                 disabled={currentPageNumber === 1}
-                onClick={() => setCurrentPage(Math.max(1, currentPageNumber - 1))}
+                onClick={() => handlePageChange(currentPageNumber - 1)}
               >
                 <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
                 <span>이전</span>
@@ -311,7 +336,7 @@ function MainPage() {
                       type="button"
                       $active={currentPageNumber === pageNumber}
                       aria-current={currentPageNumber === pageNumber ? 'page' : undefined}
-                      onClick={() => setCurrentPage(pageNumber)}
+                      onClick={() => handlePageChange(pageNumber)}
                     >
                       {pageNumber}
                     </S.PageNumberButton>
@@ -322,7 +347,7 @@ function MainPage() {
               <S.PaginationButton
                 type="button"
                 disabled={currentPageNumber === totalPages}
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPageNumber + 1))}
+                onClick={() => handlePageChange(currentPageNumber + 1)}
               >
                 <span>다음</span>
                 <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>

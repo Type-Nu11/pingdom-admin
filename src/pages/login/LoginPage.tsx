@@ -24,7 +24,7 @@ function LoginPage() {
           <S.IconBox>
             <S.MaterialIcon aria-hidden="true">shield_lock</S.MaterialIcon>
           </S.IconBox>
-          <S.Title>Admin Login</S.Title>
+          <S.Title>관리자 로그인</S.Title>
           <S.Description>
             서버에서 발급된 관리자 계정으로 로그인해주세요.
           </S.Description>
@@ -41,7 +41,7 @@ function LoginPage() {
           }}
         >
           <S.Field>
-            <S.Label htmlFor="username">Admin ID</S.Label>
+            <S.Label htmlFor="username">관리자 아이디</S.Label>
             <S.InputWrap>
               <S.InputIcon aria-hidden="true">person</S.InputIcon>
               <S.Input
@@ -50,13 +50,13 @@ function LoginPage() {
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 autoComplete="username"
-                placeholder="Enter your ID"
+                placeholder="아이디를 입력해주세요"
               />
             </S.InputWrap>
           </S.Field>
 
           <S.Field>
-            <S.Label htmlFor="password">Password</S.Label>
+            <S.Label htmlFor="password">비밀번호</S.Label>
             <S.InputWrap>
               <S.InputIcon aria-hidden="true">key</S.InputIcon>
               <S.Input
@@ -65,7 +65,7 @@ function LoginPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
-                placeholder="Enter your password"
+                placeholder="비밀번호를 입력해주세요"
                 $hasEndAction
               />
               <S.PasswordToggleButton
@@ -87,7 +87,7 @@ function LoginPage() {
           ) : null}
 
           <S.SubmitButton type="submit" disabled={isLoading}>
-            <span>{isLoading ? '로그인 중...' : 'Login'}</span>
+            <span>{isLoading ? '로그인 중...' : '로그인'}</span>
             <S.ButtonIcon aria-hidden="true">arrow_forward</S.ButtonIcon>
           </S.SubmitButton>
         </S.Form>

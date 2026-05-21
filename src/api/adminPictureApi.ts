@@ -29,11 +29,7 @@ export async function getAdminPictures(limit = DEFAULT_ADMIN_PICTURE_LIMIT) {
 }
 
 export async function deleteAdminPicture(pictureId: number) {
-  const { data } = await customAxios.delete<string>(
-    `${ADMIN_PICTURES_API_PATH}/${pictureId}/delete`
-  )
-
-  return data
+  await customAxios.delete<void>(`${ADMIN_PICTURES_API_PATH}/${pictureId}/delete`)
 }
 
 export type { AdminPicture }

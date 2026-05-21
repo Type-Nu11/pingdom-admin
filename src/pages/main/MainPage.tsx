@@ -258,7 +258,7 @@ function MainPage() {
                       <S.CardActions>
                         <S.CardButton
                           type="button"
-                          disabled={deletingPictureId === picture.id}
+                          disabled={deletingPictureId !== null}
                           onClick={(event) => {
                             event.stopPropagation()
                             const shouldDelete = window.confirm(

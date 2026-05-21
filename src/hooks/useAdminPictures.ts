@@ -54,10 +54,17 @@ export function useAdminPictures(limit = 20) {
   const [actionErrorMessage, setActionErrorMessage] = useState('')
   const [deletingPictureId, setDeletingPictureId] = useState<number | null>(null)
   const latestRequestIdRef = useRef(0)
+  const isFetchingRef = useRef(false)
+  const deletingPictureIdRef = useRef<number | null>(null)
 
   const fetchAdminPictures = useCallback(async () => {
+    if (isFetchingRef.current) {
+      return false
+    }
+
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
+    isFetchingRef.current = true
 
     setIsError(false)
     setErrorMessage('')
@@ -91,13 +98,19 @@ export function useAdminPictures(limit = 20) {
       if (requestId === latestRequestIdRef.current) {
         setIsLoading(false)
       }
+
+      isFetchingRef.current = false
     }
   }, [clearAuth, limit])
 
   const deletePicture = useCallback(
     async (pictureId: number) => {
-      setIsError(false)
-      setErrorMessage('')
+      if (deletingPictureIdRef.current !== null) {
+        return false
+      }
+
+      deletingPictureIdRef.current = pictureId
+      setActionErrorMessage('')
 
       try {
         setDeletingPictureId(pictureId)
@@ -119,7 +132,10 @@ export function useAdminPictures(limit = 20) {
 
         return false
       } finally {
-        setDeletingPictureId(null)
+        if (deletingPictureIdRef.current === pictureId) {
+          deletingPictureIdRef.current = null
+          setDeletingPictureId(null)
+        }
       }
     },
     [clearAuth]

@@ -120,6 +120,19 @@ export function useAdminPictures(limit = 20) {
           prevPictures.filter((picture) => picture.id !== pictureId)
         )
 
+        try {
+          const refreshedPictures = await getAdminPictures(limit)
+          setPictures(refreshedPictures)
+        } catch (refreshError) {
+          setActionErrorMessage('사진은 삭제됐지만 목록을 다시 불러오지 못했습니다.')
+
+          if (shouldClearAuth(refreshError)) {
+            clearAuth()
+          }
+
+          console.error('관리자 사진 삭제 후 목록 재조회 실패', refreshError)
+        }
+
         return true
       } catch (error) {
         setActionErrorMessage(getAdminPictureErrorMessage(error))
@@ -138,7 +151,7 @@ export function useAdminPictures(limit = 20) {
         }
       }
     },
-    [clearAuth]
+    [clearAuth, limit]
   )
 
   useEffect(() => {

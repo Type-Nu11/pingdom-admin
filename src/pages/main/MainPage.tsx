@@ -48,6 +48,7 @@ function MainPage() {
     isLoading,
     isError,
     errorMessage,
+    actionErrorMessage,
     deletingPictureId,
     fetchAdminPictures,
     deletePicture,
@@ -198,6 +199,10 @@ function MainPage() {
           {isLoading ? <S.FeedbackText>사진 목록을 불러오는 중입니다.</S.FeedbackText> : null}
 
           {isError ? <S.FeedbackText>{errorMessage}</S.FeedbackText> : null}
+
+          {actionErrorMessage ? (
+            <S.FeedbackText>{actionErrorMessage}</S.FeedbackText>
+          ) : null}
 
           {!isLoading && !isError && pictures.length === 0 ? (
             <S.FeedbackText>등록된 사진이 없습니다.</S.FeedbackText>

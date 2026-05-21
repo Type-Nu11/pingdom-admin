@@ -51,6 +51,7 @@ export function useAdminPictures(limit = 20) {
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [actionErrorMessage, setActionErrorMessage] = useState('')
   const [deletingPictureId, setDeletingPictureId] = useState<number | null>(null)
   const latestRequestIdRef = useRef(0)
 
@@ -60,6 +61,7 @@ export function useAdminPictures(limit = 20) {
 
     setIsError(false)
     setErrorMessage('')
+    setActionErrorMessage('')
 
     try {
       setIsLoading(true)
@@ -107,8 +109,7 @@ export function useAdminPictures(limit = 20) {
 
         return true
       } catch (error) {
-        setIsError(true)
-        setErrorMessage(getAdminPictureErrorMessage(error))
+        setActionErrorMessage(getAdminPictureErrorMessage(error))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -133,6 +134,7 @@ export function useAdminPictures(limit = 20) {
     isLoading,
     isError,
     errorMessage,
+    actionErrorMessage,
     deletingPictureId,
     fetchAdminPictures,
     deletePicture,

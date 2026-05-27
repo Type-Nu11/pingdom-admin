@@ -103,8 +103,7 @@ function setAuthorizationHeader(config: InternalAxiosRequestConfig, accessToken:
 }
 
 function getRequestAccessToken(config: InternalAxiosRequestConfig) {
-  const authorizationHeader =
-    config.headers.Authorization ?? config.headers.authorization
+  const authorizationHeader = config.headers.get('Authorization')
 
   if (!authorizationHeader) {
     return ''

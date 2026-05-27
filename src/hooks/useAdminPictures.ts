@@ -160,7 +160,15 @@ export function useAdminPictures({
         )
 
         try {
-          const refreshedPictures = await getAdminPictures(latestListRequestRef.current)
+          let refreshedPictures = await getAdminPictures(latestListRequestRef.current)
+
+          if (refreshedPictures.pictures.length === 0 && refreshedPictures.page > 1) {
+            refreshedPictures = await getAdminPictures({
+              ...latestListRequestRef.current,
+              page: refreshedPictures.page - 1,
+            })
+          }
+
           setPictures(refreshedPictures.pictures)
           setPage(refreshedPictures.page)
           setTotalCount(refreshedPictures.totalCount)

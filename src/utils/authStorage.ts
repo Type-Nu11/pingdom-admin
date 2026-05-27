@@ -54,6 +54,20 @@ function parseStoredNumber(value: string) {
   return Number.isNaN(parsedValue) ? null : parsedValue
 }
 
+function normalizeAuthString(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
+function normalizeAuthNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function stringifyAuthNumber(value: unknown) {
+  const normalizedValue = normalizeAuthNumber(value)
+
+  return normalizedValue === null ? '' : String(normalizedValue)
+}
+
 export function getStoredAccessToken() {
   return getStoredString(AUTH_STORAGE_KEYS.accessToken)
 }
@@ -90,14 +104,14 @@ export function createAuthStateFromLogin(data: LoginResponse): AuthState {
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
     user: {
-      id: data.id,
-      username: data.username,
+      id: normalizeAuthNumber(data.id),
+      username: normalizeAuthString(data.username),
       name: '',
-      email: data.email,
-      birthYear: data.birthYear,
-      profileImageUrl: data.profileImageUrl,
-      language: data.language,
-      country: data.country,
+      email: normalizeAuthString(data.email),
+      birthYear: normalizeAuthNumber(data.birthYear),
+      profileImageUrl: normalizeAuthString(data.profileImageUrl),
+      language: normalizeAuthString(data.language),
+      country: normalizeAuthString(data.country),
     },
   }
 }
@@ -105,14 +119,17 @@ export function createAuthStateFromLogin(data: LoginResponse): AuthState {
 export function saveLoginAuth(data: LoginResponse) {
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
   setStoredString(AUTH_STORAGE_KEYS.refreshToken, data.refreshToken)
-  setStoredString(AUTH_STORAGE_KEYS.userId, String(data.id))
-  setStoredString(AUTH_STORAGE_KEYS.username, data.username)
+  setStoredString(AUTH_STORAGE_KEYS.userId, stringifyAuthNumber(data.id))
+  setStoredString(AUTH_STORAGE_KEYS.username, normalizeAuthString(data.username))
   removeStoredValue(AUTH_STORAGE_KEYS.name)
-  setStoredString(AUTH_STORAGE_KEYS.email, data.email)
-  setStoredString(AUTH_STORAGE_KEYS.birthYear, String(data.birthYear))
-  setStoredString(AUTH_STORAGE_KEYS.profileImageUrl, data.profileImageUrl)
-  setStoredString(AUTH_STORAGE_KEYS.language, data.language)
-  setStoredString(AUTH_STORAGE_KEYS.country, data.country)
+  setStoredString(AUTH_STORAGE_KEYS.email, normalizeAuthString(data.email))
+  setStoredString(AUTH_STORAGE_KEYS.birthYear, stringifyAuthNumber(data.birthYear))
+  setStoredString(
+    AUTH_STORAGE_KEYS.profileImageUrl,
+    normalizeAuthString(data.profileImageUrl)
+  )
+  setStoredString(AUTH_STORAGE_KEYS.language, normalizeAuthString(data.language))
+  setStoredString(AUTH_STORAGE_KEYS.country, normalizeAuthString(data.country))
 }
 
 export function saveRefreshedAuthTokens(data: RefreshTokenResponse) {

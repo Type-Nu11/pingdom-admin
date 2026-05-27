@@ -5,10 +5,15 @@ import { isApiError } from '../api/customAxios'
 import { useAuth } from './useAuth'
 import type {
   AdminPicture,
+  AdminPictureSortParam,
+  AdminPictureListRequest,
   AdminPictureDeleteErrorResponse,
   AdminPictureListErrorResponse,
 } from '../types/adminPicture.types'
 
+const DEFAULT_ADMIN_PICTURE_PAGE = 1
+const DEFAULT_ADMIN_PICTURE_LIMIT = 20
+const DEFAULT_ADMIN_PICTURE_SORT_PARAM = 'LATEST'
 const ADMIN_PICTURE_ERROR_MESSAGE = '사진 목록을 불러오는 중 오류가 발생했습니다.'
 const ADMIN_PICTURE_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
@@ -45,9 +50,23 @@ function shouldClearAuth(error: unknown) {
   )
 }
 
-export function useAdminPictures(limit = 20) {
+interface UseAdminPicturesOptions {
+  initialPage?: number
+  limit?: number
+  sortParam?: AdminPictureSortParam
+}
+
+export function useAdminPictures({
+  initialPage = DEFAULT_ADMIN_PICTURE_PAGE,
+  limit = DEFAULT_ADMIN_PICTURE_LIMIT,
+  sortParam = DEFAULT_ADMIN_PICTURE_SORT_PARAM,
+}: UseAdminPicturesOptions = {}) {
   const { clearAuth } = useAuth()
   const [pictures, setPictures] = useState<AdminPicture[]>([])
+  const [page, setPage] = useState(initialPage)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [hasNext, setHasNext] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -56,8 +75,13 @@ export function useAdminPictures(limit = 20) {
   const latestRequestIdRef = useRef(0)
   const isFetchingRef = useRef(false)
   const deletingPictureIdRef = useRef<number | null>(null)
+  const latestListRequestRef = useRef<Required<AdminPictureListRequest>>({
+    page: initialPage,
+    limit,
+    sortParam,
+  })
 
-  const fetchAdminPictures = useCallback(async () => {
+  const fetchAdminPictures = useCallback(async (request: AdminPictureListRequest = {}) => {
     if (isFetchingRef.current) {
       return false
     }
@@ -70,13 +94,28 @@ export function useAdminPictures(limit = 20) {
     setErrorMessage('')
     setActionErrorMessage('')
 
+    const nextRequest = {
+      page: request.page ?? latestListRequestRef.current.page,
+      limit: request.limit ?? latestListRequestRef.current.limit,
+      sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
+    }
+
     try {
       setIsLoading(true)
 
-      const data = await getAdminPictures(limit)
+      const data = await getAdminPictures(nextRequest)
 
       if (requestId === latestRequestIdRef.current) {
-        setPictures(data)
+        setPictures(data.pictures)
+        setPage(data.page)
+        setTotalCount(data.totalCount)
+        setTotalPages(data.totalPages)
+        setHasNext(data.hasNext)
+        latestListRequestRef.current = {
+          page: data.page,
+          limit: data.limit,
+          sortParam: nextRequest.sortParam,
+        }
       }
 
       return true
@@ -101,7 +140,7 @@ export function useAdminPictures(limit = 20) {
 
       isFetchingRef.current = false
     }
-  }, [clearAuth, limit])
+  }, [clearAuth])
 
   const deletePicture = useCallback(
     async (pictureId: number) => {
@@ -121,8 +160,17 @@ export function useAdminPictures(limit = 20) {
         )
 
         try {
-          const refreshedPictures = await getAdminPictures(limit)
-          setPictures(refreshedPictures)
+          const refreshedPictures = await getAdminPictures(latestListRequestRef.current)
+          setPictures(refreshedPictures.pictures)
+          setPage(refreshedPictures.page)
+          setTotalCount(refreshedPictures.totalCount)
+          setTotalPages(refreshedPictures.totalPages)
+          setHasNext(refreshedPictures.hasNext)
+          latestListRequestRef.current = {
+            ...latestListRequestRef.current,
+            page: refreshedPictures.page,
+            limit: refreshedPictures.limit,
+          }
         } catch (refreshError) {
           setActionErrorMessage('사진은 삭제됐지만 목록을 다시 불러오지 못했습니다.')
 
@@ -151,7 +199,7 @@ export function useAdminPictures(limit = 20) {
         }
       }
     },
-    [clearAuth, limit]
+    [clearAuth]
   )
 
   useEffect(() => {
@@ -160,6 +208,10 @@ export function useAdminPictures(limit = 20) {
 
   return {
     pictures,
+    page,
+    totalCount,
+    totalPages,
+    hasNext,
     isLoading,
     isError,
     errorMessage,

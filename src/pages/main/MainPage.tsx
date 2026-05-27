@@ -2,14 +2,18 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminPictures } from '../../hooks/useAdminPictures'
 import { useAuth } from '../../hooks/useAuth'
-import type { AdminPicture } from '../../types/adminPicture.types'
+import type { AdminPicture, AdminPictureSortParam } from '../../types/adminPicture.types'
 import * as S from './MainPage.styles'
 
-const ADMIN_PICTURE_FETCH_LIMIT = 100
 const ADMIN_PICTURE_PAGE_SIZE = 20
+const DEFAULT_ADMIN_PICTURE_SORT_PARAM: AdminPictureSortParam = 'LATEST'
 
-function getPictureUrl(picture: AdminPicture) {
-  return picture.url ?? picture.imageUrl ?? picture.pictureUrl ?? ''
+function getPictureThumbnailUrl(picture: AdminPicture) {
+  return picture.thumbnailUrl
+}
+
+function getPictureImageUrl(picture: AdminPicture) {
+  return picture.imageUrl
 }
 
 function getPictureOwner(picture: AdminPicture) {
@@ -33,11 +37,7 @@ function safeDecodeURIComponent(value: string) {
 }
 
 function getPictureName(picture: AdminPicture) {
-  if (picture.s3Key) {
-    return safeDecodeURIComponent(picture.s3Key.split('/').pop() ?? picture.s3Key)
-  }
-
-  const pictureUrl = getPictureUrl(picture)
+  const pictureUrl = getPictureImageUrl(picture)
 
   if (!pictureUrl) {
     return `사진-${picture.id}`
@@ -50,10 +50,17 @@ function MainPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
   const pageContentRef = useRef<HTMLElement | null>(null)
+  const isSortEffectReadyRef = useRef(false)
   const [selectedPicture, setSelectedPicture] = useState<AdminPicture | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedSortParam, setSelectedSortParam] = useState<AdminPictureSortParam>(
+    DEFAULT_ADMIN_PICTURE_SORT_PARAM
+  )
   const {
     pictures,
+    page,
+    totalCount,
+    totalPages,
+    hasNext,
     isLoading,
     isError,
     errorMessage,
@@ -61,27 +68,61 @@ function MainPage() {
     deletingPictureId,
     fetchAdminPictures,
     deletePicture,
-  } = useAdminPictures(ADMIN_PICTURE_FETCH_LIMIT)
-  const selectedPictureUrl = selectedPicture ? getPictureUrl(selectedPicture) : ''
-  const totalPages = Math.max(1, Math.ceil(pictures.length / ADMIN_PICTURE_PAGE_SIZE))
-  const currentPageNumber = Math.min(currentPage, totalPages)
-  const pageStartIndex = (currentPageNumber - 1) * ADMIN_PICTURE_PAGE_SIZE
-  const currentPagePictures = pictures.slice(
-    pageStartIndex,
-    pageStartIndex + ADMIN_PICTURE_PAGE_SIZE
-  )
-  const showPagination = pictures.length > ADMIN_PICTURE_PAGE_SIZE
+  } = useAdminPictures({ limit: ADMIN_PICTURE_PAGE_SIZE })
+  const selectedPictureUrl = selectedPicture ? getPictureImageUrl(selectedPicture) : ''
+  const currentPageNumber = page
+  const showPagination = totalPages > 1
   const handlePageChange = (nextPage: number) => {
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
-    setCurrentPage(nextPageNumber)
-    window.requestAnimationFrame(() => {
-      pageContentRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
+    if (nextPageNumber === currentPageNumber || isLoading) {
+      return
+    }
+
+    void fetchAdminPictures({ page: nextPageNumber }).then((isSuccess) => {
+      if (isSuccess) {
+        window.requestAnimationFrame(() => {
+          pageContentRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+        })
+      }
     })
   }
+
+  const handleRefresh = () => {
+    void fetchAdminPictures({
+      page: currentPageNumber,
+      sortParam: selectedSortParam,
+    })
+  }
+
+  const handleClearFilters = () => {
+    if (selectedSortParam === DEFAULT_ADMIN_PICTURE_SORT_PARAM) {
+      void fetchAdminPictures({
+        page: 1,
+        sortParam: DEFAULT_ADMIN_PICTURE_SORT_PARAM,
+      })
+
+      return
+    }
+
+    setSelectedSortParam(DEFAULT_ADMIN_PICTURE_SORT_PARAM)
+  }
+
+  useEffect(() => {
+    if (!isSortEffectReadyRef.current) {
+      isSortEffectReadyRef.current = true
+
+      return
+    }
+
+    void fetchAdminPictures({
+      page: 1,
+      sortParam: selectedSortParam,
+    })
+  }, [fetchAdminPictures, selectedSortParam])
 
   useEffect(() => {
     if (!selectedPicture) {
@@ -155,10 +196,6 @@ function MainPage() {
         <S.TopBar>
           <S.TopTitle>관리자 운영</S.TopTitle>
           <S.TopActions>
-            <S.SearchBox>
-              <S.SearchIcon aria-hidden="true">search</S.SearchIcon>
-              <S.SearchInput type="search" placeholder="운영 항목 검색" />
-            </S.SearchBox>
             <S.IconButton type="button" aria-label="알림">
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
             </S.IconButton>
@@ -176,8 +213,8 @@ function MainPage() {
             <div>
               <S.PageTitle>업로드 미디어</S.PageTitle>
               <S.PageDescription>
-                {pictures.length > 0
-                  ? `업로드된 사진 ${pictures.length}개를 관리합니다.`
+                {totalCount > 0
+                  ? `업로드된 사진 ${totalCount}개를 관리합니다.`
                   : '사용자가 업로드한 지도 사진을 관리합니다.'}
               </S.PageDescription>
             </div>
@@ -190,9 +227,7 @@ function MainPage() {
               <S.PrimaryButton
                 type="button"
                 disabled={isLoading}
-                onClick={() => {
-                  void fetchAdminPictures()
-                }}
+                onClick={handleRefresh}
               >
                 <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
                 <span>{isLoading ? '불러오는 중' : '새로고침'}</span>
@@ -205,15 +240,19 @@ function MainPage() {
               <S.MaterialIcon aria-hidden="true">filter_list</S.MaterialIcon>
               <span>필터</span>
             </S.FilterLabel>
-            <S.Select aria-label="상태 필터" defaultValue="all">
-              <option value="all">전체 상태</option>
-              <option value="uploaded">업로드됨</option>
+            <S.Select
+              aria-label="사진 목록 정렬"
+              value={selectedSortParam}
+              onChange={(event) =>
+                setSelectedSortParam(event.target.value as AdminPictureSortParam)
+              }
+            >
+              <option value="LATEST">최신순</option>
+              <option value="OLDEST">오래된순</option>
             </S.Select>
-            <S.Select aria-label="타입 필터" defaultValue="photo">
-              <option value="photo">사진</option>
-            </S.Select>
-            <S.DateInput type="text" placeholder="기간" />
-            <S.ClearButton type="button">필터 초기화</S.ClearButton>
+            <S.ClearButton type="button" onClick={handleClearFilters}>
+              필터 초기화
+            </S.ClearButton>
           </S.FilterBar>
 
           {isLoading ? <S.FeedbackText>사진 목록을 불러오는 중입니다.</S.FeedbackText> : null}
@@ -230,8 +269,8 @@ function MainPage() {
 
           {!isError && pictures.length > 0 ? (
             <S.MediaGrid>
-              {currentPagePictures.map((picture) => {
-                const pictureUrl = getPictureUrl(picture)
+              {pictures.map((picture) => {
+                const pictureUrl = getPictureThumbnailUrl(picture)
 
                 return (
                   <S.MediaCard
@@ -319,7 +358,7 @@ function MainPage() {
             <S.Pagination aria-label="사진 목록 페이지네이션">
               <S.PaginationButton
                 type="button"
-                disabled={currentPageNumber === 1}
+                disabled={isLoading || currentPageNumber === 1}
                 onClick={() => handlePageChange(currentPageNumber - 1)}
               >
                 <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
@@ -346,7 +385,7 @@ function MainPage() {
 
               <S.PaginationButton
                 type="button"
-                disabled={currentPageNumber === totalPages}
+                disabled={isLoading || !hasNext || currentPageNumber === totalPages}
                 onClick={() => handlePageChange(currentPageNumber + 1)}
               >
                 <span>다음</span>
@@ -397,9 +436,7 @@ function MainPage() {
               )}
             </S.ModalImageFrame>
 
-            {selectedPicture.s3Key ? (
-              <S.ModalMeta>{selectedPicture.s3Key}</S.ModalMeta>
-            ) : null}
+            <S.ModalMeta>{selectedPicture.imageUrl}</S.ModalMeta>
           </S.ModalContent>
         </S.ModalOverlay>
       ) : null}

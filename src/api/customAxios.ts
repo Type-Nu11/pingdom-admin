@@ -170,6 +170,16 @@ async function requestTokenRefresh() {
   return tokenRefreshRequest
 }
 
+function shouldClearAuthAfterRefreshFailure(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return true
+  }
+
+  const status = error.response?.status
+
+  return Boolean(error.response && (typeof status !== 'number' || status < 500))
+}
+
 customAxios.interceptors.request.use((config) => {
   const accessToken = getStoredAccessToken()
 
@@ -208,8 +218,10 @@ customAxios.interceptors.response.use(
         setAuthorizationHeader(originalRequest, refreshedTokens.accessToken)
 
         return customAxios(originalRequest)
-      } catch {
-        clearStoredAuth()
+      } catch (refreshError) {
+        if (shouldClearAuthAfterRefreshFailure(refreshError)) {
+          clearStoredAuth()
+        }
 
         return Promise.reject(apiError)
       }

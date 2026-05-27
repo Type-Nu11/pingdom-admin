@@ -76,6 +76,7 @@ export function useUserProfile({ enabled = true }: UseUserProfileOptions = {}) {
           id: data.id,
           username: data.username,
           name: data.name,
+          email: data.email,
         })
       }
 

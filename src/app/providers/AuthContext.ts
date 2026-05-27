@@ -5,6 +5,11 @@ export interface AuthUser {
   id: number | null
   username: string
   name: string
+  email: string
+  birthYear: number | null
+  profileImageUrl: string
+  language: string
+  country: string
 }
 
 export interface AuthState {

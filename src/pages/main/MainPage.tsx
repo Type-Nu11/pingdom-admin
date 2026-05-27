@@ -43,7 +43,11 @@ function getPictureName(picture: AdminPicture) {
     return `사진-${picture.id}`
   }
 
-  return safeDecodeURIComponent(pictureUrl.split('/').pop() ?? `사진-${picture.id}`)
+  const pictureUrlWithoutQuery = pictureUrl.split('?')[0]
+
+  return safeDecodeURIComponent(
+    pictureUrlWithoutQuery.split('/').pop() ?? `사진-${picture.id}`
+  )
 }
 
 function MainPage() {

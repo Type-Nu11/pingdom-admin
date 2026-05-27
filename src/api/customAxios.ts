@@ -102,6 +102,23 @@ function setAuthorizationHeader(config: InternalAxiosRequestConfig, accessToken:
   config.headers.Authorization = `Bearer ${accessToken}`
 }
 
+function getRequestAccessToken(config: InternalAxiosRequestConfig) {
+  const authorizationHeader =
+    config.headers.Authorization ?? config.headers.authorization
+
+  if (!authorizationHeader) {
+    return ''
+  }
+
+  const authorization = authorizationHeader.toString()
+
+  if (!authorization.startsWith('Bearer ')) {
+    return ''
+  }
+
+  return authorization.replace('Bearer ', '').trim()
+}
+
 function enrichApiError(error: AxiosError) {
   const apiError = error as ApiError
   apiError.category = classifyApiError(error)
@@ -171,9 +188,22 @@ customAxios.interceptors.response.use(
     const originalRequest = error.config as RetriableRequestConfig | undefined
 
     if (originalRequest && shouldRefreshAccessToken(error, originalRequest)) {
-      try {
-        originalRequest._retry = true
+      originalRequest._retry = true
 
+      const currentAccessToken = getStoredAccessToken()
+      const requestAccessToken = getRequestAccessToken(originalRequest)
+
+      if (
+        requestAccessToken &&
+        currentAccessToken &&
+        requestAccessToken !== currentAccessToken
+      ) {
+        setAuthorizationHeader(originalRequest, currentAccessToken)
+
+        return customAxios(originalRequest)
+      }
+
+      try {
         const refreshedTokens = await requestTokenRefresh()
         setAuthorizationHeader(originalRequest, refreshedTokens.accessToken)
 

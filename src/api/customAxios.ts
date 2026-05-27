@@ -1,5 +1,11 @@
-import axios, { AxiosError } from 'axios'
-import { AUTH_STORAGE_KEYS } from '../constants/auth'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import type { RefreshTokenResponse } from '../types/auth.types'
+import {
+  clearStoredAuth,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  saveRefreshedAuthTokens,
+} from '../utils/authStorage'
 
 export type ApiErrorCategory =
   | 'timeout'
@@ -20,11 +26,17 @@ export type ApiError<T = unknown> = AxiosError<T> & {
   status?: number
 }
 
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean
+}
+
 export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
   return axios.isAxiosError(error)
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
+let tokenRefreshRequest: Promise<RefreshTokenResponse> | null = null
 
 function isBrowserOffline() {
   return typeof navigator !== 'undefined' && navigator.onLine === false
@@ -80,20 +92,72 @@ const customAxios = axios.create({
   timeout: 10000,
 })
 
-const AUTH_EXCLUDED_PATHS = [
-  '/auth/login',
-  '/auth/token/refresh',
-]
+const AUTH_EXCLUDED_PATHS = ['/auth/login', TOKEN_REFRESH_API_PATH]
 
 function shouldAttachAccessToken(url = '') {
   return !AUTH_EXCLUDED_PATHS.some((path) => url.startsWith(path))
 }
 
+function setAuthorizationHeader(config: InternalAxiosRequestConfig, accessToken: string) {
+  config.headers.Authorization = `Bearer ${accessToken}`
+}
+
+function enrichApiError(error: AxiosError) {
+  const apiError = error as ApiError
+  apiError.category = classifyApiError(error)
+  apiError.status = error.response?.status
+
+  return apiError
+}
+
+function shouldRefreshAccessToken(
+  error: AxiosError,
+  config?: RetriableRequestConfig
+) {
+  return Boolean(
+    config &&
+      error.response?.status === 401 &&
+      !config._retry &&
+      shouldAttachAccessToken(config.url) &&
+      getStoredRefreshToken()
+  )
+}
+
+async function requestTokenRefresh() {
+  const refreshToken = getStoredRefreshToken()
+
+  if (!refreshToken) {
+    throw new Error('리프레시 토큰이 없습니다.')
+  }
+
+  tokenRefreshRequest ??= axios
+    .post<RefreshTokenResponse>(
+      TOKEN_REFRESH_API_PATH,
+      {
+        refreshToken,
+      },
+      {
+        baseURL: API_BASE_URL,
+        timeout: 10000,
+      }
+    )
+    .then(({ data }) => {
+      saveRefreshedAuthTokens(data)
+
+      return data
+    })
+    .finally(() => {
+      tokenRefreshRequest = null
+    })
+
+  return tokenRefreshRequest
+}
+
 customAxios.interceptors.request.use((config) => {
-  const accessToken = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken)
+  const accessToken = getStoredAccessToken()
 
   if (accessToken && shouldAttachAccessToken(config.url)) {
-    config.headers.Authorization = `Bearer ${accessToken}`
+    setAuthorizationHeader(config, accessToken)
   }
 
   return config
@@ -102,10 +166,24 @@ customAxios.interceptors.request.use((config) => {
 customAxios.interceptors.response.use(
   (response) => response,
 
-  (error: AxiosError) => {
-    const apiError = error as ApiError
-    apiError.category = classifyApiError(error)
-    apiError.status = error.response?.status
+  async (error: AxiosError) => {
+    const apiError = enrichApiError(error)
+    const originalRequest = error.config as RetriableRequestConfig | undefined
+
+    if (originalRequest && shouldRefreshAccessToken(error, originalRequest)) {
+      try {
+        originalRequest._retry = true
+
+        const refreshedTokens = await requestTokenRefresh()
+        setAuthorizationHeader(originalRequest, refreshedTokens.accessToken)
+
+        return customAxios(originalRequest)
+      } catch {
+        clearStoredAuth()
+
+        return Promise.reject(apiError)
+      }
+    }
 
     return Promise.reject(apiError)
   }

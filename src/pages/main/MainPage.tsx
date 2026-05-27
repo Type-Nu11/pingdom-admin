@@ -76,10 +76,11 @@ function MainPage() {
   const selectedPictureUrl = selectedPicture ? getPictureImageUrl(selectedPicture) : ''
   const currentPageNumber = page
   const showPagination = totalPages > 1
+  const isDeleting = deletingPictureId !== null
   const handlePageChange = (nextPage: number) => {
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
-    if (nextPageNumber === currentPageNumber || isLoading) {
+    if (nextPageNumber === currentPageNumber || isLoading || isDeleting) {
       return
     }
 
@@ -230,7 +231,7 @@ function MainPage() {
               </S.OutlineButton>
               <S.PrimaryButton
                 type="button"
-                disabled={isLoading}
+                disabled={isLoading || isDeleting}
                 onClick={handleRefresh}
               >
                 <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
@@ -362,7 +363,7 @@ function MainPage() {
             <S.Pagination aria-label="사진 목록 페이지네이션">
               <S.PaginationButton
                 type="button"
-                disabled={isLoading || currentPageNumber === 1}
+                disabled={isLoading || isDeleting || currentPageNumber === 1}
                 onClick={() => handlePageChange(currentPageNumber - 1)}
               >
                 <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
@@ -379,6 +380,7 @@ function MainPage() {
                       type="button"
                       $active={currentPageNumber === pageNumber}
                       aria-current={currentPageNumber === pageNumber ? 'page' : undefined}
+                      disabled={isLoading || isDeleting}
                       onClick={() => handlePageChange(pageNumber)}
                     >
                       {pageNumber}
@@ -389,7 +391,7 @@ function MainPage() {
 
               <S.PaginationButton
                 type="button"
-                disabled={isLoading || !hasNext || currentPageNumber === totalPages}
+                disabled={isLoading || isDeleting || !hasNext || currentPageNumber === totalPages}
                 onClick={() => handlePageChange(currentPageNumber + 1)}
               >
                 <span>다음</span>

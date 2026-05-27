@@ -725,9 +725,14 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
     background 160ms ease,
     color 160ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${({ $active }) =>
       $active ? neutral.primary : neutral.surfaceContainer};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.72;
   }
 `
 

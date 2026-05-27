@@ -6,6 +6,7 @@ import type { AdminPicture, AdminPictureSortParam } from '../../types/adminPictu
 import * as S from './MainPage.styles'
 
 const ADMIN_PICTURE_PAGE_SIZE = 20
+const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
 const DEFAULT_ADMIN_PICTURE_SORT_PARAM: AdminPictureSortParam = 'LATEST'
 
 function getPictureThumbnailUrl(picture: AdminPicture) {
@@ -50,6 +51,25 @@ function getPictureName(picture: AdminPicture) {
   )
 }
 
+function getVisiblePageNumbers(currentPage: number, totalPages: number) {
+  if (totalPages < 1) {
+    return []
+  }
+
+  const visiblePageCount = Math.min(MAX_VISIBLE_PAGE_NUMBER_COUNT, totalPages)
+  const sidePageCount = Math.floor(visiblePageCount / 2)
+  let startPage = Math.max(1, currentPage - sidePageCount)
+  let endPage = Math.min(totalPages, startPage + visiblePageCount - 1)
+
+  startPage = Math.max(1, endPage - visiblePageCount + 1)
+  endPage = Math.min(totalPages, startPage + visiblePageCount - 1)
+
+  return Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index
+  )
+}
+
 function MainPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
@@ -77,6 +97,7 @@ function MainPage() {
   const currentPageNumber = page
   const showPagination = totalPages > 1
   const isDeleting = deletingPictureId !== null
+  const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
   const handlePageChange = (nextPage: number) => {
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
@@ -371,9 +392,7 @@ function MainPage() {
               </S.PaginationButton>
 
               <S.PageNumberList>
-                {Array.from({ length: totalPages }, (_, index) => {
-                  const pageNumber = index + 1
-
+                {visiblePageNumbers.map((pageNumber) => {
                   return (
                     <S.PageNumberButton
                       key={pageNumber}

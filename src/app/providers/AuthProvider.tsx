@@ -1,6 +1,13 @@
-import { useCallback, useMemo, useState, type PropsWithChildren } from 'react'
-import { AUTH_STORAGE_KEYS } from '../../constants/auth'
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 import type { LoginResponse } from '../../types/auth.types'
+import {
+  clearStoredAuth,
+  createAuthStateFromLogin,
+  getStoredAuthState,
+  saveLoginAuth,
+  subscribeAuthStorageChange,
+  updateStoredAuthUser,
+} from '../../utils/authStorage'
 import {
   AuthContext,
   EMPTY_AUTH_STATE,
@@ -10,61 +17,26 @@ import {
 } from './AuthContext'
 
 function getInitialAuthState(): AuthState {
-  const accessToken = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken) ?? ''
-  const refreshToken = localStorage.getItem(AUTH_STORAGE_KEYS.refreshToken) ?? ''
-  const username = localStorage.getItem(AUTH_STORAGE_KEYS.username) ?? ''
-  const name = localStorage.getItem(AUTH_STORAGE_KEYS.name) ?? ''
-  const userIdFromStorage = localStorage.getItem(AUTH_STORAGE_KEYS.userId)
-  const userId = userIdFromStorage ? Number(userIdFromStorage) : NaN
-
-  if (!accessToken) {
-    return EMPTY_AUTH_STATE
-  }
-
-  return {
-    accessToken,
-    refreshToken,
-    user: {
-      id: Number.isNaN(userId) ? null : userId,
-      username,
-      name,
-    },
-  }
-}
-
-function saveAuthToStorage(data: LoginResponse) {
-  localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
-  localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, data.refreshToken)
-  localStorage.setItem(AUTH_STORAGE_KEYS.userId, String(data.id))
-  localStorage.setItem(AUTH_STORAGE_KEYS.username, data.username)
-  localStorage.setItem(AUTH_STORAGE_KEYS.name, data.name)
-}
-
-function clearAuthStorage() {
-  Object.values(AUTH_STORAGE_KEYS).forEach((key) => {
-    localStorage.removeItem(key)
-  })
+  return getStoredAuthState() ?? EMPTY_AUTH_STATE
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [authState, setAuthState] = useState<AuthState>(() => getInitialAuthState())
 
+  useEffect(() => {
+    return subscribeAuthStorageChange(() => {
+      setAuthState(getInitialAuthState())
+    })
+  }, [])
+
   const clearAuth = useCallback(() => {
-    clearAuthStorage()
+    clearStoredAuth()
     setAuthState(EMPTY_AUTH_STATE)
   }, [])
 
   const login = useCallback((data: LoginResponse) => {
-    saveAuthToStorage(data)
-    setAuthState({
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      user: {
-        id: data.id,
-        username: data.username,
-        name: data.name,
-      },
-    })
+    saveLoginAuth(data)
+    setAuthState(createAuthStateFromLogin(data))
   }, [])
 
   const updateUser = useCallback((user: Partial<AuthUser>) => {
@@ -78,17 +50,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         ...user,
       }
 
-      if (typeof user.id === 'number') {
-        localStorage.setItem(AUTH_STORAGE_KEYS.userId, String(user.id))
-      }
-
-      if (typeof user.username === 'string') {
-        localStorage.setItem(AUTH_STORAGE_KEYS.username, user.username)
-      }
-
-      if (typeof user.name === 'string') {
-        localStorage.setItem(AUTH_STORAGE_KEYS.name, user.name)
-      }
+      updateStoredAuthUser(user)
 
       return {
         ...prevState,

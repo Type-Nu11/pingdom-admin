@@ -19,7 +19,11 @@ export interface RefreshTokenRequest {
 export interface LoginResponse {
   id: number
   username: string
-  name: string
+  email: string
+  birthYear: number
+  profileImageUrl: string
+  language: string
+  country: string
   message: string
   accessToken: string
   refreshToken: string

@@ -186,6 +186,10 @@ function MainPage() {
             <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
             <span>대시보드</span>
           </S.MenuButton>
+          <S.MenuButton type="button" onClick={() => navigate('/places')}>
+            <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
+            <span>장소 조회</span>
+          </S.MenuButton>
           <S.MenuButton type="button" $active>
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
             <span>콘텐츠 목록</span>

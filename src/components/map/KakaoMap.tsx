@@ -32,6 +32,10 @@ const DEFAULT_CENTER = {
 }
 let kakaoMapScriptPromise: Promise<void> | null = null
 
+interface KakaoMapProps {
+  className?: string
+}
+
 function loadKakaoMapScript(appKey: string) {
   if (kakaoMapScriptPromise) {
     return kakaoMapScriptPromise
@@ -84,7 +88,7 @@ function loadKakaoMapScript(appKey: string) {
   return kakaoMapScriptPromise
 }
 
-function KakaoMap() {
+function KakaoMap({ className }: KakaoMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDelayed, setIsDelayed] = useState(false)
@@ -161,7 +165,7 @@ function KakaoMap() {
   }, [])
 
   return (
-    <MapFrame>
+    <MapFrame className={className}>
       <MapCanvas ref={mapContainerRef} />
       {isLoading ? (
         <MapMessage>
@@ -177,8 +181,9 @@ function KakaoMap() {
 
 const MapFrame = styled.div`
   position: relative;
-  width: 500px;
-  height: 500px;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
   max-width: 100%;
 `
 

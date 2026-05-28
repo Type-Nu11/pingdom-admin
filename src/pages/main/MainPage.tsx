@@ -228,9 +228,6 @@ function MainPage() {
             <S.IconButton type="button" aria-label="도움말">
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
             </S.IconButton>
-            <S.ProfileLink to="/profile" aria-label="프로필 페이지로 이동">
-              <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
-            </S.ProfileLink>
           </S.TopActions>
         </S.TopBar>
 

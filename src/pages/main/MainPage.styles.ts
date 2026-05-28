@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 
 const neutral = {
@@ -309,19 +308,6 @@ export const IconButton = styled.button`
   &:hover {
     color: ${neutral.primary};
   }
-`
-
-export const ProfileLink = styled(Link)`
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid ${neutral.border};
-  border-radius: 999px;
-  background: ${neutral.surface};
-  color: ${neutral.text};
 `
 
 export const PageContent = styled.main`

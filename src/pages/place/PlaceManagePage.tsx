@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { KakaoMapHandle } from '../../components/map/KakaoMap'
 import { useAuth } from '../../hooks/useAuth'
 import * as S from './PlaceManagePage.styles'
 
@@ -27,6 +28,7 @@ const adminPlaces: AdminPlace[] = []
 function PlaceManagePage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const mapRef = useRef<KakaoMapHandle | null>(null)
   const [keyword, setKeyword] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<'all' | PlaceStatus>('all')
   const [selectedSort, setSelectedSort] = useState<PlaceSort>('latest')
@@ -228,7 +230,7 @@ function PlaceManagePage() {
           </S.PlacePanel>
 
           <S.MapPanel>
-            <S.AdminMap />
+            <S.AdminMap ref={mapRef} />
             <S.MapMarkerLayer>
               {filteredPlaces.map((place) => {
                 const isSelected = selectedPlace?.id === place.id
@@ -254,10 +256,18 @@ function PlaceManagePage() {
               })}
             </S.MapMarkerLayer>
             <S.MapControlGroup>
-              <S.MapControlButton type="button" aria-label="지도 확대">
+              <S.MapControlButton
+                type="button"
+                aria-label="지도 확대"
+                onClick={() => mapRef.current?.zoomIn()}
+              >
                 <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
               </S.MapControlButton>
-              <S.MapControlButton type="button" aria-label="지도 축소">
+              <S.MapControlButton
+                type="button"
+                aria-label="지도 축소"
+                onClick={() => mapRef.current?.zoomOut()}
+              >
                 <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
               </S.MapControlButton>
               <S.MapControlButton type="button" aria-label="선택 장소로 이동">

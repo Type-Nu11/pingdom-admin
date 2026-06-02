@@ -11,6 +11,15 @@ const ADMIN_PLACE_USE_MOCK_DATA = true
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
 
 function formatCoordinate(place: AdminPlaceItem) {
+  if (
+    typeof place.latitude !== 'number' ||
+    typeof place.longitude !== 'number' ||
+    !Number.isFinite(place.latitude) ||
+    !Number.isFinite(place.longitude)
+  ) {
+    return '좌표 정보 없음'
+  }
+
   return `${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`
 }
 

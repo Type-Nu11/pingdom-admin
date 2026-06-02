@@ -54,12 +54,14 @@ interface UseAdminPicturesOptions {
   initialPage?: number
   limit?: number
   sortParam?: AdminPictureSortParam
+  enabled?: boolean
 }
 
 export function useAdminPictures({
   initialPage = DEFAULT_ADMIN_PICTURE_PAGE,
   limit = DEFAULT_ADMIN_PICTURE_LIMIT,
   sortParam = DEFAULT_ADMIN_PICTURE_SORT_PARAM,
+  enabled = true,
 }: UseAdminPicturesOptions = {}) {
   const { clearAuth } = useAuth()
   const [pictures, setPictures] = useState<AdminPicture[]>([])
@@ -82,6 +84,10 @@ export function useAdminPictures({
   })
 
   const fetchAdminPictures = useCallback(async (request: AdminPictureListRequest = {}) => {
+    if (!enabled) {
+      return false
+    }
+
     if (isFetchingRef.current) {
       return false
     }
@@ -140,7 +146,7 @@ export function useAdminPictures({
 
       isFetchingRef.current = false
     }
-  }, [clearAuth])
+  }, [clearAuth, enabled])
 
   const deletePicture = useCallback(
     async (pictureId: number) => {
@@ -211,8 +217,10 @@ export function useAdminPictures({
   )
 
   useEffect(() => {
-    void fetchAdminPictures()
-  }, [fetchAdminPictures])
+    if (enabled) {
+      void fetchAdminPictures()
+    }
+  }, [enabled, fetchAdminPictures])
 
   return {
     pictures,

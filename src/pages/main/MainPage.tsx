@@ -8,6 +8,7 @@ import * as S from './MainPage.styles'
 const ADMIN_PICTURE_PAGE_SIZE = 20
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
 const DEFAULT_ADMIN_PICTURE_SORT_PARAM: AdminPictureSortParam = 'LATEST'
+const ADMIN_PICTURE_FEATURE_ENABLED = false
 
 function getPictureThumbnailUrl(picture: AdminPicture) {
   return picture.thumbnailUrl
@@ -92,13 +93,21 @@ function MainPage() {
     deletingPictureId,
     fetchAdminPictures,
     deletePicture,
-  } = useAdminPictures({ limit: ADMIN_PICTURE_PAGE_SIZE })
+  } = useAdminPictures({
+    limit: ADMIN_PICTURE_PAGE_SIZE,
+    enabled: ADMIN_PICTURE_FEATURE_ENABLED,
+  })
   const selectedPictureUrl = selectedPicture ? getPictureImageUrl(selectedPicture) : ''
   const currentPageNumber = page
   const showPagination = totalPages > 1
   const isDeleting = deletingPictureId !== null
+  const isPictureFeatureDisabled = !ADMIN_PICTURE_FEATURE_ENABLED
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
   const handlePageChange = (nextPage: number) => {
+    if (isPictureFeatureDisabled) {
+      return
+    }
+
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
     if (nextPageNumber === currentPageNumber || isLoading || isDeleting) {
@@ -118,6 +127,10 @@ function MainPage() {
   }
 
   const handleRefresh = () => {
+    if (isPictureFeatureDisabled) {
+      return
+    }
+
     void fetchAdminPictures({
       page: currentPageNumber,
       sortParam: selectedSortParam,
@@ -125,6 +138,10 @@ function MainPage() {
   }
 
   const handleClearFilters = () => {
+    if (isPictureFeatureDisabled) {
+      return
+    }
+
     if (selectedSortParam === DEFAULT_ADMIN_PICTURE_SORT_PARAM) {
       void fetchAdminPictures({
         page: 1,
@@ -240,7 +257,9 @@ function MainPage() {
             <div>
               <S.PageTitle>업로드 미디어</S.PageTitle>
               <S.PageDescription>
-                {totalCount > 0
+                {isPictureFeatureDisabled
+                  ? '사진 목록 API 연동은 준비 중입니다.'
+                  : totalCount > 0
                   ? `업로드된 사진 ${totalCount}개를 관리합니다.`
                   : '사용자가 업로드한 지도 사진을 관리합니다.'}
               </S.PageDescription>
@@ -253,11 +272,17 @@ function MainPage() {
               </S.OutlineButton>
               <S.PrimaryButton
                 type="button"
-                disabled={isLoading || isDeleting}
+                disabled={isPictureFeatureDisabled || isLoading || isDeleting}
                 onClick={handleRefresh}
               >
                 <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                <span>{isLoading ? '불러오는 중' : '새로고침'}</span>
+                <span>
+                  {isPictureFeatureDisabled
+                    ? '준비 중'
+                    : isLoading
+                      ? '불러오는 중'
+                      : '새로고침'}
+                </span>
               </S.PrimaryButton>
             </S.HeaderActions>
           </S.PageHeader>
@@ -270,6 +295,7 @@ function MainPage() {
             <S.Select
               aria-label="사진 목록 정렬"
               value={selectedSortParam}
+              disabled={isPictureFeatureDisabled}
               onChange={(event) =>
                 setSelectedSortParam(event.target.value as AdminPictureSortParam)
               }
@@ -277,24 +303,38 @@ function MainPage() {
               <option value="LATEST">최신순</option>
               <option value="OLDEST">오래된순</option>
             </S.Select>
-            <S.ClearButton type="button" onClick={handleClearFilters}>
+            <S.ClearButton
+              type="button"
+              disabled={isPictureFeatureDisabled}
+              onClick={handleClearFilters}
+            >
               필터 초기화
             </S.ClearButton>
           </S.FilterBar>
 
-          {isLoading ? <S.FeedbackText>사진 목록을 불러오는 중입니다.</S.FeedbackText> : null}
+          {isPictureFeatureDisabled ? (
+            <S.FeedbackText>
+              사진 목록 조회는 현재 비활성화되어 있습니다. 장소 조회 기능부터 확인해주세요.
+            </S.FeedbackText>
+          ) : null}
 
-          {isError ? <S.FeedbackText>{errorMessage}</S.FeedbackText> : null}
+          {!isPictureFeatureDisabled && isLoading ? (
+            <S.FeedbackText>사진 목록을 불러오는 중입니다.</S.FeedbackText>
+          ) : null}
 
-          {actionErrorMessage ? (
+          {!isPictureFeatureDisabled && isError ? (
+            <S.FeedbackText>{errorMessage}</S.FeedbackText>
+          ) : null}
+
+          {!isPictureFeatureDisabled && actionErrorMessage ? (
             <S.FeedbackText>{actionErrorMessage}</S.FeedbackText>
           ) : null}
 
-          {!isLoading && !isError && pictures.length === 0 ? (
+          {!isPictureFeatureDisabled && !isLoading && !isError && pictures.length === 0 ? (
             <S.FeedbackText>등록된 사진이 없습니다.</S.FeedbackText>
           ) : null}
 
-          {!isError && pictures.length > 0 ? (
+          {!isPictureFeatureDisabled && !isError && pictures.length > 0 ? (
             <S.MediaGrid>
               {pictures.map((picture) => {
                 const pictureUrl = getPictureThumbnailUrl(picture)
@@ -381,7 +421,7 @@ function MainPage() {
             </S.MediaGrid>
           ) : null}
 
-          {!isError && showPagination ? (
+          {!isPictureFeatureDisabled && !isError && showPagination ? (
             <S.Pagination aria-label="사진 목록 페이지네이션">
               <S.PaginationButton
                 type="button"

@@ -274,7 +274,7 @@ function PlaceManagePage() {
                 <S.PageButton
                   type="button"
                   aria-label="다음 페이지로 이동"
-                  disabled={isLoading || (!hasNext && page >= safeTotalPages)}
+                  disabled={isLoading || !hasNext}
                   onClick={() => handlePageChange(page + 1)}
                 >
                   <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>

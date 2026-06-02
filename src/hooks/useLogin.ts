@@ -15,6 +15,7 @@ const LOGIN_CATEGORY_MESSAGES = {
 }
 const LOGIN_CODE_MESSAGES = {
   INVALID_CREDENTIALS: '아이디 또는 비밀번호가 올바르지 않습니다.',
+  ADMIN_ACCESS_REQUIRED: '관리자 권한이 있는 계정으로 로그인해주세요.',
 }
 
 export function useLogin() {

@@ -21,7 +21,7 @@ export interface LoginResponse {
   username: string
   email: string
   birthYear: number
-  profileImageUrl: string
+  profileImageUrl: string | null
   language: string
   country: string
   message: string
@@ -39,6 +39,8 @@ export interface ValidationErrorResponse {
   errors: Record<string, string>
 }
 
-export type LoginErrorResponse = AuthErrorResponse<'INVALID_CREDENTIALS'>
+export type LoginErrorResponse = AuthErrorResponse<
+  'INVALID_CREDENTIALS' | 'ADMIN_ACCESS_REQUIRED'
+>
 
 export type RefreshTokenErrorResponse = AuthErrorResponse<'INVALID_TOKEN' | 'USER_NOT_FOUND'>

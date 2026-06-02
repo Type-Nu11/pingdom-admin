@@ -1,65 +1,89 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { KakaoMapHandle } from '../../components/map/KakaoMap'
+import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
+import type { AdminPlaceItem } from '../../types/adminPlace.types'
 import * as S from './PlaceManagePage.styles'
 
-type PlaceStatus = 'normal' | 'reported'
-type PlaceSort = 'latest' | 'oldest'
+const ADMIN_PLACE_PAGE_SIZE = 10
+const ADMIN_PLACE_USE_MOCK_DATA = true
+const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
 
-interface AdminPlace {
-  id: string
-  name: string
-  coordinate: string
-  author: string
-  createdAt: string
-  reportCount: number
-  status: PlaceStatus
-  memo: string
-  photoCount: number
-  markerPosition: {
-    top: string
-    left: string
-  }
+function formatCoordinate(place: AdminPlaceItem) {
+  return `${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`
 }
 
-const adminPlaces: AdminPlace[] = []
+function getPlaceOwner(place: AdminPlaceItem) {
+  return `사용자 ID: ${place.userId}`
+}
+
+function getVisiblePageNumbers(currentPage: number, totalPages: number) {
+  if (totalPages < 1) {
+    return []
+  }
+
+  const visiblePageCount = Math.min(MAX_VISIBLE_PAGE_NUMBER_COUNT, totalPages)
+  const sidePageCount = Math.floor(visiblePageCount / 2)
+  let startPage = Math.max(1, currentPage - sidePageCount)
+  let endPage = Math.min(totalPages, startPage + visiblePageCount - 1)
+
+  startPage = Math.max(1, endPage - visiblePageCount + 1)
+  endPage = Math.min(totalPages, startPage + visiblePageCount - 1)
+
+  return Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index
+  )
+}
 
 function PlaceManagePage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
-  const [keyword, setKeyword] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState<'all' | PlaceStatus>('all')
-  const [selectedSort, setSelectedSort] = useState<PlaceSort>('latest')
-  const [selectedPlace, setSelectedPlace] = useState<AdminPlace | null>(null)
-  const [modalPlace, setModalPlace] = useState<AdminPlace | null>(null)
-  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false)
+  const placeListRef = useRef<HTMLDivElement | null>(null)
+  const [selectedPlace, setSelectedPlace] = useState<AdminPlaceItem | null>(null)
+  const {
+    places,
+    page,
+    totalCount,
+    totalPages,
+    hasNext,
+    isLoading,
+    isError,
+    errorMessage,
+    fetchAdminPlaces,
+  } = useAdminPlaces({
+    limit: ADMIN_PLACE_PAGE_SIZE,
+    useMockData: ADMIN_PLACE_USE_MOCK_DATA,
+  })
+  const safeTotalPages = Math.max(totalPages, 1)
+  const showPagination = safeTotalPages > 1
+  const visiblePageNumbers = getVisiblePageNumbers(page, safeTotalPages)
+  const showEdgePageButtons = safeTotalPages > MAX_VISIBLE_PAGE_NUMBER_COUNT
 
-  const filteredPlaces = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase()
+  const handleRefresh = () => {
+    void fetchAdminPlaces({ page })
+  }
 
-    return adminPlaces.filter((place) => {
-      const matchesKeyword =
-        !normalizedKeyword ||
-        place.name.toLowerCase().includes(normalizedKeyword) ||
-        place.id.toLowerCase().includes(normalizedKeyword)
-      const matchesStatus =
-        selectedStatus === 'all' || place.status === selectedStatus
+  const handlePageChange = (nextPage: number) => {
+    const nextPageNumber = Math.min(Math.max(nextPage, 1), safeTotalPages)
 
-      return matchesKeyword && matchesStatus
-    }).sort((a, b) => {
-      if (selectedSort === 'latest') {
-        return b.createdAt.localeCompare(a.createdAt)
+    if (nextPageNumber === page || isLoading) {
+      return
+    }
+
+    void fetchAdminPlaces({ page: nextPageNumber }).then((isSuccess) => {
+      if (isSuccess) {
+        setSelectedPlace(null)
+        window.requestAnimationFrame(() => {
+          placeListRef.current?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          })
+        })
       }
-
-      return a.createdAt.localeCompare(b.createdAt)
     })
-  }, [keyword, selectedSort, selectedStatus])
-
-  const closeModal = () => {
-    setModalPlace(null)
-    setIsDeleteConfirming(false)
   }
 
   return (
@@ -134,51 +158,37 @@ function PlaceManagePage() {
         <S.SplitContent>
           <S.PlacePanel>
             <S.PanelControls>
-              <S.SearchField>
-                <S.SearchIcon aria-hidden="true">search</S.SearchIcon>
-                <S.SearchInput
-                  value={keyword}
-                  onChange={(event) => setKeyword(event.target.value)}
-                  placeholder="장소명 또는 ID 검색"
-                />
-              </S.SearchField>
-
-              <S.FilterRow>
-                <S.Select
-                  aria-label="장소 정렬"
-                  value={selectedSort}
-                  onChange={(event) => setSelectedSort(event.target.value as PlaceSort)}
-                >
-                  <option value="latest">최신순</option>
-                  <option value="oldest">오래된순</option>
-                </S.Select>
-                <S.Select
-                  aria-label="장소 상태 필터"
-                  value={selectedStatus}
-                  onChange={(event) =>
-                    setSelectedStatus(event.target.value as 'all' | PlaceStatus)
-                  }
-                >
-                  <option value="all">전체 상태</option>
-                  <option value="normal">일반</option>
-                </S.Select>
+              <S.PanelSummary>
+                <S.PanelCount>
+                  전체 장소 <strong>{totalCount}</strong>개
+                </S.PanelCount>
                 <S.IconFilterButton
                   type="button"
                   aria-label="장소 목록 새로고침"
-                  onClick={() => {
-                    setKeyword('')
-                    setSelectedStatus('all')
-                    setSelectedSort('latest')
-                  }}
+                  disabled={isLoading}
+                  onClick={handleRefresh}
                 >
                   <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
                 </S.IconFilterButton>
-              </S.FilterRow>
+              </S.PanelSummary>
             </S.PanelControls>
 
-            <S.PlaceList aria-label="장소 목록">
-              {filteredPlaces.length > 0 ? (
-                filteredPlaces.map((place) => {
+            <S.PlaceList ref={placeListRef} aria-label="장소 목록">
+              {isLoading && places.length === 0 ? (
+                <S.EmptyState>장소 목록을 불러오는 중입니다.</S.EmptyState>
+              ) : isError ? (
+                <S.EmptyState>
+                  {errorMessage}
+                  <S.RetryButton
+                    type="button"
+                    disabled={isLoading}
+                    onClick={handleRefresh}
+                  >
+                    다시 시도
+                  </S.RetryButton>
+                </S.EmptyState>
+              ) : places.length > 0 ? (
+                places.map((place) => {
                   const isSelected = selectedPlace?.id === place.id
 
                   return (
@@ -194,67 +204,88 @@ function PlaceManagePage() {
                       <S.PlaceInfo>
                         <S.PlaceTitleRow>
                           <S.PlaceName>{place.name}</S.PlaceName>
-                          {place.reportCount > 0 ? (
-                            <S.ReportBadge>{place.reportCount}건</S.ReportBadge>
-                          ) : null}
                         </S.PlaceTitleRow>
-                        <S.PlaceCaption>{place.id}</S.PlaceCaption>
+                        <S.PlaceCaption>장소 ID: {place.id}</S.PlaceCaption>
+                        <S.PlaceMeta>
+                          <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
+                          <span>{place.address || '주소 정보 없음'}</span>
+                        </S.PlaceMeta>
                         <S.PlaceMeta>
                           <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-                          <span>{place.coordinate}</span>
+                          <span>{formatCoordinate(place)}</span>
                         </S.PlaceMeta>
                         <S.PlaceFooter>
-                          <span>{place.author}</span>
-                          <span>{place.createdAt}</span>
+                          <span>{getPlaceOwner(place)}</span>
                         </S.PlaceFooter>
                       </S.PlaceInfo>
                     </S.PlaceItem>
                   )
                 })
               ) : (
-                <S.EmptyState>조건에 맞는 장소가 없습니다.</S.EmptyState>
+                <S.EmptyState>등록된 장소가 없습니다.</S.EmptyState>
               )}
             </S.PlaceList>
 
-            {filteredPlaces.length > 0 ? (
+            {showPagination ? (
               <S.PanelPagination>
-                <S.PageButton type="button" disabled>
-                  이전
+                {showEdgePageButtons ? (
+                  <S.PageButton
+                    type="button"
+                    aria-label="첫 페이지로 이동"
+                    disabled={isLoading || page <= 1}
+                    onClick={() => handlePageChange(1)}
+                  >
+                    <S.MaterialIcon aria-hidden="true">first_page</S.MaterialIcon>
+                  </S.PageButton>
+                ) : null}
+                <S.PageButton
+                  type="button"
+                  aria-label="이전 페이지로 이동"
+                  disabled={isLoading || page <= 1}
+                  onClick={() => handlePageChange(page - 1)}
+                >
+                  <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
                 </S.PageButton>
-                <S.PageIndicator>1</S.PageIndicator>
-                <S.PageButton type="button" disabled>
-                  다음
+                <S.PageNumberList>
+                  {visiblePageNumbers.map((pageNumber) => {
+                    return (
+                      <S.PageNumberButton
+                        key={pageNumber}
+                        type="button"
+                        $active={page === pageNumber}
+                        aria-current={page === pageNumber ? 'page' : undefined}
+                        disabled={isLoading}
+                        onClick={() => handlePageChange(pageNumber)}
+                      >
+                        {pageNumber}
+                      </S.PageNumberButton>
+                    )
+                  })}
+                </S.PageNumberList>
+                <S.PageButton
+                  type="button"
+                  aria-label="다음 페이지로 이동"
+                  disabled={isLoading || (!hasNext && page >= safeTotalPages)}
+                  onClick={() => handlePageChange(page + 1)}
+                >
+                  <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
                 </S.PageButton>
+                {showEdgePageButtons ? (
+                  <S.PageButton
+                    type="button"
+                    aria-label="마지막 페이지로 이동"
+                    disabled={isLoading || page >= safeTotalPages}
+                    onClick={() => handlePageChange(safeTotalPages)}
+                  >
+                    <S.MaterialIcon aria-hidden="true">last_page</S.MaterialIcon>
+                  </S.PageButton>
+                ) : null}
               </S.PanelPagination>
             ) : null}
           </S.PlacePanel>
 
           <S.MapPanel>
             <S.AdminMap ref={mapRef} />
-            <S.MapMarkerLayer>
-              {filteredPlaces.map((place) => {
-                const isSelected = selectedPlace?.id === place.id
-
-                return (
-                  <S.MapMarker
-                    key={place.id}
-                    type="button"
-                    $active={isSelected}
-                    style={{
-                      top: place.markerPosition.top,
-                      left: place.markerPosition.left,
-                    }}
-                    onClick={() => {
-                      setSelectedPlace(place)
-                      setModalPlace(place)
-                    }}
-                  >
-                    <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-                    <S.MarkerTooltip>{place.name}</S.MarkerTooltip>
-                  </S.MapMarker>
-                )
-              })}
-            </S.MapMarkerLayer>
             <S.MapControlGroup>
               <S.MapControlButton
                 type="button"
@@ -270,127 +301,18 @@ function PlaceManagePage() {
               >
                 <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
               </S.MapControlButton>
-              <S.MapControlButton type="button" aria-label="선택 장소로 이동">
-                <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
-              </S.MapControlButton>
             </S.MapControlGroup>
             <S.MapInfo>
               <S.MapInfoDot />
               <span>
                 {selectedPlace
                   ? `선택된 장소: ${selectedPlace.name}`
-                  : '선택된 장소가 없습니다.'}
+                  : '장소 목록 조회가 연결되었습니다.'}
               </span>
             </S.MapInfo>
           </S.MapPanel>
         </S.SplitContent>
       </S.MainArea>
-
-      {modalPlace ? (
-        <S.ModalOverlay
-          role="presentation"
-          onMouseDown={closeModal}
-        >
-          <S.PlaceModal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="place-modal-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <S.ModalHeader>
-              <S.ModalTitle id="place-modal-title">{modalPlace.name}</S.ModalTitle>
-              <S.ModalCloseButton
-                type="button"
-                aria-label="장소 상세 닫기"
-                onClick={closeModal}
-              >
-                <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
-              </S.ModalCloseButton>
-            </S.ModalHeader>
-
-            <S.ModalBody>
-              <S.DetailGrid>
-                <S.DetailItem>
-                  <S.DetailLabel>장소 ID</S.DetailLabel>
-                  <S.DetailValue>{modalPlace.id}</S.DetailValue>
-                </S.DetailItem>
-                <S.DetailItem>
-                  <S.DetailLabel>좌표</S.DetailLabel>
-                  <S.DetailValue>{modalPlace.coordinate}</S.DetailValue>
-                </S.DetailItem>
-                <S.DetailItem>
-                  <S.DetailLabel>작성자</S.DetailLabel>
-                  <S.DetailValue>{modalPlace.author}</S.DetailValue>
-                </S.DetailItem>
-                <S.DetailItem>
-                  <S.DetailLabel>등록일</S.DetailLabel>
-                  <S.DetailValue>{modalPlace.createdAt}</S.DetailValue>
-                </S.DetailItem>
-              </S.DetailGrid>
-
-              {modalPlace.reportCount > 0 ? (
-                <S.ReportNotice>
-                  <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
-                  <div>
-                    <S.ReportTitle>{modalPlace.reportCount}건의 신고가 있습니다.</S.ReportTitle>
-                    <S.ReportDescription>{modalPlace.memo}</S.ReportDescription>
-                  </div>
-                </S.ReportNotice>
-              ) : null}
-
-              <S.PhotoLink type="button">
-                <S.MaterialIcon aria-hidden="true">photo_library</S.MaterialIcon>
-                <span>연결된 사진 {modalPlace.photoCount}개</span>
-              </S.PhotoLink>
-
-              <S.MemoBox>
-                <S.DetailLabel>관리 메모</S.DetailLabel>
-                <S.MemoTextarea
-                  placeholder="관리자 확인 내용을 입력하세요."
-                  defaultValue={modalPlace.memo}
-                />
-              </S.MemoBox>
-
-              {isDeleteConfirming ? (
-                <S.DeleteWarning>
-                  <S.MaterialIcon aria-hidden="true">warning</S.MaterialIcon>
-                  <span>
-                    정말 이 장소를 삭제할까요? 이 작업은 되돌릴 수 없습니다.
-                  </span>
-                </S.DeleteWarning>
-              ) : null}
-            </S.ModalBody>
-
-            <S.ModalFooter>
-              {isDeleteConfirming ? (
-                <>
-                  <S.SecondaryButton
-                    type="button"
-                    onClick={() => setIsDeleteConfirming(false)}
-                  >
-                    취소
-                  </S.SecondaryButton>
-                  <S.DangerButton type="button" onClick={closeModal}>
-                    삭제 확정
-                  </S.DangerButton>
-                </>
-              ) : (
-                <>
-                  <S.SecondaryButton type="button" onClick={closeModal}>
-                    닫기
-                  </S.SecondaryButton>
-                  <S.DangerOutlineButton
-                    type="button"
-                    onClick={() => setIsDeleteConfirming(true)}
-                  >
-                    장소 삭제
-                  </S.DangerOutlineButton>
-                </>
-              )}
-            </S.ModalFooter>
-          </S.PlaceModal>
-        </S.ModalOverlay>
-      ) : null}
     </S.AppShell>
   )
 }

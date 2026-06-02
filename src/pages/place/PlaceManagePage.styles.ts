@@ -257,6 +257,23 @@ export const PanelControls = styled.div`
   border-bottom: 1px solid ${neutral.border};
 `
 
+export const PanelSummary = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`
+
+export const PanelCount = styled.p`
+  margin: 0;
+  color: ${neutral.muted};
+  font-size: 14px;
+
+  strong {
+    color: ${neutral.primary};
+  }
+`
+
 export const SearchField = styled.label`
   position: relative;
   display: block;
@@ -324,6 +341,11 @@ export const IconFilterButton = styled.button`
 
   &:hover {
     background: ${neutral.surfaceHigh};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
   }
 `
 
@@ -437,7 +459,11 @@ export const PlaceFooter = styled.div`
   font-size: 12px;
 `
 
-export const EmptyState = styled.p`
+export const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
   margin: 16px;
   padding: 16px;
   border: 1px solid ${neutral.border};
@@ -446,39 +472,117 @@ export const EmptyState = styled.p`
   color: ${neutral.muted};
 `
 
-export const PanelPagination = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 16px;
-  border-top: 1px solid ${neutral.border};
-`
-
-export const PageButton = styled.button`
+export const RetryButton = styled.button`
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
-  color: ${neutral.muted};
+  color: ${neutral.text};
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primary};
+    background: ${neutral.surfaceContainer};
+  }
 
   &:disabled {
+    cursor: not-allowed;
     opacity: 0.45;
   }
 `
 
-export const PageIndicator = styled.span`
-  width: 36px;
-  height: 36px;
+export const PanelPagination = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid ${neutral.border};
+  background: ${neutral.surface};
+`
+
+export const PageButton = styled.button`
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
   border-radius: 8px;
-  background: ${neutral.primary};
-  color: ${neutral.primaryText};
-  font-size: 14px;
-  font-weight: 700;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.border};
+    background: ${neutral.surfaceContainer};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.32;
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const PageNumberList = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surfaceLow};
+`
+
+export const PageNumberButton = styled.button<{ $active?: boolean }>`
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: ${({ $active }) => ($active ? neutral.primary : 'transparent')};
+  color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+
+  &:hover:not(:disabled) {
+    background: ${({ $active }) =>
+      $active ? neutral.primary : neutral.surface};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.72;
+  }
 `
 
 export const MapPanel = styled.section`

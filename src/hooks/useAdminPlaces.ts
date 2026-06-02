@@ -273,20 +273,14 @@ export function useAdminPlaces({
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const latestRequestIdRef = useRef(0)
-  const isFetchingRef = useRef(false)
   const latestListRequestRef = useRef<Required<AdminPlaceListRequest>>({
     page: initialPage,
     limit,
   })
 
   const fetchAdminPlaces = useCallback(async (request: AdminPlaceListRequest = {}) => {
-    if (isFetchingRef.current) {
-      return false
-    }
-
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
-    isFetchingRef.current = true
 
     setIsError(false)
     setErrorMessage('')
@@ -334,8 +328,6 @@ export function useAdminPlaces({
       if (requestId === latestRequestIdRef.current) {
         setIsLoading(false)
       }
-
-      isFetchingRef.current = false
     }
   }, [clearAuth, useMockData])
 

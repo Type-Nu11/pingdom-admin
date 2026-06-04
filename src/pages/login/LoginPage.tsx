@@ -6,8 +6,9 @@ import * as S from './LoginPage.styles'
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAuthReady } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const {
     username,
     setUsername,
@@ -18,12 +19,13 @@ function LoginPage() {
     errorMessage,
     handleLogin,
   } = useLogin()
+  const isSubmitting = isLoading || isRedirecting
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthReady && isAuthenticated) {
       navigate('/main', { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthReady, isAuthenticated, navigate])
 
   return (
     <S.Page>
@@ -41,7 +43,11 @@ function LoginPage() {
         <S.Form
           onSubmit={async (event) => {
             event.preventDefault()
-            await handleLogin()
+            const isSuccess = await handleLogin()
+
+            if (isSuccess) {
+              setIsRedirecting(true)
+            }
           }}
         >
           <S.Field>
@@ -90,8 +96,14 @@ function LoginPage() {
             <S.ErrorMessage role="alert">{errorMessage}</S.ErrorMessage>
           ) : null}
 
-          <S.SubmitButton type="submit" disabled={isLoading}>
-            <span>{isLoading ? '로그인 중...' : '로그인'}</span>
+          <S.SubmitButton type="submit" disabled={isSubmitting}>
+            <span>
+              {isRedirecting
+                ? '관리자 정보를 불러오는 중...'
+                : isLoading
+                  ? '로그인 중...'
+                  : '로그인'}
+            </span>
             <S.ButtonIcon aria-hidden="true">arrow_forward</S.ButtonIcon>
           </S.SubmitButton>
         </S.Form>

@@ -1,14 +1,23 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { KakaoMapHandle } from '../../components/map/KakaoMap'
+import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
-import type { AdminPlaceItem } from '../../types/adminPlace.types'
+import type {
+  AdminPlaceItem,
+  AdminPlaceListSortParam,
+} from '../../types/adminPlace.types'
 import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
 const ADMIN_PLACE_USE_MOCK_DATA = true
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
+const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
+const PLACE_SORT_OPTIONS = [
+  { value: 'LATEST', label: '최신순' },
+  { value: 'OLDEST', label: '오래된순' },
+]
 
 function formatCoordinate(place: AdminPlaceItem) {
   if (
@@ -52,6 +61,7 @@ function PlaceManagePage() {
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<AdminPlaceItem | null>(null)
+  const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const {
     places,
     page,
@@ -72,7 +82,25 @@ function PlaceManagePage() {
   const showEdgePageButtons = safeTotalPages > MAX_VISIBLE_PAGE_NUMBER_COUNT
 
   const handleRefresh = () => {
-    void fetchAdminPlaces({ page })
+    void fetchAdminPlaces({ page, sortParam: selectedSortParam })
+  }
+
+  const handleSortChange = (value: string) => {
+    const nextSortParam = value as AdminPlaceListSortParam
+
+    setSelectedSortParam(nextSortParam)
+
+    void fetchAdminPlaces({ page: 1, sortParam: nextSortParam }).then((isSuccess) => {
+      if (isSuccess) {
+        setSelectedPlace(null)
+        window.requestAnimationFrame(() => {
+          placeListRef.current?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          })
+        })
+      }
+    })
   }
 
   const handlePageChange = (nextPage: number) => {
@@ -82,7 +110,10 @@ function PlaceManagePage() {
       return
     }
 
-    void fetchAdminPlaces({ page: nextPageNumber }).then((isSuccess) => {
+    void fetchAdminPlaces({
+      page: nextPageNumber,
+      sortParam: selectedSortParam,
+    }).then((isSuccess) => {
       if (isSuccess) {
         setSelectedPlace(null)
         window.requestAnimationFrame(() => {
@@ -104,7 +135,7 @@ function PlaceManagePage() {
           </S.ProfileAvatar>
           <div>
             <S.SideTitle>관리자 패널</S.SideTitle>
-            <S.SideCaption>운영 MVP</S.SideCaption>
+            <S.SideCaption>핑덤</S.SideCaption>
           </div>
         </S.SideHeader>
 
@@ -115,15 +146,11 @@ function PlaceManagePage() {
           </S.MenuButton>
           <S.MenuButton type="button" $active>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-            <span>장소 조회</span>
+            <span>장소 관리</span>
           </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/main')}>
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
-            <span>콘텐츠 목록</span>
-          </S.MenuButton>
-          <S.MenuButton type="button">
-            <S.MaterialIcon aria-hidden="true">gavel</S.MaterialIcon>
-            <span>신고 관리</span>
+            <span>게시글 관리</span>
           </S.MenuButton>
           <S.MenuButton type="button">
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
@@ -171,14 +198,24 @@ function PlaceManagePage() {
                 <S.PanelCount>
                   전체 장소 <strong>{totalCount}</strong>개
                 </S.PanelCount>
-                <S.IconFilterButton
-                  type="button"
-                  aria-label="장소 목록 새로고침"
-                  disabled={isLoading}
-                  onClick={handleRefresh}
-                >
-                  <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                </S.IconFilterButton>
+                <S.PanelActionGroup>
+                  <SortDropdown
+                    ariaLabel="장소 목록 정렬"
+                    value={selectedSortParam}
+                    options={PLACE_SORT_OPTIONS}
+                    disabled={isLoading}
+                    width="104px"
+                    onChange={handleSortChange}
+                  />
+                  <S.IconFilterButton
+                    type="button"
+                    aria-label="장소 목록 새로고침"
+                    disabled={isLoading}
+                    onClick={handleRefresh}
+                  >
+                    <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+                  </S.IconFilterButton>
+                </S.PanelActionGroup>
               </S.PanelSummary>
             </S.PanelControls>
 

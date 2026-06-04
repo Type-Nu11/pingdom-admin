@@ -19,6 +19,7 @@ export interface AuthState {
 }
 
 export interface AuthContextValue extends AuthState {
+  isAuthReady: boolean
   isAuthenticated: boolean
   login: (data: LoginResponse) => void
   logout: () => void

@@ -7,10 +7,12 @@ import type {
   AdminPlaceItem,
   AdminPlaceListErrorResponse,
   AdminPlaceListRequest,
+  AdminPlaceListSortParam,
 } from '../types/adminPlace.types'
 
 const DEFAULT_ADMIN_PLACE_PAGE = 1
 const DEFAULT_ADMIN_PLACE_LIMIT = 20
+const DEFAULT_ADMIN_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const MOCK_ADMIN_PLACE_TOTAL_COUNT = 23
 const MOCK_ADMIN_PLACES: AdminPlaceItem[] = [
   {
@@ -235,12 +237,18 @@ function shouldClearAuth(error: unknown) {
 function getMockAdminPlaces({
   page = DEFAULT_ADMIN_PLACE_PAGE,
   limit = DEFAULT_ADMIN_PLACE_LIMIT,
+  sortParam = DEFAULT_ADMIN_PLACE_SORT_PARAM,
 }: AdminPlaceListRequest) {
   const safeLimit = Math.min(Math.max(limit, 1), 100)
   const totalPages = Math.max(1, Math.ceil(MOCK_ADMIN_PLACE_TOTAL_COUNT / safeLimit))
   const safePage = Math.min(Math.max(page, 1), totalPages)
   const startIndex = (safePage - 1) * safeLimit
-  const places = MOCK_ADMIN_PLACES.slice(startIndex, startIndex + safeLimit)
+  const sortedPlaces = [...MOCK_ADMIN_PLACES].sort((prevPlace, nextPlace) => {
+    return sortParam === 'OLDEST'
+      ? prevPlace.id - nextPlace.id
+      : nextPlace.id - prevPlace.id
+  })
+  const places = sortedPlaces.slice(startIndex, startIndex + safeLimit)
 
   return {
     places,
@@ -255,12 +263,14 @@ function getMockAdminPlaces({
 interface UseAdminPlacesOptions {
   initialPage?: number
   limit?: number
+  sortParam?: AdminPlaceListSortParam
   useMockData?: boolean
 }
 
 export function useAdminPlaces({
   initialPage = DEFAULT_ADMIN_PLACE_PAGE,
   limit = DEFAULT_ADMIN_PLACE_LIMIT,
+  sortParam = DEFAULT_ADMIN_PLACE_SORT_PARAM,
   useMockData = false,
 }: UseAdminPlacesOptions = {}) {
   const { clearAuth } = useAuth()
@@ -276,6 +286,7 @@ export function useAdminPlaces({
   const latestListRequestRef = useRef<Required<AdminPlaceListRequest>>({
     page: initialPage,
     limit,
+    sortParam,
   })
 
   const fetchAdminPlaces = useCallback(async (request: AdminPlaceListRequest = {}) => {
@@ -288,6 +299,7 @@ export function useAdminPlaces({
     const nextRequest = {
       page: request.page ?? latestListRequestRef.current.page,
       limit: request.limit ?? latestListRequestRef.current.limit,
+      sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
     }
 
     try {
@@ -306,6 +318,7 @@ export function useAdminPlaces({
         latestListRequestRef.current = {
           page: data.page,
           limit: data.limit,
+          sortParam: nextRequest.sortParam,
         }
       }
 

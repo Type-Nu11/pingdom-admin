@@ -22,21 +22,25 @@ function getInitialAuthState(): AuthState {
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [authState, setAuthState] = useState<AuthState>(() => getInitialAuthState())
+  const [isAuthReady, setIsAuthReady] = useState(true)
 
   useEffect(() => {
     return subscribeAuthStorageChange(() => {
       setAuthState(getInitialAuthState())
+      setIsAuthReady(true)
     })
   }, [])
 
   const clearAuth = useCallback(() => {
     clearStoredAuth()
     setAuthState(EMPTY_AUTH_STATE)
+    setIsAuthReady(true)
   }, [])
 
   const login = useCallback((data: LoginResponse) => {
     saveLoginAuth(data)
     setAuthState(createAuthStateFromLogin(data))
+    setIsAuthReady(true)
   }, [])
 
   const updateUser = useCallback((user: Partial<AuthUser>) => {
@@ -62,13 +66,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const value = useMemo<AuthContextValue>(
     () => ({
       ...authState,
+      isAuthReady,
       isAuthenticated: Boolean(authState.accessToken),
       login,
       logout: clearAuth,
       clearAuth,
       updateUser,
     }),
-    [authState, clearAuth, login, updateUser]
+    [authState, clearAuth, isAuthReady, login, updateUser]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

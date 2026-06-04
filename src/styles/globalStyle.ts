@@ -1,4 +1,5 @@
 import { createGlobalStyle } from 'styled-components'
+import { adminColors } from './theme'
 
 // 앱 전체에 적용되는 기본 스타일입니다.
 export const GlobalStyle = createGlobalStyle`
@@ -14,8 +15,8 @@ export const GlobalStyle = createGlobalStyle`
 
   body {
     margin: 0;
-    color: #111827;
-    background: #f7f8fa;
+    color: ${adminColors.text};
+    background: ${adminColors.background};
     font-family:
       system-ui,
       -apple-system,

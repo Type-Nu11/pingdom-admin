@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react'
 import styled from 'styled-components'
+import { adminColors } from '../../styles/theme'
 
 type KakaoMapInstance = {
   getLevel: () => number
@@ -43,6 +44,7 @@ const DEFAULT_CENTER = {
   latitude: 37.5665,
   longitude: 126.978,
 }
+const neutral = adminColors
 let kakaoMapScriptPromise: Promise<void> | null = null
 
 interface KakaoMapProps {
@@ -235,10 +237,10 @@ const MapFrame = styled.div`
 const MapCanvas = styled.div`
   width: 100%;
   height: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   overflow: hidden;
-  background: #f3f4f6;
+  background: ${neutral.surfaceLow};
 `
 
 const MapMessage = styled.p`
@@ -249,8 +251,8 @@ const MapMessage = styled.p`
   margin: 0;
   padding: 16px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #b91c1c;
+  background: ${neutral.softOverlay};
+  color: ${neutral.error};
 `
 
 export default KakaoMap

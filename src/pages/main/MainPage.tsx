@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPictures } from '../../hooks/useAdminPictures'
 import { useAuth } from '../../hooks/useAuth'
 import type { AdminPicture, AdminPictureSortParam } from '../../types/adminPicture.types'
@@ -9,6 +10,10 @@ const ADMIN_PICTURE_PAGE_SIZE = 20
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
 const DEFAULT_ADMIN_PICTURE_SORT_PARAM: AdminPictureSortParam = 'LATEST'
 const ADMIN_PICTURE_FEATURE_ENABLED = false
+const ADMIN_PICTURE_SORT_OPTIONS = [
+  { value: 'LATEST', label: '최신순' },
+  { value: 'OLDEST', label: '오래된순' },
+]
 
 function getPictureThumbnailUrl(picture: AdminPicture) {
   return picture.thumbnailUrl
@@ -137,23 +142,6 @@ function MainPage() {
     })
   }
 
-  const handleClearFilters = () => {
-    if (isPictureFeatureDisabled) {
-      return
-    }
-
-    if (selectedSortParam === DEFAULT_ADMIN_PICTURE_SORT_PARAM) {
-      void fetchAdminPictures({
-        page: 1,
-        sortParam: DEFAULT_ADMIN_PICTURE_SORT_PARAM,
-      })
-
-      return
-    }
-
-    setSelectedSortParam(DEFAULT_ADMIN_PICTURE_SORT_PARAM)
-  }
-
   useEffect(() => {
     if (!isSortEffectReadyRef.current) {
       isSortEffectReadyRef.current = true
@@ -194,7 +182,7 @@ function MainPage() {
           </S.ProfileAvatar>
           <div>
             <S.SideTitle>관리자 패널</S.SideTitle>
-            <S.SideCaption>운영 MVP</S.SideCaption>
+            <S.SideCaption>핑덤</S.SideCaption>
           </div>
         </S.SideHeader>
 
@@ -205,15 +193,11 @@ function MainPage() {
           </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/places')}>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-            <span>장소 조회</span>
+            <span>장소 관리</span>
           </S.MenuButton>
           <S.MenuButton type="button" $active>
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
-            <span>콘텐츠 목록</span>
-          </S.MenuButton>
-          <S.MenuButton type="button">
-            <S.MaterialIcon aria-hidden="true">gavel</S.MaterialIcon>
-            <span>신고 관리</span>
+            <span>게시글 관리</span>
           </S.MenuButton>
           <S.MenuButton type="button">
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
@@ -241,7 +225,7 @@ function MainPage() {
 
       <S.MainArea>
         <S.TopBar>
-          <S.TopTitle>관리자 운영</S.TopTitle>
+          <S.TopTitle>게시글 관리</S.TopTitle>
           <S.TopActions>
             <S.IconButton type="button" aria-label="알림">
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
@@ -255,13 +239,13 @@ function MainPage() {
         <S.PageContent ref={pageContentRef}>
           <S.PageHeader>
             <div>
-              <S.PageTitle>업로드 미디어</S.PageTitle>
+              <S.PageTitle>업로드 게시글</S.PageTitle>
               <S.PageDescription>
                 {isPictureFeatureDisabled
-                  ? '사진 목록 API 연동은 준비 중입니다.'
+                  ? '사용자가 업로드한 지도 게시글을 관리합니다.'
                   : totalCount > 0
-                  ? `업로드된 사진 ${totalCount}개를 관리합니다.`
-                  : '사용자가 업로드한 지도 사진을 관리합니다.'}
+                    ? `업로드된 게시글 ${totalCount}개를 관리합니다.`
+                    : '사용자가 업로드한 지도 게시글을 관리합니다.'}
               </S.PageDescription>
             </div>
 
@@ -270,6 +254,16 @@ function MainPage() {
                 <S.MaterialIcon aria-hidden="true">download</S.MaterialIcon>
                 <span>목록 내보내기</span>
               </S.OutlineButton>
+              <SortDropdown
+                ariaLabel="게시글 목록 정렬"
+                value={selectedSortParam}
+                options={ADMIN_PICTURE_SORT_OPTIONS}
+                disabled={isPictureFeatureDisabled || isLoading || isDeleting}
+                width="104px"
+                onChange={(value) =>
+                  setSelectedSortParam(value as AdminPictureSortParam)
+                }
+              />
               <S.PrimaryButton
                 type="button"
                 disabled={isPictureFeatureDisabled || isLoading || isDeleting}
@@ -286,37 +280,6 @@ function MainPage() {
               </S.PrimaryButton>
             </S.HeaderActions>
           </S.PageHeader>
-
-          <S.FilterBar>
-            <S.FilterLabel>
-              <S.MaterialIcon aria-hidden="true">filter_list</S.MaterialIcon>
-              <span>필터</span>
-            </S.FilterLabel>
-            <S.Select
-              aria-label="사진 목록 정렬"
-              value={selectedSortParam}
-              disabled={isPictureFeatureDisabled}
-              onChange={(event) =>
-                setSelectedSortParam(event.target.value as AdminPictureSortParam)
-              }
-            >
-              <option value="LATEST">최신순</option>
-              <option value="OLDEST">오래된순</option>
-            </S.Select>
-            <S.ClearButton
-              type="button"
-              disabled={isPictureFeatureDisabled}
-              onClick={handleClearFilters}
-            >
-              필터 초기화
-            </S.ClearButton>
-          </S.FilterBar>
-
-          {isPictureFeatureDisabled ? (
-            <S.FeedbackText>
-              사진 목록 조회는 현재 비활성화되어 있습니다. 장소 조회 기능부터 확인해주세요.
-            </S.FeedbackText>
-          ) : null}
 
           {!isPictureFeatureDisabled && isLoading ? (
             <S.FeedbackText>사진 목록을 불러오는 중입니다.</S.FeedbackText>

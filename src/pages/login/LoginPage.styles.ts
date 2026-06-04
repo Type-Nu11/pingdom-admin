@@ -1,18 +1,7 @@
 import styled from 'styled-components'
+import { adminColors } from '../../styles/theme'
 
-const neutral = {
-  background: '#f9f9f9',
-  surface: '#ffffff',
-  surfaceLow: '#f3f3f3',
-  surfaceHigh: '#e8e8e8',
-  border: '#c7c7c7',
-  borderSoft: '#e2e2e2',
-  text: '#1a1a1a',
-  muted: '#5f5f5f',
-  placeholder: '#8a8a8a',
-  primary: '#000000',
-  primaryText: '#ffffff',
-}
+const neutral = adminColors
 
 export const Page = styled.main`
   min-height: 100vh;
@@ -39,8 +28,10 @@ export const LoginCard = styled.section`
   gap: 24px;
   padding: 32px;
   border: 1px solid ${neutral.borderSoft};
+  border-top: 4px solid ${neutral.primary};
   border-radius: 8px;
   background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.shadow};
 `
 
 export const Header = styled.header`
@@ -58,13 +49,14 @@ export const IconBox = styled.div`
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.surfaceHigh};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
 `
 
 export const MaterialIcon = styled.span`
-  color: ${neutral.text};
+  color: currentColor;
   font-family: 'Material Symbols Outlined';
   font-size: 22px;
   font-weight: 400;
@@ -142,7 +134,7 @@ export const Input = styled.input<{ $hasEndAction?: boolean }>`
 
   &:focus {
     outline-color: ${neutral.primary};
-    box-shadow: 0 0 0 3px rgb(0 0 0 / 10%);
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
 
   &:-webkit-autofill,
@@ -185,10 +177,10 @@ export const PasswordToggleButton = styled.button`
 export const ErrorMessage = styled.p`
   margin: 0;
   padding: 12px;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.error};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.text};
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
   font-size: 14px;
   line-height: 1.4;
 `
@@ -212,7 +204,7 @@ export const SubmitButton = styled.button`
     transform 120ms ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: ${neutral.primaryHover};
   }
 
   &:active:not(:disabled) {

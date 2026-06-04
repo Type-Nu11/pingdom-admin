@@ -1,20 +1,7 @@
 import styled, { css } from 'styled-components'
+import { adminColors } from '../../styles/theme'
 
-const neutral = {
-  background: '#f9f9f9',
-  surface: '#ffffff',
-  surfaceLow: '#f3f3f3',
-  surfaceContainer: '#eeeeee',
-  surfaceHigh: '#e8e8e8',
-  surfaceHighest: '#e2e2e2',
-  border: '#c4c7c7',
-  borderDark: '#747878',
-  text: '#1a1c1c',
-  muted: '#444748',
-  softText: '#636465',
-  primary: '#000000',
-  primaryText: '#ffffff',
-}
+const neutral = adminColors
 
 const controlStyle = css`
   min-height: 44px;
@@ -52,12 +39,12 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 256px;
+  width: 280px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   border-right: 1px solid ${neutral.border};
-  background: ${neutral.background};
+  background: ${neutral.surface};
 
   @media (max-width: 900px) {
     position: static;
@@ -72,7 +59,7 @@ export const SideHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 32px 24px;
+  padding: 34px 28px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -83,14 +70,15 @@ export const ProfileAvatar = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 999px;
-  background: ${neutral.surfaceContainer};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
 `
 
 export const SideTitle = styled.h1`
   margin: 0;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
@@ -107,7 +95,7 @@ export const SideMenu = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 16px 0;
+  padding: 18px 0;
 
   @media (max-width: 900px) {
     flex: 0 1 auto;
@@ -121,8 +109,9 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 24px;
+  gap: 14px;
+  min-height: 48px;
+  padding: 0 28px;
   border: 0;
   border-right: 2px solid transparent;
   background: transparent;
@@ -137,7 +126,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     border-color 160ms ease;
 
   &:hover {
-    background: ${neutral.surfaceHigh};
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 
@@ -145,7 +134,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     $active &&
     css`
       border-right-color: ${neutral.primary};
-      background: ${neutral.surfaceHighest};
+      background: ${neutral.primaryTint};
       color: ${neutral.primary};
       font-weight: 700;
 
@@ -174,7 +163,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 `
 
 export const SideFooter = styled.div`
-  padding: 16px 24px 24px;
+  padding: 18px 28px 28px;
   border-top: 1px solid ${neutral.border};
 
   @media (max-width: 900px) {
@@ -204,7 +193,8 @@ export const LogoutButton = styled.button`
 
   &:hover {
     border-color: ${neutral.primary};
-    background: ${neutral.surfaceContainer};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 
   @media (max-width: 900px) {
@@ -215,7 +205,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   min-height: 100vh;
-  margin-left: 256px;
+  margin-left: 280px;
 
   @media (max-width: 900px) {
     margin-left: 0;
@@ -233,7 +223,7 @@ export const TopBar = styled.header`
   gap: 24px;
   padding: 0 32px;
   border-bottom: 1px solid ${neutral.border};
-  background: ${neutral.background};
+  background: ${neutral.surface};
 
   @media (max-width: 720px) {
     height: auto;
@@ -245,7 +235,7 @@ export const TopBar = styled.header`
 
 export const TopTitle = styled.h2`
   margin: 0;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 18px;
   font-weight: 700;
 `
@@ -290,6 +280,7 @@ export const SearchInput = styled.input`
 
   &:focus {
     outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
     background: ${neutral.surface};
   }
 `
@@ -301,11 +292,13 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 0;
+  border-radius: 8px;
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
 
   &:hover {
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 `
@@ -330,7 +323,7 @@ export const PageHeader = styled.div`
 
 export const PageTitle = styled.h1`
   margin: 0 0 8px;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 28px;
   font-weight: 700;
   line-height: 1.3;
@@ -362,7 +355,9 @@ export const OutlineButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: ${neutral.surfaceContainer};
+    border-color: ${neutral.primary};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 `
 
@@ -378,6 +373,14 @@ export const PrimaryButton = styled.button`
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primaryHover};
+    background: ${neutral.primaryHover};
+  }
 
   &:disabled {
     cursor: default;
@@ -404,6 +407,10 @@ export const FilterLabel = styled.div`
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 500;
+
+  ${MaterialIcon} {
+    color: ${neutral.primary};
+  }
 `
 
 export const Select = styled.select`
@@ -417,6 +424,7 @@ export const Select = styled.select`
 
   &:focus {
     outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
 `
 
@@ -431,6 +439,7 @@ export const DateInput = styled.input`
 
   &:focus {
     outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
 `
 
@@ -477,10 +486,15 @@ export const MediaCard = styled.li`
   border-radius: 8px;
   background: ${neutral.surface};
   cursor: pointer;
-  transition: border-color 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 
   &:hover {
     border-color: ${neutral.primary};
+    box-shadow: 0 10px 24px ${neutral.shadow};
+    transform: translateY(-2px);
   }
 
   &:focus-visible {
@@ -525,11 +539,12 @@ export const MediaBadge = styled.div`
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 4px;
-  background: rgb(255 255 255 / 90%);
-  color: ${neutral.text};
+  background: ${neutral.softOverlay};
+  color: ${neutral.primary};
   font-size: 12px;
+  font-weight: 700;
 
   ${MaterialIcon} {
     font-size: 14px;
@@ -555,7 +570,7 @@ export const MediaTitle = styled.h3`
   min-width: 0;
   overflow: hidden;
   margin: 0;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 18px;
   font-weight: 700;
   line-height: 1.3;
@@ -566,11 +581,12 @@ export const MediaTitle = styled.h3`
 export const StatusBadge = styled.span`
   flex-shrink: 0;
   padding: 4px 8px;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 4px;
-  background: ${neutral.surfaceContainer};
-  color: ${neutral.text};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
   font-size: 12px;
+  font-weight: 700;
 `
 
 export const MediaMetaList = styled.div`
@@ -610,16 +626,16 @@ export const CardActions = styled.div`
 export const CardButton = styled.button`
   height: 36px;
   flex: 1;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.error};
   border-radius: 4px;
   background: ${neutral.surface};
-  color: ${neutral.text};
+  color: ${neutral.error};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 
   &:hover {
-    background: ${neutral.surfaceContainer};
+    background: ${neutral.errorTint};
   }
 
   &:disabled {
@@ -641,7 +657,7 @@ export const IconCardButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: ${neutral.surfaceContainer};
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 `
@@ -730,7 +746,7 @@ export const ModalOverlay = styled.div`
   align-items: center;
   justify-content: center;
   padding: 32px;
-  background: rgb(0 0 0 / 58%);
+  background: ${neutral.overlay};
 
   @media (max-width: 720px) {
     padding: 16px;
@@ -759,7 +775,7 @@ export const ModalHeader = styled.header`
 
 export const ModalTitle = styled.h2`
   margin: 0 0 6px;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;

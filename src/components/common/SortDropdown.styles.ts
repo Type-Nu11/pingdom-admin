@@ -72,7 +72,10 @@ export const DropdownMenu = styled.div`
   box-shadow: 0 14px 34px ${adminColors.shadow};
 `
 
-export const DropdownOption = styled.button<{ $selected?: boolean }>`
+export const DropdownOption = styled.button<{
+  $selected?: boolean
+  $highlighted?: boolean
+}>`
   width: 100%;
   min-height: 34px;
   display: flex;
@@ -96,6 +99,13 @@ export const DropdownOption = styled.button<{ $selected?: boolean }>`
     background: ${adminColors.primaryTint};
     color: ${adminColors.primary};
   }
+
+  ${({ $highlighted }) =>
+    $highlighted &&
+    css`
+      background: ${adminColors.primaryTint};
+      color: ${adminColors.primary};
+    `}
 
   ${({ $selected }) =>
     $selected &&

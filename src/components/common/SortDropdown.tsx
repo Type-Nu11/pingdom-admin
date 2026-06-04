@@ -1,4 +1,10 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import * as S from './SortDropdown.styles'
 
 export interface SortDropdownOption {
@@ -26,8 +32,13 @@ function SortDropdown({
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
   const selectedOption =
     options.find((option) => option.value === value) ?? options[0]
+  const selectedIndex = Math.max(
+    options.findIndex((option) => option.value === selectedOption.value),
+    0
+  )
 
   useEffect(() => {
     if (!isOpen) {
@@ -55,6 +66,94 @@ function SortDropdown({
     }
   }, [isOpen])
 
+  function openDropdown() {
+    setActiveIndex(selectedIndex)
+    setIsOpen(true)
+  }
+
+  function closeDropdown() {
+    setIsOpen(false)
+  }
+
+  function toggleDropdown() {
+    if (isOpen) {
+      closeDropdown()
+
+      return
+    }
+
+    openDropdown()
+  }
+
+  function moveActiveOption(direction: number) {
+    if (options.length === 0) {
+      return
+    }
+
+    setActiveIndex((prevIndex) => {
+      const baseIndex = prevIndex >= 0 ? prevIndex : selectedIndex
+
+      return (baseIndex + direction + options.length) % options.length
+    })
+  }
+
+  function selectOption(optionIndex: number) {
+    const nextOption = options[optionIndex]
+
+    if (!nextOption) {
+      return
+    }
+
+    onChange(nextOption.value)
+    closeDropdown()
+  }
+
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>) {
+    if (disabled) {
+      return
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+
+      if (!isOpen) {
+        openDropdown()
+
+        return
+      }
+
+      moveActiveOption(1)
+
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+
+      if (!isOpen) {
+        openDropdown()
+
+        return
+      }
+
+      moveActiveOption(-1)
+
+      return
+    }
+
+    if (event.key === 'Enter' && isOpen) {
+      event.preventDefault()
+      selectOption(activeIndex)
+
+      return
+    }
+
+    if (event.key === 'Escape' && isOpen) {
+      event.preventDefault()
+      closeDropdown()
+    }
+  }
+
   return (
     <S.DropdownRoot ref={rootRef} $width={width}>
       <S.DropdownTrigger
@@ -64,27 +163,37 @@ function SortDropdown({
         aria-expanded={isOpen}
         aria-controls={listboxId}
         disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={toggleDropdown}
+        onKeyDown={handleKeyDown}
       >
         <span>{selectedOption.label}</span>
         <S.DropdownIcon aria-hidden="true">expand_more</S.DropdownIcon>
       </S.DropdownTrigger>
 
       {isOpen ? (
-        <S.DropdownMenu id={listboxId} role="listbox" aria-label={ariaLabel}>
-          {options.map((option) => {
+        <S.DropdownMenu
+          id={listboxId}
+          role="listbox"
+          aria-label={ariaLabel}
+          aria-activedescendant={`${listboxId}-option-${activeIndex}`}
+        >
+          {options.map((option, index) => {
             const isSelected = option.value === value
+            const isHighlighted = index === activeIndex
 
             return (
               <S.DropdownOption
+                id={`${listboxId}-option-${index}`}
                 key={option.value}
                 type="button"
                 role="option"
                 aria-selected={isSelected}
                 $selected={isSelected}
+                $highlighted={isHighlighted}
+                onMouseEnter={() => setActiveIndex(index)}
+                onKeyDown={handleKeyDown}
                 onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
+                  selectOption(index)
                 }}
               >
                 <span>{option.label}</span>

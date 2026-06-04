@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLogin } from '../../hooks/useLogin'
+import { useAuth } from '../../hooks/useAuth'
 import * as S from './LoginPage.styles'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const {
     username,
@@ -16,6 +18,12 @@ function LoginPage() {
     errorMessage,
     handleLogin,
   } = useLogin()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/main', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   return (
     <S.Page>
@@ -33,11 +41,7 @@ function LoginPage() {
         <S.Form
           onSubmit={async (event) => {
             event.preventDefault()
-            const isSuccess = await handleLogin()
-
-            if (isSuccess) {
-              navigate('/main')
-            }
+            await handleLogin()
           }}
         >
           <S.Field>

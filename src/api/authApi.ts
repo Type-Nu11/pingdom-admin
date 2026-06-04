@@ -6,7 +6,7 @@ import type {
   RefreshTokenResponse,
 } from '../types/auth.types'
 
-const LOGIN_API_PATH = '/auth/login'
+const LOGIN_API_PATH = '/auth/admin/login'
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
 
 export async function login(payload: LoginRequest) {

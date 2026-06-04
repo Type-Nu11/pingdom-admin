@@ -1,5 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import styled from 'styled-components'
+
+type KakaoMapInstance = {
+  getLevel: () => number
+  setLevel: (level: number) => void
+}
 
 type KakaoMaps = {
   load: (callback: () => void) => void
@@ -10,7 +21,7 @@ type KakaoMaps = {
       center: unknown
       level: number
     }
-  ) => unknown
+  ) => KakaoMapInstance
   event: {
     addListener: (target: unknown, eventName: string, handler: () => void) => void
   }
@@ -26,11 +37,22 @@ declare global {
 
 const KAKAO_MAP_SCRIPT_ID = 'kakao-map-sdk'
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY
+const MIN_MAP_LEVEL = 1
+const MAX_MAP_LEVEL = 14
 const DEFAULT_CENTER = {
   latitude: 37.5665,
   longitude: 126.978,
 }
 let kakaoMapScriptPromise: Promise<void> | null = null
+
+interface KakaoMapProps {
+  className?: string
+}
+
+export interface KakaoMapHandle {
+  zoomIn: () => void
+  zoomOut: () => void
+}
 
 function loadKakaoMapScript(appKey: string) {
   if (kakaoMapScriptPromise) {
@@ -84,11 +106,36 @@ function loadKakaoMapScript(appKey: string) {
   return kakaoMapScriptPromise
 }
 
-function KakaoMap() {
+const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
+  { className },
+  ref
+) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapInstanceRef = useRef<KakaoMapInstance | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDelayed, setIsDelayed] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+
+  useImperativeHandle(ref, () => ({
+    zoomIn() {
+      const map = mapInstanceRef.current
+
+      if (!map) {
+        return
+      }
+
+      map.setLevel(Math.max(MIN_MAP_LEVEL, map.getLevel() - 1))
+    },
+    zoomOut() {
+      const map = mapInstanceRef.current
+
+      if (!map) {
+        return
+      }
+
+      map.setLevel(Math.min(MAX_MAP_LEVEL, map.getLevel() + 1))
+    },
+  }))
 
   useEffect(() => {
     let isMounted = true
@@ -121,6 +168,7 @@ function KakaoMap() {
           center,
           level: 3,
         })
+        mapInstanceRef.current = map
 
         delayedMessageTimer = window.setTimeout(() => {
           if (isMounted) {
@@ -153,6 +201,7 @@ function KakaoMap() {
 
     return () => {
       isMounted = false
+      mapInstanceRef.current = null
 
       if (delayedMessageTimer) {
         window.clearTimeout(delayedMessageTimer)
@@ -161,7 +210,7 @@ function KakaoMap() {
   }, [])
 
   return (
-    <MapFrame>
+    <MapFrame className={className}>
       <MapCanvas ref={mapContainerRef} />
       {isLoading ? (
         <MapMessage>
@@ -173,12 +222,13 @@ function KakaoMap() {
       {errorMessage ? <MapMessage>{errorMessage}</MapMessage> : null}
     </MapFrame>
   )
-}
+})
 
 const MapFrame = styled.div`
   position: relative;
-  width: 500px;
-  height: 500px;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
   max-width: 100%;
 `
 

@@ -1,5 +1,7 @@
 import type { AuthErrorResponse } from './auth.types'
 
+export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST'
+
 export interface AdminPlaceItem {
   id: number
   name: string
@@ -12,6 +14,7 @@ export interface AdminPlaceItem {
 export interface AdminPlaceListRequest {
   page?: number
   limit?: number
+  sortParam?: AdminPlaceListSortParam
 }
 
 export interface AdminPlaceListResponse {

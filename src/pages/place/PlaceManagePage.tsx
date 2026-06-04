@@ -4,13 +4,16 @@ import type { KakaoMapHandle } from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
-import type { AdminPlaceItem } from '../../types/adminPlace.types'
+import type {
+  AdminPlaceItem,
+  AdminPlaceListSortParam,
+} from '../../types/adminPlace.types'
 import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
 const ADMIN_PLACE_USE_MOCK_DATA = true
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
-const DEFAULT_PLACE_SORT_PARAM = 'LATEST'
+const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
@@ -79,7 +82,25 @@ function PlaceManagePage() {
   const showEdgePageButtons = safeTotalPages > MAX_VISIBLE_PAGE_NUMBER_COUNT
 
   const handleRefresh = () => {
-    void fetchAdminPlaces({ page })
+    void fetchAdminPlaces({ page, sortParam: selectedSortParam })
+  }
+
+  const handleSortChange = (value: string) => {
+    const nextSortParam = value as AdminPlaceListSortParam
+
+    setSelectedSortParam(nextSortParam)
+
+    void fetchAdminPlaces({ page: 1, sortParam: nextSortParam }).then((isSuccess) => {
+      if (isSuccess) {
+        setSelectedPlace(null)
+        window.requestAnimationFrame(() => {
+          placeListRef.current?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          })
+        })
+      }
+    })
   }
 
   const handlePageChange = (nextPage: number) => {
@@ -89,7 +110,10 @@ function PlaceManagePage() {
       return
     }
 
-    void fetchAdminPlaces({ page: nextPageNumber }).then((isSuccess) => {
+    void fetchAdminPlaces({
+      page: nextPageNumber,
+      sortParam: selectedSortParam,
+    }).then((isSuccess) => {
       if (isSuccess) {
         setSelectedPlace(null)
         window.requestAnimationFrame(() => {
@@ -181,7 +205,7 @@ function PlaceManagePage() {
                     options={PLACE_SORT_OPTIONS}
                     disabled={isLoading}
                     width="104px"
-                    onChange={setSelectedSortParam}
+                    onChange={handleSortChange}
                   />
                   <S.IconFilterButton
                     type="button"

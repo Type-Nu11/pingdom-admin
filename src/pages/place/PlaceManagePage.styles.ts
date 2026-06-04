@@ -1,23 +1,8 @@
 import styled, { css } from 'styled-components'
 import KakaoMap from '../../components/map/KakaoMap'
+import { adminColors } from '../../styles/theme'
 
-const neutral = {
-  background: '#f9f9f9',
-  surface: '#ffffff',
-  surfaceLow: '#f3f3f3',
-  surfaceContainer: '#eeeeee',
-  surfaceHigh: '#e8e8e8',
-  surfaceHighest: '#e2e2e2',
-  border: '#c4c7c7',
-  borderDark: '#747878',
-  text: '#1a1c1c',
-  muted: '#444748',
-  softText: '#636465',
-  primary: '#000000',
-  primaryText: '#ffffff',
-  error: '#ba1a1a',
-  errorContainer: '#ffdad6',
-}
+const neutral = adminColors
 
 const controlStyle = css`
   min-height: 44px;
@@ -55,19 +40,19 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 256px;
+  width: 280px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   border-right: 1px solid ${neutral.border};
-  background: ${neutral.background};
+  background: ${neutral.surface};
 `
 
 export const SideHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 32px 24px;
+  padding: 34px 28px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -78,14 +63,15 @@ export const ProfileAvatar = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 999px;
-  background: ${neutral.surfaceContainer};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
 `
 
 export const SideTitle = styled.h1`
   margin: 0;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
@@ -102,15 +88,16 @@ export const SideMenu = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 16px 0;
+  padding: 18px 0;
 `
 
 export const MenuButton = styled.button<{ $active?: boolean }>`
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 24px;
+  gap: 14px;
+  min-height: 48px;
+  padding: 0 28px;
   border: 0;
   border-right: 2px solid transparent;
   background: transparent;
@@ -125,7 +112,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     border-color 160ms ease;
 
   &:hover {
-    background: ${neutral.surfaceHigh};
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 
@@ -133,7 +120,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     $active &&
     css`
       border-right-color: ${neutral.primary};
-      background: ${neutral.surfaceHighest};
+      background: ${neutral.primaryTint};
       color: ${neutral.primary};
       font-weight: 700;
 
@@ -148,7 +135,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 `
 
 export const SideFooter = styled.div`
-  padding: 16px 24px 24px;
+  padding: 18px 28px 28px;
   border-top: 1px solid ${neutral.border};
 `
 
@@ -173,13 +160,14 @@ export const LogoutButton = styled.button`
 
   &:hover {
     border-color: ${neutral.primary};
-    background: ${neutral.surfaceContainer};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 `
 
 export const MainArea = styled.div`
   height: 100vh;
-  margin-left: 256px;
+  margin-left: 280px;
   display: flex;
   overflow: hidden;
   flex-direction: column;
@@ -194,7 +182,7 @@ export const TopBar = styled.header`
   flex-shrink: 0;
   padding: 0 32px;
   border-bottom: 1px solid ${neutral.border};
-  background: ${neutral.background};
+  background: ${neutral.surface};
 `
 
 export const TopTitleGroup = styled.div`
@@ -205,7 +193,7 @@ export const TopTitleGroup = styled.div`
 
 export const TopTitle = styled.h2`
   margin: 0;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 18px;
   font-weight: 700;
 `
@@ -223,11 +211,13 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 0;
+  border-radius: 8px;
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
 
   &:hover {
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 `
@@ -235,7 +225,7 @@ export const IconButton = styled.button`
 export const SplitContent = styled.div`
   min-height: 0;
   display: grid;
-  grid-template-columns: 400px minmax(0, 1fr);
+  grid-template-columns: 500px minmax(0, 1fr);
   flex: 1;
   overflow: hidden;
 `
@@ -253,7 +243,7 @@ export const PanelControls = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
+  padding: 20px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -264,13 +254,21 @@ export const PanelSummary = styled.div`
   gap: 12px;
 `
 
+export const PanelActionGroup = styled.div`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+`
+
 export const PanelCount = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 14px;
+  font-size: 15px;
 
   strong {
     color: ${neutral.primary};
+    font-weight: 800;
   }
 `
 
@@ -300,18 +298,29 @@ export const SearchInput = styled.input`
 
   &:focus {
     outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
     background: ${neutral.surface};
   }
 `
 
 export const FilterRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 36px;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+`
+
+export const FilterControl = styled.label`
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
 `
 
 export const Select = styled.select`
-  height: 36px;
+  height: 40px;
   min-width: 0;
   padding: 0 10px;
   border: 0;
@@ -324,12 +333,37 @@ export const Select = styled.select`
 
   &:focus {
     outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+`
+
+export const CompactSelect = styled.select`
+  height: 40px;
+  width: 92px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  outline: 1px solid transparent;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus {
+    outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
   }
 `
 
 export const IconFilterButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -340,7 +374,8 @@ export const IconFilterButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: ${neutral.surfaceHigh};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 
   &:disabled {
@@ -358,12 +393,12 @@ export const PlaceList = styled.div`
 export const PlaceItem = styled.button<{ $active?: boolean }>`
   width: 100%;
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  gap: 14px;
-  padding: 16px;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px 20px;
   border: 0;
   border-bottom: 1px solid ${neutral.border};
-  background: ${({ $active }) => ($active ? neutral.surfaceLow : neutral.surface)};
+  background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
   color: ${neutral.text};
   text-align: left;
   cursor: pointer;
@@ -372,7 +407,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
     box-shadow 160ms ease;
 
   &:hover {
-    background: ${neutral.surfaceLow};
+    background: ${neutral.primaryTint};
   }
 
   ${({ $active }) =>
@@ -383,15 +418,15 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
 `
 
 export const PlaceThumb = styled.div`
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.surfaceContainer};
-  color: ${neutral.muted};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
 `
 
 export const PlaceInfo = styled.div`
@@ -408,8 +443,8 @@ export const PlaceTitleRow = styled.div`
 export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
-  color: ${neutral.primary};
-  font-size: 16px;
+  color: ${neutral.strongText};
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.3;
   text-overflow: ellipsis;
@@ -419,16 +454,16 @@ export const PlaceName = styled.h3`
 export const ReportBadge = styled.span`
   flex-shrink: 0;
   padding: 3px 7px;
-  border: 1px solid rgb(186 26 26 / 24%);
+  border: 1px solid ${neutral.error};
   border-radius: 999px;
-  background: ${neutral.errorContainer};
+  background: ${neutral.errorTint};
   color: ${neutral.error};
   font-size: 12px;
   font-weight: 700;
 `
 
 export const PlaceCaption = styled.p`
-  margin: 2px 0 0;
+  margin: 4px 0 0;
   color: ${neutral.muted};
   font-size: 12px;
 `
@@ -438,7 +473,7 @@ export const PlaceMeta = styled.p`
   align-items: center;
   gap: 4px;
   overflow: hidden;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: ${neutral.muted};
   font-size: 12px;
   text-overflow: ellipsis;
@@ -454,7 +489,7 @@ export const PlaceFooter = styled.div`
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 12px;
   color: ${neutral.muted};
   font-size: 12px;
 `
@@ -485,7 +520,8 @@ export const RetryButton = styled.button`
 
   &:hover {
     border-color: ${neutral.primary};
-    background: ${neutral.surfaceContainer};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 
   &:disabled {
@@ -498,15 +534,15 @@ export const PanelPagination = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 14px 16px;
   border-top: 1px solid ${neutral.border};
   background: ${neutral.surface};
 `
 
 export const PageButton = styled.button`
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -522,8 +558,8 @@ export const PageButton = styled.button`
     border-color 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.border};
-    background: ${neutral.surfaceContainer};
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 
@@ -545,24 +581,24 @@ export const PageButton = styled.button`
 export const PageNumberList = styled.div`
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${neutral.surfaceLow};
+  border-radius: 12px;
+  background: ${neutral.surface};
 `
 
 export const PageNumberButton = styled.button<{ $active?: boolean }>`
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: 9px;
   background: ${({ $active }) => ($active ? neutral.primary : 'transparent')};
   color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -571,7 +607,8 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
 
   &:hover:not(:disabled) {
     background: ${({ $active }) =>
-      $active ? neutral.primary : neutral.surface};
+      $active ? neutral.primary : neutral.primaryTint};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primary)};
   }
 
   &:focus-visible {
@@ -620,7 +657,7 @@ export const MapMarker = styled.button<{ $active?: boolean }>`
   height: 42px;
   border: 0;
   background: transparent;
-  color: ${({ $active }) => ($active ? neutral.primary : neutral.softText)};
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
   cursor: pointer;
   opacity: ${({ $active }) => ($active ? 1 : 0.74)};
   pointer-events: auto;
@@ -697,13 +734,15 @@ export const MapControlButton = styled.button`
   justify-content: center;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: rgb(255 255 255 / 92%);
+  background: ${neutral.softOverlay};
   color: ${neutral.text};
   cursor: pointer;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
+  box-shadow: 0 8px 22px ${neutral.shadow};
 
   &:hover {
-    background: ${neutral.surfaceHigh};
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 `
 
@@ -719,10 +758,10 @@ export const MapInfo = styled.div`
   padding: 8px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: rgb(255 255 255 / 92%);
+  background: ${neutral.softOverlay};
   color: ${neutral.text};
   font-size: 12px;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
+  box-shadow: 0 8px 22px ${neutral.shadow};
 `
 
 export const MapInfoDot = styled.span`
@@ -741,7 +780,7 @@ export const ModalOverlay = styled.div`
   align-items: center;
   justify-content: center;
   padding: 32px;
-  background: rgb(0 0 0 / 45%);
+  background: ${neutral.overlay};
   backdrop-filter: blur(3px);
 `
 
@@ -754,7 +793,7 @@ export const PlaceModal = styled.section`
   border: 1px solid ${neutral.border};
   border-radius: 12px;
   background: ${neutral.surface};
-  box-shadow: 0 24px 70px rgb(0 0 0 / 18%);
+  box-shadow: 0 24px 70px ${neutral.strongShadow};
 `
 
 export const ModalHeader = styled.header`
@@ -768,7 +807,7 @@ export const ModalHeader = styled.header`
 
 export const ModalTitle = styled.h2`
   margin: 0;
-  color: ${neutral.primary};
+  color: ${neutral.strongText};
   font-size: 24px;
   font-weight: 700;
   line-height: 1.3;
@@ -830,9 +869,9 @@ export const ReportNotice = styled.div`
   display: flex;
   gap: 12px;
   padding: 14px;
-  border: 1px solid rgb(186 26 26 / 14%);
+  border: 1px solid ${neutral.error};
   border-radius: 8px;
-  background: rgb(255 218 214 / 28%);
+  background: ${neutral.errorTint};
   color: ${neutral.error};
 
   ${MaterialIcon} {
@@ -868,6 +907,7 @@ export const PhotoLink = styled.button`
   cursor: pointer;
 
   &:hover {
+    color: ${neutral.primaryHover};
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -952,7 +992,7 @@ export const DangerOutlineButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: rgb(255 218 214 / 28%);
+    background: ${neutral.errorTint};
   }
 `
 

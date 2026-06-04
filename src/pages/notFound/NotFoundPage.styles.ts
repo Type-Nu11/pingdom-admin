@@ -1,15 +1,8 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { adminColors } from '../../styles/theme'
 
-const neutral = {
-  background: '#f9f9f9',
-  surface: '#ffffff',
-  border: '#e2e2e2',
-  text: '#1a1a1a',
-  muted: '#5f5f5f',
-  primary: '#000000',
-  primaryText: '#ffffff',
-}
+const neutral = adminColors
 
 export const Page = styled.main`
   min-height: 100vh;
@@ -33,8 +26,10 @@ export const Content = styled.section`
   max-width: 420px;
   padding: 28px;
   border: 1px solid ${neutral.border};
+  border-top: 4px solid ${neutral.primary};
   border-radius: 8px;
   background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.shadow};
   text-align: center;
 `
 
@@ -47,6 +42,7 @@ export const StatusCode = styled.p`
 
 export const Title = styled.h1`
   margin: 0 0 12px;
+  color: ${neutral.strongText};
   font-size: 24px;
 `
 
@@ -67,6 +63,6 @@ export const NavLink = styled(Link)`
   font-weight: 600;
 
   &:hover {
-    opacity: 0.9;
+    background: ${neutral.primaryHover};
   }
 `

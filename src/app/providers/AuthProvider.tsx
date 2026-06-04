@@ -22,17 +22,7 @@ function getInitialAuthState(): AuthState {
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [authState, setAuthState] = useState<AuthState>(() => getInitialAuthState())
-  const [isAuthReady, setIsAuthReady] = useState(false)
-
-  useEffect(() => {
-    const readyTimer = window.requestAnimationFrame(() => {
-      setIsAuthReady(true)
-    })
-
-    return () => {
-      window.cancelAnimationFrame(readyTimer)
-    }
-  }, [])
+  const [isAuthReady, setIsAuthReady] = useState(true)
 
   useEffect(() => {
     return subscribeAuthStorageChange(() => {

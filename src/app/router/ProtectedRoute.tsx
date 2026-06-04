@@ -1,12 +1,20 @@
+import { useEffect } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import styled from 'styled-components'
 import { useAuth } from '../../hooks/useAuth'
 import { adminColors } from '../../styles/theme'
 
 export function ProtectedRoute() {
-  const { isAuthenticated, isAuthReady, user } = useAuth()
+  const { clearAuth, isAuthenticated, isAuthReady, user } = useAuth()
+  const hasBrokenAuthState = isAuthReady && isAuthenticated && !user
 
-  if (!isAuthReady || (isAuthenticated && !user)) {
+  useEffect(() => {
+    if (hasBrokenAuthState) {
+      clearAuth()
+    }
+  }, [clearAuth, hasBrokenAuthState])
+
+  if (!isAuthReady || hasBrokenAuthState) {
     return (
       <RouteLoadingPage role="status" aria-live="polite">
         <RouteLoadingCard>

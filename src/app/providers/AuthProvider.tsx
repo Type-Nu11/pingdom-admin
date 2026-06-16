@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { logout as requestLogout } from '../../api/authApi'
 import type { LoginResponse } from '../../types/auth.types'
 import {
   clearStoredAuth,
@@ -43,6 +44,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setIsAuthReady(true)
   }, [])
 
+  const logout = useCallback(async () => {
+    const refreshToken = authState.refreshToken
+
+    clearAuth()
+
+    if (!refreshToken) {
+      return
+    }
+
+    try {
+      await requestLogout({ refreshToken })
+    } catch (error) {
+      console.error('로그아웃 요청 실패', error)
+    }
+  }, [authState.refreshToken, clearAuth])
+
   const updateUser = useCallback((user: Partial<AuthUser>) => {
     setAuthState((prevState) => {
       if (!prevState.user) {
@@ -69,11 +86,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isAuthReady,
       isAuthenticated: Boolean(authState.accessToken),
       login,
-      logout: clearAuth,
+      logout,
       clearAuth,
       updateUser,
     }),
-    [authState, clearAuth, isAuthReady, login, updateUser]
+    [authState, clearAuth, isAuthReady, login, logout, updateUser]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

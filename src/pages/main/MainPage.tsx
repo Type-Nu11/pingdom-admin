@@ -448,7 +448,7 @@ function MainPage() {
                       <S.CardActions>
                         <S.CardButton
                           type="button"
-                          disabled={deletingPostId !== null}
+                          disabled={isLoading || deletingPostId !== null}
                           onClick={(event) => {
                             event.stopPropagation()
                             const shouldDelete = window.confirm(
@@ -598,7 +598,11 @@ function MainPage() {
 
               <S.ModalSection>
                 <S.ModalSectionTitle>신고 내역</S.ModalSectionTitle>
-                {activeReports.length > 0 ? (
+                {isDetailLoading ? (
+                  <S.ModalEmptyText>
+                    신고 내역을 불러오는 중입니다...
+                  </S.ModalEmptyText>
+                ) : activeReports.length > 0 ? (
                   <S.ReportList>
                     {activeReports.map((report) => (
                       <S.ReportItem key={report.reportId}>

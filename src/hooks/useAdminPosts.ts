@@ -219,34 +219,12 @@ export function useAdminPosts({
           prevPostDetail?.id === postId ? null : prevPostDetail
         )
 
-        try {
-          let refreshedPosts = await getAdminPosts(latestListRequestRef.current)
+        const isLastItemOnPage = posts.length === 1
+        const targetPage = isLastItemOnPage && page > 1 ? page - 1 : page
+        const isRefreshSuccess = await fetchAdminPosts({ page: targetPage })
 
-          if (refreshedPosts.posts.length === 0 && refreshedPosts.page > 1) {
-            refreshedPosts = await getAdminPosts({
-              ...latestListRequestRef.current,
-              page: refreshedPosts.page - 1,
-            })
-          }
-
-          setPosts(refreshedPosts.posts)
-          setPage(refreshedPosts.page)
-          setTotalCount(refreshedPosts.totalCount)
-          setTotalPages(refreshedPosts.totalPages)
-          setHasNext(refreshedPosts.hasNext)
-          latestListRequestRef.current = {
-            ...latestListRequestRef.current,
-            page: refreshedPosts.page,
-            limit: refreshedPosts.limit,
-          }
-        } catch (refreshError) {
+        if (!isRefreshSuccess) {
           setActionErrorMessage('게시글은 삭제됐지만 목록을 다시 불러오지 못했습니다.')
-
-          if (shouldClearAuth(refreshError)) {
-            clearAuth()
-          }
-
-          console.error('관리자 게시글 삭제 후 목록 재조회 실패', refreshError)
         }
 
         return true
@@ -267,7 +245,7 @@ export function useAdminPosts({
         }
       }
     },
-    [clearAuth]
+    [clearAuth, fetchAdminPosts, page, posts.length]
   )
 
   useEffect(() => {

@@ -485,13 +485,38 @@ export const PlaceMeta = styled.p`
   }
 `
 
-export const PlaceFooter = styled.div`
+export const PlaceStatList = styled.div`
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 12px;
-  color: ${neutral.muted};
+`
+
+export const PlaceStat = styled.span`
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.text};
   font-size: 12px;
+  font-weight: 600;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  ${MaterialIcon} {
+    flex-shrink: 0;
+    color: ${neutral.muted};
+    font-size: 14px;
+  }
 `
 
 export const EmptyState = styled.div`

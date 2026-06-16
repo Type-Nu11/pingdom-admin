@@ -11,7 +11,6 @@ import type {
 import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
-const ADMIN_PLACE_USE_MOCK_DATA = true
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
 const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
@@ -34,6 +33,18 @@ function formatCoordinate(place: AdminPlaceItem) {
 
 function getPlaceOwner(place: AdminPlaceItem) {
   return `사용자 ID: ${place.userId}`
+}
+
+function formatOptionalNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '-'
+}
+
+function getPlaceLevel(place: AdminPlaceItem) {
+  return formatOptionalNumber(place.placeGrowth?.level)
+}
+
+function getPlacePhotoCount(place: AdminPlaceItem) {
+  return formatOptionalNumber(place.placeGrowth?.photoCount)
 }
 
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
@@ -74,7 +85,6 @@ function PlaceManagePage() {
     fetchAdminPlaces,
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
-    useMockData: ADMIN_PLACE_USE_MOCK_DATA,
   })
   const safeTotalPages = Math.max(totalPages, 1)
   const showPagination = safeTotalPages > 1
@@ -166,7 +176,7 @@ function PlaceManagePage() {
           <S.LogoutButton
             type="button"
             onClick={() => {
-              logout()
+              void logout()
               navigate('/login', { replace: true })
             }}
           >
@@ -251,7 +261,9 @@ function PlaceManagePage() {
                         <S.PlaceTitleRow>
                           <S.PlaceName>{place.name}</S.PlaceName>
                         </S.PlaceTitleRow>
-                        <S.PlaceCaption>장소 ID: {place.id}</S.PlaceCaption>
+                        <S.PlaceCaption>
+                          장소 ID: {place.id} · {getPlaceOwner(place)}
+                        </S.PlaceCaption>
                         <S.PlaceMeta>
                           <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
                           <span>{place.address || '주소 정보 없음'}</span>
@@ -260,9 +272,16 @@ function PlaceManagePage() {
                           <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
                           <span>{formatCoordinate(place)}</span>
                         </S.PlaceMeta>
-                        <S.PlaceFooter>
-                          <span>{getPlaceOwner(place)}</span>
-                        </S.PlaceFooter>
+                        <S.PlaceStatList aria-label={`${place.name} 장소 지표`}>
+                          <S.PlaceStat>
+                            <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
+                            <span>레벨 {getPlaceLevel(place)}</span>
+                          </S.PlaceStat>
+                          <S.PlaceStat>
+                            <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
+                            <span>사진 {getPlacePhotoCount(place)}장</span>
+                          </S.PlaceStat>
+                        </S.PlaceStatList>
                       </S.PlaceInfo>
                     </S.PlaceItem>
                   )

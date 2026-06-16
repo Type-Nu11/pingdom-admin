@@ -1,7 +1,16 @@
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
 const neutral = adminColors
+const loadingShimmer = keyframes`
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+`
 
 const controlStyle = css`
   min-height: 44px;
@@ -506,23 +515,51 @@ export const MediaCard = styled.li`
 export const MediaPreview = styled.div`
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
-  background: ${neutral.surfaceContainer};
+  aspect-ratio: 4 / 3;
+  background: ${neutral.surfaceLow};
 `
 
-export const MediaImage = styled.img`
+export const MediaImage = styled.img<{ $isLoaded?: boolean }>`
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  transition: transform 500ms ease;
+  object-fit: cover;
+  object-position: center;
+  opacity: ${({ $isLoaded }) => ($isLoaded ? 1 : 0)};
+  transition:
+    opacity 160ms ease,
+    transform 500ms ease;
 
   ${MediaCard}:hover & {
     transform: scale(1.05);
   }
 `
 
+export const MediaLoading = styled.div`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(
+      90deg,
+      ${neutral.surfaceContainer} 0%,
+      ${neutral.surfaceLow} 42%,
+      ${neutral.surfaceContainer} 72%
+    );
+  background-size: 220% 100%;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 600;
+  animation: ${loadingShimmer} 1.2s ease-in-out infinite;
+`
+
 export const MediaFallback = styled.div`
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -806,36 +843,207 @@ export const ModalCloseButton = styled.button`
   }
 `
 
-export const ModalImageFrame = styled.div`
+export const ModalBody = styled.div`
+  flex: 1;
   min-height: 0;
+  overflow-y: auto;
+`
+
+export const ModalNotice = styled.div`
+  margin: 16px 20px 0;
+  padding: 12px 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 600;
+`
+
+export const ModalImageFrame = styled.div`
+  min-height: 280px;
+  max-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  overflow: hidden;
   padding: 20px;
   background: ${neutral.surfaceContainer};
+
+  @media (max-width: 720px) {
+    min-height: 220px;
+  }
 `
 
 export const ModalImage = styled.img`
   display: block;
   max-width: 100%;
-  max-height: 60vh;
+  max-height: 380px;
   object-fit: contain;
 `
 
 export const ModalFallback = styled.div`
-  min-height: 320px;
+  min-height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${neutral.muted};
 `
 
-export const ModalMeta = styled.p`
+export const ModalInfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 16px 20px 0;
+
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`
+
+export const ModalInfoItem = styled.div`
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+
+  span,
+  strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    margin-bottom: 4px;
+    color: ${neutral.muted};
+    font-size: 12px;
+  }
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 700;
+  }
+`
+
+export const ModalPostDescription = styled.p`
+  margin: 16px 20px 0;
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.text};
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+`
+
+export const ModalSection = styled.section`
+  padding: 20px;
+`
+
+export const ModalSectionTitle = styled.h3`
+  margin: 0 0 12px;
+  color: ${neutral.strongText};
+  font-size: 16px;
+  font-weight: 700;
+`
+
+export const ReportList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin: 0;
-  padding: 12px 20px 16px;
-  border-top: 1px solid ${neutral.border};
+  padding: 0;
+  list-style: none;
+`
+
+export const ReportItem = styled.li`
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+`
+
+export const ReportHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+`
+
+export const ReportReporter = styled.p`
+  margin: 0 0 4px;
+  color: ${neutral.strongText};
+  font-size: 14px;
+  font-weight: 700;
+`
+
+export const ReportMeta = styled.p`
+  margin: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  word-break: break-all;
+  line-height: 1.5;
+  word-break: break-word;
+`
+
+export const ReportStatusBadge = styled.span<{
+  $status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+}>`
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 4px;
+  background: ${neutral.surfaceContainer};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
+
+  ${({ $status }) =>
+    $status === 'PENDING' &&
+    css`
+      border-color: ${neutral.warning};
+      background: #ffcc0024;
+      color: ${neutral.text};
+    `}
+
+  ${({ $status }) =>
+    $status === 'ACCEPTED' &&
+    css`
+      border-color: ${neutral.success};
+      background: #20df331f;
+      color: ${neutral.text};
+    `}
+
+  ${({ $status }) =>
+    $status === 'DECLINED' &&
+    css`
+      border-color: ${neutral.borderDark};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.muted};
+    `}
+`
+
+export const ReportReason = styled.p`
+  margin: 0 0 10px;
+  color: ${neutral.text};
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+`
+
+export const ModalEmptyText = styled.p`
+  margin: 0;
+  padding: 16px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 14px;
 `

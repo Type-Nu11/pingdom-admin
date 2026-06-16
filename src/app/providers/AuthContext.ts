@@ -22,7 +22,7 @@ export interface AuthContextValue extends AuthState {
   isAuthReady: boolean
   isAuthenticated: boolean
   login: (data: LoginResponse) => void
-  logout: () => void
+  logout: () => Promise<void>
   clearAuth: () => void
   updateUser: (user: Partial<AuthUser>) => void
 }

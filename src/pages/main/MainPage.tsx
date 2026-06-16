@@ -1,59 +1,140 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SortDropdown from '../../components/common/SortDropdown'
-import { useAdminPictures } from '../../hooks/useAdminPictures'
+import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
-import type { AdminPicture, AdminPictureSortParam } from '../../types/adminPicture.types'
+import type {
+  AdminPost,
+  AdminPostReportItem,
+  AdminPostReportStatus,
+  AdminPostSortParam,
+} from '../../types/adminPost.types'
 import * as S from './MainPage.styles'
 
-const ADMIN_PICTURE_PAGE_SIZE = 20
+const ADMIN_POST_PAGE_SIZE = 20
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
-const DEFAULT_ADMIN_PICTURE_SORT_PARAM: AdminPictureSortParam = 'LATEST'
-const ADMIN_PICTURE_FEATURE_ENABLED = false
-const ADMIN_PICTURE_SORT_OPTIONS = [
+const DEFAULT_ADMIN_POST_SORT_PARAM: AdminPostSortParam = 'LATEST'
+const ADMIN_POST_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
+  { value: 'MOST_LIKED', label: '좋아요순' },
 ]
-
-function getPictureThumbnailUrl(picture: AdminPicture) {
-  return picture.thumbnailUrl
+const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
+  PENDING: '대기',
+  ACCEPTED: '수락',
+  DECLINED: '거절',
 }
 
-function getPictureImageUrl(picture: AdminPicture) {
-  return picture.imageUrl
+function getPostImageUrl(post: AdminPost) {
+  return post.imageUrl
 }
 
-function getPictureOwner(picture: AdminPicture) {
-  if (picture.username) {
-    return picture.username
+function getPostOwner(post: AdminPost) {
+  if (post.username) {
+    return post.username
   }
 
-  if (typeof picture.userId === 'number') {
-    return `사용자 ID: ${picture.userId}`
+  if (typeof post.userId === 'number') {
+    return `사용자 ID: ${post.userId}`
   }
 
   return '작성자 정보 없음'
 }
 
-function safeDecodeURIComponent(value: string) {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
+function getPostTitle(post: AdminPost) {
+  return post.name || `게시글-${post.id}`
 }
 
-function getPictureName(picture: AdminPicture) {
-  const pictureUrl = getPictureImageUrl(picture)
+function getPostReports(post: AdminPost) {
+  return Array.isArray(post.reports) ? post.reports : []
+}
 
-  if (!pictureUrl) {
-    return `사진-${picture.id}`
+function getReporterName(report: AdminPostReportItem) {
+  if (report.reporterUsername) {
+    return report.reporterUsername
   }
 
-  const pictureUrlWithoutQuery = pictureUrl.split('?')[0]
+  if (typeof report.reporterUserId === 'number') {
+    return `사용자 ID: ${report.reporterUserId}`
+  }
 
-  return safeDecodeURIComponent(
-    pictureUrlWithoutQuery.split('/').pop() ?? `사진-${picture.id}`
+  return '신고자 정보 없음'
+}
+
+function getReportStatusLabel(status: AdminPostReportStatus) {
+  return ADMIN_POST_REPORT_STATUS_LABELS[status]
+}
+
+function getPendingReportCount(post: AdminPost) {
+  return getPostReports(post).filter((report) => report.status === 'PENDING').length
+}
+
+function formatCount(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '0'
+}
+
+function formatPostDate(value: string) {
+  if (!value) {
+    return '작성일 정보 없음'
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
+function formatOptionalPostDate(value?: string | null) {
+  if (!value) {
+    return '처리 전'
+  }
+
+  return formatPostDate(value)
+}
+
+interface AdminPostImageProps {
+  post: AdminPost
+}
+
+function AdminPostImage({ post }: AdminPostImageProps) {
+  const postUrl = getPostImageUrl(post)
+  const [imageStatus, setImageStatus] = useState<'loading' | 'loaded' | 'error'>(
+    postUrl ? 'loading' : 'error'
+  )
+
+  const isLoadingImage = imageStatus === 'loading'
+  const isImageUnavailable = imageStatus === 'error'
+
+  return (
+    <S.MediaPreview>
+      {postUrl && !isImageUnavailable ? (
+        <S.MediaImage
+          src={postUrl}
+          alt={`게시글 ${post.id} 이미지`}
+          loading="lazy"
+          decoding="async"
+          $isLoaded={imageStatus === 'loaded'}
+          onLoad={() => setImageStatus('loaded')}
+          onError={() => setImageStatus('error')}
+        />
+      ) : null}
+      {isLoadingImage ? (
+        <S.MediaLoading role="status" aria-live="polite">
+          이미지 불러오는 중
+        </S.MediaLoading>
+      ) : null}
+      {isImageUnavailable ? <S.MediaFallback>이미지 없음</S.MediaFallback> : null}
+      <S.MediaBadge>
+        <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
+        <span>게시글</span>
+      </S.MediaBadge>
+    </S.MediaPreview>
   )
 }
 
@@ -81,12 +162,12 @@ function MainPage() {
   const { logout } = useAuth()
   const pageContentRef = useRef<HTMLElement | null>(null)
   const isSortEffectReadyRef = useRef(false)
-  const [selectedPicture, setSelectedPicture] = useState<AdminPicture | null>(null)
-  const [selectedSortParam, setSelectedSortParam] = useState<AdminPictureSortParam>(
-    DEFAULT_ADMIN_PICTURE_SORT_PARAM
+  const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
+  const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
+    DEFAULT_ADMIN_POST_SORT_PARAM
   )
   const {
-    pictures,
+    posts,
     page,
     totalCount,
     totalPages,
@@ -95,31 +176,43 @@ function MainPage() {
     isError,
     errorMessage,
     actionErrorMessage,
-    deletingPictureId,
-    fetchAdminPictures,
-    deletePicture,
-  } = useAdminPictures({
-    limit: ADMIN_PICTURE_PAGE_SIZE,
-    enabled: ADMIN_PICTURE_FEATURE_ENABLED,
+    postDetail,
+    isDetailLoading,
+    detailErrorMessage,
+    deletingPostId,
+    fetchAdminPosts,
+    fetchAdminPostDetail,
+    clearPostDetail,
+    deletePost,
+  } = useAdminPosts({
+    limit: ADMIN_POST_PAGE_SIZE,
   })
-  const selectedPictureUrl = selectedPicture ? getPictureImageUrl(selectedPicture) : ''
+  const activePost = postDetail ?? selectedPost
+  const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
+  const activeReports = activePost ? getPostReports(activePost) : []
   const currentPageNumber = page
   const showPagination = totalPages > 1
-  const isDeleting = deletingPictureId !== null
-  const isPictureFeatureDisabled = !ADMIN_PICTURE_FEATURE_ENABLED
+  const isDeleting = deletingPostId !== null
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
+  const handleOpenPostDetail = useCallback(
+    (post: AdminPost) => {
+      setSelectedPost(post)
+      void fetchAdminPostDetail(post.id)
+    },
+    [fetchAdminPostDetail]
+  )
+  const handleClosePostDetail = useCallback(() => {
+    setSelectedPost(null)
+    clearPostDetail()
+  }, [clearPostDetail])
   const handlePageChange = (nextPage: number) => {
-    if (isPictureFeatureDisabled) {
-      return
-    }
-
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
     if (nextPageNumber === currentPageNumber || isLoading || isDeleting) {
       return
     }
 
-    void fetchAdminPictures({ page: nextPageNumber }).then((isSuccess) => {
+    void fetchAdminPosts({ page: nextPageNumber }).then((isSuccess) => {
       if (isSuccess) {
         window.requestAnimationFrame(() => {
           pageContentRef.current?.scrollIntoView({
@@ -132,11 +225,7 @@ function MainPage() {
   }
 
   const handleRefresh = () => {
-    if (isPictureFeatureDisabled) {
-      return
-    }
-
-    void fetchAdminPictures({
+    void fetchAdminPosts({
       page: currentPageNumber,
       sortParam: selectedSortParam,
     })
@@ -149,20 +238,20 @@ function MainPage() {
       return
     }
 
-    void fetchAdminPictures({
+    void fetchAdminPosts({
       page: 1,
       sortParam: selectedSortParam,
     })
-  }, [fetchAdminPictures, selectedSortParam])
+  }, [fetchAdminPosts, selectedSortParam])
 
   useEffect(() => {
-    if (!selectedPicture) {
+    if (!selectedPost) {
       return
     }
 
     function closeModalOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setSelectedPicture(null)
+        handleClosePostDetail()
       }
     }
 
@@ -171,7 +260,7 @@ function MainPage() {
     return () => {
       window.removeEventListener('keydown', closeModalOnEscape)
     }
-  }, [selectedPicture])
+  }, [handleClosePostDetail, selectedPost])
 
   return (
     <S.AppShell>
@@ -213,7 +302,7 @@ function MainPage() {
           <S.LogoutButton
             type="button"
             onClick={() => {
-              logout()
+              void logout()
               navigate('/login', { replace: true })
             }}
           >
@@ -241,11 +330,9 @@ function MainPage() {
             <div>
               <S.PageTitle>업로드 게시글</S.PageTitle>
               <S.PageDescription>
-                {isPictureFeatureDisabled
-                  ? '사용자가 업로드한 지도 게시글을 관리합니다.'
-                  : totalCount > 0
-                    ? `업로드된 게시글 ${totalCount}개를 관리합니다.`
-                    : '사용자가 업로드한 지도 게시글을 관리합니다.'}
+                {totalCount > 0
+                  ? `업로드된 게시글 ${totalCount}개를 관리합니다.`
+                  : '사용자가 업로드한 지도 게시글을 관리합니다.'}
               </S.PageDescription>
             </div>
 
@@ -257,121 +344,130 @@ function MainPage() {
               <SortDropdown
                 ariaLabel="게시글 목록 정렬"
                 value={selectedSortParam}
-                options={ADMIN_PICTURE_SORT_OPTIONS}
-                disabled={isPictureFeatureDisabled || isLoading || isDeleting}
-                width="104px"
-                onChange={(value) =>
-                  setSelectedSortParam(value as AdminPictureSortParam)
-                }
+                options={ADMIN_POST_SORT_OPTIONS}
+                disabled={isLoading || isDeleting}
+                width="112px"
+                onChange={(value) => setSelectedSortParam(value as AdminPostSortParam)}
               />
               <S.PrimaryButton
                 type="button"
-                disabled={isPictureFeatureDisabled || isLoading || isDeleting}
+                disabled={isLoading || isDeleting}
                 onClick={handleRefresh}
               >
                 <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                <span>
-                  {isPictureFeatureDisabled
-                    ? '준비 중'
-                    : isLoading
-                      ? '불러오는 중'
-                      : '새로고침'}
-                </span>
+                <span>{isLoading ? '불러오는 중' : '새로고침'}</span>
               </S.PrimaryButton>
             </S.HeaderActions>
           </S.PageHeader>
 
-          {!isPictureFeatureDisabled && isLoading ? (
-            <S.FeedbackText>사진 목록을 불러오는 중입니다.</S.FeedbackText>
+          {isLoading ? (
+            <S.FeedbackText>게시글 목록을 불러오는 중입니다.</S.FeedbackText>
           ) : null}
 
-          {!isPictureFeatureDisabled && isError ? (
+          {isError ? (
             <S.FeedbackText>{errorMessage}</S.FeedbackText>
           ) : null}
 
-          {!isPictureFeatureDisabled && actionErrorMessage ? (
+          {actionErrorMessage ? (
             <S.FeedbackText>{actionErrorMessage}</S.FeedbackText>
           ) : null}
 
-          {!isPictureFeatureDisabled && !isLoading && !isError && pictures.length === 0 ? (
-            <S.FeedbackText>등록된 사진이 없습니다.</S.FeedbackText>
+          {!isLoading && !isError && posts.length === 0 ? (
+            <S.FeedbackText>등록된 게시글이 없습니다.</S.FeedbackText>
           ) : null}
 
-          {!isPictureFeatureDisabled && !isError && pictures.length > 0 ? (
+          {!isError && posts.length > 0 ? (
             <S.MediaGrid>
-              {pictures.map((picture) => {
-                const pictureUrl = getPictureThumbnailUrl(picture)
+              {posts.map((post) => {
+                const reportCount = getPostReports(post).length
+                const pendingReportCount = getPendingReportCount(post)
 
                 return (
                   <S.MediaCard
-                    key={picture.id}
+                    key={post.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelectedPicture(picture)}
+                    onClick={() => handleOpenPostDetail(post)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault()
-                        setSelectedPicture(picture)
+                        handleOpenPostDetail(post)
                       }
                     }}
                   >
-                    <S.MediaPreview>
-                      {pictureUrl ? (
-                        <S.MediaImage
-                          src={pictureUrl}
-                          alt={`업로드 사진 ${picture.id}`}
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <S.MediaFallback>이미지 없음</S.MediaFallback>
-                      )}
-                      <S.MediaBadge>
-                        <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
-                        <span>사진</span>
-                      </S.MediaBadge>
-                    </S.MediaPreview>
+                    <AdminPostImage
+                      key={getPostImageUrl(post) || `post-image-${post.id}`}
+                      post={post}
+                    />
 
                     <S.MediaBody>
                       <S.MediaTitleRow>
-                        <S.MediaTitle>{getPictureName(picture)}</S.MediaTitle>
-                        <S.StatusBadge>업로드됨</S.StatusBadge>
+                        <S.MediaTitle>{getPostTitle(post)}</S.MediaTitle>
+                        <S.StatusBadge>
+                          {pendingReportCount > 0 ? `신고 ${pendingReportCount}` : '정상'}
+                        </S.StatusBadge>
                       </S.MediaTitleRow>
 
                       <S.MediaMetaList>
                         <S.MediaMeta>
                           <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
-                          <span>{getPictureOwner(picture)}</span>
+                          <span>{getPostOwner(post)}</span>
                         </S.MediaMeta>
                         <S.MediaMeta>
                           <S.MaterialIcon aria-hidden="true">tag</S.MaterialIcon>
-                          <span>사진 ID: {picture.id}</span>
+                          <span>게시글 ID: {post.id}</span>
+                        </S.MediaMeta>
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
+                          <span>{post.placeName || '장소 정보 없음'}</span>
+                        </S.MediaMeta>
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">favorite</S.MaterialIcon>
+                          <span>좋아요 {formatCount(post.likeCount)}</span>
+                        </S.MediaMeta>
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
+                          <span>신고 {formatCount(reportCount)}건</span>
+                        </S.MediaMeta>
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
+                          <span>{formatPostDate(post.createdAt)}</span>
+                        </S.MediaMeta>
+                        {post.description ? (
+                          <S.MediaMeta>
+                            <S.MaterialIcon aria-hidden="true">notes</S.MaterialIcon>
+                            <span>{post.description}</span>
+                          </S.MediaMeta>
+                        ) : null}
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">badge</S.MaterialIcon>
+                          <span>사용자 ID: {post.userId}</span>
                         </S.MediaMeta>
                       </S.MediaMetaList>
 
                       <S.CardActions>
                         <S.CardButton
                           type="button"
-                          disabled={deletingPictureId !== null}
+                          disabled={isLoading || deletingPostId !== null}
                           onClick={(event) => {
                             event.stopPropagation()
                             const shouldDelete = window.confirm(
-                              `사진 #${picture.id}을 삭제할까요?`
+                              `게시글 #${post.id}을 삭제할까요?`
                             )
 
                             if (shouldDelete) {
-                              void deletePicture(picture.id)
+                              void deletePost(post.id)
                             }
                           }}
                         >
-                          {deletingPictureId === picture.id ? '삭제 중' : '삭제'}
+                          {deletingPostId === post.id ? '삭제 중' : '삭제'}
                         </S.CardButton>
                         <S.IconCardButton
                           type="button"
-                          aria-label={`사진 ${picture.id} 보기`}
+                          aria-label={`게시글 ${post.id} 보기`}
                           onClick={(event) => {
                             event.stopPropagation()
-                            setSelectedPicture(picture)
+                            handleOpenPostDetail(post)
                           }}
                         >
                           <S.MaterialIcon aria-hidden="true">visibility</S.MaterialIcon>
@@ -384,8 +480,8 @@ function MainPage() {
             </S.MediaGrid>
           ) : null}
 
-          {!isPictureFeatureDisabled && !isError && showPagination ? (
-            <S.Pagination aria-label="사진 목록 페이지네이션">
+          {!isError && showPagination ? (
+            <S.Pagination aria-label="게시글 목록 페이지네이션">
               <S.PaginationButton
                 type="button"
                 disabled={isLoading || isDeleting || currentPageNumber === 1}
@@ -425,47 +521,115 @@ function MainPage() {
         </S.PageContent>
       </S.MainArea>
 
-      {selectedPicture ? (
+      {activePost ? (
         <S.ModalOverlay
           role="presentation"
-          onMouseDown={() => setSelectedPicture(null)}
+          onMouseDown={handleClosePostDetail}
         >
           <S.ModalContent
             role="dialog"
             aria-modal="true"
-            aria-labelledby="picture-modal-title"
+            aria-labelledby="post-modal-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <S.ModalHeader>
               <div>
-                <S.ModalTitle id="picture-modal-title">
-                  {getPictureName(selectedPicture)}
+                <S.ModalTitle id="post-modal-title">
+                  {getPostTitle(activePost)}
                 </S.ModalTitle>
                 <S.ModalDescription>
-                  사진 ID: {selectedPicture.id} · {getPictureOwner(selectedPicture)}
+                  게시글 ID: {activePost.id} · {getPostOwner(activePost)} ·{' '}
+                  {activePost.placeName || '장소 정보 없음'}
                 </S.ModalDescription>
               </div>
               <S.ModalCloseButton
                 type="button"
-                aria-label="이미지 미리보기 닫기"
-                onClick={() => setSelectedPicture(null)}
+                aria-label="게시글 이미지 미리보기 닫기"
+                onClick={handleClosePostDetail}
               >
                 <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
               </S.ModalCloseButton>
             </S.ModalHeader>
 
-            <S.ModalImageFrame>
-              {selectedPictureUrl ? (
-                <S.ModalImage
-                  src={selectedPictureUrl}
-                  alt={`업로드 사진 ${selectedPicture.id} 크게 보기`}
-                />
-              ) : (
-                <S.ModalFallback>이미지 없음</S.ModalFallback>
-              )}
-            </S.ModalImageFrame>
+            <S.ModalBody>
+              {isDetailLoading ? (
+                <S.ModalNotice role="status" aria-live="polite">
+                  상세 정보를 불러오는 중입니다.
+                </S.ModalNotice>
+              ) : null}
 
-            <S.ModalMeta>{selectedPicture.imageUrl}</S.ModalMeta>
+              {detailErrorMessage ? (
+                <S.ModalNotice role="alert">{detailErrorMessage}</S.ModalNotice>
+              ) : null}
+
+              <S.ModalImageFrame>
+                {selectedPostUrl ? (
+                  <S.ModalImage
+                    src={selectedPostUrl}
+                    alt={`게시글 ${activePost.id} 이미지 크게 보기`}
+                  />
+                ) : (
+                  <S.ModalFallback>이미지 없음</S.ModalFallback>
+                )}
+              </S.ModalImageFrame>
+
+              <S.ModalInfoGrid>
+                <S.ModalInfoItem>
+                  <span>작성자 ID</span>
+                  <strong>{activePost.userId}</strong>
+                </S.ModalInfoItem>
+                <S.ModalInfoItem>
+                  <span>좋아요</span>
+                  <strong>{formatCount(activePost.likeCount)}</strong>
+                </S.ModalInfoItem>
+                <S.ModalInfoItem>
+                  <span>작성일</span>
+                  <strong>{formatPostDate(activePost.createdAt)}</strong>
+                </S.ModalInfoItem>
+                <S.ModalInfoItem>
+                  <span>신고</span>
+                  <strong>{formatCount(activeReports.length)}건</strong>
+                </S.ModalInfoItem>
+              </S.ModalInfoGrid>
+
+              {activePost.description ? (
+                <S.ModalPostDescription>{activePost.description}</S.ModalPostDescription>
+              ) : null}
+
+              <S.ModalSection>
+                <S.ModalSectionTitle>신고 내역</S.ModalSectionTitle>
+                {isDetailLoading ? (
+                  <S.ModalEmptyText>
+                    신고 내역을 불러오는 중입니다...
+                  </S.ModalEmptyText>
+                ) : activeReports.length > 0 ? (
+                  <S.ReportList>
+                    {activeReports.map((report) => (
+                      <S.ReportItem key={report.reportId}>
+                        <S.ReportHeader>
+                          <div>
+                            <S.ReportReporter>{getReporterName(report)}</S.ReportReporter>
+                            <S.ReportMeta>
+                              신고자 ID: {report.reporterUserId} · 신고 ID:{' '}
+                              {report.reportId}
+                            </S.ReportMeta>
+                          </div>
+                          <S.ReportStatusBadge $status={report.status}>
+                            {getReportStatusLabel(report.status)}
+                          </S.ReportStatusBadge>
+                        </S.ReportHeader>
+                        <S.ReportReason>{report.reason || '신고 사유 없음'}</S.ReportReason>
+                        <S.ReportMeta>
+                          처리일: {formatOptionalPostDate(report.processedAt)}
+                        </S.ReportMeta>
+                      </S.ReportItem>
+                    ))}
+                  </S.ReportList>
+                ) : (
+                  <S.ModalEmptyText>연결된 신고가 없습니다.</S.ModalEmptyText>
+                )}
+              </S.ModalSection>
+            </S.ModalBody>
           </S.ModalContent>
         </S.ModalOverlay>
       ) : null}

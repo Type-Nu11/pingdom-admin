@@ -24,6 +24,13 @@ export const AppShell = styled.div`
 `
 
 export const MaterialIcon = styled.span`
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
   line-height: 1;
@@ -46,6 +53,14 @@ export const SideNav = styled.nav`
   flex-direction: column;
   border-right: 1px solid ${neutral.border};
   background: ${neutral.surface};
+
+  @media (max-width: 900px) {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid ${neutral.border};
+  }
 `
 
 export const SideHeader = styled.div`
@@ -89,6 +104,13 @@ export const SideMenu = styled.div`
   flex: 1;
   flex-direction: column;
   padding: 18px 0;
+
+  @media (max-width: 900px) {
+    flex: 0 1 auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+  }
 `
 
 export const MenuButton = styled.button<{ $active?: boolean }>`
@@ -129,14 +151,32 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
           'FILL' 1,
           'wght' 400,
           'GRAD' 0,
-          'opsz' 20;
+        'opsz' 20;
       }
     `}
+
+  @media (max-width: 900px) {
+    width: auto;
+    flex-shrink: 0;
+    border-right: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 8px;
+
+    ${({ $active }) =>
+      $active &&
+      css`
+        border-bottom-color: ${neutral.primary};
+      `}
+  }
 `
 
 export const SideFooter = styled.div`
   padding: 18px 28px 28px;
   border-top: 1px solid ${neutral.border};
+
+  @media (max-width: 900px) {
+    padding: 8px;
+  }
 `
 
 export const LogoutButton = styled.button`
@@ -163,6 +203,11 @@ export const LogoutButton = styled.button`
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
+
+  @media (max-width: 900px) {
+    width: auto;
+    padding: 0 14px;
+  }
 `
 
 export const MainArea = styled.div`
@@ -171,6 +216,13 @@ export const MainArea = styled.div`
   display: flex;
   overflow: hidden;
   flex-direction: column;
+
+  @media (max-width: 900px) {
+    height: auto;
+    min-height: 100vh;
+    margin-left: 0;
+    overflow: visible;
+  }
 `
 
 export const TopBar = styled.header`
@@ -183,6 +235,13 @@ export const TopBar = styled.header`
   padding: 0 32px;
   border-bottom: 1px solid ${neutral.border};
   background: ${neutral.surface};
+
+  @media (max-width: 720px) {
+    height: auto;
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px 24px;
+  }
 `
 
 export const TopTitleGroup = styled.div`
@@ -202,6 +261,10 @@ export const TopActions = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+
+  @media (max-width: 720px) {
+    width: 100%;
+  }
 `
 
 export const IconButton = styled.button`
@@ -228,6 +291,16 @@ export const SplitContent = styled.div`
   grid-template-columns: 500px minmax(0, 1fr);
   flex: 1;
   overflow: hidden;
+
+  @media (max-width: 1180px) {
+    grid-template-columns: 440px minmax(0, 1fr);
+  }
+
+  @media (max-width: 900px) {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
 `
 
 export const PlacePanel = styled.section`
@@ -237,6 +310,11 @@ export const PlacePanel = styled.section`
   flex-direction: column;
   border-right: 1px solid ${neutral.border};
   background: ${neutral.surface};
+
+  @media (max-width: 900px) {
+    border-right: 0;
+    border-bottom: 1px solid ${neutral.border};
+  }
 `
 
 export const PanelControls = styled.div`
@@ -245,6 +323,10 @@ export const PanelControls = styled.div`
   gap: 16px;
   padding: 20px;
   border-bottom: 1px solid ${neutral.border};
+
+  @media (max-width: 520px) {
+    padding: 16px;
+  }
 `
 
 export const PanelSummary = styled.div`
@@ -255,16 +337,19 @@ export const PanelSummary = styled.div`
 `
 
 export const PanelActionGroup = styled.div`
-  display: inline-flex;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
   align-items: center;
-  flex-shrink: 0;
   gap: 8px;
 `
 
 export const PanelCount = styled.p`
+  min-height: 23px;
   margin: 0;
   color: ${neutral.muted};
   font-size: 15px;
+  line-height: 1.5;
 
   strong {
     color: ${neutral.primary};
@@ -300,6 +385,33 @@ export const SearchInput = styled.input`
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
     background: ${neutral.surface};
+  }
+`
+
+export const PanelResultSummary = styled.div`
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const ClearFilterButton = styled.button`
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: ${neutral.primary};
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: ${neutral.primaryHover};
   }
 `
 
@@ -388,6 +500,22 @@ export const PlaceList = styled.div`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
+
+  @media (max-width: 900px) {
+    max-height: 560px;
+  }
+`
+
+export const ListStatus = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 10px 20px;
+  border-bottom: 1px solid ${neutral.border};
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
 `
 
 export const PlaceItem = styled.button<{ $active?: boolean }>`
@@ -410,11 +538,22 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
     background: ${neutral.primaryTint};
   }
 
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: -2px;
+  }
+
   ${({ $active }) =>
     $active &&
     css`
       box-shadow: inset 3px 0 0 ${neutral.primary};
     `}
+
+  @media (max-width: 520px) {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
 `
 
 export const PlaceThumb = styled.div`
@@ -427,6 +566,11 @@ export const PlaceThumb = styled.div`
   border-radius: 8px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
+
+  @media (max-width: 520px) {
+    width: 40px;
+    height: 40px;
+  }
 `
 
 export const PlaceInfo = styled.div`
@@ -530,6 +674,8 @@ export const EmptyState = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
+  font-size: 14px;
+  line-height: 1.5;
 `
 
 export const RetryButton = styled.button`
@@ -559,6 +705,7 @@ export const PanelPagination = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 14px 16px;
   border-top: 1px solid ${neutral.border};
@@ -653,6 +800,10 @@ export const MapPanel = styled.section`
   min-height: 0;
   overflow: hidden;
   background: ${neutral.surfaceLow};
+
+  @media (max-width: 900px) {
+    min-height: 460px;
+  }
 `
 
 export const AdminMap = styled(KakaoMap)`
@@ -749,6 +900,11 @@ export const MapControlGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  @media (max-width: 720px) {
+    right: 16px;
+    bottom: 16px;
+  }
 `
 
 export const MapControlButton = styled.button`
@@ -787,6 +943,13 @@ export const MapInfo = styled.div`
   color: ${neutral.text};
   font-size: 12px;
   box-shadow: 0 8px 22px ${neutral.shadow};
+
+  @media (max-width: 720px) {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
 `
 
 export const MapInfoDot = styled.span`
@@ -795,6 +958,86 @@ export const MapInfoDot = styled.span`
   flex-shrink: 0;
   border-radius: 999px;
   background: ${neutral.primary};
+`
+
+export const MapSelectionCard = styled.div`
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 6;
+  width: min(360px, calc(100% - 120px));
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.softOverlay};
+  box-shadow: 0 12px 30px ${neutral.shadow};
+
+  @media (max-width: 720px) {
+    left: 12px;
+    bottom: 76px;
+    width: calc(100% - 24px);
+  }
+`
+
+export const MapSelectionTitle = styled.h3`
+  overflow: hidden;
+  margin: 0 0 6px;
+  color: ${neutral.strongText};
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const MapSelectionMeta = styled.p`
+  overflow: hidden;
+  margin: 0;
+  color: ${neutral.muted};
+  font-size: 12px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const MapSelectionStatList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+`
+
+export const MapSelectionAction = styled.button`
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primary};
+    background: ${neutral.primary};
+    color: ${neutral.primaryText};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
 `
 
 export const ModalOverlay = styled.div`

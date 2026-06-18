@@ -11,6 +11,7 @@ import { adminColors } from '../../styles/theme'
 type KakaoMapInstance = {
   getLevel: () => number
   setLevel: (level: number) => void
+  setCenter: (center: unknown) => void
 }
 
 type KakaoMaps = {
@@ -54,6 +55,7 @@ interface KakaoMapProps {
 export interface KakaoMapHandle {
   zoomIn: () => void
   zoomOut: () => void
+  moveTo: (latitude: number, longitude: number) => void
 }
 
 function loadKakaoMapScript(appKey: string) {
@@ -136,6 +138,15 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
       }
 
       map.setLevel(Math.min(MAX_MAP_LEVEL, map.getLevel() + 1))
+    },
+    moveTo(latitude: number, longitude: number) {
+      const map = mapInstanceRef.current
+
+      if (!map || !window.kakao?.maps) {
+        return
+      }
+
+      map.setCenter(new window.kakao.maps.LatLng(latitude, longitude))
     },
   }))
 

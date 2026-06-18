@@ -141,12 +141,13 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     },
     moveTo(latitude: number, longitude: number) {
       const map = mapInstanceRef.current
+      const kakao = window.kakao
 
-      if (!map || !window.kakao?.maps) {
+      if (!map || !kakao?.maps) {
         return
       }
 
-      map.setCenter(new window.kakao.maps.LatLng(latitude, longitude))
+      map.setCenter(new kakao.maps.LatLng(latitude, longitude))
     },
   }))
 
@@ -168,16 +169,18 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         setErrorMessage('')
         await loadKakaoMapScript(KAKAO_MAP_APP_KEY)
 
-        if (!isMounted || !mapContainerRef.current || !window.kakao?.maps) {
+        const kakao = window.kakao
+
+        if (!isMounted || !mapContainerRef.current || !kakao?.maps) {
           return
         }
 
-        const center = new window.kakao.maps.LatLng(
+        const center = new kakao.maps.LatLng(
           DEFAULT_CENTER.latitude,
           DEFAULT_CENTER.longitude
         )
 
-        const map = new window.kakao.maps.Map(mapContainerRef.current, {
+        const map = new kakao.maps.Map(mapContainerRef.current, {
           center,
           level: 3,
         })
@@ -189,7 +192,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
           }
         }, 3000)
 
-        window.kakao.maps.event.addListener(map, 'tilesloaded', () => {
+        kakao.maps.event.addListener(map, 'tilesloaded', () => {
           if (delayedMessageTimer) {
             window.clearTimeout(delayedMessageTimer)
           }

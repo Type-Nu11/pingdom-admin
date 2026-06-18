@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { KakaoMapHandle } from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
@@ -12,6 +12,7 @@ import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
+const PLACE_SEARCH_DEBOUNCE_MS = 300
 const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
@@ -90,6 +91,10 @@ function PlaceManagePage() {
   const { logout } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
+  const isSearchEffectReadyRef = useRef(false)
+  const latestSortParamRef = useRef(DEFAULT_PLACE_SORT_PARAM)
+  const shouldSkipNextSearchEffectRef = useRef(false)
+  const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<AdminPlaceItem | null>(null)
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
@@ -117,6 +122,65 @@ function PlaceManagePage() {
     ? hasValidCoordinate(selectedPlace)
     : false
 
+  const clearPendingPlaceSearch = useCallback(() => {
+    if (!searchTimeoutRef.current) {
+      return
+    }
+
+    window.clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = null
+  }, [])
+
+  const scrollPlaceListToTop = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      placeListRef.current?.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+    })
+  }, [])
+
+  useEffect(() => {
+    latestSortParamRef.current = selectedSortParam
+  }, [selectedSortParam])
+
+  useEffect(() => {
+    if (!isSearchEffectReadyRef.current) {
+      isSearchEffectReadyRef.current = true
+
+      return
+    }
+
+    if (shouldSkipNextSearchEffectRef.current) {
+      shouldSkipNextSearchEffectRef.current = false
+
+      return
+    }
+
+    clearPendingPlaceSearch()
+
+    const nextKeyword = placeSearchQuery.trim()
+    searchTimeoutRef.current = window.setTimeout(() => {
+      searchTimeoutRef.current = null
+      void fetchAdminPlaces({
+        page: 1,
+        sortParam: latestSortParamRef.current,
+        keyword: nextKeyword,
+      }).then((isSuccess) => {
+        if (isSuccess) {
+          scrollPlaceListToTop()
+        }
+      })
+    }, PLACE_SEARCH_DEBOUNCE_MS)
+
+    return clearPendingPlaceSearch
+  }, [
+    clearPendingPlaceSearch,
+    fetchAdminPlaces,
+    placeSearchQuery,
+    scrollPlaceListToTop,
+  ])
+
   const handleSelectPlace = (place: AdminPlaceItem) => {
     setSelectedPlace(place)
 
@@ -128,24 +192,11 @@ function PlaceManagePage() {
   const handleSearchQueryChange = (nextQuery: string) => {
     setPlaceSearchQuery(nextQuery)
     setSelectedPlace(null)
-
-    void fetchAdminPlaces({
-      page: 1,
-      sortParam: selectedSortParam,
-      keyword: nextQuery.trim(),
-    }).then((isSuccess) => {
-      if (isSuccess) {
-        window.requestAnimationFrame(() => {
-          placeListRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          })
-        })
-      }
-    })
   }
 
   const handleClearPlaceFilters = () => {
+    clearPendingPlaceSearch()
+    shouldSkipNextSearchEffectRef.current = true
     setPlaceSearchQuery('')
 
     void fetchAdminPlaces({
@@ -160,6 +211,8 @@ function PlaceManagePage() {
   }
 
   const handleRefresh = () => {
+    clearPendingPlaceSearch()
+
     void fetchAdminPlaces({
       page,
       sortParam: selectedSortParam,
@@ -174,6 +227,7 @@ function PlaceManagePage() {
   const handleSortChange = (value: string) => {
     const nextSortParam = value as AdminPlaceListSortParam
 
+    clearPendingPlaceSearch()
     setSelectedSortParam(nextSortParam)
 
     void fetchAdminPlaces({
@@ -183,12 +237,7 @@ function PlaceManagePage() {
     }).then((isSuccess) => {
       if (isSuccess) {
         setSelectedPlace(null)
-        window.requestAnimationFrame(() => {
-          placeListRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          })
-        })
+        scrollPlaceListToTop()
       }
     })
   }
@@ -200,6 +249,8 @@ function PlaceManagePage() {
       return
     }
 
+    clearPendingPlaceSearch()
+
     void fetchAdminPlaces({
       page: nextPageNumber,
       sortParam: selectedSortParam,
@@ -207,12 +258,7 @@ function PlaceManagePage() {
     }).then((isSuccess) => {
       if (isSuccess) {
         setSelectedPlace(null)
-        window.requestAnimationFrame(() => {
-          placeListRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          })
-        })
+        scrollPlaceListToTop()
       }
     })
   }

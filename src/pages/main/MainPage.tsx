@@ -229,7 +229,7 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function MainPage() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const pageContentRef = useRef<HTMLElement | null>(null)
   const isSortEffectReadyRef = useRef(false)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
@@ -265,6 +265,8 @@ function MainPage() {
   const activeReports = activePost ? getPostReports(activePost) : []
   const currentPageNumber = page
   const isDeleting = deletingPostId !== null
+  const adminIdentifier =
+    user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const hasClientOnlyPostFilter =
     selectedReviewFilter !== 'ALL' || postSearchQuery.trim().length > 0
   const showPagination = totalPages > 1 && !hasClientOnlyPostFilter
@@ -399,19 +401,16 @@ function MainPage() {
     <S.AppShell>
       <S.SideNav aria-label="관리자 메뉴">
         <S.SideHeader>
-          <S.ProfileAvatar>
-            <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
-          </S.ProfileAvatar>
-          <div>
-            <S.SideTitle>관리자 패널</S.SideTitle>
-            <S.SideCaption>핑덤</S.SideCaption>
-          </div>
+          <S.BrandLockup>
+            <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+          </S.BrandLockup>
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" disabled aria-label="대시보드 점검 중">
             <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
             <span>대시보드</span>
+            <S.MenuStatusText>점검 중</S.MenuStatusText>
           </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/places')}>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
@@ -432,6 +431,15 @@ function MainPage() {
         </S.SideMenu>
 
         <S.SideFooter>
+          <S.AdminProfile aria-label="관리자 계정">
+            <S.AdminProfileIcon>
+              <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
+            </S.AdminProfileIcon>
+            <S.AdminProfileText>
+              <strong>{adminIdentifier}</strong>
+              <span>관리자</span>
+            </S.AdminProfileText>
+          </S.AdminProfile>
           <S.LogoutButton
             type="button"
             onClick={() => {
@@ -470,10 +478,6 @@ function MainPage() {
             </div>
 
             <S.HeaderActions>
-              <S.OutlineButton type="button">
-                <S.MaterialIcon aria-hidden="true">download</S.MaterialIcon>
-                <span>목록 내보내기</span>
-              </S.OutlineButton>
               <SortDropdown
                 ariaLabel="게시글 목록 정렬"
                 value={selectedSortParam}

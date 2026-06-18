@@ -72,39 +72,26 @@ export const SideNav = styled.nav`
 `
 
 export const SideHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 34px 28px;
-  border-bottom: 1px solid ${neutral.border};
-`
-
-export const ProfileAvatar = styled.div`
-  width: 40px;
-  height: 40px;
+  min-height: 116px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid ${neutral.primarySoft};
-  border-radius: 999px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  padding: 24px 28px;
+  border-bottom: 1px solid ${neutral.border};
 `
 
-export const SideTitle = styled.h1`
-  margin: 0;
-  color: ${neutral.strongText};
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
+export const BrandLockup = styled.div`
+  position: relative;
+  width: min(188px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `
 
-export const SideCaption = styled.p`
-  margin: 0;
-  color: ${neutral.muted};
-  font-size: 12px;
-  line-height: 1.3;
+export const BrandLogo = styled.img`
+  width: 100%;
+  height: auto;
+  display: block;
 `
 
 export const SideMenu = styled.div`
@@ -141,9 +128,20 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     color 160ms ease,
     border-color 160ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
+  }
+
+  &:disabled {
+    border-right-color: #f59f00;
+    background: #fff4e0;
+    color: ${neutral.muted};
+    cursor: default;
+
+    ${MaterialIcon} {
+      color: #f59f00;
+    }
   }
 
   ${({ $active }) =>
@@ -170,12 +168,26 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     border-bottom: 2px solid transparent;
     border-radius: 8px;
 
+    &:disabled {
+      border-right: 0;
+      border-bottom-color: #f59f00;
+    }
+
     ${({ $active }) =>
       $active &&
       css`
         border-bottom-color: ${neutral.primary};
       `}
   }
+`
+
+export const MenuStatusText = styled.span`
+  margin-left: auto;
+  color: #f59f00;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
 `
 
 export const SideFooter = styled.div`
@@ -185,6 +197,62 @@ export const SideFooter = styled.div`
   @media (max-width: 900px) {
     padding: 8px;
     border-top: 1px solid ${neutral.border};
+  }
+`
+
+export const AdminProfile = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const AdminProfileIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const AdminProfileText = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  span {
+    color: ${neutral.muted};
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
   }
 `
 
@@ -729,9 +797,9 @@ export const StatusBadge = styled.span<{
   ${({ $tone }) =>
     $tone === 'reported' &&
     css`
-      border-color: ${neutral.info};
-      background: #008bff14;
-      color: ${neutral.info};
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
     `}
 
 `

@@ -88,7 +88,7 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function PlaceManagePage() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
   const isSearchEffectReadyRef = useRef(false)
@@ -121,6 +121,8 @@ function PlaceManagePage() {
   const selectedPlaceHasCoordinate = selectedPlace
     ? hasValidCoordinate(selectedPlace)
     : false
+  const adminIdentifier =
+    user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 
   const clearPendingPlaceSearch = useCallback(() => {
     if (!searchTimeoutRef.current) {
@@ -267,19 +269,16 @@ function PlaceManagePage() {
     <S.AppShell>
       <S.SideNav aria-label="관리자 메뉴">
         <S.SideHeader>
-          <S.ProfileAvatar>
-            <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
-          </S.ProfileAvatar>
-          <div>
-            <S.SideTitle>관리자 패널</S.SideTitle>
-            <S.SideCaption>핑덤</S.SideCaption>
-          </div>
+          <S.BrandLockup>
+            <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+          </S.BrandLockup>
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" disabled aria-label="대시보드 점검 중">
             <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
             <span>대시보드</span>
+            <S.MenuStatusText>점검 중</S.MenuStatusText>
           </S.MenuButton>
           <S.MenuButton type="button" $active>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
@@ -300,6 +299,15 @@ function PlaceManagePage() {
         </S.SideMenu>
 
         <S.SideFooter>
+          <S.AdminProfile aria-label="관리자 계정">
+            <S.AdminProfileIcon>
+              <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
+            </S.AdminProfileIcon>
+            <S.AdminProfileText>
+              <strong>{adminIdentifier}</strong>
+              <span>관리자</span>
+            </S.AdminProfileText>
+          </S.AdminProfile>
           <S.LogoutButton
             type="button"
             onClick={() => {

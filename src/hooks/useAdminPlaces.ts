@@ -72,6 +72,7 @@ export function useAdminPlaces({
     page: initialPage,
     limit,
     sortParam,
+    keyword: '',
   })
 
   const fetchAdminPlaces = useCallback(async (request: AdminPlaceListRequest = {}) => {
@@ -85,6 +86,7 @@ export function useAdminPlaces({
       page: request.page ?? latestListRequestRef.current.page,
       limit: request.limit ?? latestListRequestRef.current.limit,
       sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
+      keyword: request.keyword ?? latestListRequestRef.current.keyword,
     }
 
     try {
@@ -102,6 +104,7 @@ export function useAdminPlaces({
           page: data.page,
           limit: data.limit,
           sortParam: nextRequest.sortParam,
+          keyword: nextRequest.keyword,
         }
       }
 

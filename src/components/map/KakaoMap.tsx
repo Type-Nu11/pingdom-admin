@@ -11,6 +11,7 @@ import { adminColors } from '../../styles/theme'
 type KakaoMapInstance = {
   getLevel: () => number
   setLevel: (level: number) => void
+  setCenter: (center: unknown) => void
 }
 
 type KakaoMaps = {
@@ -54,6 +55,7 @@ interface KakaoMapProps {
 export interface KakaoMapHandle {
   zoomIn: () => void
   zoomOut: () => void
+  moveTo: (latitude: number, longitude: number) => void
 }
 
 function loadKakaoMapScript(appKey: string) {
@@ -137,6 +139,16 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
       map.setLevel(Math.min(MAX_MAP_LEVEL, map.getLevel() + 1))
     },
+    moveTo(latitude: number, longitude: number) {
+      const map = mapInstanceRef.current
+      const kakao = window.kakao
+
+      if (!map || !kakao?.maps) {
+        return
+      }
+
+      map.setCenter(new kakao.maps.LatLng(latitude, longitude))
+    },
   }))
 
   useEffect(() => {
@@ -157,16 +169,18 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         setErrorMessage('')
         await loadKakaoMapScript(KAKAO_MAP_APP_KEY)
 
-        if (!isMounted || !mapContainerRef.current || !window.kakao?.maps) {
+        const kakao = window.kakao
+
+        if (!isMounted || !mapContainerRef.current || !kakao?.maps) {
           return
         }
 
-        const center = new window.kakao.maps.LatLng(
+        const center = new kakao.maps.LatLng(
           DEFAULT_CENTER.latitude,
           DEFAULT_CENTER.longitude
         )
 
-        const map = new window.kakao.maps.Map(mapContainerRef.current, {
+        const map = new kakao.maps.Map(mapContainerRef.current, {
           center,
           level: 3,
         })
@@ -178,7 +192,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
           }
         }, 3000)
 
-        window.kakao.maps.event.addListener(map, 'tilesloaded', () => {
+        kakao.maps.event.addListener(map, 'tilesloaded', () => {
           if (delayedMessageTimer) {
             window.clearTimeout(delayedMessageTimer)
           }

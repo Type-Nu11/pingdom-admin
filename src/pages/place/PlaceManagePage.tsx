@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { KakaoMapHandle } from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
@@ -12,19 +12,23 @@ import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
+const PLACE_SEARCH_DEBOUNCE_MS = 300
 const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
 ]
+function hasValidCoordinate(place: AdminPlaceItem) {
+  return (
+    typeof place.latitude === 'number' &&
+    typeof place.longitude === 'number' &&
+    Number.isFinite(place.latitude) &&
+    Number.isFinite(place.longitude)
+  )
+}
 
 function formatCoordinate(place: AdminPlaceItem) {
-  if (
-    typeof place.latitude !== 'number' ||
-    typeof place.longitude !== 'number' ||
-    !Number.isFinite(place.latitude) ||
-    !Number.isFinite(place.longitude)
-  ) {
+  if (!hasValidCoordinate(place)) {
     return '좌표 정보 없음'
   }
 
@@ -32,7 +36,7 @@ function formatCoordinate(place: AdminPlaceItem) {
 }
 
 function getPlaceOwner(place: AdminPlaceItem) {
-  return `사용자 ID: ${place.userId}`
+  return place.registrant || `사용자 ID: ${place.userId}`
 }
 
 function formatOptionalNumber(value: unknown) {
@@ -45,6 +49,22 @@ function getPlaceLevel(place: AdminPlaceItem) {
 
 function getPlacePhotoCount(place: AdminPlaceItem) {
   return formatOptionalNumber(place.placeGrowth?.photoCount)
+}
+
+function getPlaceGrowthProgress(place: AdminPlaceItem) {
+  const progressPercent = place.placeGrowth?.progressPercent
+
+  if (typeof progressPercent !== 'number' || !Number.isFinite(progressPercent)) {
+    return null
+  }
+
+  return Math.min(Math.max(Math.round(progressPercent), 0), 100)
+}
+
+function getPlaceGrowthProgressLabel(place: AdminPlaceItem) {
+  const progressPercent = getPlaceGrowthProgress(place)
+
+  return progressPercent === null ? '-' : `${progressPercent}%`
 }
 
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
@@ -68,11 +88,16 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function PlaceManagePage() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
+  const isSearchEffectReadyRef = useRef(false)
+  const latestSortParamRef = useRef(DEFAULT_PLACE_SORT_PARAM)
+  const shouldSkipNextSearchEffectRef = useRef(false)
+  const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<AdminPlaceItem | null>(null)
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
+  const [placeSearchQuery, setPlaceSearchQuery] = useState('')
   const {
     places,
     page,
@@ -87,28 +112,134 @@ function PlaceManagePage() {
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
   const safeTotalPages = Math.max(totalPages, 1)
-  const showPagination = safeTotalPages > 1
   const visiblePageNumbers = getVisiblePageNumbers(page, safeTotalPages)
   const showEdgePageButtons = safeTotalPages > MAX_VISIBLE_PAGE_NUMBER_COUNT
+  const placeKeyword = placeSearchQuery.trim()
+  const showPagination = safeTotalPages > 1
+  const hasActivePlaceFilter = placeKeyword.length > 0
+  const isUpdatingList = isLoading && places.length > 0
+  const selectedPlaceHasCoordinate = selectedPlace
+    ? hasValidCoordinate(selectedPlace)
+    : false
+  const adminIdentifier =
+    user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
+
+  const clearPendingPlaceSearch = useCallback(() => {
+    if (!searchTimeoutRef.current) {
+      return
+    }
+
+    window.clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = null
+  }, [])
+
+  const scrollPlaceListToTop = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      placeListRef.current?.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+    })
+  }, [])
+
+  useEffect(() => {
+    latestSortParamRef.current = selectedSortParam
+  }, [selectedSortParam])
+
+  useEffect(() => {
+    if (!isSearchEffectReadyRef.current) {
+      isSearchEffectReadyRef.current = true
+
+      return
+    }
+
+    if (shouldSkipNextSearchEffectRef.current) {
+      shouldSkipNextSearchEffectRef.current = false
+
+      return
+    }
+
+    clearPendingPlaceSearch()
+
+    const nextKeyword = placeSearchQuery.trim()
+    searchTimeoutRef.current = window.setTimeout(() => {
+      searchTimeoutRef.current = null
+      void fetchAdminPlaces({
+        page: 1,
+        sortParam: latestSortParamRef.current,
+        keyword: nextKeyword,
+      }).then((isSuccess) => {
+        if (isSuccess) {
+          scrollPlaceListToTop()
+        }
+      })
+    }, PLACE_SEARCH_DEBOUNCE_MS)
+
+    return clearPendingPlaceSearch
+  }, [
+    clearPendingPlaceSearch,
+    fetchAdminPlaces,
+    placeSearchQuery,
+    scrollPlaceListToTop,
+  ])
+
+  const handleSelectPlace = (place: AdminPlaceItem) => {
+    setSelectedPlace(place)
+
+    if (hasValidCoordinate(place)) {
+      mapRef.current?.moveTo(place.latitude, place.longitude)
+    }
+  }
+
+  const handleSearchQueryChange = (nextQuery: string) => {
+    setPlaceSearchQuery(nextQuery)
+    setSelectedPlace(null)
+  }
+
+  const handleClearPlaceFilters = () => {
+    clearPendingPlaceSearch()
+    shouldSkipNextSearchEffectRef.current = true
+    setPlaceSearchQuery('')
+
+    void fetchAdminPlaces({
+      page: 1,
+      sortParam: selectedSortParam,
+      keyword: '',
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setSelectedPlace(null)
+      }
+    })
+  }
 
   const handleRefresh = () => {
-    void fetchAdminPlaces({ page, sortParam: selectedSortParam })
+    clearPendingPlaceSearch()
+
+    void fetchAdminPlaces({
+      page,
+      sortParam: selectedSortParam,
+      keyword: placeKeyword,
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setSelectedPlace(null)
+      }
+    })
   }
 
   const handleSortChange = (value: string) => {
     const nextSortParam = value as AdminPlaceListSortParam
 
+    clearPendingPlaceSearch()
     setSelectedSortParam(nextSortParam)
 
-    void fetchAdminPlaces({ page: 1, sortParam: nextSortParam }).then((isSuccess) => {
+    void fetchAdminPlaces({
+      page: 1,
+      sortParam: nextSortParam,
+      keyword: placeKeyword,
+    }).then((isSuccess) => {
       if (isSuccess) {
         setSelectedPlace(null)
-        window.requestAnimationFrame(() => {
-          placeListRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          })
-        })
+        scrollPlaceListToTop()
       }
     })
   }
@@ -120,18 +251,16 @@ function PlaceManagePage() {
       return
     }
 
+    clearPendingPlaceSearch()
+
     void fetchAdminPlaces({
       page: nextPageNumber,
       sortParam: selectedSortParam,
+      keyword: placeKeyword,
     }).then((isSuccess) => {
       if (isSuccess) {
         setSelectedPlace(null)
-        window.requestAnimationFrame(() => {
-          placeListRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          })
-        })
+        scrollPlaceListToTop()
       }
     })
   }
@@ -140,19 +269,16 @@ function PlaceManagePage() {
     <S.AppShell>
       <S.SideNav aria-label="관리자 메뉴">
         <S.SideHeader>
-          <S.ProfileAvatar>
-            <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
-          </S.ProfileAvatar>
-          <div>
-            <S.SideTitle>관리자 패널</S.SideTitle>
-            <S.SideCaption>핑덤</S.SideCaption>
-          </div>
+          <S.BrandLockup>
+            <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+          </S.BrandLockup>
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" disabled aria-label="대시보드 점검 중">
             <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
             <span>대시보드</span>
+            <S.MenuStatusText>점검 중</S.MenuStatusText>
           </S.MenuButton>
           <S.MenuButton type="button" $active>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
@@ -173,6 +299,15 @@ function PlaceManagePage() {
         </S.SideMenu>
 
         <S.SideFooter>
+          <S.AdminProfile aria-label="관리자 계정">
+            <S.AdminProfileIcon>
+              <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
+            </S.AdminProfileIcon>
+            <S.AdminProfileText>
+              <strong>{adminIdentifier}</strong>
+              <span>관리자</span>
+            </S.AdminProfileText>
+          </S.AdminProfile>
           <S.LogoutButton
             type="button"
             onClick={() => {
@@ -206,30 +341,67 @@ function PlaceManagePage() {
             <S.PanelControls>
               <S.PanelSummary>
                 <S.PanelCount>
-                  전체 장소 <strong>{totalCount}</strong>개
+                  {placeKeyword ? '검색 결과' : '전체 장소'}{' '}
+                  <strong>{totalCount.toLocaleString()}</strong>개
                 </S.PanelCount>
-                <S.PanelActionGroup>
-                  <SortDropdown
-                    ariaLabel="장소 목록 정렬"
-                    value={selectedSortParam}
-                    options={PLACE_SORT_OPTIONS}
-                    disabled={isLoading}
-                    width="104px"
-                    onChange={handleSortChange}
-                  />
-                  <S.IconFilterButton
-                    type="button"
-                    aria-label="장소 목록 새로고침"
-                    disabled={isLoading}
-                    onClick={handleRefresh}
-                  >
-                    <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                  </S.IconFilterButton>
-                </S.PanelActionGroup>
               </S.PanelSummary>
+
+              <S.PanelActionGroup>
+                <SortDropdown
+                  ariaLabel="장소 목록 정렬"
+                  value={selectedSortParam}
+                  options={PLACE_SORT_OPTIONS}
+                  disabled={isLoading}
+                  width="104px"
+                  onChange={handleSortChange}
+                />
+                <S.IconFilterButton
+                  type="button"
+                  aria-label={
+                    isLoading ? '장소 목록을 불러오는 중입니다' : '장소 목록 새로고침'
+                  }
+                  title={isLoading ? '불러오는 중' : '새로고침'}
+                  disabled={isLoading}
+                  onClick={handleRefresh}
+                >
+                  <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+                </S.IconFilterButton>
+              </S.PanelActionGroup>
+
+              <S.SearchField>
+                <S.SearchIcon aria-hidden="true">search</S.SearchIcon>
+                <S.SearchInput
+                  type="search"
+                  value={placeSearchQuery}
+                  placeholder="장소명 검색"
+                  aria-label="장소 검색"
+                  onChange={(event) =>
+                    handleSearchQueryChange(event.target.value)
+                  }
+                />
+              </S.SearchField>
+
+              <S.PanelResultSummary>
+                현재 페이지 장소 {places.length.toLocaleString()}개 표시
+                {hasActivePlaceFilter ? (
+                  <S.ClearFilterButton type="button" onClick={handleClearPlaceFilters}>
+                    검색 초기화
+                  </S.ClearFilterButton>
+                ) : null}
+              </S.PanelResultSummary>
             </S.PanelControls>
 
-            <S.PlaceList ref={placeListRef} aria-label="장소 목록">
+            <S.PlaceList
+              ref={placeListRef}
+              aria-label="장소 목록"
+              aria-busy={isLoading}
+            >
+              {isUpdatingList ? (
+                <S.ListStatus role="status" aria-live="polite">
+                  장소 목록을 업데이트하고 있습니다.
+                </S.ListStatus>
+              ) : null}
+
               {isLoading && places.length === 0 ? (
                 <S.EmptyState>장소 목록을 불러오는 중입니다.</S.EmptyState>
               ) : isError ? (
@@ -252,7 +424,8 @@ function PlaceManagePage() {
                       key={place.id}
                       type="button"
                       $active={isSelected}
-                      onClick={() => setSelectedPlace(place)}
+                      aria-pressed={isSelected}
+                      onClick={() => handleSelectPlace(place)}
                     >
                       <S.PlaceThumb>
                         <S.MaterialIcon aria-hidden="true">location_city</S.MaterialIcon>
@@ -281,11 +454,22 @@ function PlaceManagePage() {
                             <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
                             <span>사진 {getPlacePhotoCount(place)}장</span>
                           </S.PlaceStat>
+                          <S.PlaceStat>
+                            <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
+                            <span>다음 레벨까지 {getPlaceGrowthProgressLabel(place)}</span>
+                          </S.PlaceStat>
                         </S.PlaceStatList>
                       </S.PlaceInfo>
                     </S.PlaceItem>
                   )
                 })
+              ) : placeKeyword ? (
+                <S.EmptyState>
+                  검색 결과가 없습니다.
+                  <S.RetryButton type="button" onClick={handleClearPlaceFilters}>
+                    검색 초기화
+                  </S.RetryButton>
+                </S.EmptyState>
               ) : (
                 <S.EmptyState>등록된 장소가 없습니다.</S.EmptyState>
               )}
@@ -372,9 +556,44 @@ function PlaceManagePage() {
               <span>
                 {selectedPlace
                   ? `선택된 장소: ${selectedPlace.name}`
-                  : '장소 목록 조회가 연결되었습니다.'}
+                  : `${places.length.toLocaleString()}개 장소를 확인 중입니다.`}
               </span>
             </S.MapInfo>
+            {selectedPlace ? (
+              <S.MapSelectionCard>
+                <S.MapSelectionTitle>{selectedPlace.name}</S.MapSelectionTitle>
+                <S.MapSelectionMeta>
+                  {selectedPlace.address || '주소 정보 없음'}
+                </S.MapSelectionMeta>
+                <S.MapSelectionStatList>
+                  <S.PlaceStat>
+                    <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
+                    <span>레벨 {getPlaceLevel(selectedPlace)}</span>
+                  </S.PlaceStat>
+                  <S.PlaceStat>
+                    <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
+                    <span>사진 {getPlacePhotoCount(selectedPlace)}장</span>
+                  </S.PlaceStat>
+                </S.MapSelectionStatList>
+                <S.MapSelectionAction
+                  type="button"
+                  disabled={!selectedPlaceHasCoordinate}
+                  onClick={() => {
+                    if (selectedPlaceHasCoordinate) {
+                      mapRef.current?.moveTo(
+                        selectedPlace.latitude,
+                        selectedPlace.longitude
+                      )
+                    }
+                  }}
+                >
+                  <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
+                  <span>
+                    {selectedPlaceHasCoordinate ? '지도 중심 맞추기' : '좌표 정보 없음'}
+                  </span>
+                </S.MapSelectionAction>
+              </S.MapSelectionCard>
+            ) : null}
           </S.MapPanel>
         </S.SplitContent>
       </S.MainArea>

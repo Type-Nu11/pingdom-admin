@@ -32,6 +32,13 @@ export const AppShell = styled.div`
 `
 
 export const MaterialIcon = styled.span`
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
   line-height: 1;
@@ -65,39 +72,26 @@ export const SideNav = styled.nav`
 `
 
 export const SideHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 34px 28px;
-  border-bottom: 1px solid ${neutral.border};
-`
-
-export const ProfileAvatar = styled.div`
-  width: 40px;
-  height: 40px;
+  min-height: 116px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid ${neutral.primarySoft};
-  border-radius: 999px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  padding: 24px 28px;
+  border-bottom: 1px solid ${neutral.border};
 `
 
-export const SideTitle = styled.h1`
-  margin: 0;
-  color: ${neutral.strongText};
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
+export const BrandLockup = styled.div`
+  position: relative;
+  width: min(188px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `
 
-export const SideCaption = styled.p`
-  margin: 0;
-  color: ${neutral.muted};
-  font-size: 12px;
-  line-height: 1.3;
+export const BrandLogo = styled.img`
+  width: 100%;
+  height: auto;
+  display: block;
 `
 
 export const SideMenu = styled.div`
@@ -134,9 +128,20 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     color 160ms ease,
     border-color 160ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
+  }
+
+  &:disabled {
+    border-right-color: #f59f00;
+    background: #fff4e0;
+    color: ${neutral.muted};
+    cursor: default;
+
+    ${MaterialIcon} {
+      color: #f59f00;
+    }
   }
 
   ${({ $active }) =>
@@ -163,12 +168,26 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     border-bottom: 2px solid transparent;
     border-radius: 8px;
 
+    &:disabled {
+      border-right: 0;
+      border-bottom-color: #f59f00;
+    }
+
     ${({ $active }) =>
       $active &&
       css`
         border-bottom-color: ${neutral.primary};
       `}
   }
+`
+
+export const MenuStatusText = styled.span`
+  margin-left: auto;
+  color: #f59f00;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
 `
 
 export const SideFooter = styled.div`
@@ -178,6 +197,62 @@ export const SideFooter = styled.div`
   @media (max-width: 900px) {
     padding: 8px;
     border-top: 1px solid ${neutral.border};
+  }
+`
+
+export const AdminProfile = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const AdminProfileIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const AdminProfileText = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  span {
+    color: ${neutral.muted};
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
   }
 `
 
@@ -322,7 +397,7 @@ export const PageHeader = styled.div`
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 48px;
+  margin-bottom: 24px;
 
   @media (max-width: 720px) {
     align-items: flex-start;
@@ -339,9 +414,11 @@ export const PageTitle = styled.h1`
 `
 
 export const PageDescription = styled.p`
+  min-height: 24px;
   margin: 0;
   color: ${neutral.muted};
   font-size: 16px;
+  line-height: 1.5;
 `
 
 export const HeaderActions = styled.div`
@@ -468,6 +545,108 @@ export const ClearButton = styled.button`
   }
 `
 
+export const ReviewToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+
+  @media (max-width: 860px) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+`
+
+export const ReviewTabList = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+`
+
+export const ReviewTabButton = styled.button<{ $active?: boolean }>`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 0 12px;
+  border: 1px solid ${({ $active }) => ($active ? neutral.primary : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+
+  strong {
+    min-width: 24px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: ${({ $active }) =>
+      $active ? neutral.primary : neutral.surfaceContainer};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.muted)};
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  &:hover {
+    border-color: ${neutral.primary};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+`
+
+export const ReviewSearchField = styled.div`
+  position: relative;
+  width: min(320px, 100%);
+  flex-shrink: 0;
+
+  @media (max-width: 860px) {
+    width: 100%;
+  }
+`
+
+export const ReviewSearchInput = styled.input`
+  ${controlStyle}
+  width: 100%;
+  padding: 0 16px 0 40px;
+  border: 1px solid ${neutral.border};
+  outline: 1px solid transparent;
+  background: ${neutral.surfaceContainer};
+  color: ${neutral.text};
+  font-size: 14px;
+
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
+  &:focus {
+    border-color: ${neutral.primary};
+    outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+    background: ${neutral.surface};
+  }
+`
+
+export const ReviewResultSummary = styled.div`
+  margin: -12px 0 24px;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+`
+
 export const FeedbackText = styled.p`
   margin: 0 0 24px;
   padding: 16px;
@@ -568,26 +747,6 @@ export const MediaFallback = styled.div`
   color: ${neutral.muted};
 `
 
-export const MediaBadge = styled.div`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border: 1px solid ${neutral.primarySoft};
-  border-radius: 4px;
-  background: ${neutral.softOverlay};
-  color: ${neutral.primary};
-  font-size: 12px;
-  font-weight: 700;
-
-  ${MaterialIcon} {
-    font-size: 14px;
-  }
-`
-
 export const MediaBody = styled.div`
   display: flex;
   flex: 1;
@@ -615,7 +774,9 @@ export const MediaTitle = styled.h3`
   white-space: nowrap;
 `
 
-export const StatusBadge = styled.span`
+export const StatusBadge = styled.span<{
+  $tone?: 'normal' | 'reported'
+}>`
   flex-shrink: 0;
   padding: 4px 8px;
   border: 1px solid ${neutral.primarySoft};
@@ -624,6 +785,23 @@ export const StatusBadge = styled.span`
   color: ${neutral.primary};
   font-size: 12px;
   font-weight: 700;
+
+  ${({ $tone }) =>
+    $tone === 'normal' &&
+    css`
+      border-color: ${neutral.success};
+      background: #20df331a;
+      color: ${neutral.text};
+    `}
+
+  ${({ $tone }) =>
+    $tone === 'reported' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
+    `}
+
 `
 
 export const MediaMetaList = styled.div`
@@ -653,49 +831,31 @@ export const MediaMeta = styled.div`
   }
 `
 
-export const CardActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: auto;
-`
-
-export const CardButton = styled.button`
-  height: 36px;
-  flex: 1;
-  border: 1px solid ${neutral.error};
-  border-radius: 4px;
-  background: ${neutral.surface};
-  color: ${neutral.error};
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-
-  &:hover {
-    background: ${neutral.errorTint};
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.72;
-  }
-`
-
-export const IconCardButton = styled.button`
-  width: 36px;
-  height: 36px;
+export const CardHint = styled.div`
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid ${neutral.border};
-  border-radius: 4px;
-  background: ${neutral.surface};
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid ${neutral.borderSoft};
   color: ${neutral.muted};
-  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
 
-  &:hover {
-    background: ${neutral.primaryTint};
+  ${MaterialIcon} {
+    flex-shrink: 0;
+    font-size: 18px;
+    transition: transform 160ms ease;
+  }
+
+  ${MediaCard}:hover & {
     color: ${neutral.primary};
+  }
+
+  ${MediaCard}:hover & ${MaterialIcon} {
+    transform: translateX(2px);
   }
 `
 
@@ -791,8 +951,8 @@ export const ModalOverlay = styled.div`
 `
 
 export const ModalContent = styled.section`
-  width: min(920px, 100%);
-  max-height: min(760px, 92vh);
+  width: min(1120px, 100%);
+  max-height: min(820px, 92vh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -806,7 +966,7 @@ export const ModalHeader = styled.header`
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 20px 16px;
+  padding: 20px 24px 16px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -860,26 +1020,75 @@ export const ModalNotice = styled.div`
   font-weight: 600;
 `
 
+export const ModalReviewLayout = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+  gap: 20px;
+  padding: 20px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 720px) {
+    padding: 16px;
+  }
+`
+
+export const ModalMediaPanel = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+export const ModalModerationPanel = styled.aside`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+`
+
+export const ModalStatusRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 600;
+
+  > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
 export const ModalImageFrame = styled.div`
-  min-height: 280px;
-  max-height: 420px;
+  height: min(56vh, 540px);
+  min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 20px;
+  padding: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
   background: ${neutral.surfaceContainer};
 
   @media (max-width: 720px) {
-    min-height: 220px;
+    height: min(58vh, 420px);
+    min-height: 260px;
   }
 `
 
 export const ModalImage = styled.img`
   display: block;
-  max-width: 100%;
-  max-height: 380px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 `
 
 export const ModalFallback = styled.div`
@@ -890,11 +1099,41 @@ export const ModalFallback = styled.div`
   color: ${neutral.muted};
 `
 
+export const ModalMediaActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`
+
+export const ModalExternalLink = styled.a`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    border-color: ${neutral.primary};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
 export const ModalInfoGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  padding: 16px 20px 0;
 
   @media (max-width: 720px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -930,7 +1169,7 @@ export const ModalInfoItem = styled.div`
 `
 
 export const ModalPostDescription = styled.p`
-  margin: 16px 20px 0;
+  margin: 16px 0 0;
   padding: 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
@@ -943,7 +1182,8 @@ export const ModalPostDescription = styled.p`
 `
 
 export const ModalSection = styled.section`
-  padding: 20px;
+  margin-top: 16px;
+  padding: 0;
 `
 
 export const ModalSectionTitle = styled.h3`
@@ -1036,6 +1276,109 @@ export const ReportReason = styled.p`
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
+`
+
+export const ModalFooter = styled.footer`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid ${neutral.border};
+  background: ${neutral.surface};
+
+  @media (max-width: 720px) {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+`
+
+export const ModalFooterMeta = styled.p`
+  margin: 0;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 600;
+`
+
+export const ModalFooterActions = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  @media (max-width: 720px) {
+    justify-content: stretch;
+  }
+`
+
+export const SecondaryButton = styled.button`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primary};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const DangerButton = styled.button`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.error};
+  color: ${neutral.primaryText};
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: #c72020;
+    background: #c72020;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.58;
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
 `
 
 export const ModalEmptyText = styled.p`

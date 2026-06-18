@@ -56,6 +56,13 @@ export const IconBox = styled.div`
 `
 
 export const MaterialIcon = styled.span`
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
   color: currentColor;
   font-family: 'Material Symbols Outlined';
   font-size: 22px;

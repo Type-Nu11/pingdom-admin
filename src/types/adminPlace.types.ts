@@ -25,6 +25,7 @@ export interface AdminPlaceListRequest {
   page?: number
   limit?: number
   sortParam?: AdminPlaceListSortParam
+  keyword?: string
 }
 
 export interface AdminPlaceListResponse {

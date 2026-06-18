@@ -1072,7 +1072,7 @@ export const ModalImageFrame = styled.div`
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 16px;
+  padding: 0;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surfaceContainer};
@@ -1085,9 +1085,10 @@ export const ModalImageFrame = styled.div`
 
 export const ModalImage = styled.img`
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 `
 
 export const ModalFallback = styled.div`

@@ -808,7 +808,9 @@ function MainPage() {
                         ))}
                       </S.ReportList>
                     ) : (
-                      <S.ModalEmptyText>연결된 신고가 없습니다.</S.ModalEmptyText>
+                      <S.ModalEmptyText>
+                        이 게시글에 접수된 신고가 없습니다.
+                      </S.ModalEmptyText>
                     )}
                   </S.ModalSection>
                 </S.ModalModerationPanel>

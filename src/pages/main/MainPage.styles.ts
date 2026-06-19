@@ -647,13 +647,31 @@ export const ReviewResultSummary = styled.div`
   font-weight: 700;
 `
 
-export const FeedbackText = styled.p`
+export const FeedbackText = styled.p<{ $variant?: 'success' | 'error' }>`
   margin: 0 0 24px;
   padding: 16px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.muted};
+
+  ${({ $variant }) =>
+    $variant === 'success' &&
+    css`
+      border-color: ${neutral.success};
+      background: #20df3314;
+      color: #138f20;
+      font-weight: 700;
+    `}
+
+  ${({ $variant }) =>
+    $variant === 'error' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
+      font-weight: 700;
+    `}
 `
 
 export const MediaGrid = styled.ul`
@@ -1389,4 +1407,134 @@ export const ModalEmptyText = styled.p`
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
   font-size: 14px;
+`
+
+export const ActionToast = styled.div`
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 150;
+  min-height: 48px;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid ${neutral.success};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  box-shadow: 0 16px 40px ${neutral.shadow};
+  color: #138f20;
+  font-size: 14px;
+  font-weight: 800;
+
+  ${MaterialIcon} {
+    color: ${neutral.success};
+    font-size: 20px;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 20;
+  }
+
+  @media (max-width: 720px) {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+`
+
+export const DeleteConfirmOverlay = styled(ModalOverlay)`
+  z-index: 120;
+`
+
+export const DeleteConfirmDialog = styled.section`
+  width: min(420px, 100%);
+  padding: 24px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.strongShadow};
+`
+
+export const DeleteConfirmIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  ${MaterialIcon} {
+    font-size: 24px;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+`
+
+export const DeleteConfirmTitle = styled.h2`
+  margin: 0 0 8px;
+  color: ${neutral.strongText};
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+`
+
+export const DeleteConfirmDescription = styled.p`
+  margin: 0;
+  color: ${neutral.text};
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: keep-all;
+`
+
+export const DeleteConfirmMeta = styled.p`
+  margin: 14px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
+`
+
+export const DeleteConfirmNotice = styled.p`
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const DeleteConfirmActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    ${SecondaryButton},
+    ${DangerButton} {
+      width: 100%;
+    }
+  }
 `

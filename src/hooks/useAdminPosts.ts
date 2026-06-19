@@ -80,6 +80,7 @@ export function useAdminPosts({
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   const [postDetail, setPostDetail] = useState<AdminPost | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
@@ -88,11 +89,41 @@ export function useAdminPosts({
   const latestDetailRequestIdRef = useRef(0)
   const isFetchingRef = useRef(false)
   const deletingPostIdRef = useRef<number | null>(null)
+  const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
   const latestListRequestRef = useRef<Required<AdminPostListRequest>>({
     page: initialPage,
     limit,
     sortParam,
   })
+
+  const clearActionSuccessTimeout = useCallback(() => {
+    if (!actionSuccessTimeoutRef.current) {
+      return
+    }
+
+    clearTimeout(actionSuccessTimeoutRef.current)
+    actionSuccessTimeoutRef.current = null
+  }, [])
+
+  const clearActionSuccessMessage = useCallback(() => {
+    clearActionSuccessTimeout()
+    setActionSuccessMessage('')
+  }, [clearActionSuccessTimeout])
+
+  const showActionSuccessMessage = useCallback(
+    (message: string) => {
+      clearActionSuccessTimeout()
+      setActionSuccessMessage(message)
+
+      actionSuccessTimeoutRef.current = setTimeout(() => {
+        actionSuccessTimeoutRef.current = null
+        setActionSuccessMessage('')
+      }, 5000)
+    },
+    [clearActionSuccessTimeout]
+  )
 
   const fetchAdminPosts = useCallback(async (request: AdminPostListRequest = {}) => {
     if (isFetchingRef.current) {
@@ -106,6 +137,7 @@ export function useAdminPosts({
     setIsError(false)
     setErrorMessage('')
     setActionErrorMessage('')
+    clearActionSuccessMessage()
 
     const nextRequest = {
       page: request.page ?? latestListRequestRef.current.page,
@@ -153,7 +185,7 @@ export function useAdminPosts({
 
       isFetchingRef.current = false
     }
-  }, [clearAuth])
+  }, [clearActionSuccessMessage, clearAuth])
 
   const clearPostDetail = useCallback(() => {
     latestDetailRequestIdRef.current += 1
@@ -209,6 +241,7 @@ export function useAdminPosts({
 
       deletingPostIdRef.current = postId
       setActionErrorMessage('')
+      clearActionSuccessMessage()
 
       try {
         setDeletingPostId(postId)
@@ -227,8 +260,11 @@ export function useAdminPosts({
           setActionErrorMessage('게시글은 삭제됐지만 목록을 다시 불러오지 못했습니다.')
         }
 
+        showActionSuccessMessage(`게시글 #${postId}을 삭제했습니다.`)
+
         return true
       } catch (error) {
+        clearActionSuccessMessage()
         setActionErrorMessage(getAdminPostErrorMessage(error))
 
         if (shouldClearAuth(error)) {
@@ -245,12 +281,25 @@ export function useAdminPosts({
         }
       }
     },
-    [clearAuth, fetchAdminPosts, page, posts.length]
+    [
+      clearActionSuccessMessage,
+      clearAuth,
+      fetchAdminPosts,
+      page,
+      posts.length,
+      showActionSuccessMessage,
+    ]
   )
 
   useEffect(() => {
     void fetchAdminPosts()
   }, [fetchAdminPosts])
+
+  useEffect(() => {
+    return () => {
+      clearActionSuccessTimeout()
+    }
+  }, [clearActionSuccessTimeout])
 
   return {
     posts,
@@ -262,6 +311,7 @@ export function useAdminPosts({
     isError,
     errorMessage,
     actionErrorMessage,
+    actionSuccessMessage,
     postDetail,
     isDetailLoading,
     detailErrorMessage,

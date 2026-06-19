@@ -233,6 +233,11 @@ function MainPage() {
   const pageContentRef = useRef<HTMLElement | null>(null)
   const isSortEffectReadyRef = useRef(false)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
+  const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
+    null
+  )
+  const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
+    useState(false)
   const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
     DEFAULT_ADMIN_POST_SORT_PARAM
   )
@@ -249,6 +254,7 @@ function MainPage() {
     isError,
     errorMessage,
     actionErrorMessage,
+    actionSuccessMessage,
     postDetail,
     isDetailLoading,
     detailErrorMessage,
@@ -310,8 +316,19 @@ function MainPage() {
   )
   const handleClosePostDetail = useCallback(() => {
     setSelectedPost(null)
+    setDeleteConfirmPost(null)
+    setHasDeleteConfirmAttempted(false)
     clearPostDetail()
   }, [clearPostDetail])
+
+  const handleCloseDeleteConfirm = useCallback(() => {
+    if (isDeleting) {
+      return
+    }
+
+    setDeleteConfirmPost(null)
+    setHasDeleteConfirmAttempted(false)
+  }, [isDeleting])
   const handlePageChange = (nextPage: number) => {
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
@@ -343,18 +360,32 @@ function MainPage() {
       return
     }
 
-    const shouldDelete = window.confirm(`게시글 #${activePost.id}을 삭제할까요?`)
+    setDeleteConfirmPost(activePost)
+    setHasDeleteConfirmAttempted(false)
+  }
 
-    if (!shouldDelete) {
+  const handleConfirmDeletePost = () => {
+    if (!deleteConfirmPost || isLoading || isDeleting) {
       return
     }
 
-    const postToOpenAfterDelete = nextReviewPost
+    setHasDeleteConfirmAttempted(true)
 
-    void deletePost(activePost.id).then((isSuccess) => {
+    const deleteConfirmPostIndex = filteredPosts.findIndex(
+      (post) => post.id === deleteConfirmPost.id
+    )
+    const postToOpenAfterDelete =
+      deleteConfirmPostIndex >= 0
+        ? filteredPosts[deleteConfirmPostIndex + 1] ?? null
+        : null
+
+    void deletePost(deleteConfirmPost.id).then((isSuccess) => {
       if (!isSuccess) {
         return
       }
+
+      setDeleteConfirmPost(null)
+      setHasDeleteConfirmAttempted(false)
 
       if (postToOpenAfterDelete) {
         handleOpenPostDetail(postToOpenAfterDelete)
@@ -535,11 +566,17 @@ function MainPage() {
           ) : null}
 
           {isError ? (
-            <S.FeedbackText>{errorMessage}</S.FeedbackText>
+            <S.FeedbackText $variant="error">{errorMessage}</S.FeedbackText>
           ) : null}
 
           {actionErrorMessage ? (
-            <S.FeedbackText>{actionErrorMessage}</S.FeedbackText>
+            <S.FeedbackText $variant="error">{actionErrorMessage}</S.FeedbackText>
+          ) : null}
+
+          {actionSuccessMessage ? (
+            <S.FeedbackText $variant="success" role="status">
+              {actionSuccessMessage}
+            </S.FeedbackText>
           ) : null}
 
           {!isLoading && !isError && posts.length === 0 ? (
@@ -848,6 +885,68 @@ function MainPage() {
             </S.ModalFooter>
           </S.ModalContent>
         </S.ModalOverlay>
+      ) : null}
+
+      {actionSuccessMessage ? (
+        <S.ActionToast role="status">
+          <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
+          <span>{actionSuccessMessage}</span>
+        </S.ActionToast>
+      ) : null}
+
+      {deleteConfirmPost ? (
+        <S.DeleteConfirmOverlay
+          role="presentation"
+          onMouseDown={handleCloseDeleteConfirm}
+        >
+          <S.DeleteConfirmDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-title"
+            aria-describedby="delete-confirm-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.DeleteConfirmIcon aria-hidden="true">
+              <S.MaterialIcon>delete</S.MaterialIcon>
+            </S.DeleteConfirmIcon>
+            <S.DeleteConfirmTitle id="delete-confirm-title">
+              게시글을 삭제할까요?
+            </S.DeleteConfirmTitle>
+            <S.DeleteConfirmDescription id="delete-confirm-description">
+              게시글 #{deleteConfirmPost.id}은 삭제 후 현재 관리자 화면에서
+              되돌릴 수 없습니다.
+            </S.DeleteConfirmDescription>
+            <S.DeleteConfirmMeta>
+              {getPostTitle(deleteConfirmPost)} · {getPostOwner(deleteConfirmPost)}
+            </S.DeleteConfirmMeta>
+
+            {hasDeleteConfirmAttempted && actionErrorMessage ? (
+              <S.DeleteConfirmNotice role="alert">
+                {actionErrorMessage}
+              </S.DeleteConfirmNotice>
+            ) : null}
+
+            <S.DeleteConfirmActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={isDeleting}
+                onClick={handleCloseDeleteConfirm}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.DangerButton
+                type="button"
+                disabled={isLoading || isDeleting}
+                onClick={handleConfirmDeletePost}
+              >
+                <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                <span>
+                  {deletingPostId === deleteConfirmPost.id ? '삭제 중' : '삭제하기'}
+                </span>
+              </S.DangerButton>
+            </S.DeleteConfirmActions>
+          </S.DeleteConfirmDialog>
+        </S.DeleteConfirmOverlay>
       ) : null}
     </S.AppShell>
   )

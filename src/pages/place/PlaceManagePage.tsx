@@ -373,8 +373,8 @@ function PlaceManagePage() {
                 <S.SearchInput
                   type="search"
                   value={placeSearchQuery}
-                  placeholder="장소명 검색"
-                  aria-label="장소 검색"
+                  placeholder="장소명, 등록자 ID, 주소 검색"
+                  aria-label="장소명, 등록자 ID, 주소 검색"
                   onChange={(event) =>
                     handleSearchQueryChange(event.target.value)
                   }

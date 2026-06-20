@@ -610,7 +610,7 @@ export const ReviewTabButton = styled.button<{ $active?: boolean }>`
 
 export const ReviewSearchField = styled.div`
   position: relative;
-  width: min(320px, 100%);
+  width: min(380px, 100%);
   flex-shrink: 0;
 
   @media (max-width: 860px) {
@@ -642,9 +642,34 @@ export const ReviewSearchInput = styled.input`
 
 export const ReviewResultSummary = styled.div`
   margin: -12px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   color: ${neutral.muted};
   font-size: 13px;
   font-weight: 700;
+
+  @media (max-width: 720px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
+
+export const ClearFilterButton = styled.button`
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: ${neutral.primary};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: ${neutral.primaryHover};
+  }
 `
 
 export const FeedbackText = styled.p<{ $variant?: 'success' | 'error' }>`

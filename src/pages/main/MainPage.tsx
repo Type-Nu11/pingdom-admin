@@ -13,6 +13,7 @@ import * as S from './MainPage.styles'
 
 const ADMIN_POST_PAGE_SIZE = 20
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
+const POST_SEARCH_DEBOUNCE_MS = 300
 const DEFAULT_ADMIN_POST_SORT_PARAM: AdminPostSortParam = 'LATEST'
 const ADMIN_POST_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
@@ -113,36 +114,6 @@ function isPostMatchingReviewFilter(
   return true
 }
 
-function isPostMatchingSearch(post: AdminPost, query: string) {
-  const normalizedQuery = query.trim().toLowerCase()
-
-  if (!normalizedQuery) {
-    return true
-  }
-
-  const searchableText = [
-    getPostTitle(post),
-    getPostOwner(post),
-    post.id,
-    post.userId,
-    post.placeName,
-    post.description,
-    post.createdAt,
-    ...getPostReports(post).flatMap((report) => [
-      report.reportId,
-      report.reporterUserId,
-      report.reporterUsername,
-      report.reason,
-      report.status,
-    ]),
-  ]
-    .filter((value) => value !== null && value !== undefined)
-    .join(' ')
-    .toLowerCase()
-
-  return searchableText.includes(normalizedQuery)
-}
-
 function formatCount(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '0'
 }
@@ -232,6 +203,11 @@ function MainPage() {
   const { logout, user } = useAuth()
   const pageContentRef = useRef<HTMLElement | null>(null)
   const isSortEffectReadyRef = useRef(false)
+  const isSearchEffectReadyRef = useRef(false)
+  const latestSortParamRef = useRef(DEFAULT_ADMIN_POST_SORT_PARAM)
+  const latestPostKeywordRef = useRef('')
+  const shouldSkipNextSearchEffectRef = useRef(false)
+  const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
     null
@@ -271,10 +247,11 @@ function MainPage() {
   const activeReports = activePost ? getPostReports(activePost) : []
   const currentPageNumber = page
   const isDeleting = deletingPostId !== null
+  const postKeyword = postSearchQuery.trim()
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
-  const hasClientOnlyPostFilter =
-    selectedReviewFilter !== 'ALL' || postSearchQuery.trim().length > 0
+  const hasClientOnlyPostFilter = selectedReviewFilter !== 'ALL'
+  const hasActivePostKeyword = postKeyword.length > 0
   const showPagination = totalPages > 1 && !hasClientOnlyPostFilter
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
   const reviewFilterCounts = useMemo(
@@ -295,18 +272,33 @@ function MainPage() {
   )
   const filteredPosts = useMemo(
     () =>
-      posts.filter(
-        (post) =>
-          isPostMatchingReviewFilter(post, selectedReviewFilter) &&
-          isPostMatchingSearch(post, postSearchQuery)
-      ),
-    [postSearchQuery, posts, selectedReviewFilter]
+      posts.filter((post) => isPostMatchingReviewFilter(post, selectedReviewFilter)),
+    [posts, selectedReviewFilter]
   )
   const activePostIndex = activePost
     ? filteredPosts.findIndex((post) => post.id === activePost.id)
     : -1
   const nextReviewPost =
     activePostIndex >= 0 ? filteredPosts[activePostIndex + 1] ?? null : null
+
+  const clearPendingPostSearch = useCallback(() => {
+    if (!searchTimeoutRef.current) {
+      return
+    }
+
+    window.clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = null
+  }, [])
+
+  const scrollPageContentToTop = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      pageContentRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }, [])
+
   const handleOpenPostDetail = useCallback(
     (post: AdminPost) => {
       setSelectedPost(post)
@@ -329,6 +321,32 @@ function MainPage() {
     setDeleteConfirmPost(null)
     setHasDeleteConfirmAttempted(false)
   }, [isDeleting])
+
+  const handlePostSortChange = (value: string) => {
+    clearPendingPostSearch()
+    setSelectedSortParam(value as AdminPostSortParam)
+  }
+
+  const handleSearchQueryChange = (nextQuery: string) => {
+    setPostSearchQuery(nextQuery)
+  }
+
+  const handleClearPostKeyword = () => {
+    clearPendingPostSearch()
+    shouldSkipNextSearchEffectRef.current = true
+    setPostSearchQuery('')
+
+    void fetchAdminPosts({
+      page: 1,
+      sortParam: selectedSortParam,
+      keyword: '',
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        scrollPageContentToTop()
+      }
+    })
+  }
+
   const handlePageChange = (nextPage: number) => {
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
@@ -336,22 +354,26 @@ function MainPage() {
       return
     }
 
-    void fetchAdminPosts({ page: nextPageNumber }).then((isSuccess) => {
+    clearPendingPostSearch()
+
+    void fetchAdminPosts({
+      page: nextPageNumber,
+      sortParam: selectedSortParam,
+      keyword: postKeyword,
+    }).then((isSuccess) => {
       if (isSuccess) {
-        window.requestAnimationFrame(() => {
-          pageContentRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        })
+        scrollPageContentToTop()
       }
     })
   }
 
   const handleRefresh = () => {
+    clearPendingPostSearch()
+
     void fetchAdminPosts({
       page: currentPageNumber,
       sortParam: selectedSortParam,
+      keyword: postKeyword,
     })
   }
 
@@ -398,6 +420,14 @@ function MainPage() {
   }
 
   useEffect(() => {
+    latestSortParamRef.current = selectedSortParam
+  }, [selectedSortParam])
+
+  useEffect(() => {
+    latestPostKeywordRef.current = postKeyword
+  }, [postKeyword])
+
+  useEffect(() => {
     if (!isSortEffectReadyRef.current) {
       isSortEffectReadyRef.current = true
 
@@ -407,8 +437,46 @@ function MainPage() {
     void fetchAdminPosts({
       page: 1,
       sortParam: selectedSortParam,
+      keyword: latestPostKeywordRef.current,
     })
   }, [fetchAdminPosts, selectedSortParam])
+
+  useEffect(() => {
+    if (!isSearchEffectReadyRef.current) {
+      isSearchEffectReadyRef.current = true
+
+      return
+    }
+
+    if (shouldSkipNextSearchEffectRef.current) {
+      shouldSkipNextSearchEffectRef.current = false
+
+      return
+    }
+
+    clearPendingPostSearch()
+
+    const nextKeyword = postSearchQuery.trim()
+    searchTimeoutRef.current = window.setTimeout(() => {
+      searchTimeoutRef.current = null
+      void fetchAdminPosts({
+        page: 1,
+        sortParam: latestSortParamRef.current,
+        keyword: nextKeyword,
+      }).then((isSuccess) => {
+        if (isSuccess) {
+          scrollPageContentToTop()
+        }
+      })
+    }, POST_SEARCH_DEBOUNCE_MS)
+
+    return clearPendingPostSearch
+  }, [
+    clearPendingPostSearch,
+    fetchAdminPosts,
+    postSearchQuery,
+    scrollPageContentToTop,
+  ])
 
   useEffect(() => {
     if (!selectedPost) {
@@ -502,9 +570,11 @@ function MainPage() {
             <div>
               <S.PageTitle>업로드 게시글</S.PageTitle>
               <S.PageDescription>
-                {totalCount > 0
-                  ? `업로드된 게시글 ${totalCount.toLocaleString()}개를 관리합니다.`
-                  : '사용자가 업로드한 지도 게시글을 관리합니다.'}
+                {hasActivePostKeyword
+                  ? `검색 결과 게시글 ${totalCount.toLocaleString()}개를 관리합니다.`
+                  : totalCount > 0
+                    ? `업로드된 게시글 ${totalCount.toLocaleString()}개를 관리합니다.`
+                    : '사용자가 업로드한 지도 게시글을 관리합니다.'}
               </S.PageDescription>
             </div>
 
@@ -515,7 +585,7 @@ function MainPage() {
                 options={ADMIN_POST_SORT_OPTIONS}
                 disabled={isLoading || isDeleting}
                 width="112px"
-                onChange={(value) => setSelectedSortParam(value as AdminPostSortParam)}
+                onChange={handlePostSortChange}
               />
               <S.PrimaryButton
                 type="button"
@@ -548,17 +618,26 @@ function MainPage() {
               <S.ReviewSearchInput
                 type="search"
                 value={postSearchQuery}
-                placeholder="게시글 ID, 작성자, 장소 검색"
-                aria-label="게시글 검색"
-                onChange={(event) => setPostSearchQuery(event.target.value)}
+                placeholder="게시글 ID, 제목, 작성자, 장소, 설명 검색"
+                aria-label="게시글 ID, 제목, 작성자, 장소, 설명 검색"
+                onChange={(event) => handleSearchQueryChange(event.target.value)}
               />
             </S.ReviewSearchField>
           </S.ReviewToolbar>
 
           <S.ReviewResultSummary>
-            {hasClientOnlyPostFilter
-              ? `현재 페이지 필터 결과 ${filteredPosts.length.toLocaleString()}개 표시`
-              : `현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`}
+            <span>
+              {hasClientOnlyPostFilter
+                ? `현재 페이지 필터 결과 ${filteredPosts.length.toLocaleString()}개 표시`
+                : hasActivePostKeyword
+                  ? `검색 결과 중 현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`
+                  : `현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`}
+            </span>
+            {hasActivePostKeyword ? (
+              <S.ClearFilterButton type="button" onClick={handleClearPostKeyword}>
+                검색 초기화
+              </S.ClearFilterButton>
+            ) : null}
           </S.ReviewResultSummary>
 
           {isLoading ? (
@@ -580,7 +659,11 @@ function MainPage() {
           ) : null}
 
           {!isLoading && !isError && posts.length === 0 ? (
-            <S.FeedbackText>등록된 게시글이 없습니다.</S.FeedbackText>
+            <S.FeedbackText>
+              {hasActivePostKeyword
+                ? '검색 결과에 맞는 게시글이 없습니다.'
+                : '등록된 게시글이 없습니다.'}
+            </S.FeedbackText>
           ) : null}
 
           {!isLoading && !isError && posts.length > 0 && filteredPosts.length === 0 ? (

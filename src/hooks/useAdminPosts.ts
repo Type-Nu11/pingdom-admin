@@ -87,7 +87,6 @@ export function useAdminPosts({
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null)
   const latestRequestIdRef = useRef(0)
   const latestDetailRequestIdRef = useRef(0)
-  const isFetchingRef = useRef(false)
   const deletingPostIdRef = useRef<number | null>(null)
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
@@ -96,6 +95,7 @@ export function useAdminPosts({
     page: initialPage,
     limit,
     sortParam,
+    keyword: '',
   })
 
   const clearActionSuccessTimeout = useCallback(() => {
@@ -126,13 +126,8 @@ export function useAdminPosts({
   )
 
   const fetchAdminPosts = useCallback(async (request: AdminPostListRequest = {}) => {
-    if (isFetchingRef.current) {
-      return false
-    }
-
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
-    isFetchingRef.current = true
 
     setIsError(false)
     setErrorMessage('')
@@ -143,6 +138,7 @@ export function useAdminPosts({
       page: request.page ?? latestListRequestRef.current.page,
       limit: request.limit ?? latestListRequestRef.current.limit,
       sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
+      keyword: request.keyword ?? latestListRequestRef.current.keyword,
     }
 
     try {
@@ -160,6 +156,7 @@ export function useAdminPosts({
           page: data.page,
           limit: data.limit,
           sortParam: nextRequest.sortParam,
+          keyword: nextRequest.keyword,
         }
       }
 
@@ -182,8 +179,6 @@ export function useAdminPosts({
       if (requestId === latestRequestIdRef.current) {
         setIsLoading(false)
       }
-
-      isFetchingRef.current = false
     }
   }, [clearActionSuccessMessage, clearAuth])
 

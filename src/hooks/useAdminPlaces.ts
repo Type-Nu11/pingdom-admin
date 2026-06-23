@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getAdminPlaces } from '../api/adminPlaceApi'
+import { deleteAdminPlace, getAdminPlace, getAdminPlaces } from '../api/adminPlaceApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { useAuth } from './useAuth'
 import type {
+  AdminPlaceDeleteErrorResponse,
+  AdminPlaceDetail,
+  AdminPlaceDetailErrorResponse,
+  AdminPlaceDetailRequest,
   AdminPlaceItem,
   AdminPlaceListErrorResponse,
   AdminPlaceListRequest,
@@ -25,11 +29,17 @@ const ADMIN_PLACE_CATEGORY_MESSAGES = {
 }
 const ADMIN_PLACE_CODE_MESSAGES = {
   INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
+  ACCESS_DENIED: '관리자 권한이 필요합니다.',
   PLACE_NOT_FOUND: '장소를 찾을 수 없습니다.',
 }
 
+type AdminPlaceApiErrorResponse =
+  | AdminPlaceListErrorResponse
+  | AdminPlaceDetailErrorResponse
+  | AdminPlaceDeleteErrorResponse
+
 function getAdminPlaceErrorMessage(error: unknown) {
-  if (!isApiError<AdminPlaceListErrorResponse>(error)) {
+  if (!isApiError<AdminPlaceApiErrorResponse>(error)) {
     return ADMIN_PLACE_ERROR_MESSAGE
   }
 
@@ -42,7 +52,7 @@ function getAdminPlaceErrorMessage(error: unknown) {
 
 function shouldClearAuth(error: unknown) {
   return (
-    isApiError<AdminPlaceListErrorResponse>(error) &&
+    isApiError<AdminPlaceApiErrorResponse>(error) &&
     (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
   )
 }
@@ -67,7 +77,18 @@ export function useAdminPlaces({
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [actionErrorMessage, setActionErrorMessage] = useState('')
+  const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  const [placeDetail, setPlaceDetail] = useState<AdminPlaceDetail | null>(null)
+  const [isDetailLoading, setIsDetailLoading] = useState(false)
+  const [detailErrorMessage, setDetailErrorMessage] = useState('')
+  const [deletingPlaceId, setDeletingPlaceId] = useState<number | null>(null)
   const latestRequestIdRef = useRef(0)
+  const latestDetailRequestIdRef = useRef(0)
+  const deletingPlaceIdRef = useRef<number | null>(null)
+  const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
   const latestListRequestRef = useRef<Required<AdminPlaceListRequest>>({
     page: initialPage,
     limit,
@@ -75,12 +96,41 @@ export function useAdminPlaces({
     keyword: '',
   })
 
+  const clearActionSuccessTimeout = useCallback(() => {
+    if (!actionSuccessTimeoutRef.current) {
+      return
+    }
+
+    clearTimeout(actionSuccessTimeoutRef.current)
+    actionSuccessTimeoutRef.current = null
+  }, [])
+
+  const clearActionSuccessMessage = useCallback(() => {
+    clearActionSuccessTimeout()
+    setActionSuccessMessage('')
+  }, [clearActionSuccessTimeout])
+
+  const showActionSuccessMessage = useCallback(
+    (message: string) => {
+      clearActionSuccessTimeout()
+      setActionSuccessMessage(message)
+
+      actionSuccessTimeoutRef.current = setTimeout(() => {
+        actionSuccessTimeoutRef.current = null
+        setActionSuccessMessage('')
+      }, 5000)
+    },
+    [clearActionSuccessTimeout]
+  )
+
   const fetchAdminPlaces = useCallback(async (request: AdminPlaceListRequest = {}) => {
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
 
     setIsError(false)
     setErrorMessage('')
+    setActionErrorMessage('')
+    clearActionSuccessMessage()
 
     const nextRequest = {
       page: request.page ?? latestListRequestRef.current.page,
@@ -128,11 +178,124 @@ export function useAdminPlaces({
         setIsLoading(false)
       }
     }
-  }, [clearAuth])
+  }, [clearActionSuccessMessage, clearAuth])
+
+  const clearPlaceDetail = useCallback(() => {
+    latestDetailRequestIdRef.current += 1
+    setPlaceDetail(null)
+    setIsDetailLoading(false)
+    setDetailErrorMessage('')
+  }, [])
+
+  const fetchAdminPlaceDetail = useCallback(
+    async (placeId: number, request: AdminPlaceDetailRequest = {}) => {
+      const requestId = latestDetailRequestIdRef.current + 1
+      latestDetailRequestIdRef.current = requestId
+
+      setIsDetailLoading(true)
+      setPlaceDetail(null)
+      setDetailErrorMessage('')
+      setActionErrorMessage('')
+
+      try {
+        const data = await getAdminPlace(placeId, request)
+
+        if (requestId === latestDetailRequestIdRef.current) {
+          setPlaceDetail(data)
+        }
+
+        return data
+      } catch (error) {
+        if (requestId === latestDetailRequestIdRef.current) {
+          setPlaceDetail(null)
+          setDetailErrorMessage(getAdminPlaceErrorMessage(error))
+
+          if (shouldClearAuth(error)) {
+            clearAuth()
+          }
+        }
+
+        console.error('관리자 장소 상세 조회 실패', error)
+
+        return null
+      } finally {
+        if (requestId === latestDetailRequestIdRef.current) {
+          setIsDetailLoading(false)
+        }
+      }
+    },
+    [clearAuth]
+  )
+
+  const deletePlace = useCallback(
+    async (placeId: number) => {
+      if (deletingPlaceIdRef.current !== null) {
+        return false
+      }
+
+      deletingPlaceIdRef.current = placeId
+      setActionErrorMessage('')
+      clearActionSuccessMessage()
+
+      try {
+        setDeletingPlaceId(placeId)
+
+        await deleteAdminPlace(placeId)
+        setPlaces((prevPlaces) =>
+          prevPlaces.filter((place) => place.id !== placeId)
+        )
+        setPlaceDetail((prevPlaceDetail) =>
+          prevPlaceDetail?.id === placeId ? null : prevPlaceDetail
+        )
+
+        const isLastItemOnPage = places.length === 1
+        const targetPage = isLastItemOnPage && page > 1 ? page - 1 : page
+        const isRefreshSuccess = await fetchAdminPlaces({ page: targetPage })
+
+        if (!isRefreshSuccess) {
+          setActionErrorMessage('장소는 삭제됐지만 목록을 다시 불러오지 못했습니다.')
+        }
+
+        showActionSuccessMessage(`장소 #${placeId}을 삭제했습니다.`)
+
+        return true
+      } catch (error) {
+        clearActionSuccessMessage()
+        setActionErrorMessage(getAdminPlaceErrorMessage(error))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        console.error('관리자 장소 삭제 실패', error)
+
+        return false
+      } finally {
+        if (deletingPlaceIdRef.current === placeId) {
+          deletingPlaceIdRef.current = null
+          setDeletingPlaceId(null)
+        }
+      }
+    },
+    [
+      clearActionSuccessMessage,
+      clearAuth,
+      fetchAdminPlaces,
+      page,
+      places.length,
+      showActionSuccessMessage,
+    ]
+  )
 
   useEffect(() => {
     void fetchAdminPlaces()
   }, [fetchAdminPlaces])
+
+  useEffect(() => {
+    return () => {
+      clearActionSuccessTimeout()
+    }
+  }, [clearActionSuccessTimeout])
 
   return {
     places,
@@ -143,6 +306,15 @@ export function useAdminPlaces({
     isLoading,
     isError,
     errorMessage,
+    actionErrorMessage,
+    actionSuccessMessage,
+    placeDetail,
+    isDetailLoading,
+    detailErrorMessage,
+    deletingPlaceId,
     fetchAdminPlaces,
+    fetchAdminPlaceDetail,
+    clearPlaceDetail,
+    deletePlace,
   }
 }

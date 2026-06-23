@@ -1,5 +1,7 @@
 import customAxios from './customAxios'
 import type {
+  AdminPlaceDetail,
+  AdminPlaceDetailRequest,
   AdminPlaceItem,
   AdminPlaceListRequest,
   AdminPlaceListResponse,
@@ -30,6 +32,27 @@ export async function getAdminPlaces({
   )
 
   return data
+}
+
+export async function getAdminPlace(
+  placeId: number,
+  { sortParam = 'LATEST', keyword = '' }: AdminPlaceDetailRequest = {}
+) {
+  const { data } = await customAxios.get<AdminPlaceDetail>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}`,
+    {
+      params: {
+        sortParam,
+        keyword,
+      },
+    }
+  )
+
+  return data
+}
+
+export async function deleteAdminPlace(placeId: number) {
+  await customAxios.delete<void>(`${ADMIN_PLACES_API_PATH}/${placeId}/delete`)
 }
 
 export type { AdminPlaceItem }

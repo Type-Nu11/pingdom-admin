@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { KakaoMapHandle } from '../../components/map/KakaoMap'
+import type {
+  KakaoMapHandle,
+  KakaoMapMarker,
+} from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
@@ -121,6 +124,23 @@ function PlaceManagePage() {
   const selectedPlaceHasCoordinate = selectedPlace
     ? hasValidCoordinate(selectedPlace)
     : false
+  const placeMapMarkers = useMemo<KakaoMapMarker[]>(
+    () =>
+      places.filter(hasValidCoordinate).map((place) => ({
+        id: place.id,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        label: place.name,
+      })),
+    [places]
+  )
+  const placeMapFitBoundsKey = useMemo(
+    () =>
+      placeMapMarkers
+        .map((marker) => `${marker.id}:${marker.latitude}:${marker.longitude}`)
+        .join('|'),
+    [placeMapMarkers]
+  )
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 
@@ -183,13 +203,24 @@ function PlaceManagePage() {
     scrollPlaceListToTop,
   ])
 
-  const handleSelectPlace = (place: AdminPlaceItem) => {
+  const handleSelectPlace = useCallback((place: AdminPlaceItem) => {
     setSelectedPlace(place)
 
     if (hasValidCoordinate(place)) {
       mapRef.current?.moveTo(place.latitude, place.longitude)
     }
-  }
+  }, [])
+
+  const handleSelectMapMarker = useCallback(
+    (placeId: number) => {
+      const nextPlace = places.find((place) => place.id === placeId)
+
+      if (nextPlace) {
+        handleSelectPlace(nextPlace)
+      }
+    },
+    [handleSelectPlace, places]
+  )
 
   const handleSearchQueryChange = (nextQuery: string) => {
     setPlaceSearchQuery(nextQuery)
@@ -534,7 +565,13 @@ function PlaceManagePage() {
           </S.PlacePanel>
 
           <S.MapPanel>
-            <S.AdminMap ref={mapRef} />
+            <S.AdminMap
+              ref={mapRef}
+              activeMarkerId={selectedPlace?.id ?? null}
+              fitBoundsKey={placeMapFitBoundsKey}
+              markers={placeMapMarkers}
+              onMarkerClick={handleSelectMapMarker}
+            />
             <S.MapControlGroup>
               <S.MapControlButton
                 type="button"
@@ -589,7 +626,7 @@ function PlaceManagePage() {
                 >
                   <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
                   <span>
-                    {selectedPlaceHasCoordinate ? '지도 중심 맞추기' : '좌표 정보 없음'}
+                    {selectedPlaceHasCoordinate ? '선택 위치 보기' : '좌표 정보 없음'}
                   </span>
                 </S.MapSelectionAction>
               </S.MapSelectionCard>

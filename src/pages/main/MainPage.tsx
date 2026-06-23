@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
@@ -35,6 +35,10 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
   PENDING: '처리 대기',
   ACCEPTED: '수락',
   DECLINED: '거절',
+}
+
+interface MainPageLocationState {
+  openPostId?: number
 }
 
 function getPostImageUrl(post: AdminPost) {
@@ -143,6 +147,21 @@ function formatOptionalPostDate(value?: string | null) {
   return formatPostDate(value)
 }
 
+function createPendingPost(postId: number): AdminPost {
+  return {
+    id: postId,
+    name: `게시글 #${postId}`,
+    imageUrl: '',
+    userId: 0,
+    username: '불러오는 중',
+    createdAt: '',
+    description: '',
+    likeCount: 0,
+    placeName: '',
+    reports: [],
+  }
+}
+
 interface AdminPostImageProps {
   post: AdminPost
 }
@@ -200,6 +219,7 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function MainPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, user } = useAuth()
   const pageContentRef = useRef<HTMLElement | null>(null)
   const isSortEffectReadyRef = useRef(false)
@@ -303,6 +323,13 @@ function MainPage() {
     (post: AdminPost) => {
       setSelectedPost(post)
       void fetchAdminPostDetail(post.id)
+    },
+    [fetchAdminPostDetail]
+  )
+  const handleOpenPostDetailById = useCallback(
+    (postId: number) => {
+      setSelectedPost(createPendingPost(postId))
+      void fetchAdminPostDetail(postId)
     },
     [fetchAdminPostDetail]
   )
@@ -428,6 +455,24 @@ function MainPage() {
   }, [postKeyword])
 
   useEffect(() => {
+    const locationState = location.state as MainPageLocationState | null
+    const openPostId = locationState?.openPostId
+
+    if (typeof openPostId !== 'number' || !Number.isFinite(openPostId)) {
+      return
+    }
+
+    const openDetailTimer = window.setTimeout(() => {
+      handleOpenPostDetailById(openPostId)
+      navigate(location.pathname, { replace: true, state: null })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(openDetailTimer)
+    }
+  }, [handleOpenPostDetailById, location.pathname, location.state, navigate])
+
+  useEffect(() => {
     if (!isSortEffectReadyRef.current) {
       isSortEffectReadyRef.current = true
 
@@ -519,11 +564,11 @@ function MainPage() {
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
             <span>게시글 관리</span>
           </S.MenuButton>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" onClick={() => navigate('/bans')}>
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
             <span>사용자 밴</span>
           </S.MenuButton>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" onClick={() => navigate('/settings')}>
             <S.MaterialIcon aria-hidden="true">settings</S.MaterialIcon>
             <span>설정</span>
           </S.MenuButton>

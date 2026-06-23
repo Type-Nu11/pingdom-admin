@@ -14,6 +14,7 @@ type KakaoMapInstance = {
   getLevel: () => number
   setLevel: (level: number) => void
   setZoomable: (zoomable: boolean) => void
+  relayout: () => void
   setCenter: (center: unknown) => void
   setBounds: (bounds: unknown) => void
 }
@@ -59,7 +60,9 @@ const KAKAO_MAP_SCRIPT_ID = 'kakao-map-sdk'
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY
 const MIN_MAP_LEVEL = 1
 const MAX_MAP_LEVEL = 14
+const INITIAL_MAP_LEVEL = 3
 const WHEEL_ZOOM_THROTTLE_MS = 140
+const DEFAULT_MAP_WIDTH = 960
 const DEFAULT_CENTER = {
   latitude: 37.5665,
   longitude: 126.978,
@@ -85,6 +88,7 @@ export interface KakaoMapMarker {
 export interface KakaoMapHandle {
   zoomIn: () => void
   zoomOut: () => void
+  relayout: () => void
   moveTo: (latitude: number, longitude: number) => void
   fitToMarkers: () => void
 }
@@ -161,6 +165,8 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   const [isDelayed, setIsDelayed] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isMapReady, setIsMapReady] = useState(false)
+  const [mapLevel, setMapLevel] = useState(INITIAL_MAP_LEVEL)
+  const [mapWidthScale, setMapWidthScale] = useState(1)
 
   const updateMapLevel = useCallback((levelDelta: number) => {
     const map = mapInstanceRef.current
@@ -208,6 +214,9 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     },
     zoomOut() {
       updateMapLevel(1)
+    },
+    relayout() {
+      mapInstanceRef.current?.relayout()
     },
     moveTo(latitude: number, longitude: number) {
       const map = mapInstanceRef.current
@@ -259,10 +268,11 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
         const map = new kakao.maps.Map(mapContainerRef.current, {
           center,
-          level: 3,
+          level: INITIAL_MAP_LEVEL,
         })
         map.setZoomable(false)
         mapInstanceRef.current = map
+        setMapLevel(map.getLevel())
         setIsMapReady(true)
 
         delayedMessageTimer = window.setTimeout(() => {
@@ -279,6 +289,12 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
           if (isMounted) {
             setIsLoading(false)
             setIsDelayed(false)
+          }
+        })
+
+        kakao.maps.event.addListener(map, 'zoom_changed', () => {
+          if (isMounted) {
+            setMapLevel(map.getLevel())
           }
         })
       } catch (error) {
@@ -338,6 +354,29 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   }, [isMapReady, updateMapLevel])
 
   useEffect(() => {
+    const mapContainer = mapContainerRef.current
+    const map = mapInstanceRef.current
+
+    if (!isMapReady || !mapContainer || !map || typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(() => {
+        map.relayout()
+        setMapWidthScale(getMapWidthScale(mapContainer.clientWidth))
+      })
+    })
+
+    resizeObserver.observe(mapContainer)
+    setMapWidthScale(getMapWidthScale(mapContainer.clientWidth))
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [isMapReady])
+
+  useEffect(() => {
     const map = mapInstanceRef.current
     const kakao = window.kakao
 
@@ -353,7 +392,13 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     validMarkers.forEach((marker) => {
       const isActive = marker.id === activeMarkerId
       const position = new kakao.maps.LatLng(marker.latitude, marker.longitude)
-      const content = createMarkerContent(marker, isActive, onMarkerClickRef.current)
+      const content = createMarkerContent(
+        marker,
+        isActive,
+        mapLevel,
+        mapWidthScale,
+        onMarkerClickRef.current
+      )
       const overlay = new kakao.maps.CustomOverlay({
         position,
         content,
@@ -383,6 +428,8 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     fitBoundsKey,
     fitCurrentMarkersToMap,
     isMapReady,
+    mapLevel,
+    mapWidthScale,
     markers,
   ])
 
@@ -414,6 +461,36 @@ function clampMapLevel(level: number) {
   return Math.min(MAX_MAP_LEVEL, Math.max(MIN_MAP_LEVEL, level))
 }
 
+function getMapWidthScale(width: number) {
+  if (!Number.isFinite(width) || width <= 0) {
+    return 1
+  }
+
+  return Math.min(1.08, Math.max(0.82, width / DEFAULT_MAP_WIDTH))
+}
+
+function getMarkerScale(mapLevel: number, mapWidthScale: number) {
+  const normalizedLevel =
+    (clampMapLevel(mapLevel) - MIN_MAP_LEVEL) / (MAX_MAP_LEVEL - MIN_MAP_LEVEL)
+  const zoomScale = 1.14 - normalizedLevel * 0.36
+
+  return Math.min(1.18, Math.max(0.7, zoomScale * mapWidthScale))
+}
+
+function getMarkerDimensions(
+  isActive: boolean,
+  mapLevel: number,
+  mapWidthScale: number
+) {
+  const scale = getMarkerScale(mapLevel, mapWidthScale)
+
+  return {
+    buttonSize: Math.round((isActive ? 42 : 34) * scale),
+    pinSize: Math.round((isActive ? 34 : 28) * scale),
+    dotSize: Math.round((isActive ? 10 : 8) * scale),
+  }
+}
+
 function clearWheelZoomTimer(timerRef: MutableRefObject<number | null>) {
   if (timerRef.current === null) {
     return
@@ -426,8 +503,11 @@ function clearWheelZoomTimer(timerRef: MutableRefObject<number | null>) {
 function createMarkerContent(
   marker: KakaoMapMarker,
   isActive: boolean,
+  mapLevel: number,
+  mapWidthScale: number,
   onMarkerClick?: (markerId: number) => void
 ) {
+  const markerDimensions = getMarkerDimensions(isActive, mapLevel, mapWidthScale)
   const markerButton = document.createElement('button')
   markerButton.type = 'button'
   markerButton.setAttribute('aria-label', `${marker.label} 위치 선택`)
@@ -436,8 +516,8 @@ function createMarkerContent(
   markerButton.style.display = 'inline-flex'
   markerButton.style.alignItems = 'center'
   markerButton.style.justifyContent = 'center'
-  markerButton.style.width = isActive ? '42px' : '34px'
-  markerButton.style.height = isActive ? '42px' : '34px'
+  markerButton.style.width = `${markerDimensions.buttonSize}px`
+  markerButton.style.height = `${markerDimensions.buttonSize}px`
   markerButton.style.padding = '0'
   markerButton.style.border = '0'
   markerButton.style.background = 'transparent'
@@ -473,8 +553,8 @@ function createMarkerContent(
   pin.style.display = 'inline-flex'
   pin.style.alignItems = 'center'
   pin.style.justifyContent = 'center'
-  pin.style.width = isActive ? '34px' : '28px'
-  pin.style.height = isActive ? '34px' : '28px'
+  pin.style.width = `${markerDimensions.pinSize}px`
+  pin.style.height = `${markerDimensions.pinSize}px`
   pin.style.border = '2px solid #ffffff'
   pin.style.borderRadius = '50% 50% 50% 0'
   pin.style.background = neutral.primary
@@ -484,8 +564,8 @@ function createMarkerContent(
   const centerDot = document.createElement('span')
   centerDot.setAttribute('aria-hidden', 'true')
   centerDot.style.display = 'block'
-  centerDot.style.width = isActive ? '10px' : '8px'
-  centerDot.style.height = isActive ? '10px' : '8px'
+  centerDot.style.width = `${markerDimensions.dotSize}px`
+  centerDot.style.height = `${markerDimensions.dotSize}px`
   centerDot.style.borderRadius = '50%'
   centerDot.style.background = '#ffffff'
   centerDot.style.transform = 'rotate(45deg)'

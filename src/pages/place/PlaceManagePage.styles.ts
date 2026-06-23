@@ -47,7 +47,7 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 280px;
+  width: 248px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -64,17 +64,17 @@ export const SideNav = styled.nav`
 `
 
 export const SideHeader = styled.div`
-  min-height: 116px;
+  min-height: 104px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 28px;
+  padding: 22px 24px;
   border-bottom: 1px solid ${neutral.border};
 `
 
 export const BrandLockup = styled.div`
   position: relative;
-  width: min(188px, 100%);
+  width: min(168px, 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -106,7 +106,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 14px;
   min-height: 48px;
-  padding: 0 28px;
+  padding: 0 24px;
   border: 0;
   border-right: 2px solid transparent;
   background: transparent;
@@ -183,7 +183,7 @@ export const MenuStatusText = styled.span`
 `
 
 export const SideFooter = styled.div`
-  padding: 18px 28px 28px;
+  padding: 18px 24px 24px;
   border-top: 1px solid ${neutral.border};
 
   @media (max-width: 900px) {
@@ -280,7 +280,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   height: 100vh;
-  margin-left: 280px;
+  margin-left: 248px;
   display: flex;
   overflow: hidden;
   flex-direction: column;

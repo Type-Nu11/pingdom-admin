@@ -6,12 +6,14 @@ import {
   useRef,
   useState,
 } from 'react'
+import type { MutableRefObject } from 'react'
 import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
 type KakaoMapInstance = {
   getLevel: () => number
   setLevel: (level: number) => void
+  setZoomable: (zoomable: boolean) => void
   setCenter: (center: unknown) => void
   setBounds: (bounds: unknown) => void
 }
@@ -57,6 +59,7 @@ const KAKAO_MAP_SCRIPT_ID = 'kakao-map-sdk'
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY
 const MIN_MAP_LEVEL = 1
 const MAX_MAP_LEVEL = 14
+const WHEEL_ZOOM_THROTTLE_MS = 140
 const DEFAULT_CENTER = {
   latitude: 37.5665,
   longitude: 126.978,
@@ -153,10 +156,26 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   const markerOverlayRefs = useRef<KakaoMapOverlay[]>([])
   const onMarkerClickRef = useRef<KakaoMapProps['onMarkerClick']>(onMarkerClick)
   const lastFitBoundsKeyRef = useRef('')
+  const wheelZoomTimerRef = useRef<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDelayed, setIsDelayed] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isMapReady, setIsMapReady] = useState(false)
+
+  const updateMapLevel = useCallback((levelDelta: number) => {
+    const map = mapInstanceRef.current
+
+    if (!map) {
+      return
+    }
+
+    const currentLevel = map.getLevel()
+    const nextLevel = clampMapLevel(currentLevel + levelDelta)
+
+    if (nextLevel !== currentLevel) {
+      map.setLevel(nextLevel)
+    }
+  }, [])
 
   const fitCurrentMarkersToMap = useCallback(() => {
     const map = mapInstanceRef.current
@@ -185,22 +204,10 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
   useImperativeHandle(ref, () => ({
     zoomIn() {
-      const map = mapInstanceRef.current
-
-      if (!map) {
-        return
-      }
-
-      map.setLevel(Math.max(MIN_MAP_LEVEL, map.getLevel() - 1))
+      updateMapLevel(-1)
     },
     zoomOut() {
-      const map = mapInstanceRef.current
-
-      if (!map) {
-        return
-      }
-
-      map.setLevel(Math.min(MAX_MAP_LEVEL, map.getLevel() + 1))
+      updateMapLevel(1)
     },
     moveTo(latitude: number, longitude: number) {
       const map = mapInstanceRef.current
@@ -215,7 +222,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     fitToMarkers() {
       fitCurrentMarkersToMap()
     },
-  }), [fitCurrentMarkersToMap])
+  }), [fitCurrentMarkersToMap, updateMapLevel])
 
   useEffect(() => {
     onMarkerClickRef.current = onMarkerClick
@@ -254,6 +261,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
           center,
           level: 3,
         })
+        map.setZoomable(false)
         mapInstanceRef.current = map
         setIsMapReady(true)
 
@@ -292,12 +300,42 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
       markerOverlayRefs.current.forEach((overlay) => overlay.setMap(null))
       markerOverlayRefs.current = []
       mapInstanceRef.current = null
+      clearWheelZoomTimer(wheelZoomTimerRef)
 
       if (delayedMessageTimer) {
         window.clearTimeout(delayedMessageTimer)
       }
     }
   }, [])
+
+  useEffect(() => {
+    const mapContainer = mapContainerRef.current
+
+    if (!isMapReady || !mapContainer) {
+      return
+    }
+
+    const handleWheelZoom = (event: WheelEvent) => {
+      event.preventDefault()
+
+      if (wheelZoomTimerRef.current !== null || event.deltaY === 0) {
+        return
+      }
+
+      updateMapLevel(event.deltaY > 0 ? 1 : -1)
+
+      wheelZoomTimerRef.current = window.setTimeout(() => {
+        wheelZoomTimerRef.current = null
+      }, WHEEL_ZOOM_THROTTLE_MS)
+    }
+
+    mapContainer.addEventListener('wheel', handleWheelZoom, { passive: false })
+
+    return () => {
+      mapContainer.removeEventListener('wheel', handleWheelZoom)
+      clearWheelZoomTimer(wheelZoomTimerRef)
+    }
+  }, [isMapReady, updateMapLevel])
 
   useEffect(() => {
     const map = mapInstanceRef.current
@@ -370,6 +408,19 @@ function hasValidMarkerCoordinate(marker: KakaoMapMarker) {
     Number.isFinite(marker.latitude) &&
     Number.isFinite(marker.longitude)
   )
+}
+
+function clampMapLevel(level: number) {
+  return Math.min(MAX_MAP_LEVEL, Math.max(MIN_MAP_LEVEL, level))
+}
+
+function clearWheelZoomTimer(timerRef: MutableRefObject<number | null>) {
+  if (timerRef.current === null) {
+    return
+  }
+
+  window.clearTimeout(timerRef.current)
+  timerRef.current = null
 }
 
 function createMarkerContent(

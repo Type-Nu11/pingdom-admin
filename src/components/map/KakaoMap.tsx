@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -12,11 +13,19 @@ type KakaoMapInstance = {
   getLevel: () => number
   setLevel: (level: number) => void
   setCenter: (center: unknown) => void
+  setBounds: (bounds: unknown) => void
+}
+
+type KakaoMapOverlay = {
+  setMap: (map: KakaoMapInstance | null) => void
 }
 
 type KakaoMaps = {
   load: (callback: () => void) => void
   LatLng: new (latitude: number, longitude: number) => unknown
+  LatLngBounds: new () => {
+    extend: (position: unknown) => void
+  }
   Map: new (
     container: HTMLElement,
     options: {
@@ -24,6 +33,13 @@ type KakaoMaps = {
       level: number
     }
   ) => KakaoMapInstance
+  CustomOverlay: new (options: {
+    position: unknown
+    content: HTMLElement
+    xAnchor: number
+    yAnchor: number
+    zIndex: number
+  }) => KakaoMapOverlay
   event: {
     addListener: (target: unknown, eventName: string, handler: () => void) => void
   }
@@ -50,12 +66,24 @@ let kakaoMapScriptPromise: Promise<void> | null = null
 
 interface KakaoMapProps {
   className?: string
+  markers?: KakaoMapMarker[]
+  activeMarkerId?: number | null
+  fitBoundsKey?: string
+  onMarkerClick?: (markerId: number) => void
+}
+
+export interface KakaoMapMarker {
+  id: number
+  latitude: number
+  longitude: number
+  label: string
 }
 
 export interface KakaoMapHandle {
   zoomIn: () => void
   zoomOut: () => void
   moveTo: (latitude: number, longitude: number) => void
+  fitToMarkers: () => void
 }
 
 function loadKakaoMapScript(appKey: string) {
@@ -111,14 +139,49 @@ function loadKakaoMapScript(appKey: string) {
 }
 
 const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
-  { className },
+  {
+    activeMarkerId = null,
+    className,
+    fitBoundsKey = '',
+    markers = [],
+    onMarkerClick,
+  },
   ref
 ) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<KakaoMapInstance | null>(null)
+  const markerOverlayRefs = useRef<KakaoMapOverlay[]>([])
+  const onMarkerClickRef = useRef<KakaoMapProps['onMarkerClick']>(onMarkerClick)
+  const lastFitBoundsKeyRef = useRef('')
   const [isLoading, setIsLoading] = useState(true)
   const [isDelayed, setIsDelayed] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [isMapReady, setIsMapReady] = useState(false)
+
+  const fitCurrentMarkersToMap = useCallback(() => {
+    const map = mapInstanceRef.current
+    const kakao = window.kakao
+    const validMarkers = markers.filter(hasValidMarkerCoordinate)
+
+    if (!map || !kakao?.maps || validMarkers.length === 0) {
+      return
+    }
+
+    if (validMarkers.length === 1) {
+      const [marker] = validMarkers
+      map.setCenter(new kakao.maps.LatLng(marker.latitude, marker.longitude))
+
+      return
+    }
+
+    const bounds = new kakao.maps.LatLngBounds()
+
+    validMarkers.forEach((marker) => {
+      bounds.extend(new kakao.maps.LatLng(marker.latitude, marker.longitude))
+    })
+
+    map.setBounds(bounds)
+  }, [markers])
 
   useImperativeHandle(ref, () => ({
     zoomIn() {
@@ -149,7 +212,14 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
       map.setCenter(new kakao.maps.LatLng(latitude, longitude))
     },
-  }))
+    fitToMarkers() {
+      fitCurrentMarkersToMap()
+    },
+  }), [fitCurrentMarkersToMap])
+
+  useEffect(() => {
+    onMarkerClickRef.current = onMarkerClick
+  }, [onMarkerClick])
 
   useEffect(() => {
     let isMounted = true
@@ -185,6 +255,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
           level: 3,
         })
         mapInstanceRef.current = map
+        setIsMapReady(true)
 
         delayedMessageTimer = window.setTimeout(() => {
           if (isMounted) {
@@ -217,6 +288,9 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
     return () => {
       isMounted = false
+      setIsMapReady(false)
+      markerOverlayRefs.current.forEach((overlay) => overlay.setMap(null))
+      markerOverlayRefs.current = []
       mapInstanceRef.current = null
 
       if (delayedMessageTimer) {
@@ -224,6 +298,55 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
       }
     }
   }, [])
+
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    const kakao = window.kakao
+
+    markerOverlayRefs.current.forEach((overlay) => overlay.setMap(null))
+    markerOverlayRefs.current = []
+
+    if (!isMapReady || !map || !kakao?.maps) {
+      return
+    }
+
+    const validMarkers = markers.filter(hasValidMarkerCoordinate)
+
+    validMarkers.forEach((marker) => {
+      const isActive = marker.id === activeMarkerId
+      const position = new kakao.maps.LatLng(marker.latitude, marker.longitude)
+      const content = createMarkerContent(marker, isActive, onMarkerClickRef.current)
+      const overlay = new kakao.maps.CustomOverlay({
+        position,
+        content,
+        xAnchor: 0.5,
+        yAnchor: 1,
+        zIndex: isActive ? 30 : 20,
+      })
+
+      overlay.setMap(map)
+      markerOverlayRefs.current.push(overlay)
+    })
+
+    if (fitBoundsKey && lastFitBoundsKeyRef.current !== fitBoundsKey) {
+      lastFitBoundsKeyRef.current = fitBoundsKey
+
+      window.requestAnimationFrame(() => {
+        fitCurrentMarkersToMap()
+      })
+    }
+
+    return () => {
+      markerOverlayRefs.current.forEach((overlay) => overlay.setMap(null))
+      markerOverlayRefs.current = []
+    }
+  }, [
+    activeMarkerId,
+    fitBoundsKey,
+    fitCurrentMarkersToMap,
+    isMapReady,
+    markers,
+  ])
 
   return (
     <MapFrame className={className}>
@@ -239,6 +362,88 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     </MapFrame>
   )
 })
+
+function hasValidMarkerCoordinate(marker: KakaoMapMarker) {
+  return (
+    typeof marker.latitude === 'number' &&
+    typeof marker.longitude === 'number' &&
+    Number.isFinite(marker.latitude) &&
+    Number.isFinite(marker.longitude)
+  )
+}
+
+function createMarkerContent(
+  marker: KakaoMapMarker,
+  isActive: boolean,
+  onMarkerClick?: (markerId: number) => void
+) {
+  const markerButton = document.createElement('button')
+  markerButton.type = 'button'
+  markerButton.setAttribute('aria-label', `${marker.label} 위치 선택`)
+  markerButton.title = marker.label
+  markerButton.style.position = 'relative'
+  markerButton.style.display = 'inline-flex'
+  markerButton.style.alignItems = 'center'
+  markerButton.style.justifyContent = 'center'
+  markerButton.style.width = isActive ? '42px' : '34px'
+  markerButton.style.height = isActive ? '42px' : '34px'
+  markerButton.style.padding = '0'
+  markerButton.style.border = '0'
+  markerButton.style.background = 'transparent'
+  markerButton.style.color = neutral.primary
+  markerButton.style.cursor = 'pointer'
+  markerButton.style.fontFamily =
+    "'Hanken Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  markerButton.style.lineHeight = '1'
+  markerButton.style.filter = isActive
+    ? `drop-shadow(0 10px 18px ${neutral.strongShadow})`
+    : `drop-shadow(0 6px 12px ${neutral.shadow})`
+  markerButton.style.transition = 'filter 160ms ease, opacity 160ms ease, transform 160ms ease'
+
+  markerButton.addEventListener('mouseenter', () => {
+    markerButton.style.transform = 'translateY(-2px)'
+    markerButton.style.filter = `drop-shadow(0 12px 22px ${neutral.strongShadow})`
+  })
+
+  markerButton.addEventListener('mouseleave', () => {
+    markerButton.style.transform = 'translateY(0)'
+    markerButton.style.filter = isActive
+      ? `drop-shadow(0 10px 18px ${neutral.strongShadow})`
+      : `drop-shadow(0 6px 12px ${neutral.shadow})`
+  })
+
+  markerButton.addEventListener('click', () => {
+    onMarkerClick?.(marker.id)
+  })
+
+  const pin = document.createElement('span')
+  pin.setAttribute('aria-hidden', 'true')
+  pin.style.position = 'relative'
+  pin.style.display = 'inline-flex'
+  pin.style.alignItems = 'center'
+  pin.style.justifyContent = 'center'
+  pin.style.width = isActive ? '34px' : '28px'
+  pin.style.height = isActive ? '34px' : '28px'
+  pin.style.border = '2px solid #ffffff'
+  pin.style.borderRadius = '50% 50% 50% 0'
+  pin.style.background = neutral.primary
+  pin.style.boxSizing = 'border-box'
+  pin.style.transform = 'rotate(-45deg)'
+
+  const centerDot = document.createElement('span')
+  centerDot.setAttribute('aria-hidden', 'true')
+  centerDot.style.display = 'block'
+  centerDot.style.width = isActive ? '10px' : '8px'
+  centerDot.style.height = isActive ? '10px' : '8px'
+  centerDot.style.borderRadius = '50%'
+  centerDot.style.background = '#ffffff'
+  centerDot.style.transform = 'rotate(45deg)'
+
+  pin.appendChild(centerDot)
+  markerButton.appendChild(pin)
+
+  return markerButton
+}
 
 const MapFrame = styled.div`
   position: relative;

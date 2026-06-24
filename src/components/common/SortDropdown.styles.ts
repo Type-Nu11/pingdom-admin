@@ -15,10 +15,10 @@ export const DropdownTrigger = styled.button`
   justify-content: space-between;
   gap: 6px;
   padding: 0 10px 0 12px;
-  border: 0;
+  border: 1px solid ${adminColors.border};
   border-radius: 8px;
   outline: 1px solid transparent;
-  background: ${adminColors.surfaceLow};
+  background: ${adminColors.surface};
   color: ${adminColors.text};
   font-size: 13px;
   font-weight: 700;
@@ -30,11 +30,13 @@ export const DropdownTrigger = styled.button`
     box-shadow 160ms ease;
 
   &:hover:not(:disabled) {
+    border-color: ${adminColors.primarySoft};
     background: ${adminColors.primaryTint};
     color: ${adminColors.primary};
   }
 
   &:focus-visible {
+    border-color: ${adminColors.primary};
     outline-color: ${adminColors.primary};
     box-shadow: 0 0 0 3px ${adminColors.primaryTint};
   }

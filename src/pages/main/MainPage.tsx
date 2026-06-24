@@ -27,7 +27,7 @@ const ADMIN_POST_REVIEW_FILTERS: Array<{
   value: AdminPostReviewFilter
   label: string
 }> = [
-  { value: 'ALL', label: '전체' },
+  { value: 'ALL', label: '모든 상태' },
   { value: 'REPORTED', label: '신고 이력' },
   { value: 'NORMAL', label: '신고 없음' },
 ]

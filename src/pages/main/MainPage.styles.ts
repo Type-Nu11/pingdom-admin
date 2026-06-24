@@ -134,13 +134,13 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   }
 
   &:disabled {
-    border-right-color: #f59f00;
-    background: #fff4e0;
+    border-right-color: ${neutral.warning};
+    background: ${neutral.warningTint};
     color: ${neutral.muted};
     cursor: default;
 
     ${MaterialIcon} {
-      color: #f59f00;
+      color: ${neutral.warning};
     }
   }
 
@@ -170,7 +170,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
     &:disabled {
       border-right: 0;
-      border-bottom-color: #f59f00;
+      border-bottom-color: ${neutral.warning};
     }
 
     ${({ $active }) =>
@@ -183,7 +183,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
 export const MenuStatusText = styled.span`
   margin-left: auto;
-  color: #f59f00;
+  color: ${neutral.warning};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -347,7 +347,8 @@ export const SearchIcon = styled(MaterialIcon)`
   position: absolute;
   top: 50%;
   left: 12px;
-  color: ${neutral.muted};
+  z-index: 1;
+  color: ${neutral.primary};
   transform: translateY(-50%);
   pointer-events: none;
 `
@@ -356,16 +357,20 @@ export const SearchInput = styled.input`
   ${controlStyle}
   width: 100%;
   padding: 0 16px 0 40px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceContainer};
+  background: ${neutral.surface};
   color: ${neutral.text};
 
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 
@@ -621,10 +626,10 @@ export const ReviewSearchField = styled.div`
 export const ReviewSearchInput = styled.input`
   ${controlStyle}
   width: 100%;
-  padding: 0 16px 0 40px;
+  padding: 0 14px 0 40px;
   border: 1px solid ${neutral.border};
   outline: 1px solid transparent;
-  background: ${neutral.surfaceContainer};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
 
@@ -636,7 +641,6 @@ export const ReviewSearchInput = styled.input`
     border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 
@@ -684,8 +688,8 @@ export const FeedbackText = styled.p<{ $variant?: 'success' | 'error' }>`
     $variant === 'success' &&
     css`
       border-color: ${neutral.success};
-      background: #20df3314;
-      color: #138f20;
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
       font-weight: 700;
     `}
 
@@ -832,9 +836,9 @@ export const StatusBadge = styled.span<{
   ${({ $tone }) =>
     $tone === 'normal' &&
     css`
-      border-color: ${neutral.success};
-      background: #20df331a;
-      color: ${neutral.text};
+      border-color: ${neutral.borderDark};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.muted};
     `}
 
   ${({ $tone }) =>
@@ -1291,16 +1295,16 @@ export const ReportStatusBadge = styled.span<{
     $status === 'PENDING' &&
     css`
       border-color: ${neutral.warning};
-      background: #ffcc0024;
-      color: ${neutral.text};
+      background: ${neutral.warningSurface};
+      color: ${neutral.warningText};
     `}
 
   ${({ $status }) =>
     $status === 'ACCEPTED' &&
     css`
       border-color: ${neutral.success};
-      background: #20df331f;
-      color: ${neutral.text};
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
     `}
 
   ${({ $status }) =>
@@ -1410,8 +1414,8 @@ export const DangerButton = styled.button`
     opacity 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: #c72020;
-    background: #c72020;
+    border-color: ${neutral.errorHover};
+    background: ${neutral.errorHover};
   }
 
   &:disabled {
@@ -1447,9 +1451,9 @@ export const ActionToast = styled.div`
   padding: 12px 14px;
   border: 1px solid ${neutral.success};
   border-radius: 8px;
-  background: ${neutral.surface};
+  background: ${neutral.successSurface};
   box-shadow: 0 16px 40px ${neutral.shadow};
-  color: #138f20;
+  color: ${neutral.successText};
   font-size: 14px;
   font-weight: 800;
 

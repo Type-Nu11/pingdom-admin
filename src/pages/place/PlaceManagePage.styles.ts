@@ -126,13 +126,13 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   }
 
   &:disabled {
-    border-right-color: #f59f00;
-    background: #fff4e0;
+    border-right-color: ${neutral.warning};
+    background: ${neutral.warningTint};
     color: ${neutral.muted};
     cursor: default;
 
     ${MaterialIcon} {
-      color: #f59f00;
+      color: ${neutral.warning};
     }
   }
 
@@ -162,7 +162,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
     &:disabled {
       border-right: 0;
-      border-bottom-color: #f59f00;
+      border-bottom-color: ${neutral.warning};
     }
 
     ${({ $active }) =>
@@ -175,7 +175,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
 export const MenuStatusText = styled.span`
   margin-left: auto;
-  color: #f59f00;
+  color: ${neutral.warning};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -712,8 +712,8 @@ export const PanelCollapseButton = styled.button`
   flex-shrink: 0;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
+  background: ${neutral.surface};
+  color: ${neutral.primary};
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -758,7 +758,7 @@ export const SearchIcon = styled(MaterialIcon)`
   top: 50%;
   left: 12px;
   z-index: 1;
-  color: ${neutral.muted};
+  color: ${neutral.primary};
   transform: translateY(-50%);
   pointer-events: none;
 `
@@ -767,15 +767,19 @@ export const SearchInput = styled.input`
   ${controlStyle}
   width: 100%;
   padding: 0 14px 0 40px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
 
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 
@@ -826,15 +830,16 @@ export const Select = styled.select`
   height: 40px;
   min-width: 0;
   padding: 0 10px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   border-radius: 4px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
   cursor: pointer;
 
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
@@ -844,16 +849,17 @@ export const CompactSelect = styled.select`
   height: 40px;
   width: 92px;
   padding: 0 10px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
@@ -870,20 +876,24 @@ export const IconFilterButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 4px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.text};
+  border: 1px solid ${neutral.primary};
+  border-radius: 8px;
+  background: ${neutral.primary};
+  color: ${neutral.primaryText};
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
 
-  &:hover {
-    background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primaryHover};
+    background: ${neutral.primaryHover};
   }
 
   &:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
+    cursor: default;
+    opacity: 0.72;
   }
 `
 
@@ -955,7 +965,7 @@ export const PlaceThumb = styled.div`
   justify-content: center;
   border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.primaryTint};
+  background: ${neutral.surface};
   color: ${neutral.primary};
 
   @media (max-width: 520px) {
@@ -1034,9 +1044,9 @@ export const PlaceStat = styled.span`
   gap: 4px;
   max-width: 100%;
   padding: 0 8px;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 12px;
   font-weight: 600;
@@ -1049,7 +1059,7 @@ export const PlaceStat = styled.span`
 
   ${MaterialIcon} {
     flex-shrink: 0;
-    color: ${neutral.muted};
+    color: ${neutral.primary};
     font-size: 14px;
   }
 `
@@ -1110,10 +1120,10 @@ export const PageButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid transparent;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
+  background: ${neutral.surface};
+  color: ${neutral.text};
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -1383,86 +1393,6 @@ export const MapInfoDot = styled.span`
   background: ${neutral.primary};
 `
 
-export const MapSelectionCard = styled.div`
-  position: absolute;
-  left: 24px;
-  bottom: 24px;
-  z-index: 6;
-  width: min(360px, calc(100% - 120px));
-  padding: 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.softOverlay};
-  box-shadow: 0 12px 30px ${neutral.shadow};
-
-  @media (max-width: 720px) {
-    left: 12px;
-    bottom: 76px;
-    width: calc(100% - 24px);
-  }
-`
-
-export const MapSelectionTitle = styled.h3`
-  overflow: hidden;
-  margin: 0 0 6px;
-  color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const MapSelectionMeta = styled.p`
-  overflow: hidden;
-  margin: 0;
-  color: ${neutral.muted};
-  font-size: 12px;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const MapSelectionStatList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-`
-
-export const MapSelectionAction = styled.button`
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 12px;
-  padding: 0 12px;
-  border: 1px solid ${neutral.primarySoft};
-  border-radius: 8px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primary};
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    border-color: ${neutral.primary};
-    background: ${neutral.primary};
-    color: ${neutral.primaryText};
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.55;
-  }
-
-  ${MaterialIcon} {
-    font-size: 18px;
-  }
-`
-
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -1716,9 +1646,9 @@ export const ActionToast = styled.div`
   padding: 12px 14px;
   border: 1px solid ${neutral.success};
   border-radius: 8px;
-  background: ${neutral.surface};
+  background: ${neutral.successSurface};
   box-shadow: 0 16px 40px ${neutral.shadow};
-  color: #138f20;
+  color: ${neutral.successText};
   font-size: 14px;
   font-weight: 800;
 

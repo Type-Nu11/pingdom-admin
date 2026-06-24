@@ -911,41 +911,6 @@ function PlaceManagePage() {
                   : `${places.length.toLocaleString()}개 장소를 확인 중입니다.`}
               </span>
             </S.MapInfo>
-            {selectedPlace ? (
-              <S.MapSelectionCard>
-                <S.MapSelectionTitle>{selectedPlace.name}</S.MapSelectionTitle>
-                <S.MapSelectionMeta>
-                  {selectedPlace.address || '주소 정보 없음'}
-                </S.MapSelectionMeta>
-                <S.MapSelectionStatList>
-                  <S.PlaceStat>
-                    <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                    <span>레벨 {getPlaceLevel(selectedPlace)}</span>
-                  </S.PlaceStat>
-                  <S.PlaceStat>
-                    <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
-                    <span>사진 {getPlacePhotoCount(selectedPlace)}장</span>
-                  </S.PlaceStat>
-                </S.MapSelectionStatList>
-                <S.MapSelectionAction
-                  type="button"
-                  disabled={!selectedPlaceHasCoordinate}
-                  onClick={() => {
-                    if (selectedPlaceHasCoordinate) {
-                      mapRef.current?.moveTo(
-                        selectedPlace.latitude,
-                        selectedPlace.longitude
-                      )
-                    }
-                  }}
-                >
-                  <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
-                  <span>
-                    {selectedPlaceHasCoordinate ? '선택 위치 보기' : '좌표 정보 없음'}
-                  </span>
-                </S.MapSelectionAction>
-              </S.MapSelectionCard>
-            ) : null}
           </S.MapPanel>
         </S.SplitContent>
       </S.MainArea>

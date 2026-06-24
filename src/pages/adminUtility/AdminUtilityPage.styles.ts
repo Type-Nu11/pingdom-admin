@@ -70,11 +70,13 @@ export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
   justify-content: center;
   padding: 0 12px;
   border: 1px solid
-    ${({ $tone }) => ($tone === 'warning' ? '#F59F00' : neutral.primarySoft)};
+    ${({ $tone }) =>
+      $tone === 'warning' ? neutral.warning : neutral.primarySoft};
   border-radius: 8px;
   background: ${({ $tone }) =>
-    $tone === 'warning' ? '#FFF4E0' : neutral.primaryTint};
-  color: ${({ $tone }) => ($tone === 'warning' ? '#B56B00' : neutral.primary)};
+    $tone === 'warning' ? neutral.warningTint : neutral.primaryTint};
+  color: ${({ $tone }) =>
+    $tone === 'warning' ? neutral.warningText : neutral.primary};
   font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
@@ -171,20 +173,24 @@ export const Toolbar = styled.div`
 `
 
 export const SearchInput = styled.input`
-  min-height: 42px;
+  min-height: 44px;
   min-width: 0;
-  padding: 0 12px;
-  border: 0;
+  padding: 0 14px;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
 
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 

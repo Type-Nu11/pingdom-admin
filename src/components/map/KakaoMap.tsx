@@ -361,8 +361,15 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
       return
     }
 
+    let resizeAnimationFrameId: number | null = null
+
     const resizeObserver = new ResizeObserver(() => {
-      window.requestAnimationFrame(() => {
+      if (resizeAnimationFrameId !== null) {
+        window.cancelAnimationFrame(resizeAnimationFrameId)
+      }
+
+      resizeAnimationFrameId = window.requestAnimationFrame(() => {
+        resizeAnimationFrameId = null
         map.relayout()
         setMapWidthScale(getMapWidthScale(mapContainer.clientWidth))
       })
@@ -373,6 +380,10 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
     return () => {
       resizeObserver.disconnect()
+
+      if (resizeAnimationFrameId !== null) {
+        window.cancelAnimationFrame(resizeAnimationFrameId)
+      }
     }
   }, [isMapReady])
 

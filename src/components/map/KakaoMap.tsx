@@ -9,6 +9,11 @@ import {
 import type { MutableRefObject } from 'react'
 import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
+import {
+  getPlaceCategoryLabel,
+  getPlaceCategoryMarkerImageUrl,
+  PLACE_CATEGORY_ACCENT_COLOR,
+} from '../../utils/placeCategory'
 
 type KakaoMapInstance = {
   getLevel: () => number
@@ -17,6 +22,9 @@ type KakaoMapInstance = {
   relayout: () => void
   setCenter: (center: unknown) => void
   setBounds: (bounds: unknown) => void
+  getProjection?: () => {
+    coordsFromContainerPoint?: (point: unknown) => unknown
+  }
 }
 
 type KakaoMapOverlay = {
@@ -26,6 +34,7 @@ type KakaoMapOverlay = {
 type KakaoMaps = {
   load: (callback: () => void) => void
   LatLng: new (latitude: number, longitude: number) => unknown
+  Point: new (x: number, y: number) => unknown
   LatLngBounds: new () => {
     extend: (position: unknown) => void
   }
@@ -83,13 +92,21 @@ export interface KakaoMapMarker {
   latitude: number
   longitude: number
   label: string
+  category?: string
+  categoryName?: string
 }
 
 export interface KakaoMapHandle {
   zoomIn: () => void
   zoomOut: () => void
   relayout: () => void
-  moveTo: (latitude: number, longitude: number) => void
+  moveTo: (
+    latitude: number,
+    longitude: number,
+    options?: {
+      offsetX?: number
+    }
+  ) => void
   fitToMarkers: () => void
 }
 
@@ -218,7 +235,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     relayout() {
       mapInstanceRef.current?.relayout()
     },
-    moveTo(latitude: number, longitude: number) {
+    moveTo(latitude: number, longitude: number, options) {
       const map = mapInstanceRef.current
       const kakao = window.kakao
 
@@ -226,7 +243,30 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         return
       }
 
-      map.setCenter(new kakao.maps.LatLng(latitude, longitude))
+      const position = new kakao.maps.LatLng(latitude, longitude)
+      map.setCenter(position)
+
+      const offsetX = options?.offsetX ?? 0
+
+      if (offsetX === 0 || !mapContainerRef.current) {
+        return
+      }
+
+      const projection = map.getProjection?.()
+
+      if (!projection?.coordsFromContainerPoint) {
+        return
+      }
+
+      const containerWidth = mapContainerRef.current.clientWidth
+      const containerHeight = mapContainerRef.current.clientHeight
+      const adjustedCenterPoint = new kakao.maps.Point(
+        containerWidth / 2 - offsetX,
+        containerHeight / 2
+      )
+      const adjustedCenter = projection.coordsFromContainerPoint(adjustedCenterPoint)
+
+      map.setCenter(adjustedCenter)
     },
     fitToMarkers() {
       fitCurrentMarkersToMap()
@@ -414,7 +454,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         position,
         content,
         xAnchor: 0.5,
-        yAnchor: 1,
+        yAnchor: 0.62,
         zIndex: isActive ? 30 : 20,
       })
 
@@ -496,9 +536,8 @@ function getMarkerDimensions(
   const scale = getMarkerScale(mapLevel, mapWidthScale)
 
   return {
-    buttonSize: Math.round((isActive ? 42 : 34) * scale),
-    pinSize: Math.round((isActive ? 34 : 28) * scale),
-    dotSize: Math.round((isActive ? 10 : 8) * scale),
+    imageWidth: Math.round((isActive ? 50 : 44) * scale),
+    imageHeight: Math.round((isActive ? 67 : 59) * scale),
   }
 }
 
@@ -519,70 +558,75 @@ function createMarkerContent(
   onMarkerClick?: (markerId: number) => void
 ) {
   const markerDimensions = getMarkerDimensions(isActive, mapLevel, mapWidthScale)
+  const categoryLabel = getPlaceCategoryLabel(marker)
+  const markerImageUrl = getPlaceCategoryMarkerImageUrl(marker)
+  const markerLabel =
+    categoryLabel === '카테고리 없음'
+      ? marker.label
+      : `${marker.label} · ${categoryLabel}`
   const markerButton = document.createElement('button')
   markerButton.type = 'button'
-  markerButton.setAttribute('aria-label', `${marker.label} 위치 선택`)
-  markerButton.title = marker.label
+  markerButton.setAttribute('aria-label', `${markerLabel} 위치 선택`)
+  markerButton.title = markerLabel
   markerButton.style.position = 'relative'
   markerButton.style.display = 'inline-flex'
-  markerButton.style.alignItems = 'center'
+  markerButton.style.alignItems = 'flex-end'
   markerButton.style.justifyContent = 'center'
-  markerButton.style.width = `${markerDimensions.buttonSize}px`
-  markerButton.style.height = `${markerDimensions.buttonSize}px`
+  markerButton.style.width = `${markerDimensions.imageWidth}px`
+  markerButton.style.height = `${markerDimensions.imageHeight}px`
   markerButton.style.padding = '0'
   markerButton.style.border = '0'
   markerButton.style.background = 'transparent'
-  markerButton.style.color = neutral.primary
+  markerButton.style.color = PLACE_CATEGORY_ACCENT_COLOR
   markerButton.style.cursor = 'pointer'
   markerButton.style.fontFamily =
     "'Hanken Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   markerButton.style.lineHeight = '1'
-  markerButton.style.filter = isActive
-    ? `drop-shadow(0 10px 18px ${neutral.strongShadow})`
-    : `drop-shadow(0 6px 12px ${neutral.shadow})`
-  markerButton.style.transition = 'filter 160ms ease, opacity 160ms ease, transform 160ms ease'
+  markerButton.style.transition = 'opacity 160ms ease, transform 160ms ease'
 
   markerButton.addEventListener('mouseenter', () => {
     markerButton.style.transform = 'translateY(-2px)'
-    markerButton.style.filter = `drop-shadow(0 12px 22px ${neutral.strongShadow})`
   })
 
   markerButton.addEventListener('mouseleave', () => {
     markerButton.style.transform = 'translateY(0)'
-    markerButton.style.filter = isActive
-      ? `drop-shadow(0 10px 18px ${neutral.strongShadow})`
-      : `drop-shadow(0 6px 12px ${neutral.shadow})`
   })
 
   markerButton.addEventListener('click', () => {
     onMarkerClick?.(marker.id)
   })
 
-  const pin = document.createElement('span')
-  pin.setAttribute('aria-hidden', 'true')
-  pin.style.position = 'relative'
-  pin.style.display = 'inline-flex'
-  pin.style.alignItems = 'center'
-  pin.style.justifyContent = 'center'
-  pin.style.width = `${markerDimensions.pinSize}px`
-  pin.style.height = `${markerDimensions.pinSize}px`
-  pin.style.border = '2px solid #ffffff'
-  pin.style.borderRadius = '50% 50% 50% 0'
-  pin.style.background = neutral.primary
-  pin.style.boxSizing = 'border-box'
-  pin.style.transform = 'rotate(-45deg)'
+  const markerImage = document.createElement('img')
+  markerImage.setAttribute('aria-hidden', 'true')
+  markerImage.draggable = false
+  markerImage.src = markerImageUrl
+  markerImage.alt = ''
+  markerImage.width = markerDimensions.imageWidth
+  markerImage.height = markerDimensions.imageHeight
+  markerImage.style.display = 'block'
+  markerImage.style.width = '100%'
+  markerImage.style.height = '100%'
+  markerImage.style.objectFit = 'contain'
+  markerImage.style.pointerEvents = 'none'
+  markerImage.style.transformOrigin = '50% 62%'
 
-  const centerDot = document.createElement('span')
-  centerDot.setAttribute('aria-hidden', 'true')
-  centerDot.style.display = 'block'
-  centerDot.style.width = `${markerDimensions.dotSize}px`
-  centerDot.style.height = `${markerDimensions.dotSize}px`
-  centerDot.style.borderRadius = '50%'
-  centerDot.style.background = '#ffffff'
-  centerDot.style.transform = 'rotate(45deg)'
+  if (isActive) {
+    markerImage.animate(
+      [
+        { transform: 'translateY(0) scale(1)' },
+        { transform: 'translateY(-10px) scale(1.04)' },
+        { transform: 'translateY(0) scale(0.98)' },
+        { transform: 'translateY(-4px) scale(1.02)' },
+        { transform: 'translateY(0) scale(1)' },
+      ],
+      {
+        duration: 540,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      }
+    )
+  }
 
-  pin.appendChild(centerDot)
-  markerButton.appendChild(pin)
+  markerButton.appendChild(markerImage)
 
   return markerButton
 }

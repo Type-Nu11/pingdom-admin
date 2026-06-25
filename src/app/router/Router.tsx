@@ -3,7 +3,6 @@ import LoginPage from '../../pages/login/LoginPage'
 import MainPage from '../../pages/main/MainPage'
 import NotFoundPage from '../../pages/notFound/NotFoundPage'
 import PlaceManagePage from '../../pages/place/PlaceManagePage'
-import SettingsPage from '../../pages/settings/SettingsPage'
 import UserBanPage from '../../pages/userBan/UserBanPage'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -18,7 +17,6 @@ export function Router() {
           <Route path="/main" element={<MainPage />} />
           <Route path="/places" element={<PlaceManagePage />} />
           <Route path="/bans" element={<UserBanPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

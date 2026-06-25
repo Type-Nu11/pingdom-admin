@@ -54,10 +54,6 @@ function UserBanPage() {
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
             <span>사용자 밴</span>
           </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/settings')}>
-            <S.MaterialIcon aria-hidden="true">settings</S.MaterialIcon>
-            <span>설정</span>
-          </S.MenuButton>
         </S.SideMenu>
 
         <S.SideFooter>

@@ -18,6 +18,8 @@ export interface AdminPlaceItem {
   latitude: number
   longitude: number
   userId: number
+  category?: string
+  categoryName?: string
   registrant?: string
   placeGrowth?: PlaceGrowthSnapshot
 }
@@ -41,6 +43,8 @@ export interface AdminPlaceDetail {
   longitude: number
   userId: number
   username: string
+  category?: string
+  categoryName?: string
   sortParam: AdminPlacePostSortParam
   postCount: number
   placeGrowth?: PlaceGrowthSnapshot

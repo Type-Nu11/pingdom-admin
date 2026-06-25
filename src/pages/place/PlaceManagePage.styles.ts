@@ -1,6 +1,7 @@
 import styled, { css } from 'styled-components'
 import KakaoMap from '../../components/map/KakaoMap'
 import { adminColors } from '../../styles/theme'
+import { PLACE_CATEGORY_ACCENT_COLOR } from '../../utils/placeCategory'
 
 const neutral = adminColors
 
@@ -355,23 +356,18 @@ export const IconButton = styled.button`
 
 export const SplitContent = styled.div<{
   $isPanelCollapsed?: boolean
-  $isDetailOpen?: boolean
 }>`
   min-height: 0;
   display: grid;
-  grid-template-columns: ${({ $isDetailOpen, $isPanelCollapsed }) =>
-    `${$isPanelCollapsed ? '0' : '380px'} ${
-      $isDetailOpen ? '360px' : '0'
-    } minmax(0, 1fr)`};
+  grid-template-columns: ${({ $isPanelCollapsed }) =>
+    `${$isPanelCollapsed ? '0' : '340px'} minmax(0, 1fr)`};
   flex: 1;
   overflow: hidden;
   transition: grid-template-columns 180ms ease;
 
   @media (max-width: 1180px) {
-    grid-template-columns: ${({ $isDetailOpen, $isPanelCollapsed }) =>
-      `${$isPanelCollapsed ? '0' : '340px'} ${
-        $isDetailOpen ? '320px' : '0'
-      } minmax(0, 1fr)`};
+    grid-template-columns: ${({ $isPanelCollapsed }) =>
+      `${$isPanelCollapsed ? '0' : '312px'} minmax(0, 1fr)`};
   }
 
   @media (max-width: 900px) {
@@ -400,19 +396,26 @@ export const PlacePanel = styled.section<{ $collapsed?: boolean }>`
 `
 
 export const PlaceDetailPanel = styled.aside<{ $open?: boolean }>`
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 12px;
+  z-index: 8;
+  width: min(432px, calc(100% - 24px));
   min-width: 0;
   min-height: 0;
   display: ${({ $open }) => ($open ? 'flex' : 'none')};
   overflow: hidden;
   flex-direction: column;
-  border-right: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
   background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.strongShadow};
 
   @media (max-width: 900px) {
-    display: ${({ $open }) => ($open ? 'flex' : 'none')};
-    min-height: 420px;
-    border-right: 0;
-    border-bottom: 1px solid ${neutral.border};
+    inset: 16px;
+    width: auto;
+    min-height: 0;
   }
 `
 
@@ -963,10 +966,10 @@ export const PlaceThumb = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.primarySoft};
+  border: 1px solid #ffc9d3;
   border-radius: 8px;
-  background: ${neutral.surface};
-  color: ${neutral.primary};
+  background: #fff4f7;
+  color: ${PLACE_CATEGORY_ACCENT_COLOR};
 
   @media (max-width: 520px) {
     width: 40px;
@@ -993,6 +996,22 @@ export const PlaceName = styled.h3`
   font-weight: 700;
   line-height: 1.3;
   text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const PlaceCategoryBadge = styled.span`
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid #ffc9d3;
+  border-radius: 999px;
+  background: #fcfcfd;
+  color: ${PLACE_CATEGORY_ACCENT_COLOR};
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
   white-space: nowrap;
 `
 
@@ -1195,9 +1214,9 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
   }
 `
 
-export const MapPanel = styled.section<{ $hasDetail?: boolean }>`
+export const MapPanel = styled.section`
   position: relative;
-  grid-column: ${({ $hasDetail }) => ($hasDetail ? '3' : '2 / 4')};
+  grid-column: 2;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -1363,12 +1382,12 @@ export const MapControlButton = styled.button`
 export const MapInfo = styled.div`
   position: absolute;
   top: 16px;
-  right: 16px;
+  right: 84px;
   z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: min(360px, calc(100% - 32px));
+  max-width: min(320px, calc(100% - 132px));
   padding: 8px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
@@ -1380,8 +1399,7 @@ export const MapInfo = styled.div`
   @media (max-width: 720px) {
     top: 12px;
     right: 12px;
-    left: 12px;
-    max-width: none;
+    max-width: min(320px, calc(100% - 24px));
   }
 `
 

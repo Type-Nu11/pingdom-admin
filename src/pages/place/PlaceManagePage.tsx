@@ -12,6 +12,10 @@ import type {
   AdminPlaceItem,
   AdminPlaceListSortParam,
 } from '../../types/adminPlace.types'
+import {
+  getPlaceCategoryIconName,
+  getPlaceCategoryLabel,
+} from '../../utils/placeCategory'
 import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
@@ -121,6 +125,8 @@ function PlaceManagePage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
+  const mapPanelRef = useRef<HTMLElement | null>(null)
+  const placeDetailPanelRef = useRef<HTMLElement | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
   const isSearchEffectReadyRef = useRef(false)
   const latestSortParamRef = useRef(DEFAULT_PLACE_SORT_PARAM)
@@ -176,6 +182,8 @@ function PlaceManagePage() {
         latitude: place.latitude,
         longitude: place.longitude,
         label: place.name,
+        category: place.category,
+        categoryName: place.categoryName,
       })),
     [places]
   )
@@ -211,6 +219,43 @@ function PlaceManagePage() {
     setSelectedPlace(null)
     clearPlaceDetail()
   }, [clearPlaceDetail])
+
+  const getSelectedPlaceMapOffsetX = useCallback(() => {
+    const mapPanel = mapPanelRef.current
+    const detailPanel = placeDetailPanelRef.current
+
+    if (!isPlaceDetailOpen || !mapPanel || !detailPanel) {
+      return 0
+    }
+
+    const mapRect = mapPanel.getBoundingClientRect()
+    const detailRect = detailPanel.getBoundingClientRect()
+    const coveredWidth = Math.min(
+      mapRect.width,
+      Math.max(0, detailRect.right - mapRect.left)
+    )
+    const remainingMapWidth = mapRect.width - coveredWidth
+
+    if (coveredWidth <= 0 || remainingMapWidth < 240) {
+      return 0
+    }
+
+    return coveredWidth / 2
+  }, [isPlaceDetailOpen])
+
+  const focusPlaceOnVisibleMap = useCallback(
+    (place: AdminPlaceItem) => {
+      if (!hasValidCoordinate(place)) {
+        return
+      }
+
+      mapRef.current?.relayout()
+      mapRef.current?.moveTo(place.latitude, place.longitude, {
+        offsetX: getSelectedPlaceMapOffsetX(),
+      })
+    },
+    [getSelectedPlaceMapOffsetX]
+  )
 
   useEffect(() => {
     latestSortParamRef.current = selectedSortParam
@@ -257,10 +302,6 @@ function PlaceManagePage() {
     (place: AdminPlaceItem) => {
       setSelectedPlace(place)
       void fetchAdminPlaceDetail(place.id)
-
-      if (hasValidCoordinate(place)) {
-        mapRef.current?.moveTo(place.latitude, place.longitude)
-      }
     },
     [fetchAdminPlaceDetail]
   )
@@ -395,18 +436,16 @@ function PlaceManagePage() {
       return
     }
 
-    const recenterSelectedPlace = () => {
-      mapRef.current?.relayout()
-      mapRef.current?.moveTo(selectedPlace.latitude, selectedPlace.longitude)
-    }
+    const recenterSelectedPlace = () => focusPlaceOnVisibleMap(selectedPlace)
 
-    window.requestAnimationFrame(recenterSelectedPlace)
+    const recenterAnimationFrame = window.requestAnimationFrame(recenterSelectedPlace)
     const recenterTimer = window.setTimeout(recenterSelectedPlace, 220)
 
     return () => {
+      window.cancelAnimationFrame(recenterAnimationFrame)
       window.clearTimeout(recenterTimer)
     }
-  }, [isPlaceDetailOpen, isPlacePanelCollapsed, selectedPlace])
+  }, [focusPlaceOnVisibleMap, isPlacePanelCollapsed, selectedPlace])
 
   useEffect(() => {
     function closeDeleteConfirmOnEscape(event: KeyboardEvent) {
@@ -493,10 +532,7 @@ function PlaceManagePage() {
           </S.TopActions>
         </S.TopBar>
 
-        <S.SplitContent
-          $isDetailOpen={isPlaceDetailOpen}
-          $isPanelCollapsed={isPlacePanelCollapsed}
-        >
+        <S.SplitContent $isPanelCollapsed={isPlacePanelCollapsed}>
           <S.PlacePanel $collapsed={isPlacePanelCollapsed}>
             <S.PanelControls>
               <S.PanelSummary>
@@ -586,6 +622,7 @@ function PlaceManagePage() {
               ) : places.length > 0 ? (
                 places.map((place) => {
                   const isSelected = selectedPlace?.id === place.id
+                  const placeCategoryLabel = getPlaceCategoryLabel(place)
 
                   return (
                     <S.PlaceItem
@@ -596,11 +633,14 @@ function PlaceManagePage() {
                       onClick={() => handleSelectPlace(place)}
                     >
                       <S.PlaceThumb>
-                        <S.MaterialIcon aria-hidden="true">location_city</S.MaterialIcon>
+                        <S.MaterialIcon aria-hidden="true">
+                          {getPlaceCategoryIconName(place)}
+                        </S.MaterialIcon>
                       </S.PlaceThumb>
                       <S.PlaceInfo>
                         <S.PlaceTitleRow>
                           <S.PlaceName>{place.name}</S.PlaceName>
+                          <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                         </S.PlaceTitleRow>
                         <S.PlaceCaption>
                           장소 ID: {place.id} · {getPlaceOwner(place)}
@@ -701,171 +741,7 @@ function PlaceManagePage() {
             ) : null}
           </S.PlacePanel>
 
-          <S.PlaceDetailPanel $open={isPlaceDetailOpen}>
-            {selectedPlace ? (
-              <>
-                <S.DetailHeader>
-                  <S.DetailTitleGroup>
-                    <S.DetailEyebrow>PLACE DETAIL</S.DetailEyebrow>
-                    <S.DetailTitle>
-                      {placeDetail?.name ?? selectedPlace.name}
-                    </S.DetailTitle>
-                  </S.DetailTitleGroup>
-                  <S.DetailCloseButton
-                    type="button"
-                    aria-label="장소 상세 닫기"
-                    onClick={handleClosePlaceDetail}
-                  >
-                    <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
-                  </S.DetailCloseButton>
-                </S.DetailHeader>
-
-                <S.DetailBody>
-                  {isDetailLoading ? (
-                    <S.DetailStatus role="status" aria-live="polite">
-                      장소 상세 정보를 불러오는 중입니다.
-                    </S.DetailStatus>
-                  ) : detailErrorMessage ? (
-                    <S.DetailNotice role="alert">{detailErrorMessage}</S.DetailNotice>
-                  ) : placeDetail ? (
-                    <>
-                      <S.DetailMetaList>
-                        <S.DetailMetaItem>
-                          <span>장소 ID</span>
-                          <strong>{placeDetail.id}</strong>
-                        </S.DetailMetaItem>
-                        <S.DetailMetaItem>
-                          <span>주소</span>
-                          <strong>{placeDetail.address || '주소 정보 없음'}</strong>
-                        </S.DetailMetaItem>
-                        <S.DetailMetaItem>
-                          <span>등록자</span>
-                          <strong>
-                            {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
-                          </strong>
-                        </S.DetailMetaItem>
-                        <S.DetailMetaItem>
-                          <span>좌표</span>
-                          <strong>
-                            {placeDetail.latitude.toFixed(6)},{' '}
-                            {placeDetail.longitude.toFixed(6)}
-                          </strong>
-                        </S.DetailMetaItem>
-                      </S.DetailMetaList>
-
-                      <S.DetailSection>
-                        <S.DetailSectionTitle>장소 성장</S.DetailSectionTitle>
-                        <S.PlaceStatList>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                            <span>
-                              레벨 {formatOptionalNumber(placeDetail.placeGrowth?.level)}
-                            </span>
-                          </S.PlaceStat>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
-                            <span>
-                              사진{' '}
-                              {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
-                            </span>
-                          </S.PlaceStat>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
-                            <span>
-                              다음 레벨까지 {getDetailGrowthProgressLabel(placeDetail)}
-                            </span>
-                          </S.PlaceStat>
-                        </S.PlaceStatList>
-                      </S.DetailSection>
-
-                      <S.DetailSection>
-                        <S.DetailSectionTitle>
-                          연결 게시글 {placeDetail.postCount.toLocaleString()}개
-                        </S.DetailSectionTitle>
-                        {placeDetail.posts.length > 0 ? (
-                          <S.DetailPostList>
-                            {placeDetail.posts.map((post) => (
-                              <S.DetailPostItem key={post.id}>
-                                <S.DetailPostImage>
-                                  {post.imageUrl ? (
-                                    <img
-                                      src={post.imageUrl}
-                                      alt={`${post.title || `게시글 ${post.id}`} 이미지`}
-                                      loading="lazy"
-                                      decoding="async"
-                                    />
-                                  ) : (
-                                    <S.DetailPostFallback>
-                                      <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
-                                    </S.DetailPostFallback>
-                                  )}
-                                </S.DetailPostImage>
-                                <S.DetailPostText>
-                                  <S.DetailPostTitleButton
-                                    type="button"
-                                    onClick={() =>
-                                      navigate('/main', {
-                                        state: {
-                                          openPostId: post.id,
-                                        },
-                                      })
-                                    }
-                                  >
-                                    {post.title || `게시글 #${post.id}`}
-                                  </S.DetailPostTitleButton>
-                                  <p>
-                                    {post.description || '설명 없음'}
-                                  </p>
-                                  <S.DetailPostMeta>
-                                    {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
-                                    {post.likeCount.toLocaleString()} ·{' '}
-                                    {formatPlacePostDate(post.createdAt)}
-                                  </S.DetailPostMeta>
-                                </S.DetailPostText>
-                              </S.DetailPostItem>
-                            ))}
-                          </S.DetailPostList>
-                        ) : (
-                          <S.DetailStatus>연결된 게시글이 없습니다.</S.DetailStatus>
-                        )}
-                      </S.DetailSection>
-                    </>
-                  ) : (
-                    <S.DetailStatus>장소를 선택하면 상세 정보가 표시됩니다.</S.DetailStatus>
-                  )}
-                </S.DetailBody>
-
-                <S.DetailFooter>
-                  <S.DetailActionButton
-                    type="button"
-                    disabled={!selectedPlaceHasCoordinate}
-                    onClick={() => {
-                      if (selectedPlaceHasCoordinate) {
-                        mapRef.current?.relayout()
-                        mapRef.current?.moveTo(
-                          selectedPlace.latitude,
-                          selectedPlace.longitude
-                        )
-                      }
-                    }}
-                  >
-                    <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
-                    <span>위치 보기</span>
-                  </S.DetailActionButton>
-                  <S.DetailDeleteButton
-                    type="button"
-                    disabled={!placeDetail || isDetailLoading || isDeletingSelectedPlace}
-                    onClick={handleOpenDeleteConfirm}
-                  >
-                    <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
-                    <span>{isDeletingSelectedPlace ? '삭제 중' : '장소 삭제'}</span>
-                  </S.DetailDeleteButton>
-                </S.DetailFooter>
-              </>
-            ) : null}
-          </S.PlaceDetailPanel>
-
-          <S.MapPanel $hasDetail={isPlaceDetailOpen}>
+          <S.MapPanel ref={mapPanelRef}>
             <S.AdminMap
               ref={mapRef}
               activeMarkerId={selectedPlace?.id ?? null}
@@ -873,6 +749,168 @@ function PlaceManagePage() {
               markers={placeMapMarkers}
               onMarkerClick={handleSelectMapMarker}
             />
+            <S.PlaceDetailPanel
+              ref={placeDetailPanelRef}
+              $open={isPlaceDetailOpen}
+            >
+              {selectedPlace ? (
+                <>
+                  <S.DetailHeader>
+                    <S.DetailTitleGroup>
+                      <S.DetailEyebrow>PLACE DETAIL</S.DetailEyebrow>
+                      <S.DetailTitle>
+                        {placeDetail?.name ?? selectedPlace.name}
+                      </S.DetailTitle>
+                    </S.DetailTitleGroup>
+                    <S.DetailCloseButton
+                      type="button"
+                      aria-label="장소 상세 닫기"
+                      onClick={handleClosePlaceDetail}
+                    >
+                      <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                    </S.DetailCloseButton>
+                  </S.DetailHeader>
+
+                  <S.DetailBody>
+                    {isDetailLoading ? (
+                      <S.DetailStatus role="status" aria-live="polite">
+                        장소 상세 정보를 불러오는 중입니다.
+                      </S.DetailStatus>
+                    ) : detailErrorMessage ? (
+                      <S.DetailNotice role="alert">{detailErrorMessage}</S.DetailNotice>
+                    ) : placeDetail ? (
+                      <>
+                        <S.DetailMetaList>
+                          <S.DetailMetaItem>
+                            <span>장소 ID</span>
+                            <strong>{placeDetail.id}</strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>주소</span>
+                            <strong>{placeDetail.address || '주소 정보 없음'}</strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>카테고리</span>
+                            <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>등록자</span>
+                            <strong>
+                              {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
+                            </strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>좌표</span>
+                            <strong>
+                              {placeDetail.latitude.toFixed(6)},{' '}
+                              {placeDetail.longitude.toFixed(6)}
+                            </strong>
+                          </S.DetailMetaItem>
+                        </S.DetailMetaList>
+
+                        <S.DetailSection>
+                          <S.DetailSectionTitle>장소 성장</S.DetailSectionTitle>
+                          <S.PlaceStatList>
+                            <S.PlaceStat>
+                              <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
+                              <span>
+                                레벨 {formatOptionalNumber(placeDetail.placeGrowth?.level)}
+                              </span>
+                            </S.PlaceStat>
+                            <S.PlaceStat>
+                              <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
+                              <span>
+                                사진{' '}
+                                {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
+                              </span>
+                            </S.PlaceStat>
+                            <S.PlaceStat>
+                              <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
+                              <span>
+                                다음 레벨까지 {getDetailGrowthProgressLabel(placeDetail)}
+                              </span>
+                            </S.PlaceStat>
+                          </S.PlaceStatList>
+                        </S.DetailSection>
+
+                        <S.DetailSection>
+                          <S.DetailSectionTitle>
+                            연결 게시글 {placeDetail.postCount.toLocaleString()}개
+                          </S.DetailSectionTitle>
+                          {placeDetail.posts.length > 0 ? (
+                            <S.DetailPostList>
+                              {placeDetail.posts.map((post) => (
+                                <S.DetailPostItem key={post.id}>
+                                  <S.DetailPostImage>
+                                    {post.imageUrl ? (
+                                      <img
+                                        src={post.imageUrl}
+                                        alt={`${post.title || `게시글 ${post.id}`} 이미지`}
+                                        loading="lazy"
+                                        decoding="async"
+                                      />
+                                    ) : (
+                                      <S.DetailPostFallback>
+                                        <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
+                                      </S.DetailPostFallback>
+                                    )}
+                                  </S.DetailPostImage>
+                                  <S.DetailPostText>
+                                    <S.DetailPostTitleButton
+                                      type="button"
+                                      onClick={() =>
+                                        navigate('/main', {
+                                          state: {
+                                            openPostId: post.id,
+                                          },
+                                        })
+                                      }
+                                    >
+                                      {post.title || `게시글 #${post.id}`}
+                                    </S.DetailPostTitleButton>
+                                    <p>
+                                      {post.description || '설명 없음'}
+                                    </p>
+                                    <S.DetailPostMeta>
+                                      {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
+                                      {post.likeCount.toLocaleString()} ·{' '}
+                                      {formatPlacePostDate(post.createdAt)}
+                                    </S.DetailPostMeta>
+                                  </S.DetailPostText>
+                                </S.DetailPostItem>
+                              ))}
+                            </S.DetailPostList>
+                          ) : (
+                            <S.DetailStatus>연결된 게시글이 없습니다.</S.DetailStatus>
+                          )}
+                        </S.DetailSection>
+                      </>
+                    ) : (
+                      <S.DetailStatus>장소를 선택하면 상세 정보가 표시됩니다.</S.DetailStatus>
+                    )}
+                  </S.DetailBody>
+
+                  <S.DetailFooter>
+                    <S.DetailActionButton
+                      type="button"
+                      disabled={!selectedPlaceHasCoordinate}
+                      onClick={() => focusPlaceOnVisibleMap(selectedPlace)}
+                    >
+                      <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
+                      <span>위치 보기</span>
+                    </S.DetailActionButton>
+                    <S.DetailDeleteButton
+                      type="button"
+                      disabled={!placeDetail || isDetailLoading || isDeletingSelectedPlace}
+                      onClick={handleOpenDeleteConfirm}
+                    >
+                      <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                      <span>{isDeletingSelectedPlace ? '삭제 중' : '장소 삭제'}</span>
+                    </S.DetailDeleteButton>
+                  </S.DetailFooter>
+                </>
+              ) : null}
+            </S.PlaceDetailPanel>
             {isPlacePanelCollapsed ? (
               <S.MapListToggleButton
                 type="button"

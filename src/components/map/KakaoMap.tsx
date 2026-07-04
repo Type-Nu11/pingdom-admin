@@ -438,6 +438,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
       return
     }
 
+    let fitBoundsAnimationFrameId: number | null = null
     const validMarkers = markers.filter(hasValidMarkerCoordinate)
 
     validMarkers.forEach((marker) => {
@@ -465,12 +466,17 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     if (fitBoundsKey && lastFitBoundsKeyRef.current !== fitBoundsKey) {
       lastFitBoundsKeyRef.current = fitBoundsKey
 
-      window.requestAnimationFrame(() => {
+      fitBoundsAnimationFrameId = window.requestAnimationFrame(() => {
+        fitBoundsAnimationFrameId = null
         fitCurrentMarkersToMap()
       })
     }
 
     return () => {
+      if (fitBoundsAnimationFrameId !== null) {
+        window.cancelAnimationFrame(fitBoundsAnimationFrameId)
+      }
+
       markerOverlayRefs.current.forEach((overlay) => overlay.setMap(null))
       markerOverlayRefs.current = []
     }

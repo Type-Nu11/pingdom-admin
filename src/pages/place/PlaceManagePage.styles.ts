@@ -1,6 +1,7 @@
 import styled, { css } from 'styled-components'
 import KakaoMap from '../../components/map/KakaoMap'
 import { adminColors } from '../../styles/theme'
+import { PLACE_CATEGORY_ACCENT_COLOR } from '../../utils/placeCategory'
 
 const neutral = adminColors
 
@@ -47,7 +48,7 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 280px;
+  width: 248px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -64,17 +65,17 @@ export const SideNav = styled.nav`
 `
 
 export const SideHeader = styled.div`
-  min-height: 116px;
+  min-height: 104px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 28px;
+  padding: 22px 24px;
   border-bottom: 1px solid ${neutral.border};
 `
 
 export const BrandLockup = styled.div`
   position: relative;
-  width: min(188px, 100%);
+  width: min(168px, 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -106,7 +107,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 14px;
   min-height: 48px;
-  padding: 0 28px;
+  padding: 0 24px;
   border: 0;
   border-right: 2px solid transparent;
   background: transparent;
@@ -126,13 +127,13 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   }
 
   &:disabled {
-    border-right-color: #f59f00;
-    background: #fff4e0;
+    border-right-color: ${neutral.warning};
+    background: ${neutral.warningTint};
     color: ${neutral.muted};
     cursor: default;
 
     ${MaterialIcon} {
-      color: #f59f00;
+      color: ${neutral.warning};
     }
   }
 
@@ -162,7 +163,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
     &:disabled {
       border-right: 0;
-      border-bottom-color: #f59f00;
+      border-bottom-color: ${neutral.warning};
     }
 
     ${({ $active }) =>
@@ -175,7 +176,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
 export const MenuStatusText = styled.span`
   margin-left: auto;
-  color: #f59f00;
+  color: ${neutral.warning};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -183,7 +184,7 @@ export const MenuStatusText = styled.span`
 `
 
 export const SideFooter = styled.div`
-  padding: 18px 28px 28px;
+  padding: 18px 24px 24px;
   border-top: 1px solid ${neutral.border};
 
   @media (max-width: 900px) {
@@ -280,7 +281,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   height: 100vh;
-  margin-left: 280px;
+  margin-left: 248px;
   display: flex;
   overflow: hidden;
   flex-direction: column;
@@ -353,15 +354,20 @@ export const IconButton = styled.button`
   }
 `
 
-export const SplitContent = styled.div`
+export const SplitContent = styled.div<{
+  $isPanelCollapsed?: boolean
+}>`
   min-height: 0;
   display: grid;
-  grid-template-columns: 500px minmax(0, 1fr);
+  grid-template-columns: ${({ $isPanelCollapsed }) =>
+    `${$isPanelCollapsed ? '0' : '340px'} minmax(0, 1fr)`};
   flex: 1;
   overflow: hidden;
+  transition: grid-template-columns 180ms ease;
 
   @media (max-width: 1180px) {
-    grid-template-columns: 440px minmax(0, 1fr);
+    grid-template-columns: ${({ $isPanelCollapsed }) =>
+      `${$isPanelCollapsed ? '0' : '312px'} minmax(0, 1fr)`};
   }
 
   @media (max-width: 900px) {
@@ -371,25 +377,321 @@ export const SplitContent = styled.div`
   }
 `
 
-export const PlacePanel = styled.section`
+export const PlacePanel = styled.section<{ $collapsed?: boolean }>`
   min-height: 0;
   display: flex;
   overflow: hidden;
   flex-direction: column;
-  border-right: 1px solid ${neutral.border};
+  border-right: ${({ $collapsed }) =>
+    $collapsed ? '0' : `1px solid ${neutral.border}`};
   background: ${neutral.surface};
+  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
+  pointer-events: ${({ $collapsed }) => ($collapsed ? 'none' : 'auto')};
 
   @media (max-width: 900px) {
+    display: ${({ $collapsed }) => ($collapsed ? 'none' : 'flex')};
     border-right: 0;
     border-bottom: 1px solid ${neutral.border};
+  }
+`
+
+export const PlaceDetailPanel = styled.aside<{ $open?: boolean }>`
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 12px;
+  z-index: 8;
+  width: min(432px, calc(100% - 24px));
+  min-width: 0;
+  min-height: 0;
+  display: ${({ $open }) => ($open ? 'flex' : 'none')};
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.strongShadow};
+
+  @media (max-width: 900px) {
+    inset: 16px;
+    width: auto;
+    min-height: 0;
+  }
+`
+
+export const DetailHeader = styled.header`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid ${neutral.border};
+`
+
+export const DetailTitleGroup = styled.div`
+  min-width: 0;
+`
+
+export const DetailEyebrow = styled.p`
+  margin: 0 0 4px;
+  color: ${neutral.primary};
+  font-size: 11px;
+  font-weight: 800;
+`
+
+export const DetailTitle = styled.h3`
+  overflow: hidden;
+  margin: 0;
+  color: ${neutral.strongText};
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const DetailCloseButton = styled.button`
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.surfaceLow};
+    color: ${neutral.primary};
+  }
+`
+
+export const DetailBody = styled.div`
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+`
+
+export const DetailStatus = styled.div`
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const DetailNotice = styled.p`
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const DetailMetaList = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+`
+
+export const DetailMetaItem = styled.div`
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  span {
+    display: block;
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.4;
+  }
+
+  strong {
+    display: block;
+    overflow: hidden;
+    margin-top: 4px;
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const DetailSection = styled.section`
+  margin-top: 18px;
+`
+
+export const DetailSectionTitle = styled.h4`
+  margin: 0 0 10px;
+  color: ${neutral.strongText};
+  font-size: 14px;
+  font-weight: 800;
+`
+
+export const DetailPostList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`
+
+export const DetailPostItem = styled.article`
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surface};
+`
+
+export const DetailPostImage = styled.div`
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+`
+
+export const DetailPostFallback = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${neutral.softText};
+
+  ${MaterialIcon} {
+    font-size: 20px;
+  }
+`
+
+export const DetailPostText = styled.div`
+  min-width: 0;
+
+  p {
+    overflow: hidden;
+    margin: 4px 0 0;
+    color: ${neutral.muted};
+    font-size: 12px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const DetailPostTitleButton = styled.button`
+  max-width: 100%;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${neutral.strongText};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: ${neutral.primary};
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+`
+
+export const DetailPostMeta = styled.span`
+  display: block;
+  margin-top: 6px;
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 700;
+`
+
+export const DetailFooter = styled.footer`
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px;
+  border-top: 1px solid ${neutral.border};
+  background: ${neutral.surface};
+`
+
+export const DetailActionButton = styled.button`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  padding: 0 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const DetailDeleteButton = styled(DetailActionButton)`
+  border-color: ${neutral.error};
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.error};
+    background: ${neutral.error};
+    color: ${neutral.primaryText};
   }
 `
 
 export const PanelControls = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
+  gap: 14px;
+  padding: 16px;
   border-bottom: 1px solid ${neutral.border};
 
   @media (max-width: 520px) {
@@ -402,6 +704,30 @@ export const PanelSummary = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+`
+
+export const PanelCollapseButton = styled.button`
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.primary};
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
 `
 
 export const PanelActionGroup = styled.div`
@@ -435,7 +761,7 @@ export const SearchIcon = styled(MaterialIcon)`
   top: 50%;
   left: 12px;
   z-index: 1;
-  color: ${neutral.muted};
+  color: ${neutral.primary};
   transform: translateY(-50%);
   pointer-events: none;
 `
@@ -444,15 +770,19 @@ export const SearchInput = styled.input`
   ${controlStyle}
   width: 100%;
   padding: 0 14px 0 40px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
 
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 
@@ -503,15 +833,16 @@ export const Select = styled.select`
   height: 40px;
   min-width: 0;
   padding: 0 10px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   border-radius: 4px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
   cursor: pointer;
 
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
@@ -521,16 +852,17 @@ export const CompactSelect = styled.select`
   height: 40px;
   width: 92px;
   padding: 0 10px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
@@ -547,20 +879,24 @@ export const IconFilterButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 4px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.text};
+  border: 1px solid ${neutral.primary};
+  border-radius: 8px;
+  background: ${neutral.primary};
+  color: ${neutral.primaryText};
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
 
-  &:hover {
-    background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primaryHover};
+    background: ${neutral.primaryHover};
   }
 
   &:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
+    cursor: default;
+    opacity: 0.72;
   }
 `
 
@@ -589,9 +925,9 @@ export const ListStatus = styled.div`
 export const PlaceItem = styled.button<{ $active?: boolean }>`
   width: 100%;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 16px;
-  padding: 18px 20px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
   border: 0;
   border-bottom: 1px solid ${neutral.border};
   background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
@@ -625,15 +961,15 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
 `
 
 export const PlaceThumb = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.primarySoft};
+  border: 1px solid #ffc9d3;
   border-radius: 8px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  background: #fff4f7;
+  color: ${PLACE_CATEGORY_ACCENT_COLOR};
 
   @media (max-width: 520px) {
     width: 40px;
@@ -656,10 +992,26 @@ export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.3;
   text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const PlaceCategoryBadge = styled.span`
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid #ffc9d3;
+  border-radius: 999px;
+  background: #fcfcfd;
+  color: ${PLACE_CATEGORY_ACCENT_COLOR};
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
   white-space: nowrap;
 `
 
@@ -700,8 +1052,8 @@ export const PlaceMeta = styled.p`
 export const PlaceStatList = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
+  gap: 5px;
+  margin-top: 10px;
 `
 
 export const PlaceStat = styled.span`
@@ -711,9 +1063,9 @@ export const PlaceStat = styled.span`
   gap: 4px;
   max-width: 100%;
   padding: 0 8px;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 12px;
   font-weight: 600;
@@ -726,7 +1078,7 @@ export const PlaceStat = styled.span`
 
   ${MaterialIcon} {
     flex-shrink: 0;
-    color: ${neutral.muted};
+    color: ${neutral.primary};
     font-size: 14px;
   }
 `
@@ -787,10 +1139,10 @@ export const PageButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid transparent;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
+  background: ${neutral.surface};
+  color: ${neutral.text};
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -864,12 +1216,14 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
 
 export const MapPanel = styled.section`
   position: relative;
+  grid-column: 2;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
   background: ${neutral.surfaceLow};
 
   @media (max-width: 900px) {
+    grid-column: auto;
     min-height: 460px;
   }
 `
@@ -975,6 +1329,36 @@ export const MapControlGroup = styled.div`
   }
 `
 
+export const MapListToggleButton = styled.button`
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 7;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 0 10px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.softOverlay};
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px ${neutral.shadow};
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
 export const MapControlButton = styled.button`
   width: 40px;
   height: 40px;
@@ -998,12 +1382,12 @@ export const MapControlButton = styled.button`
 export const MapInfo = styled.div`
   position: absolute;
   top: 16px;
-  right: 16px;
+  right: 84px;
   z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: min(360px, calc(100% - 32px));
+  max-width: min(320px, calc(100% - 132px));
   padding: 8px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
@@ -1015,8 +1399,7 @@ export const MapInfo = styled.div`
   @media (max-width: 720px) {
     top: 12px;
     right: 12px;
-    left: 12px;
-    max-width: none;
+    max-width: min(320px, calc(100% - 24px));
   }
 `
 
@@ -1026,86 +1409,6 @@ export const MapInfoDot = styled.span`
   flex-shrink: 0;
   border-radius: 999px;
   background: ${neutral.primary};
-`
-
-export const MapSelectionCard = styled.div`
-  position: absolute;
-  left: 24px;
-  bottom: 24px;
-  z-index: 6;
-  width: min(360px, calc(100% - 120px));
-  padding: 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.softOverlay};
-  box-shadow: 0 12px 30px ${neutral.shadow};
-
-  @media (max-width: 720px) {
-    left: 12px;
-    bottom: 76px;
-    width: calc(100% - 24px);
-  }
-`
-
-export const MapSelectionTitle = styled.h3`
-  overflow: hidden;
-  margin: 0 0 6px;
-  color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const MapSelectionMeta = styled.p`
-  overflow: hidden;
-  margin: 0;
-  color: ${neutral.muted};
-  font-size: 12px;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const MapSelectionStatList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-`
-
-export const MapSelectionAction = styled.button`
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 12px;
-  padding: 0 12px;
-  border: 1px solid ${neutral.primarySoft};
-  border-radius: 8px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primary};
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    border-color: ${neutral.primary};
-    background: ${neutral.primary};
-    color: ${neutral.primaryText};
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.55;
-  }
-
-  ${MaterialIcon} {
-    font-size: 18px;
-  }
 `
 
 export const ModalOverlay = styled.div`
@@ -1345,5 +1648,135 @@ export const DangerButton = styled.button`
 
   &:hover {
     opacity: 0.9;
+  }
+`
+
+export const ActionToast = styled.div`
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 150;
+  min-height: 48px;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid ${neutral.success};
+  border-radius: 8px;
+  background: ${neutral.successSurface};
+  box-shadow: 0 16px 40px ${neutral.shadow};
+  color: ${neutral.successText};
+  font-size: 14px;
+  font-weight: 800;
+
+  ${MaterialIcon} {
+    color: ${neutral.success};
+    font-size: 20px;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 20;
+  }
+
+  @media (max-width: 720px) {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+`
+
+export const DeleteConfirmOverlay = styled(ModalOverlay)`
+  z-index: 120;
+`
+
+export const DeleteConfirmDialog = styled.section`
+  width: min(420px, 100%);
+  padding: 24px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.strongShadow};
+`
+
+export const DeleteConfirmIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  ${MaterialIcon} {
+    font-size: 24px;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+`
+
+export const DeleteConfirmTitle = styled.h2`
+  margin: 0 0 8px;
+  color: ${neutral.strongText};
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+`
+
+export const DeleteConfirmDescription = styled.p`
+  margin: 0;
+  color: ${neutral.text};
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: keep-all;
+`
+
+export const DeleteConfirmMeta = styled.p`
+  margin: 14px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
+`
+
+export const DeleteConfirmNotice = styled.p`
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const DeleteConfirmActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    ${SecondaryButton},
+    ${DangerButton} {
+      width: 100%;
+    }
   }
 `

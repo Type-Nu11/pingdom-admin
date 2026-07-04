@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
@@ -13,6 +13,7 @@ import * as S from './MainPage.styles'
 
 const ADMIN_POST_PAGE_SIZE = 20
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
+const POST_SEARCH_DEBOUNCE_MS = 300
 const DEFAULT_ADMIN_POST_SORT_PARAM: AdminPostSortParam = 'LATEST'
 const ADMIN_POST_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
@@ -26,7 +27,7 @@ const ADMIN_POST_REVIEW_FILTERS: Array<{
   value: AdminPostReviewFilter
   label: string
 }> = [
-  { value: 'ALL', label: '전체' },
+  { value: 'ALL', label: '모든 상태' },
   { value: 'REPORTED', label: '신고 이력' },
   { value: 'NORMAL', label: '신고 없음' },
 ]
@@ -34,6 +35,10 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
   PENDING: '처리 대기',
   ACCEPTED: '수락',
   DECLINED: '거절',
+}
+
+interface MainPageLocationState {
+  openPostId?: number
 }
 
 function getPostImageUrl(post: AdminPost) {
@@ -113,36 +118,6 @@ function isPostMatchingReviewFilter(
   return true
 }
 
-function isPostMatchingSearch(post: AdminPost, query: string) {
-  const normalizedQuery = query.trim().toLowerCase()
-
-  if (!normalizedQuery) {
-    return true
-  }
-
-  const searchableText = [
-    getPostTitle(post),
-    getPostOwner(post),
-    post.id,
-    post.userId,
-    post.placeName,
-    post.description,
-    post.createdAt,
-    ...getPostReports(post).flatMap((report) => [
-      report.reportId,
-      report.reporterUserId,
-      report.reporterUsername,
-      report.reason,
-      report.status,
-    ]),
-  ]
-    .filter((value) => value !== null && value !== undefined)
-    .join(' ')
-    .toLowerCase()
-
-  return searchableText.includes(normalizedQuery)
-}
-
 function formatCount(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '0'
 }
@@ -170,6 +145,21 @@ function formatOptionalPostDate(value?: string | null) {
   }
 
   return formatPostDate(value)
+}
+
+function createPendingPost(postId: number): AdminPost {
+  return {
+    id: postId,
+    name: `게시글 #${postId}`,
+    imageUrl: '',
+    userId: 0,
+    username: '불러오는 중',
+    createdAt: '',
+    description: '',
+    likeCount: 0,
+    placeName: '',
+    reports: [],
+  }
 }
 
 interface AdminPostImageProps {
@@ -229,10 +219,21 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function MainPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, user } = useAuth()
   const pageContentRef = useRef<HTMLElement | null>(null)
   const isSortEffectReadyRef = useRef(false)
+  const isSearchEffectReadyRef = useRef(false)
+  const latestSortParamRef = useRef(DEFAULT_ADMIN_POST_SORT_PARAM)
+  const latestPostKeywordRef = useRef('')
+  const shouldSkipNextSearchEffectRef = useRef(false)
+  const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
+  const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
+    null
+  )
+  const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
+    useState(false)
   const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
     DEFAULT_ADMIN_POST_SORT_PARAM
   )
@@ -249,6 +250,7 @@ function MainPage() {
     isError,
     errorMessage,
     actionErrorMessage,
+    actionSuccessMessage,
     postDetail,
     isDetailLoading,
     detailErrorMessage,
@@ -265,10 +267,11 @@ function MainPage() {
   const activeReports = activePost ? getPostReports(activePost) : []
   const currentPageNumber = page
   const isDeleting = deletingPostId !== null
+  const postKeyword = postSearchQuery.trim()
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
-  const hasClientOnlyPostFilter =
-    selectedReviewFilter !== 'ALL' || postSearchQuery.trim().length > 0
+  const hasClientOnlyPostFilter = selectedReviewFilter !== 'ALL'
+  const hasActivePostKeyword = postKeyword.length > 0
   const showPagination = totalPages > 1 && !hasClientOnlyPostFilter
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
   const reviewFilterCounts = useMemo(
@@ -289,18 +292,33 @@ function MainPage() {
   )
   const filteredPosts = useMemo(
     () =>
-      posts.filter(
-        (post) =>
-          isPostMatchingReviewFilter(post, selectedReviewFilter) &&
-          isPostMatchingSearch(post, postSearchQuery)
-      ),
-    [postSearchQuery, posts, selectedReviewFilter]
+      posts.filter((post) => isPostMatchingReviewFilter(post, selectedReviewFilter)),
+    [posts, selectedReviewFilter]
   )
   const activePostIndex = activePost
     ? filteredPosts.findIndex((post) => post.id === activePost.id)
     : -1
   const nextReviewPost =
     activePostIndex >= 0 ? filteredPosts[activePostIndex + 1] ?? null : null
+
+  const clearPendingPostSearch = useCallback(() => {
+    if (!searchTimeoutRef.current) {
+      return
+    }
+
+    window.clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = null
+  }, [])
+
+  const scrollPageContentToTop = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      pageContentRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }, [])
+
   const handleOpenPostDetail = useCallback(
     (post: AdminPost) => {
       setSelectedPost(post)
@@ -308,10 +326,54 @@ function MainPage() {
     },
     [fetchAdminPostDetail]
   )
+  const handleOpenPostDetailById = useCallback(
+    (postId: number) => {
+      setSelectedPost(createPendingPost(postId))
+      void fetchAdminPostDetail(postId)
+    },
+    [fetchAdminPostDetail]
+  )
   const handleClosePostDetail = useCallback(() => {
     setSelectedPost(null)
+    setDeleteConfirmPost(null)
+    setHasDeleteConfirmAttempted(false)
     clearPostDetail()
   }, [clearPostDetail])
+
+  const handleCloseDeleteConfirm = useCallback(() => {
+    if (isDeleting) {
+      return
+    }
+
+    setDeleteConfirmPost(null)
+    setHasDeleteConfirmAttempted(false)
+  }, [isDeleting])
+
+  const handlePostSortChange = (value: string) => {
+    clearPendingPostSearch()
+    setSelectedSortParam(value as AdminPostSortParam)
+  }
+
+  const handleSearchQueryChange = (nextQuery: string) => {
+    setPostSearchQuery(nextQuery)
+  }
+
+  const handleClearPostKeyword = () => {
+    clearPendingPostSearch()
+    shouldSkipNextSearchEffectRef.current = true
+    setPostSearchQuery('')
+
+    void fetchAdminPosts({
+      page: 1,
+      sortParam: selectedSortParam,
+      keyword: '',
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        scrollPageContentToTop()
+      }
+    })
+  }
+
   const handlePageChange = (nextPage: number) => {
     const nextPageNumber = Math.min(Math.max(nextPage, 1), totalPages)
 
@@ -319,22 +381,26 @@ function MainPage() {
       return
     }
 
-    void fetchAdminPosts({ page: nextPageNumber }).then((isSuccess) => {
+    clearPendingPostSearch()
+
+    void fetchAdminPosts({
+      page: nextPageNumber,
+      sortParam: selectedSortParam,
+      keyword: postKeyword,
+    }).then((isSuccess) => {
       if (isSuccess) {
-        window.requestAnimationFrame(() => {
-          pageContentRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        })
+        scrollPageContentToTop()
       }
     })
   }
 
   const handleRefresh = () => {
+    clearPendingPostSearch()
+
     void fetchAdminPosts({
       page: currentPageNumber,
       sortParam: selectedSortParam,
+      keyword: postKeyword,
     })
   }
 
@@ -343,18 +409,32 @@ function MainPage() {
       return
     }
 
-    const shouldDelete = window.confirm(`게시글 #${activePost.id}을 삭제할까요?`)
+    setDeleteConfirmPost(activePost)
+    setHasDeleteConfirmAttempted(false)
+  }
 
-    if (!shouldDelete) {
+  const handleConfirmDeletePost = () => {
+    if (!deleteConfirmPost || isLoading || isDeleting) {
       return
     }
 
-    const postToOpenAfterDelete = nextReviewPost
+    setHasDeleteConfirmAttempted(true)
 
-    void deletePost(activePost.id).then((isSuccess) => {
+    const deleteConfirmPostIndex = filteredPosts.findIndex(
+      (post) => post.id === deleteConfirmPost.id
+    )
+    const postToOpenAfterDelete =
+      deleteConfirmPostIndex >= 0
+        ? filteredPosts[deleteConfirmPostIndex + 1] ?? null
+        : null
+
+    void deletePost(deleteConfirmPost.id).then((isSuccess) => {
       if (!isSuccess) {
         return
       }
+
+      setDeleteConfirmPost(null)
+      setHasDeleteConfirmAttempted(false)
 
       if (postToOpenAfterDelete) {
         handleOpenPostDetail(postToOpenAfterDelete)
@@ -367,6 +447,32 @@ function MainPage() {
   }
 
   useEffect(() => {
+    latestSortParamRef.current = selectedSortParam
+  }, [selectedSortParam])
+
+  useEffect(() => {
+    latestPostKeywordRef.current = postKeyword
+  }, [postKeyword])
+
+  useEffect(() => {
+    const locationState = location.state as MainPageLocationState | null
+    const openPostId = locationState?.openPostId
+
+    if (typeof openPostId !== 'number' || !Number.isFinite(openPostId)) {
+      return
+    }
+
+    const openDetailTimer = window.setTimeout(() => {
+      handleOpenPostDetailById(openPostId)
+      navigate(location.pathname, { replace: true, state: null })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(openDetailTimer)
+    }
+  }, [handleOpenPostDetailById, location.pathname, location.state, navigate])
+
+  useEffect(() => {
     if (!isSortEffectReadyRef.current) {
       isSortEffectReadyRef.current = true
 
@@ -376,8 +482,46 @@ function MainPage() {
     void fetchAdminPosts({
       page: 1,
       sortParam: selectedSortParam,
+      keyword: latestPostKeywordRef.current,
     })
   }, [fetchAdminPosts, selectedSortParam])
+
+  useEffect(() => {
+    if (!isSearchEffectReadyRef.current) {
+      isSearchEffectReadyRef.current = true
+
+      return
+    }
+
+    if (shouldSkipNextSearchEffectRef.current) {
+      shouldSkipNextSearchEffectRef.current = false
+
+      return
+    }
+
+    clearPendingPostSearch()
+
+    const nextKeyword = postSearchQuery.trim()
+    searchTimeoutRef.current = window.setTimeout(() => {
+      searchTimeoutRef.current = null
+      void fetchAdminPosts({
+        page: 1,
+        sortParam: latestSortParamRef.current,
+        keyword: nextKeyword,
+      }).then((isSuccess) => {
+        if (isSuccess) {
+          scrollPageContentToTop()
+        }
+      })
+    }, POST_SEARCH_DEBOUNCE_MS)
+
+    return clearPendingPostSearch
+  }, [
+    clearPendingPostSearch,
+    fetchAdminPosts,
+    postSearchQuery,
+    scrollPageContentToTop,
+  ])
 
   useEffect(() => {
     if (!selectedPost) {
@@ -420,13 +564,9 @@ function MainPage() {
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
             <span>게시글 관리</span>
           </S.MenuButton>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" onClick={() => navigate('/bans')}>
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
             <span>사용자 밴</span>
-          </S.MenuButton>
-          <S.MenuButton type="button">
-            <S.MaterialIcon aria-hidden="true">settings</S.MaterialIcon>
-            <span>설정</span>
           </S.MenuButton>
         </S.SideMenu>
 
@@ -471,9 +611,11 @@ function MainPage() {
             <div>
               <S.PageTitle>업로드 게시글</S.PageTitle>
               <S.PageDescription>
-                {totalCount > 0
-                  ? `업로드된 게시글 ${totalCount.toLocaleString()}개를 관리합니다.`
-                  : '사용자가 업로드한 지도 게시글을 관리합니다.'}
+                {hasActivePostKeyword
+                  ? `검색 결과 게시글 ${totalCount.toLocaleString()}개를 관리합니다.`
+                  : totalCount > 0
+                    ? `업로드된 게시글 ${totalCount.toLocaleString()}개를 관리합니다.`
+                    : '사용자가 업로드한 지도 게시글을 관리합니다.'}
               </S.PageDescription>
             </div>
 
@@ -484,7 +626,7 @@ function MainPage() {
                 options={ADMIN_POST_SORT_OPTIONS}
                 disabled={isLoading || isDeleting}
                 width="112px"
-                onChange={(value) => setSelectedSortParam(value as AdminPostSortParam)}
+                onChange={handlePostSortChange}
               />
               <S.PrimaryButton
                 type="button"
@@ -517,17 +659,26 @@ function MainPage() {
               <S.ReviewSearchInput
                 type="search"
                 value={postSearchQuery}
-                placeholder="게시글 ID, 작성자, 장소 검색"
-                aria-label="게시글 검색"
-                onChange={(event) => setPostSearchQuery(event.target.value)}
+                placeholder="게시글 ID, 제목, 작성자, 장소, 설명 검색"
+                aria-label="게시글 ID, 제목, 작성자, 장소, 설명 검색"
+                onChange={(event) => handleSearchQueryChange(event.target.value)}
               />
             </S.ReviewSearchField>
           </S.ReviewToolbar>
 
           <S.ReviewResultSummary>
-            {hasClientOnlyPostFilter
-              ? `현재 페이지 필터 결과 ${filteredPosts.length.toLocaleString()}개 표시`
-              : `현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`}
+            <span>
+              {hasClientOnlyPostFilter
+                ? `현재 페이지 필터 결과 ${filteredPosts.length.toLocaleString()}개 표시`
+                : hasActivePostKeyword
+                  ? `검색 결과 중 현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`
+                  : `현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`}
+            </span>
+            {hasActivePostKeyword ? (
+              <S.ClearFilterButton type="button" onClick={handleClearPostKeyword}>
+                검색 초기화
+              </S.ClearFilterButton>
+            ) : null}
           </S.ReviewResultSummary>
 
           {isLoading ? (
@@ -535,15 +686,25 @@ function MainPage() {
           ) : null}
 
           {isError ? (
-            <S.FeedbackText>{errorMessage}</S.FeedbackText>
+            <S.FeedbackText $variant="error">{errorMessage}</S.FeedbackText>
           ) : null}
 
           {actionErrorMessage ? (
-            <S.FeedbackText>{actionErrorMessage}</S.FeedbackText>
+            <S.FeedbackText $variant="error">{actionErrorMessage}</S.FeedbackText>
+          ) : null}
+
+          {actionSuccessMessage ? (
+            <S.FeedbackText $variant="success" role="status">
+              {actionSuccessMessage}
+            </S.FeedbackText>
           ) : null}
 
           {!isLoading && !isError && posts.length === 0 ? (
-            <S.FeedbackText>등록된 게시글이 없습니다.</S.FeedbackText>
+            <S.FeedbackText>
+              {hasActivePostKeyword
+                ? '검색 결과에 맞는 게시글이 없습니다.'
+                : '등록된 게시글이 없습니다.'}
+            </S.FeedbackText>
           ) : null}
 
           {!isLoading && !isError && posts.length > 0 && filteredPosts.length === 0 ? (
@@ -848,6 +1009,68 @@ function MainPage() {
             </S.ModalFooter>
           </S.ModalContent>
         </S.ModalOverlay>
+      ) : null}
+
+      {actionSuccessMessage ? (
+        <S.ActionToast role="status">
+          <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
+          <span>{actionSuccessMessage}</span>
+        </S.ActionToast>
+      ) : null}
+
+      {deleteConfirmPost ? (
+        <S.DeleteConfirmOverlay
+          role="presentation"
+          onMouseDown={handleCloseDeleteConfirm}
+        >
+          <S.DeleteConfirmDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-title"
+            aria-describedby="delete-confirm-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.DeleteConfirmIcon aria-hidden="true">
+              <S.MaterialIcon>delete</S.MaterialIcon>
+            </S.DeleteConfirmIcon>
+            <S.DeleteConfirmTitle id="delete-confirm-title">
+              게시글을 삭제할까요?
+            </S.DeleteConfirmTitle>
+            <S.DeleteConfirmDescription id="delete-confirm-description">
+              게시글 #{deleteConfirmPost.id}은 삭제 후 현재 관리자 화면에서
+              되돌릴 수 없습니다.
+            </S.DeleteConfirmDescription>
+            <S.DeleteConfirmMeta>
+              {getPostTitle(deleteConfirmPost)} · {getPostOwner(deleteConfirmPost)}
+            </S.DeleteConfirmMeta>
+
+            {hasDeleteConfirmAttempted && actionErrorMessage ? (
+              <S.DeleteConfirmNotice role="alert">
+                {actionErrorMessage}
+              </S.DeleteConfirmNotice>
+            ) : null}
+
+            <S.DeleteConfirmActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={isDeleting}
+                onClick={handleCloseDeleteConfirm}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.DangerButton
+                type="button"
+                disabled={isLoading || isDeleting}
+                onClick={handleConfirmDeletePost}
+              >
+                <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                <span>
+                  {deletingPostId === deleteConfirmPost.id ? '삭제 중' : '삭제하기'}
+                </span>
+              </S.DangerButton>
+            </S.DeleteConfirmActions>
+          </S.DeleteConfirmDialog>
+        </S.DeleteConfirmOverlay>
       ) : null}
     </S.AppShell>
   )

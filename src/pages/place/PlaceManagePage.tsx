@@ -1,13 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { KakaoMapHandle } from '../../components/map/KakaoMap'
+import type {
+  KakaoMapHandle,
+  KakaoMapMarker,
+} from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
+  AdminPlaceDetail,
   AdminPlaceItem,
   AdminPlaceListSortParam,
 } from '../../types/adminPlace.types'
+import {
+  getPlaceCategoryIconName,
+  getPlaceCategoryLabel,
+} from '../../utils/placeCategory'
 import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
@@ -67,6 +75,33 @@ function getPlaceGrowthProgressLabel(place: AdminPlaceItem) {
   return progressPercent === null ? '-' : `${progressPercent}%`
 }
 
+function getDetailGrowthProgressLabel(placeDetail: AdminPlaceDetail) {
+  const progressPercent = placeDetail.placeGrowth?.progressPercent
+
+  if (typeof progressPercent !== 'number' || !Number.isFinite(progressPercent)) {
+    return '-'
+  }
+
+  return `${Math.min(Math.max(Math.round(progressPercent), 0), 100)}%`
+}
+
+function formatPlacePostDate(value: string) {
+  if (!value) {
+    return '작성일 정보 없음'
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   if (totalPages < 1) {
     return []
@@ -90,12 +125,19 @@ function PlaceManagePage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
+  const mapPanelRef = useRef<HTMLElement | null>(null)
+  const placeDetailPanelRef = useRef<HTMLElement | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
   const isSearchEffectReadyRef = useRef(false)
   const latestSortParamRef = useRef(DEFAULT_PLACE_SORT_PARAM)
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<AdminPlaceItem | null>(null)
+  const [isPlacePanelCollapsed, setIsPlacePanelCollapsed] = useState(false)
+  const [deleteConfirmPlace, setDeleteConfirmPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
+    useState(false)
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
   const {
@@ -107,7 +149,16 @@ function PlaceManagePage() {
     isLoading,
     isError,
     errorMessage,
+    actionErrorMessage,
+    actionSuccessMessage,
+    placeDetail,
+    isDetailLoading,
+    detailErrorMessage,
+    deletingPlaceId,
     fetchAdminPlaces,
+    fetchAdminPlaceDetail,
+    clearPlaceDetail,
+    deletePlace,
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
@@ -121,6 +172,28 @@ function PlaceManagePage() {
   const selectedPlaceHasCoordinate = selectedPlace
     ? hasValidCoordinate(selectedPlace)
     : false
+  const isPlaceDetailOpen = selectedPlace !== null
+  const isDeletingSelectedPlace =
+    selectedPlace !== null && deletingPlaceId === selectedPlace.id
+  const placeMapMarkers = useMemo<KakaoMapMarker[]>(
+    () =>
+      places.filter(hasValidCoordinate).map((place) => ({
+        id: place.id,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        label: place.name,
+        category: place.category,
+        categoryName: place.categoryName,
+      })),
+    [places]
+  )
+  const placeMapFitBoundsKey = useMemo(
+    () =>
+      placeMapMarkers
+        .map((marker) => `${marker.id}:${marker.latitude}:${marker.longitude}`)
+        .join('|'),
+    [placeMapMarkers]
+  )
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 
@@ -141,6 +214,48 @@ function PlaceManagePage() {
       })
     })
   }, [])
+
+  const handleClosePlaceDetail = useCallback(() => {
+    setSelectedPlace(null)
+    clearPlaceDetail()
+  }, [clearPlaceDetail])
+
+  const getSelectedPlaceMapOffsetX = useCallback(() => {
+    const mapPanel = mapPanelRef.current
+    const detailPanel = placeDetailPanelRef.current
+
+    if (!isPlaceDetailOpen || !mapPanel || !detailPanel) {
+      return 0
+    }
+
+    const mapRect = mapPanel.getBoundingClientRect()
+    const detailRect = detailPanel.getBoundingClientRect()
+    const coveredWidth = Math.min(
+      mapRect.width,
+      Math.max(0, detailRect.right - mapRect.left)
+    )
+    const remainingMapWidth = mapRect.width - coveredWidth
+
+    if (coveredWidth <= 0 || remainingMapWidth < 240) {
+      return 0
+    }
+
+    return coveredWidth / 2
+  }, [isPlaceDetailOpen])
+
+  const focusPlaceOnVisibleMap = useCallback(
+    (place: AdminPlaceItem) => {
+      if (!hasValidCoordinate(place)) {
+        return
+      }
+
+      mapRef.current?.relayout()
+      mapRef.current?.moveTo(place.latitude, place.longitude, {
+        offsetX: getSelectedPlaceMapOffsetX(),
+      })
+    },
+    [getSelectedPlaceMapOffsetX]
+  )
 
   useEffect(() => {
     latestSortParamRef.current = selectedSortParam
@@ -183,23 +298,35 @@ function PlaceManagePage() {
     scrollPlaceListToTop,
   ])
 
-  const handleSelectPlace = (place: AdminPlaceItem) => {
-    setSelectedPlace(place)
+  const handleSelectPlace = useCallback(
+    (place: AdminPlaceItem) => {
+      setSelectedPlace(place)
+      void fetchAdminPlaceDetail(place.id)
+    },
+    [fetchAdminPlaceDetail]
+  )
 
-    if (hasValidCoordinate(place)) {
-      mapRef.current?.moveTo(place.latitude, place.longitude)
-    }
-  }
+  const handleSelectMapMarker = useCallback(
+    (placeId: number) => {
+      const nextPlace = places.find((place) => place.id === placeId)
+
+      if (nextPlace) {
+        handleSelectPlace(nextPlace)
+      }
+    },
+    [handleSelectPlace, places]
+  )
 
   const handleSearchQueryChange = (nextQuery: string) => {
     setPlaceSearchQuery(nextQuery)
-    setSelectedPlace(null)
+    handleClosePlaceDetail()
   }
 
   const handleClearPlaceFilters = () => {
     clearPendingPlaceSearch()
     shouldSkipNextSearchEffectRef.current = true
     setPlaceSearchQuery('')
+    handleClosePlaceDetail()
 
     void fetchAdminPlaces({
       page: 1,
@@ -207,13 +334,14 @@ function PlaceManagePage() {
       keyword: '',
     }).then((isSuccess) => {
       if (isSuccess) {
-        setSelectedPlace(null)
+        handleClosePlaceDetail()
       }
     })
   }
 
   const handleRefresh = () => {
     clearPendingPlaceSearch()
+    handleClosePlaceDetail()
 
     void fetchAdminPlaces({
       page,
@@ -221,7 +349,7 @@ function PlaceManagePage() {
       keyword: placeKeyword,
     }).then((isSuccess) => {
       if (isSuccess) {
-        setSelectedPlace(null)
+        handleClosePlaceDetail()
       }
     })
   }
@@ -231,6 +359,7 @@ function PlaceManagePage() {
 
     clearPendingPlaceSearch()
     setSelectedSortParam(nextSortParam)
+    handleClosePlaceDetail()
 
     void fetchAdminPlaces({
       page: 1,
@@ -238,7 +367,7 @@ function PlaceManagePage() {
       keyword: placeKeyword,
     }).then((isSuccess) => {
       if (isSuccess) {
-        setSelectedPlace(null)
+        handleClosePlaceDetail()
         scrollPlaceListToTop()
       }
     })
@@ -252,6 +381,7 @@ function PlaceManagePage() {
     }
 
     clearPendingPlaceSearch()
+    handleClosePlaceDetail()
 
     void fetchAdminPlaces({
       page: nextPageNumber,
@@ -259,11 +389,81 @@ function PlaceManagePage() {
       keyword: placeKeyword,
     }).then((isSuccess) => {
       if (isSuccess) {
-        setSelectedPlace(null)
+        handleClosePlaceDetail()
         scrollPlaceListToTop()
       }
     })
   }
+
+  const handleOpenDeleteConfirm = () => {
+    if (!placeDetail || isDeletingSelectedPlace) {
+      return
+    }
+
+    setDeleteConfirmPlace(placeDetail)
+    setHasDeleteConfirmAttempted(false)
+  }
+
+  const handleCloseDeleteConfirm = useCallback(() => {
+    if (deletingPlaceId !== null) {
+      return
+    }
+
+    setDeleteConfirmPlace(null)
+    setHasDeleteConfirmAttempted(false)
+  }, [deletingPlaceId])
+
+  const handleConfirmDeletePlace = () => {
+    if (!deleteConfirmPlace || isLoading || deletingPlaceId !== null) {
+      return
+    }
+
+    setHasDeleteConfirmAttempted(true)
+
+    void deletePlace(deleteConfirmPlace.id).then((isSuccess) => {
+      if (!isSuccess) {
+        return
+      }
+
+      setDeleteConfirmPlace(null)
+      setHasDeleteConfirmAttempted(false)
+      handleClosePlaceDetail()
+    })
+  }
+
+  useEffect(() => {
+    if (!selectedPlace || !hasValidCoordinate(selectedPlace)) {
+      return
+    }
+
+    const recenterSelectedPlace = () => focusPlaceOnVisibleMap(selectedPlace)
+
+    const recenterAnimationFrame = window.requestAnimationFrame(recenterSelectedPlace)
+    const recenterTimer = window.setTimeout(recenterSelectedPlace, 220)
+
+    return () => {
+      window.cancelAnimationFrame(recenterAnimationFrame)
+      window.clearTimeout(recenterTimer)
+    }
+  }, [focusPlaceOnVisibleMap, isPlacePanelCollapsed, selectedPlace])
+
+  useEffect(() => {
+    function closeDeleteConfirmOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        handleCloseDeleteConfirm()
+      }
+    }
+
+    if (!deleteConfirmPlace) {
+      return
+    }
+
+    window.addEventListener('keydown', closeDeleteConfirmOnEscape)
+
+    return () => {
+      window.removeEventListener('keydown', closeDeleteConfirmOnEscape)
+    }
+  }, [deleteConfirmPlace, handleCloseDeleteConfirm])
 
   return (
     <S.AppShell>
@@ -288,13 +488,9 @@ function PlaceManagePage() {
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
             <span>게시글 관리</span>
           </S.MenuButton>
-          <S.MenuButton type="button">
+          <S.MenuButton type="button" onClick={() => navigate('/bans')}>
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
             <span>사용자 밴</span>
-          </S.MenuButton>
-          <S.MenuButton type="button">
-            <S.MaterialIcon aria-hidden="true">settings</S.MaterialIcon>
-            <span>설정</span>
           </S.MenuButton>
         </S.SideMenu>
 
@@ -336,14 +532,22 @@ function PlaceManagePage() {
           </S.TopActions>
         </S.TopBar>
 
-        <S.SplitContent>
-          <S.PlacePanel>
+        <S.SplitContent $isPanelCollapsed={isPlacePanelCollapsed}>
+          <S.PlacePanel $collapsed={isPlacePanelCollapsed}>
             <S.PanelControls>
               <S.PanelSummary>
                 <S.PanelCount>
                   {placeKeyword ? '검색 결과' : '전체 장소'}{' '}
                   <strong>{totalCount.toLocaleString()}</strong>개
                 </S.PanelCount>
+                <S.PanelCollapseButton
+                  type="button"
+                  aria-label="장소 목록 접기"
+                  title="장소 목록 접기"
+                  onClick={() => setIsPlacePanelCollapsed(true)}
+                >
+                  <S.MaterialIcon aria-hidden="true">keyboard_double_arrow_left</S.MaterialIcon>
+                </S.PanelCollapseButton>
               </S.PanelSummary>
 
               <S.PanelActionGroup>
@@ -373,8 +577,8 @@ function PlaceManagePage() {
                 <S.SearchInput
                   type="search"
                   value={placeSearchQuery}
-                  placeholder="장소명 검색"
-                  aria-label="장소 검색"
+                  placeholder="장소명, 등록자 ID, 주소 검색"
+                  aria-label="장소명, 등록자 ID, 주소 검색"
                   onChange={(event) =>
                     handleSearchQueryChange(event.target.value)
                   }
@@ -418,6 +622,7 @@ function PlaceManagePage() {
               ) : places.length > 0 ? (
                 places.map((place) => {
                   const isSelected = selectedPlace?.id === place.id
+                  const placeCategoryLabel = getPlaceCategoryLabel(place)
 
                   return (
                     <S.PlaceItem
@@ -428,11 +633,14 @@ function PlaceManagePage() {
                       onClick={() => handleSelectPlace(place)}
                     >
                       <S.PlaceThumb>
-                        <S.MaterialIcon aria-hidden="true">location_city</S.MaterialIcon>
+                        <S.MaterialIcon aria-hidden="true">
+                          {getPlaceCategoryIconName(place)}
+                        </S.MaterialIcon>
                       </S.PlaceThumb>
                       <S.PlaceInfo>
                         <S.PlaceTitleRow>
                           <S.PlaceName>{place.name}</S.PlaceName>
+                          <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                         </S.PlaceTitleRow>
                         <S.PlaceCaption>
                           장소 ID: {place.id} · {getPlaceOwner(place)}
@@ -533,8 +741,186 @@ function PlaceManagePage() {
             ) : null}
           </S.PlacePanel>
 
-          <S.MapPanel>
-            <S.AdminMap ref={mapRef} />
+          <S.MapPanel ref={mapPanelRef}>
+            <S.AdminMap
+              ref={mapRef}
+              activeMarkerId={selectedPlace?.id ?? null}
+              fitBoundsKey={placeMapFitBoundsKey}
+              markers={placeMapMarkers}
+              onMarkerClick={handleSelectMapMarker}
+            />
+            <S.PlaceDetailPanel
+              ref={placeDetailPanelRef}
+              $open={isPlaceDetailOpen}
+            >
+              {selectedPlace ? (
+                <>
+                  <S.DetailHeader>
+                    <S.DetailTitleGroup>
+                      <S.DetailEyebrow>PLACE DETAIL</S.DetailEyebrow>
+                      <S.DetailTitle>
+                        {placeDetail?.name ?? selectedPlace.name}
+                      </S.DetailTitle>
+                    </S.DetailTitleGroup>
+                    <S.DetailCloseButton
+                      type="button"
+                      aria-label="장소 상세 닫기"
+                      onClick={handleClosePlaceDetail}
+                    >
+                      <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                    </S.DetailCloseButton>
+                  </S.DetailHeader>
+
+                  <S.DetailBody>
+                    {isDetailLoading ? (
+                      <S.DetailStatus role="status" aria-live="polite">
+                        장소 상세 정보를 불러오는 중입니다.
+                      </S.DetailStatus>
+                    ) : detailErrorMessage ? (
+                      <S.DetailNotice role="alert">{detailErrorMessage}</S.DetailNotice>
+                    ) : placeDetail ? (
+                      <>
+                        <S.DetailMetaList>
+                          <S.DetailMetaItem>
+                            <span>장소 ID</span>
+                            <strong>{placeDetail.id}</strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>주소</span>
+                            <strong>{placeDetail.address || '주소 정보 없음'}</strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>카테고리</span>
+                            <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>등록자</span>
+                            <strong>
+                              {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
+                            </strong>
+                          </S.DetailMetaItem>
+                          <S.DetailMetaItem>
+                            <span>좌표</span>
+                            <strong>
+                              {placeDetail.latitude.toFixed(6)},{' '}
+                              {placeDetail.longitude.toFixed(6)}
+                            </strong>
+                          </S.DetailMetaItem>
+                        </S.DetailMetaList>
+
+                        <S.DetailSection>
+                          <S.DetailSectionTitle>장소 성장</S.DetailSectionTitle>
+                          <S.PlaceStatList>
+                            <S.PlaceStat>
+                              <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
+                              <span>
+                                레벨 {formatOptionalNumber(placeDetail.placeGrowth?.level)}
+                              </span>
+                            </S.PlaceStat>
+                            <S.PlaceStat>
+                              <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
+                              <span>
+                                사진{' '}
+                                {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
+                              </span>
+                            </S.PlaceStat>
+                            <S.PlaceStat>
+                              <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
+                              <span>
+                                다음 레벨까지 {getDetailGrowthProgressLabel(placeDetail)}
+                              </span>
+                            </S.PlaceStat>
+                          </S.PlaceStatList>
+                        </S.DetailSection>
+
+                        <S.DetailSection>
+                          <S.DetailSectionTitle>
+                            연결 게시글 {placeDetail.postCount.toLocaleString()}개
+                          </S.DetailSectionTitle>
+                          {placeDetail.posts.length > 0 ? (
+                            <S.DetailPostList>
+                              {placeDetail.posts.map((post) => (
+                                <S.DetailPostItem key={post.id}>
+                                  <S.DetailPostImage>
+                                    {post.imageUrl ? (
+                                      <img
+                                        src={post.imageUrl}
+                                        alt={`${post.title || `게시글 ${post.id}`} 이미지`}
+                                        loading="lazy"
+                                        decoding="async"
+                                      />
+                                    ) : (
+                                      <S.DetailPostFallback>
+                                        <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
+                                      </S.DetailPostFallback>
+                                    )}
+                                  </S.DetailPostImage>
+                                  <S.DetailPostText>
+                                    <S.DetailPostTitleButton
+                                      type="button"
+                                      onClick={() =>
+                                        navigate('/main', {
+                                          state: {
+                                            openPostId: post.id,
+                                          },
+                                        })
+                                      }
+                                    >
+                                      {post.title || `게시글 #${post.id}`}
+                                    </S.DetailPostTitleButton>
+                                    <p>
+                                      {post.description || '설명 없음'}
+                                    </p>
+                                    <S.DetailPostMeta>
+                                      {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
+                                      {post.likeCount.toLocaleString()} ·{' '}
+                                      {formatPlacePostDate(post.createdAt)}
+                                    </S.DetailPostMeta>
+                                  </S.DetailPostText>
+                                </S.DetailPostItem>
+                              ))}
+                            </S.DetailPostList>
+                          ) : (
+                            <S.DetailStatus>연결된 게시글이 없습니다.</S.DetailStatus>
+                          )}
+                        </S.DetailSection>
+                      </>
+                    ) : (
+                      <S.DetailStatus>장소를 선택하면 상세 정보가 표시됩니다.</S.DetailStatus>
+                    )}
+                  </S.DetailBody>
+
+                  <S.DetailFooter>
+                    <S.DetailActionButton
+                      type="button"
+                      disabled={!selectedPlaceHasCoordinate}
+                      onClick={() => focusPlaceOnVisibleMap(selectedPlace)}
+                    >
+                      <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
+                      <span>위치 보기</span>
+                    </S.DetailActionButton>
+                    <S.DetailDeleteButton
+                      type="button"
+                      disabled={!placeDetail || isDetailLoading || isDeletingSelectedPlace}
+                      onClick={handleOpenDeleteConfirm}
+                    >
+                      <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                      <span>{isDeletingSelectedPlace ? '삭제 중' : '장소 삭제'}</span>
+                    </S.DetailDeleteButton>
+                  </S.DetailFooter>
+                </>
+              ) : null}
+            </S.PlaceDetailPanel>
+            {isPlacePanelCollapsed ? (
+              <S.MapListToggleButton
+                type="button"
+                aria-label="장소 목록 열기"
+                onClick={() => setIsPlacePanelCollapsed(false)}
+              >
+                <S.MaterialIcon aria-hidden="true">keyboard_double_arrow_right</S.MaterialIcon>
+                <span>목록</span>
+              </S.MapListToggleButton>
+            ) : null}
             <S.MapControlGroup>
               <S.MapControlButton
                 type="button"
@@ -559,44 +945,68 @@ function PlaceManagePage() {
                   : `${places.length.toLocaleString()}개 장소를 확인 중입니다.`}
               </span>
             </S.MapInfo>
-            {selectedPlace ? (
-              <S.MapSelectionCard>
-                <S.MapSelectionTitle>{selectedPlace.name}</S.MapSelectionTitle>
-                <S.MapSelectionMeta>
-                  {selectedPlace.address || '주소 정보 없음'}
-                </S.MapSelectionMeta>
-                <S.MapSelectionStatList>
-                  <S.PlaceStat>
-                    <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                    <span>레벨 {getPlaceLevel(selectedPlace)}</span>
-                  </S.PlaceStat>
-                  <S.PlaceStat>
-                    <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
-                    <span>사진 {getPlacePhotoCount(selectedPlace)}장</span>
-                  </S.PlaceStat>
-                </S.MapSelectionStatList>
-                <S.MapSelectionAction
-                  type="button"
-                  disabled={!selectedPlaceHasCoordinate}
-                  onClick={() => {
-                    if (selectedPlaceHasCoordinate) {
-                      mapRef.current?.moveTo(
-                        selectedPlace.latitude,
-                        selectedPlace.longitude
-                      )
-                    }
-                  }}
-                >
-                  <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
-                  <span>
-                    {selectedPlaceHasCoordinate ? '지도 중심 맞추기' : '좌표 정보 없음'}
-                  </span>
-                </S.MapSelectionAction>
-              </S.MapSelectionCard>
-            ) : null}
           </S.MapPanel>
         </S.SplitContent>
       </S.MainArea>
+
+      {actionSuccessMessage ? (
+        <S.ActionToast role="status">
+          <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
+          <span>{actionSuccessMessage}</span>
+        </S.ActionToast>
+      ) : null}
+
+      {deleteConfirmPlace ? (
+        <S.DeleteConfirmOverlay
+          role="presentation"
+          onMouseDown={handleCloseDeleteConfirm}
+        >
+          <S.DeleteConfirmDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="place-delete-confirm-title"
+            aria-describedby="place-delete-confirm-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.DeleteConfirmIcon aria-hidden="true">
+              <S.MaterialIcon>delete</S.MaterialIcon>
+            </S.DeleteConfirmIcon>
+            <S.DeleteConfirmTitle id="place-delete-confirm-title">
+              장소를 삭제할까요?
+            </S.DeleteConfirmTitle>
+            <S.DeleteConfirmDescription id="place-delete-confirm-description">
+              장소 #{deleteConfirmPlace.id}은 삭제 후 관리자 화면에서 다시 복구할 수
+              없습니다.
+            </S.DeleteConfirmDescription>
+            <S.DeleteConfirmMeta>
+              {deleteConfirmPlace.name} · {deleteConfirmPlace.address || '주소 정보 없음'}
+            </S.DeleteConfirmMeta>
+
+            {hasDeleteConfirmAttempted && actionErrorMessage ? (
+              <S.DeleteConfirmNotice role="alert">
+                {actionErrorMessage}
+              </S.DeleteConfirmNotice>
+            ) : null}
+
+            <S.DeleteConfirmActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={deletingPlaceId !== null}
+                onClick={handleCloseDeleteConfirm}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.DangerButton
+                type="button"
+                disabled={deletingPlaceId !== null}
+                onClick={handleConfirmDeletePlace}
+              >
+                {deletingPlaceId === deleteConfirmPlace.id ? '삭제 중' : '삭제하기'}
+              </S.DangerButton>
+            </S.DeleteConfirmActions>
+          </S.DeleteConfirmDialog>
+        </S.DeleteConfirmOverlay>
+      ) : null}
     </S.AppShell>
   )
 }

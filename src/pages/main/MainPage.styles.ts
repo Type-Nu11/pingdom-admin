@@ -55,7 +55,7 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 280px;
+  width: 248px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -72,17 +72,17 @@ export const SideNav = styled.nav`
 `
 
 export const SideHeader = styled.div`
-  min-height: 116px;
+  min-height: 104px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 28px;
+  padding: 22px 24px;
   border-bottom: 1px solid ${neutral.border};
 `
 
 export const BrandLockup = styled.div`
   position: relative;
-  width: min(188px, 100%);
+  width: min(168px, 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -114,7 +114,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 14px;
   min-height: 48px;
-  padding: 0 28px;
+  padding: 0 24px;
   border: 0;
   border-right: 2px solid transparent;
   background: transparent;
@@ -134,13 +134,13 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   }
 
   &:disabled {
-    border-right-color: #f59f00;
-    background: #fff4e0;
+    border-right-color: ${neutral.warning};
+    background: ${neutral.warningTint};
     color: ${neutral.muted};
     cursor: default;
 
     ${MaterialIcon} {
-      color: #f59f00;
+      color: ${neutral.warning};
     }
   }
 
@@ -170,7 +170,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
     &:disabled {
       border-right: 0;
-      border-bottom-color: #f59f00;
+      border-bottom-color: ${neutral.warning};
     }
 
     ${({ $active }) =>
@@ -183,7 +183,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
 export const MenuStatusText = styled.span`
   margin-left: auto;
-  color: #f59f00;
+  color: ${neutral.warning};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -191,7 +191,7 @@ export const MenuStatusText = styled.span`
 `
 
 export const SideFooter = styled.div`
-  padding: 18px 28px 28px;
+  padding: 18px 24px 24px;
   border-top: 1px solid ${neutral.border};
 
   @media (max-width: 900px) {
@@ -289,7 +289,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   min-height: 100vh;
-  margin-left: 280px;
+  margin-left: 248px;
 
   @media (max-width: 900px) {
     margin-left: 0;
@@ -347,7 +347,8 @@ export const SearchIcon = styled(MaterialIcon)`
   position: absolute;
   top: 50%;
   left: 12px;
-  color: ${neutral.muted};
+  z-index: 1;
+  color: ${neutral.primary};
   transform: translateY(-50%);
   pointer-events: none;
 `
@@ -356,16 +357,20 @@ export const SearchInput = styled.input`
   ${controlStyle}
   width: 100%;
   padding: 0 16px 0 40px;
-  border: 0;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   outline: 1px solid transparent;
-  background: ${neutral.surfaceContainer};
+  background: ${neutral.surface};
   color: ${neutral.text};
 
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
   &:focus {
+    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 
@@ -610,7 +615,7 @@ export const ReviewTabButton = styled.button<{ $active?: boolean }>`
 
 export const ReviewSearchField = styled.div`
   position: relative;
-  width: min(320px, 100%);
+  width: min(380px, 100%);
   flex-shrink: 0;
 
   @media (max-width: 860px) {
@@ -621,10 +626,10 @@ export const ReviewSearchField = styled.div`
 export const ReviewSearchInput = styled.input`
   ${controlStyle}
   width: 100%;
-  padding: 0 16px 0 40px;
+  padding: 0 14px 0 40px;
   border: 1px solid ${neutral.border};
   outline: 1px solid transparent;
-  background: ${neutral.surfaceContainer};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
 
@@ -636,24 +641,66 @@ export const ReviewSearchInput = styled.input`
     border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
-    background: ${neutral.surface};
   }
 `
 
 export const ReviewResultSummary = styled.div`
   margin: -12px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   color: ${neutral.muted};
   font-size: 13px;
   font-weight: 700;
+
+  @media (max-width: 720px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 `
 
-export const FeedbackText = styled.p`
+export const ClearFilterButton = styled.button`
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: ${neutral.primary};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: ${neutral.primaryHover};
+  }
+`
+
+export const FeedbackText = styled.p<{ $variant?: 'success' | 'error' }>`
   margin: 0 0 24px;
   padding: 16px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.muted};
+
+  ${({ $variant }) =>
+    $variant === 'success' &&
+    css`
+      border-color: ${neutral.success};
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
+      font-weight: 700;
+    `}
+
+  ${({ $variant }) =>
+    $variant === 'error' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
+      font-weight: 700;
+    `}
 `
 
 export const MediaGrid = styled.ul`
@@ -789,9 +836,9 @@ export const StatusBadge = styled.span<{
   ${({ $tone }) =>
     $tone === 'normal' &&
     css`
-      border-color: ${neutral.success};
-      background: #20df331a;
-      color: ${neutral.text};
+      border-color: ${neutral.borderDark};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.muted};
     `}
 
   ${({ $tone }) =>
@@ -1248,16 +1295,16 @@ export const ReportStatusBadge = styled.span<{
     $status === 'PENDING' &&
     css`
       border-color: ${neutral.warning};
-      background: #ffcc0024;
-      color: ${neutral.text};
+      background: ${neutral.warningSurface};
+      color: ${neutral.warningText};
     `}
 
   ${({ $status }) =>
     $status === 'ACCEPTED' &&
     css`
       border-color: ${neutral.success};
-      background: #20df331f;
-      color: ${neutral.text};
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
     `}
 
   ${({ $status }) =>
@@ -1367,8 +1414,8 @@ export const DangerButton = styled.button`
     opacity 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: #c72020;
-    background: #c72020;
+    border-color: ${neutral.errorHover};
+    background: ${neutral.errorHover};
   }
 
   &:disabled {
@@ -1389,4 +1436,134 @@ export const ModalEmptyText = styled.p`
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
   font-size: 14px;
+`
+
+export const ActionToast = styled.div`
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 150;
+  min-height: 48px;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid ${neutral.success};
+  border-radius: 8px;
+  background: ${neutral.successSurface};
+  box-shadow: 0 16px 40px ${neutral.shadow};
+  color: ${neutral.successText};
+  font-size: 14px;
+  font-weight: 800;
+
+  ${MaterialIcon} {
+    color: ${neutral.success};
+    font-size: 20px;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 20;
+  }
+
+  @media (max-width: 720px) {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+`
+
+export const DeleteConfirmOverlay = styled(ModalOverlay)`
+  z-index: 120;
+`
+
+export const DeleteConfirmDialog = styled.section`
+  width: min(420px, 100%);
+  padding: 24px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  box-shadow: 0 18px 48px ${neutral.strongShadow};
+`
+
+export const DeleteConfirmIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  ${MaterialIcon} {
+    font-size: 24px;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+`
+
+export const DeleteConfirmTitle = styled.h2`
+  margin: 0 0 8px;
+  color: ${neutral.strongText};
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+`
+
+export const DeleteConfirmDescription = styled.p`
+  margin: 0;
+  color: ${neutral.text};
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: keep-all;
+`
+
+export const DeleteConfirmMeta = styled.p`
+  margin: 14px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
+`
+
+export const DeleteConfirmNotice = styled.p`
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const DeleteConfirmActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    ${SecondaryButton},
+    ${DangerButton} {
+      width: 100%;
+    }
+  }
 `

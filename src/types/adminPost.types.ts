@@ -30,6 +30,7 @@ export interface AdminPostListRequest {
   page?: number
   limit?: number
   sortParam?: AdminPostSortParam
+  keyword?: string
 }
 
 export interface AdminPostListResponse {

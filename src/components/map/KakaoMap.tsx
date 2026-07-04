@@ -87,6 +87,8 @@ interface KakaoMapProps {
   onMarkerClick?: (markerId: number) => void
 }
 
+type MarkerClickRef = MutableRefObject<KakaoMapProps['onMarkerClick']>
+
 export interface KakaoMapMarker {
   id: number
   latitude: number
@@ -449,7 +451,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         isActive,
         mapLevel,
         mapWidthScale,
-        onMarkerClickRef.current
+        onMarkerClickRef
       )
       const overlay = new kakao.maps.CustomOverlay({
         position,
@@ -561,7 +563,7 @@ function createMarkerContent(
   isActive: boolean,
   mapLevel: number,
   mapWidthScale: number,
-  onMarkerClick?: (markerId: number) => void
+  onMarkerClickRef: MarkerClickRef
 ) {
   const markerDimensions = getMarkerDimensions(isActive, mapLevel, mapWidthScale)
   const categoryLabel = getPlaceCategoryLabel(marker)
@@ -599,7 +601,7 @@ function createMarkerContent(
   })
 
   markerButton.addEventListener('click', () => {
-    onMarkerClick?.(marker.id)
+    onMarkerClickRef.current?.(marker.id)
   })
 
   const markerImage = document.createElement('img')

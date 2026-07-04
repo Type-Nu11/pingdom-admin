@@ -1280,7 +1280,7 @@ export const ReportMeta = styled.p`
 `
 
 export const ReportStatusBadge = styled.span<{
-  $status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  $status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'RESTORED'
 }>`
   flex-shrink: 0;
   padding: 4px 8px;
@@ -1313,6 +1313,14 @@ export const ReportStatusBadge = styled.span<{
       border-color: ${neutral.borderDark};
       background: ${neutral.surfaceHighest};
       color: ${neutral.muted};
+    `}
+
+  ${({ $status }) =>
+    $status === 'RESTORED' &&
+    css`
+      border-color: ${neutral.info};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.info};
     `}
 `
 

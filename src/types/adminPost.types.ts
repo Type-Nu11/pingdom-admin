@@ -2,7 +2,13 @@ import type { AuthErrorResponse } from './auth.types'
 
 export type AdminPostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
 
-export type AdminPostReportStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED'
+export type AdminPostReportStatus =
+  | 'PENDING'
+  | 'ACCEPTED'
+  | 'DECLINED'
+  | 'RESTORED'
+
+export type AdminPostVisibilityStatus = 'ACTIVE' | 'AUTO_HIDDEN'
 
 export interface AdminPostReportItem {
   reportId: number
@@ -17,12 +23,16 @@ export interface AdminPost {
   id: number
   name: string
   imageUrl: string
+  thumbnailUrl?: string | null
   userId: number
   username: string
   createdAt: string
   description: string
   likeCount: number
   placeName: string
+  visibilityStatus?: AdminPostVisibilityStatus
+  hiddenAt?: string | null
+  hiddenReason?: string | null
   reports?: AdminPostReportItem[]
 }
 

@@ -35,6 +35,7 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
   PENDING: '처리 대기',
   ACCEPTED: '수락',
   DECLINED: '거절',
+  RESTORED: '복구',
 }
 
 interface MainPageLocationState {

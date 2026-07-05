@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
+import { useAdminReports } from '../../hooks/useAdminReports'
 import { useAuth } from '../../hooks/useAuth'
+import type { AdminReportActionStatus } from '../../types/adminReport.types'
 import type {
   AdminPost,
   AdminPostReportItem,
@@ -40,6 +42,11 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
 
 interface MainPageLocationState {
   openPostId?: number
+}
+
+interface ReportActionConfirmState {
+  report: AdminPostReportItem
+  actionStatus: AdminReportActionStatus
 }
 
 function getPostImageUrl(post: AdminPost) {
@@ -80,6 +87,14 @@ function getReporterName(report: AdminPostReportItem) {
 
 function getReportStatusLabel(status: AdminPostReportStatus) {
   return ADMIN_POST_REPORT_STATUS_LABELS[status]
+}
+
+function getPostVisibilityLabel(post: AdminPost) {
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return '숨김 처리'
+  }
+
+  return '공개'
 }
 
 function getPostStatusTone(post: AdminPost): AdminPostStatusTone {
@@ -233,7 +248,11 @@ function MainPage() {
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
     null
   )
+  const [reportActionConfirm, setReportActionConfirm] =
+    useState<ReportActionConfirmState | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
+    useState(false)
+  const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
     useState(false)
   const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
     DEFAULT_ADMIN_POST_SORT_PARAM
@@ -263,12 +282,26 @@ function MainPage() {
   } = useAdminPosts({
     limit: ADMIN_POST_PAGE_SIZE,
   })
+  const {
+    actionErrorMessage: reportActionErrorMessage,
+    actionSuccessMessage: reportActionSuccessMessage,
+    processingReportId,
+    acceptReport,
+    declineReport,
+  } = useAdminReports({
+    autoFetch: false,
+    refreshListOnAction: false,
+  })
   const activePost = postDetail ?? selectedPost
+  const activePostId = activePost?.id ?? null
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
   const currentPageNumber = page
   const isDeleting = deletingPostId !== null
+  const isProcessingReport = processingReportId !== null
   const postKeyword = postSearchQuery.trim()
+  const visibleActionSuccessMessage =
+    reportActionSuccessMessage || actionSuccessMessage
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const hasClientOnlyPostFilter = selectedReviewFilter !== 'ALL'
@@ -337,7 +370,9 @@ function MainPage() {
   const handleClosePostDetail = useCallback(() => {
     setSelectedPost(null)
     setDeleteConfirmPost(null)
+    setReportActionConfirm(null)
     setHasDeleteConfirmAttempted(false)
+    setHasReportActionConfirmAttempted(false)
     clearPostDetail()
   }, [clearPostDetail])
 
@@ -349,6 +384,30 @@ function MainPage() {
     setDeleteConfirmPost(null)
     setHasDeleteConfirmAttempted(false)
   }, [isDeleting])
+
+  const handleOpenReportActionConfirm = useCallback(
+    (report: AdminPostReportItem, actionStatus: AdminReportActionStatus) => {
+      if (report.status !== 'PENDING' || isDetailLoading || isProcessingReport) {
+        return
+      }
+
+      setReportActionConfirm({
+        report,
+        actionStatus,
+      })
+      setHasReportActionConfirmAttempted(false)
+    },
+    [isDetailLoading, isProcessingReport]
+  )
+
+  const handleCloseReportActionConfirm = useCallback(() => {
+    if (isProcessingReport) {
+      return
+    }
+
+    setReportActionConfirm(null)
+    setHasReportActionConfirmAttempted(false)
+  }, [isProcessingReport])
 
   const handlePostSortChange = (value: string) => {
     clearPendingPostSearch()
@@ -447,6 +506,35 @@ function MainPage() {
     })
   }
 
+  const handleConfirmReportAction = () => {
+    if (!reportActionConfirm || activePostId === null || isProcessingReport) {
+      return
+    }
+
+    setHasReportActionConfirmAttempted(true)
+
+    const { report, actionStatus } = reportActionConfirm
+    const requestReportAction =
+      actionStatus === 'ACCEPTED' ? acceptReport : declineReport
+    const postId = activePostId
+
+    void requestReportAction(report.reportId).then((result) => {
+      if (!result) {
+        return
+      }
+
+      setReportActionConfirm(null)
+      setHasReportActionConfirmAttempted(false)
+
+      void fetchAdminPostDetail(postId)
+      void fetchAdminPosts({
+        page: currentPageNumber,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+      })
+    })
+  }
+
   useEffect(() => {
     latestSortParamRef.current = selectedSortParam
   }, [selectedSortParam])
@@ -531,6 +619,12 @@ function MainPage() {
 
     function closeModalOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (reportActionConfirm) {
+          handleCloseReportActionConfirm()
+
+          return
+        }
+
         handleClosePostDetail()
       }
     }
@@ -540,7 +634,12 @@ function MainPage() {
     return () => {
       window.removeEventListener('keydown', closeModalOnEscape)
     }
-  }, [handleClosePostDetail, selectedPost])
+  }, [
+    handleClosePostDetail,
+    handleCloseReportActionConfirm,
+    reportActionConfirm,
+    selectedPost,
+  ])
 
   return (
     <S.AppShell>
@@ -928,6 +1027,16 @@ function MainPage() {
                       <span>작성일</span>
                       <strong>{formatPostDate(activePost.createdAt)}</strong>
                     </S.ModalInfoItem>
+                    <S.ModalInfoItem>
+                      <span>게시 상태</span>
+                      <strong>{getPostVisibilityLabel(activePost)}</strong>
+                    </S.ModalInfoItem>
+                    {activePost.hiddenAt ? (
+                      <S.ModalInfoItem>
+                        <span>숨김 처리일</span>
+                        <strong>{formatPostDate(activePost.hiddenAt)}</strong>
+                      </S.ModalInfoItem>
+                    ) : null}
                   </S.ModalInfoGrid>
 
                   {activePost.description ? (
@@ -938,6 +1047,16 @@ function MainPage() {
 
                   <S.ModalSection>
                     <S.ModalSectionTitle>신고 내역</S.ModalSectionTitle>
+                    {reportActionErrorMessage ? (
+                      <S.ReportActionNotice $variant="error" role="alert">
+                        {reportActionErrorMessage}
+                      </S.ReportActionNotice>
+                    ) : null}
+                    {reportActionSuccessMessage ? (
+                      <S.ReportActionNotice $variant="success" role="status">
+                        {reportActionSuccessMessage}
+                      </S.ReportActionNotice>
+                    ) : null}
                     {isDetailLoading ? (
                       <S.ModalEmptyText>
                         신고 내역을 불러오는 중입니다...
@@ -966,6 +1085,38 @@ function MainPage() {
                             <S.ReportMeta>
                               처리일: {formatOptionalPostDate(report.processedAt)}
                             </S.ReportMeta>
+                            {report.status === 'PENDING' ? (
+                              <S.ReportActions>
+                                <S.SecondaryButton
+                                  type="button"
+                                  disabled={isDetailLoading || isDeleting || isProcessingReport}
+                                  onClick={() =>
+                                    handleOpenReportActionConfirm(report, 'DECLINED')
+                                  }
+                                >
+                                  <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
+                                  <span>
+                                    {processingReportId === report.reportId
+                                      ? '처리 중'
+                                      : '거절'}
+                                  </span>
+                                </S.SecondaryButton>
+                                <S.DangerButton
+                                  type="button"
+                                  disabled={isDetailLoading || isDeleting || isProcessingReport}
+                                  onClick={() =>
+                                    handleOpenReportActionConfirm(report, 'ACCEPTED')
+                                  }
+                                >
+                                  <S.MaterialIcon aria-hidden="true">gavel</S.MaterialIcon>
+                                  <span>
+                                    {processingReportId === report.reportId
+                                      ? '처리 중'
+                                      : '수락'}
+                                  </span>
+                                </S.DangerButton>
+                              </S.ReportActions>
+                            ) : null}
                           </S.ReportItem>
                         ))}
                       </S.ReportList>
@@ -1012,11 +1163,81 @@ function MainPage() {
         </S.ModalOverlay>
       ) : null}
 
-      {actionSuccessMessage ? (
+      {visibleActionSuccessMessage ? (
         <S.ActionToast role="status">
           <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
-          <span>{actionSuccessMessage}</span>
+          <span>{visibleActionSuccessMessage}</span>
         </S.ActionToast>
+      ) : null}
+
+      {reportActionConfirm ? (
+        <S.DeleteConfirmOverlay
+          role="presentation"
+          onMouseDown={handleCloseReportActionConfirm}
+        >
+          <S.DeleteConfirmDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-action-confirm-title"
+            aria-describedby="report-action-confirm-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.DeleteConfirmIcon aria-hidden="true">
+              <S.MaterialIcon>
+                {reportActionConfirm.actionStatus === 'ACCEPTED' ? 'gavel' : 'block'}
+              </S.MaterialIcon>
+            </S.DeleteConfirmIcon>
+            <S.DeleteConfirmTitle id="report-action-confirm-title">
+              {reportActionConfirm.actionStatus === 'ACCEPTED'
+                ? '신고를 수락할까요?'
+                : '신고를 거절할까요?'}
+            </S.DeleteConfirmTitle>
+            <S.DeleteConfirmDescription id="report-action-confirm-description">
+              {reportActionConfirm.actionStatus === 'ACCEPTED'
+                ? '수락하면 신고 대상 게시글은 숨김 처리되고 대상 사용자에게 제재가 적용될 수 있습니다.'
+                : '거절하면 해당 신고는 처리 완료 상태가 되며 대상 게시글과 사용자는 변경하지 않습니다.'}
+            </S.DeleteConfirmDescription>
+            <S.DeleteConfirmMeta>
+              신고 ID: {reportActionConfirm.report.reportId} · 신고자 ID:{' '}
+              {reportActionConfirm.report.reporterUserId}
+            </S.DeleteConfirmMeta>
+
+            {hasReportActionConfirmAttempted && reportActionErrorMessage ? (
+              <S.DeleteConfirmNotice role="alert">
+                {reportActionErrorMessage}
+              </S.DeleteConfirmNotice>
+            ) : null}
+
+            <S.DeleteConfirmActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={isProcessingReport}
+                onClick={handleCloseReportActionConfirm}
+              >
+                취소
+              </S.SecondaryButton>
+              {reportActionConfirm.actionStatus === 'ACCEPTED' ? (
+                <S.DangerButton
+                  type="button"
+                  disabled={isProcessingReport}
+                  onClick={handleConfirmReportAction}
+                >
+                  <S.MaterialIcon aria-hidden="true">gavel</S.MaterialIcon>
+                  <span>{isProcessingReport ? '처리 중' : '수락하기'}</span>
+                </S.DangerButton>
+              ) : (
+                <S.PrimaryButton
+                  type="button"
+                  disabled={isProcessingReport}
+                  onClick={handleConfirmReportAction}
+                >
+                  <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
+                  <span>{isProcessingReport ? '처리 중' : '거절하기'}</span>
+                </S.PrimaryButton>
+              )}
+            </S.DeleteConfirmActions>
+          </S.DeleteConfirmDialog>
+        </S.DeleteConfirmOverlay>
       ) : null}
 
       {deleteConfirmPost ? (

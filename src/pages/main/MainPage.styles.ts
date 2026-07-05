@@ -1240,6 +1240,34 @@ export const ModalSectionTitle = styled.h3`
   font-weight: 700;
 `
 
+export const ReportActionNotice = styled.p<{ $variant?: 'success' | 'error' }>`
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  ${({ $variant }) =>
+    $variant === 'success' &&
+    css`
+      border-color: ${neutral.success};
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
+    `}
+
+  ${({ $variant }) =>
+    $variant === 'error' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
+    `}
+`
+
 export const ReportList = styled.ul`
   display: flex;
   flex-direction: column;
@@ -1331,6 +1359,27 @@ export const ReportReason = styled.p`
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
+`
+
+export const ReportActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+
+  > button {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    > button {
+      width: 100%;
+    }
+  }
 `
 
 export const ModalFooter = styled.footer`
@@ -1570,6 +1619,7 @@ export const DeleteConfirmActions = styled.div`
     flex-direction: column-reverse;
 
     ${SecondaryButton},
+    ${PrimaryButton},
     ${DangerButton} {
       width: 100%;
     }

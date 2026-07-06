@@ -602,7 +602,7 @@ export const DetailGrowthTrack = styled.div`
 `
 
 export const DetailGrowthBar = styled.div<{ $progress: number }>`
-  width: ${({ $progress }) => `${$progress}%`};
+  width: ${({ $progress }) => `${Math.min(100, Math.max(0, $progress))}%`};
   height: 100%;
   border-radius: inherit;
   background: ${neutral.primary};

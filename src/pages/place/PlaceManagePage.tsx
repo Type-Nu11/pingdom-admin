@@ -20,6 +20,7 @@ import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
+const PLACE_DETAIL_POST_PREVIEW_LIMIT = 3
 const PLACE_SEARCH_DEBOUNCE_MS = 300
 const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
@@ -167,6 +168,12 @@ function PlaceManagePage() {
   const detailGrowthProgressLabel = placeDetail
     ? getDetailGrowthProgressLabel(placeDetail)
     : '-'
+  const detailPostPreviewItems = placeDetail
+    ? placeDetail.posts.slice(0, PLACE_DETAIL_POST_PREVIEW_LIMIT)
+    : []
+  const shouldShowDetailPostAllAction = placeDetail
+    ? placeDetail.postCount > PLACE_DETAIL_POST_PREVIEW_LIMIT
+    : false
   const placeMapMarkers = useMemo<KakaoMapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -194,6 +201,17 @@ function PlaceManagePage() {
       navigate('/main', {
         state: {
           openPostId: postId,
+        },
+      })
+    },
+    [navigate]
+  )
+
+  const handleOpenPlacePosts = useCallback(
+    (placeName: string) => {
+      navigate('/main', {
+        state: {
+          postSearchKeyword: placeName,
         },
       })
     },
@@ -858,53 +876,66 @@ function PlaceManagePage() {
                           <S.DetailSectionTitle>
                             연결 게시글 {placeDetail.postCount.toLocaleString()}개
                           </S.DetailSectionTitle>
-                          {placeDetail.posts.length > 0 ? (
-                            <S.DetailPostList>
-                              {placeDetail.posts.map((post) => (
-                                <S.DetailPostItem key={post.id}>
-                                  <S.DetailPostImage>
-                                    {post.imageUrl ? (
-                                      <img
-                                        src={post.imageUrl}
-                                        alt={`${post.title || `게시글 ${post.id}`} 이미지`}
-                                        loading="lazy"
-                                        decoding="async"
-                                      />
-                                    ) : (
-                                      <S.DetailPostFallback>
-                                        <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
-                                      </S.DetailPostFallback>
-                                    )}
-                                  </S.DetailPostImage>
-                                  <S.DetailPostText>
-                                    <S.DetailPostTitleButton
-                                      type="button"
-                                      onClick={() => handleOpenPostDetail(post.id)}
-                                    >
-                                      {post.title || `게시글 #${post.id}`}
-                                    </S.DetailPostTitleButton>
-                                    <p>
-                                      {post.description || '설명 없음'}
-                                    </p>
-                                    <S.DetailPostMeta>
-                                      {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
-                                      {post.likeCount.toLocaleString()} ·{' '}
-                                      {formatPlacePostDate(post.createdAt)}
-                                    </S.DetailPostMeta>
-                                    <S.DetailPostTitleButton
-                                      $variant="action"
-                                      type="button"
-                                      onClick={() => handleOpenPostDetail(post.id)}
-                                    >
-                                      <span>게시글 상세 보기</span>
-                                      <S.MaterialIcon aria-hidden="true">
-                                        chevron_right
-                                      </S.MaterialIcon>
-                                    </S.DetailPostTitleButton>
-                                  </S.DetailPostText>
-                                </S.DetailPostItem>
-                              ))}
-                            </S.DetailPostList>
+                          {detailPostPreviewItems.length > 0 ? (
+                            <>
+                              <S.DetailPostList>
+                                {detailPostPreviewItems.map((post) => (
+                                  <S.DetailPostItem key={post.id}>
+                                    <S.DetailPostImage>
+                                      {post.imageUrl ? (
+                                        <img
+                                          src={post.imageUrl}
+                                          alt={`${post.title || `게시글 ${post.id}`} 이미지`}
+                                          loading="lazy"
+                                          decoding="async"
+                                        />
+                                      ) : (
+                                        <S.DetailPostFallback>
+                                          <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
+                                        </S.DetailPostFallback>
+                                      )}
+                                    </S.DetailPostImage>
+                                    <S.DetailPostText>
+                                      <S.DetailPostTitleButton
+                                        type="button"
+                                        onClick={() => handleOpenPostDetail(post.id)}
+                                      >
+                                        {post.title || `게시글 #${post.id}`}
+                                      </S.DetailPostTitleButton>
+                                      <p>
+                                        {post.description || '설명 없음'}
+                                      </p>
+                                      <S.DetailPostMeta>
+                                        {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
+                                        {post.likeCount.toLocaleString()} ·{' '}
+                                        {formatPlacePostDate(post.createdAt)}
+                                      </S.DetailPostMeta>
+                                      <S.DetailPostTitleButton
+                                        $variant="action"
+                                        type="button"
+                                        onClick={() => handleOpenPostDetail(post.id)}
+                                      >
+                                        <span>게시글 상세 보기</span>
+                                        <S.MaterialIcon aria-hidden="true">
+                                          chevron_right
+                                        </S.MaterialIcon>
+                                      </S.DetailPostTitleButton>
+                                    </S.DetailPostText>
+                                  </S.DetailPostItem>
+                                ))}
+                              </S.DetailPostList>
+                              {shouldShowDetailPostAllAction ? (
+                                <S.DetailPostListAction
+                                  type="button"
+                                  onClick={() => handleOpenPlacePosts(placeDetail.name)}
+                                >
+                                  <span>연결 게시글 전체 보기</span>
+                                  <S.MaterialIcon aria-hidden="true">
+                                    chevron_right
+                                  </S.MaterialIcon>
+                                </S.DetailPostListAction>
+                              ) : null}
+                            </>
                           ) : (
                             <S.DetailStatus>연결된 게시글이 없습니다.</S.DetailStatus>
                           )}

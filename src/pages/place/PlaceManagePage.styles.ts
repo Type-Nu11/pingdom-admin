@@ -736,6 +736,38 @@ export const DetailPostMeta = styled.span`
   font-weight: 700;
 `
 
+export const DetailPostListAction = styled.button`
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+
+  &:hover {
+    border-color: ${neutral.primary};
+    background: ${neutral.surface};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+`
+
 export const DetailFooter = styled.footer`
   position: relative;
   flex-shrink: 0;

@@ -3,6 +3,7 @@ import type {
   AdminPost,
   AdminPostListRequest,
   AdminPostListResponse,
+  AdminPostReportBulkActionResponse,
 } from '../types/adminPost.types'
 
 const ADMIN_POSTS_API_PATH = '/admin/posts'
@@ -16,6 +17,8 @@ export async function getAdminPosts({
   limit = DEFAULT_ADMIN_POST_LIMIT,
   sortParam = DEFAULT_ADMIN_POST_SORT_PARAM,
   keyword = DEFAULT_ADMIN_POST_KEYWORD,
+  reviewStatus,
+  reportStatus,
 }: AdminPostListRequest = {}) {
   const { data } = await customAxios.get<AdminPostListResponse>(
     ADMIN_POSTS_API_PATH,
@@ -25,6 +28,8 @@ export async function getAdminPosts({
         limit,
         sortParam,
         keyword,
+        reviewStatus,
+        reportStatus: reviewStatus ? undefined : reportStatus,
       },
     }
   )
@@ -42,6 +47,22 @@ export async function getAdminPost(postId: number) {
 
 export async function deleteAdminPost(postId: number) {
   await customAxios.delete<void>(`${ADMIN_POSTS_API_PATH}/${postId}/delete`)
+}
+
+export async function acceptAdminPostReports(postId: number) {
+  const { data } = await customAxios.post<AdminPostReportBulkActionResponse>(
+    `${ADMIN_POSTS_API_PATH}/${postId}/reports/accept`
+  )
+
+  return data
+}
+
+export async function declineAdminPostReports(postId: number) {
+  const { data } = await customAxios.post<AdminPostReportBulkActionResponse>(
+    `${ADMIN_POSTS_API_PATH}/${postId}/reports/decline`
+  )
+
+  return data
 }
 
 export type { AdminPost }

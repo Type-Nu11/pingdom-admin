@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { deleteAdminPost, getAdminPost, getAdminPosts } from '../api/adminPostApi'
+import {
+  acceptAdminPostReports,
+  declineAdminPostReports,
+  deleteAdminPost,
+  getAdminPost,
+  getAdminPosts,
+} from '../api/adminPostApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { useAuth } from './useAuth'
@@ -7,8 +13,14 @@ import type {
   AdminPost,
   AdminPostDeleteErrorResponse,
   AdminPostDetailErrorResponse,
+  AdminPostListResponse,
   AdminPostListErrorResponse,
   AdminPostListRequest,
+  AdminPostReportBulkActionErrorResponse,
+  AdminPostReportBulkActionResponse,
+  AdminPostReportStatus,
+  AdminPostReviewCounts,
+  AdminPostReviewStatus,
   AdminPostSortParam,
 } from '../types/adminPost.types'
 
@@ -29,16 +41,38 @@ const ADMIN_POST_CODE_MESSAGES = {
   INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
   ACCESS_DENIED: '관리자 권한이 필요합니다.',
   POST_NOT_FOUND: '이미 삭제되었거나 존재하지 않는 게시글입니다.',
+  REPORT_NOT_FOUND: '이미 처리되었거나 존재하지 않는 신고입니다.',
+  REPORT_ALREADY_PROCESSED: '이미 처리된 신고입니다.',
+  NO_PENDING_REPORT: '처리할 대기 신고가 없습니다.',
   IMAGE_NOT_FOUND: '이미 삭제되었거나 존재하지 않는 게시글입니다.',
   DELETE_ERROR: '게시글 삭제 중 오류가 발생했습니다.',
   POST_DELETE_FAILED: '게시글 삭제 중 오류가 발생했습니다.',
   S3_CONNECTION_ERROR: '이미지 서버 연결 중 오류가 발생했습니다.',
 }
 
+const EMPTY_ADMIN_POST_REVIEW_COUNTS: AdminPostReviewCounts = {
+  all: 0,
+  pending: 0,
+  processed: 0,
+  normal: 0,
+}
+
 type AdminPostApiErrorResponse =
   | AdminPostListErrorResponse
   | AdminPostDetailErrorResponse
   | AdminPostDeleteErrorResponse
+  | AdminPostReportBulkActionErrorResponse
+
+type LatestAdminPostListRequest = {
+  page: number
+  limit: number
+  sortParam: AdminPostSortParam
+  keyword: string
+  reviewStatus?: AdminPostReviewStatus
+  reportStatus?: AdminPostReportStatus
+}
+
+type AdminPostReportBulkActionStatus = 'ACCEPTED' | 'DECLINED'
 
 function getAdminPostErrorMessage(error: unknown) {
   if (!isApiError<AdminPostApiErrorResponse>(error)) {
@@ -59,16 +93,46 @@ function shouldClearAuth(error: unknown) {
   )
 }
 
+function hasOwnRequestProperty(
+  request: Partial<LatestAdminPostListRequest>,
+  property: keyof LatestAdminPostListRequest
+) {
+  return Object.prototype.hasOwnProperty.call(request, property)
+}
+
+function applyPostReportBulkActionResult(
+  post: AdminPost,
+  result: AdminPostReportBulkActionResponse
+): AdminPost {
+  return {
+    ...post,
+    visibilityStatus: result.visibilityStatus,
+    hiddenAt: result.hiddenAt,
+    hiddenReason: result.hiddenReason,
+    reports: post.reports?.map((report) =>
+      report.status === 'PENDING'
+        ? {
+            ...report,
+            status: result.status,
+            processedAt: result.processedAt,
+          }
+        : report
+    ),
+  }
+}
+
 interface UseAdminPostsOptions {
   initialPage?: number
   limit?: number
   sortParam?: AdminPostSortParam
+  autoFetch?: boolean
 }
 
 export function useAdminPosts({
   initialPage = DEFAULT_ADMIN_POST_PAGE,
   limit = DEFAULT_ADMIN_POST_LIMIT,
   sortParam = DEFAULT_ADMIN_POST_SORT_PARAM,
+  autoFetch = true,
 }: UseAdminPostsOptions = {}) {
   const { clearAuth } = useAuth()
   const [posts, setPosts] = useState<AdminPost[]>([])
@@ -76,6 +140,9 @@ export function useAdminPosts({
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [hasNext, setHasNext] = useState(false)
+  const [reviewCounts, setReviewCounts] = useState<AdminPostReviewCounts>(
+    EMPTY_ADMIN_POST_REVIEW_COUNTS
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -85,13 +152,19 @@ export function useAdminPosts({
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null)
+  const [processingPostReportId, setProcessingPostReportId] = useState<
+    number | null
+  >(null)
+  const [postReportActionResult, setPostReportActionResult] =
+    useState<AdminPostReportBulkActionResponse | null>(null)
   const latestRequestIdRef = useRef(0)
   const latestDetailRequestIdRef = useRef(0)
   const deletingPostIdRef = useRef<number | null>(null)
+  const processingPostReportIdRef = useRef<number | null>(null)
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
-  const latestListRequestRef = useRef<Required<AdminPostListRequest>>({
+  const latestListRequestRef = useRef<LatestAdminPostListRequest>({
     page: initialPage,
     limit,
     sortParam,
@@ -125,7 +198,9 @@ export function useAdminPosts({
     [clearActionSuccessTimeout]
   )
 
-  const fetchAdminPosts = useCallback(async (request: AdminPostListRequest = {}) => {
+  const fetchAdminPosts = useCallback(async (
+    request: AdminPostListRequest = {}
+  ): Promise<AdminPostListResponse | null> => {
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
 
@@ -139,6 +214,16 @@ export function useAdminPosts({
       limit: request.limit ?? latestListRequestRef.current.limit,
       sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
       keyword: request.keyword ?? latestListRequestRef.current.keyword,
+      reviewStatus: hasOwnRequestProperty(request, 'reportStatus')
+        ? undefined
+        : hasOwnRequestProperty(request, 'reviewStatus')
+          ? request.reviewStatus
+          : latestListRequestRef.current.reviewStatus,
+      reportStatus: hasOwnRequestProperty(request, 'reviewStatus')
+        ? undefined
+        : hasOwnRequestProperty(request, 'reportStatus')
+          ? request.reportStatus
+          : latestListRequestRef.current.reportStatus,
     }
 
     try {
@@ -152,15 +237,18 @@ export function useAdminPosts({
         setTotalCount(data.totalCount)
         setTotalPages(data.totalPages)
         setHasNext(data.hasNext)
+        setReviewCounts(data.counts ?? EMPTY_ADMIN_POST_REVIEW_COUNTS)
         latestListRequestRef.current = {
           page: data.page,
           limit: data.limit,
           sortParam: nextRequest.sortParam,
           keyword: nextRequest.keyword,
+          reviewStatus: nextRequest.reviewStatus,
+          reportStatus: nextRequest.reportStatus,
         }
       }
 
-      return true
+      return data
     } catch (error) {
       if (requestId === latestRequestIdRef.current) {
         setPosts([])
@@ -174,7 +262,7 @@ export function useAdminPosts({
 
       console.error('관리자 게시글 목록 조회 실패', error)
 
-      return false
+      return null
     } finally {
       if (requestId === latestRequestIdRef.current) {
         setIsLoading(false)
@@ -249,9 +337,9 @@ export function useAdminPosts({
 
         const isLastItemOnPage = posts.length === 1
         const targetPage = isLastItemOnPage && page > 1 ? page - 1 : page
-        const isRefreshSuccess = await fetchAdminPosts({ page: targetPage })
+        const refreshedPosts = await fetchAdminPosts({ page: targetPage })
 
-        if (!isRefreshSuccess) {
+        if (!refreshedPosts) {
           setActionErrorMessage('게시글은 삭제됐지만 목록을 다시 불러오지 못했습니다.')
         }
 
@@ -286,9 +374,91 @@ export function useAdminPosts({
     ]
   )
 
+  const processPostReports = useCallback(
+    async (postId: number, status: AdminPostReportBulkActionStatus) => {
+      if (processingPostReportIdRef.current !== null) {
+        return null
+      }
+
+      processingPostReportIdRef.current = postId
+      setProcessingPostReportId(postId)
+      setActionErrorMessage('')
+      setPostReportActionResult(null)
+      clearActionSuccessMessage()
+
+      const requestPostReportAction =
+        status === 'ACCEPTED' ? acceptAdminPostReports : declineAdminPostReports
+      const successActionLabel = status === 'ACCEPTED' ? '수락' : '거절'
+
+      try {
+        const data = await requestPostReportAction(postId)
+        setPostReportActionResult(data)
+
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId ? applyPostReportBulkActionResult(post, data) : post
+          )
+        )
+        setPostDetail((prevPostDetail) =>
+          prevPostDetail?.id === postId
+            ? applyPostReportBulkActionResult(prevPostDetail, data)
+            : prevPostDetail
+        )
+
+        const refreshedPosts = await fetchAdminPosts()
+
+        if (!refreshedPosts) {
+          setActionErrorMessage('신고는 처리됐지만 목록을 다시 불러오지 못했습니다.')
+        }
+
+        showActionSuccessMessage(
+          `게시글 #${postId}의 대기 신고 ${data.processedReportCount}건을 ${successActionLabel}했습니다.`
+        )
+
+        return data
+      } catch (error) {
+        setPostReportActionResult(null)
+        setActionErrorMessage(getAdminPostErrorMessage(error))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        console.error('관리자 게시글 신고 일괄 처리 실패', error)
+
+        return null
+      } finally {
+        if (processingPostReportIdRef.current === postId) {
+          processingPostReportIdRef.current = null
+          setProcessingPostReportId(null)
+        }
+      }
+    },
+    [
+      clearActionSuccessMessage,
+      clearAuth,
+      fetchAdminPosts,
+      showActionSuccessMessage,
+    ]
+  )
+
+  const acceptPostReports = useCallback(
+    (postId: number) => processPostReports(postId, 'ACCEPTED'),
+    [processPostReports]
+  )
+
+  const declinePostReports = useCallback(
+    (postId: number) => processPostReports(postId, 'DECLINED'),
+    [processPostReports]
+  )
+
   useEffect(() => {
+    if (!autoFetch) {
+      return
+    }
+
     void fetchAdminPosts()
-  }, [fetchAdminPosts])
+  }, [autoFetch, fetchAdminPosts])
 
   useEffect(() => {
     return () => {
@@ -302,6 +472,7 @@ export function useAdminPosts({
     totalCount,
     totalPages,
     hasNext,
+    reviewCounts,
     isLoading,
     isError,
     errorMessage,
@@ -311,9 +482,13 @@ export function useAdminPosts({
     isDetailLoading,
     detailErrorMessage,
     deletingPostId,
+    processingPostReportId,
+    postReportActionResult,
     fetchAdminPosts,
     fetchAdminPostDetail,
     clearPostDetail,
     deletePost,
+    acceptPostReports,
+    declinePostReports,
   }
 }

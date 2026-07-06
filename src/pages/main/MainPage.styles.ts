@@ -822,7 +822,7 @@ export const MediaTitle = styled.h3`
 `
 
 export const StatusBadge = styled.span<{
-  $tone?: 'normal' | 'reported'
+  $tone?: 'normal' | 'reported' | 'processed' | 'hidden'
 }>`
   flex-shrink: 0;
   padding: 4px 8px;
@@ -849,6 +849,21 @@ export const StatusBadge = styled.span<{
       color: ${neutral.error};
     `}
 
+  ${({ $tone }) =>
+    $tone === 'processed' &&
+    css`
+      border-color: ${neutral.info};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.info};
+    `}
+
+  ${({ $tone }) =>
+    $tone === 'hidden' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.error};
+    `}
 `
 
 export const MediaMetaList = styled.div`
@@ -998,7 +1013,7 @@ export const ModalOverlay = styled.div`
 `
 
 export const ModalContent = styled.section`
-  width: min(1120px, 100%);
+  width: min(1180px, 100%);
   max-height: min(820px, 92vh);
   display: flex;
   flex-direction: column;
@@ -1026,10 +1041,26 @@ export const ModalTitle = styled.h2`
   word-break: break-word;
 `
 
-export const ModalDescription = styled.p`
-  margin: 0;
+export const ModalMetaList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`
+
+export const ModalMetaChip = styled.span`
+  min-height: 26px;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  word-break: break-word;
 `
 
 export const ModalCloseButton = styled.button`
@@ -1069,7 +1100,7 @@ export const ModalNotice = styled.div`
 
 export const ModalReviewLayout = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+  grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
   gap: 20px;
   padding: 20px;
 
@@ -1097,24 +1128,67 @@ export const ModalModerationPanel = styled.aside`
 
 export const ModalStatusRow = styled.div`
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 12px;
   color: ${neutral.muted};
   font-size: 13px;
   font-weight: 600;
+`
 
-  > span:last-child {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+export const ModalStatusLine = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+`
+
+export const ModalMetricBadge = styled.span<{
+  $tone?: 'neutral' | 'normal' | 'reported' | 'processed'
+}>`
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  ${({ $tone }) =>
+    $tone === 'normal' &&
+    css`
+      border-color: ${neutral.success};
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
+    `}
+
+  ${({ $tone }) =>
+    $tone === 'reported' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
+    `}
+
+  ${({ $tone }) =>
+    $tone === 'processed' &&
+    css`
+      border-color: ${neutral.info};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.info};
+    `}
 `
 
 export const ModalImageFrame = styled.div`
-  height: min(56vh, 540px);
-  min-height: 360px;
+  height: min(50vh, 480px);
+  min-height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1187,12 +1261,18 @@ export const ModalInfoGrid = styled.div`
   }
 `
 
-export const ModalInfoItem = styled.div`
+export const ModalInfoItem = styled.div<{ $wide?: boolean }>`
   min-width: 0;
   padding: 12px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
+
+  ${({ $wide }) =>
+    $wide &&
+    css`
+      grid-column: 1 / -1;
+    `}
 
   span,
   strong {
@@ -1215,17 +1295,66 @@ export const ModalInfoItem = styled.div`
   }
 `
 
-export const ModalPostDescription = styled.p`
+export const ModalPostDescriptionCard = styled.section`
   margin: 16px 0 0;
+`
+
+export const ModalPostContentCard = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   padding: 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
+`
+
+export const ModalPostContentIcon = styled.span`
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.muted};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const ModalPostContentBody = styled.div`
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+`
+
+export const ModalPostDescription = styled.p<{ $empty?: boolean }>`
+  margin: 0;
   color: ${neutral.text};
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
+
+  ${({ $empty }) =>
+    $empty &&
+    css`
+      color: ${neutral.muted};
+      font-weight: 700;
+    `}
 `
 
 export const ModalSection = styled.section`
@@ -1240,6 +1369,34 @@ export const ModalSectionTitle = styled.h3`
   font-weight: 700;
 `
 
+export const ReportActionNotice = styled.p<{ $variant?: 'success' | 'error' }>`
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  ${({ $variant }) =>
+    $variant === 'success' &&
+    css`
+      border-color: ${neutral.success};
+      background: ${neutral.successTint};
+      color: ${neutral.successText};
+    `}
+
+  ${({ $variant }) =>
+    $variant === 'error' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.errorTint};
+      color: ${neutral.error};
+    `}
+`
+
 export const ReportList = styled.ul`
   display: flex;
   flex-direction: column;
@@ -1249,11 +1406,20 @@ export const ReportList = styled.ul`
   list-style: none;
 `
 
-export const ReportItem = styled.li`
+export const ReportItem = styled.li<{
+  $status?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'RESTORED'
+}>`
   padding: 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
+
+  ${({ $status }) =>
+    $status === 'PENDING' &&
+    css`
+      border-color: ${neutral.error};
+      box-shadow: inset 3px 0 0 ${neutral.error};
+    `}
 `
 
 export const ReportHeader = styled.div`
@@ -1280,7 +1446,7 @@ export const ReportMeta = styled.p`
 `
 
 export const ReportStatusBadge = styled.span<{
-  $status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  $status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'RESTORED'
 }>`
   flex-shrink: 0;
   padding: 4px 8px;
@@ -1314,6 +1480,14 @@ export const ReportStatusBadge = styled.span<{
       background: ${neutral.surfaceHighest};
       color: ${neutral.muted};
     `}
+
+  ${({ $status }) =>
+    $status === 'RESTORED' &&
+    css`
+      border-color: ${neutral.info};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.info};
+    `}
 `
 
 export const ReportReason = styled.p`
@@ -1325,10 +1499,31 @@ export const ReportReason = styled.p`
   word-break: break-word;
 `
 
+export const ReportActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+
+  > button {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    > button {
+      width: 100%;
+    }
+  }
+`
+
 export const ModalFooter = styled.footer`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   padding: 16px 24px;
   border-top: 1px solid ${neutral.border};
@@ -1341,11 +1536,28 @@ export const ModalFooter = styled.footer`
   }
 `
 
+export const ModalFooterControls = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+
+  @media (max-width: 720px) {
+    align-items: stretch;
+  }
+`
+
 export const ModalFooterMeta = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+
+  @media (max-width: 720px) {
+    text-align: left;
+  }
 `
 
 export const ModalFooterActions = styled.div`
@@ -1436,6 +1648,63 @@ export const ModalEmptyText = styled.p`
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
   font-size: 14px;
+`
+
+export const ModalEmptyState = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-left: 3px solid ${neutral.success};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+`
+
+export const ModalEmptyContent = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    min-width: 0;
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  span {
+    min-width: 0;
+    color: ${neutral.muted};
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+`
+
+export const ModalEmptyIcon = styled.span`
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid ${neutral.success};
+  background: ${neutral.successTint};
+  color: ${neutral.successText};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 20;
+  }
 `
 
 export const ActionToast = styled.div`
@@ -1540,6 +1809,19 @@ export const DeleteConfirmMeta = styled.p`
   word-break: break-word;
 `
 
+export const DeleteConfirmWarning = styled.p`
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.warning};
+  border-radius: 8px;
+  background: ${neutral.warningTint};
+  color: ${neutral.warningText};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  word-break: keep-all;
+`
+
 export const DeleteConfirmNotice = styled.p`
   margin: 12px 0 0;
   padding: 12px;
@@ -1562,6 +1844,7 @@ export const DeleteConfirmActions = styled.div`
     flex-direction: column-reverse;
 
     ${SecondaryButton},
+    ${PrimaryButton},
     ${DangerButton} {
       width: 100%;
     }

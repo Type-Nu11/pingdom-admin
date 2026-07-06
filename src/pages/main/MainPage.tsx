@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SortDropdown from '../../components/common/SortDropdown'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminPost,
+  AdminPostListRequest,
   AdminPostReportItem,
+  AdminPostReviewCounts,
   AdminPostReportStatus,
+  AdminPostReviewStatus,
   AdminPostSortParam,
 } from '../../types/adminPost.types'
 import * as S from './MainPage.styles'
@@ -20,25 +23,40 @@ const ADMIN_POST_SORT_OPTIONS = [
   { value: 'OLDEST', label: '오래된순' },
   { value: 'MOST_LIKED', label: '좋아요순' },
 ]
-type AdminPostReviewFilter = 'ALL' | 'REPORTED' | 'NORMAL'
-type AdminPostStatusTone = 'normal' | 'reported'
+type AdminPostStatusTone = 'normal' | 'reported' | 'processed' | 'hidden'
+type AdminPostReportActionStatus = 'ACCEPTED' | 'DECLINED'
 
 const ADMIN_POST_REVIEW_FILTERS: Array<{
-  value: AdminPostReviewFilter
+  value: AdminPostReviewStatus
   label: string
 }> = [
   { value: 'ALL', label: '모든 상태' },
-  { value: 'REPORTED', label: '신고 이력' },
+  { value: 'PENDING', label: '처리 대기' },
+  { value: 'PROCESSED', label: '신고 이력' },
   { value: 'NORMAL', label: '신고 없음' },
 ]
+const ADMIN_POST_REVIEW_COUNT_KEYS: Record<
+  AdminPostReviewStatus,
+  keyof AdminPostReviewCounts
+> = {
+  ALL: 'all',
+  PENDING: 'pending',
+  PROCESSED: 'processed',
+  NORMAL: 'normal',
+}
 const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
   PENDING: '처리 대기',
   ACCEPTED: '수락',
   DECLINED: '거절',
+  RESTORED: '복구',
 }
 
 interface MainPageLocationState {
   openPostId?: number
+}
+
+interface ReportActionConfirmState {
+  actionStatus: AdminPostReportActionStatus
 }
 
 function getPostImageUrl(post: AdminPost) {
@@ -65,6 +83,10 @@ function getPostReports(post: AdminPost) {
   return Array.isArray(post.reports) ? post.reports : []
 }
 
+function getPendingPostReports(post: AdminPost) {
+  return getPostReports(post).filter((report) => report.status === 'PENDING')
+}
+
 function getReporterName(report: AdminPostReportItem) {
   if (report.reporterUsername) {
     return report.reporterUsername
@@ -81,41 +103,65 @@ function getReportStatusLabel(status: AdminPostReportStatus) {
   return ADMIN_POST_REPORT_STATUS_LABELS[status]
 }
 
+function getPostVisibilityLabel(post: AdminPost) {
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return '숨김 처리'
+  }
+
+  return '공개'
+}
+
 function getPostStatusTone(post: AdminPost): AdminPostStatusTone {
   const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
 
-  return reports.length > 0 ? 'reported' : 'normal'
+  if (pendingReportCount > 0) {
+    return 'reported'
+  }
+
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return 'hidden'
+  }
+
+  if (reports.length > 0) {
+    return 'processed'
+  }
+
+  return 'normal'
 }
 
 function getPostStatusLabel(post: AdminPost) {
-  const reportCount = getPostReports(post).length
+  const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
 
-  if (reportCount > 0) {
-    return `신고 이력 ${reportCount}`
+  if (pendingReportCount > 0) {
+    return `처리 대기 ${pendingReportCount}`
+  }
+
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return '숨김 처리'
+  }
+
+  if (reports.length > 0) {
+    return `처리 완료 ${reports.length}`
   }
 
   return '신고 없음'
 }
 
-function getPostFilterCount(posts: AdminPost[], filter: AdminPostReviewFilter) {
-  return posts.filter((post) => isPostMatchingReviewFilter(post, filter)).length
-}
-
-function isPostMatchingReviewFilter(
-  post: AdminPost,
-  filter: AdminPostReviewFilter
-) {
+function getPostReportSummaryLabel(post: AdminPost) {
   const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
 
-  if (filter === 'REPORTED') {
-    return reports.length > 0
+  if (pendingReportCount > 0) {
+    return `처리 대기 ${pendingReportCount}건`
   }
 
-  if (filter === 'NORMAL') {
-    return reports.length === 0
+  if (reports.length > 0) {
+    return `처리 완료 ${reports.length}건`
   }
 
-  return true
+  return '신고 없음'
 }
 
 function formatCount(value: unknown) {
@@ -142,6 +188,14 @@ function formatPostDate(value: string) {
 function formatOptionalPostDate(value?: string | null) {
   if (!value) {
     return '처리 전'
+  }
+
+  return formatPostDate(value)
+}
+
+function formatOptionalReportCreatedDate(value?: string | null) {
+  if (!value) {
+    return '접수일 정보 없음'
   }
 
   return formatPostDate(value)
@@ -226,19 +280,24 @@ function MainPage() {
   const isSearchEffectReadyRef = useRef(false)
   const latestSortParamRef = useRef(DEFAULT_ADMIN_POST_SORT_PARAM)
   const latestPostKeywordRef = useRef('')
+  const latestReviewFilterRef = useRef<AdminPostReviewStatus>('ALL')
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
     null
   )
+  const [reportActionConfirm, setReportActionConfirm] =
+    useState<ReportActionConfirmState | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
+    useState(false)
+  const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
     useState(false)
   const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
     DEFAULT_ADMIN_POST_SORT_PARAM
   )
   const [selectedReviewFilter, setSelectedReviewFilter] =
-    useState<AdminPostReviewFilter>('ALL')
+    useState<AdminPostReviewStatus>('ALL')
   const [postSearchQuery, setPostSearchQuery] = useState('')
   const {
     posts,
@@ -246,6 +305,7 @@ function MainPage() {
     totalCount,
     totalPages,
     hasNext,
+    reviewCounts,
     isLoading,
     isError,
     errorMessage,
@@ -255,51 +315,43 @@ function MainPage() {
     isDetailLoading,
     detailErrorMessage,
     deletingPostId,
+    processingPostReportId,
     fetchAdminPosts,
     fetchAdminPostDetail,
     clearPostDetail,
     deletePost,
+    acceptPostReports,
+    declinePostReports,
   } = useAdminPosts({
     limit: ADMIN_POST_PAGE_SIZE,
+    autoFetch: false,
   })
+  const fetchReviewPosts = useCallback(
+    (request: AdminPostListRequest = {}) => fetchAdminPosts(request),
+    [fetchAdminPosts]
+  )
   const activePost = postDetail ?? selectedPost
+  const activePostId = activePost?.id ?? null
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
+  const activePendingReportCount = activePost
+    ? getPendingPostReports(activePost).length
+    : 0
   const currentPageNumber = page
   const isDeleting = deletingPostId !== null
+  const isProcessingReport = processingPostReportId !== null
   const postKeyword = postSearchQuery.trim()
+  const visibleActionSuccessMessage = actionSuccessMessage
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
-  const hasClientOnlyPostFilter = selectedReviewFilter !== 'ALL'
   const hasActivePostKeyword = postKeyword.length > 0
-  const showPagination = totalPages > 1 && !hasClientOnlyPostFilter
+  const showPagination = totalPages > 1
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
-  const reviewFilterCounts = useMemo(
-    () =>
-      ADMIN_POST_REVIEW_FILTERS.reduce<Record<AdminPostReviewFilter, number>>(
-        (counts, filter) => {
-          counts[filter.value] = getPostFilterCount(posts, filter.value)
-
-          return counts
-        },
-        {
-          ALL: 0,
-          REPORTED: 0,
-          NORMAL: 0,
-        }
-      ),
-    [posts]
-  )
-  const filteredPosts = useMemo(
-    () =>
-      posts.filter((post) => isPostMatchingReviewFilter(post, selectedReviewFilter)),
-    [posts, selectedReviewFilter]
-  )
   const activePostIndex = activePost
-    ? filteredPosts.findIndex((post) => post.id === activePost.id)
+    ? posts.findIndex((post) => post.id === activePost.id)
     : -1
   const nextReviewPost =
-    activePostIndex >= 0 ? filteredPosts[activePostIndex + 1] ?? null : null
+    activePostIndex >= 0 ? posts[activePostIndex + 1] ?? null : null
 
   const clearPendingPostSearch = useCallback(() => {
     if (!searchTimeoutRef.current) {
@@ -336,7 +388,9 @@ function MainPage() {
   const handleClosePostDetail = useCallback(() => {
     setSelectedPost(null)
     setDeleteConfirmPost(null)
+    setReportActionConfirm(null)
     setHasDeleteConfirmAttempted(false)
+    setHasReportActionConfirmAttempted(false)
     clearPostDetail()
   }, [clearPostDetail])
 
@@ -349,9 +403,58 @@ function MainPage() {
     setHasDeleteConfirmAttempted(false)
   }, [isDeleting])
 
+  const handleOpenReportActionConfirm = useCallback(
+    (actionStatus: AdminPostReportActionStatus) => {
+      if (
+        activePendingReportCount === 0 ||
+        isDetailLoading ||
+        isProcessingReport
+      ) {
+        return
+      }
+
+      setReportActionConfirm({
+        actionStatus,
+      })
+      setHasReportActionConfirmAttempted(false)
+    },
+    [activePendingReportCount, isDetailLoading, isProcessingReport]
+  )
+
+  const handleCloseReportActionConfirm = useCallback(() => {
+    if (isProcessingReport) {
+      return
+    }
+
+    setReportActionConfirm(null)
+    setHasReportActionConfirmAttempted(false)
+  }, [isProcessingReport])
+
   const handlePostSortChange = (value: string) => {
     clearPendingPostSearch()
     setSelectedSortParam(value as AdminPostSortParam)
+  }
+
+  const handleReviewFilterChange = (nextFilter: AdminPostReviewStatus) => {
+    if (selectedReviewFilter === nextFilter || isLoading || isDeleting) {
+      return
+    }
+
+    clearPendingPostSearch()
+    setSelectedReviewFilter(nextFilter)
+
+    void fetchReviewPosts(
+      {
+        page: 1,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+        reviewStatus: nextFilter,
+      }
+    ).then((data) => {
+      if (data) {
+        scrollPageContentToTop()
+      }
+    })
   }
 
   const handleSearchQueryChange = (nextQuery: string) => {
@@ -363,12 +466,15 @@ function MainPage() {
     shouldSkipNextSearchEffectRef.current = true
     setPostSearchQuery('')
 
-    void fetchAdminPosts({
-      page: 1,
-      sortParam: selectedSortParam,
-      keyword: '',
-    }).then((isSuccess) => {
-      if (isSuccess) {
+    void fetchReviewPosts(
+      {
+        page: 1,
+        sortParam: selectedSortParam,
+        keyword: '',
+        reviewStatus: selectedReviewFilter,
+      }
+    ).then((data) => {
+      if (data) {
         scrollPageContentToTop()
       }
     })
@@ -383,12 +489,15 @@ function MainPage() {
 
     clearPendingPostSearch()
 
-    void fetchAdminPosts({
-      page: nextPageNumber,
-      sortParam: selectedSortParam,
-      keyword: postKeyword,
-    }).then((isSuccess) => {
-      if (isSuccess) {
+    void fetchReviewPosts(
+      {
+        page: nextPageNumber,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+        reviewStatus: selectedReviewFilter,
+      }
+    ).then((data) => {
+      if (data) {
         scrollPageContentToTop()
       }
     })
@@ -397,11 +506,14 @@ function MainPage() {
   const handleRefresh = () => {
     clearPendingPostSearch()
 
-    void fetchAdminPosts({
-      page: currentPageNumber,
-      sortParam: selectedSortParam,
-      keyword: postKeyword,
-    })
+    void fetchReviewPosts(
+      {
+        page: currentPageNumber,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+        reviewStatus: selectedReviewFilter,
+      }
+    )
   }
 
   const handleDeleteActivePost = () => {
@@ -420,12 +532,12 @@ function MainPage() {
 
     setHasDeleteConfirmAttempted(true)
 
-    const deleteConfirmPostIndex = filteredPosts.findIndex(
+    const deleteConfirmPostIndex = posts.findIndex(
       (post) => post.id === deleteConfirmPost.id
     )
     const postToOpenAfterDelete =
       deleteConfirmPostIndex >= 0
-        ? filteredPosts[deleteConfirmPostIndex + 1] ?? null
+        ? posts[deleteConfirmPostIndex + 1] ?? null
         : null
 
     void deletePost(deleteConfirmPost.id).then((isSuccess) => {
@@ -446,6 +558,43 @@ function MainPage() {
     })
   }
 
+  const handleConfirmReportAction = () => {
+    if (
+      !reportActionConfirm ||
+      activePostId === null ||
+      activePendingReportCount === 0 ||
+      isProcessingReport
+    ) {
+      return
+    }
+
+    setHasReportActionConfirmAttempted(true)
+
+    const { actionStatus } = reportActionConfirm
+    const requestReportAction =
+      actionStatus === 'ACCEPTED' ? acceptPostReports : declinePostReports
+    const postId = activePostId
+
+    void requestReportAction(postId).then((result) => {
+      if (!result) {
+        return
+      }
+
+      setReportActionConfirm(null)
+      setHasReportActionConfirmAttempted(false)
+
+      void fetchAdminPostDetail(postId)
+      void fetchReviewPosts(
+        {
+          page: currentPageNumber,
+          sortParam: selectedSortParam,
+          keyword: postKeyword,
+          reviewStatus: selectedReviewFilter,
+        }
+      )
+    })
+  }
+
   useEffect(() => {
     latestSortParamRef.current = selectedSortParam
   }, [selectedSortParam])
@@ -453,6 +602,16 @@ function MainPage() {
   useEffect(() => {
     latestPostKeywordRef.current = postKeyword
   }, [postKeyword])
+
+  useEffect(() => {
+    latestReviewFilterRef.current = selectedReviewFilter
+  }, [selectedReviewFilter])
+
+  useEffect(() => {
+    void fetchReviewPosts({
+      reviewStatus: 'ALL',
+    })
+  }, [fetchReviewPosts])
 
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
@@ -479,12 +638,15 @@ function MainPage() {
       return
     }
 
-    void fetchAdminPosts({
-      page: 1,
-      sortParam: selectedSortParam,
-      keyword: latestPostKeywordRef.current,
-    })
-  }, [fetchAdminPosts, selectedSortParam])
+    void fetchReviewPosts(
+      {
+        page: 1,
+        sortParam: selectedSortParam,
+        keyword: latestPostKeywordRef.current,
+        reviewStatus: latestReviewFilterRef.current,
+      }
+    )
+  }, [fetchReviewPosts, selectedSortParam])
 
   useEffect(() => {
     if (!isSearchEffectReadyRef.current) {
@@ -504,12 +666,15 @@ function MainPage() {
     const nextKeyword = postSearchQuery.trim()
     searchTimeoutRef.current = window.setTimeout(() => {
       searchTimeoutRef.current = null
-      void fetchAdminPosts({
-        page: 1,
-        sortParam: latestSortParamRef.current,
-        keyword: nextKeyword,
-      }).then((isSuccess) => {
-        if (isSuccess) {
+      void fetchReviewPosts(
+        {
+          page: 1,
+          sortParam: latestSortParamRef.current,
+          keyword: nextKeyword,
+          reviewStatus: latestReviewFilterRef.current,
+        }
+      ).then((data) => {
+        if (data) {
           scrollPageContentToTop()
         }
       })
@@ -518,7 +683,7 @@ function MainPage() {
     return clearPendingPostSearch
   }, [
     clearPendingPostSearch,
-    fetchAdminPosts,
+    fetchReviewPosts,
     postSearchQuery,
     scrollPageContentToTop,
   ])
@@ -530,6 +695,12 @@ function MainPage() {
 
     function closeModalOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (reportActionConfirm) {
+          handleCloseReportActionConfirm()
+
+          return
+        }
+
         handleClosePostDetail()
       }
     }
@@ -539,7 +710,12 @@ function MainPage() {
     return () => {
       window.removeEventListener('keydown', closeModalOnEscape)
     }
-  }, [handleClosePostDetail, selectedPost])
+  }, [
+    handleClosePostDetail,
+    handleCloseReportActionConfirm,
+    reportActionConfirm,
+    selectedPost,
+  ])
 
   return (
     <S.AppShell>
@@ -647,10 +823,14 @@ function MainPage() {
                   type="button"
                   $active={selectedReviewFilter === filter.value}
                   aria-pressed={selectedReviewFilter === filter.value}
-                  onClick={() => setSelectedReviewFilter(filter.value)}
+                  onClick={() => handleReviewFilterChange(filter.value)}
                 >
                   <span>{filter.label}</span>
-                  <strong>{formatCount(reviewFilterCounts[filter.value])}</strong>
+                  <strong>
+                    {formatCount(
+                      reviewCounts[ADMIN_POST_REVIEW_COUNT_KEYS[filter.value]]
+                    )}
+                  </strong>
                 </S.ReviewTabButton>
               ))}
             </S.ReviewTabList>
@@ -668,11 +848,9 @@ function MainPage() {
 
           <S.ReviewResultSummary>
             <span>
-              {hasClientOnlyPostFilter
-                ? `현재 페이지 필터 결과 ${filteredPosts.length.toLocaleString()}개 표시`
-                : hasActivePostKeyword
-                  ? `검색 결과 중 현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`
-                  : `현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`}
+              {hasActivePostKeyword
+                ? `검색 결과 중 현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`
+                : `현재 페이지 게시글 ${posts.length.toLocaleString()}개 표시`}
             </span>
             {hasActivePostKeyword ? (
               <S.ClearFilterButton type="button" onClick={handleClearPostKeyword}>
@@ -707,86 +885,78 @@ function MainPage() {
             </S.FeedbackText>
           ) : null}
 
-          {!isLoading && !isError && posts.length > 0 && filteredPosts.length === 0 ? (
-            <S.FeedbackText>조건에 맞는 게시글이 없습니다.</S.FeedbackText>
-          ) : null}
-
-          {!isError && filteredPosts.length > 0 ? (
+          {!isError && posts.length > 0 ? (
             <S.MediaGrid>
-              {filteredPosts.map((post) => {
-                const reportCount = getPostReports(post).length
+              {posts.map((post) => (
+                <S.MediaCard
+                  key={post.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleOpenPostDetail(post)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      handleOpenPostDetail(post)
+                    }
+                  }}
+                >
+                  <AdminPostImage
+                    key={getPostImageUrl(post) || `post-image-${post.id}`}
+                    post={post}
+                  />
 
-                return (
-                  <S.MediaCard
-                    key={post.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleOpenPostDetail(post)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        handleOpenPostDetail(post)
-                      }
-                    }}
-                  >
-                    <AdminPostImage
-                      key={getPostImageUrl(post) || `post-image-${post.id}`}
-                      post={post}
-                    />
+                  <S.MediaBody>
+                    <S.MediaTitleRow>
+                      <S.MediaTitle>{getPostTitle(post)}</S.MediaTitle>
+                      <S.StatusBadge $tone={getPostStatusTone(post)}>
+                        {getPostStatusLabel(post)}
+                      </S.StatusBadge>
+                    </S.MediaTitleRow>
 
-                    <S.MediaBody>
-                      <S.MediaTitleRow>
-                        <S.MediaTitle>{getPostTitle(post)}</S.MediaTitle>
-                        <S.StatusBadge $tone={getPostStatusTone(post)}>
-                          {getPostStatusLabel(post)}
-                        </S.StatusBadge>
-                      </S.MediaTitleRow>
+                    <S.MediaMetaList>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
+                        <span>{getPostOwner(post)}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">tag</S.MaterialIcon>
+                        <span>게시글 ID: {post.id}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
+                        <span>{post.placeName || '장소 정보 없음'}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">favorite</S.MaterialIcon>
+                        <span>좋아요 {formatCount(post.likeCount)}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
+                        <span>{getPostReportSummaryLabel(post)}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
+                        <span>{formatPostDate(post.createdAt)}</span>
+                      </S.MediaMeta>
+                      {post.description ? (
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">notes</S.MaterialIcon>
+                          <span>{post.description}</span>
+                        </S.MediaMeta>
+                      ) : null}
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">badge</S.MaterialIcon>
+                        <span>사용자 ID: {post.userId}</span>
+                      </S.MediaMeta>
+                    </S.MediaMetaList>
 
-                      <S.MediaMetaList>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
-                          <span>{getPostOwner(post)}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">tag</S.MaterialIcon>
-                          <span>게시글 ID: {post.id}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
-                          <span>{post.placeName || '장소 정보 없음'}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">favorite</S.MaterialIcon>
-                          <span>좋아요 {formatCount(post.likeCount)}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
-                          <span>신고 {formatCount(reportCount)}건</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
-                          <span>{formatPostDate(post.createdAt)}</span>
-                        </S.MediaMeta>
-                        {post.description ? (
-                          <S.MediaMeta>
-                            <S.MaterialIcon aria-hidden="true">notes</S.MaterialIcon>
-                            <span>{post.description}</span>
-                          </S.MediaMeta>
-                        ) : null}
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">badge</S.MaterialIcon>
-                          <span>사용자 ID: {post.userId}</span>
-                        </S.MediaMeta>
-                      </S.MediaMetaList>
-
-                      <S.CardHint>
-                        <span>클릭해서 상세 보기</span>
-                        <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
-                      </S.CardHint>
-                    </S.MediaBody>
-                  </S.MediaCard>
-                )
-              })}
+                    <S.CardHint>
+                      <span>클릭해서 상세 보기</span>
+                      <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
+                    </S.CardHint>
+                  </S.MediaBody>
+                </S.MediaCard>
+              ))}
             </S.MediaGrid>
           ) : null}
 
@@ -847,10 +1017,18 @@ function MainPage() {
                 <S.ModalTitle id="post-modal-title">
                   {getPostTitle(activePost)}
                 </S.ModalTitle>
-                <S.ModalDescription>
-                  게시글 ID: {activePost.id} · {getPostOwner(activePost)} ·{' '}
-                  {activePost.placeName || '장소 정보 없음'}
-                </S.ModalDescription>
+                <S.ModalMetaList aria-label="게시글 기본 정보">
+                  <S.ModalMetaChip>게시글 #{activePost.id}</S.ModalMetaChip>
+                  <S.ModalMetaChip>
+                    작성자 {getPostOwner(activePost)}
+                    {activePost.username && typeof activePost.userId === 'number'
+                      ? ` (ID ${activePost.userId})`
+                      : ''}
+                  </S.ModalMetaChip>
+                  <S.ModalMetaChip>
+                    {activePost.placeName || '장소 정보 없음'}
+                  </S.ModalMetaChip>
+                </S.ModalMetaList>
               </div>
               <S.ModalCloseButton
                 type="button"
@@ -900,43 +1078,82 @@ function MainPage() {
                 </S.ModalMediaPanel>
 
                 <S.ModalModerationPanel>
-                  <S.ModalStatusRow>
-                    <S.StatusBadge $tone={getPostStatusTone(activePost)}>
-                      {getPostStatusLabel(activePost)}
-                    </S.StatusBadge>
-                    <span>
-                      신고 {formatCount(activeReports.length)}건 · 좋아요{' '}
-                      {formatCount(activePost.likeCount)}
-                    </span>
+                  <S.ModalStatusRow aria-label="게시글 상태 요약">
+                    <S.ModalStatusLine>
+                      <S.StatusBadge $tone={getPostStatusTone(activePost)}>
+                        {getPostStatusLabel(activePost)}
+                      </S.StatusBadge>
+                      <S.ModalMetricBadge
+                        $tone={
+                          activePost.visibilityStatus === 'AUTO_HIDDEN'
+                            ? 'reported'
+                            : 'normal'
+                        }
+                      >
+                        {getPostVisibilityLabel(activePost)}
+                      </S.ModalMetricBadge>
+                    </S.ModalStatusLine>
+                    <S.ModalStatusLine>
+                      <S.ModalMetricBadge
+                        $tone={activePendingReportCount > 0 ? 'reported' : 'neutral'}
+                      >
+                        처리 대기 {formatCount(activePendingReportCount)}
+                      </S.ModalMetricBadge>
+                      <S.ModalMetricBadge
+                        $tone={activeReports.length > 0 ? 'processed' : 'neutral'}
+                      >
+                        전체 신고 {formatCount(activeReports.length)}
+                      </S.ModalMetricBadge>
+                      <S.ModalMetricBadge>
+                        좋아요 {formatCount(activePost.likeCount)}
+                      </S.ModalMetricBadge>
+                    </S.ModalStatusLine>
                   </S.ModalStatusRow>
 
                   <S.ModalInfoGrid>
                     <S.ModalInfoItem>
-                      <span>게시글 ID</span>
-                      <strong>{activePost.id}</strong>
-                    </S.ModalInfoItem>
-                    <S.ModalInfoItem>
-                      <span>작성자 ID</span>
-                      <strong>{activePost.userId}</strong>
-                    </S.ModalInfoItem>
-                    <S.ModalInfoItem>
-                      <span>장소</span>
-                      <strong>{activePost.placeName || '장소 정보 없음'}</strong>
-                    </S.ModalInfoItem>
-                    <S.ModalInfoItem>
                       <span>작성일</span>
                       <strong>{formatPostDate(activePost.createdAt)}</strong>
                     </S.ModalInfoItem>
+                    <S.ModalInfoItem>
+                      <span>좋아요 수</span>
+                      <strong>{formatCount(activePost.likeCount)}</strong>
+                    </S.ModalInfoItem>
+                    {activePost.hiddenAt ? (
+                      <S.ModalInfoItem $wide>
+                        <span>숨김 처리일</span>
+                        <strong>{formatPostDate(activePost.hiddenAt)}</strong>
+                      </S.ModalInfoItem>
+                    ) : null}
                   </S.ModalInfoGrid>
 
-                  {activePost.description ? (
-                    <S.ModalPostDescription>
-                      {activePost.description}
-                    </S.ModalPostDescription>
-                  ) : null}
+                  <S.ModalPostDescriptionCard>
+                    <S.ModalSectionTitle>게시글 내용</S.ModalSectionTitle>
+                    <S.ModalPostContentCard>
+                      <S.ModalPostContentIcon aria-hidden="true">
+                        <S.MaterialIcon>notes</S.MaterialIcon>
+                      </S.ModalPostContentIcon>
+                      <S.ModalPostContentBody>
+                        <strong>작성자가 입력한 내용</strong>
+                        <S.ModalPostDescription $empty={!activePost.description}>
+                          {activePost.description || '작성된 게시글 내용이 없습니다.'}
+                        </S.ModalPostDescription>
+                      </S.ModalPostContentBody>
+                    </S.ModalPostContentCard>
+                  </S.ModalPostDescriptionCard>
 
                   <S.ModalSection>
                     <S.ModalSectionTitle>신고 내역</S.ModalSectionTitle>
+                    {actionErrorMessage ? (
+                      <S.ReportActionNotice $variant="error" role="alert">
+                        {actionErrorMessage}
+                      </S.ReportActionNotice>
+                    ) : null}
+                    {actionSuccessMessage ? (
+                      <S.ReportActionNotice $variant="success" role="status">
+                        {actionSuccessMessage}
+                      </S.ReportActionNotice>
+                    ) : null}
                     {isDetailLoading ? (
                       <S.ModalEmptyText>
                         신고 내역을 불러오는 중입니다...
@@ -944,7 +1161,10 @@ function MainPage() {
                     ) : activeReports.length > 0 ? (
                       <S.ReportList>
                         {activeReports.map((report) => (
-                          <S.ReportItem key={report.reportId}>
+                          <S.ReportItem
+                            key={report.reportId}
+                            $status={report.status}
+                          >
                             <S.ReportHeader>
                               <div>
                                 <S.ReportReporter>
@@ -963,59 +1183,160 @@ function MainPage() {
                               {report.reason || '신고 사유 없음'}
                             </S.ReportReason>
                             <S.ReportMeta>
+                              접수일: {formatOptionalReportCreatedDate(report.createdAt)}
+                            </S.ReportMeta>
+                            <S.ReportMeta>
                               처리일: {formatOptionalPostDate(report.processedAt)}
                             </S.ReportMeta>
                           </S.ReportItem>
                         ))}
                       </S.ReportList>
                     ) : (
-                      <S.ModalEmptyText>
-                        이 게시글에 접수된 신고가 없습니다.
-                      </S.ModalEmptyText>
+                      <S.ModalEmptyState>
+                        <S.ModalEmptyIcon aria-hidden="true">
+                          <S.MaterialIcon>report_off</S.MaterialIcon>
+                        </S.ModalEmptyIcon>
+                        <S.ModalEmptyContent>
+                          <strong>신고 내역이 없습니다.</strong>
+                          <span>이 게시글은 접수된 신고 없이 확인되었습니다.</span>
+                        </S.ModalEmptyContent>
+                      </S.ModalEmptyState>
                     )}
+                    {activePendingReportCount > 0 ? (
+                      <S.ReportActions>
+                        <S.SecondaryButton
+                          type="button"
+                          disabled={isDetailLoading || isDeleting || isProcessingReport}
+                          onClick={() => handleOpenReportActionConfirm('DECLINED')}
+                        >
+                          <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
+                          <span>{isProcessingReport ? '처리 중' : '전체 거절'}</span>
+                        </S.SecondaryButton>
+                        <S.DangerButton
+                          type="button"
+                          disabled={isDetailLoading || isDeleting || isProcessingReport}
+                          onClick={() => handleOpenReportActionConfirm('ACCEPTED')}
+                        >
+                          <S.MaterialIcon aria-hidden="true">gavel</S.MaterialIcon>
+                          <span>{isProcessingReport ? '처리 중' : '전체 수락'}</span>
+                        </S.DangerButton>
+                      </S.ReportActions>
+                    ) : null}
                   </S.ModalSection>
                 </S.ModalModerationPanel>
               </S.ModalReviewLayout>
             </S.ModalBody>
 
             <S.ModalFooter>
-              <S.ModalFooterMeta>
-                {nextReviewPost
-                  ? `다음 검토: 게시글 #${nextReviewPost.id}`
-                  : '현재 필터의 마지막 게시글입니다.'}
-              </S.ModalFooterMeta>
-              <S.ModalFooterActions>
-                <S.SecondaryButton
-                  type="button"
-                  disabled={!nextReviewPost || isDetailLoading || isDeleting}
-                  onClick={() => {
-                    if (nextReviewPost) {
-                      handleOpenPostDetail(nextReviewPost)
-                    }
-                  }}
-                >
-                  <S.MaterialIcon aria-hidden="true">skip_next</S.MaterialIcon>
-                  <span>다음 게시글</span>
-                </S.SecondaryButton>
-                <S.DangerButton
-                  type="button"
-                  disabled={isLoading || isDeleting}
-                  onClick={handleDeleteActivePost}
-                >
-                  <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
-                  <span>{deletingPostId === activePost.id ? '삭제 중' : '삭제'}</span>
-                </S.DangerButton>
-              </S.ModalFooterActions>
+              <S.ModalFooterControls>
+                <S.ModalFooterMeta>
+                  {nextReviewPost
+                    ? `다음 검토: 게시글 #${nextReviewPost.id}`
+                    : '현재 필터의 마지막 게시글입니다.'}
+                </S.ModalFooterMeta>
+                <S.ModalFooterActions>
+                  <S.SecondaryButton
+                    type="button"
+                    disabled={!nextReviewPost || isDetailLoading || isDeleting}
+                    onClick={() => {
+                      if (nextReviewPost) {
+                        handleOpenPostDetail(nextReviewPost)
+                      }
+                    }}
+                  >
+                    <S.MaterialIcon aria-hidden="true">skip_next</S.MaterialIcon>
+                    <span>다음 게시글</span>
+                  </S.SecondaryButton>
+                  <S.DangerButton
+                    type="button"
+                    disabled={isLoading || isDeleting}
+                    onClick={handleDeleteActivePost}
+                  >
+                    <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                    <span>{deletingPostId === activePost.id ? '삭제 중' : '삭제'}</span>
+                  </S.DangerButton>
+                </S.ModalFooterActions>
+              </S.ModalFooterControls>
             </S.ModalFooter>
           </S.ModalContent>
         </S.ModalOverlay>
       ) : null}
 
-      {actionSuccessMessage ? (
+      {visibleActionSuccessMessage ? (
         <S.ActionToast role="status">
           <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
-          <span>{actionSuccessMessage}</span>
+          <span>{visibleActionSuccessMessage}</span>
         </S.ActionToast>
+      ) : null}
+
+      {reportActionConfirm ? (
+        <S.DeleteConfirmOverlay
+          role="presentation"
+          onMouseDown={handleCloseReportActionConfirm}
+        >
+          <S.DeleteConfirmDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-action-confirm-title"
+            aria-describedby="report-action-confirm-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.DeleteConfirmIcon aria-hidden="true">
+              <S.MaterialIcon>
+                {reportActionConfirm.actionStatus === 'ACCEPTED' ? 'gavel' : 'block'}
+              </S.MaterialIcon>
+            </S.DeleteConfirmIcon>
+            <S.DeleteConfirmTitle id="report-action-confirm-title">
+              {reportActionConfirm.actionStatus === 'ACCEPTED'
+                ? '대기 신고를 모두 수락할까요?'
+                : '대기 신고를 모두 거절할까요?'}
+            </S.DeleteConfirmTitle>
+            <S.DeleteConfirmDescription id="report-action-confirm-description">
+              {reportActionConfirm.actionStatus === 'ACCEPTED'
+                ? '수락하면 이 게시글에 연결된 대기 신고가 모두 수락되고 게시글은 숨김 처리됩니다.'
+                : '거절하면 이 게시글에 연결된 대기 신고가 모두 거절되고 게시글과 사용자는 변경하지 않습니다.'}
+            </S.DeleteConfirmDescription>
+            <S.DeleteConfirmMeta>
+              게시글 ID: {activePostId} · 대기 신고{' '}
+              {formatCount(activePendingReportCount)}건
+            </S.DeleteConfirmMeta>
+
+            {hasReportActionConfirmAttempted && actionErrorMessage ? (
+              <S.DeleteConfirmNotice role="alert">
+                {actionErrorMessage}
+              </S.DeleteConfirmNotice>
+            ) : null}
+
+            <S.DeleteConfirmActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={isProcessingReport}
+                onClick={handleCloseReportActionConfirm}
+              >
+                취소
+              </S.SecondaryButton>
+              {reportActionConfirm.actionStatus === 'ACCEPTED' ? (
+                <S.DangerButton
+                  type="button"
+                  disabled={isProcessingReport}
+                  onClick={handleConfirmReportAction}
+                >
+                  <S.MaterialIcon aria-hidden="true">gavel</S.MaterialIcon>
+                  <span>{isProcessingReport ? '처리 중' : '수락하기'}</span>
+                </S.DangerButton>
+              ) : (
+                <S.PrimaryButton
+                  type="button"
+                  disabled={isProcessingReport}
+                  onClick={handleConfirmReportAction}
+                >
+                  <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
+                  <span>{isProcessingReport ? '처리 중' : '거절하기'}</span>
+                </S.PrimaryButton>
+              )}
+            </S.DeleteConfirmActions>
+          </S.DeleteConfirmDialog>
+        </S.DeleteConfirmOverlay>
       ) : null}
 
       {deleteConfirmPost ? (
@@ -1040,6 +1361,12 @@ function MainPage() {
               게시글 #{deleteConfirmPost.id}은 삭제 후 현재 관리자 화면에서
               되돌릴 수 없습니다.
             </S.DeleteConfirmDescription>
+            {getPostReports(deleteConfirmPost).length > 0 ? (
+              <S.DeleteConfirmWarning>
+                이 게시글에는 신고 내역이 있습니다. 삭제하면 신고 검토 흐름에도
+                영향을 줄 수 있습니다.
+              </S.DeleteConfirmWarning>
+            ) : null}
             <S.DeleteConfirmMeta>
               {getPostTitle(deleteConfirmPost)} · {getPostOwner(deleteConfirmPost)}
             </S.DeleteConfirmMeta>

@@ -2,7 +2,22 @@ import type { AuthErrorResponse } from './auth.types'
 
 export type AdminPostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
 
-export type AdminPostReportStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED'
+export type AdminPostReportStatus =
+  | 'PENDING'
+  | 'ACCEPTED'
+  | 'DECLINED'
+  | 'RESTORED'
+
+export type AdminPostReviewStatus = 'ALL' | 'PENDING' | 'PROCESSED' | 'NORMAL'
+
+export type AdminPostVisibilityStatus = 'ACTIVE' | 'AUTO_HIDDEN'
+
+export interface AdminPostReviewCounts {
+  all: number
+  pending: number
+  processed: number
+  normal: number
+}
 
 export interface AdminPostReportItem {
   reportId: number
@@ -10,6 +25,7 @@ export interface AdminPostReportItem {
   reporterUsername: string
   reason: string
   status: AdminPostReportStatus
+  createdAt?: string | null
   processedAt?: string | null
 }
 
@@ -17,12 +33,16 @@ export interface AdminPost {
   id: number
   name: string
   imageUrl: string
+  thumbnailUrl?: string | null
   userId: number
   username: string
   createdAt: string
   description: string
   likeCount: number
   placeName: string
+  visibilityStatus?: AdminPostVisibilityStatus
+  hiddenAt?: string | null
+  hiddenReason?: string | null
   reports?: AdminPostReportItem[]
 }
 
@@ -31,6 +51,8 @@ export interface AdminPostListRequest {
   limit?: number
   sortParam?: AdminPostSortParam
   keyword?: string
+  reviewStatus?: AdminPostReviewStatus
+  reportStatus?: AdminPostReportStatus
 }
 
 export interface AdminPostListResponse {
@@ -40,6 +62,17 @@ export interface AdminPostListResponse {
   totalCount: number
   totalPages: number
   hasNext: boolean
+  counts?: AdminPostReviewCounts
+}
+
+export interface AdminPostReportBulkActionResponse {
+  postId: number
+  status: AdminPostReportStatus
+  processedReportCount: number
+  visibilityStatus: AdminPostVisibilityStatus
+  hiddenAt?: string | null
+  hiddenReason?: string | null
+  processedAt: string
 }
 
 export type AdminPostListErrorResponse = AuthErrorResponse<
@@ -58,4 +91,13 @@ export type AdminPostDeleteErrorResponse = AuthErrorResponse<
   | 'DELETE_ERROR'
   | 'POST_DELETE_FAILED'
   | 'S3_CONNECTION_ERROR'
+>
+
+export type AdminPostReportBulkActionErrorResponse = AuthErrorResponse<
+  | 'INVALID_TOKEN'
+  | 'ACCESS_DENIED'
+  | 'POST_NOT_FOUND'
+  | 'REPORT_NOT_FOUND'
+  | 'REPORT_ALREADY_PROCESSED'
+  | 'NO_PENDING_REPORT'
 >

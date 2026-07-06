@@ -55,8 +55,8 @@ function getPlacePhotoCount(place: AdminPlaceItem) {
   return formatOptionalNumber(place.placeGrowth?.photoCount)
 }
 
-function getPlaceGrowthProgress(place: AdminPlaceItem) {
-  const progressPercent = place.placeGrowth?.progressPercent
+function getDetailGrowthProgress(placeDetail: AdminPlaceDetail) {
+  const progressPercent = placeDetail.placeGrowth?.progressPercent
 
   if (typeof progressPercent !== 'number' || !Number.isFinite(progressPercent)) {
     return null
@@ -65,20 +65,10 @@ function getPlaceGrowthProgress(place: AdminPlaceItem) {
   return Math.min(Math.max(Math.round(progressPercent), 0), 100)
 }
 
-function getPlaceGrowthProgressLabel(place: AdminPlaceItem) {
-  const progressPercent = getPlaceGrowthProgress(place)
+function getDetailGrowthProgressLabel(placeDetail: AdminPlaceDetail) {
+  const progressPercent = getDetailGrowthProgress(placeDetail)
 
   return progressPercent === null ? '-' : `${progressPercent}%`
-}
-
-function getDetailGrowthProgressLabel(placeDetail: AdminPlaceDetail) {
-  const progressPercent = placeDetail.placeGrowth?.progressPercent
-
-  if (typeof progressPercent !== 'number' || !Number.isFinite(progressPercent)) {
-    return '-'
-  }
-
-  return `${Math.min(Math.max(Math.round(progressPercent), 0), 100)}%`
 }
 
 function formatPlacePostDate(value: string) {
@@ -171,6 +161,12 @@ function PlaceManagePage() {
   const isPlaceDetailOpen = selectedPlace !== null
   const isDeletingSelectedPlace =
     selectedPlace !== null && deletingPlaceId === selectedPlace.id
+  const detailGrowthProgress = placeDetail
+    ? getDetailGrowthProgress(placeDetail)
+    : null
+  const detailGrowthProgressLabel = placeDetail
+    ? getDetailGrowthProgressLabel(placeDetail)
+    : '-'
   const placeMapMarkers = useMemo<KakaoMapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -651,10 +647,6 @@ function PlaceManagePage() {
                             <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
                             <span>사진 {getPlacePhotoCount(place)}장</span>
                           </S.PlaceStat>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
-                            <span>다음 레벨까지 {getPlaceGrowthProgressLabel(place)}</span>
-                          </S.PlaceStat>
                         </S.PlaceStatList>
                       </S.PlaceInfo>
                     </S.PlaceItem>
@@ -816,13 +808,25 @@ function PlaceManagePage() {
                                 {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
                               </span>
                             </S.PlaceStat>
-                            <S.PlaceStat>
-                              <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
-                              <span>
-                                다음 레벨까지 {getDetailGrowthProgressLabel(placeDetail)}
-                              </span>
-                            </S.PlaceStat>
                           </S.PlaceStatList>
+                          <S.DetailGrowthProgress>
+                            <S.DetailGrowthProgressHeader>
+                              <span>다음 레벨까지</span>
+                              <strong>{detailGrowthProgressLabel}</strong>
+                            </S.DetailGrowthProgressHeader>
+                            <S.DetailGrowthTrack
+                              role="progressbar"
+                              aria-label="다음 레벨 진행률"
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={detailGrowthProgress ?? undefined}
+                              aria-valuetext={detailGrowthProgressLabel}
+                            >
+                              <S.DetailGrowthBar
+                                $progress={detailGrowthProgress ?? 0}
+                              />
+                            </S.DetailGrowthTrack>
+                          </S.DetailGrowthProgress>
                         </S.DetailSection>
 
                         <S.DetailSection>

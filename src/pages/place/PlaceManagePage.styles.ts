@@ -568,6 +568,47 @@ export const DetailSectionTitle = styled.h4`
   font-weight: 800;
 `
 
+export const DetailGrowthProgress = styled.div`
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const DetailGrowthProgressHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+
+  strong {
+    flex-shrink: 0;
+    color: ${neutral.primary};
+    font-size: 13px;
+  }
+`
+
+export const DetailGrowthTrack = styled.div`
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: ${neutral.surfaceHighest};
+`
+
+export const DetailGrowthBar = styled.div<{ $progress: number }>`
+  width: ${({ $progress }) => `${$progress}%`};
+  height: 100%;
+  border-radius: inherit;
+  background: ${neutral.primary};
+  transition: width 180ms ease;
+`
+
 export const DetailPostList = styled.div`
   display: flex;
   flex-direction: column;

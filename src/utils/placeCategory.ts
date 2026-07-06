@@ -13,6 +13,15 @@ const MARKER_IMAGE_URL_BY_KIND = {
   other: new URL('../assets/placeMarkers/EtcPing.svg', import.meta.url).href,
 }
 
+const FLAME_MARKER_IMAGE_URL_BY_KIND = {
+  food: new URL('../assets/placeMarkers/foodPingFlame.svg', import.meta.url).href,
+  music: new URL('../assets/placeMarkers/musicPingFlame.svg', import.meta.url).href,
+  fashion: new URL('../assets/placeMarkers/fashionPingFlame.svg', import.meta.url)
+    .href,
+  game: new URL('../assets/placeMarkers/gamePingFlame.svg', import.meta.url).href,
+  other: new URL('../assets/placeMarkers/etcPingFlame.svg', import.meta.url).href,
+}
+
 const CATEGORY_LABEL_BY_KEY: Record<string, string> = {
   FOOD: '음식',
   RESTAURANT: '음식',
@@ -108,4 +117,8 @@ export function getPlaceCategoryIconName(place: PlaceCategorySource) {
 
 export function getPlaceCategoryMarkerImageUrl(place: PlaceCategorySource) {
   return MARKER_IMAGE_URL_BY_KIND[getPlaceCategoryKind(place)]
+}
+
+export function getPlaceCategoryFlameMarkerImageUrl(place: PlaceCategorySource) {
+  return FLAME_MARKER_IMAGE_URL_BY_KIND[getPlaceCategoryKind(place)]
 }

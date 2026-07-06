@@ -10,6 +10,7 @@ import type { MutableRefObject } from 'react'
 import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
 import {
+  getPlaceCategoryFlameMarkerImageUrl,
   getPlaceCategoryLabel,
   getPlaceCategoryMarkerImageUrl,
   PLACE_CATEGORY_ACCENT_COLOR,
@@ -72,6 +73,13 @@ const MAX_MAP_LEVEL = 14
 const INITIAL_MAP_LEVEL = 3
 const WHEEL_ZOOM_THROTTLE_MS = 140
 const DEFAULT_MAP_WIDTH = 960
+const LEVEL_MARKER_SCALE = 1.2
+const LEVEL_MARKER_SCALE_STEPS = [
+  { minLevel: 20, scale: LEVEL_MARKER_SCALE ** 3 },
+  { minLevel: 15, scale: LEVEL_MARKER_SCALE ** 2 },
+  { minLevel: 5, scale: LEVEL_MARKER_SCALE },
+]
+const FLAME_MARKER_MIN_LEVEL = 10
 const DEFAULT_CENTER = {
   latitude: 37.5665,
   longitude: 126.978,
@@ -96,6 +104,7 @@ export interface KakaoMapMarker {
   label: string
   category?: string
   categoryName?: string
+  level?: number
 }
 
 export interface KakaoMapHandle {
@@ -543,12 +552,33 @@ function getMarkerScale(mapLevel: number, mapWidthScale: number) {
   return Math.min(1.18, Math.max(0.7, zoomScale * mapWidthScale))
 }
 
+function getPlaceLevelScale(level?: number) {
+  if (typeof level !== 'number' || !Number.isFinite(level)) {
+    return 1
+  }
+
+  const levelScaleStep = LEVEL_MARKER_SCALE_STEPS.find(
+    (step) => level >= step.minLevel
+  )
+
+  return levelScaleStep?.scale ?? 1
+}
+
+function shouldUseFlameMarker(level?: number) {
+  return (
+    typeof level === 'number' &&
+    Number.isFinite(level) &&
+    level >= FLAME_MARKER_MIN_LEVEL
+  )
+}
+
 function getMarkerDimensions(
   isActive: boolean,
   mapLevel: number,
-  mapWidthScale: number
+  mapWidthScale: number,
+  level?: number
 ) {
-  const scale = getMarkerScale(mapLevel, mapWidthScale)
+  const scale = getMarkerScale(mapLevel, mapWidthScale) * getPlaceLevelScale(level)
 
   return {
     imageWidth: Math.round((isActive ? 50 : 44) * scale),
@@ -572,9 +602,16 @@ function createMarkerContent(
   mapWidthScale: number,
   onMarkerClickRef: MarkerClickRef
 ) {
-  const markerDimensions = getMarkerDimensions(isActive, mapLevel, mapWidthScale)
+  const markerDimensions = getMarkerDimensions(
+    isActive,
+    mapLevel,
+    mapWidthScale,
+    marker.level
+  )
   const categoryLabel = getPlaceCategoryLabel(marker)
-  const markerImageUrl = getPlaceCategoryMarkerImageUrl(marker)
+  const markerImageUrl = shouldUseFlameMarker(marker.level)
+    ? getPlaceCategoryFlameMarkerImageUrl(marker)
+    : getPlaceCategoryMarkerImageUrl(marker)
   const markerLabel =
     categoryLabel === '카테고리 없음'
       ? marker.label

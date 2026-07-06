@@ -184,6 +184,7 @@ function PlaceManagePage() {
         label: place.name,
         category: place.category,
         categoryName: place.categoryName,
+        level: place.placeGrowth?.level,
       })),
     [places]
   )

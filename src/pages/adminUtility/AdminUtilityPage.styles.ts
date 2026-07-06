@@ -43,7 +43,7 @@ export const Eyebrow = styled.p`
   margin: 0 0 6px;
   color: ${neutral.primary};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0;
 `
 
@@ -51,7 +51,7 @@ export const IntroTitle = styled.h1`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.25;
 `
 
@@ -78,7 +78,7 @@ export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
   color: ${({ $tone }) =>
     $tone === 'warning' ? neutral.warningText : neutral.primary};
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
 `
 
@@ -118,12 +118,12 @@ export const ResultSummary = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.5;
 
   strong {
     color: ${neutral.strongText};
-    font-weight: 800;
+    font-weight: 600;
   }
 `
 
@@ -147,7 +147,7 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
   color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
   font: inherit;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 
   &:hover {
@@ -211,7 +211,7 @@ export const FilterField = styled.label`
   gap: 6px;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
 `
 
 const inputControlStyle = css`
@@ -306,7 +306,7 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
   color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
   font: inherit;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -344,7 +344,7 @@ export const MetricLabel = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 `
 
 export const MetricValue = styled.strong`
@@ -353,7 +353,7 @@ export const MetricValue = styled.strong`
   overflow: hidden;
   color: ${neutral.strongText};
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -397,7 +397,7 @@ export const SectionTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const SectionBody = styled.div`
@@ -451,7 +451,7 @@ const buttonStyle = css`
   border-radius: 8px;
   font: inherit;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 
   &:disabled {
@@ -501,7 +501,7 @@ export const TableHeadCell = styled.th`
   padding: 12px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
-  font-weight: 800;
+  font-weight: 600;
   text-align: left;
   white-space: nowrap;
 `
@@ -534,7 +534,7 @@ export const TableStrongText = styled.strong`
   display: block;
   color: ${neutral.strongText};
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.4;
 `
 
@@ -601,7 +601,7 @@ export const TableStatusBadge = styled.span<{
     return neutral.error
   }};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
 `
 
@@ -629,7 +629,7 @@ export const Notice = styled.div<{ $variant?: 'error' | 'info' }>`
     $variant === 'error' ? neutral.errorTint : neutral.surfaceLow};
   color: ${({ $variant }) => ($variant === 'error' ? neutral.error : neutral.muted)};
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.5;
 `
 
@@ -649,7 +649,7 @@ export const ActionLabel = styled.label`
   gap: 7px;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
 `
 
 export const TextArea = styled.textarea`
@@ -697,7 +697,7 @@ export const PaginationStatus = styled.span`
   min-width: 96px;
   color: ${neutral.muted};
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   text-align: center;
 `
 
@@ -715,7 +715,7 @@ export const DetailEmpty = styled.div`
   strong {
     color: ${neutral.strongText};
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 600;
   }
 
   span {
@@ -747,7 +747,7 @@ export const DetailTitle = styled.strong`
   overflow: hidden;
   color: ${neutral.strongText};
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -757,7 +757,7 @@ export const DetailMeta = styled.span`
   display: block;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
 `
 
 export const DetailStack = styled.div`
@@ -778,7 +778,7 @@ export const DetailGroupTitle = styled.h3`
   margin: 0 0 10px;
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const DetailList = styled.dl`
@@ -804,7 +804,7 @@ export const DetailRow = styled.div`
   dt {
     color: ${neutral.muted};
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 500;
   }
 
   dd {
@@ -812,7 +812,7 @@ export const DetailRow = styled.div`
     margin: 0;
     color: ${neutral.text};
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 400;
     line-height: 1.45;
     overflow-wrap: anywhere;
   }
@@ -858,7 +858,7 @@ export const ConfirmTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.35;
 `
 
@@ -880,13 +880,13 @@ export const ConfirmMeta = styled.div`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.5;
 
   span {
     color: ${neutral.muted};
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 500;
   }
 `
 
@@ -928,7 +928,7 @@ export const PolicyText = styled.div`
     display: block;
     color: ${neutral.strongText};
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.4;
   }
 
@@ -958,7 +958,7 @@ export const Field = styled.label`
   gap: 7px;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
 `
 
 export const FieldInput = styled.input`
@@ -1004,7 +1004,7 @@ export const ToggleText = styled.span`
     display: block;
     color: ${neutral.strongText};
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.4;
   }
 

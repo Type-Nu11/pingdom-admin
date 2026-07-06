@@ -32,7 +32,7 @@ const ADMIN_POST_REVIEW_FILTERS: Array<{
   label: string
 }> = [
   { value: 'ALL', label: '모든 상태' },
-  { value: 'PENDING', label: '처리 대기' },
+  { value: 'PENDING', label: '신고 받음' },
   { value: 'PROCESSED', label: '신고 이력' },
   { value: 'NORMAL', label: '신고 없음' },
 ]
@@ -46,7 +46,7 @@ const ADMIN_POST_REVIEW_COUNT_KEYS: Record<
   NORMAL: 'normal',
 }
 const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
-  PENDING: '처리 대기',
+  PENDING: '미처리',
   ACCEPTED: '수락',
   DECLINED: '거절',
   RESTORED: '복구',
@@ -137,7 +137,7 @@ function getPostStatusLabel(post: AdminPost) {
   const pendingReportCount = getPendingPostReports(post).length
 
   if (pendingReportCount > 0) {
-    return `처리 대기 ${pendingReportCount}`
+    return '신고 받음'
   }
 
   if (post.visibilityStatus === 'AUTO_HIDDEN') {
@@ -156,7 +156,7 @@ function getPostReportSummaryLabel(post: AdminPost) {
   const pendingReportCount = getPendingPostReports(post).length
 
   if (pendingReportCount > 0) {
-    return `처리 대기 ${pendingReportCount}건`
+    return `미처리 신고 ${pendingReportCount}건`
   }
 
   if (reports.length > 0) {
@@ -1145,7 +1145,7 @@ function MainPage() {
                       <S.ModalMetricBadge
                         $tone={activePendingReportCount > 0 ? 'reported' : 'neutral'}
                       >
-                        처리 대기 {formatCount(activePendingReportCount)}
+                        미처리 신고 {formatCount(activePendingReportCount)}
                       </S.ModalMetricBadge>
                       <S.ModalMetricBadge
                         $tone={activeReports.length > 0 ? 'processed' : 'neutral'}
@@ -1332,16 +1332,16 @@ function MainPage() {
             </S.DeleteConfirmIcon>
             <S.DeleteConfirmTitle id="report-action-confirm-title">
               {reportActionConfirm.actionStatus === 'ACCEPTED'
-                ? '대기 신고를 모두 수락할까요?'
-                : '대기 신고를 모두 거절할까요?'}
+                ? '미처리 신고를 모두 수락할까요?'
+                : '미처리 신고를 모두 거절할까요?'}
             </S.DeleteConfirmTitle>
             <S.DeleteConfirmDescription id="report-action-confirm-description">
               {reportActionConfirm.actionStatus === 'ACCEPTED'
-                ? '수락하면 이 게시글에 연결된 대기 신고가 모두 수락되고 게시글은 숨김 처리됩니다.'
-                : '거절하면 이 게시글에 연결된 대기 신고가 모두 거절되고 게시글과 사용자는 변경하지 않습니다.'}
+                ? '수락하면 이 게시글에 연결된 미처리 신고가 모두 수락되고 게시글은 숨김 처리됩니다.'
+                : '거절하면 이 게시글에 연결된 미처리 신고가 모두 거절되고 게시글과 사용자는 변경하지 않습니다.'}
             </S.DeleteConfirmDescription>
             <S.DeleteConfirmMeta>
-              게시글 ID: {activePostId} · 대기 신고{' '}
+              게시글 ID: {activePostId} · 미처리 신고{' '}
               {formatCount(activePendingReportCount)}건
             </S.DeleteConfirmMeta>
 

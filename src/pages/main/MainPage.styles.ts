@@ -822,7 +822,7 @@ export const MediaTitle = styled.h3`
 `
 
 export const StatusBadge = styled.span<{
-  $tone?: 'normal' | 'reported'
+  $tone?: 'normal' | 'reported' | 'processed' | 'hidden'
 }>`
   flex-shrink: 0;
   padding: 4px 8px;
@@ -849,6 +849,21 @@ export const StatusBadge = styled.span<{
       color: ${neutral.error};
     `}
 
+  ${({ $tone }) =>
+    $tone === 'processed' &&
+    css`
+      border-color: ${neutral.info};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.info};
+    `}
+
+  ${({ $tone }) =>
+    $tone === 'hidden' &&
+    css`
+      border-color: ${neutral.error};
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.error};
+    `}
 `
 
 export const MediaMetaList = styled.div`
@@ -1277,11 +1292,20 @@ export const ReportList = styled.ul`
   list-style: none;
 `
 
-export const ReportItem = styled.li`
+export const ReportItem = styled.li<{
+  $status?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'RESTORED'
+}>`
   padding: 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
+
+  ${({ $status }) =>
+    $status === 'PENDING' &&
+    css`
+      border-color: ${neutral.error};
+      box-shadow: inset 3px 0 0 ${neutral.error};
+    `}
 `
 
 export const ReportHeader = styled.div`

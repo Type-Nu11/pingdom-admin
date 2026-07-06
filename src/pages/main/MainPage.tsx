@@ -22,14 +22,15 @@ const ADMIN_POST_SORT_OPTIONS = [
   { value: 'OLDEST', label: '오래된순' },
   { value: 'MOST_LIKED', label: '좋아요순' },
 ]
-type AdminPostReviewFilter = 'ALL' | 'REPORTED' | 'NORMAL'
-type AdminPostStatusTone = 'normal' | 'reported'
+type AdminPostReviewFilter = 'ALL' | 'PENDING' | 'REPORTED' | 'NORMAL'
+type AdminPostStatusTone = 'normal' | 'reported' | 'processed' | 'hidden'
 
 const ADMIN_POST_REVIEW_FILTERS: Array<{
   value: AdminPostReviewFilter
   label: string
 }> = [
   { value: 'ALL', label: '모든 상태' },
+  { value: 'PENDING', label: '처리 대기' },
   { value: 'REPORTED', label: '신고 이력' },
   { value: 'NORMAL', label: '신고 없음' },
 ]
@@ -73,6 +74,10 @@ function getPostReports(post: AdminPost) {
   return Array.isArray(post.reports) ? post.reports : []
 }
 
+function getPendingPostReports(post: AdminPost) {
+  return getPostReports(post).filter((report) => report.status === 'PENDING')
+}
+
 function getReporterName(report: AdminPostReportItem) {
   if (report.reporterUsername) {
     return report.reporterUsername
@@ -99,15 +104,52 @@ function getPostVisibilityLabel(post: AdminPost) {
 
 function getPostStatusTone(post: AdminPost): AdminPostStatusTone {
   const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
 
-  return reports.length > 0 ? 'reported' : 'normal'
+  if (pendingReportCount > 0) {
+    return 'reported'
+  }
+
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return 'hidden'
+  }
+
+  if (reports.length > 0) {
+    return 'processed'
+  }
+
+  return 'normal'
 }
 
 function getPostStatusLabel(post: AdminPost) {
-  const reportCount = getPostReports(post).length
+  const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
 
-  if (reportCount > 0) {
-    return `신고 이력 ${reportCount}`
+  if (pendingReportCount > 0) {
+    return `처리 대기 ${pendingReportCount}`
+  }
+
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return '숨김 처리'
+  }
+
+  if (reports.length > 0) {
+    return `처리 완료 ${reports.length}`
+  }
+
+  return '신고 없음'
+}
+
+function getPostReportSummaryLabel(post: AdminPost) {
+  const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
+
+  if (pendingReportCount > 0) {
+    return `처리 대기 ${pendingReportCount}건`
+  }
+
+  if (reports.length > 0) {
+    return `처리 완료 ${reports.length}건`
   }
 
   return '신고 없음'
@@ -122,6 +164,11 @@ function isPostMatchingReviewFilter(
   filter: AdminPostReviewFilter
 ) {
   const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
+
+  if (filter === 'PENDING') {
+    return pendingReportCount > 0
+  }
 
   if (filter === 'REPORTED') {
     return reports.length > 0
@@ -296,6 +343,9 @@ function MainPage() {
   const activePostId = activePost?.id ?? null
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
+  const activePendingReportCount = activePost
+    ? getPendingPostReports(activePost).length
+    : 0
   const currentPageNumber = page
   const isDeleting = deletingPostId !== null
   const isProcessingReport = processingReportId !== null
@@ -318,6 +368,7 @@ function MainPage() {
         },
         {
           ALL: 0,
+          PENDING: 0,
           REPORTED: 0,
           NORMAL: 0,
         }
@@ -813,80 +864,76 @@ function MainPage() {
 
           {!isError && filteredPosts.length > 0 ? (
             <S.MediaGrid>
-              {filteredPosts.map((post) => {
-                const reportCount = getPostReports(post).length
+              {filteredPosts.map((post) => (
+                <S.MediaCard
+                  key={post.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleOpenPostDetail(post)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      handleOpenPostDetail(post)
+                    }
+                  }}
+                >
+                  <AdminPostImage
+                    key={getPostImageUrl(post) || `post-image-${post.id}`}
+                    post={post}
+                  />
 
-                return (
-                  <S.MediaCard
-                    key={post.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleOpenPostDetail(post)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        handleOpenPostDetail(post)
-                      }
-                    }}
-                  >
-                    <AdminPostImage
-                      key={getPostImageUrl(post) || `post-image-${post.id}`}
-                      post={post}
-                    />
+                  <S.MediaBody>
+                    <S.MediaTitleRow>
+                      <S.MediaTitle>{getPostTitle(post)}</S.MediaTitle>
+                      <S.StatusBadge $tone={getPostStatusTone(post)}>
+                        {getPostStatusLabel(post)}
+                      </S.StatusBadge>
+                    </S.MediaTitleRow>
 
-                    <S.MediaBody>
-                      <S.MediaTitleRow>
-                        <S.MediaTitle>{getPostTitle(post)}</S.MediaTitle>
-                        <S.StatusBadge $tone={getPostStatusTone(post)}>
-                          {getPostStatusLabel(post)}
-                        </S.StatusBadge>
-                      </S.MediaTitleRow>
+                    <S.MediaMetaList>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
+                        <span>{getPostOwner(post)}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">tag</S.MaterialIcon>
+                        <span>게시글 ID: {post.id}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
+                        <span>{post.placeName || '장소 정보 없음'}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">favorite</S.MaterialIcon>
+                        <span>좋아요 {formatCount(post.likeCount)}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
+                        <span>{getPostReportSummaryLabel(post)}</span>
+                      </S.MediaMeta>
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
+                        <span>{formatPostDate(post.createdAt)}</span>
+                      </S.MediaMeta>
+                      {post.description ? (
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">notes</S.MaterialIcon>
+                          <span>{post.description}</span>
+                        </S.MediaMeta>
+                      ) : null}
+                      <S.MediaMeta>
+                        <S.MaterialIcon aria-hidden="true">badge</S.MaterialIcon>
+                        <span>사용자 ID: {post.userId}</span>
+                      </S.MediaMeta>
+                    </S.MediaMetaList>
 
-                      <S.MediaMetaList>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
-                          <span>{getPostOwner(post)}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">tag</S.MaterialIcon>
-                          <span>게시글 ID: {post.id}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
-                          <span>{post.placeName || '장소 정보 없음'}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">favorite</S.MaterialIcon>
-                          <span>좋아요 {formatCount(post.likeCount)}</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
-                          <span>신고 {formatCount(reportCount)}건</span>
-                        </S.MediaMeta>
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
-                          <span>{formatPostDate(post.createdAt)}</span>
-                        </S.MediaMeta>
-                        {post.description ? (
-                          <S.MediaMeta>
-                            <S.MaterialIcon aria-hidden="true">notes</S.MaterialIcon>
-                            <span>{post.description}</span>
-                          </S.MediaMeta>
-                        ) : null}
-                        <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">badge</S.MaterialIcon>
-                          <span>사용자 ID: {post.userId}</span>
-                        </S.MediaMeta>
-                      </S.MediaMetaList>
-
-                      <S.CardHint>
-                        <span>클릭해서 상세 보기</span>
-                        <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
-                      </S.CardHint>
-                    </S.MediaBody>
-                  </S.MediaCard>
-                )
-              })}
+                    <S.CardHint>
+                      <span>클릭해서 상세 보기</span>
+                      <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
+                    </S.CardHint>
+                  </S.MediaBody>
+                </S.MediaCard>
+              ))}
             </S.MediaGrid>
           ) : null}
 
@@ -1005,7 +1052,8 @@ function MainPage() {
                       {getPostStatusLabel(activePost)}
                     </S.StatusBadge>
                     <span>
-                      신고 {formatCount(activeReports.length)}건 · 좋아요{' '}
+                      처리 대기 {formatCount(activePendingReportCount)}건 · 신고 이력{' '}
+                      {formatCount(activeReports.length)}건 · 좋아요{' '}
                       {formatCount(activePost.likeCount)}
                     </span>
                   </S.ModalStatusRow>
@@ -1064,7 +1112,10 @@ function MainPage() {
                     ) : activeReports.length > 0 ? (
                       <S.ReportList>
                         {activeReports.map((report) => (
-                          <S.ReportItem key={report.reportId}>
+                          <S.ReportItem
+                            key={report.reportId}
+                            $status={report.status}
+                          >
                             <S.ReportHeader>
                               <div>
                                 <S.ReportReporter>

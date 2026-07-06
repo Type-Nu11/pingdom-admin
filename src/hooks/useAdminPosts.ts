@@ -93,6 +93,13 @@ function shouldClearAuth(error: unknown) {
   )
 }
 
+function hasOwnRequestProperty(
+  request: Partial<LatestAdminPostListRequest>,
+  property: keyof LatestAdminPostListRequest
+) {
+  return Object.prototype.hasOwnProperty.call(request, property)
+}
+
 function applyPostReportBulkActionResult(
   post: AdminPost,
   result: AdminPostReportBulkActionResponse
@@ -207,14 +214,14 @@ export function useAdminPosts({
       limit: request.limit ?? latestListRequestRef.current.limit,
       sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
       keyword: request.keyword ?? latestListRequestRef.current.keyword,
-      reviewStatus: Object.hasOwn(request, 'reportStatus')
+      reviewStatus: hasOwnRequestProperty(request, 'reportStatus')
         ? undefined
-        : Object.hasOwn(request, 'reviewStatus')
+        : hasOwnRequestProperty(request, 'reviewStatus')
           ? request.reviewStatus
           : latestListRequestRef.current.reviewStatus,
-      reportStatus: Object.hasOwn(request, 'reviewStatus')
+      reportStatus: hasOwnRequestProperty(request, 'reviewStatus')
         ? undefined
-        : Object.hasOwn(request, 'reportStatus')
+        : hasOwnRequestProperty(request, 'reportStatus')
           ? request.reportStatus
           : latestListRequestRef.current.reportStatus,
     }

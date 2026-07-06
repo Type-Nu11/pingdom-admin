@@ -626,12 +626,22 @@ export const ReviewSearchField = styled.div`
 export const ReviewSearchInput = styled.input`
   ${controlStyle}
   width: 100%;
-  padding: 0 14px 0 40px;
+  padding: 0 44px 0 40px;
   border: 1px solid ${neutral.border};
   outline: 1px solid transparent;
   background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+    display: none;
+  }
+
+  &::-ms-clear {
+    display: none;
+  }
 
   &::placeholder {
     color: ${neutral.placeholder};
@@ -641,6 +651,44 @@ export const ReviewSearchInput = styled.input`
     border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+`
+
+export const SearchClearButton = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  ${MaterialIcon} {
+    font-size: 16px;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 600,
+      'GRAD' 0,
+      'opsz' 16;
+  }
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
   }
 `
 

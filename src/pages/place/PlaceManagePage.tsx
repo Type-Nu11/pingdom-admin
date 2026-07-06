@@ -590,6 +590,16 @@ function PlaceManagePage() {
                     handleSearchQueryChange(event.target.value)
                   }
                 />
+                {placeSearchQuery ? (
+                  <S.SearchClearButton
+                    type="button"
+                    aria-label="검색어 지우기"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={handleClearPlaceFilters}
+                  >
+                    <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                  </S.SearchClearButton>
+                ) : null}
               </S.SearchField>
 
               <S.PanelResultSummary>

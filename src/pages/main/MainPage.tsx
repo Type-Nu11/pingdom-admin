@@ -843,6 +843,16 @@ function MainPage() {
                 aria-label="게시글 ID, 제목, 작성자, 장소, 설명 검색"
                 onChange={(event) => handleSearchQueryChange(event.target.value)}
               />
+              {postSearchQuery ? (
+                <S.SearchClearButton
+                  type="button"
+                  aria-label="검색어 지우기"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={handleClearPostKeyword}
+                >
+                  <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                </S.SearchClearButton>
+              ) : null}
             </S.ReviewSearchField>
           </S.ReviewToolbar>
 

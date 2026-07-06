@@ -439,10 +439,6 @@ function PlaceManagePage() {
       return
     }
 
-    if (deleteConfirmPlace.postCount > 0) {
-      return
-    }
-
     setHasDeleteConfirmAttempted(true)
 
     void deletePlace(deleteConfirmPlace.id).then((isSuccess) => {
@@ -1039,7 +1035,7 @@ function PlaceManagePage() {
             </S.DeleteConfirmMeta>
             <S.DeleteConfirmWarning>
               {deleteConfirmPlace.postCount > 0
-                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개가 있어 현재 장소를 삭제할 수 없습니다. 게시글 연결 정책이 정리된 뒤 다시 시도해 주세요.`
+                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개가 영향을 받을 수 있습니다. 삭제 전 연결 상태를 확인해 주세요.`
                 : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
             </S.DeleteConfirmWarning>
 
@@ -1059,14 +1055,10 @@ function PlaceManagePage() {
               </S.SecondaryButton>
               <S.DangerButton
                 type="button"
-                disabled={deletingPlaceId !== null || deleteConfirmPlace.postCount > 0}
+                disabled={deletingPlaceId !== null}
                 onClick={handleConfirmDeletePlace}
               >
-                {deleteConfirmPlace.postCount > 0
-                  ? '삭제 불가'
-                  : deletingPlaceId === deleteConfirmPlace.id
-                    ? '삭제 중'
-                    : '삭제하기'}
+                {deletingPlaceId === deleteConfirmPlace.id ? '삭제 중' : '삭제하기'}
               </S.DangerButton>
             </S.DeleteConfirmActions>
           </S.DeleteConfirmDialog>

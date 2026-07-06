@@ -24,10 +24,12 @@ function getAdminBannedUserListParams({
   sortDirection,
 }: Required<Pick<AdminBannedUserListRequest, 'page' | 'limit' | 'keyword'>> &
   Omit<AdminBannedUserListRequest, 'page' | 'limit' | 'keyword'>) {
+  const normalizedKeyword = keyword.trim()
+
   return {
     page,
     limit,
-    keyword: keyword || undefined,
+    keyword: normalizedKeyword || undefined,
     banType,
     from,
     to,

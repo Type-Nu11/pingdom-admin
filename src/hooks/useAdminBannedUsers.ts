@@ -126,6 +126,7 @@ export function useAdminBannedUsers({
       setIsError(false)
       setErrorMessage('')
       setActionErrorMessage('')
+      setActionSuccessMessage('')
 
       const nextRequest = {
         page: request.page ?? latestListRequestRef.current.page,
@@ -252,6 +253,7 @@ export function useAdminBannedUsers({
   const releaseUserBan = useCallback(
     async (userId: number, payload: AdminUserBanReleaseRequest = {}) => {
       if (releasingUserIdRef.current !== null) {
+        setActionErrorMessage('이미 밴 해제 처리가 진행 중입니다.')
         return null
       }
 
@@ -259,6 +261,7 @@ export function useAdminBannedUsers({
       setReleasingUserId(userId)
       setActionErrorMessage('')
       setActionSuccessMessage('')
+      const nextPageAfterRelease = users.length === 1 && page > 1 ? page - 1 : page
 
       try {
         const data = await releaseAdminUserBan(userId, payload)
@@ -268,7 +271,9 @@ export function useAdminBannedUsers({
           prevDetail?.userId === userId ? null : prevDetail
         )
 
-        const isRefreshSuccess = await fetchAdminBannedUsers()
+        const isRefreshSuccess = await fetchAdminBannedUsers({
+          page: nextPageAfterRelease,
+        })
 
         if (!isRefreshSuccess) {
           setActionErrorMessage('밴은 해제됐지만 목록을 다시 불러오지 못했습니다.')
@@ -294,7 +299,7 @@ export function useAdminBannedUsers({
         }
       }
     },
-    [clearAuth, fetchAdminBannedUsers]
+    [clearAuth, fetchAdminBannedUsers, page, users.length]
   )
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import {
 } from '../api/adminUserBanApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
+import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type {
   AdminBannedUserDetail,
@@ -192,7 +193,7 @@ export function useAdminBannedUsers({
           }
         }
 
-        console.error('관리자 밴 유저 목록 조회 실패', error)
+        logDebugError('관리자 밴 유저 목록 조회 실패', error)
 
         return false
       } finally {
@@ -257,7 +258,7 @@ export function useAdminBannedUsers({
           }
         }
 
-        console.error('관리자 밴 유저 상세 조회 실패', error)
+        logDebugError('관리자 밴 유저 상세 조회 실패', error)
 
         return null
       } finally {
@@ -304,7 +305,7 @@ export function useAdminBannedUsers({
           }
         }
 
-        console.error('관리자 사용자 제재 상태 조회 실패', error)
+        logDebugError('관리자 사용자 제재 상태 조회 실패', error)
 
         return null
       } finally {
@@ -353,7 +354,7 @@ export function useAdminBannedUsers({
           }
         }
 
-        console.error('관리자 사용자 제재 이력 조회 실패', error)
+        logDebugError('관리자 사용자 제재 이력 조회 실패', error)
 
         return null
       } finally {
@@ -413,7 +414,7 @@ export function useAdminBannedUsers({
           clearAuth()
         }
 
-        console.error('관리자 사용자 밴 해제 실패', error)
+        logDebugError('관리자 사용자 밴 해제 실패', error)
 
         return null
       } finally {
@@ -466,7 +467,7 @@ export function useAdminBannedUsers({
           clearAuth()
         }
 
-        console.error('관리자 사용자 밴 처리 실패', error)
+        logDebugError('관리자 사용자 밴 처리 실패', error)
 
         return null
       } finally {

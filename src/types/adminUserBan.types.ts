@@ -1,14 +1,7 @@
 import type { AuthErrorResponse } from './auth.types'
 
 export type AdminBanType = 'PERMANENT' | 'TEMPORARY'
-export type AdminBannedUserSortBy = 'BANNED_AT' | 'EXPIRES_AT' | 'USER_ID'
-export type AdminBannedUserSortDirection = 'DESC' | 'ASC'
-
-export interface AdminBannedUserCounts {
-  total: number
-  permanent: number
-  temporary: number
-}
+export type AdminUserSanctionAction = 'APPLIED' | 'RELEASED' | 'EXPIRED'
 
 export interface AdminBannedUserItem {
   userId: number
@@ -39,11 +32,6 @@ export interface AdminBannedUserListRequest {
   page?: number
   limit?: number
   keyword?: string
-  banType?: AdminBanType
-  from?: string
-  to?: string
-  sortBy?: AdminBannedUserSortBy
-  sortDirection?: AdminBannedUserSortDirection
 }
 
 export interface AdminBannedUserListResponse {
@@ -53,7 +41,6 @@ export interface AdminBannedUserListResponse {
   totalCount: number
   totalPages: number
   hasNext: boolean
-  counts?: AdminBannedUserCounts
 }
 
 export interface AdminUserBanReleaseRequest {
@@ -67,6 +54,63 @@ export interface AdminUserBanReleaseResponse {
   reason?: string | null
 }
 
+export interface AdminUserBanRequest {
+  reason?: string
+  expiresAt?: string
+  durationDays?: number
+}
+
+export interface AdminUserBanResponse {
+  userId: number
+  banned: boolean
+  bannedAt?: string | null
+  reason?: string | null
+  banType: AdminBanType
+  banExpiresAt?: string | null
+}
+
+export interface AdminUserSanctionStatus {
+  userId: number
+  username: string
+  banned: boolean
+  banType?: AdminBanType | null
+  bannedAt?: string | null
+  banExpiresAt?: string | null
+  banReason?: string | null
+}
+
+export interface AdminUserSanctionHistoryItem {
+  historyId: number
+  targetUserId: number
+  targetUsername?: string | null
+  banType: AdminBanType
+  action: AdminUserSanctionAction
+  reason?: string | null
+  startedAt?: string | null
+  endedAt?: string | null
+  adminUserId?: number | null
+  adminUsername?: string | null
+  processedAt?: string | null
+}
+
+export interface AdminUserSanctionHistoryRequest {
+  page?: number
+  limit?: number
+  banType?: AdminBanType
+  action?: AdminUserSanctionAction
+  from?: string
+  to?: string
+}
+
+export interface AdminUserSanctionHistoryResponse {
+  histories: AdminUserSanctionHistoryItem[]
+  page: number
+  limit: number
+  totalCount: number
+  totalPages: number
+  hasNext: boolean
+}
+
 export type AdminBannedUserListErrorResponse = AuthErrorResponse<
   'INVALID_TOKEN' | 'ACCESS_DENIED'
 >
@@ -77,4 +121,8 @@ export type AdminBannedUserDetailErrorResponse = AuthErrorResponse<
 
 export type AdminUserBanReleaseErrorResponse = AuthErrorResponse<
   'INVALID_TOKEN' | 'ACCESS_DENIED' | 'USER_NOT_FOUND' | 'USER_NOT_BANNED'
+>
+
+export type AdminUserBanErrorResponse = AuthErrorResponse<
+  'INVALID_TOKEN' | 'ACCESS_DENIED' | 'USER_NOT_FOUND' | 'USER_ALREADY_BANNED'
 >

@@ -91,6 +91,10 @@ interface UseAdminBannedUsersOptions {
   limit?: number
 }
 
+interface FetchBanTargetStatusOptions {
+  resetActionMessage?: boolean
+}
+
 export function useAdminBannedUsers({
   initialPage = DEFAULT_ADMIN_BANNED_USER_PAGE,
   limit = DEFAULT_ADMIN_BANNED_USER_LIMIT,
@@ -266,15 +270,21 @@ export function useAdminBannedUsers({
   )
 
   const fetchBanTargetStatus = useCallback(
-    async (userId: number) => {
+    async (
+      userId: number,
+      { resetActionMessage = true }: FetchBanTargetStatusOptions = {}
+    ) => {
       const requestId = latestBanTargetStatusRequestIdRef.current + 1
       latestBanTargetStatusRequestIdRef.current = requestId
 
       setIsBanTargetStatusLoading(true)
       setBanTargetStatus(null)
       setBanTargetStatusErrorMessage('')
-      setActionErrorMessage('')
-      setActionSuccessMessage('')
+
+      if (resetActionMessage) {
+        setActionErrorMessage('')
+        setActionSuccessMessage('')
+      }
 
       try {
         const data = await getAdminUserSanctionStatus(userId)
@@ -373,9 +383,13 @@ export function useAdminBannedUsers({
 
         setUsers((prevUsers) => prevUsers.filter((item) => item.userId !== userId))
         setSelectedUserDetail((prevDetail) =>
-          prevDetail?.userId === userId ? null : prevDetail
+          prevDetail?.userId === userId
+            ? {
+                ...prevDetail,
+                banned: false,
+              }
+            : prevDetail
         )
-        setSanctionHistories([])
 
         const isRefreshSuccess = await fetchAdminBannedUsers({
           page: nextPageAfterRelease,
@@ -384,6 +398,10 @@ export function useAdminBannedUsers({
         if (!isRefreshSuccess) {
           setActionErrorMessage('밴은 해제됐지만 목록을 다시 불러오지 못했습니다.')
         }
+
+        await fetchUserSanctionHistories(userId, {
+          page: DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE,
+        })
 
         setActionSuccessMessage(`사용자 ID ${userId}의 밴을 해제했습니다.`)
 
@@ -405,7 +423,7 @@ export function useAdminBannedUsers({
         }
       }
     },
-    [clearAuth, fetchAdminBannedUsers, page, users.length]
+    [clearAuth, fetchAdminBannedUsers, fetchUserSanctionHistories, page, users.length]
   )
 
   const applyUserBan = useCallback(
@@ -428,12 +446,14 @@ export function useAdminBannedUsers({
           setActionErrorMessage('밴은 처리됐지만 목록을 다시 불러오지 못했습니다.')
         }
 
-        try {
-          const status = await getAdminUserSanctionStatus(userId)
-          setBanTargetStatus(status)
-        } catch (statusError) {
-          setBanTargetStatus(null)
-          console.error('관리자 사용자 제재 상태 재조회 실패', statusError)
+        await fetchBanTargetStatus(userId, {
+          resetActionMessage: false,
+        })
+
+        if (selectedUserDetail?.userId === userId) {
+          await fetchUserSanctionHistories(userId, {
+            page: DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE,
+          })
         }
 
         setActionSuccessMessage(`사용자 ID ${userId}를 밴 처리했습니다.`)
@@ -456,7 +476,13 @@ export function useAdminBannedUsers({
         }
       }
     },
-    [clearAuth, fetchAdminBannedUsers]
+    [
+      clearAuth,
+      fetchAdminBannedUsers,
+      fetchBanTargetStatus,
+      fetchUserSanctionHistories,
+      selectedUserDetail?.userId,
+    ]
   )
 
   useEffect(() => {

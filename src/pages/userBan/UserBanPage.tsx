@@ -350,7 +350,11 @@ function UserBanPage() {
         return
       }
 
-      clearSelection()
+      setSelectedUserId(request.targetUserId)
+      setReleaseReason('')
+      setIsReleaseConfirmOpen(false)
+      void fetchAdminBannedUserDetail(request.targetUserId)
+      void fetchUserSanctionHistories(request.targetUserId)
       setBanTargetUserId('')
       setBanType('PERMANENT')
       setBanDurationDays(DEFAULT_TEMPORARY_BAN_DURATION_DAYS)
@@ -1009,30 +1013,37 @@ function UserBanPage() {
 
                       <U.DetailGroup>
                         <U.DetailGroupTitle>밴 해제</U.DetailGroupTitle>
-                        <U.ActionPanel onSubmit={handleReleaseSubmit}>
-                          <U.ActionLabel>
-                            해제 사유
-                            <U.TextArea
-                              value={releaseReason}
-                              maxLength={255}
-                              placeholder="운영 검토 결과 해제 등 사유를 입력하세요."
-                              onChange={(event) =>
-                                setReleaseReason(event.target.value)
-                              }
-                            />
-                          </U.ActionLabel>
-                          <U.ActionHelpText>
-                            사유는 최대 255자까지 저장됩니다.
-                          </U.ActionHelpText>
-                          <U.PrimaryButton
-                            type="submit"
-                            disabled={releasingUserId === selectedUserDetail.userId}
-                          >
-                            {releasingUserId === selectedUserDetail.userId
-                              ? '해제 중'
-                              : '밴 해제 요청'}
-                          </U.PrimaryButton>
-                        </U.ActionPanel>
+                        {selectedUserDetail.banned ? (
+                          <U.ActionPanel onSubmit={handleReleaseSubmit}>
+                            <U.ActionLabel>
+                              해제 사유
+                              <U.TextArea
+                                value={releaseReason}
+                                maxLength={255}
+                                placeholder="운영 검토 결과 해제 등 사유를 입력하세요."
+                                onChange={(event) =>
+                                  setReleaseReason(event.target.value)
+                                }
+                              />
+                            </U.ActionLabel>
+                            <U.ActionHelpText>
+                              사유는 최대 255자까지 저장됩니다.
+                            </U.ActionHelpText>
+                            <U.PrimaryButton
+                              type="submit"
+                              disabled={releasingUserId === selectedUserDetail.userId}
+                            >
+                              {releasingUserId === selectedUserDetail.userId
+                                ? '해제 중'
+                                : '밴 해제 요청'}
+                            </U.PrimaryButton>
+                          </U.ActionPanel>
+                        ) : (
+                          <U.Notice role="status">
+                            이 사용자는 밴 해제 처리되었습니다. 제재 이력에서 해제
+                            기록을 확인할 수 있습니다.
+                          </U.Notice>
+                        )}
                       </U.DetailGroup>
                     </U.DetailStack>
                   ) : null}

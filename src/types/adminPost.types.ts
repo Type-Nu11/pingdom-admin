@@ -8,7 +8,16 @@ export type AdminPostReportStatus =
   | 'DECLINED'
   | 'RESTORED'
 
+export type AdminPostReviewStatus = 'ALL' | 'PENDING' | 'PROCESSED' | 'NORMAL'
+
 export type AdminPostVisibilityStatus = 'ACTIVE' | 'AUTO_HIDDEN'
+
+export interface AdminPostReviewCounts {
+  all: number
+  pending: number
+  processed: number
+  normal: number
+}
 
 export interface AdminPostReportItem {
   reportId: number
@@ -42,6 +51,7 @@ export interface AdminPostListRequest {
   limit?: number
   sortParam?: AdminPostSortParam
   keyword?: string
+  reviewStatus?: AdminPostReviewStatus
   reportStatus?: AdminPostReportStatus
 }
 

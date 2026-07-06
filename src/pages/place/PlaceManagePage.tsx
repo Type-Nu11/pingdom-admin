@@ -692,20 +692,11 @@ function PlaceManagePage() {
                           <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
                           <span>{place.address || '주소 정보 없음'}</span>
                         </S.PlaceMeta>
-                        <S.PlaceStatList aria-label={`${place.name} 장소 지표`}>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
-                            <span>등록자 {getPlaceRegistrantLabel(place)}</span>
-                          </S.PlaceStat>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                            <span>Lv.{getPlaceLevel(place)}</span>
-                          </S.PlaceStat>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
-                            <span>사진 {getPlacePhotoCount(place)}장</span>
-                          </S.PlaceStat>
-                        </S.PlaceStatList>
+                        <S.PlaceMetaLine aria-label={`${place.name} 장소 지표`}>
+                          <span>등록자 {getPlaceRegistrantLabel(place)}</span>
+                          <span>Lv.{getPlaceLevel(place)}</span>
+                          <span>사진 {getPlacePhotoCount(place)}장</span>
+                        </S.PlaceMetaLine>
                       </S.PlaceInfo>
                     </S.PlaceItem>
                   )
@@ -852,21 +843,15 @@ function PlaceManagePage() {
 
                         <S.DetailSection>
                           <S.DetailSectionTitle>장소 성장</S.DetailSectionTitle>
-                          <S.PlaceStatList>
-                            <S.PlaceStat>
-                              <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                              <span>
-                                레벨 {formatOptionalNumber(placeDetail.placeGrowth?.level)}
-                              </span>
-                            </S.PlaceStat>
-                            <S.PlaceStat>
-                              <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
-                              <span>
-                                사진{' '}
-                                {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
-                              </span>
-                            </S.PlaceStat>
-                          </S.PlaceStatList>
+                          <S.PlaceMetaLine>
+                            <span>
+                              Lv.{formatOptionalNumber(placeDetail.placeGrowth?.level)}
+                            </span>
+                            <span>
+                              사진{' '}
+                              {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
+                            </span>
+                          </S.PlaceMetaLine>
                           <S.DetailGrowthProgress>
                             <S.DetailGrowthProgressHeader>
                               <span>다음 레벨까지</span>

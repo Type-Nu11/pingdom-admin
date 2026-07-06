@@ -1,7 +1,6 @@
 import styled, { css } from 'styled-components'
 import KakaoMap from '../../components/map/KakaoMap'
 import { adminColors } from '../../styles/theme'
-import { PLACE_CATEGORY_ACCENT_COLOR } from '../../utils/placeCategory'
 
 const neutral = adminColors
 
@@ -1140,10 +1139,10 @@ export const PlaceThumb = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #ffc9d3;
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: #fff4f7;
-  color: ${PLACE_CATEGORY_ACCENT_COLOR};
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
 
   @media (max-width: 520px) {
     width: 40px;
@@ -1179,10 +1178,10 @@ export const PlaceCategoryBadge = styled.span`
   align-items: center;
   flex-shrink: 0;
   padding: 3px 8px;
-  border: 1px solid #ffc9d3;
+  border: 1px solid ${neutral.border};
   border-radius: 999px;
-  background: #fcfcfd;
-  color: ${PLACE_CATEGORY_ACCENT_COLOR};
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
   font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
@@ -1217,38 +1216,42 @@ export const PlaceMeta = styled.p`
   }
 `
 
-export const PlaceStatList = styled.div`
+export const PlaceMetaLine = styled.p`
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px;
+  gap: 6px 0;
+  align-items: center;
+  margin: 9px 0 0;
+  color: ${neutral.softText};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+
+  span {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    overflow-wrap: anywhere;
+
+    &::after {
+      display: inline-block;
+      margin: 0 7px;
+      color: ${neutral.borderDark};
+      content: '·';
+    }
+
+    &:last-child::after {
+      display: none;
+    }
+  }
 `
 
+export const PlaceStatList = PlaceMetaLine
+
 export const PlaceStat = styled.span`
-  min-height: 26px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 100%;
-  padding: 0 8px;
-  border: 1px solid ${neutral.primarySoft};
-  border-radius: 8px;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 600;
-
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  ${MaterialIcon} {
-    flex-shrink: 0;
-    color: ${neutral.primary};
-    font-size: 14px;
-  }
 `
 
 export const EmptyState = styled.div`

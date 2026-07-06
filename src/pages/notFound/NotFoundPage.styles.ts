@@ -12,13 +12,7 @@ export const Page = styled.main`
   padding: 32px 24px;
   background: ${neutral.background};
   color: ${neutral.text};
-  font-family:
-    'Hanken Grotesk',
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: inherit;
 `
 
 export const Content = styled.section`

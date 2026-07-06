@@ -16,7 +16,7 @@ export const Content = styled.main`
 `
 
 export const PageStack = styled.div`
-  width: min(1120px, 100%);
+  width: min(1180px, 100%);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -92,6 +92,246 @@ export const SummaryGrid = styled.div`
   }
 `
 
+export const FilterPanel = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+`
+
+export const FilterTopLine = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  @media (max-width: 760px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
+
+export const ResultSummary = styled.p`
+  margin: 0;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  strong {
+    color: ${neutral.strongText};
+    font-weight: 800;
+  }
+`
+
+export const SegmentGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`
+
+export const SegmentButton = styled.button<{ $active?: boolean }>`
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid
+    ${({ $active }) => ($active ? neutral.primary : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $active }) =>
+    $active ? neutral.primaryTint : neutral.surface};
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    color: ${neutral.primary};
+  }
+
+  span {
+    min-width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: ${({ $active }) =>
+      $active ? neutral.primary : neutral.surfaceLow};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.muted)};
+    font-size: 12px;
+  }
+`
+
+export const FilterForm = styled.form`
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const AdvancedFilterPanel = styled.div`
+  grid-template-columns:
+    minmax(132px, 0.8fr)
+    minmax(132px, 0.8fr)
+    minmax(150px, 0.9fr)
+    minmax(120px, 0.7fr)
+    auto;
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  align-items: end;
+  padding-top: 12px;
+  border-top: 1px solid ${neutral.borderSoft};
+
+  @media (max-width: 1160px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const FilterField = styled.label`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+`
+
+const inputControlStyle = css`
+  min-height: 42px;
+  min-width: 0;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 1px solid transparent;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 13px;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+`
+
+export const SelectInput = styled.select`
+  ${inputControlStyle}
+`
+
+export const DateInput = styled.input`
+  ${inputControlStyle}
+`
+
+export const FilterMenuRoot = styled.div`
+  position: relative;
+  min-width: 0;
+`
+
+export const FilterMenuButton = styled.button<{ $open?: boolean }>`
+  ${inputControlStyle}
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+
+  ${({ $open }) =>
+    $open &&
+    css`
+      border-color: ${neutral.primary};
+      outline-color: ${neutral.primary};
+      box-shadow: 0 0 0 3px ${neutral.primaryTint};
+    `}
+
+  .filter-menu-label {
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .filter-menu-icon {
+    color: ${neutral.muted};
+    font-size: 20px;
+    line-height: 1;
+  }
+`
+
+export const FilterMenuList = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 15;
+  width: 100%;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  box-shadow: 0 18px 42px ${neutral.shadow};
+`
+
+export const FilterMenuOption = styled.button<{ $active?: boolean }>`
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: ${({ $active }) =>
+    $active ? neutral.primaryTint : 'transparent'};
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  .filter-menu-icon {
+    color: ${neutral.primary};
+    font-size: 18px;
+  }
+`
+
+export const FilterActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+
+  @media (max-width: 1160px) {
+    justify-content: flex-start;
+  }
+`
+
 export const MetricItem = styled.section`
   min-width: 0;
   padding: 16px;
@@ -110,10 +350,13 @@ export const MetricLabel = styled.p`
 export const MetricValue = styled.strong`
   display: block;
   margin-top: 8px;
+  overflow: hidden;
   color: ${neutral.strongText};
   font-size: 28px;
   font-weight: 800;
   line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 export const MetricHint = styled.span`
@@ -126,10 +369,10 @@ export const MetricHint = styled.span`
 
 export const WorkGrid = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.7fr);
   gap: 16px;
 
-  @media (max-width: 980px) {
+  @media (max-width: 780px) {
     grid-template-columns: 1fr;
   }
 `
@@ -185,6 +428,10 @@ export const SearchInput = styled.input`
 
   &::placeholder {
     color: ${neutral.placeholder};
+  }
+
+  &::-webkit-search-cancel-button {
+    appearance: none;
   }
 
   &:focus {
@@ -259,10 +506,110 @@ export const TableHeadCell = styled.th`
   white-space: nowrap;
 `
 
+export const TableRow = styled.tr<{ $active?: boolean }>`
+  background: ${({ $active }) => ($active ? neutral.primaryTint : 'transparent')};
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ $active }) =>
+      $active ? neutral.primaryTint : neutral.surfaceLow};
+  }
+
+  ${({ $active }) =>
+    $active &&
+    css`
+      td:first-child {
+        box-shadow: inset 3px 0 0 ${neutral.primary};
+      }
+    `}
+`
+
 export const TableCell = styled.td`
   padding: 14px 12px;
   border-top: 1px solid ${neutral.borderSoft};
   color: ${neutral.text};
+`
+
+export const TableStrongText = styled.strong`
+  display: block;
+  color: ${neutral.strongText};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+`
+
+export const TableSubText = styled.span`
+  display: block;
+  margin-top: 3px;
+  color: ${neutral.softText};
+  font-size: 12px;
+  line-height: 1.4;
+`
+
+export const TableStatusBadge = styled.span<{
+  $tone?: 'danger' | 'warning' | 'success' | 'neutral'
+}>`
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid
+    ${({ $tone }) => {
+      if ($tone === 'warning') {
+        return neutral.warning
+      }
+
+      if ($tone === 'success') {
+        return neutral.success
+      }
+
+      if ($tone === 'neutral') {
+        return neutral.borderDark
+      }
+
+      return neutral.error
+    }};
+  border-radius: 999px;
+  background: ${({ $tone }) => {
+    if ($tone === 'warning') {
+      return neutral.warningTint
+    }
+
+    if ($tone === 'success') {
+      return neutral.successTint
+    }
+
+    if ($tone === 'neutral') {
+      return neutral.surfaceLow
+    }
+
+    return neutral.errorTint
+  }};
+  color: ${({ $tone }) => {
+    if ($tone === 'warning') {
+      return neutral.warningText
+    }
+
+    if ($tone === 'success') {
+      return neutral.successText
+    }
+
+    if ($tone === 'neutral') {
+      return neutral.muted
+    }
+
+    return neutral.error
+  }};
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+`
+
+export const BadgeGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
 `
 
 export const EmptyRow = styled.td`
@@ -270,6 +617,284 @@ export const EmptyRow = styled.td`
   border-top: 1px solid ${neutral.borderSoft};
   color: ${neutral.muted};
   text-align: center;
+`
+
+export const Notice = styled.div<{ $variant?: 'error' | 'info' }>`
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid
+    ${({ $variant }) => ($variant === 'error' ? neutral.error : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $variant }) =>
+    $variant === 'error' ? neutral.errorTint : neutral.surfaceLow};
+  color: ${({ $variant }) => ($variant === 'error' ? neutral.error : neutral.muted)};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const ActionPanel = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const ActionLabel = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+`
+
+export const TextArea = styled.textarea`
+  min-height: 82px;
+  width: 100%;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 1px solid transparent;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+
+  &::placeholder {
+    color: ${neutral.placeholder};
+  }
+
+  &:focus {
+    border-color: ${neutral.primary};
+    outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+`
+
+export const ActionHelpText = styled.span`
+  color: ${neutral.softText};
+  font-size: 12px;
+  line-height: 1.4;
+`
+
+export const Pagination = styled.nav`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid ${neutral.borderSoft};
+`
+
+export const PaginationStatus = styled.span`
+  min-width: 96px;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+`
+
+export const DetailEmpty = styled.div`
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: ${neutral.muted};
+  text-align: center;
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  span {
+    max-width: 260px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+`
+
+export const DetailHeaderStack = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`
+
+export const DetailSummaryCard = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+`
+
+export const DetailTitle = styled.strong`
+  display: block;
+  overflow: hidden;
+  color: ${neutral.strongText};
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const DetailMeta = styled.span`
+  display: block;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const DetailStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`
+
+export const DetailGroup = styled.section`
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surface};
+`
+
+export const DetailGroupTitle = styled.h3`
+  margin: 0 0 10px;
+  color: ${neutral.strongText};
+  font-size: 14px;
+  font-weight: 800;
+`
+
+export const DetailList = styled.dl`
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  overflow: hidden;
+`
+
+export const DetailRow = styled.div`
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px 12px;
+  border-top: 1px solid ${neutral.borderSoft};
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  dt {
+    color: ${neutral.muted};
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  dd {
+    min-width: 0;
+    margin: 0;
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+`
+
+export const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: ${neutral.overlay};
+`
+
+export const ConfirmDialog = styled.section`
+  width: min(440px, 100%);
+  padding: 22px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  box-shadow: 0 24px 64px ${neutral.strongShadow};
+`
+
+export const ConfirmIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  background: ${neutral.warningTint};
+  color: ${neutral.warningText};
+
+  span {
+    font-size: 24px;
+  }
+`
+
+export const ConfirmTitle = styled.h2`
+  margin: 0;
+  color: ${neutral.strongText};
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+`
+
+export const ConfirmDescription = styled.p`
+  margin: 10px 0 0;
+  color: ${neutral.muted};
+  font-size: 14px;
+  line-height: 1.6;
+`
+
+export const ConfirmMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  span {
+    color: ${neutral.muted};
+    font-size: 12px;
+    font-weight: 800;
+  }
+`
+
+export const ConfirmActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
 `
 
 export const PolicyList = styled.div`

@@ -1111,13 +1111,9 @@ function MainPage() {
                   </S.ModalStatusRow>
 
                   <S.ModalInfoGrid>
-                    <S.ModalInfoItem>
+                    <S.ModalInfoItem $wide>
                       <span>작성일</span>
                       <strong>{formatPostDate(activePost.createdAt)}</strong>
-                    </S.ModalInfoItem>
-                    <S.ModalInfoItem>
-                      <span>좋아요 수</span>
-                      <strong>{formatCount(activePost.likeCount)}</strong>
                     </S.ModalInfoItem>
                     {activePost.hiddenAt ? (
                       <S.ModalInfoItem $wide>

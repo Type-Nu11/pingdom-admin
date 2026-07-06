@@ -1,6 +1,6 @@
 import type { AuthErrorResponse } from './auth.types'
 
-export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST'
+export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST' | 'LEVEL_DESC'
 export type AdminPlacePostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
 
 export interface PlaceGrowthSnapshot {

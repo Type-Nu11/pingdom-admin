@@ -26,6 +26,7 @@ const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
+  { value: 'LEVEL_DESC', label: '레벨 높은순' },
 ]
 function hasValidCoordinate(place: AdminPlaceItem) {
   return (
@@ -577,7 +578,7 @@ function PlaceManagePage() {
                   value={selectedSortParam}
                   options={PLACE_SORT_OPTIONS}
                   disabled={isLoading}
-                  width="104px"
+                  width="124px"
                   onChange={handleSortChange}
                 />
                 <S.IconFilterButton

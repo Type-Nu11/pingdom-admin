@@ -57,6 +57,18 @@ function getPlacePhotoCount(place: AdminPlaceItem) {
   return formatOptionalNumber(place.placeGrowth?.photoCount)
 }
 
+function getPlaceRegistrantLabel(place: AdminPlaceItem) {
+  if (place.registrant) {
+    return place.registrant
+  }
+
+  if (typeof place.userId === 'number' && Number.isFinite(place.userId)) {
+    return `ID ${place.userId}`
+  }
+
+  return '등록자 정보 없음'
+}
+
 function getDetailGrowthProgress(placeDetail: AdminPlaceDetail) {
   const progressPercent = placeDetail.placeGrowth?.progressPercent
 
@@ -681,8 +693,12 @@ function PlaceManagePage() {
                         </S.PlaceMeta>
                         <S.PlaceStatList aria-label={`${place.name} 장소 지표`}>
                           <S.PlaceStat>
+                            <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
+                            <span>등록자 {getPlaceRegistrantLabel(place)}</span>
+                          </S.PlaceStat>
+                          <S.PlaceStat>
                             <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                            <span>레벨 {getPlaceLevel(place)}</span>
+                            <span>Lv.{getPlaceLevel(place)}</span>
                           </S.PlaceStat>
                           <S.PlaceStat>
                             <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
@@ -994,9 +1010,12 @@ function PlaceManagePage() {
             {!isPlaceDetailOpen ? (
               <S.MapInfo $offsetForListToggle={isPlacePanelCollapsed}>
                 <S.MapInfoDot />
-                <span>
-                  현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
-                </span>
+                <S.MapInfoText>
+                  <strong>
+                    현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
+                  </strong>
+                  <span>장소를 선택하면 상세 정보를 확인할 수 있습니다.</span>
+                </S.MapInfoText>
               </S.MapInfo>
             ) : null}
           </S.MapPanel>

@@ -112,7 +112,7 @@ export function getPlaceCategoryIconName(place: PlaceCategorySource) {
     return 'sports_esports'
   }
 
-  return 'more_horiz'
+  return 'location_on'
 }
 
 export function getPlaceCategoryMarkerImageUrl(place: PlaceCategorySource) {

@@ -69,7 +69,7 @@ declare global {
 const KAKAO_MAP_SCRIPT_ID = 'kakao-map-sdk'
 const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY
 const MIN_MAP_LEVEL = 1
-const MAX_MAP_LEVEL = 14
+const MAX_MAP_LEVEL = 12
 const INITIAL_MAP_LEVEL = 3
 const WHEEL_ZOOM_THROTTLE_MS = 140
 const DEFAULT_MAP_WIDTH = 960

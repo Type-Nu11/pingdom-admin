@@ -73,13 +73,13 @@ const MAX_MAP_LEVEL = 12
 const INITIAL_MAP_LEVEL = 3
 const WHEEL_ZOOM_THROTTLE_MS = 140
 const DEFAULT_MAP_WIDTH = 960
-const LEVEL_MARKER_SCALE = 1.2
-const LEVEL_MARKER_SCALE_STEPS = [
-  { minLevel: 20, scale: LEVEL_MARKER_SCALE ** 3 },
-  { minLevel: 15, scale: LEVEL_MARKER_SCALE ** 2 },
-  { minLevel: 5, scale: LEVEL_MARKER_SCALE },
+const PLACE_LEVEL_MARKER_SCALE = 1.2
+const PLACE_LEVEL_MARKER_SCALE_STEPS = [
+  { minLevel: 20, scale: PLACE_LEVEL_MARKER_SCALE ** 3 },
+  { minLevel: 15, scale: PLACE_LEVEL_MARKER_SCALE ** 2 },
+  { minLevel: 5, scale: PLACE_LEVEL_MARKER_SCALE },
 ]
-const FLAME_MARKER_MIN_LEVEL = 10
+const FLAME_MARKER_MIN_PLACE_LEVEL = 10
 const DEFAULT_CENTER = {
   latitude: 37.5665,
   longitude: 126.978,
@@ -557,7 +557,7 @@ function getPlaceLevelScale(level?: number) {
     return 1
   }
 
-  const levelScaleStep = LEVEL_MARKER_SCALE_STEPS.find(
+  const levelScaleStep = PLACE_LEVEL_MARKER_SCALE_STEPS.find(
     (step) => level >= step.minLevel
   )
 
@@ -568,7 +568,7 @@ function shouldUseFlameMarker(level?: number) {
   return (
     typeof level === 'number' &&
     Number.isFinite(level) &&
-    level >= FLAME_MARKER_MIN_LEVEL
+    level >= FLAME_MARKER_MIN_PLACE_LEVEL
   )
 }
 

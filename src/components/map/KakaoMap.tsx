@@ -9,6 +9,7 @@ import {
 import type { MutableRefObject } from 'react'
 import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
+import { logDebugError } from '../../utils/debugLogger'
 import {
   getPlaceCategoryFlameMarkerImageUrl,
   getPlaceCategoryLabel,
@@ -349,7 +350,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
           }
         })
       } catch (error) {
-        console.error('카카오 지도 로드 실패', error)
+        logDebugError('카카오 지도 로드 실패', error)
 
         if (isMounted) {
           setIsLoading(false)

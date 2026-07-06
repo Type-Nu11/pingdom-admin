@@ -19,10 +19,17 @@ const controlStyle = css`
 `
 
 export const AppShell = styled.div`
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: ${neutral.background};
   color: ${neutral.text};
   font-family: inherit;
+
+  @media (max-width: 900px) {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
 `
 
 export const MaterialIcon = styled.span`
@@ -282,11 +289,16 @@ export const LogoutButton = styled.button`
 `
 
 export const MainArea = styled.div`
-  min-height: 100vh;
+  height: 100vh;
   margin-left: 248px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 
   @media (max-width: 900px) {
+    height: auto;
+    min-height: 100vh;
     margin-left: 0;
+    overflow: visible;
   }
 `
 

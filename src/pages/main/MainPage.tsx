@@ -637,11 +637,7 @@ function MainPage() {
             keyword: postSearchKeyword,
             reviewStatus: 'ALL',
           }
-        ).then((data) => {
-          if (data) {
-            scrollPageContentToTop()
-          }
-        })
+        )
         navigate(location.pathname, { replace: true, state: null })
       }, 0)
 
@@ -670,7 +666,6 @@ function MainPage() {
     location.pathname,
     location.state,
     navigate,
-    scrollPageContentToTop,
   ])
 
   useEffect(() => {

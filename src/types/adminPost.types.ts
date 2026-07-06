@@ -16,6 +16,7 @@ export interface AdminPostReportItem {
   reporterUsername: string
   reason: string
   status: AdminPostReportStatus
+  createdAt?: string | null
   processedAt?: string | null
 }
 
@@ -41,6 +42,7 @@ export interface AdminPostListRequest {
   limit?: number
   sortParam?: AdminPostSortParam
   keyword?: string
+  reportStatus?: AdminPostReportStatus
 }
 
 export interface AdminPostListResponse {

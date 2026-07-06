@@ -9,6 +9,7 @@ import type {
   AdminPostDetailErrorResponse,
   AdminPostListErrorResponse,
   AdminPostListRequest,
+  AdminPostReportStatus,
   AdminPostSortParam,
 } from '../types/adminPost.types'
 
@@ -39,6 +40,14 @@ type AdminPostApiErrorResponse =
   | AdminPostListErrorResponse
   | AdminPostDetailErrorResponse
   | AdminPostDeleteErrorResponse
+
+type LatestAdminPostListRequest = {
+  page: number
+  limit: number
+  sortParam: AdminPostSortParam
+  keyword: string
+  reportStatus?: AdminPostReportStatus
+}
 
 function getAdminPostErrorMessage(error: unknown) {
   if (!isApiError<AdminPostApiErrorResponse>(error)) {
@@ -91,7 +100,7 @@ export function useAdminPosts({
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
-  const latestListRequestRef = useRef<Required<AdminPostListRequest>>({
+  const latestListRequestRef = useRef<LatestAdminPostListRequest>({
     page: initialPage,
     limit,
     sortParam,
@@ -139,6 +148,9 @@ export function useAdminPosts({
       limit: request.limit ?? latestListRequestRef.current.limit,
       sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
       keyword: request.keyword ?? latestListRequestRef.current.keyword,
+      reportStatus: Object.hasOwn(request, 'reportStatus')
+        ? request.reportStatus
+        : latestListRequestRef.current.reportStatus,
     }
 
     try {
@@ -157,6 +169,7 @@ export function useAdminPosts({
           limit: data.limit,
           sortParam: nextRequest.sortParam,
           keyword: nextRequest.keyword,
+          reportStatus: nextRequest.reportStatus,
         }
       }
 

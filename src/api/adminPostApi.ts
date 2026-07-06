@@ -16,6 +16,7 @@ export async function getAdminPosts({
   limit = DEFAULT_ADMIN_POST_LIMIT,
   sortParam = DEFAULT_ADMIN_POST_SORT_PARAM,
   keyword = DEFAULT_ADMIN_POST_KEYWORD,
+  reportStatus,
 }: AdminPostListRequest = {}) {
   const { data } = await customAxios.get<AdminPostListResponse>(
     ADMIN_POSTS_API_PATH,
@@ -25,6 +26,7 @@ export async function getAdminPosts({
         limit,
         sortParam,
         keyword,
+        reportStatus,
       },
     }
   )

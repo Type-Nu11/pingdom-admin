@@ -7,12 +7,6 @@ function NotFoundPage() {
   const requestedPath = `${location.pathname}${location.search}${location.hash}`
 
   const handleGoBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1)
-
-      return
-    }
-
     navigate('/places', { replace: true })
   }
 

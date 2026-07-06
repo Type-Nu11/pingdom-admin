@@ -65,6 +65,16 @@ export interface AdminPostListResponse {
   counts?: AdminPostReviewCounts
 }
 
+export interface AdminPostReportBulkActionResponse {
+  postId: number
+  status: AdminPostReportStatus
+  processedReportCount: number
+  visibilityStatus: AdminPostVisibilityStatus
+  hiddenAt?: string | null
+  hiddenReason?: string | null
+  processedAt: string
+}
+
 export type AdminPostListErrorResponse = AuthErrorResponse<
   'INVALID_TOKEN' | 'ACCESS_DENIED'
 >
@@ -81,4 +91,13 @@ export type AdminPostDeleteErrorResponse = AuthErrorResponse<
   | 'DELETE_ERROR'
   | 'POST_DELETE_FAILED'
   | 'S3_CONNECTION_ERROR'
+>
+
+export type AdminPostReportBulkActionErrorResponse = AuthErrorResponse<
+  | 'INVALID_TOKEN'
+  | 'ACCESS_DENIED'
+  | 'POST_NOT_FOUND'
+  | 'REPORT_NOT_FOUND'
+  | 'REPORT_ALREADY_PROCESSED'
+  | 'NO_PENDING_REPORT'
 >

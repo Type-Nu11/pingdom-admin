@@ -15,13 +15,7 @@ export const AppShell = styled.div`
   min-height: 100vh;
   background: ${neutral.background};
   color: ${neutral.text};
-  font-family:
-    'Hanken Grotesk',
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: inherit;
 `
 
 export const MaterialIcon = styled.span`

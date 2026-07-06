@@ -43,13 +43,7 @@ const RouteLoadingPage = styled.main`
   padding: 32px;
   background: ${adminColors.background};
   color: ${adminColors.text};
-  font-family:
-    'Hanken Grotesk',
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: inherit;
 `
 
 const RouteLoadingCard = styled.section`

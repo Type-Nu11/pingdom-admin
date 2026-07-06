@@ -18,6 +18,7 @@ export const GlobalStyle = createGlobalStyle`
     color: ${adminColors.text};
     background: ${adminColors.background};
     font-family:
+      'Pretendard',
       system-ui,
       -apple-system,
       BlinkMacSystemFont,

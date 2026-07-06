@@ -595,7 +595,7 @@ function createMarkerContent(
   markerButton.style.color = PLACE_CATEGORY_ACCENT_COLOR
   markerButton.style.cursor = 'pointer'
   markerButton.style.fontFamily =
-    "'Hanken Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    "'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   markerButton.style.lineHeight = '1'
   markerButton.style.transition = 'opacity 160ms ease, transform 160ms ease'
 

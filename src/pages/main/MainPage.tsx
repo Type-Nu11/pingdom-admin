@@ -1129,9 +1129,17 @@ function MainPage() {
 
                   <S.ModalPostDescriptionCard>
                     <S.ModalSectionTitle>게시글 내용</S.ModalSectionTitle>
-                    <S.ModalPostDescription $empty={!activePost.description}>
-                      {activePost.description || '작성된 게시글 내용이 없습니다.'}
-                    </S.ModalPostDescription>
+                    <S.ModalPostContentCard>
+                      <S.ModalPostContentIcon aria-hidden="true">
+                        <S.MaterialIcon>notes</S.MaterialIcon>
+                      </S.ModalPostContentIcon>
+                      <S.ModalPostContentBody>
+                        <strong>작성자가 입력한 내용</strong>
+                        <S.ModalPostDescription $empty={!activePost.description}>
+                          {activePost.description || '작성된 게시글 내용이 없습니다.'}
+                        </S.ModalPostDescription>
+                      </S.ModalPostContentBody>
+                    </S.ModalPostContentCard>
                   </S.ModalPostDescriptionCard>
 
                   <S.ModalSection>

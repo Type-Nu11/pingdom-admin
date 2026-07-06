@@ -1299,13 +1299,50 @@ export const ModalPostDescriptionCard = styled.section`
   margin: 16px 0 0;
 `
 
-export const ModalPostDescription = styled.p<{ $empty?: boolean }>`
-  min-height: 78px;
-  margin: 0;
+export const ModalPostContentCard = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   padding: 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
+`
+
+export const ModalPostContentIcon = styled.span`
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.muted};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const ModalPostContentBody = styled.div`
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+`
+
+export const ModalPostDescription = styled.p<{ $empty?: boolean }>`
+  margin: 0;
   color: ${neutral.text};
   font-size: 14px;
   line-height: 1.6;
@@ -1315,8 +1352,6 @@ export const ModalPostDescription = styled.p<{ $empty?: boolean }>`
   ${({ $empty }) =>
     $empty &&
     css`
-      display: flex;
-      align-items: center;
       color: ${neutral.muted};
       font-weight: 700;
     `}

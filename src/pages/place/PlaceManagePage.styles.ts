@@ -1553,27 +1553,29 @@ export const MapControlButton = styled.button`
   }
 `
 
-export const MapInfo = styled.div`
+export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   position: absolute;
-  top: 16px;
-  right: 84px;
+  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '66px' : '20px')};
+  left: 20px;
   z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: min(320px, calc(100% - 132px));
-  padding: 8px 10px;
+  max-width: min(340px, calc(100% - 40px));
+  min-height: 38px;
+  padding: 0 12px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.softOverlay};
   color: ${neutral.text};
   font-size: 12px;
+  font-weight: 800;
   box-shadow: 0 8px 22px ${neutral.shadow};
 
   @media (max-width: 720px) {
-    top: 12px;
-    right: 12px;
-    max-width: min(320px, calc(100% - 24px));
+    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '60px' : '12px')};
+    left: 12px;
+    max-width: min(340px, calc(100% - 24px));
   }
 `
 

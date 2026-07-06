@@ -993,14 +993,14 @@ function PlaceManagePage() {
                 <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
               </S.MapControlButton>
             </S.MapControlGroup>
-            <S.MapInfo>
-              <S.MapInfoDot />
-              <span>
-                {selectedPlace
-                  ? `선택된 장소: ${selectedPlace.name}`
-                  : `${places.length.toLocaleString()}개 장소를 확인 중입니다.`}
-              </span>
-            </S.MapInfo>
+            {!isPlaceDetailOpen ? (
+              <S.MapInfo $offsetForListToggle={isPlacePanelCollapsed}>
+                <S.MapInfoDot />
+                <span>
+                  현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
+                </span>
+              </S.MapInfo>
+            ) : null}
           </S.MapPanel>
         </S.SplitContent>
       </S.MainArea>

@@ -74,6 +74,14 @@ function getPostReports(post: AdminPost) {
   return Array.isArray(post.reports) ? post.reports : []
 }
 
+function getServerReportStatusFilter(filter: AdminPostReviewFilter) {
+  return filter === 'PENDING' ? 'PENDING' : undefined
+}
+
+function isClientOnlyPostFilter(filter: AdminPostReviewFilter) {
+  return filter === 'REPORTED' || filter === 'NORMAL'
+}
+
 function getPendingPostReports(post: AdminPost) {
   return getPostReports(post).filter((report) => report.status === 'PENDING')
 }
@@ -210,6 +218,14 @@ function formatOptionalPostDate(value?: string | null) {
   return formatPostDate(value)
 }
 
+function formatOptionalReportCreatedDate(value?: string | null) {
+  if (!value) {
+    return '접수일 정보 없음'
+  }
+
+  return formatPostDate(value)
+}
+
 function createPendingPost(postId: number): AdminPost {
   return {
     id: postId,
@@ -289,6 +305,7 @@ function MainPage() {
   const isSearchEffectReadyRef = useRef(false)
   const latestSortParamRef = useRef(DEFAULT_ADMIN_POST_SORT_PARAM)
   const latestPostKeywordRef = useRef('')
+  const latestReviewFilterRef = useRef<AdminPostReviewFilter>('ALL')
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
@@ -354,7 +371,7 @@ function MainPage() {
     reportActionSuccessMessage || actionSuccessMessage
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
-  const hasClientOnlyPostFilter = selectedReviewFilter !== 'ALL'
+  const hasClientOnlyPostFilter = isClientOnlyPostFilter(selectedReviewFilter)
   const hasActivePostKeyword = postKeyword.length > 0
   const showPagination = totalPages > 1 && !hasClientOnlyPostFilter
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
@@ -377,8 +394,12 @@ function MainPage() {
   )
   const filteredPosts = useMemo(
     () =>
-      posts.filter((post) => isPostMatchingReviewFilter(post, selectedReviewFilter)),
-    [posts, selectedReviewFilter]
+      hasClientOnlyPostFilter
+        ? posts.filter((post) =>
+            isPostMatchingReviewFilter(post, selectedReviewFilter)
+          )
+        : posts,
+    [hasClientOnlyPostFilter, posts, selectedReviewFilter]
   )
   const activePostIndex = activePost
     ? filteredPosts.findIndex((post) => post.id === activePost.id)
@@ -465,6 +486,33 @@ function MainPage() {
     setSelectedSortParam(value as AdminPostSortParam)
   }
 
+  const handleReviewFilterChange = (nextFilter: AdminPostReviewFilter) => {
+    if (selectedReviewFilter === nextFilter || isLoading || isDeleting) {
+      return
+    }
+
+    clearPendingPostSearch()
+    setSelectedReviewFilter(nextFilter)
+
+    const currentReportStatus = getServerReportStatusFilter(selectedReviewFilter)
+    const nextReportStatus = getServerReportStatusFilter(nextFilter)
+
+    if (currentReportStatus === nextReportStatus) {
+      return
+    }
+
+    void fetchAdminPosts({
+      page: 1,
+      sortParam: selectedSortParam,
+      keyword: postKeyword,
+      reportStatus: nextReportStatus,
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        scrollPageContentToTop()
+      }
+    })
+  }
+
   const handleSearchQueryChange = (nextQuery: string) => {
     setPostSearchQuery(nextQuery)
   }
@@ -478,6 +526,7 @@ function MainPage() {
       page: 1,
       sortParam: selectedSortParam,
       keyword: '',
+      reportStatus: getServerReportStatusFilter(selectedReviewFilter),
     }).then((isSuccess) => {
       if (isSuccess) {
         scrollPageContentToTop()
@@ -498,6 +547,7 @@ function MainPage() {
       page: nextPageNumber,
       sortParam: selectedSortParam,
       keyword: postKeyword,
+      reportStatus: getServerReportStatusFilter(selectedReviewFilter),
     }).then((isSuccess) => {
       if (isSuccess) {
         scrollPageContentToTop()
@@ -512,6 +562,7 @@ function MainPage() {
       page: currentPageNumber,
       sortParam: selectedSortParam,
       keyword: postKeyword,
+      reportStatus: getServerReportStatusFilter(selectedReviewFilter),
     })
   }
 
@@ -582,6 +633,7 @@ function MainPage() {
         page: currentPageNumber,
         sortParam: selectedSortParam,
         keyword: postKeyword,
+        reportStatus: getServerReportStatusFilter(selectedReviewFilter),
       })
     })
   }
@@ -593,6 +645,10 @@ function MainPage() {
   useEffect(() => {
     latestPostKeywordRef.current = postKeyword
   }, [postKeyword])
+
+  useEffect(() => {
+    latestReviewFilterRef.current = selectedReviewFilter
+  }, [selectedReviewFilter])
 
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
@@ -623,6 +679,7 @@ function MainPage() {
       page: 1,
       sortParam: selectedSortParam,
       keyword: latestPostKeywordRef.current,
+      reportStatus: getServerReportStatusFilter(latestReviewFilterRef.current),
     })
   }, [fetchAdminPosts, selectedSortParam])
 
@@ -648,6 +705,7 @@ function MainPage() {
         page: 1,
         sortParam: latestSortParamRef.current,
         keyword: nextKeyword,
+        reportStatus: getServerReportStatusFilter(latestReviewFilterRef.current),
       }).then((isSuccess) => {
         if (isSuccess) {
           scrollPageContentToTop()
@@ -798,7 +856,7 @@ function MainPage() {
                   type="button"
                   $active={selectedReviewFilter === filter.value}
                   aria-pressed={selectedReviewFilter === filter.value}
-                  onClick={() => setSelectedReviewFilter(filter.value)}
+                  onClick={() => handleReviewFilterChange(filter.value)}
                 >
                   <span>{filter.label}</span>
                   <strong>{formatCount(reviewFilterCounts[filter.value])}</strong>
@@ -1133,6 +1191,9 @@ function MainPage() {
                             <S.ReportReason>
                               {report.reason || '신고 사유 없음'}
                             </S.ReportReason>
+                            <S.ReportMeta>
+                              접수일: {formatOptionalReportCreatedDate(report.createdAt)}
+                            </S.ReportMeta>
                             <S.ReportMeta>
                               처리일: {formatOptionalPostDate(report.processedAt)}
                             </S.ReportMeta>

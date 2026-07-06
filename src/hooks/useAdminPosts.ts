@@ -43,7 +43,7 @@ const ADMIN_POST_CODE_MESSAGES = {
   POST_NOT_FOUND: '이미 삭제되었거나 존재하지 않는 게시글입니다.',
   REPORT_NOT_FOUND: '이미 처리되었거나 존재하지 않는 신고입니다.',
   REPORT_ALREADY_PROCESSED: '이미 처리된 신고입니다.',
-  NO_PENDING_REPORT: '처리할 대기 신고가 없습니다.',
+  NO_PENDING_REPORT: '처리할 미처리 신고가 없습니다.',
   IMAGE_NOT_FOUND: '이미 삭제되었거나 존재하지 않는 게시글입니다.',
   DELETE_ERROR: '게시글 삭제 중 오류가 발생했습니다.',
   POST_DELETE_FAILED: '게시글 삭제 중 오류가 발생했습니다.',
@@ -412,7 +412,7 @@ export function useAdminPosts({
         }
 
         showActionSuccessMessage(
-          `게시글 #${postId}의 대기 신고 ${data.processedReportCount}건을 ${successActionLabel}했습니다.`
+          `게시글 #${postId}의 미처리 신고 ${data.processedReportCount}건을 ${successActionLabel}했습니다.`
         )
 
         return data

@@ -189,6 +189,17 @@ function PlaceManagePage() {
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 
+  const handleOpenPostDetail = useCallback(
+    (postId: number) => {
+      navigate('/main', {
+        state: {
+          openPostId: postId,
+        },
+      })
+    },
+    [navigate]
+  )
+
   const clearPendingPlaceSearch = useCallback(() => {
     if (!searchTimeoutRef.current) {
       return
@@ -407,6 +418,10 @@ function PlaceManagePage() {
 
   const handleConfirmDeletePlace = () => {
     if (!deleteConfirmPlace || isLoading || deletingPlaceId !== null) {
+      return
+    }
+
+    if (deleteConfirmPlace.postCount > 0) {
       return
     }
 
@@ -854,13 +869,7 @@ function PlaceManagePage() {
                                   <S.DetailPostText>
                                     <S.DetailPostTitleButton
                                       type="button"
-                                      onClick={() =>
-                                        navigate('/main', {
-                                          state: {
-                                            openPostId: post.id,
-                                          },
-                                        })
-                                      }
+                                      onClick={() => handleOpenPostDetail(post.id)}
                                     >
                                       {post.title || `게시글 #${post.id}`}
                                     </S.DetailPostTitleButton>
@@ -872,6 +881,16 @@ function PlaceManagePage() {
                                       {post.likeCount.toLocaleString()} ·{' '}
                                       {formatPlacePostDate(post.createdAt)}
                                     </S.DetailPostMeta>
+                                    <S.DetailPostTitleButton
+                                      $variant="action"
+                                      type="button"
+                                      onClick={() => handleOpenPostDetail(post.id)}
+                                    >
+                                      <span>게시글 상세 보기</span>
+                                      <S.MaterialIcon aria-hidden="true">
+                                        chevron_right
+                                      </S.MaterialIcon>
+                                    </S.DetailPostTitleButton>
                                   </S.DetailPostText>
                                 </S.DetailPostItem>
                               ))}
@@ -977,6 +996,11 @@ function PlaceManagePage() {
             <S.DeleteConfirmMeta>
               {deleteConfirmPlace.name} · {deleteConfirmPlace.address || '주소 정보 없음'}
             </S.DeleteConfirmMeta>
+            <S.DeleteConfirmWarning>
+              {deleteConfirmPlace.postCount > 0
+                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개가 있어 현재 장소를 삭제할 수 없습니다. 게시글 연결 정책이 정리된 뒤 다시 시도해 주세요.`
+                : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
+            </S.DeleteConfirmWarning>
 
             {hasDeleteConfirmAttempted && actionErrorMessage ? (
               <S.DeleteConfirmNotice role="alert">
@@ -994,10 +1018,14 @@ function PlaceManagePage() {
               </S.SecondaryButton>
               <S.DangerButton
                 type="button"
-                disabled={deletingPlaceId !== null}
+                disabled={deletingPlaceId !== null || deleteConfirmPlace.postCount > 0}
                 onClick={handleConfirmDeletePlace}
               >
-                {deletingPlaceId === deleteConfirmPlace.id ? '삭제 중' : '삭제하기'}
+                {deleteConfirmPlace.postCount > 0
+                  ? '삭제 불가'
+                  : deletingPlaceId === deleteConfirmPlace.id
+                    ? '삭제 중'
+                    : '삭제하기'}
               </S.DangerButton>
             </S.DeleteConfirmActions>
           </S.DeleteConfirmDialog>

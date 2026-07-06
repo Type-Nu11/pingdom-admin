@@ -473,7 +473,7 @@ export const DetailBody = styled.div`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 16px 24px;
 `
 
 export const DetailStatus = styled.div`
@@ -667,7 +667,7 @@ export const DetailPostText = styled.div`
   }
 `
 
-export const DetailPostTitleButton = styled.button`
+export const DetailPostTitleButton = styled.button<{ $variant?: 'action' }>`
   max-width: 100%;
   display: block;
   overflow: hidden;
@@ -695,6 +695,37 @@ export const DetailPostTitleButton = styled.button`
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  ${({ $variant }) =>
+    $variant === 'action' &&
+    css`
+      width: fit-content;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 0 8px;
+      border: 1px solid ${neutral.border};
+      border-radius: 7px;
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.primary};
+      font-size: 12px;
+      line-height: 1;
+      text-decoration: none;
+
+      ${MaterialIcon} {
+        font-size: 16px;
+      }
+
+      &:hover {
+        border-color: ${neutral.primarySoft};
+        background: ${neutral.primaryTint};
+        color: ${neutral.primary};
+        text-decoration: none;
+      }
+    `}
 `
 
 export const DetailPostMeta = styled.span`
@@ -706,11 +737,14 @@ export const DetailPostMeta = styled.span`
 `
 
 export const DetailFooter = styled.footer`
+  position: relative;
+  flex-shrink: 0;
   display: flex;
   gap: 8px;
-  padding: 14px 16px;
-  border-top: 1px solid ${neutral.border};
+  padding: 16px;
+  border-top: 1px solid ${neutral.borderDark};
   background: ${neutral.surface};
+  box-shadow: 0 -12px 24px ${neutral.shadow};
 `
 
 export const DetailActionButton = styled.button`
@@ -1811,6 +1845,19 @@ export const DeleteConfirmMeta = styled.p`
   font-weight: 700;
   line-height: 1.5;
   word-break: break-word;
+`
+
+export const DeleteConfirmWarning = styled.p`
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.warning};
+  border-radius: 8px;
+  background: ${neutral.warningTint};
+  color: ${neutral.warningText};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  word-break: keep-all;
 `
 
 export const DeleteConfirmNotice = styled.p`

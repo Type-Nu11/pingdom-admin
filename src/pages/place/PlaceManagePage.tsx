@@ -20,6 +20,7 @@ import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10
 const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
+const PLACE_DETAIL_POST_PREVIEW_LIMIT = 3
 const PLACE_SEARCH_DEBOUNCE_MS = 300
 const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
@@ -43,10 +44,6 @@ function formatCoordinate(place: AdminPlaceItem) {
   return `${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`
 }
 
-function getPlaceOwner(place: AdminPlaceItem) {
-  return place.registrant || `사용자 ID: ${place.userId}`
-}
-
 function formatOptionalNumber(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '-'
 }
@@ -59,8 +56,8 @@ function getPlacePhotoCount(place: AdminPlaceItem) {
   return formatOptionalNumber(place.placeGrowth?.photoCount)
 }
 
-function getPlaceGrowthProgress(place: AdminPlaceItem) {
-  const progressPercent = place.placeGrowth?.progressPercent
+function getDetailGrowthProgress(placeDetail: AdminPlaceDetail) {
+  const progressPercent = placeDetail.placeGrowth?.progressPercent
 
   if (typeof progressPercent !== 'number' || !Number.isFinite(progressPercent)) {
     return null
@@ -69,20 +66,10 @@ function getPlaceGrowthProgress(place: AdminPlaceItem) {
   return Math.min(Math.max(Math.round(progressPercent), 0), 100)
 }
 
-function getPlaceGrowthProgressLabel(place: AdminPlaceItem) {
-  const progressPercent = getPlaceGrowthProgress(place)
+function getDetailGrowthProgressLabel(placeDetail: AdminPlaceDetail) {
+  const progressPercent = getDetailGrowthProgress(placeDetail)
 
   return progressPercent === null ? '-' : `${progressPercent}%`
-}
-
-function getDetailGrowthProgressLabel(placeDetail: AdminPlaceDetail) {
-  const progressPercent = placeDetail.placeGrowth?.progressPercent
-
-  if (typeof progressPercent !== 'number' || !Number.isFinite(progressPercent)) {
-    return '-'
-  }
-
-  return `${Math.min(Math.max(Math.round(progressPercent), 0), 100)}%`
 }
 
 function formatPlacePostDate(value: string) {
@@ -175,6 +162,18 @@ function PlaceManagePage() {
   const isPlaceDetailOpen = selectedPlace !== null
   const isDeletingSelectedPlace =
     selectedPlace !== null && deletingPlaceId === selectedPlace.id
+  const detailGrowthProgress = placeDetail
+    ? getDetailGrowthProgress(placeDetail)
+    : null
+  const detailGrowthProgressLabel = placeDetail
+    ? getDetailGrowthProgressLabel(placeDetail)
+    : '-'
+  const detailPostPreviewItems = placeDetail
+    ? placeDetail.posts.slice(0, PLACE_DETAIL_POST_PREVIEW_LIMIT)
+    : []
+  const shouldShowDetailPostAllAction = placeDetail
+    ? placeDetail.postCount > PLACE_DETAIL_POST_PREVIEW_LIMIT
+    : false
   const placeMapMarkers = useMemo<KakaoMapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -196,6 +195,28 @@ function PlaceManagePage() {
   )
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
+
+  const handleOpenPostDetail = useCallback(
+    (postId: number) => {
+      navigate('/main', {
+        state: {
+          openPostId: postId,
+        },
+      })
+    },
+    [navigate]
+  )
+
+  const handleOpenPlacePosts = useCallback(
+    (placeName: string) => {
+      navigate('/main', {
+        state: {
+          postSearchKeyword: placeName,
+        },
+      })
+    },
+    [navigate]
+  )
 
   const clearPendingPlaceSearch = useCallback(() => {
     if (!searchTimeoutRef.current) {
@@ -583,6 +604,16 @@ function PlaceManagePage() {
                     handleSearchQueryChange(event.target.value)
                   }
                 />
+                {placeSearchQuery ? (
+                  <S.SearchClearButton
+                    type="button"
+                    aria-label="검색어 지우기"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={handleClearPlaceFilters}
+                  >
+                    <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                  </S.SearchClearButton>
+                ) : null}
               </S.SearchField>
 
               <S.PanelResultSummary>
@@ -642,16 +673,9 @@ function PlaceManagePage() {
                           <S.PlaceName>{place.name}</S.PlaceName>
                           <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                         </S.PlaceTitleRow>
-                        <S.PlaceCaption>
-                          장소 ID: {place.id} · {getPlaceOwner(place)}
-                        </S.PlaceCaption>
                         <S.PlaceMeta>
                           <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
                           <span>{place.address || '주소 정보 없음'}</span>
-                        </S.PlaceMeta>
-                        <S.PlaceMeta>
-                          <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-                          <span>{formatCoordinate(place)}</span>
                         </S.PlaceMeta>
                         <S.PlaceStatList aria-label={`${place.name} 장소 지표`}>
                           <S.PlaceStat>
@@ -661,10 +685,6 @@ function PlaceManagePage() {
                           <S.PlaceStat>
                             <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
                             <span>사진 {getPlacePhotoCount(place)}장</span>
-                          </S.PlaceStat>
-                          <S.PlaceStat>
-                            <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
-                            <span>다음 레벨까지 {getPlaceGrowthProgressLabel(place)}</span>
                           </S.PlaceStat>
                         </S.PlaceStatList>
                       </S.PlaceInfo>
@@ -757,7 +777,7 @@ function PlaceManagePage() {
                 <>
                   <S.DetailHeader>
                     <S.DetailTitleGroup>
-                      <S.DetailEyebrow>PLACE DETAIL</S.DetailEyebrow>
+                      <S.DetailEyebrow>장소 상세</S.DetailEyebrow>
                       <S.DetailTitle>
                         {placeDetail?.name ?? selectedPlace.name}
                       </S.DetailTitle>
@@ -781,31 +801,34 @@ function PlaceManagePage() {
                     ) : placeDetail ? (
                       <>
                         <S.DetailMetaList>
-                          <S.DetailMetaItem>
-                            <span>장소 ID</span>
-                            <strong>{placeDetail.id}</strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>주소</span>
-                            <strong>{placeDetail.address || '주소 정보 없음'}</strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>카테고리</span>
-                            <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>등록자</span>
-                            <strong>
-                              {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
-                            </strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>좌표</span>
-                            <strong>
-                              {placeDetail.latitude.toFixed(6)},{' '}
-                              {placeDetail.longitude.toFixed(6)}
-                            </strong>
-                          </S.DetailMetaItem>
+                          <S.DetailMetaGroup>
+                            <S.DetailMetaGroupTitle>기본 정보</S.DetailMetaGroupTitle>
+                            <S.DetailMetaRow>
+                              <span>장소 ID</span>
+                              <strong>{placeDetail.id}</strong>
+                            </S.DetailMetaRow>
+                            <S.DetailMetaRow>
+                              <span>카테고리</span>
+                              <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
+                            </S.DetailMetaRow>
+                            <S.DetailMetaRow>
+                              <span>등록자</span>
+                              <strong>
+                                {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
+                              </strong>
+                            </S.DetailMetaRow>
+                          </S.DetailMetaGroup>
+                          <S.DetailMetaGroup>
+                            <S.DetailMetaGroupTitle>위치 정보</S.DetailMetaGroupTitle>
+                            <S.DetailMetaRow>
+                              <span>주소</span>
+                              <strong>{placeDetail.address || '주소 정보 없음'}</strong>
+                            </S.DetailMetaRow>
+                            <S.DetailMetaRow>
+                              <span>좌표</span>
+                              <strong>{formatCoordinate(placeDetail)}</strong>
+                            </S.DetailMetaRow>
+                          </S.DetailMetaGroup>
                         </S.DetailMetaList>
 
                         <S.DetailSection>
@@ -824,62 +847,91 @@ function PlaceManagePage() {
                                 {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
                               </span>
                             </S.PlaceStat>
-                            <S.PlaceStat>
-                              <S.MaterialIcon aria-hidden="true">trending_up</S.MaterialIcon>
-                              <span>
-                                다음 레벨까지 {getDetailGrowthProgressLabel(placeDetail)}
-                              </span>
-                            </S.PlaceStat>
                           </S.PlaceStatList>
+                          <S.DetailGrowthProgress>
+                            <S.DetailGrowthProgressHeader>
+                              <span>다음 레벨까지</span>
+                              <strong>{detailGrowthProgressLabel}</strong>
+                            </S.DetailGrowthProgressHeader>
+                            <S.DetailGrowthTrack
+                              role="progressbar"
+                              aria-label="다음 레벨 진행률"
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={detailGrowthProgress ?? undefined}
+                              aria-valuetext={detailGrowthProgressLabel}
+                            >
+                              <S.DetailGrowthBar
+                                $progress={detailGrowthProgress ?? 0}
+                              />
+                            </S.DetailGrowthTrack>
+                          </S.DetailGrowthProgress>
                         </S.DetailSection>
 
                         <S.DetailSection>
                           <S.DetailSectionTitle>
                             연결 게시글 {placeDetail.postCount.toLocaleString()}개
                           </S.DetailSectionTitle>
-                          {placeDetail.posts.length > 0 ? (
-                            <S.DetailPostList>
-                              {placeDetail.posts.map((post) => (
-                                <S.DetailPostItem key={post.id}>
-                                  <S.DetailPostImage>
-                                    {post.imageUrl ? (
-                                      <img
-                                        src={post.imageUrl}
-                                        alt={`${post.title || `게시글 ${post.id}`} 이미지`}
-                                        loading="lazy"
-                                        decoding="async"
-                                      />
-                                    ) : (
-                                      <S.DetailPostFallback>
-                                        <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
-                                      </S.DetailPostFallback>
-                                    )}
-                                  </S.DetailPostImage>
-                                  <S.DetailPostText>
-                                    <S.DetailPostTitleButton
-                                      type="button"
-                                      onClick={() =>
-                                        navigate('/main', {
-                                          state: {
-                                            openPostId: post.id,
-                                          },
-                                        })
-                                      }
-                                    >
-                                      {post.title || `게시글 #${post.id}`}
-                                    </S.DetailPostTitleButton>
-                                    <p>
-                                      {post.description || '설명 없음'}
-                                    </p>
-                                    <S.DetailPostMeta>
-                                      {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
-                                      {post.likeCount.toLocaleString()} ·{' '}
-                                      {formatPlacePostDate(post.createdAt)}
-                                    </S.DetailPostMeta>
-                                  </S.DetailPostText>
-                                </S.DetailPostItem>
-                              ))}
-                            </S.DetailPostList>
+                          {detailPostPreviewItems.length > 0 ? (
+                            <>
+                              <S.DetailPostList>
+                                {detailPostPreviewItems.map((post) => (
+                                  <S.DetailPostItem key={post.id}>
+                                    <S.DetailPostImage>
+                                      {post.imageUrl ? (
+                                        <img
+                                          src={post.imageUrl}
+                                          alt={`${post.title || `게시글 ${post.id}`} 이미지`}
+                                          loading="lazy"
+                                          decoding="async"
+                                        />
+                                      ) : (
+                                        <S.DetailPostFallback>
+                                          <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
+                                        </S.DetailPostFallback>
+                                      )}
+                                    </S.DetailPostImage>
+                                    <S.DetailPostText>
+                                      <S.DetailPostTitleButton
+                                        type="button"
+                                        onClick={() => handleOpenPostDetail(post.id)}
+                                      >
+                                        {post.title || `게시글 #${post.id}`}
+                                      </S.DetailPostTitleButton>
+                                      <p>
+                                        {post.description || '설명 없음'}
+                                      </p>
+                                      <S.DetailPostMeta>
+                                        {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
+                                        {post.likeCount.toLocaleString()} ·{' '}
+                                        {formatPlacePostDate(post.createdAt)}
+                                      </S.DetailPostMeta>
+                                      <S.DetailPostTitleButton
+                                        $variant="action"
+                                        type="button"
+                                        onClick={() => handleOpenPostDetail(post.id)}
+                                      >
+                                        <span>게시글 상세 보기</span>
+                                        <S.MaterialIcon aria-hidden="true">
+                                          chevron_right
+                                        </S.MaterialIcon>
+                                      </S.DetailPostTitleButton>
+                                    </S.DetailPostText>
+                                  </S.DetailPostItem>
+                                ))}
+                              </S.DetailPostList>
+                              {shouldShowDetailPostAllAction ? (
+                                <S.DetailPostListAction
+                                  type="button"
+                                  onClick={() => handleOpenPlacePosts(placeDetail.name)}
+                                >
+                                  <span>연결 게시글 전체 보기</span>
+                                  <S.MaterialIcon aria-hidden="true">
+                                    chevron_right
+                                  </S.MaterialIcon>
+                                </S.DetailPostListAction>
+                              ) : null}
+                            </>
                           ) : (
                             <S.DetailStatus>연결된 게시글이 없습니다.</S.DetailStatus>
                           )}
@@ -937,14 +989,14 @@ function PlaceManagePage() {
                 <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
               </S.MapControlButton>
             </S.MapControlGroup>
-            <S.MapInfo>
-              <S.MapInfoDot />
-              <span>
-                {selectedPlace
-                  ? `선택된 장소: ${selectedPlace.name}`
-                  : `${places.length.toLocaleString()}개 장소를 확인 중입니다.`}
-              </span>
-            </S.MapInfo>
+            {!isPlaceDetailOpen ? (
+              <S.MapInfo $offsetForListToggle={isPlacePanelCollapsed}>
+                <S.MapInfoDot />
+                <span>
+                  현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
+                </span>
+              </S.MapInfo>
+            ) : null}
           </S.MapPanel>
         </S.SplitContent>
       </S.MainArea>
@@ -981,6 +1033,11 @@ function PlaceManagePage() {
             <S.DeleteConfirmMeta>
               {deleteConfirmPlace.name} · {deleteConfirmPlace.address || '주소 정보 없음'}
             </S.DeleteConfirmMeta>
+            <S.DeleteConfirmWarning>
+              {deleteConfirmPlace.postCount > 0
+                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개가 영향을 받을 수 있습니다. 삭제 전 연결 상태를 확인해 주세요.`
+                : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
+            </S.DeleteConfirmWarning>
 
             {hasDeleteConfirmAttempted && actionErrorMessage ? (
               <S.DeleteConfirmNotice role="alert">

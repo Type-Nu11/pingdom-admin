@@ -414,6 +414,10 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         resizeAnimationFrameId = null
         map.relayout()
         setMapWidthScale(getMapWidthScale(mapContainer.clientWidth))
+
+        if (fitBoundsKey && activeMarkerId === null) {
+          fitCurrentMarkersToMap()
+        }
       })
     })
 
@@ -427,7 +431,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         window.cancelAnimationFrame(resizeAnimationFrameId)
       }
     }
-  }, [isMapReady])
+  }, [activeMarkerId, fitBoundsKey, fitCurrentMarkersToMap, isMapReady])
 
   useEffect(() => {
     const map = mapInstanceRef.current
@@ -465,12 +469,15 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
       markerOverlayRefs.current.push(overlay)
     })
 
-    if (fitBoundsKey && lastFitBoundsKeyRef.current !== fitBoundsKey) {
-      lastFitBoundsKeyRef.current = fitBoundsKey
-
+    if (
+      fitBoundsKey &&
+      activeMarkerId === null &&
+      lastFitBoundsKeyRef.current !== fitBoundsKey
+    ) {
       fitBoundsAnimationFrameId = window.requestAnimationFrame(() => {
         fitBoundsAnimationFrameId = null
         fitCurrentMarkersToMap()
+        lastFitBoundsKeyRef.current = fitBoundsKey
       })
     }
 

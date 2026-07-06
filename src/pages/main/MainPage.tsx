@@ -53,6 +53,7 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
 
 interface MainPageLocationState {
   openPostId?: number
+  postSearchKeyword?: string
 }
 
 interface ReportActionConfirmState {
@@ -616,6 +617,38 @@ function MainPage() {
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
     const openPostId = locationState?.openPostId
+    const postSearchKeyword = locationState?.postSearchKeyword?.trim()
+
+    if (postSearchKeyword) {
+      const applySearchTimer = window.setTimeout(() => {
+        clearPendingPostSearch()
+        clearPostDetail()
+        shouldSkipNextSearchEffectRef.current = true
+        latestPostKeywordRef.current = postSearchKeyword
+        latestReviewFilterRef.current = 'ALL'
+        setSelectedPost(null)
+        setSelectedReviewFilter('ALL')
+        setPostSearchQuery(postSearchKeyword)
+
+        void fetchReviewPosts(
+          {
+            page: 1,
+            sortParam: latestSortParamRef.current,
+            keyword: postSearchKeyword,
+            reviewStatus: 'ALL',
+          }
+        ).then((data) => {
+          if (data) {
+            scrollPageContentToTop()
+          }
+        })
+        navigate(location.pathname, { replace: true, state: null })
+      }, 0)
+
+      return () => {
+        window.clearTimeout(applySearchTimer)
+      }
+    }
 
     if (typeof openPostId !== 'number' || !Number.isFinite(openPostId)) {
       return
@@ -629,7 +662,16 @@ function MainPage() {
     return () => {
       window.clearTimeout(openDetailTimer)
     }
-  }, [handleOpenPostDetailById, location.pathname, location.state, navigate])
+  }, [
+    clearPendingPostSearch,
+    clearPostDetail,
+    fetchReviewPosts,
+    handleOpenPostDetailById,
+    location.pathname,
+    location.state,
+    navigate,
+    scrollPageContentToTop,
+  ])
 
   useEffect(() => {
     if (!isSortEffectReadyRef.current) {
@@ -843,6 +885,16 @@ function MainPage() {
                 aria-label="게시글 ID, 제목, 작성자, 장소, 설명 검색"
                 onChange={(event) => handleSearchQueryChange(event.target.value)}
               />
+              {postSearchQuery ? (
+                <S.SearchClearButton
+                  type="button"
+                  aria-label="검색어 지우기"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={handleClearPostKeyword}
+                >
+                  <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                </S.SearchClearButton>
+              ) : null}
             </S.ReviewSearchField>
           </S.ReviewToolbar>
 
@@ -1111,13 +1163,9 @@ function MainPage() {
                   </S.ModalStatusRow>
 
                   <S.ModalInfoGrid>
-                    <S.ModalInfoItem>
+                    <S.ModalInfoItem $wide>
                       <span>작성일</span>
                       <strong>{formatPostDate(activePost.createdAt)}</strong>
-                    </S.ModalInfoItem>
-                    <S.ModalInfoItem>
-                      <span>좋아요 수</span>
-                      <strong>{formatCount(activePost.likeCount)}</strong>
                     </S.ModalInfoItem>
                     {activePost.hiddenAt ? (
                       <S.ModalInfoItem $wide>

@@ -473,7 +473,7 @@ export const DetailBody = styled.div`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 16px 24px;
 `
 
 export const DetailStatus = styled.div`
@@ -500,16 +500,42 @@ export const DetailNotice = styled.p`
 `
 
 export const DetailMetaList = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 `
 
-export const DetailMetaItem = styled.div`
+export const DetailMetaGroup = styled.section`
   padding: 12px;
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
   background: ${neutral.surfaceLow};
+`
+
+export const DetailMetaGroupTitle = styled.h4`
+  margin: 0 0 10px;
+  color: ${neutral.strongText};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+`
+
+export const DetailMetaRow = styled.div`
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 8px 0;
+  border-top: 1px solid ${neutral.border};
+
+  &:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
 
   span {
     display: block;
@@ -522,7 +548,6 @@ export const DetailMetaItem = styled.div`
   strong {
     display: block;
     overflow: hidden;
-    margin-top: 4px;
     color: ${neutral.text};
     font-size: 13px;
     font-weight: 700;
@@ -541,6 +566,47 @@ export const DetailSectionTitle = styled.h4`
   color: ${neutral.strongText};
   font-size: 14px;
   font-weight: 800;
+`
+
+export const DetailGrowthProgress = styled.div`
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const DetailGrowthProgressHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+
+  strong {
+    flex-shrink: 0;
+    color: ${neutral.primary};
+    font-size: 13px;
+  }
+`
+
+export const DetailGrowthTrack = styled.div`
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: ${neutral.surfaceHighest};
+`
+
+export const DetailGrowthBar = styled.div<{ $progress: number }>`
+  width: ${({ $progress }) => `${Math.min(100, Math.max(0, $progress))}%`};
+  height: 100%;
+  border-radius: inherit;
+  background: ${neutral.primary};
+  transition: width 180ms ease;
 `
 
 export const DetailPostList = styled.div`
@@ -601,7 +667,7 @@ export const DetailPostText = styled.div`
   }
 `
 
-export const DetailPostTitleButton = styled.button`
+export const DetailPostTitleButton = styled.button<{ $variant?: 'action' }>`
   max-width: 100%;
   display: block;
   overflow: hidden;
@@ -629,6 +695,37 @@ export const DetailPostTitleButton = styled.button`
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  ${({ $variant }) =>
+    $variant === 'action' &&
+    css`
+      width: fit-content;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 0 8px;
+      border: 1px solid ${neutral.border};
+      border-radius: 7px;
+      background: ${neutral.surfaceHighest};
+      color: ${neutral.primary};
+      font-size: 12px;
+      line-height: 1;
+      text-decoration: none;
+
+      ${MaterialIcon} {
+        font-size: 16px;
+      }
+
+      &:hover {
+        border-color: ${neutral.primarySoft};
+        background: ${neutral.primaryTint};
+        color: ${neutral.primary};
+        text-decoration: none;
+      }
+    `}
 `
 
 export const DetailPostMeta = styled.span`
@@ -639,12 +736,47 @@ export const DetailPostMeta = styled.span`
   font-weight: 700;
 `
 
+export const DetailPostListAction = styled.button`
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+
+  &:hover {
+    border-color: ${neutral.primary};
+    background: ${neutral.surface};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+`
+
 export const DetailFooter = styled.footer`
+  position: relative;
+  flex-shrink: 0;
   display: flex;
   gap: 8px;
-  padding: 14px 16px;
-  border-top: 1px solid ${neutral.border};
+  padding: 16px;
+  border-top: 1px solid ${neutral.borderDark};
   background: ${neutral.surface};
+  box-shadow: 0 -12px 24px ${neutral.shadow};
 `
 
 export const DetailActionButton = styled.button`
@@ -751,7 +883,7 @@ export const PanelCount = styled.p`
   }
 `
 
-export const SearchField = styled.label`
+export const SearchField = styled.div`
   position: relative;
   display: block;
 `
@@ -769,11 +901,21 @@ export const SearchIcon = styled(MaterialIcon)`
 export const SearchInput = styled.input`
   ${controlStyle}
   width: 100%;
-  padding: 0 14px 0 40px;
+  padding: 0 44px 0 40px;
   border: 1px solid ${neutral.border};
   outline: 1px solid transparent;
   background: ${neutral.surface};
   color: ${neutral.text};
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+    display: none;
+  }
+
+  &::-ms-clear {
+    display: none;
+  }
 
   &::placeholder {
     color: ${neutral.placeholder};
@@ -783,6 +925,44 @@ export const SearchInput = styled.input`
     border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+`
+
+export const SearchClearButton = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  ${MaterialIcon} {
+    font-size: 16px;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 600,
+      'GRAD' 0,
+      'opsz' 16;
+  }
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
   }
 `
 
@@ -1024,12 +1204,6 @@ export const ReportBadge = styled.span`
   color: ${neutral.error};
   font-size: 12px;
   font-weight: 700;
-`
-
-export const PlaceCaption = styled.p`
-  margin: 4px 0 0;
-  color: ${neutral.muted};
-  font-size: 12px;
 `
 
 export const PlaceMeta = styled.p`
@@ -1379,27 +1553,29 @@ export const MapControlButton = styled.button`
   }
 `
 
-export const MapInfo = styled.div`
+export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   position: absolute;
-  top: 16px;
-  right: 84px;
+  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '66px' : '20px')};
+  left: 20px;
   z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: min(320px, calc(100% - 132px));
-  padding: 8px 10px;
+  max-width: min(340px, calc(100% - 40px));
+  min-height: 38px;
+  padding: 0 12px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.softOverlay};
   color: ${neutral.text};
   font-size: 12px;
+  font-weight: 800;
   box-shadow: 0 8px 22px ${neutral.shadow};
 
   @media (max-width: 720px) {
-    top: 12px;
-    right: 12px;
-    max-width: min(320px, calc(100% - 24px));
+    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '60px' : '12px')};
+    left: 12px;
+    max-width: min(340px, calc(100% - 24px));
   }
 `
 
@@ -1751,6 +1927,19 @@ export const DeleteConfirmMeta = styled.p`
   font-weight: 700;
   line-height: 1.5;
   word-break: break-word;
+`
+
+export const DeleteConfirmWarning = styled.p`
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid ${neutral.warning};
+  border-radius: 8px;
+  background: ${neutral.warningTint};
+  color: ${neutral.warningText};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  word-break: keep-all;
 `
 
 export const DeleteConfirmNotice = styled.p`

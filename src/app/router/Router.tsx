@@ -11,6 +11,7 @@ import MainPage from '../../pages/main/MainPage'
 import NotFoundPage from '../../pages/notFound/NotFoundPage'
 import PlaceManagePage from '../../pages/place/PlaceManagePage'
 import UserBanPage from '../../pages/userBan/UserBanPage'
+import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
@@ -21,6 +22,13 @@ function ScrollToTopOnRouteChange() {
   const { pathname } = useLocation()
 
   useLayoutEffect(() => {
+    const mainScrollArea = document.getElementById(ADMIN_MAIN_SCROLL_AREA_ID)
+
+    if (mainScrollArea) {
+      mainScrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      return
+    }
+
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [pathname])
 

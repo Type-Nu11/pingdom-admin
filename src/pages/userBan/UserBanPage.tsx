@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminBannedUsers } from '../../hooks/useAdminBannedUsers'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -361,7 +362,7 @@ function UserBanPage() {
         </S.SideFooter>
       </S.SideNav>
 
-      <S.MainArea>
+      <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <S.TopBar>
           <S.TopTitleGroup>
             <S.TopTitle>사용자 밴</S.TopTitle>

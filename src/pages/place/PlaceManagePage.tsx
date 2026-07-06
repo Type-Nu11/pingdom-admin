@@ -5,6 +5,7 @@ import type {
   KakaoMapMarker,
 } from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
+import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -552,7 +553,7 @@ function PlaceManagePage() {
         </S.SideFooter>
       </S.SideNav>
 
-      <S.MainArea>
+      <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <S.TopBar>
           <S.TopTitleGroup>
             <S.TopTitle>장소 관리</S.TopTitle>

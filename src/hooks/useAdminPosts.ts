@@ -7,6 +7,7 @@ import type {
   AdminPost,
   AdminPostDeleteErrorResponse,
   AdminPostDetailErrorResponse,
+  AdminPostListResponse,
   AdminPostListErrorResponse,
   AdminPostListRequest,
   AdminPostReportStatus,
@@ -72,12 +73,14 @@ interface UseAdminPostsOptions {
   initialPage?: number
   limit?: number
   sortParam?: AdminPostSortParam
+  autoFetch?: boolean
 }
 
 export function useAdminPosts({
   initialPage = DEFAULT_ADMIN_POST_PAGE,
   limit = DEFAULT_ADMIN_POST_LIMIT,
   sortParam = DEFAULT_ADMIN_POST_SORT_PARAM,
+  autoFetch = true,
 }: UseAdminPostsOptions = {}) {
   const { clearAuth } = useAuth()
   const [posts, setPosts] = useState<AdminPost[]>([])
@@ -134,7 +137,9 @@ export function useAdminPosts({
     [clearActionSuccessTimeout]
   )
 
-  const fetchAdminPosts = useCallback(async (request: AdminPostListRequest = {}) => {
+  const fetchAdminPosts = useCallback(async (
+    request: AdminPostListRequest = {}
+  ): Promise<AdminPostListResponse | null> => {
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
 
@@ -173,7 +178,7 @@ export function useAdminPosts({
         }
       }
 
-      return true
+      return data
     } catch (error) {
       if (requestId === latestRequestIdRef.current) {
         setPosts([])
@@ -187,7 +192,7 @@ export function useAdminPosts({
 
       console.error('관리자 게시글 목록 조회 실패', error)
 
-      return false
+      return null
     } finally {
       if (requestId === latestRequestIdRef.current) {
         setIsLoading(false)
@@ -262,9 +267,9 @@ export function useAdminPosts({
 
         const isLastItemOnPage = posts.length === 1
         const targetPage = isLastItemOnPage && page > 1 ? page - 1 : page
-        const isRefreshSuccess = await fetchAdminPosts({ page: targetPage })
+        const refreshedPosts = await fetchAdminPosts({ page: targetPage })
 
-        if (!isRefreshSuccess) {
+        if (!refreshedPosts) {
           setActionErrorMessage('게시글은 삭제됐지만 목록을 다시 불러오지 못했습니다.')
         }
 
@@ -300,8 +305,12 @@ export function useAdminPosts({
   )
 
   useEffect(() => {
+    if (!autoFetch) {
+      return
+    }
+
     void fetchAdminPosts()
-  }, [fetchAdminPosts])
+  }, [autoFetch, fetchAdminPosts])
 
   useEffect(() => {
     return () => {

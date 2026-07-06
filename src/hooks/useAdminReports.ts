@@ -7,6 +7,7 @@ import {
 } from '../api/adminReportApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
+import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type {
   AdminReportActionErrorResponse,
@@ -192,7 +193,7 @@ export function useAdminReports({
           }
         }
 
-        console.error('관리자 신고 목록 조회 실패', error)
+        logDebugError('관리자 신고 목록 조회 실패', error)
 
         return false
       } finally {
@@ -238,7 +239,7 @@ export function useAdminReports({
           }
         }
 
-        console.error('관리자 신고 상세 조회 실패', error)
+        logDebugError('관리자 신고 상세 조회 실패', error)
 
         return null
       } finally {
@@ -298,7 +299,7 @@ export function useAdminReports({
           clearAuth()
         }
 
-        console.error('관리자 신고 처리 실패', error)
+        logDebugError('관리자 신고 처리 실패', error)
 
         return null
       } finally {

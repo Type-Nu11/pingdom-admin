@@ -9,6 +9,7 @@ import {
   subscribeAuthStorageChange,
   updateStoredAuthUser,
 } from '../../utils/authStorage'
+import { logDebugError } from '../../utils/debugLogger'
 import {
   AuthContext,
   EMPTY_AUTH_STATE,
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try {
       await requestLogout({ refreshToken })
     } catch (error) {
-      console.error('로그아웃 요청 실패', error)
+      logDebugError('로그아웃 요청 실패', error)
     }
   }, [authState.refreshToken, clearAuth])
 

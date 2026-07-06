@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { login as requestLogin } from '../api/authApi'
+import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type { LoginErrorResponse, LoginRequest } from '../types/auth.types'
 
@@ -68,10 +69,10 @@ export function useLogin() {
             categoryMessages: LOGIN_CATEGORY_MESSAGES,
           })
         )
-        console.error('로그인 실패', error)
+        logDebugError('로그인 실패', error)
       } else {
         setErrorMessage(LOGIN_ERROR_MESSAGE)
-        console.error('로그인 실패', error)
+        logDebugError('로그인 실패', error)
       }
 
       return false

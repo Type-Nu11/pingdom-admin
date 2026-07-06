@@ -5,6 +5,7 @@ import type {
   KakaoMapMarker,
 } from '../../components/map/KakaoMap'
 import SortDropdown from '../../components/common/SortDropdown'
+import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -26,6 +27,7 @@ const DEFAULT_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const PLACE_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
+  { value: 'LEVEL_DESC', label: '레벨 높은순' },
 ]
 function hasValidCoordinate(place: AdminPlaceItem) {
   return (
@@ -54,6 +56,18 @@ function getPlaceLevel(place: AdminPlaceItem) {
 
 function getPlacePhotoCount(place: AdminPlaceItem) {
   return formatOptionalNumber(place.placeGrowth?.photoCount)
+}
+
+function getPlaceRegistrantLabel(place: AdminPlaceItem) {
+  if (place.registrant) {
+    return place.registrant
+  }
+
+  if (typeof place.userId === 'number' && Number.isFinite(place.userId)) {
+    return `ID ${place.userId}`
+  }
+
+  return '등록자 정보 없음'
 }
 
 function getDetailGrowthProgress(placeDetail: AdminPlaceDetail) {
@@ -183,6 +197,7 @@ function PlaceManagePage() {
         label: place.name,
         category: place.category,
         categoryName: place.categoryName,
+        level: place.placeGrowth?.level,
       })),
     [places]
   )
@@ -538,7 +553,7 @@ function PlaceManagePage() {
         </S.SideFooter>
       </S.SideNav>
 
-      <S.MainArea>
+      <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <S.TopBar>
           <S.TopTitleGroup>
             <S.TopTitle>장소 관리</S.TopTitle>
@@ -577,7 +592,7 @@ function PlaceManagePage() {
                   value={selectedSortParam}
                   options={PLACE_SORT_OPTIONS}
                   disabled={isLoading}
-                  width="104px"
+                  width="124px"
                   onChange={handleSortChange}
                 />
                 <S.IconFilterButton
@@ -679,8 +694,12 @@ function PlaceManagePage() {
                         </S.PlaceMeta>
                         <S.PlaceStatList aria-label={`${place.name} 장소 지표`}>
                           <S.PlaceStat>
+                            <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
+                            <span>등록자 {getPlaceRegistrantLabel(place)}</span>
+                          </S.PlaceStat>
+                          <S.PlaceStat>
                             <S.MaterialIcon aria-hidden="true">military_tech</S.MaterialIcon>
-                            <span>레벨 {getPlaceLevel(place)}</span>
+                            <span>Lv.{getPlaceLevel(place)}</span>
                           </S.PlaceStat>
                           <S.PlaceStat>
                             <S.MaterialIcon aria-hidden="true">photo_camera</S.MaterialIcon>
@@ -992,9 +1011,12 @@ function PlaceManagePage() {
             {!isPlaceDetailOpen ? (
               <S.MapInfo $offsetForListToggle={isPlacePanelCollapsed}>
                 <S.MapInfoDot />
-                <span>
-                  현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
-                </span>
+                <S.MapInfoText>
+                  <strong>
+                    현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
+                  </strong>
+                  <span>장소를 선택하면 상세 정보를 확인할 수 있습니다.</span>
+                </S.MapInfoText>
               </S.MapInfo>
             ) : null}
           </S.MapPanel>

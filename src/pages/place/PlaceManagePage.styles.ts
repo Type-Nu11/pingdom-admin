@@ -354,14 +354,14 @@ export const SplitContent = styled.div<{
   min-height: 0;
   display: grid;
   grid-template-columns: ${({ $isPanelCollapsed }) =>
-    `${$isPanelCollapsed ? '0' : '340px'} minmax(0, 1fr)`};
+    `${$isPanelCollapsed ? '0' : '320px'} minmax(0, 1fr)`};
   flex: 1;
   overflow: hidden;
   transition: grid-template-columns 180ms ease;
 
   @media (max-width: 1180px) {
     grid-template-columns: ${({ $isPanelCollapsed }) =>
-      `${$isPanelCollapsed ? '0' : '312px'} minmax(0, 1fr)`};
+      `${$isPanelCollapsed ? '0' : '300px'} minmax(0, 1fr)`};
   }
 
   @media (max-width: 900px) {
@@ -1392,7 +1392,7 @@ export const MapPanel = styled.section`
 
   @media (max-width: 900px) {
     grid-column: auto;
-    min-height: 460px;
+    min-height: 520px;
   }
 `
 
@@ -1553,11 +1553,11 @@ export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   left: 20px;
   z-index: 6;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  max-width: min(340px, calc(100% - 40px));
-  min-height: 38px;
-  padding: 0 12px;
+  max-width: min(360px, calc(100% - 40px));
+  min-height: 44px;
+  padding: 8px 12px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.softOverlay};
@@ -1573,9 +1573,31 @@ export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   }
 `
 
+export const MapInfoText = styled.span`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    color: ${neutral.text};
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+`
+
 export const MapInfoDot = styled.span`
   width: 8px;
   height: 8px;
+  margin-top: 4px;
   flex-shrink: 0;
   border-radius: 999px;
   background: ${neutral.primary};

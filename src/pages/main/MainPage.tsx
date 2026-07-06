@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SortDropdown from '../../components/common/SortDropdown'
+import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -637,11 +638,7 @@ function MainPage() {
             keyword: postSearchKeyword,
             reviewStatus: 'ALL',
           }
-        ).then((data) => {
-          if (data) {
-            scrollPageContentToTop()
-          }
-        })
+        )
         navigate(location.pathname, { replace: true, state: null })
       }, 0)
 
@@ -670,7 +667,6 @@ function MainPage() {
     location.pathname,
     location.state,
     navigate,
-    scrollPageContentToTop,
   ])
 
   useEffect(() => {
@@ -811,7 +807,7 @@ function MainPage() {
         </S.SideFooter>
       </S.SideNav>
 
-      <S.MainArea>
+      <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <S.TopBar>
           <S.TopTitle>게시글 관리</S.TopTitle>
           <S.TopActions>

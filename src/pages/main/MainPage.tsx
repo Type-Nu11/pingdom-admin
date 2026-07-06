@@ -53,6 +53,7 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
 
 interface MainPageLocationState {
   openPostId?: number
+  postSearchKeyword?: string
 }
 
 interface ReportActionConfirmState {
@@ -616,6 +617,38 @@ function MainPage() {
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
     const openPostId = locationState?.openPostId
+    const postSearchKeyword = locationState?.postSearchKeyword?.trim()
+
+    if (postSearchKeyword) {
+      const applySearchTimer = window.setTimeout(() => {
+        clearPendingPostSearch()
+        clearPostDetail()
+        shouldSkipNextSearchEffectRef.current = true
+        latestPostKeywordRef.current = postSearchKeyword
+        latestReviewFilterRef.current = 'ALL'
+        setSelectedPost(null)
+        setSelectedReviewFilter('ALL')
+        setPostSearchQuery(postSearchKeyword)
+
+        void fetchReviewPosts(
+          {
+            page: 1,
+            sortParam: latestSortParamRef.current,
+            keyword: postSearchKeyword,
+            reviewStatus: 'ALL',
+          }
+        ).then((data) => {
+          if (data) {
+            scrollPageContentToTop()
+          }
+        })
+        navigate(location.pathname, { replace: true, state: null })
+      }, 0)
+
+      return () => {
+        window.clearTimeout(applySearchTimer)
+      }
+    }
 
     if (typeof openPostId !== 'number' || !Number.isFinite(openPostId)) {
       return
@@ -629,7 +662,16 @@ function MainPage() {
     return () => {
       window.clearTimeout(openDetailTimer)
     }
-  }, [handleOpenPostDetailById, location.pathname, location.state, navigate])
+  }, [
+    clearPendingPostSearch,
+    clearPostDetail,
+    fetchReviewPosts,
+    handleOpenPostDetailById,
+    location.pathname,
+    location.state,
+    navigate,
+    scrollPageContentToTop,
+  ])
 
   useEffect(() => {
     if (!isSortEffectReadyRef.current) {

@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth'
 import type { AdminReportActionStatus } from '../../types/adminReport.types'
 import type {
   AdminPost,
+  AdminPostListRequest,
   AdminPostReportItem,
   AdminPostReportStatus,
   AdminPostSortParam,
@@ -24,6 +25,7 @@ const ADMIN_POST_SORT_OPTIONS = [
 ]
 type AdminPostReviewFilter = 'ALL' | 'PENDING' | 'REPORTED' | 'NORMAL'
 type AdminPostStatusTone = 'normal' | 'reported' | 'processed' | 'hidden'
+type AdminPostReviewFilterCounts = Record<AdminPostReviewFilter, number | null>
 
 const ADMIN_POST_REVIEW_FILTERS: Array<{
   value: AdminPostReviewFilter
@@ -34,6 +36,12 @@ const ADMIN_POST_REVIEW_FILTERS: Array<{
   { value: 'REPORTED', label: '신고 이력' },
   { value: 'NORMAL', label: '신고 없음' },
 ]
+const INITIAL_REVIEW_FILTER_COUNTS: AdminPostReviewFilterCounts = {
+  ALL: null,
+  PENDING: null,
+  REPORTED: null,
+  NORMAL: null,
+}
 const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
   PENDING: '처리 대기',
   ACCEPTED: '수락',
@@ -179,7 +187,7 @@ function isPostMatchingReviewFilter(
   }
 
   if (filter === 'REPORTED') {
-    return reports.length > 0
+    return reports.length > 0 && pendingReportCount === 0
   }
 
   if (filter === 'NORMAL') {
@@ -323,7 +331,43 @@ function MainPage() {
   )
   const [selectedReviewFilter, setSelectedReviewFilter] =
     useState<AdminPostReviewFilter>('ALL')
+  const [reviewFilterCounts, setReviewFilterCounts] =
+    useState<AdminPostReviewFilterCounts>(() => ({
+      ...INITIAL_REVIEW_FILTER_COUNTS,
+    }))
   const [postSearchQuery, setPostSearchQuery] = useState('')
+  const syncReviewFilterCounts = useCallback(
+    (
+      filter: AdminPostReviewFilter,
+      nextPosts: AdminPost[],
+      nextTotalCount: number
+    ) => {
+      setReviewFilterCounts((previousCounts) => {
+        const nextCounts = { ...previousCounts }
+        let hasChanged = false
+
+        const updateCount = (targetFilter: AdminPostReviewFilter, count: number) => {
+          if (nextCounts[targetFilter] !== count) {
+            nextCounts[targetFilter] = count
+            hasChanged = true
+          }
+        }
+
+        if (filter === 'ALL') {
+          updateCount('ALL', nextTotalCount)
+          updateCount('REPORTED', getPostFilterCount(nextPosts, 'REPORTED'))
+          updateCount('NORMAL', getPostFilterCount(nextPosts, 'NORMAL'))
+        } else if (filter === 'PENDING') {
+          updateCount('PENDING', nextTotalCount)
+        } else {
+          updateCount(filter, getPostFilterCount(nextPosts, filter))
+        }
+
+        return hasChanged ? nextCounts : previousCounts
+      })
+    },
+    []
+  )
   const {
     posts,
     page,
@@ -345,6 +389,7 @@ function MainPage() {
     deletePost,
   } = useAdminPosts({
     limit: ADMIN_POST_PAGE_SIZE,
+    autoFetch: false,
   })
   const {
     actionErrorMessage: reportActionErrorMessage,
@@ -356,6 +401,21 @@ function MainPage() {
     autoFetch: false,
     refreshListOnAction: false,
   })
+  const fetchReviewPosts = useCallback(
+    async (
+      request: AdminPostListRequest = {},
+      filter: AdminPostReviewFilter = latestReviewFilterRef.current
+    ) => {
+      const data = await fetchAdminPosts(request)
+
+      if (data) {
+        syncReviewFilterCounts(filter, data.posts, data.totalCount)
+      }
+
+      return data
+    },
+    [fetchAdminPosts, syncReviewFilterCounts]
+  )
   const activePost = postDetail ?? selectedPost
   const activePostId = activePost?.id ?? null
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
@@ -375,23 +435,6 @@ function MainPage() {
   const hasActivePostKeyword = postKeyword.length > 0
   const showPagination = totalPages > 1 && !hasClientOnlyPostFilter
   const visiblePageNumbers = getVisiblePageNumbers(currentPageNumber, totalPages)
-  const reviewFilterCounts = useMemo(
-    () =>
-      ADMIN_POST_REVIEW_FILTERS.reduce<Record<AdminPostReviewFilter, number>>(
-        (counts, filter) => {
-          counts[filter.value] = getPostFilterCount(posts, filter.value)
-
-          return counts
-        },
-        {
-          ALL: 0,
-          PENDING: 0,
-          REPORTED: 0,
-          NORMAL: 0,
-        }
-      ),
-    [posts]
-  )
   const filteredPosts = useMemo(
     () =>
       hasClientOnlyPostFilter
@@ -498,16 +541,21 @@ function MainPage() {
     const nextReportStatus = getServerReportStatusFilter(nextFilter)
 
     if (currentReportStatus === nextReportStatus) {
+      syncReviewFilterCounts(nextFilter, posts, totalCount)
+
       return
     }
 
-    void fetchAdminPosts({
-      page: 1,
-      sortParam: selectedSortParam,
-      keyword: postKeyword,
-      reportStatus: nextReportStatus,
-    }).then((isSuccess) => {
-      if (isSuccess) {
+    void fetchReviewPosts(
+      {
+        page: 1,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+        reportStatus: nextReportStatus,
+      },
+      nextFilter
+    ).then((data) => {
+      if (data) {
         scrollPageContentToTop()
       }
     })
@@ -522,13 +570,16 @@ function MainPage() {
     shouldSkipNextSearchEffectRef.current = true
     setPostSearchQuery('')
 
-    void fetchAdminPosts({
-      page: 1,
-      sortParam: selectedSortParam,
-      keyword: '',
-      reportStatus: getServerReportStatusFilter(selectedReviewFilter),
-    }).then((isSuccess) => {
-      if (isSuccess) {
+    void fetchReviewPosts(
+      {
+        page: 1,
+        sortParam: selectedSortParam,
+        keyword: '',
+        reportStatus: getServerReportStatusFilter(selectedReviewFilter),
+      },
+      selectedReviewFilter
+    ).then((data) => {
+      if (data) {
         scrollPageContentToTop()
       }
     })
@@ -543,13 +594,16 @@ function MainPage() {
 
     clearPendingPostSearch()
 
-    void fetchAdminPosts({
-      page: nextPageNumber,
-      sortParam: selectedSortParam,
-      keyword: postKeyword,
-      reportStatus: getServerReportStatusFilter(selectedReviewFilter),
-    }).then((isSuccess) => {
-      if (isSuccess) {
+    void fetchReviewPosts(
+      {
+        page: nextPageNumber,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+        reportStatus: getServerReportStatusFilter(selectedReviewFilter),
+      },
+      selectedReviewFilter
+    ).then((data) => {
+      if (data) {
         scrollPageContentToTop()
       }
     })
@@ -558,12 +612,15 @@ function MainPage() {
   const handleRefresh = () => {
     clearPendingPostSearch()
 
-    void fetchAdminPosts({
-      page: currentPageNumber,
-      sortParam: selectedSortParam,
-      keyword: postKeyword,
-      reportStatus: getServerReportStatusFilter(selectedReviewFilter),
-    })
+    void fetchReviewPosts(
+      {
+        page: currentPageNumber,
+        sortParam: selectedSortParam,
+        keyword: postKeyword,
+        reportStatus: getServerReportStatusFilter(selectedReviewFilter),
+      },
+      selectedReviewFilter
+    )
   }
 
   const handleDeleteActivePost = () => {
@@ -629,12 +686,15 @@ function MainPage() {
       setHasReportActionConfirmAttempted(false)
 
       void fetchAdminPostDetail(postId)
-      void fetchAdminPosts({
-        page: currentPageNumber,
-        sortParam: selectedSortParam,
-        keyword: postKeyword,
-        reportStatus: getServerReportStatusFilter(selectedReviewFilter),
-      })
+      void fetchReviewPosts(
+        {
+          page: currentPageNumber,
+          sortParam: selectedSortParam,
+          keyword: postKeyword,
+          reportStatus: getServerReportStatusFilter(selectedReviewFilter),
+        },
+        selectedReviewFilter
+      )
     })
   }
 
@@ -649,6 +709,10 @@ function MainPage() {
   useEffect(() => {
     latestReviewFilterRef.current = selectedReviewFilter
   }, [selectedReviewFilter])
+
+  useEffect(() => {
+    void fetchReviewPosts({}, 'ALL')
+  }, [fetchReviewPosts])
 
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
@@ -675,13 +739,16 @@ function MainPage() {
       return
     }
 
-    void fetchAdminPosts({
-      page: 1,
-      sortParam: selectedSortParam,
-      keyword: latestPostKeywordRef.current,
-      reportStatus: getServerReportStatusFilter(latestReviewFilterRef.current),
-    })
-  }, [fetchAdminPosts, selectedSortParam])
+    void fetchReviewPosts(
+      {
+        page: 1,
+        sortParam: selectedSortParam,
+        keyword: latestPostKeywordRef.current,
+        reportStatus: getServerReportStatusFilter(latestReviewFilterRef.current),
+      },
+      latestReviewFilterRef.current
+    )
+  }, [fetchReviewPosts, selectedSortParam])
 
   useEffect(() => {
     if (!isSearchEffectReadyRef.current) {
@@ -701,13 +768,16 @@ function MainPage() {
     const nextKeyword = postSearchQuery.trim()
     searchTimeoutRef.current = window.setTimeout(() => {
       searchTimeoutRef.current = null
-      void fetchAdminPosts({
-        page: 1,
-        sortParam: latestSortParamRef.current,
-        keyword: nextKeyword,
-        reportStatus: getServerReportStatusFilter(latestReviewFilterRef.current),
-      }).then((isSuccess) => {
-        if (isSuccess) {
+      void fetchReviewPosts(
+        {
+          page: 1,
+          sortParam: latestSortParamRef.current,
+          keyword: nextKeyword,
+          reportStatus: getServerReportStatusFilter(latestReviewFilterRef.current),
+        },
+        latestReviewFilterRef.current
+      ).then((data) => {
+        if (data) {
           scrollPageContentToTop()
         }
       })
@@ -716,7 +786,7 @@ function MainPage() {
     return clearPendingPostSearch
   }, [
     clearPendingPostSearch,
-    fetchAdminPosts,
+    fetchReviewPosts,
     postSearchQuery,
     scrollPageContentToTop,
   ])
@@ -859,7 +929,9 @@ function MainPage() {
                   onClick={() => handleReviewFilterChange(filter.value)}
                 >
                   <span>{filter.label}</span>
-                  <strong>{formatCount(reviewFilterCounts[filter.value])}</strong>
+                  {reviewFilterCounts[filter.value] !== null ? (
+                    <strong>{formatCount(reviewFilterCounts[filter.value])}</strong>
+                  ) : null}
                 </S.ReviewTabButton>
               ))}
             </S.ReviewTabList>

@@ -43,10 +43,6 @@ function formatCoordinate(place: AdminPlaceItem) {
   return `${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`
 }
 
-function getPlaceOwner(place: AdminPlaceItem) {
-  return place.registrant || `사용자 ID: ${place.userId}`
-}
-
 function formatOptionalNumber(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '-'
 }
@@ -642,16 +638,9 @@ function PlaceManagePage() {
                           <S.PlaceName>{place.name}</S.PlaceName>
                           <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                         </S.PlaceTitleRow>
-                        <S.PlaceCaption>
-                          장소 ID: {place.id} · {getPlaceOwner(place)}
-                        </S.PlaceCaption>
                         <S.PlaceMeta>
                           <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
                           <span>{place.address || '주소 정보 없음'}</span>
-                        </S.PlaceMeta>
-                        <S.PlaceMeta>
-                          <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-                          <span>{formatCoordinate(place)}</span>
                         </S.PlaceMeta>
                         <S.PlaceStatList aria-label={`${place.name} 장소 지표`}>
                           <S.PlaceStat>
@@ -757,7 +746,7 @@ function PlaceManagePage() {
                 <>
                   <S.DetailHeader>
                     <S.DetailTitleGroup>
-                      <S.DetailEyebrow>PLACE DETAIL</S.DetailEyebrow>
+                      <S.DetailEyebrow>장소 상세</S.DetailEyebrow>
                       <S.DetailTitle>
                         {placeDetail?.name ?? selectedPlace.name}
                       </S.DetailTitle>
@@ -781,31 +770,34 @@ function PlaceManagePage() {
                     ) : placeDetail ? (
                       <>
                         <S.DetailMetaList>
-                          <S.DetailMetaItem>
-                            <span>장소 ID</span>
-                            <strong>{placeDetail.id}</strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>주소</span>
-                            <strong>{placeDetail.address || '주소 정보 없음'}</strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>카테고리</span>
-                            <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>등록자</span>
-                            <strong>
-                              {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
-                            </strong>
-                          </S.DetailMetaItem>
-                          <S.DetailMetaItem>
-                            <span>좌표</span>
-                            <strong>
-                              {placeDetail.latitude.toFixed(6)},{' '}
-                              {placeDetail.longitude.toFixed(6)}
-                            </strong>
-                          </S.DetailMetaItem>
+                          <S.DetailMetaGroup>
+                            <S.DetailMetaGroupTitle>기본 정보</S.DetailMetaGroupTitle>
+                            <S.DetailMetaRow>
+                              <span>장소 ID</span>
+                              <strong>{placeDetail.id}</strong>
+                            </S.DetailMetaRow>
+                            <S.DetailMetaRow>
+                              <span>카테고리</span>
+                              <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
+                            </S.DetailMetaRow>
+                            <S.DetailMetaRow>
+                              <span>등록자</span>
+                              <strong>
+                                {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
+                              </strong>
+                            </S.DetailMetaRow>
+                          </S.DetailMetaGroup>
+                          <S.DetailMetaGroup>
+                            <S.DetailMetaGroupTitle>위치 정보</S.DetailMetaGroupTitle>
+                            <S.DetailMetaRow>
+                              <span>주소</span>
+                              <strong>{placeDetail.address || '주소 정보 없음'}</strong>
+                            </S.DetailMetaRow>
+                            <S.DetailMetaRow>
+                              <span>좌표</span>
+                              <strong>{formatCoordinate(placeDetail)}</strong>
+                            </S.DetailMetaRow>
+                          </S.DetailMetaGroup>
                         </S.DetailMetaList>
 
                         <S.DetailSection>

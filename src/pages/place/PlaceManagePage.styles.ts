@@ -500,16 +500,42 @@ export const DetailNotice = styled.p`
 `
 
 export const DetailMetaList = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 `
 
-export const DetailMetaItem = styled.div`
+export const DetailMetaGroup = styled.section`
   padding: 12px;
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
   background: ${neutral.surfaceLow};
+`
+
+export const DetailMetaGroupTitle = styled.h4`
+  margin: 0 0 10px;
+  color: ${neutral.strongText};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+`
+
+export const DetailMetaRow = styled.div`
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 8px 0;
+  border-top: 1px solid ${neutral.border};
+
+  &:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
 
   span {
     display: block;
@@ -522,7 +548,6 @@ export const DetailMetaItem = styled.div`
   strong {
     display: block;
     overflow: hidden;
-    margin-top: 4px;
     color: ${neutral.text};
     font-size: 13px;
     font-weight: 700;
@@ -1024,12 +1049,6 @@ export const ReportBadge = styled.span`
   color: ${neutral.error};
   font-size: 12px;
   font-weight: 700;
-`
-
-export const PlaceCaption = styled.p`
-  margin: 4px 0 0;
-  color: ${neutral.muted};
-  font-size: 12px;
 `
 
 export const PlaceMeta = styled.p`

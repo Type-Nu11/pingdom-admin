@@ -62,6 +62,7 @@ export interface AdminPostListResponse {
   totalCount: number
   totalPages: number
   hasNext: boolean
+  counts?: AdminPostReviewCounts
 }
 
 export type AdminPostListErrorResponse = AuthErrorResponse<

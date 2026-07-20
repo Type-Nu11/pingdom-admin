@@ -10,6 +10,7 @@ import LoginPage from '../../pages/login/LoginPage'
 import MainPage from '../../pages/main/MainPage'
 import NotFoundPage from '../../pages/notFound/NotFoundPage'
 import PlaceManagePage from '../../pages/place/PlaceManagePage'
+import PlaceMergePage from '../../pages/placeMerge/PlaceMergePage'
 import UserBanPage from '../../pages/userBan/UserBanPage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -46,6 +47,7 @@ export function Router() {
         <Route element={<ProtectedRoute />}>
           <Route path="/main" element={<MainPage />} />
           <Route path="/places" element={<PlaceManagePage />} />
+          <Route path="/places/duplicates" element={<PlaceMergePage />} />
           <Route path="/bans" element={<UserBanPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

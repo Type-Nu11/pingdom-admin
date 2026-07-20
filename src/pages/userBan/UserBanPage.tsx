@@ -450,6 +450,10 @@ function UserBanPage() {
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
             <span>장소 관리</span>
           </S.MenuButton>
+          <S.MenuButton type="button" onClick={() => navigate('/places/duplicates')}>
+            <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
+            <span>중복 장소</span>
+          </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/main')}>
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
             <span>게시글 관리</span>

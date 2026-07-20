@@ -765,10 +765,9 @@ function MainPage() {
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button" disabled aria-label="대시보드 점검 중">
+          <S.MenuButton type="button" onClick={() => navigate('/dashboard')}>
             <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
             <span>대시보드</span>
-            <S.MenuStatusText>점검 중</S.MenuStatusText>
           </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/places')}>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>

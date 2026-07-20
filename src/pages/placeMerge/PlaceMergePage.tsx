@@ -356,10 +356,9 @@ function PlaceMergePage() {
         </Shell.SideHeader>
 
         <Shell.SideMenu>
-          <Shell.MenuButton type="button" disabled aria-label="대시보드 점검 중">
+          <Shell.MenuButton type="button" onClick={() => navigate('/dashboard')}>
             <Shell.MaterialIcon aria-hidden="true">dashboard</Shell.MaterialIcon>
             <span>대시보드</span>
-            <Shell.MenuStatusText>점검 중</Shell.MenuStatusText>
           </Shell.MenuButton>
           <Shell.MenuButton type="button" onClick={() => navigate('/places')}>
             <Shell.MaterialIcon aria-hidden="true">location_on</Shell.MaterialIcon>

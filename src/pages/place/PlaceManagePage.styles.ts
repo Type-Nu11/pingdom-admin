@@ -347,6 +347,32 @@ export const IconButton = styled.button`
   }
 `
 
+export const TopActionButton = styled.button`
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
 export const SplitContent = styled.div<{
   $isPanelCollapsed?: boolean
 }>`

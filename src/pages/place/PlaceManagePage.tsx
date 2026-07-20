@@ -538,10 +538,6 @@ function PlaceManagePage() {
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
             <span>장소 관리</span>
           </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/places/duplicates')}>
-            <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
-            <span>중복 장소</span>
-          </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/main')}>
             <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
             <span>게시글 관리</span>
@@ -581,6 +577,13 @@ function PlaceManagePage() {
             <S.TopTitle>장소 관리</S.TopTitle>
           </S.TopTitleGroup>
           <S.TopActions>
+            <S.TopActionButton
+              type="button"
+              onClick={() => navigate('/places/duplicates')}
+            >
+              <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
+              중복 장소 관리
+            </S.TopActionButton>
             <S.IconButton type="button" aria-label="알림">
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
             </S.IconButton>

@@ -577,6 +577,13 @@ function PlaceManagePage() {
             <S.TopTitle>장소 관리</S.TopTitle>
           </S.TopTitleGroup>
           <S.TopActions>
+            <S.TopActionButton
+              type="button"
+              onClick={() => navigate('/places/duplicates')}
+            >
+              <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
+              중복 장소 관리
+            </S.TopActionButton>
             <S.IconButton type="button" aria-label="알림">
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
             </S.IconButton>

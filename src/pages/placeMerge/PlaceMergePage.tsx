@@ -365,10 +365,6 @@ function PlaceMergePage() {
             <Shell.MaterialIcon aria-hidden="true">location_on</Shell.MaterialIcon>
             <span>장소 관리</span>
           </Shell.MenuButton>
-          <Shell.MenuButton type="button" $active>
-            <Shell.MaterialIcon aria-hidden="true">merge_type</Shell.MaterialIcon>
-            <span>중복 장소</span>
-          </Shell.MenuButton>
           <Shell.MenuButton type="button" onClick={() => navigate('/main')}>
             <Shell.MaterialIcon aria-hidden="true">description</Shell.MaterialIcon>
             <span>게시글 관리</span>

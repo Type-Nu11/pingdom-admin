@@ -464,6 +464,16 @@ function PlaceMergePage() {
                       <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
                       <strong>중복 장소를 확인하는 중입니다.</strong>
                     </S.EmptyState>
+                  ) : errorMessage ? (
+                    <S.EmptyState>
+                      <strong>중복 장소 목록을 불러오지 못했습니다.</strong>
+                      <S.SecondaryButton
+                        type="button"
+                        onClick={() => void fetchDuplicateGroups()}
+                      >
+                        다시 시도
+                      </S.SecondaryButton>
+                    </S.EmptyState>
                   ) : duplicateGroups.length === 0 ? (
                     <S.EmptyState>
                       <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
@@ -489,7 +499,11 @@ function PlaceMergePage() {
                           <S.GroupTopLine>
                             <S.GroupLabel>{getGroupLabel(group)}</S.GroupLabel>
                             <S.GroupCount>
-                              후보 {group.duplicatePlaceIds.length}개
+                              후보{' '}
+                              {group.duplicatePlaceIds.filter(
+                                (placeId) => placeId !== group.representativePlaceId
+                              ).length}
+                              개
                             </S.GroupCount>
                           </S.GroupTopLine>
                           <S.GroupReasons>

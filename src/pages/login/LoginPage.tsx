@@ -23,7 +23,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (isAuthReady && isAuthenticated) {
-      navigate('/main', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
   }, [isAuthReady, isAuthenticated, navigate])
 

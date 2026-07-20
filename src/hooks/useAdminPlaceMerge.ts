@@ -35,10 +35,16 @@ const ADMIN_PLACE_MERGE_CODE_MESSAGES = {
   INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
   ACCESS_DENIED: '관리자 권한이 필요합니다.',
   PLACE_NOT_FOUND: '장소를 찾을 수 없습니다.',
-  DUPLICATE_NOT_FOUND: '중복 장소 정보를 찾을 수 없습니다.',
-  MERGE_CONFLICT: '장소 병합 상태가 변경되었습니다. 목록을 새로고침해주세요.',
-  MERGE_HISTORY_NOT_FOUND: '병합 이력을 찾을 수 없습니다.',
-  ALREADY_RESTORED: '이미 복구된 병합 이력입니다.',
+  PLACE_DUPLICATE_NOT_FOUND: '중복 장소 정보를 찾을 수 없습니다.',
+  PLACE_MERGE_INVALID_REQUEST: '장소 병합 요청이 올바르지 않습니다.',
+  PLACE_EVENT_CONNECTED:
+    '연결된 기간형 이벤트가 있어 장소를 삭제하거나 병합할 수 없습니다.',
+  PLACE_MERGE_NOT_ALLOWED:
+    '중복 장소로 확인되지 않아 병합할 수 없습니다. 목록을 새로고침해주세요.',
+  PLACE_MERGE_HISTORY_NOT_FOUND: '병합 이력을 찾을 수 없습니다.',
+  PLACE_MERGE_ALREADY_RESTORED: '이미 복구된 병합 이력입니다.',
+  PLACE_MERGE_RESTORE_NOT_ALLOWED:
+    '현재 장소 상태로는 병합 복구를 진행할 수 없습니다.',
 }
 
 function getAdminPlaceMergeErrorMessage(error: unknown) {

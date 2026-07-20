@@ -41,7 +41,7 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 248px;
+  width: 220px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -274,7 +274,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   height: 100vh;
-  margin-left: 248px;
+  margin-left: 220px;
   display: flex;
   overflow: hidden;
   flex-direction: column;
@@ -353,14 +353,14 @@ export const SplitContent = styled.div<{
   min-height: 0;
   display: grid;
   grid-template-columns: ${({ $isPanelCollapsed }) =>
-    `${$isPanelCollapsed ? '0' : '320px'} minmax(0, 1fr)`};
+    `${$isPanelCollapsed ? '0' : '380px'} minmax(0, 1fr)`};
   flex: 1;
   overflow: hidden;
   transition: grid-template-columns 180ms ease;
 
   @media (max-width: 1180px) {
     grid-template-columns: ${({ $isPanelCollapsed }) =>
-      `${$isPanelCollapsed ? '0' : '300px'} minmax(0, 1fr)`};
+      `${$isPanelCollapsed ? '0' : '340px'} minmax(0, 1fr)`};
   }
 
   @media (max-width: 900px) {
@@ -815,8 +815,8 @@ export const DetailDeleteButton = styled(DetailActionButton)`
 export const PanelControls = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px;
+  gap: 10px;
+  padding: 14px 16px;
   border-bottom: 1px solid ${neutral.border};
 
   @media (max-width: 520px) {
@@ -867,7 +867,7 @@ export const PanelCount = styled.p`
   min-height: 23px;
   margin: 0;
   color: ${neutral.muted};
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
 
   strong {
@@ -967,7 +967,7 @@ export const PanelResultSummary = styled.div`
   gap: 12px;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 `
 
 export const ClearFilterButton = styled.button`
@@ -1052,10 +1052,10 @@ export const IconFilterButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.primary};
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: ${neutral.primary};
-  color: ${neutral.primaryText};
+  background: ${neutral.surface};
+  color: ${neutral.muted};
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -1064,7 +1064,8 @@ export const IconFilterButton = styled.button`
 
   &:hover:not(:disabled) {
     border-color: ${neutral.primaryHover};
-    background: ${neutral.primaryHover};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 
   &:disabled {
@@ -1077,6 +1078,19 @@ export const PlaceList = styled.div`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.borderDark} transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid ${neutral.surface};
+    border-radius: 999px;
+    background: ${neutral.borderDark};
+  }
 
   @media (max-width: 900px) {
     max-height: 560px;
@@ -1100,7 +1114,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border: 0;
   border-bottom: 1px solid ${neutral.border};
   background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
@@ -1123,7 +1137,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
   ${({ $active }) =>
     $active &&
     css`
-      box-shadow: inset 3px 0 0 ${neutral.primary};
+      box-shadow: inset 4px 0 0 ${neutral.primary};
     `}
 
   @media (max-width: 520px) {
@@ -1167,9 +1181,11 @@ export const PlaceName = styled.h3`
   color: ${neutral.strongText};
   font-size: 15px;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 `
 
 export const PlaceCategoryBadge = styled.span`
@@ -1183,7 +1199,7 @@ export const PlaceCategoryBadge = styled.span`
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
 `
@@ -1224,7 +1240,7 @@ export const PlaceMetaLine = styled.p`
   margin: 9px 0 0;
   color: ${neutral.softText};
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.45;
 
   span {
@@ -1552,25 +1568,25 @@ export const MapControlButton = styled.button`
 
 export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   position: absolute;
-  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '66px' : '20px')};
+  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '62px' : '16px')};
   left: 20px;
   z-index: 6;
   display: inline-flex;
   align-items: flex-start;
   gap: 8px;
   max-width: min(360px, calc(100% - 40px));
-  min-height: 44px;
-  padding: 8px 12px;
+  min-height: 36px;
+  padding: 7px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.softOverlay};
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   box-shadow: 0 8px 22px ${neutral.shadow};
 
   @media (max-width: 720px) {
-    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '60px' : '12px')};
+    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '56px' : '12px')};
     left: 12px;
     max-width: min(340px, calc(100% - 24px));
   }
@@ -1584,17 +1600,11 @@ export const MapInfoText = styled.span`
 
   strong {
     color: ${neutral.text};
-    font-size: 12px;
-    font-weight: 800;
-    line-height: 1.35;
-  }
-
-  span {
-    color: ${neutral.muted};
     font-size: 11px;
     font-weight: 700;
     line-height: 1.35;
   }
+
 `
 
 export const MapInfoDot = styled.span`

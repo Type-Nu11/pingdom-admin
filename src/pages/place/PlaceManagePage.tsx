@@ -58,6 +58,17 @@ function getPlacePhotoCount(place: AdminPlaceItem) {
   return formatOptionalNumber(place.placeGrowth?.photoCount)
 }
 
+function getPlaceDisplayName(place: AdminPlaceItem) {
+  const name = place.name?.trim()
+  const address = place.address?.trim()
+
+  if (!name || name === address) {
+    return '이름 없는 장소'
+  }
+
+  return name
+}
+
 function getPlaceRegistrantLabel(place: AdminPlaceItem) {
   if (place.registrant) {
     return place.registrant
@@ -170,6 +181,13 @@ function PlaceManagePage() {
   const showPagination = safeTotalPages > 1
   const hasActivePlaceFilter = placeKeyword.length > 0
   const isUpdatingList = isLoading && places.length > 0
+  const pageStart = totalCount > 0 ? (page - 1) * ADMIN_PLACE_PAGE_SIZE + 1 : 0
+  const pageEnd = totalCount > 0 ? pageStart + places.length - 1 : 0
+  const pageRangeLabel =
+    totalCount > 0
+      ? `${pageStart.toLocaleString()}–${pageEnd.toLocaleString()} / ${totalCount.toLocaleString()}개`
+      : '0개'
+  const pageCountLabel = totalCount > 0 ? `${safeTotalPages}페이지` : '0페이지'
   const selectedPlaceHasCoordinate = selectedPlace
     ? hasValidCoordinate(selectedPlace)
     : false
@@ -586,28 +604,6 @@ function PlaceManagePage() {
                 </S.PanelCollapseButton>
               </S.PanelSummary>
 
-              <S.PanelActionGroup>
-                <SortDropdown
-                  ariaLabel="장소 목록 정렬"
-                  value={selectedSortParam}
-                  options={PLACE_SORT_OPTIONS}
-                  disabled={isLoading}
-                  width="124px"
-                  onChange={handleSortChange}
-                />
-                <S.IconFilterButton
-                  type="button"
-                  aria-label={
-                    isLoading ? '장소 목록을 불러오는 중입니다' : '장소 목록 새로고침'
-                  }
-                  title={isLoading ? '불러오는 중' : '새로고침'}
-                  disabled={isLoading}
-                  onClick={handleRefresh}
-                >
-                  <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                </S.IconFilterButton>
-              </S.PanelActionGroup>
-
               <S.SearchField>
                 <S.SearchIcon aria-hidden="true">search</S.SearchIcon>
                 <S.SearchInput
@@ -631,8 +627,32 @@ function PlaceManagePage() {
                 ) : null}
               </S.SearchField>
 
+              <S.PanelActionGroup>
+                <SortDropdown
+                  ariaLabel="장소 목록 정렬"
+                  value={selectedSortParam}
+                  options={PLACE_SORT_OPTIONS}
+                  disabled={isLoading}
+                  width="124px"
+                  onChange={handleSortChange}
+                />
+                <S.IconFilterButton
+                  type="button"
+                  aria-label={
+                    isLoading ? '장소 목록을 불러오는 중입니다' : '장소 목록 새로고침'
+                  }
+                  title={isLoading ? '불러오는 중' : '새로고침'}
+                  disabled={isLoading}
+                  onClick={handleRefresh}
+                >
+                  <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+                </S.IconFilterButton>
+              </S.PanelActionGroup>
+
               <S.PanelResultSummary>
-                현재 페이지 장소 {places.length.toLocaleString()}개 표시
+                <span>
+                  {pageRangeLabel} · {pageCountLabel}
+                </span>
                 {hasActivePlaceFilter ? (
                   <S.ClearFilterButton type="button" onClick={handleClearPlaceFilters}>
                     검색 초기화
@@ -669,6 +689,7 @@ function PlaceManagePage() {
                 places.map((place) => {
                   const isSelected = selectedPlace?.id === place.id
                   const placeCategoryLabel = getPlaceCategoryLabel(place)
+                  const placeDisplayName = getPlaceDisplayName(place)
 
                   return (
                     <S.PlaceItem
@@ -685,14 +706,14 @@ function PlaceManagePage() {
                       </S.PlaceThumb>
                       <S.PlaceInfo>
                         <S.PlaceTitleRow>
-                          <S.PlaceName>{place.name}</S.PlaceName>
+                          <S.PlaceName>{placeDisplayName}</S.PlaceName>
                           <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                         </S.PlaceTitleRow>
                         <S.PlaceMeta>
                           <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
                           <span>{place.address || '주소 정보 없음'}</span>
                         </S.PlaceMeta>
-                        <S.PlaceMetaLine aria-label={`${place.name} 장소 지표`}>
+                        <S.PlaceMetaLine aria-label={`${placeDisplayName} 장소 지표`}>
                           <span>등록자 {getPlaceRegistrantLabel(place)}</span>
                           <span>Lv.{getPlaceLevel(place)}</span>
                           <span>사진 {getPlacePhotoCount(place)}장</span>
@@ -997,10 +1018,7 @@ function PlaceManagePage() {
               <S.MapInfo $offsetForListToggle={isPlacePanelCollapsed}>
                 <S.MapInfoDot />
                 <S.MapInfoText>
-                  <strong>
-                    현재 페이지 기준 · {places.length.toLocaleString()}개 장소 표시
-                  </strong>
-                  <span>장소를 선택하면 상세 정보를 확인할 수 있습니다.</span>
+                  <strong>{places.length.toLocaleString()}개 장소 표시</strong>
                 </S.MapInfoText>
               </S.MapInfo>
             ) : null}

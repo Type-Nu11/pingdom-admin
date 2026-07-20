@@ -60,7 +60,7 @@ function getPlaceName(name: string, address: string) {
 }
 
 function getGroupLabel(group: AdminPlaceDuplicateGroupItem) {
-  return `대표 장소 #${group.representativePlaceId}`
+  return `중복 후보 #${group.representativePlaceId}`
 }
 
 function getRegistrantLabel(registrant: string, userId: number) {
@@ -169,6 +169,7 @@ function PlaceMergePage() {
     actionSuccessMessage,
     fetchDuplicateGroups,
     fetchDuplicateDetail,
+    clearDuplicateDetail,
     fetchMergeHistories,
     mergePlaces,
     restoreMerge,
@@ -181,7 +182,7 @@ function PlaceMergePage() {
       duplicateGroups.find(
         (group) =>
           group.representativePlaceId === selectedGroup?.representativePlaceId
-      ) ?? duplicateGroups[0] ?? null,
+      ) ?? null,
     [duplicateGroups, selectedGroup]
   )
   const targetPlace = useMemo(
@@ -234,8 +235,9 @@ function PlaceMergePage() {
       setSelectedSourceId(null)
       setImpacts({})
       setImpactErrorMessage('')
+      clearDuplicateDetail()
     },
-    []
+    [clearDuplicateDetail]
   )
 
   const loadPlaceImpacts = useCallback(async (placeIds: number[]) => {
@@ -407,8 +409,8 @@ function PlaceMergePage() {
           <Shell.TopActions>
             <Shell.IconButton
               type="button"
-              aria-label="중복 장소와 병합 이력 새로고침"
-              title="새로고침"
+              aria-label="탐지 결과 새로고침"
+              title="탐지 결과 새로고침"
               disabled={isGroupsLoading || isHistoriesLoading || activeAction !== null}
               onClick={handleRefresh}
             >
@@ -424,10 +426,10 @@ function PlaceMergePage() {
           <S.PageStack>
             <S.PageHeader>
               <div>
-                <S.Eyebrow>장소 데이터 관리</S.Eyebrow>
-                <S.PageTitle>중복 장소 병합 및 복구</S.PageTitle>
+                <S.Eyebrow>장소 관리 &gt; 중복 장소 관리</S.Eyebrow>
+                <S.PageTitle>중복 장소 관리</S.PageTitle>
                 <S.PageDescription>
-                  서버가 식별한 중복 장소를 비교한 뒤 대표 장소를 유지하고 후보 장소를 병합합니다.
+                  중복 가능성이 있는 장소를 비교하고 유지할 장소와 병합할 장소를 결정합니다.
                 </S.PageDescription>
               </div>
               <S.HeaderActions>

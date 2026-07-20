@@ -635,7 +635,12 @@ function createMarkerContent(
   markerButton.style.fontFamily =
     "'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   markerButton.style.lineHeight = '1'
-  markerButton.style.transition = 'opacity 160ms ease, transform 160ms ease'
+  markerButton.style.opacity = isActive ? '1' : '0.58'
+  markerButton.style.filter = isActive
+    ? 'drop-shadow(0 4px 8px rgba(255, 25, 86, 0.28))'
+    : 'saturate(0.82)'
+  markerButton.style.transition =
+    'opacity 160ms ease, transform 160ms ease, filter 160ms ease'
 
   markerButton.addEventListener('mouseenter', () => {
     markerButton.style.transform = 'translateY(-2px)'

@@ -526,16 +526,16 @@ function PlaceMergePage() {
                         </S.GroupButton>
                       ))}
                     </S.GroupList>
-                  )}
-                </S.ScrollArea>
-              </S.Panel>
+                  </S.ScrollArea>
+                </S.Panel>
 
-              <S.Panel>
+                {activeGroup ? (
+                  <S.Panel>
                 <S.PanelHeader>
                   <div>
                     <S.PanelTitle>장소 비교 및 병합</S.PanelTitle>
                     <S.PanelDescription>
-                      대표 장소는 유지되고 선택한 후보 장소의 연결 데이터가 이동됩니다.
+                      유지할 장소와 병합할 장소를 비교합니다.
                     </S.PanelDescription>
                   </div>
                 </S.PanelHeader>
@@ -653,10 +653,18 @@ function PlaceMergePage() {
                     </>
                   ) : null}
                 </S.CompareBody>
-              </S.Panel>
-            </S.Workspace>
+                  </S.Panel>
+                ) : (
+                  <S.SelectionPrompt>
+                    <Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>
+                    <strong>비교할 중복 후보를 선택해주세요.</strong>
+                    <p>왼쪽 목록에서 후보를 선택하면 장소 정보와 병합 대상을 확인할 수 있습니다.</p>
+                  </S.SelectionPrompt>
+                )}
+              </S.Workspace>
+            )}
 
-            <S.HistoryPanel>
+            {shouldShowHistoryPanel ? <S.HistoryPanel>
               <S.PanelHeader>
                 <div>
                   <S.PanelTitle>병합 이력</S.PanelTitle>

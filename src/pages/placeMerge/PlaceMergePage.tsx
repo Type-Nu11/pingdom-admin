@@ -348,6 +348,10 @@ function PlaceMergePage() {
     setSelectedSourceId(candidateId)
   }
 
+  const shouldShowHistoryPanel =
+    isHistoriesLoading || Boolean(historyErrorMessage) || mergeHistories.length > 0
+  const hasDuplicateGroups = duplicateGroups.length > 0
+
   return (
     <Shell.AppShell>
       <Shell.SideNav aria-label="관리자 메뉴">
@@ -448,40 +452,47 @@ function PlaceMergePage() {
               <S.Notice $variant="success">{actionSuccessMessage}</S.Notice>
             ) : null}
 
-            <S.Workspace>
-              <S.Panel>
-                <S.PanelHeader>
-                  <div>
-                    <S.PanelTitle>중복 장소 목록</S.PanelTitle>
-                    <S.PanelDescription>
-                      대표 장소별로 병합 후보를 확인합니다.
-                    </S.PanelDescription>
-                  </div>
-                  <S.PanelCount>{duplicateTotalCount.toLocaleString()}개</S.PanelCount>
-                </S.PanelHeader>
-                <S.ScrollArea>
-                  {isGroupsLoading && duplicateGroups.length === 0 ? (
-                    <S.EmptyState>
-                      <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
-                      <strong>중복 장소를 확인하는 중입니다.</strong>
-                    </S.EmptyState>
-                  ) : errorMessage ? (
-                    <S.EmptyState>
-                      <strong>중복 장소 목록을 불러오지 못했습니다.</strong>
-                      <S.SecondaryButton
-                        type="button"
-                        onClick={() => void fetchDuplicateGroups()}
-                      >
-                        다시 시도
-                      </S.SecondaryButton>
-                    </S.EmptyState>
-                  ) : duplicateGroups.length === 0 ? (
-                    <S.EmptyState>
-                      <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
-                      <strong>중복 장소가 없습니다.</strong>
-                      <p>현재 서버 기준으로 병합할 중복 장소가 없습니다.</p>
-                    </S.EmptyState>
-                  ) : (
+            {isGroupsLoading && duplicateGroups.length === 0 ? (
+              <S.EmptyStateCard>
+                <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
+                <strong>중복 후보를 확인하는 중입니다.</strong>
+              </S.EmptyStateCard>
+            ) : errorMessage && !hasDuplicateGroups ? (
+              <S.EmptyStateCard>
+                <Shell.MaterialIcon aria-hidden="true">error_outline</Shell.MaterialIcon>
+                <strong>중복 후보를 불러오지 못했습니다.</strong>
+                <S.SecondaryButton
+                  type="button"
+                  onClick={() => void fetchDuplicateGroups()}
+                >
+                  다시 시도
+                </S.SecondaryButton>
+              </S.EmptyStateCard>
+            ) : !hasDuplicateGroups ? (
+              <S.EmptyStateCard>
+                <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
+                <strong>중복 장소 후보가 없습니다.</strong>
+                <p>현재 탐지된 중복 장소가 없습니다. 새로 등록된 장소가 있다면 다시 확인해보세요.</p>
+                <S.EmptyStateActions>
+                  <S.PrimaryButton type="button" onClick={handleRefresh}>
+                    <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+                    탐지 결과 새로고침
+                  </S.PrimaryButton>
+                </S.EmptyStateActions>
+              </S.EmptyStateCard>
+            ) : (
+              <S.Workspace>
+                <S.Panel>
+                  <S.PanelHeader>
+                    <div>
+                      <S.PanelTitle>중복 후보</S.PanelTitle>
+                      <S.PanelDescription>
+                        중복 가능성이 높은 장소 묶음을 확인합니다.
+                      </S.PanelDescription>
+                    </div>
+                    <S.PanelCount>{duplicateTotalCount.toLocaleString()}개</S.PanelCount>
+                  </S.PanelHeader>
+                  <S.ScrollArea>
                     <S.GroupList>
                       {duplicateGroups.map((group) => (
                         <S.GroupButton
@@ -707,7 +718,7 @@ function PlaceMergePage() {
                   ))}
                 </S.HistoryList>
               )}
-            </S.HistoryPanel>
+            </S.HistoryPanel> : null}
           </S.PageStack>
         </S.Content>
       </Shell.MainArea>

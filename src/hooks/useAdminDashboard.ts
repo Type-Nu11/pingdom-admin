@@ -37,10 +37,6 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   const isRequestInFlightRef = useRef(false)
 
   const fetchSummary = useCallback(async () => {
-    if (isRequestInFlightRef.current) {
-      return
-    }
-
     const requestId = requestIdRef.current + 1
     requestIdRef.current = requestId
 
@@ -49,6 +45,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       setStatus('unavailable')
       setLastUpdatedAt(null)
 
+      return
+    }
+
+    if (isRequestInFlightRef.current) {
       return
     }
 
@@ -84,6 +84,11 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
 
   useEffect(() => {
     if (!enabled) {
+      requestIdRef.current += 1
+      setSummary(null)
+      setStatus('unavailable')
+      setLastUpdatedAt(null)
+
       return
     }
 

@@ -530,6 +530,24 @@ export const EmptyState = styled.div`
   }
 `
 
+export const EmptyStateCard = styled(EmptyState)`
+  min-height: 320px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+`
+
+export const EmptyStateActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+`
+
+export const SelectionPrompt = styled(EmptyStateCard)`
+  min-height: 560px;
+`
+
 export const HistoryPanel = styled.section`
   border: 1px solid ${neutral.border};
   border-radius: 10px;

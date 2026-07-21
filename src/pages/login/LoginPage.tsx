@@ -23,7 +23,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (isAuthReady && isAuthenticated) {
-      navigate('/main', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
   }, [isAuthReady, isAuthenticated, navigate])
 
@@ -36,7 +36,7 @@ function LoginPage() {
           </S.IconBox>
           <S.Title>관리자 로그인</S.Title>
           <S.Description>
-            서버에서 발급된 관리자 계정으로 로그인해주세요.
+            발급받은 관리자 계정으로 로그인해 주세요.
           </S.Description>
         </S.Header>
 
@@ -108,7 +108,7 @@ function LoginPage() {
           </S.SubmitButton>
         </S.Form>
 
-        <S.FooterText>Pingdum Admin Web</S.FooterText>
+        <S.FooterText>PingDom Admin</S.FooterText>
       </S.LoginCard>
     </S.Page>
   )

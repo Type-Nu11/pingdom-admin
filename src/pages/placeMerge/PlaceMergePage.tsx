@@ -60,7 +60,7 @@ function getPlaceName(name: string, address: string) {
 }
 
 function getGroupLabel(group: AdminPlaceDuplicateGroupItem) {
-  return `대표 장소 #${group.representativePlaceId}`
+  return `중복 후보 #${group.representativePlaceId}`
 }
 
 function getRegistrantLabel(registrant: string, userId: number) {
@@ -169,6 +169,7 @@ function PlaceMergePage() {
     actionSuccessMessage,
     fetchDuplicateGroups,
     fetchDuplicateDetail,
+    clearDuplicateDetail,
     fetchMergeHistories,
     mergePlaces,
     restoreMerge,
@@ -181,7 +182,7 @@ function PlaceMergePage() {
       duplicateGroups.find(
         (group) =>
           group.representativePlaceId === selectedGroup?.representativePlaceId
-      ) ?? duplicateGroups[0] ?? null,
+      ) ?? null,
     [duplicateGroups, selectedGroup]
   )
   const targetPlace = useMemo(
@@ -234,8 +235,9 @@ function PlaceMergePage() {
       setSelectedSourceId(null)
       setImpacts({})
       setImpactErrorMessage('')
+      clearDuplicateDetail()
     },
-    []
+    [clearDuplicateDetail]
   )
 
   const loadPlaceImpacts = useCallback(async (placeIds: number[]) => {
@@ -346,6 +348,10 @@ function PlaceMergePage() {
     setSelectedSourceId(candidateId)
   }
 
+  const shouldShowHistoryPanel =
+    isHistoriesLoading || Boolean(historyErrorMessage) || mergeHistories.length > 0
+  const hasDuplicateGroups = duplicateGroups.length > 0
+
   return (
     <Shell.AppShell>
       <Shell.SideNav aria-label="관리자 메뉴">
@@ -356,10 +362,9 @@ function PlaceMergePage() {
         </Shell.SideHeader>
 
         <Shell.SideMenu>
-          <Shell.MenuButton type="button" disabled aria-label="대시보드 점검 중">
+          <Shell.MenuButton type="button" onClick={() => navigate('/dashboard')}>
             <Shell.MaterialIcon aria-hidden="true">dashboard</Shell.MaterialIcon>
             <span>대시보드</span>
-            <Shell.MenuStatusText>점검 중</Shell.MenuStatusText>
           </Shell.MenuButton>
           <Shell.MenuButton type="button" onClick={() => navigate('/places')}>
             <Shell.MaterialIcon aria-hidden="true">location_on</Shell.MaterialIcon>
@@ -408,8 +413,8 @@ function PlaceMergePage() {
           <Shell.TopActions>
             <Shell.IconButton
               type="button"
-              aria-label="중복 장소와 병합 이력 새로고침"
-              title="새로고침"
+              aria-label="탐지 결과 새로고침"
+              title="탐지 결과 새로고침"
               disabled={isGroupsLoading || isHistoriesLoading || activeAction !== null}
               onClick={handleRefresh}
             >
@@ -425,10 +430,10 @@ function PlaceMergePage() {
           <S.PageStack>
             <S.PageHeader>
               <div>
-                <S.Eyebrow>장소 데이터 관리</S.Eyebrow>
-                <S.PageTitle>중복 장소 병합 및 복구</S.PageTitle>
+                <S.Eyebrow>장소 관리 &gt; 중복 장소 관리</S.Eyebrow>
+                <S.PageTitle>중복 장소 관리</S.PageTitle>
                 <S.PageDescription>
-                  서버가 식별한 중복 장소를 비교한 뒤 대표 장소를 유지하고 후보 장소를 병합합니다.
+                  중복 가능성이 있는 장소를 비교하고 유지할 장소와 병합할 장소를 결정합니다.
                 </S.PageDescription>
               </div>
               <S.HeaderActions>
@@ -447,40 +452,47 @@ function PlaceMergePage() {
               <S.Notice $variant="success">{actionSuccessMessage}</S.Notice>
             ) : null}
 
-            <S.Workspace>
-              <S.Panel>
-                <S.PanelHeader>
-                  <div>
-                    <S.PanelTitle>중복 장소 목록</S.PanelTitle>
-                    <S.PanelDescription>
-                      대표 장소별로 병합 후보를 확인합니다.
-                    </S.PanelDescription>
-                  </div>
-                  <S.PanelCount>{duplicateTotalCount.toLocaleString()}개</S.PanelCount>
-                </S.PanelHeader>
-                <S.ScrollArea>
-                  {isGroupsLoading && duplicateGroups.length === 0 ? (
-                    <S.EmptyState>
-                      <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
-                      <strong>중복 장소를 확인하는 중입니다.</strong>
-                    </S.EmptyState>
-                  ) : errorMessage ? (
-                    <S.EmptyState>
-                      <strong>중복 장소 목록을 불러오지 못했습니다.</strong>
-                      <S.SecondaryButton
-                        type="button"
-                        onClick={() => void fetchDuplicateGroups()}
-                      >
-                        다시 시도
-                      </S.SecondaryButton>
-                    </S.EmptyState>
-                  ) : duplicateGroups.length === 0 ? (
-                    <S.EmptyState>
-                      <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
-                      <strong>중복 장소가 없습니다.</strong>
-                      <p>현재 서버 기준으로 병합할 중복 장소가 없습니다.</p>
-                    </S.EmptyState>
-                  ) : (
+            {isGroupsLoading && duplicateGroups.length === 0 ? (
+              <S.EmptyStateCard>
+                <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
+                <strong>중복 후보를 확인하는 중입니다.</strong>
+              </S.EmptyStateCard>
+            ) : errorMessage && !hasDuplicateGroups ? (
+              <S.EmptyStateCard>
+                <Shell.MaterialIcon aria-hidden="true">error_outline</Shell.MaterialIcon>
+                <strong>중복 후보를 불러오지 못했습니다.</strong>
+                <S.SecondaryButton
+                  type="button"
+                  onClick={() => void fetchDuplicateGroups()}
+                >
+                  다시 시도
+                </S.SecondaryButton>
+              </S.EmptyStateCard>
+            ) : !hasDuplicateGroups ? (
+              <S.EmptyStateCard>
+                <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
+                <strong>중복 장소 후보가 없습니다.</strong>
+                <p>현재 탐지된 중복 장소가 없습니다. 새로 등록된 장소가 있다면 다시 확인해보세요.</p>
+                <S.EmptyStateActions>
+                  <S.PrimaryButton type="button" onClick={handleRefresh}>
+                    <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+                    탐지 결과 새로고침
+                  </S.PrimaryButton>
+                </S.EmptyStateActions>
+              </S.EmptyStateCard>
+            ) : (
+              <S.Workspace>
+                <S.Panel>
+                  <S.PanelHeader>
+                    <div>
+                      <S.PanelTitle>중복 후보</S.PanelTitle>
+                      <S.PanelDescription>
+                        중복 가능성이 높은 장소 묶음을 확인합니다.
+                      </S.PanelDescription>
+                    </div>
+                    <S.PanelCount>{duplicateTotalCount.toLocaleString()}개</S.PanelCount>
+                  </S.PanelHeader>
+                  <S.ScrollArea>
                     <S.GroupList>
                       {duplicateGroups.map((group) => (
                         <S.GroupButton
@@ -514,16 +526,16 @@ function PlaceMergePage() {
                         </S.GroupButton>
                       ))}
                     </S.GroupList>
-                  )}
-                </S.ScrollArea>
-              </S.Panel>
+                  </S.ScrollArea>
+                </S.Panel>
 
-              <S.Panel>
+                {activeGroup ? (
+                  <S.Panel>
                 <S.PanelHeader>
                   <div>
                     <S.PanelTitle>장소 비교 및 병합</S.PanelTitle>
                     <S.PanelDescription>
-                      대표 장소는 유지되고 선택한 후보 장소의 연결 데이터가 이동됩니다.
+                      유지할 장소와 병합할 장소를 비교합니다.
                     </S.PanelDescription>
                   </div>
                 </S.PanelHeader>
@@ -641,10 +653,18 @@ function PlaceMergePage() {
                     </>
                   ) : null}
                 </S.CompareBody>
-              </S.Panel>
-            </S.Workspace>
+                  </S.Panel>
+                ) : (
+                  <S.SelectionPrompt>
+                    <Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>
+                    <strong>비교할 중복 후보를 선택해주세요.</strong>
+                    <p>왼쪽 목록에서 후보를 선택하면 장소 정보와 병합 대상을 확인할 수 있습니다.</p>
+                  </S.SelectionPrompt>
+                )}
+              </S.Workspace>
+            )}
 
-            <S.HistoryPanel>
+            {shouldShowHistoryPanel ? <S.HistoryPanel>
               <S.PanelHeader>
                 <div>
                   <S.PanelTitle>병합 이력</S.PanelTitle>
@@ -706,7 +726,7 @@ function PlaceMergePage() {
                   ))}
                 </S.HistoryList>
               )}
-            </S.HistoryPanel>
+            </S.HistoryPanel> : null}
           </S.PageStack>
         </S.Content>
       </Shell.MainArea>

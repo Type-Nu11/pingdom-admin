@@ -64,6 +64,7 @@ function DashboardPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const { summary, status, isLoading, lastUpdatedAt, fetchSummary } = useAdminDashboard()
+  const [activeUtility, setActiveUtility] = useState<DashboardUtilityKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
 
   function getMetricValue(key: DashboardMetricKey) {
@@ -143,6 +144,34 @@ function DashboardPage() {
     )
   }
 
+  function renderUtilityPanel() {
+    if (!activeUtility) {
+      return null
+    }
+
+    const isNotificationPanel = activeUtility === 'notifications'
+
+    return (
+      <S.UtilityPanel role="status">
+        <S.UtilityPanelHeader>
+          <strong>{isNotificationPanel ? '알림' : '도움말'}</strong>
+          <S.UtilityPanelClose
+            type="button"
+            aria-label="패널 닫기"
+            onClick={() => setActiveUtility(null)}
+          >
+            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+          </S.UtilityPanelClose>
+        </S.UtilityPanelHeader>
+        <S.UtilityPanelText>
+          {isNotificationPanel
+            ? '알림 API가 연결되면 새로운 운영 이벤트를 표시합니다.'
+            : '관리자 화면 도움말은 기능 연결 후 제공됩니다.'}
+        </S.UtilityPanelText>
+      </S.UtilityPanel>
+    )
+  }
+
   return (
     <S.AppShell>
       <S.SideNav aria-label="관리자 메뉴">
@@ -208,12 +237,31 @@ function DashboardPage() {
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
-            <S.IconButton type="button" aria-label="알림">
+            <S.IconButton
+              type="button"
+              aria-label="알림"
+              title="알림"
+              aria-expanded={activeUtility === 'notifications'}
+              onClick={() =>
+                setActiveUtility((current) =>
+                  current === 'notifications' ? null : 'notifications'
+                )
+              }
+            >
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
             </S.IconButton>
-            <S.IconButton type="button" aria-label="도움말">
+            <S.IconButton
+              type="button"
+              aria-label="도움말"
+              title="도움말"
+              aria-expanded={activeUtility === 'help'}
+              onClick={() =>
+                setActiveUtility((current) => (current === 'help' ? null : 'help'))
+              }
+            >
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
             </S.IconButton>
+            {renderUtilityPanel()}
           </S.TopActions>
         </S.TopBar>
 

@@ -311,6 +311,20 @@ export const PageDescription = styled.p`
   line-height: 1.5;
 `
 
+export const UpdateMeta = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: ${neutral.softText};
+  font-size: 13px;
+`
+
+export const RefreshingText = styled.span`
+  color: ${neutral.primary};
+  font-weight: 600;
+`
+
 export const Section = styled.section`
   margin-top: 28px;
 `
@@ -338,14 +352,13 @@ export const SectionDescription = styled.p`
 
 export const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 
-  @media (max-width: 1100px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (max-width: 560px) { grid-template-columns: 1fr; }
 `
 
-export const SummaryCard = styled.button`
+export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
   min-height: 148px;
   display: flex;
   flex-direction: column;
@@ -362,9 +375,14 @@ export const SummaryCard = styled.button`
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 
   &:hover {
-    border-color: ${neutral.primary};
+    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
     box-shadow: 0 8px 24px ${neutral.shadow};
     transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
   }
 `
 

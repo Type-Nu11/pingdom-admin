@@ -269,6 +269,7 @@ export const TopTitle = styled.h2`
 `
 
 export const TopActions = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -287,6 +288,69 @@ export const IconButton = styled.button`
   cursor: pointer;
 
   &:hover { background: ${neutral.primaryTint}; color: ${neutral.primary}; }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+`
+
+export const UtilityPanel = styled.div`
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 60;
+  width: min(280px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 8px 24px ${neutral.shadow};
+`
+
+export const UtilityPanelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 14px;
+    font-weight: 600;
+  }
+`
+
+export const UtilityPanelClose = styled.button`
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: ${neutral.softText};
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.surfaceLow};
+    color: ${neutral.text};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  ${MaterialIcon} { font-size: 18px; }
+`
+
+export const UtilityPanelText = styled.p`
+  margin: 10px 0 0;
+  color: ${neutral.muted};
+  font-size: 13px;
+  line-height: 1.5;
 `
 
 export const PageContent = styled.main`
@@ -357,6 +421,10 @@ export const Section = styled.section`
   }
 `
 
+export const PlaceholderSection = styled(Section)`
+  margin-top: 48px;
+`
+
 export const SectionHeader = styled.div`
   display: flex;
   align-items: baseline;
@@ -386,8 +454,14 @@ export const SummaryGrid = styled.div`
   @media (max-width: 560px) { grid-template-columns: 1fr; }
 `
 
+export const PlaceholderGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 136px;
+  min-height: 140px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -419,7 +493,7 @@ export const SummaryCardTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 `
 
 export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
@@ -446,11 +520,11 @@ export const SummaryArrow = styled(MaterialIcon)`
 export const SummaryLabel = styled.span`
   color: ${neutral.muted};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 `
 
 export const SummaryValue = styled.strong`
-  margin-top: auto;
+  margin-top: 6px;
   color: ${neutral.strongText};
   font-size: 28px;
   font-weight: 700;

@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
+import DashboardPlaceholderCard from '../../components/common/DashboardPlaceholderCard'
 import * as S from './DashboardPage.styles'
 
 type DashboardMetricKey =
@@ -14,15 +16,23 @@ interface DashboardMetric {
   key: DashboardMetricKey
   label: string
   icon: string
+  unit: string
   route: string
   tone: 'neutral' | 'action'
 }
+
+interface DashboardMetricNavigationState {
+  reviewStatus?: 'PENDING'
+}
+
+type DashboardUtilityKey = 'notifications' | 'help'
 
 const SERVICE_METRICS: DashboardMetric[] = [
   {
     key: 'placeCount',
     label: '전체 장소',
     icon: 'location_on',
+    unit: '개',
     route: '/places',
     tone: 'neutral',
   },
@@ -30,6 +40,7 @@ const SERVICE_METRICS: DashboardMetric[] = [
     key: 'postCount',
     label: '전체 게시글',
     icon: 'description',
+    unit: '개',
     route: '/main',
     tone: 'neutral',
   },
@@ -40,6 +51,7 @@ const ACTION_METRICS: DashboardMetric[] = [
     key: 'pendingReportCount',
     label: '처리 대기 신고',
     icon: 'flag',
+    unit: '건',
     route: '/main',
     tone: 'action',
   },
@@ -47,6 +59,7 @@ const ACTION_METRICS: DashboardMetric[] = [
     key: 'bannedUserCount',
     label: '현재 밴 사용자',
     icon: 'block',
+    unit: '명',
     route: '/bans',
     tone: 'action',
   },
@@ -56,6 +69,7 @@ function DashboardPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const { summary, status, isLoading, lastUpdatedAt, fetchSummary } = useAdminDashboard()
+  const [activeUtility, setActiveUtility] = useState<DashboardUtilityKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
 
   function getMetricValue(key: DashboardMetricKey) {
@@ -94,10 +108,24 @@ function DashboardPage() {
       return '아직 조회되지 않음'
     }
 
+    const updatedAt = new Date(timestamp)
+    const now = new Date()
+    const isToday = updatedAt.toDateString() === now.toDateString()
+    const time = new Intl.DateTimeFormat('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(updatedAt)
+
+    if (isToday) {
+      return `오늘 ${time}`
+    }
+
     return new Intl.DateTimeFormat('ko-KR', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(timestamp)
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(updatedAt)
   }
 
   function renderMetricCard(metric: DashboardMetric) {
@@ -108,7 +136,14 @@ function DashboardPage() {
         key={metric.key}
         type="button"
         $tone={metric.tone}
-        onClick={() => navigate(metric.route)}
+        onClick={() => {
+          const state: DashboardMetricNavigationState | undefined =
+            metric.key === 'pendingReportCount'
+              ? { reviewStatus: 'PENDING' }
+              : undefined
+
+          navigate(metric.route, state ? { state } : undefined)
+        }}
         aria-label={`${metric.label} ${value ?? '불러오는 중'} 관리 화면으로 이동`}
         aria-busy={isLoading}
       >
@@ -122,9 +157,37 @@ function DashboardPage() {
         {value === null ? (
           <S.Skeleton aria-label="불러오는 중" />
         ) : (
-          <S.SummaryValue>{value}</S.SummaryValue>
+          <S.SummaryValue>{value}{metric.unit}</S.SummaryValue>
         )}
       </S.SummaryCard>
+    )
+  }
+
+  function renderUtilityPanel() {
+    if (!activeUtility) {
+      return null
+    }
+
+    const isNotificationPanel = activeUtility === 'notifications'
+
+    return (
+      <S.UtilityPanel role="status">
+        <S.UtilityPanelHeader>
+          <strong>{isNotificationPanel ? '알림' : '도움말'}</strong>
+          <S.UtilityPanelClose
+            type="button"
+            aria-label="패널 닫기"
+            onClick={() => setActiveUtility(null)}
+          >
+            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+          </S.UtilityPanelClose>
+        </S.UtilityPanelHeader>
+        <S.UtilityPanelText>
+          {isNotificationPanel
+            ? '알림 API가 연결되면 새로운 운영 이벤트를 표시합니다.'
+            : '관리자 화면 도움말은 기능 연결 후 제공됩니다.'}
+        </S.UtilityPanelText>
+      </S.UtilityPanel>
     )
   }
 
@@ -181,7 +244,7 @@ function DashboardPage() {
 
       <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <S.TopBar>
-          <S.TopTitle>대시보드</S.TopTitle>
+          <S.TopTitle as="h1">대시보드</S.TopTitle>
           <S.TopActions>
             <S.RefreshButton
               type="button"
@@ -193,19 +256,37 @@ function DashboardPage() {
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
-            <S.IconButton type="button" aria-label="알림">
+            <S.IconButton
+              type="button"
+              aria-label="알림"
+              title="알림"
+              aria-expanded={activeUtility === 'notifications'}
+              onClick={() =>
+                setActiveUtility((current) =>
+                  current === 'notifications' ? null : 'notifications'
+                )
+              }
+            >
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
             </S.IconButton>
-            <S.IconButton type="button" aria-label="도움말">
+            <S.IconButton
+              type="button"
+              aria-label="도움말"
+              title="도움말"
+              aria-expanded={activeUtility === 'help'}
+              onClick={() =>
+                setActiveUtility((current) => (current === 'help' ? null : 'help'))
+              }
+            >
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
             </S.IconButton>
+            {renderUtilityPanel()}
           </S.TopActions>
         </S.TopBar>
 
         <S.PageContent>
           <S.PageHeader>
             <S.PageHeaderMain>
-              <S.PageTitle>대시보드</S.PageTitle>
               <S.PageDescription>
                 PingDom의 주요 운영 현황과 처리할 항목을 확인합니다.
               </S.PageDescription>
@@ -235,6 +316,35 @@ function DashboardPage() {
             </S.SectionHeader>
             <S.SummaryGrid>{ACTION_METRICS.map(renderMetricCard)}</S.SummaryGrid>
           </S.Section>
+
+          <S.PlaceholderSection aria-labelledby="dashboard-placeholder-title">
+            <S.SectionHeader>
+              <S.SectionTitle id="dashboard-placeholder-title">추가 운영 현황</S.SectionTitle>
+              <S.SectionDescription>준비 중인 운영 항목</S.SectionDescription>
+            </S.SectionHeader>
+            <S.PlaceholderGrid>
+              <DashboardPlaceholderCard
+                icon="history"
+                label="최근 활동"
+                description="장소·게시글·제재 처리 내역"
+              />
+              <DashboardPlaceholderCard
+                icon="content_copy"
+                label="중복 장소 후보"
+                description="병합 검토가 필요한 장소"
+              />
+              <DashboardPlaceholderCard
+                icon="event_busy"
+                label="밴 만료 예정"
+                description="곧 밴이 해제되는 사용자"
+              />
+              <DashboardPlaceholderCard
+                icon="monitoring"
+                label="운영 추이"
+                description="기간별 장소·게시글 변화"
+              />
+            </S.PlaceholderGrid>
+          </S.PlaceholderSection>
         </S.PageContent>
       </S.MainArea>
     </S.AppShell>

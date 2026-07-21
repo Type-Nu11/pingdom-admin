@@ -16,6 +16,7 @@ interface DashboardMetric {
   key: DashboardMetricKey
   label: string
   icon: string
+  unit: string
   route: string
   tone: 'neutral' | 'action'
 }
@@ -31,6 +32,7 @@ const SERVICE_METRICS: DashboardMetric[] = [
     key: 'placeCount',
     label: '전체 장소',
     icon: 'location_on',
+    unit: '개',
     route: '/places',
     tone: 'neutral',
   },
@@ -38,6 +40,7 @@ const SERVICE_METRICS: DashboardMetric[] = [
     key: 'postCount',
     label: '전체 게시글',
     icon: 'description',
+    unit: '개',
     route: '/main',
     tone: 'neutral',
   },
@@ -48,6 +51,7 @@ const ACTION_METRICS: DashboardMetric[] = [
     key: 'pendingReportCount',
     label: '처리 대기 신고',
     icon: 'flag',
+    unit: '건',
     route: '/main',
     tone: 'action',
   },
@@ -55,6 +59,7 @@ const ACTION_METRICS: DashboardMetric[] = [
     key: 'bannedUserCount',
     label: '현재 밴 사용자',
     icon: 'block',
+    unit: '명',
     route: '/bans',
     tone: 'action',
   },
@@ -225,7 +230,7 @@ function DashboardPage() {
 
       <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <S.TopBar>
-          <S.TopTitle>대시보드</S.TopTitle>
+          <S.TopTitle as="h1">대시보드</S.TopTitle>
           <S.TopActions>
             <S.RefreshButton
               type="button"

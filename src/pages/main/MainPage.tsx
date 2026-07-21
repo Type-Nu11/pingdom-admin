@@ -55,6 +55,7 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
 interface MainPageLocationState {
   openPostId?: number
   postSearchKeyword?: string
+  reviewStatus?: AdminPostReviewStatus
 }
 
 interface ReportActionConfirmState {
@@ -619,24 +620,25 @@ function MainPage() {
     const locationState = location.state as MainPageLocationState | null
     const openPostId = locationState?.openPostId
     const postSearchKeyword = locationState?.postSearchKeyword?.trim()
+    const reviewStatus = locationState?.reviewStatus
 
-    if (postSearchKeyword) {
+    if (postSearchKeyword || reviewStatus) {
       const applySearchTimer = window.setTimeout(() => {
         clearPendingPostSearch()
         clearPostDetail()
         shouldSkipNextSearchEffectRef.current = true
-        latestPostKeywordRef.current = postSearchKeyword
-        latestReviewFilterRef.current = 'ALL'
+        latestPostKeywordRef.current = postSearchKeyword ?? ''
+        latestReviewFilterRef.current = reviewStatus ?? 'ALL'
         setSelectedPost(null)
-        setSelectedReviewFilter('ALL')
-        setPostSearchQuery(postSearchKeyword)
+        setSelectedReviewFilter(reviewStatus ?? 'ALL')
+        setPostSearchQuery(postSearchKeyword ?? '')
 
         void fetchReviewPosts(
           {
             page: 1,
             sortParam: latestSortParamRef.current,
             keyword: postSearchKeyword,
-            reviewStatus: 'ALL',
+            reviewStatus: reviewStatus ?? 'ALL',
           }
         )
         navigate(location.pathname, { replace: true, state: null })

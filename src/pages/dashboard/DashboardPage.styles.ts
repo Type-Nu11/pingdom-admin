@@ -493,7 +493,7 @@ export const SummaryCardTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 `
 
 export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
@@ -520,11 +520,11 @@ export const SummaryArrow = styled(MaterialIcon)`
 export const SummaryLabel = styled.span`
   color: ${neutral.muted};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 `
 
 export const SummaryValue = styled.strong`
-  margin-top: auto;
+  margin-top: 6px;
   color: ${neutral.strongText};
   font-size: 28px;
   font-weight: 700;

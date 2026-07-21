@@ -208,9 +208,11 @@ function DashboardPage() {
             <S.PageDescription>
               PingDom의 주요 운영 현황과 처리할 항목을 확인합니다.
             </S.PageDescription>
-            <S.UpdateMeta>
+            <S.UpdateMeta aria-live="polite">
               마지막 업데이트: {formatLastUpdated(lastUpdatedAt)}
-              {isLoading && summary ? <S.RefreshingText>업데이트 중</S.RefreshingText> : null}
+              {isLoading && summary ? (
+                <S.RefreshingText role="status">업데이트 중</S.RefreshingText>
+              ) : null}
             </S.UpdateMeta>
           </S.PageHeader>
 

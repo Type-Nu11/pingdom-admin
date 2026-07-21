@@ -6,6 +6,10 @@ const loadingShimmer = keyframes`
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
 `
+const refreshSpin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`
 
 export const AppShell = styled.div`
   height: 100vh;
@@ -394,15 +398,15 @@ export const SummaryCardTop = styled.div`
   gap: 12px;
 `
 
-export const SummaryIcon = styled.div`
+export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
   width: 36px;
   height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
+  color: ${({ $tone }) => ($tone === 'action' ? neutral.warningText : neutral.primary)};
 `
 
 export const SummaryArrow = styled(MaterialIcon)`
@@ -471,21 +475,32 @@ export const RetryButton = styled.button`
   &:hover { border-color: ${neutral.primary}; color: ${neutral.primary}; }
 `
 
-export const RefreshButton = styled.button`
-  min-height: 40px;
+export const RefreshButton = styled.button<{ $isLoading?: boolean }>`
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0 14px;
-  border: 1px solid ${neutral.border};
+  justify-content: center;
+  padding: 0;
+  border: 0;
   border-radius: 8px;
-  background: ${neutral.surface};
-  color: ${neutral.text};
+  background: transparent;
+  color: ${neutral.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${neutral.primary}; color: ${neutral.primary}; }
+  &:hover:not(:disabled) { background: ${neutral.primaryTint}; color: ${neutral.primary}; }
   &:disabled { color: ${neutral.disabled}; cursor: default; }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      ${MaterialIcon} { animation: ${refreshSpin} 900ms linear infinite; }
+    `}
 `

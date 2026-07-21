@@ -421,6 +421,10 @@ export const Section = styled.section`
   }
 `
 
+export const PlaceholderSection = styled(Section)`
+  margin-top: 48px;
+`
+
 export const SectionHeader = styled.div`
   display: flex;
   align-items: baseline;
@@ -451,17 +455,13 @@ export const SummaryGrid = styled.div`
 `
 
 export const PlaceholderGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `
 
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 136px;
+  min-height: 140px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

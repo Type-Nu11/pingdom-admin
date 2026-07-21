@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
+import DashboardPlaceholderCard from '../../components/common/DashboardPlaceholderCard'
 import * as S from './DashboardPage.styles'
 
 type DashboardMetricKey =
@@ -234,6 +236,35 @@ function DashboardPage() {
               <S.SectionDescription>관리자 확인이 필요한 현황</S.SectionDescription>
             </S.SectionHeader>
             <S.SummaryGrid>{ACTION_METRICS.map(renderMetricCard)}</S.SummaryGrid>
+          </S.Section>
+
+          <S.Section aria-labelledby="dashboard-placeholder-title">
+            <S.SectionHeader>
+              <S.SectionTitle id="dashboard-placeholder-title">추가 운영 현황</S.SectionTitle>
+              <S.SectionDescription>서버 데이터 연결 후 표시됩니다</S.SectionDescription>
+            </S.SectionHeader>
+            <S.PlaceholderGrid>
+              <DashboardPlaceholderCard
+                icon="history"
+                label="최근 활동"
+                description="최근 장소·게시글·제재 처리 내역을 확인할 수 있습니다."
+              />
+              <DashboardPlaceholderCard
+                icon="content_copy"
+                label="중복 장소 후보"
+                description="병합 검토가 필요한 중복 장소 후보를 확인할 수 있습니다."
+              />
+              <DashboardPlaceholderCard
+                icon="event_busy"
+                label="밴 만료 예정"
+                description="밴 만료가 예정된 사용자를 확인할 수 있습니다."
+              />
+              <DashboardPlaceholderCard
+                icon="monitoring"
+                label="운영 추이"
+                description="기간별 장소·게시글 운영 변화를 확인할 수 있습니다."
+              />
+            </S.PlaceholderGrid>
           </S.Section>
         </S.PageContent>
       </S.MainArea>

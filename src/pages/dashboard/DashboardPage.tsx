@@ -185,11 +185,13 @@ function DashboardPage() {
           <S.TopActions>
             <S.RefreshButton
               type="button"
-              disabled={isLoading || status === 'unavailable'}
+              aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}
+              title={isLoading ? '새로고침 중' : '대시보드 새로고침'}
+              $isLoading={isLoading}
+              disabled={isLoading}
               onClick={() => void fetchSummary()}
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-              새로고침
             </S.RefreshButton>
             <S.IconButton type="button" aria-label="알림">
               <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>

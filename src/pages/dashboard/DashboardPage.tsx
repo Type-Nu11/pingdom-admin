@@ -287,7 +287,6 @@ function DashboardPage() {
         <S.PageContent>
           <S.PageHeader>
             <S.PageHeaderMain>
-              <S.PageTitle>대시보드</S.PageTitle>
               <S.PageDescription>
                 PingDom의 주요 운영 현황과 처리할 항목을 확인합니다.
               </S.PageDescription>

@@ -626,7 +626,7 @@ function MainPage() {
       const applySearchTimer = window.setTimeout(() => {
         clearPendingPostSearch()
         clearPostDetail()
-        shouldSkipNextSearchEffectRef.current = true
+        shouldSkipNextSearchEffectRef.current = Boolean(postSearchKeyword)
         latestPostKeywordRef.current = postSearchKeyword ?? ''
         latestReviewFilterRef.current = reviewStatus ?? 'ALL'
         setSelectedPost(null)

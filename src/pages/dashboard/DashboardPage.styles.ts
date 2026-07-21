@@ -386,6 +386,16 @@ export const SummaryGrid = styled.div`
   @media (max-width: 560px) { grid-template-columns: 1fr; }
 `
 
+export const PlaceholderGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+`
+
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
   min-height: 136px;
   display: flex;

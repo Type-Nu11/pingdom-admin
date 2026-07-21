@@ -108,10 +108,24 @@ function DashboardPage() {
       return '아직 조회되지 않음'
     }
 
+    const updatedAt = new Date(timestamp)
+    const now = new Date()
+    const isToday = updatedAt.toDateString() === now.toDateString()
+    const time = new Intl.DateTimeFormat('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(updatedAt)
+
+    if (isToday) {
+      return `오늘 ${time}`
+    }
+
     return new Intl.DateTimeFormat('ko-KR', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(timestamp)
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(updatedAt)
   }
 
   function renderMetricCard(metric: DashboardMetric) {
@@ -143,7 +157,7 @@ function DashboardPage() {
         {value === null ? (
           <S.Skeleton aria-label="불러오는 중" />
         ) : (
-          <S.SummaryValue>{value}</S.SummaryValue>
+          <S.SummaryValue>{value}{metric.unit}</S.SummaryValue>
         )}
       </S.SummaryCard>
     )

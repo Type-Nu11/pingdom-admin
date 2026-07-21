@@ -290,20 +290,39 @@ export const IconButton = styled.button`
 `
 
 export const PageContent = styled.main`
+  width: min(calc(100% - 64px), 1100px);
   min-height: calc(100vh - 64px);
-  padding: 32px;
+  margin: 0 auto;
+  padding: 36px 0 48px;
 
-  @media (max-width: 640px) { padding: 24px 16px; }
+  @media (max-width: 640px) {
+    width: calc(100% - 32px);
+    padding: 28px 0 36px;
+  }
 `
 
 export const PageHeader = styled.div`
-  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 34px;
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+`
+
+export const PageHeaderMain = styled.div`
+  min-width: 0;
 `
 
 export const PageTitle = styled.h1`
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: ${neutral.strongText};
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1.3;
 `
@@ -319,7 +338,8 @@ export const UpdateMeta = styled.p`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 12px 0 0;
+  flex-shrink: 0;
+  margin: 0;
   color: ${neutral.softText};
   font-size: 13px;
 `
@@ -330,7 +350,11 @@ export const RefreshingText = styled.span`
 `
 
 export const Section = styled.section`
-  margin-top: 28px;
+  margin-top: 0;
+
+  & + & {
+    margin-top: 40px;
+  }
 `
 
 export const SectionHeader = styled.div`
@@ -338,7 +362,7 @@ export const SectionHeader = styled.div`
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 `
 
 export const SectionTitle = styled.h2`
@@ -363,15 +387,15 @@ export const SummaryGrid = styled.div`
 `
 
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 148px;
+  min-height: 136px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 18px;
-  padding: 20px;
+  gap: 0;
+  padding: 18px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border-radius: 10px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
   color: ${neutral.text};
   font: inherit;
   text-align: left;
@@ -380,8 +404,7 @@ export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
 
   &:hover {
     border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
-    box-shadow: 0 8px 24px ${neutral.shadow};
-    transform: translateY(-1px);
+    background: ${neutral.surface};
   }
 
   &:focus-visible {
@@ -396,6 +419,7 @@ export const SummaryCardTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 18px;
 `
 
 export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
@@ -411,7 +435,12 @@ export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
 
 export const SummaryArrow = styled(MaterialIcon)`
   color: ${neutral.softText};
-  font-size: 20px;
+  font-size: 18px;
+  transition: color 160ms ease;
+
+  ${SummaryCard}:hover & {
+    color: ${neutral.primary};
+  }
 `
 
 export const SummaryLabel = styled.span`
@@ -421,6 +450,7 @@ export const SummaryLabel = styled.span`
 `
 
 export const SummaryValue = styled.strong`
+  margin-top: auto;
   color: ${neutral.strongText};
   font-size: 28px;
   font-weight: 700;

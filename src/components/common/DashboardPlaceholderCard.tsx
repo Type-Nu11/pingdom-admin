@@ -23,21 +23,34 @@ const MaterialIcon = styled.span`
 `
 
 const Card = styled.article`
-  min-height: 116px;
+  min-height: 64px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 12px;
-  padding: 18px;
+  padding: 12px 16px;
   border: 1px solid ${adminColors.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${adminColors.surfaceHighest};
 `
 
 const CardTop = styled.div`
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: ${adminColors.surfaceContainer};
   color: ${adminColors.muted};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+const CardContent = styled.div`
+  min-width: 0;
 `
 
 const CardLabel = styled.strong`
@@ -47,7 +60,7 @@ const CardLabel = styled.strong`
 `
 
 const CardDescription = styled.p`
-  margin: 0;
+  margin: 2px 0 0;
   color: ${adminColors.softText};
   font-size: 13px;
   line-height: 1.5;
@@ -62,9 +75,11 @@ function DashboardPlaceholderCard({
     <Card>
       <CardTop>
         <MaterialIcon aria-hidden="true">{icon}</MaterialIcon>
-        <CardLabel>{label}</CardLabel>
       </CardTop>
-      <CardDescription>{description}</CardDescription>
+      <CardContent>
+        <CardLabel>{label}</CardLabel>
+        <CardDescription>{description}</CardDescription>
+      </CardContent>
     </Card>
   )
 }

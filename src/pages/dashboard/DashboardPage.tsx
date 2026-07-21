@@ -20,6 +20,12 @@ interface DashboardMetric {
   tone: 'neutral' | 'action'
 }
 
+interface DashboardMetricNavigationState {
+  reviewStatus?: 'PENDING'
+}
+
+type DashboardUtilityKey = 'notifications' | 'help'
+
 const SERVICE_METRICS: DashboardMetric[] = [
   {
     key: 'placeCount',
@@ -110,7 +116,14 @@ function DashboardPage() {
         key={metric.key}
         type="button"
         $tone={metric.tone}
-        onClick={() => navigate(metric.route)}
+        onClick={() => {
+          const state: DashboardMetricNavigationState | undefined =
+            metric.key === 'pendingReportCount'
+              ? { reviewStatus: 'PENDING' }
+              : undefined
+
+          navigate(metric.route, state ? { state } : undefined)
+        }}
         aria-label={`${metric.label} ${value ?? '불러오는 중'} 관리 화면으로 이동`}
         aria-busy={isLoading}
       >

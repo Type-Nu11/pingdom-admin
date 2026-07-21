@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAdminDashboardSummary } from '../api/adminDashboardApi'
+import { isApiError } from '../api/customAxios'
+import type { AuthErrorResponse } from '../types/auth.types'
 import type {
   AdminDashboardLoadStatus,
   AdminDashboardSummary,
 } from '../types/adminDashboard.types'
 import { logDebugError } from '../utils/debugLogger'
+import { useAuth } from './useAuth'
 
 const DASHBOARD_REFRESH_INTERVAL_MS = 30_000
 
@@ -16,7 +19,17 @@ function hasSummaryData(summary: AdminDashboardSummary) {
   return Object.values(summary).some((value) => value !== 0)
 }
 
+function shouldClearAuth(error: unknown) {
+  return (
+    isApiError<AuthErrorResponse>(error) &&
+    (error.response?.status === 401 ||
+      error.response?.data?.code === 'INVALID_TOKEN' ||
+      error.category === 'unauthorized')
+  )
+}
+
 export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions = {}) {
+  const { clearAuth } = useAuth()
   const [summary, setSummary] = useState<AdminDashboardSummary | null>(null)
   const [status, setStatus] = useState<AdminDashboardLoadStatus>('loading')
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null)
@@ -58,11 +71,16 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       }
 
       logDebugError('관리자 대시보드 요약 조회 실패', error)
+
+      if (shouldClearAuth(error)) {
+        clearAuth()
+      }
+
       setStatus('error')
     } finally {
       isRequestInFlightRef.current = false
     }
-  }, [enabled])
+  }, [clearAuth, enabled])
 
   useEffect(() => {
     if (!enabled) {

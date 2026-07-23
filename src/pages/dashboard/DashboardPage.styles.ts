@@ -460,6 +460,305 @@ export const PlaceholderGrid = styled.div`
   gap: 8px;
 `
 
+export const OperationsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action' }>`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+`
+
+export const OperationsPanelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+`
+
+export const OperationsPanelTitle = styled.h3`
+  margin: 0;
+  color: ${neutral.strongText};
+  font-size: 15px;
+  font-weight: 700;
+`
+
+export const PanelUpdatingText = styled.span`
+  color: ${neutral.primary};
+  font-size: 12px;
+  font-weight: 600;
+`
+
+export const ActivityGroups = styled.div`
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.border} transparent;
+`
+
+export const ActivityGroup = styled.div`
+  min-width: 0;
+`
+
+export const ActivityGroupTitle = styled.h4`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  color: ${neutral.softText};
+  font-size: 12px;
+  font-weight: 600;
+`
+
+export const ActivityGroupCount = styled.span`
+  color: ${neutral.disabled};
+  font-size: 11px;
+  font-weight: 500;
+`
+
+export const ActivityList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`
+
+export const ActivityItem = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid ${neutral.borderSoft};
+
+  &:last-child {
+    border-bottom: 0;
+  }
+`
+
+export const ActivityItemMain = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  span {
+    color: ${neutral.softText};
+    font-size: 12px;
+  }
+`
+
+export const ActivityItemDate = styled.time`
+  flex-shrink: 0;
+  color: ${neutral.softText};
+  font-size: 11px;
+`
+
+export const ActivityBadge = styled.span<{
+  $tone: 'neutral' | 'success' | 'warning' | 'error'
+}>`
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: ${({ $tone }) => {
+    if ($tone === 'success') return neutral.successTint
+    if ($tone === 'warning') return neutral.warningTint
+    if ($tone === 'error') return neutral.errorTint
+    return neutral.surfaceContainer
+  }};
+  color: ${({ $tone }) => {
+    if ($tone === 'success') return neutral.successText
+    if ($tone === 'warning') return neutral.warningText
+    if ($tone === 'error') return neutral.error
+    return neutral.softText
+  }};
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+`
+
+export const PendingList = styled.div`
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.border} transparent;
+`
+
+export const PendingItem = styled.button`
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border: 0;
+  border-bottom: 1px solid ${neutral.borderSoft};
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+`
+
+export const PendingItemMain = styled.span`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  span {
+    color: ${neutral.warningText};
+    font-size: 12px;
+  }
+`
+
+export const PendingItemMeta = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: ${neutral.softText};
+  font-size: 11px;
+
+  ${PendingItem}:hover & {
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+`
+
+export const EmptyState = styled.p`
+  margin: 0;
+  padding: 14px 8px;
+  color: ${neutral.softText};
+  font-size: 13px;
+  text-align: center;
+`
+
+export const DataStatus = styled.div<{ $tone?: 'error' | 'neutral' }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $tone }) => ($tone === 'error' ? neutral.errorTint : neutral.surfaceLow)};
+  color: ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.muted)};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const DataStatusText = styled.span`
+  min-width: 0;
+  color: ${neutral.muted};
+  font-size: 12px;
+  line-height: 1.4;
+`
+
+export const InlineRetryButton = styled.button`
+  min-height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primary};
+    color: ${neutral.primary};
+  }
+`
+
+export const ActivitySkeletonList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+export const ActivitySkeleton = styled.span`
+  width: 100%;
+  height: 44px;
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, ${neutral.surfaceContainer} 25%, ${neutral.surfaceHigh} 50%, ${neutral.surfaceContainer} 75%);
+  background-size: 200% 100%;
+  animation: ${loadingShimmer} 1.2s infinite;
+`
+
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
   min-height: 140px;
   display: flex;

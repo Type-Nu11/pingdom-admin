@@ -448,10 +448,16 @@ export const SectionDescription = styled.p`
 
 export const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 
-  @media (max-width: 560px) { grid-template-columns: 1fr; }
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
 `
 
 export const PlaceholderGrid = styled.div`
@@ -508,6 +514,51 @@ export const PanelUpdatingText = styled.span`
   color: ${neutral.primary};
   font-size: 12px;
   font-weight: 600;
+`
+
+export const ActivityTabs = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`
+
+export const ActivityTab = styled.button<{ $active?: boolean }>`
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 0 10px;
+  border: 1px solid ${({ $active }) => ($active ? neutral.primary : neutral.border)};
+  border-radius: 7px;
+  background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primary};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+`
+
+export const ActivityTabCount = styled.span`
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 500;
 `
 
 export const ActivityGroups = styled.div`
@@ -769,12 +820,12 @@ export const ActivitySkeleton = styled.span`
 `
 
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 140px;
+  min-height: 108px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  padding: 18px;
+  padding: 16px;
   border: 1px solid ${neutral.border};
   border-radius: 10px;
   background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
@@ -801,12 +852,12 @@ export const SummaryCardTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 `
 
 export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -834,7 +885,7 @@ export const SummaryLabel = styled.span`
 export const SummaryValue = styled.strong`
   margin-top: 6px;
   color: ${neutral.strongText};
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1;
 `

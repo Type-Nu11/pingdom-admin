@@ -511,7 +511,7 @@ export const PanelUpdatingText = styled.span`
 `
 
 export const ActivityGroups = styled.div`
-  max-height: 420px;
+  max-height: 360px;
   overflow-y: auto;
   padding-right: 4px;
   display: flex;
@@ -617,7 +617,7 @@ export const ActivityBadge = styled.span<{
 `
 
 export const PendingList = styled.div`
-  max-height: 420px;
+  max-height: 360px;
   overflow-y: auto;
   padding-right: 4px;
   display: flex;

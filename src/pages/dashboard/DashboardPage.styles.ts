@@ -276,8 +276,8 @@ export const TopActions = styled.div`
 `
 
 export const IconButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -399,13 +399,20 @@ export const PageDescription = styled.p`
 `
 
 export const UpdateMeta = styled.p`
+  min-width: 190px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   flex-shrink: 0;
   margin: 0;
   color: ${neutral.softText};
   font-size: 13px;
+
+  @media (max-width: 640px) {
+    min-width: 0;
+    justify-content: flex-start;
+  }
 `
 
 export const RefreshingText = styled.span`
@@ -464,16 +471,6 @@ export const PlaceholderGrid = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-`
-
-export const OperationsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-
-  @media (max-width: 760px) {
-    grid-template-columns: 1fr;
-  }
 `
 
 export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action' }>`
@@ -577,22 +574,6 @@ export const ActivityGroup = styled.div`
   min-width: 0;
 `
 
-export const ActivityGroupTitle = styled.h4`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 6px;
-  color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 600;
-`
-
-export const ActivityGroupCount = styled.span`
-  color: ${neutral.disabled};
-  font-size: 11px;
-  font-weight: 500;
-`
-
 export const ActivityList = styled.div`
   display: flex;
   flex-direction: column;
@@ -602,7 +583,7 @@ export const ActivityList = styled.div`
 export const ActivityItem = styled.div`
   min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
@@ -642,6 +623,15 @@ export const ActivityItemDate = styled.time`
   flex-shrink: 0;
   color: ${neutral.softText};
   font-size: 11px;
+`
+
+export const ActivityItemAside = styled.div`
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 `
 
 export const ActivityBadge = styled.span<{
@@ -817,6 +807,10 @@ export const ActivitySkeleton = styled.span`
   background: linear-gradient(90deg, ${neutral.surfaceContainer} 25%, ${neutral.surfaceHigh} 50%, ${neutral.surfaceContainer} 75%);
   background-size: 200% 100%;
   animation: ${loadingShimmer} 1.2s infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
@@ -898,6 +892,10 @@ export const Skeleton = styled.span`
   background: linear-gradient(90deg, ${neutral.surfaceContainer} 25%, ${neutral.surfaceHigh} 50%, ${neutral.surfaceContainer} 75%);
   background-size: 200% 100%;
   animation: ${loadingShimmer} 1.2s infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const StatusPanel = styled.div<{ $tone?: 'neutral' | 'error' | 'success' }>`
@@ -939,8 +937,8 @@ export const RetryButton = styled.button`
 `
 
 export const RefreshButton = styled.button<{ $isLoading?: boolean }>`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   gap: 8px;

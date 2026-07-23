@@ -323,6 +323,8 @@ function DashboardPage() {
     const selectedGroup = activeActivityTab
       ? groups.find((group) => group.key === activeActivityTab) ?? groups[0]
       : groups.find((group) => group.rows.length > 0) ?? groups[0]
+    const selectedTabId = `dashboard-activity-tab-${selectedGroup.key}`
+    const activityPanelId = 'dashboard-activity-panel'
 
     return (
       <>
@@ -331,8 +333,10 @@ function DashboardPage() {
             <S.ActivityTab
               key={group.key}
               type="button"
+              id={`dashboard-activity-tab-${group.key}`}
               role="tab"
               aria-selected={selectedGroup.key === group.key}
+              aria-controls={activityPanelId}
               $active={selectedGroup.key === group.key}
               onClick={() => setActiveActivityTab(group.key)}
             >
@@ -342,9 +346,19 @@ function DashboardPage() {
           ))}
         </S.ActivityTabs>
         {selectedGroup.rows.length === 0 ? (
-          <S.EmptyState>{selectedGroup.title} 활동이 없습니다.</S.EmptyState>
+          <S.EmptyState
+            id={activityPanelId}
+            role="tabpanel"
+            aria-labelledby={selectedTabId}
+          >
+            {selectedGroup.title} 활동이 없습니다.
+          </S.EmptyState>
         ) : (
-          <S.ActivityGroups>
+          <S.ActivityGroups
+            id={activityPanelId}
+            role="tabpanel"
+            aria-labelledby={selectedTabId}
+          >
             <S.ActivityGroup>
               <S.ActivityList>
                 {selectedGroup.rows.map((row) => {

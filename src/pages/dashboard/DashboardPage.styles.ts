@@ -489,10 +489,19 @@ export const OperationsPanelHeader = styled.div`
 `
 
 export const OperationsPanelTitle = styled.h3`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   color: ${neutral.strongText};
   font-size: 15px;
   font-weight: 700;
+`
+
+export const PanelCount = styled.span`
+  color: ${neutral.softText};
+  font-size: 12px;
+  font-weight: 500;
 `
 
 export const PanelUpdatingText = styled.span`

@@ -611,6 +611,9 @@ function DashboardPage() {
                 <S.OperationsPanelHeader>
                   <S.OperationsPanelTitle id="dashboard-pending-items-title">
                     처리 필요 항목
+                    {pendingItemsStatus !== 'loading' || pendingItems.length > 0 ? (
+                      <S.PanelCount>{pendingItems.length}건</S.PanelCount>
+                    ) : null}
                   </S.OperationsPanelTitle>
                   {pendingItemsStatus === 'loading' && pendingItems.length > 0 ? (
                     <S.PanelUpdatingText>업데이트 중</S.PanelUpdatingText>

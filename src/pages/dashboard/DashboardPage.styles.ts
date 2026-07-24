@@ -623,6 +623,7 @@ export const ActivityItemDate = styled.time`
   flex-shrink: 0;
   color: ${neutral.softText};
   font-size: 11px;
+  white-space: nowrap;
 `
 
 export const ActivityItemAside = styled.div`

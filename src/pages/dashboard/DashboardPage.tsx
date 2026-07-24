@@ -250,18 +250,14 @@ function DashboardPage() {
     const time = new Intl.DateTimeFormat('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     }).format(updatedAt)
 
     if (isToday) {
       return `오늘 ${time}`
     }
 
-    return new Intl.DateTimeFormat('ko-KR', {
-      month: 'numeric',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(updatedAt)
+    return `${updatedAt.getMonth() + 1}월 ${updatedAt.getDate()}일 ${time}`
   }
 
   function formatActivityDate(timestamp?: string) {
@@ -283,6 +279,7 @@ function DashboardPage() {
     const time = new Intl.DateTimeFormat('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     }).format(date)
 
     if (isToday) {
@@ -293,12 +290,7 @@ function DashboardPage() {
       return `어제 ${time}`
     }
 
-    return new Intl.DateTimeFormat('ko-KR', {
-      month: 'numeric',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date)
+    return `${date.getMonth() + 1}월 ${date.getDate()}일 ${time}`
   }
 
   function getReportStatusLabel(reportStatus: string) {
@@ -370,11 +362,22 @@ function DashboardPage() {
       {
         key: 'places',
         title: '장소',
-        rows: recentActivities.places.map((place) => ({
-          id: `place-${place.placeId}`,
-          title: place.name || '이름 없는 장소',
-          detail: `등록자 ${place.registrant || `사용자 ID ${place.userId}`} · ${place.address}`,
-        })),
+        rows: recentActivities.places.map((place) => {
+          const placeName = place.name?.trim() || '이름 없는 장소'
+          const address = place.address?.trim()
+          const registrant = place.registrant || `사용자 ID ${place.userId}`
+          const detail =
+            address && placeName === address
+              ? `등록자 ${registrant}`
+              : `등록자 ${registrant}${address ? ` · ${address}` : ''}`
+
+          return {
+            id: `place-${place.placeId}`,
+            title: placeName,
+            detail,
+            timestamp: place.createdAt ?? undefined,
+          }
+        }),
       },
       {
         key: 'posts',

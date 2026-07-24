@@ -531,7 +531,7 @@ function UserBanPage() {
     hasNext,
     counts,
     isLoading,
-    hasLoadedList,
+    hasSuccessfulListResponse,
     isError,
     errorMessage,
     selectedUserDetail,
@@ -566,15 +566,11 @@ function UserBanPage() {
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const safeTotalPages = Math.max(totalPages, 1)
   const hasUsers = users.length > 0
-  const totalBannedUserCount = hasLoadedList
+  const totalBannedUserCount = hasSuccessfulListResponse
     ? counts?.total ?? totalCount
     : null
   const resultRangeLabel = (() => {
-    if (isError && !hasUsers) {
-      return '조회 실패'
-    }
-
-    if (!hasLoadedList) {
+    if (!hasSuccessfulListResponse) {
       return isLoading ? '조회 중' : '-'
     }
 
@@ -590,6 +586,17 @@ function UserBanPage() {
 
     return `${rangeStart}–${rangeEnd} / ${totalCount.toLocaleString()}건`
   })()
+  const getMetricHint = (value?: number | null) => {
+    if (isLoading) {
+      return '조회 중'
+    }
+
+    if (isError && !hasSuccessfulListResponse) {
+      return '불러오기 실패'
+    }
+
+    return typeof value === 'number' ? '현재 조회 조건 기준' : '집계 미제공'
+  }
   const banPreviewTargetUserId = parsePositiveInteger(banTargetUserId)
   const banPreviewDurationDays = parsePositiveInteger(banDurationDays)
   const safeSanctionHistoryTotalPages = Math.max(sanctionHistoryTotalPages, 1)
@@ -996,17 +1003,17 @@ function UserBanPage() {
               <U.MetricItem>
                 <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
                 <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
-                <U.MetricHint>{isLoading ? '조회 중' : '현재 조회 조건 기준'}</U.MetricHint>
+                <U.MetricHint>{getMetricHint(totalBannedUserCount)}</U.MetricHint>
               </U.MetricItem>
               <U.MetricItem>
                 <U.MetricLabel>영구 밴</U.MetricLabel>
                 <U.MetricValue>{formatCount(counts?.permanent)}</U.MetricValue>
-                <U.MetricHint>서버 응답 기준</U.MetricHint>
+                <U.MetricHint>{getMetricHint(counts?.permanent)}</U.MetricHint>
               </U.MetricItem>
               <U.MetricItem>
                 <U.MetricLabel>기간 밴</U.MetricLabel>
                 <U.MetricValue>{formatCount(counts?.temporary)}</U.MetricValue>
-                <U.MetricHint>서버 응답 기준</U.MetricHint>
+                <U.MetricHint>{getMetricHint(counts?.temporary)}</U.MetricHint>
               </U.MetricItem>
             </U.SummaryGrid>
 
@@ -1288,8 +1295,9 @@ function UserBanPage() {
                       </U.FilterActions>
                     </>
                   ) : null}
-                  <U.TableWrap>
-                    <U.Table>
+                  {isError && !hasUsers ? null : (
+                    <U.TableWrap>
+                      <U.Table>
                       <thead>
                         <tr>
                           <U.TableHeadCell>사용자</U.TableHeadCell>
@@ -1302,13 +1310,7 @@ function UserBanPage() {
                       <tbody>
                         {isLoading && !hasUsers ? (
                           <tr>
-                            <U.EmptyRow colSpan={5}>밴 유저 목록을 불러오는 중입니다.</U.EmptyRow>
-                          </tr>
-                        ) : isError && !hasUsers ? (
-                          <tr>
-                            <U.EmptyRow colSpan={5}>
-                              밴 내역을 불러오지 못했습니다. 위의 다시 시도 버튼을 눌러 주세요.
-                            </U.EmptyRow>
+                            <U.EmptyRow colSpan={5}>밴 사용자 목록을 불러오는 중입니다.</U.EmptyRow>
                           </tr>
                         ) : hasUsers ? (
                           users.map((bannedUser) => (
@@ -1354,34 +1356,37 @@ function UserBanPage() {
                           </tr>
                         )}
                       </tbody>
-                    </U.Table>
-                  </U.TableWrap>
-                  <U.Pagination aria-label="밴 유저 목록 페이지네이션">
-                    <U.SecondaryButton
-                      type="button"
-                      disabled={isLoading || page <= 1}
-                      onClick={() => handlePageChange(page - 1)}
-                    >
-                      이전
-                    </U.SecondaryButton>
-                    <U.PaginationStatus>
-                      {page} / {safeTotalPages}
-                    </U.PaginationStatus>
-                    <U.SecondaryButton
-                      type="button"
-                      disabled={isLoading || !hasNext}
-                      onClick={() => handlePageChange(page + 1)}
-                    >
-                      다음
-                    </U.SecondaryButton>
-                  </U.Pagination>
+                      </U.Table>
+                    </U.TableWrap>
+                  )}
+                  {hasUsers && !isError && totalCount > 0 ? (
+                    <U.Pagination aria-label="밴 사용자 목록 페이지네이션">
+                      <U.SecondaryButton
+                        type="button"
+                        disabled={isLoading || page <= 1}
+                        onClick={() => handlePageChange(page - 1)}
+                      >
+                        이전
+                      </U.SecondaryButton>
+                      <U.PaginationStatus>
+                        {page} / {safeTotalPages}
+                      </U.PaginationStatus>
+                      <U.SecondaryButton
+                        type="button"
+                        disabled={isLoading || !hasNext}
+                        onClick={() => handlePageChange(page + 1)}
+                      >
+                        다음
+                      </U.SecondaryButton>
+                    </U.Pagination>
+                  ) : null}
                 </U.SectionBody>
               </U.Section>
 
               <U.Section>
                 <U.SectionHeader>
                   <U.DetailHeaderStack>
-                    <U.SectionTitle>밴 유저 상세</U.SectionTitle>
+                    <U.SectionTitle>밴 사용자 상세</U.SectionTitle>
                     {selectedUserDetail ? (
                       <U.DetailMeta>
                         사용자 ID {selectedUserDetail.userId}

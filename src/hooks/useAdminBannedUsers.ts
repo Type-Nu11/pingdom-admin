@@ -32,7 +32,7 @@ const DEFAULT_ADMIN_BANNED_USER_LIMIT = 20
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE = 1
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_LIMIT = 5
 const ADMIN_BANNED_USER_ERROR_MESSAGE =
-  '밴 유저 목록을 불러오는 중 오류가 발생했습니다.'
+  '밴 사용자 목록을 불러오는 중 오류가 발생했습니다.'
 const ADMIN_BANNED_USER_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
   forbidden: '관리자 권한이 필요합니다.',
@@ -115,6 +115,7 @@ export function useAdminBannedUsers({
   const [counts, setCounts] = useState<AdminBannedUserCounts | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasLoadedList, setHasLoadedList] = useState(false)
+  const [hasSuccessfulListResponse, setHasSuccessfulListResponse] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [selectedUserDetail, setSelectedUserDetail] =
@@ -199,6 +200,7 @@ export function useAdminBannedUsers({
           setTotalPages(data.totalPages)
           setHasNext(data.hasNext)
           setCounts(data.counts ?? null)
+          setHasSuccessfulListResponse(true)
           latestListRequestRef.current = {
             page: data.page,
             limit: data.limit,
@@ -529,6 +531,7 @@ export function useAdminBannedUsers({
     counts,
     isLoading,
     hasLoadedList,
+    hasSuccessfulListResponse,
     isError,
     errorMessage,
     selectedUserDetail,

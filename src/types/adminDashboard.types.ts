@@ -40,8 +40,8 @@ export interface AdminDashboardRecentPostItem {
   title: string
   userId: number
   username: string
-  placeId: number
-  placeName: string
+  placeId: number | null
+  placeName: string | null
   createdAt: string
 }
 

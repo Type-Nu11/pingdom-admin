@@ -179,6 +179,7 @@ function DashboardPage() {
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
+  const pendingItemCount = summary?.pendingReportCount ?? pendingItems.length
 
   function getMetricValue(key: DashboardMetricKey) {
     if (summary && (status === 'success' || status === 'empty' || status === 'loading' || status === 'error')) {
@@ -385,7 +386,7 @@ function DashboardPage() {
         rows: recentActivities.posts.map((post) => ({
           id: `post-${post.postId}`,
           title: post.title,
-          detail: `${post.username} · ${post.placeName}`,
+          detail: `${post.username} · ${post.placeName ?? '장소 정보 없음'}`,
           timestamp: post.createdAt,
         })),
       },
@@ -812,8 +813,8 @@ function DashboardPage() {
               <S.OperationsPanelHeader>
                 <S.OperationsPanelTitle id="dashboard-pending-items-title">
                   신고 검토 목록
-                  {pendingItemsStatus !== 'loading' || pendingItems.length > 0 ? (
-                    <S.PanelCount>{pendingItems.length}건</S.PanelCount>
+                  {summary || pendingItemsStatus !== 'loading' || pendingItems.length > 0 ? (
+                    <S.PanelCount>{pendingItemCount.toLocaleString()}건</S.PanelCount>
                   ) : null}
                 </S.OperationsPanelTitle>
                 {pendingItemsStatus === 'loading' && pendingItems.length > 0 ? (

@@ -22,7 +22,26 @@ interface UseAdminDashboardOptions {
 }
 
 function hasSummaryData(summary: AdminDashboardSummary) {
-  return Object.values(summary).some((value) => value !== 0)
+  const summaryCountsHaveData = [
+    summary.placeCount,
+    summary.postCount,
+    summary.pendingReportCount,
+    summary.bannedUserCount,
+  ].some((value) => value !== 0)
+  const operationalMetrics = summary.operationalMetrics
+  const operationalMetricsHaveData = operationalMetrics
+    ? [
+        operationalMetrics.today.placeRegistrationCount,
+        operationalMetrics.today.postRegistrationCount,
+        operationalMetrics.last7Days.placeRegistrationCount,
+        operationalMetrics.last7Days.postRegistrationCount,
+        operationalMetrics.duplicatePlaceGroupCount,
+        operationalMetrics.expiringBannedUserCount,
+        operationalMetrics.missingLocationPlaceCount,
+      ].some((value) => value !== 0)
+    : false
+
+  return summaryCountsHaveData || operationalMetricsHaveData
 }
 
 function hasRecentActivityData(activities: AdminDashboardRecentActivitiesResponse) {

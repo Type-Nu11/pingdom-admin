@@ -3,6 +3,27 @@ export interface AdminDashboardSummary {
   postCount: number
   pendingReportCount: number
   bannedUserCount: number
+  operationalMetrics?: AdminDashboardOperationalMetrics
+}
+
+export type AdminDashboardMetricPeriod = 'TODAY' | 'LAST_7_DAYS'
+
+export interface AdminDashboardMetricWindow {
+  period: AdminDashboardMetricPeriod
+  startedAt: string
+  endedAt: string
+  placeRegistrationCount: number
+  postRegistrationCount: number
+}
+
+export interface AdminDashboardOperationalMetrics {
+  today: AdminDashboardMetricWindow
+  last7Days: AdminDashboardMetricWindow
+  duplicatePlaceGroupCount: number
+  expiringBannedUserCount: number
+  missingLocationPlaceCount: number
+  expiringBanUntil: string
+  collectedAt: string
 }
 
 export interface AdminDashboardRecentPlaceItem {
@@ -11,6 +32,7 @@ export interface AdminDashboardRecentPlaceItem {
   address: string
   userId: number
   registrant: string
+  createdAt?: string | null
 }
 
 export interface AdminDashboardRecentPostItem {
@@ -61,6 +83,8 @@ export interface AdminDashboardRecentActivitiesResponse {
 export interface AdminDashboardPendingItem {
   type: string
   targetId: number
+  reportId?: number | null
+  postId?: number | null
   title: string
   status: string
   createdAt: string

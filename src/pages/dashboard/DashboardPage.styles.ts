@@ -814,12 +814,12 @@ export const ActivitySkeleton = styled.span`
 `
 
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 108px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  padding: 16px;
+  padding: 14px 16px;
   border: 1px solid ${neutral.border};
   border-radius: 10px;
   background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
@@ -862,7 +862,7 @@ export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
 
 export const SummaryArrow = styled(MaterialIcon)`
   color: ${neutral.softText};
-  font-size: 18px;
+  font-size: 16px;
   transition: color 160ms ease;
 
   ${SummaryCard}:hover & {
@@ -876,10 +876,89 @@ export const SummaryLabel = styled.span`
   font-weight: 500;
 `
 
-export const SummaryValue = styled.strong`
+export const SummaryValue = styled.strong<{ $muted?: boolean }>`
   margin-top: 6px;
-  color: ${neutral.strongText};
+  color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
   font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+`
+
+export const OperationalMetricGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const OperationalMetricCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
+  min-width: 0;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 9px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  color: ${neutral.text};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+
+  &:hover {
+    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
+    background: ${neutral.surfaceLow};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+`
+
+export const OperationalMetricIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
+  color: ${({ $tone }) => ($tone === 'action' ? neutral.warningText : neutral.primary)};
+
+  ${MaterialIcon} { font-size: 16px; }
+`
+
+export const OperationalMetricContent = styled.span`
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+`
+
+export const OperationalMetricLabel = styled.span`
+  overflow: hidden;
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const OperationalMetricValue = styled.strong<{ $muted?: boolean }>`
+  color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
+  font-size: 17px;
   font-weight: 700;
   line-height: 1;
 `

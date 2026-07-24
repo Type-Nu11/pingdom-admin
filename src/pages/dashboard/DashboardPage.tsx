@@ -21,7 +21,27 @@ interface DashboardMetric {
 }
 
 interface DashboardMetricNavigationState {
-  reviewStatus?: 'PENDING'
+  openPostId?: number
+  reportId?: number
+  reviewStatus?: 'ALL' | 'PENDING' | 'PROCESSED'
+}
+
+type DashboardOperationalMetricKey =
+  | 'todayPlaceRegistrationCount'
+  | 'todayPostRegistrationCount'
+  | 'last7DaysPlaceRegistrationCount'
+  | 'last7DaysPostRegistrationCount'
+  | 'duplicatePlaceGroupCount'
+  | 'expiringBannedUserCount'
+  | 'missingLocationPlaceCount'
+
+interface DashboardOperationalMetric {
+  key: DashboardOperationalMetricKey
+  label: string
+  unit: string
+  icon: string
+  route: string
+  tone: 'neutral' | 'action'
 }
 
 type DashboardUtilityKey = 'notifications' | 'help'
@@ -82,6 +102,65 @@ const ACTION_METRICS: DashboardMetric[] = [
   },
 ]
 
+const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
+  {
+    key: 'todayPlaceRegistrationCount',
+    label: '오늘 등록 장소',
+    unit: '개',
+    icon: 'add_location_alt',
+    route: '/places',
+    tone: 'neutral',
+  },
+  {
+    key: 'todayPostRegistrationCount',
+    label: '오늘 등록 게시글',
+    unit: '개',
+    icon: 'post_add',
+    route: '/main',
+    tone: 'neutral',
+  },
+  {
+    key: 'last7DaysPlaceRegistrationCount',
+    label: '최근 7일 장소 등록',
+    unit: '개',
+    icon: 'location_on',
+    route: '/places',
+    tone: 'neutral',
+  },
+  {
+    key: 'last7DaysPostRegistrationCount',
+    label: '최근 7일 게시글 등록',
+    unit: '개',
+    icon: 'description',
+    route: '/main',
+    tone: 'neutral',
+  },
+  {
+    key: 'duplicatePlaceGroupCount',
+    label: '중복 장소 후보',
+    unit: '건',
+    icon: 'content_copy',
+    route: '/places/duplicates',
+    tone: 'action',
+  },
+  {
+    key: 'expiringBannedUserCount',
+    label: '밴 만료 예정',
+    unit: '명',
+    icon: 'event_upcoming',
+    route: '/bans',
+    tone: 'action',
+  },
+  {
+    key: 'missingLocationPlaceCount',
+    label: '좌표 누락 장소',
+    unit: '개',
+    icon: 'location_disabled',
+    route: '/places',
+    tone: 'action',
+  },
+]
+
 function DashboardPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
@@ -111,6 +190,34 @@ function DashboardPage() {
     }
 
     return null
+  }
+
+  function getOperationalMetricValue(key: DashboardOperationalMetricKey) {
+    if (!summary) {
+      return status === 'error' || status === 'unavailable' ? undefined : null
+    }
+
+    const metrics = summary.operationalMetrics
+    if (!metrics) {
+      return undefined
+    }
+
+    switch (key) {
+      case 'todayPlaceRegistrationCount':
+        return metrics.today.placeRegistrationCount
+      case 'todayPostRegistrationCount':
+        return metrics.today.postRegistrationCount
+      case 'last7DaysPlaceRegistrationCount':
+        return metrics.last7Days.placeRegistrationCount
+      case 'last7DaysPostRegistrationCount':
+        return metrics.last7Days.postRegistrationCount
+      case 'duplicatePlaceGroupCount':
+        return metrics.duplicatePlaceGroupCount
+      case 'expiringBannedUserCount':
+        return metrics.expiringBannedUserCount
+      case 'missingLocationPlaceCount':
+        return metrics.missingLocationPlaceCount
+    }
   }
 
   function renderStatusPanel() {
@@ -446,14 +553,49 @@ function DashboardPage() {
     )
   }
 
+  function renderOperationalMetricCard(metric: DashboardOperationalMetric) {
+    const value = getOperationalMetricValue(metric.key)
+    const isZeroValue = value === 0
+    const tone = isZeroValue ? 'neutral' : metric.tone
+
+    return (
+      <S.OperationalMetricCard
+        key={metric.key}
+        type="button"
+        $tone={tone}
+        onClick={() => navigate(metric.route)}
+        aria-label={`${metric.label} ${value ?? '확인 중'} 관리 화면으로 이동`}
+        aria-busy={isLoading}
+      >
+        <S.OperationalMetricIcon $tone={tone}>
+          <S.MaterialIcon aria-hidden="true">{metric.icon}</S.MaterialIcon>
+        </S.OperationalMetricIcon>
+        <S.OperationalMetricContent>
+          <S.OperationalMetricLabel>{metric.label}</S.OperationalMetricLabel>
+          {value === null ? (
+            <S.Skeleton aria-label="불러오는 중" />
+          ) : (
+            <S.OperationalMetricValue $muted={isZeroValue}>
+              {value === undefined ? '-' : value.toLocaleString()}
+              {value === undefined ? '' : metric.unit}
+            </S.OperationalMetricValue>
+          )}
+        </S.OperationalMetricContent>
+        <S.SummaryArrow aria-hidden="true">arrow_forward</S.SummaryArrow>
+      </S.OperationalMetricCard>
+    )
+  }
+
   function renderMetricCard(metric: DashboardMetric) {
     const value = getMetricValue(metric.key)
+    const isZeroValue = value === '0'
+    const tone = isZeroValue ? 'neutral' : metric.tone
 
     return (
       <S.SummaryCard
         key={metric.key}
         type="button"
-        $tone={metric.tone}
+        $tone={tone}
         onClick={() => {
           const state: DashboardMetricNavigationState | undefined =
             metric.key === 'pendingReportCount'
@@ -466,7 +608,7 @@ function DashboardPage() {
         aria-busy={isLoading}
       >
         <S.SummaryCardTop>
-          <S.SummaryIcon $tone={metric.tone}>
+          <S.SummaryIcon $tone={tone}>
             <S.MaterialIcon aria-hidden="true">{metric.icon}</S.MaterialIcon>
           </S.SummaryIcon>
           <S.SummaryArrow aria-hidden="true">arrow_forward</S.SummaryArrow>
@@ -475,7 +617,7 @@ function DashboardPage() {
         {value === null ? (
           <S.Skeleton aria-label="불러오는 중" />
         ) : (
-          <S.SummaryValue>{value}{metric.unit}</S.SummaryValue>
+          <S.SummaryValue $muted={isZeroValue}>{value}{metric.unit}</S.SummaryValue>
         )}
       </S.SummaryCard>
     )
@@ -652,20 +794,31 @@ function DashboardPage() {
             </S.OperationsPanel>
           </S.Section>
 
+          <S.Section aria-labelledby="dashboard-operational-metrics-title">
+            <S.SectionHeader>
+              <S.SectionTitle id="dashboard-operational-metrics-title">
+                추가 운영 현황
+              </S.SectionTitle>
+              <S.SectionDescription>
+                {summary?.operationalMetrics?.collectedAt
+                  ? `집계 기준: ${formatActivityDate(summary.operationalMetrics.collectedAt) ?? '시각 미상'}`
+                  : '서버 운영 지표'}
+              </S.SectionDescription>
+            </S.SectionHeader>
+            <S.OperationalMetricGrid>
+              {OPERATIONAL_METRICS.map(renderOperationalMetricCard)}
+            </S.OperationalMetricGrid>
+          </S.Section>
+
           <S.Section aria-labelledby="dashboard-recent-activities-title">
             <S.SectionHeader>
               <S.SectionTitle id="dashboard-recent-activities-title">최근 활동</S.SectionTitle>
-              <S.SectionDescription>장소·게시글·신고·제재 내역</S.SectionDescription>
+              <S.SectionDescription>장소·게시글·신고·제재의 최신 내역</S.SectionDescription>
             </S.SectionHeader>
-            <S.OperationsPanel aria-labelledby="dashboard-activity-panel-title">
-              <S.OperationsPanelHeader>
-                <S.OperationsPanelTitle id="dashboard-activity-panel-title">
-                  활동 내역
-                </S.OperationsPanelTitle>
-                {recentActivitiesStatus === 'loading' && recentActivities ? (
-                  <S.PanelUpdatingText>업데이트 중</S.PanelUpdatingText>
-                ) : null}
-              </S.OperationsPanelHeader>
+            <S.OperationsPanel>
+              {recentActivitiesStatus === 'loading' && recentActivities ? (
+                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
+              ) : null}
               {recentActivitiesStatus === 'error' && recentActivities
                 ? renderSectionError('최근 활동을 새로 불러오지 못했습니다.')
                 : null}

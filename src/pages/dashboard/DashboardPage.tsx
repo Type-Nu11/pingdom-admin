@@ -556,9 +556,17 @@ function DashboardPage() {
           <S.PendingItem
             key={`${item.type}-${item.targetId}`}
             type="button"
-            onClick={() => navigate('/main', { state: { reviewStatus: 'PENDING' } })}
-            aria-label={`${item.title}, ${getPendingTypeLabel(item.type)} 게시글 관리로 이동`}
-            >
+            onClick={() => {
+              const state: DashboardMetricNavigationState = {
+                reviewStatus: 'PENDING',
+                ...(typeof item.postId === 'number' ? { openPostId: item.postId } : {}),
+                ...(typeof item.reportId === 'number' ? { reportId: item.reportId } : {}),
+              }
+
+              navigate('/main', { state })
+            }}
+            aria-label={`${item.title}, ${getPendingTypeLabel(item.type)} 상세 검토로 이동`}
+          >
             <S.PendingItemMain>
               <strong title={item.title}>{item.title}</strong>
               <span title={`${getPendingTypeLabel(item.type)} · ${getReportStatusLabel(item.status)}`}>

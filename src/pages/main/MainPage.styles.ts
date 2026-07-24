@@ -1462,6 +1462,7 @@ export const ReportList = styled.ul`
 
 export const ReportItem = styled.li<{
   $status?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'RESTORED'
+  $highlighted?: boolean
 }>`
   padding: 14px;
   border: 1px solid ${neutral.border};
@@ -1473,6 +1474,13 @@ export const ReportItem = styled.li<{
     css`
       border-color: ${neutral.error};
       box-shadow: inset 3px 0 0 ${neutral.error};
+    `}
+
+  ${({ $highlighted }) =>
+    $highlighted &&
+    css`
+      border-color: ${neutral.primary};
+      box-shadow: 0 0 0 3px ${neutral.primarySoft};
     `}
 `
 

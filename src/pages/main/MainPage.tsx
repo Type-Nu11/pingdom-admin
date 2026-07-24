@@ -54,6 +54,7 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
 
 interface MainPageLocationState {
   openPostId?: number
+  reportId?: number
   postSearchKeyword?: string
   reviewStatus?: AdminPostReviewStatus
 }
@@ -292,6 +293,7 @@ function MainPage() {
   )
   const [reportActionConfirm, setReportActionConfirm] =
     useState<ReportActionConfirmState | null>(null)
+  const [highlightedReportId, setHighlightedReportId] = useState<number | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
     useState(false)
   const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
@@ -376,13 +378,15 @@ function MainPage() {
 
   const handleOpenPostDetail = useCallback(
     (post: AdminPost) => {
+      setHighlightedReportId(null)
       setSelectedPost(post)
       void fetchAdminPostDetail(post.id)
     },
     [fetchAdminPostDetail]
   )
   const handleOpenPostDetailById = useCallback(
-    (postId: number) => {
+    (postId: number, reportId?: number) => {
+      setHighlightedReportId(reportId ?? null)
       setSelectedPost(createPendingPost(postId))
       void fetchAdminPostDetail(postId)
     },
@@ -619,6 +623,7 @@ function MainPage() {
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
     const openPostId = locationState?.openPostId
+    const reportId = locationState?.reportId
     const postSearchKeyword = locationState?.postSearchKeyword?.trim()
     const reviewStatus = locationState?.reviewStatus
 
@@ -630,6 +635,9 @@ function MainPage() {
         latestPostKeywordRef.current = postSearchKeyword ?? ''
         latestReviewFilterRef.current = reviewStatus ?? 'ALL'
         setSelectedPost(null)
+        setHighlightedReportId(
+          typeof reportId === 'number' && Number.isFinite(reportId) ? reportId : null
+        )
         setSelectedReviewFilter(reviewStatus ?? 'ALL')
         setPostSearchQuery(postSearchKeyword ?? '')
 
@@ -641,6 +649,9 @@ function MainPage() {
             reviewStatus: reviewStatus ?? 'ALL',
           }
         )
+        if (typeof openPostId === 'number' && Number.isFinite(openPostId)) {
+          handleOpenPostDetailById(openPostId, reportId)
+        }
         navigate(location.pathname, { replace: true, state: null })
       }, 0)
 
@@ -654,7 +665,7 @@ function MainPage() {
     }
 
     const openDetailTimer = window.setTimeout(() => {
-      handleOpenPostDetailById(openPostId)
+      handleOpenPostDetailById(openPostId, reportId)
       navigate(location.pathname, { replace: true, state: null })
     }, 0)
 
@@ -1209,6 +1220,7 @@ function MainPage() {
                           <S.ReportItem
                             key={report.reportId}
                             $status={report.status}
+                            $highlighted={report.reportId === highlightedReportId}
                           >
                             <S.ReportHeader>
                               <div>

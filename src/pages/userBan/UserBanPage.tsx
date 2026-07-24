@@ -170,10 +170,6 @@ function formatCount(value?: number | null) {
   return typeof value === 'number' ? value.toLocaleString() : '-'
 }
 
-function formatCountWithUnit(value: number | null, unit: string) {
-  return typeof value === 'number' ? `${value.toLocaleString()}${unit}` : '-'
-}
-
 function hasInvalidDateRange(from: string, to: string) {
   return Boolean(from && to && new Date(from).getTime() > new Date(to).getTime())
 }
@@ -989,28 +985,32 @@ function UserBanPage() {
           <U.PageStack>
             <U.IntroBand>
               <U.IntroText>
-                <U.Eyebrow>사용자 제재 관리</U.Eyebrow>
-                <U.IntroTitle>밴 처리된 사용자를 확인하고 해제 여부를 검토합니다.</U.IntroTitle>
+                <U.IntroTitle>사용자 밴</U.IntroTitle>
                 <U.IntroDescription>
-                  사용자 ID와 닉네임으로 현재 밴 상태를 검색하고, 상세 정보에서
-                  해제 여부를 검토합니다.
+                  밴 사용자를 조회하고 제재 처리 및 해제를 관리합니다.
                 </U.IntroDescription>
               </U.IntroText>
-              <U.StatusBadge>운영 관리</U.StatusBadge>
             </U.IntroBand>
 
-            <U.FilterPanel>
-              <U.FilterTopLine>
-                <U.ResultSummary>
-                  전체 밴 사용자{' '}
-                  <strong>{formatCountWithUnit(totalBannedUserCount, '명')}</strong>
-                  {' · '}
-                  현재 페이지{' '}
-                  <strong>{formatCountWithUnit(currentPageUserCount, '명')}</strong>{' '}
-                  표시
-                </U.ResultSummary>
-              </U.FilterTopLine>
+            <U.SummaryGrid>
+              <U.MetricItem>
+                <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
+                <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
+                <U.MetricHint>{isLoading ? '조회 중' : '현재 조회 조건 기준'}</U.MetricHint>
+              </U.MetricItem>
+              <U.MetricItem>
+                <U.MetricLabel>영구 밴</U.MetricLabel>
+                <U.MetricValue>{formatCount(counts?.permanent)}</U.MetricValue>
+                <U.MetricHint>서버 응답 기준</U.MetricHint>
+              </U.MetricItem>
+              <U.MetricItem>
+                <U.MetricLabel>기간 밴</U.MetricLabel>
+                <U.MetricValue>{formatCount(counts?.temporary)}</U.MetricValue>
+                <U.MetricHint>서버 응답 기준</U.MetricHint>
+              </U.MetricItem>
+            </U.SummaryGrid>
 
+            <U.FilterPanel>
               <U.FilterForm onSubmit={handleSearchSubmit}>
                   <U.FilterField>
                     검색어
@@ -1120,9 +1120,21 @@ function UserBanPage() {
             <U.Section>
               <U.SectionHeader>
                 <U.SectionTitle>사용자 밴 처리</U.SectionTitle>
-                <U.DetailMeta>사용자 ID 기준</U.DetailMeta>
+                <U.FilterActions>
+                  <U.DetailMeta>사용자 ID 기준</U.DetailMeta>
+                  <U.SecondaryButton
+                    type="button"
+                    aria-expanded={isBanFormOpen}
+                    onClick={() => setIsBanFormOpen((isOpen) => !isOpen)}
+                  >
+                    <S.MaterialIcon aria-hidden="true">
+                      {isBanFormOpen ? 'expand_less' : 'expand_more'}
+                    </S.MaterialIcon>
+                    {isBanFormOpen ? '접기' : '밴 처리 열기'}
+                  </U.SecondaryButton>
+                </U.FilterActions>
               </U.SectionHeader>
-              <U.SectionBody>
+              {isBanFormOpen ? <U.SectionBody>
                 {banFormError ? (
                   <U.Notice $variant="error" role="alert">
                     {banFormError}
@@ -1229,8 +1241,9 @@ function UserBanPage() {
                     </U.DetailSummaryCard>
                   ) : null}
                   <U.ActionHelpText>
-                    기간 밴은 입력한 일수만큼 적용되고, 영구 밴은 기간 없이 처리됩니다.
-                    밴 처리만으로 기존 게시글이 자동 숨김 또는 삭제되지는 않습니다.
+                    기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
+                    <br />
+                    밴 처리 후에도 기존 게시글은 유지됩니다.
                   </U.ActionHelpText>
                   <U.FilterActions>
                     <U.SecondaryButton
@@ -1250,16 +1263,13 @@ function UserBanPage() {
                     </U.PrimaryButton>
                   </U.FilterActions>
                 </U.ActionPanel>
-              </U.SectionBody>
+              </U.SectionBody> : null}
             </U.Section>
 
             <U.WorkGrid>
               <U.Section>
                 <U.SectionHeader>
                   <U.SectionTitle>밴 내역</U.SectionTitle>
-                  <U.DetailMeta>
-                    {page} / {safeTotalPages} 페이지
-                  </U.DetailMeta>
                 </U.SectionHeader>
                 <U.SectionBody>
                   {isError ? (
@@ -1293,6 +1303,12 @@ function UserBanPage() {
                         {isLoading && !hasUsers ? (
                           <tr>
                             <U.EmptyRow colSpan={5}>밴 유저 목록을 불러오는 중입니다.</U.EmptyRow>
+                          </tr>
+                        ) : isError && !hasUsers ? (
+                          <tr>
+                            <U.EmptyRow colSpan={5}>
+                              밴 내역을 불러오지 못했습니다. 위의 다시 시도 버튼을 눌러 주세요.
+                            </U.EmptyRow>
                           </tr>
                         ) : hasUsers ? (
                           users.map((bannedUser) => (

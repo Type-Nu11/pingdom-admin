@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
-import DashboardPlaceholderCard from '../../components/common/DashboardPlaceholderCard'
 import * as S from './DashboardPage.styles'
 
 type DashboardMetricKey =
@@ -22,10 +21,48 @@ interface DashboardMetric {
 }
 
 interface DashboardMetricNavigationState {
-  reviewStatus?: 'PENDING'
+  openPostId?: number
+  reportId?: number
+  reviewStatus?: 'ALL' | 'PENDING' | 'PROCESSED'
+}
+
+type DashboardOperationalMetricKey =
+  | 'todayPlaceRegistrationCount'
+  | 'todayPostRegistrationCount'
+  | 'last7DaysPlaceRegistrationCount'
+  | 'last7DaysPostRegistrationCount'
+  | 'duplicatePlaceGroupCount'
+  | 'expiringBannedUserCount'
+  | 'missingLocationPlaceCount'
+
+interface DashboardOperationalMetric {
+  key: DashboardOperationalMetricKey
+  label: string
+  unit: string
+  icon: string
+  route: string
+  tone: 'neutral' | 'action'
 }
 
 type DashboardUtilityKey = 'notifications' | 'help'
+type DashboardActivityTabKey = 'places' | 'posts' | 'reports' | 'userSanctions'
+
+interface DashboardActivityRow {
+  id: string
+  title: string
+  detail: string
+  timestamp?: string
+  badge?: {
+    label: string
+    tone: 'neutral' | 'success' | 'warning' | 'error'
+  }
+}
+
+interface DashboardActivityGroup {
+  key: DashboardActivityTabKey
+  title: string
+  rows: DashboardActivityRow[]
+}
 
 const SERVICE_METRICS: DashboardMetric[] = [
   {
@@ -44,6 +81,14 @@ const SERVICE_METRICS: DashboardMetric[] = [
     route: '/main',
     tone: 'neutral',
   },
+  {
+    key: 'bannedUserCount',
+    label: '현재 밴 사용자',
+    icon: 'block',
+    unit: '명',
+    route: '/bans',
+    tone: 'neutral',
+  },
 ]
 
 const ACTION_METRICS: DashboardMetric[] = [
@@ -55,12 +100,63 @@ const ACTION_METRICS: DashboardMetric[] = [
     route: '/main',
     tone: 'action',
   },
+]
+
+const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
   {
-    key: 'bannedUserCount',
-    label: '현재 밴 사용자',
-    icon: 'block',
+    key: 'todayPlaceRegistrationCount',
+    label: '오늘 등록 장소',
+    unit: '개',
+    icon: 'add_location_alt',
+    route: '/places',
+    tone: 'neutral',
+  },
+  {
+    key: 'todayPostRegistrationCount',
+    label: '오늘 등록 게시글',
+    unit: '개',
+    icon: 'post_add',
+    route: '/main',
+    tone: 'neutral',
+  },
+  {
+    key: 'last7DaysPlaceRegistrationCount',
+    label: '최근 7일 장소 등록',
+    unit: '개',
+    icon: 'location_on',
+    route: '/places',
+    tone: 'neutral',
+  },
+  {
+    key: 'last7DaysPostRegistrationCount',
+    label: '최근 7일 게시글 등록',
+    unit: '개',
+    icon: 'description',
+    route: '/main',
+    tone: 'neutral',
+  },
+  {
+    key: 'duplicatePlaceGroupCount',
+    label: '중복 장소 후보',
+    unit: '건',
+    icon: 'content_copy',
+    route: '/places/duplicates',
+    tone: 'action',
+  },
+  {
+    key: 'expiringBannedUserCount',
+    label: '밴 만료 예정',
     unit: '명',
+    icon: 'event_upcoming',
     route: '/bans',
+    tone: 'action',
+  },
+  {
+    key: 'missingLocationPlaceCount',
+    label: '좌표 누락 장소',
+    unit: '개',
+    icon: 'location_disabled',
+    route: '/places',
     tone: 'action',
   },
 ]
@@ -68,9 +164,22 @@ const ACTION_METRICS: DashboardMetric[] = [
 function DashboardPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
-  const { summary, status, isLoading, lastUpdatedAt, fetchSummary } = useAdminDashboard()
+  const {
+    summary,
+    recentActivities,
+    pendingItems,
+    status,
+    recentActivitiesStatus,
+    pendingItemsStatus,
+    isLoading,
+    lastUpdatedAt,
+    fetchSummary,
+  } = useAdminDashboard()
   const [activeUtility, setActiveUtility] = useState<DashboardUtilityKey | null>(null)
+  const [activeActivityTab, setActiveActivityTab] =
+    useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
+  const pendingItemCount = summary?.pendingReportCount ?? pendingItems.length
 
   function getMetricValue(key: DashboardMetricKey) {
     if (summary && (status === 'success' || status === 'empty' || status === 'loading' || status === 'error')) {
@@ -82,6 +191,34 @@ function DashboardPage() {
     }
 
     return null
+  }
+
+  function getOperationalMetricValue(key: DashboardOperationalMetricKey) {
+    if (!summary) {
+      return status === 'error' || status === 'unavailable' ? undefined : null
+    }
+
+    const metrics = summary.operationalMetrics
+    if (!metrics) {
+      return undefined
+    }
+
+    switch (key) {
+      case 'todayPlaceRegistrationCount':
+        return metrics.today.placeRegistrationCount
+      case 'todayPostRegistrationCount':
+        return metrics.today.postRegistrationCount
+      case 'last7DaysPlaceRegistrationCount':
+        return metrics.last7Days.placeRegistrationCount
+      case 'last7DaysPostRegistrationCount':
+        return metrics.last7Days.postRegistrationCount
+      case 'duplicatePlaceGroupCount':
+        return metrics.duplicatePlaceGroupCount
+      case 'expiringBannedUserCount':
+        return metrics.expiringBannedUserCount
+      case 'missingLocationPlaceCount':
+        return metrics.missingLocationPlaceCount
+    }
   }
 
   function renderStatusPanel() {
@@ -114,28 +251,382 @@ function DashboardPage() {
     const time = new Intl.DateTimeFormat('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     }).format(updatedAt)
 
     if (isToday) {
       return `오늘 ${time}`
     }
 
-    return new Intl.DateTimeFormat('ko-KR', {
-      month: 'numeric',
-      day: 'numeric',
+    return `${updatedAt.getMonth() + 1}월 ${updatedAt.getDate()}일 ${time}`
+  }
+
+  function formatActivityDate(timestamp?: string) {
+    if (!timestamp) {
+      return null
+    }
+
+    const date = new Date(timestamp)
+
+    if (Number.isNaN(date.getTime())) {
+      return null
+    }
+
+    const now = new Date()
+    const isToday = date.toDateString() === now.toDateString()
+    const yesterday = new Date(now)
+    yesterday.setDate(now.getDate() - 1)
+
+    const time = new Intl.DateTimeFormat('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
-    }).format(updatedAt)
+      hour12: false,
+    }).format(date)
+
+    if (isToday) {
+      return `오늘 ${time}`
+    }
+
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `어제 ${time}`
+    }
+
+    return `${date.getMonth() + 1}월 ${date.getDate()}일 ${time}`
+  }
+
+  function getReportStatusLabel(reportStatus: string) {
+    const labels: Record<string, string> = {
+      PENDING: '처리 대기',
+      ACCEPTED: '수락됨',
+      DECLINED: '거절됨',
+      RESTORED: '복구됨',
+    }
+
+    return labels[reportStatus] ?? reportStatus
+  }
+
+  function getSanctionActionLabel(action: string) {
+    const labels: Record<string, string> = {
+      APPLIED: '밴 처리',
+      RELEASED: '밴 해제',
+      EXPIRED: '밴 만료',
+    }
+
+    return labels[action] ?? action
+  }
+
+  function getPendingTypeLabel(type: string) {
+    const labels: Record<string, string> = {
+      POST_REPORT: '게시글 신고',
+      REPORT: '신고',
+    }
+
+    return labels[type] ?? type
+  }
+
+  function renderSectionError(message: string) {
+    return (
+      <S.DataStatus $tone="error" role="alert">
+        <S.MaterialIcon aria-hidden="true">error_outline</S.MaterialIcon>
+        <S.DataStatusText>{message}</S.DataStatusText>
+        <S.InlineRetryButton type="button" onClick={() => void fetchSummary()}>
+          다시 시도
+        </S.InlineRetryButton>
+      </S.DataStatus>
+    )
+  }
+
+  function renderActivitySkeleton() {
+    return (
+      <S.ActivitySkeletonList aria-label="최근 활동 불러오는 중">
+        {[1, 2, 3, 4].map((item) => (
+          <S.ActivitySkeleton key={item} />
+        ))}
+      </S.ActivitySkeletonList>
+    )
+  }
+
+  function renderActivityGroups() {
+    if (!recentActivities) {
+      if (recentActivitiesStatus === 'loading') {
+        return renderActivitySkeleton()
+      }
+
+      if (recentActivitiesStatus === 'error') {
+        return renderSectionError('최근 활동을 불러오지 못했습니다.')
+      }
+
+      return <S.EmptyState>최근 운영 활동이 없습니다.</S.EmptyState>
+    }
+
+    const groups: DashboardActivityGroup[] = [
+      {
+        key: 'places',
+        title: '장소',
+        rows: recentActivities.places.map((place) => {
+          const placeName = place.name?.trim() || '이름 없는 장소'
+          const address = place.address?.trim()
+          const registrant = place.registrant || `사용자 ID ${place.userId}`
+          const detail =
+            address && placeName === address
+              ? `등록자 ${registrant}`
+              : `등록자 ${registrant}${address ? ` · ${address}` : ''}`
+
+          return {
+            id: `place-${place.placeId}`,
+            title: placeName,
+            detail,
+            timestamp: place.createdAt ?? undefined,
+          }
+        }),
+      },
+      {
+        key: 'posts',
+        title: '게시글',
+        rows: recentActivities.posts.map((post) => ({
+          id: `post-${post.postId}`,
+          title: post.title,
+          detail: `${post.username} · ${post.placeName ?? '장소 정보 없음'}`,
+          timestamp: post.createdAt,
+        })),
+      },
+      {
+        key: 'reports',
+        title: '신고',
+        rows: recentActivities.reports.map((report) => ({
+          id: `report-${report.reportId}`,
+          title: report.title,
+          detail: `신고 ID ${report.reportId}`,
+          timestamp: report.createdAt,
+          badge: {
+            label: getReportStatusLabel(report.status),
+            tone:
+              report.status === 'ACCEPTED'
+                ? 'success'
+                : report.status === 'PENDING'
+                  ? 'warning'
+                  : report.status === 'DECLINED'
+                    ? 'error'
+                    : 'neutral',
+          },
+        })),
+      },
+      {
+        key: 'userSanctions',
+        title: '제재',
+        rows: recentActivities.userSanctions.map((sanction) => ({
+          id: `sanction-${sanction.sanctionId}`,
+          title: sanction.targetUsername || `사용자 ID ${sanction.targetUserId}`,
+          detail: `${sanction.banType === 'PERMANENT' ? '영구 밴' : '기간 밴'} · 제재 ID ${sanction.sanctionId}`,
+          timestamp: sanction.processedAt,
+          badge: {
+            label: getSanctionActionLabel(sanction.action),
+            tone: sanction.action === 'APPLIED' ? 'warning' : 'neutral',
+          },
+        })),
+      },
+    ]
+
+    if (groups.every((group) => group.rows.length === 0)) {
+      return <S.EmptyState>최근 운영 활동이 없습니다.</S.EmptyState>
+    }
+
+    const selectedGroup = activeActivityTab
+      ? groups.find((group) => group.key === activeActivityTab) ?? groups[0]
+      : groups.find((group) => group.rows.length > 0) ?? groups[0]
+    const selectedTabId = `dashboard-activity-tab-${selectedGroup.key}`
+    const activityPanelId = 'dashboard-activity-panel'
+    const activityNavigation = {
+      places: { route: '/places', label: '장소 관리에서 보기' },
+      posts: { route: '/main', label: '게시글 관리에서 보기' },
+      reports: {
+        route: '/main',
+        label: '신고 내역 보기',
+        state: { reviewStatus: 'PROCESSED' as const },
+      },
+      userSanctions: { route: '/bans', label: '사용자 밴에서 보기' },
+    }[selectedGroup.key]
+
+    return (
+      <>
+        <S.ActivityTabToolbar>
+          <S.ActivityTabs role="tablist" aria-label="최근 활동 유형">
+            {groups.map((group) => (
+              <S.ActivityTab
+                key={group.key}
+                type="button"
+                id={`dashboard-activity-tab-${group.key}`}
+                role="tab"
+                aria-selected={selectedGroup.key === group.key}
+                aria-controls={activityPanelId}
+                $active={selectedGroup.key === group.key}
+                onClick={() => setActiveActivityTab(group.key)}
+              >
+                {group.title}
+                <S.ActivityTabCount>{group.rows.length}</S.ActivityTabCount>
+              </S.ActivityTab>
+            ))}
+          </S.ActivityTabs>
+          <S.ActivityViewAllButton
+            type="button"
+            onClick={() => navigate(activityNavigation.route, activityNavigation.state ? { state: activityNavigation.state } : undefined)}
+          >
+            {activityNavigation.label}
+            <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+          </S.ActivityViewAllButton>
+        </S.ActivityTabToolbar>
+        {selectedGroup.rows.length === 0 ? (
+          <S.EmptyState
+            id={activityPanelId}
+            role="tabpanel"
+            aria-labelledby={selectedTabId}
+          >
+            {selectedGroup.title} 활동이 없습니다.
+          </S.EmptyState>
+        ) : (
+          <S.ActivityGroups
+            id={activityPanelId}
+            role="tabpanel"
+            aria-labelledby={selectedTabId}
+          >
+            <S.ActivityGroup>
+              <S.ActivityList>
+                {selectedGroup.rows.map((row) => {
+                  const formattedDate = formatActivityDate(row.timestamp)
+
+                  return (
+                    <S.ActivityItem key={row.id}>
+                      <S.ActivityItemMain>
+                        <strong title={row.title}>{row.title}</strong>
+                        <span title={row.detail}>{row.detail}</span>
+                      </S.ActivityItemMain>
+                      {row.badge || formattedDate ? (
+                        <S.ActivityItemAside>
+                          {row.badge ? (
+                            <S.ActivityBadge $tone={row.badge.tone}>
+                              {row.badge.label}
+                            </S.ActivityBadge>
+                          ) : null}
+                          {formattedDate ? (
+                            <S.ActivityItemDate>{formattedDate}</S.ActivityItemDate>
+                          ) : null}
+                        </S.ActivityItemAside>
+                      ) : null}
+                    </S.ActivityItem>
+                  )
+                })}
+              </S.ActivityList>
+            </S.ActivityGroup>
+          </S.ActivityGroups>
+        )}
+      </>
+    )
+  }
+
+  function renderPendingItems() {
+    if (pendingItemsStatus === 'error') {
+      return (
+        <>
+          {renderSectionError('처리 필요 항목을 불러오지 못했습니다.')}
+          {pendingItems.length > 0 ? renderPendingList() : null}
+        </>
+      )
+    }
+
+    if (pendingItemsStatus === 'loading' && pendingItems.length === 0) {
+      return (
+        <S.ActivitySkeletonList aria-label="처리 필요 항목 불러오는 중">
+          {[1, 2, 3].map((item) => (
+            <S.ActivitySkeleton key={item} />
+          ))}
+        </S.ActivitySkeletonList>
+      )
+    }
+
+    if (pendingItems.length === 0) {
+      return <S.EmptyState>현재 처리할 항목이 없습니다.</S.EmptyState>
+    }
+
+    return renderPendingList()
+  }
+
+  function renderPendingList() {
+    return (
+      <S.PendingList>
+        {pendingItems.map((item) => (
+          <S.PendingItem
+            key={`${item.type}-${item.targetId}`}
+            type="button"
+            onClick={() => {
+              const state: DashboardMetricNavigationState = {
+                reviewStatus: 'PENDING',
+                ...(typeof item.postId === 'number' ? { openPostId: item.postId } : {}),
+                ...(typeof item.reportId === 'number' ? { reportId: item.reportId } : {}),
+              }
+
+              navigate('/main', { state })
+            }}
+            aria-label={`${item.title}, ${getPendingTypeLabel(item.type)} 상세 검토로 이동`}
+          >
+            <S.PendingItemMain>
+              <strong title={item.title}>{item.title}</strong>
+              <span title={`${getPendingTypeLabel(item.type)} · ${getReportStatusLabel(item.status)}`}>
+                {getPendingTypeLabel(item.type)} · {getReportStatusLabel(item.status)}
+              </span>
+            </S.PendingItemMain>
+            <S.PendingItemMeta>
+              <span>{formatActivityDate(item.createdAt) ?? '접수일 미상'}</span>
+              <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+            </S.PendingItemMeta>
+          </S.PendingItem>
+        ))}
+      </S.PendingList>
+    )
+  }
+
+  function renderOperationalMetricCard(metric: DashboardOperationalMetric) {
+    const value = getOperationalMetricValue(metric.key)
+    const isZeroValue = value === 0
+    const tone = isZeroValue ? 'neutral' : metric.tone
+
+    return (
+      <S.OperationalMetricCard
+        key={metric.key}
+        type="button"
+        $tone={tone}
+        onClick={() => navigate(metric.route)}
+        aria-label={`${metric.label} ${value ?? '확인 중'} 관리 화면으로 이동`}
+        aria-busy={isLoading}
+      >
+        <S.OperationalMetricIcon $tone={tone}>
+          <S.MaterialIcon aria-hidden="true">{metric.icon}</S.MaterialIcon>
+        </S.OperationalMetricIcon>
+        <S.OperationalMetricContent>
+          <S.OperationalMetricLabel>{metric.label}</S.OperationalMetricLabel>
+          {value === null ? (
+            <S.Skeleton aria-label="불러오는 중" />
+          ) : (
+            <S.OperationalMetricValue $muted={isZeroValue}>
+              {value === undefined ? '-' : value.toLocaleString()}
+              {value === undefined ? '' : metric.unit}
+            </S.OperationalMetricValue>
+          )}
+        </S.OperationalMetricContent>
+        <S.SummaryArrow aria-hidden="true">arrow_forward</S.SummaryArrow>
+      </S.OperationalMetricCard>
+    )
   }
 
   function renderMetricCard(metric: DashboardMetric) {
     const value = getMetricValue(metric.key)
+    const isZeroValue = value === '0'
+    const tone = isZeroValue ? 'neutral' : metric.tone
 
     return (
       <S.SummaryCard
         key={metric.key}
         type="button"
-        $tone={metric.tone}
+        $tone={tone}
         onClick={() => {
           const state: DashboardMetricNavigationState | undefined =
             metric.key === 'pendingReportCount'
@@ -148,7 +639,7 @@ function DashboardPage() {
         aria-busy={isLoading}
       >
         <S.SummaryCardTop>
-          <S.SummaryIcon $tone={metric.tone}>
+          <S.SummaryIcon $tone={tone}>
             <S.MaterialIcon aria-hidden="true">{metric.icon}</S.MaterialIcon>
           </S.SummaryIcon>
           <S.SummaryArrow aria-hidden="true">arrow_forward</S.SummaryArrow>
@@ -157,7 +648,7 @@ function DashboardPage() {
         {value === null ? (
           <S.Skeleton aria-label="불러오는 중" />
         ) : (
-          <S.SummaryValue>{value}{metric.unit}</S.SummaryValue>
+          <S.SummaryValue $muted={isZeroValue}>{value}{metric.unit}</S.SummaryValue>
         )}
       </S.SummaryCard>
     )
@@ -303,48 +794,68 @@ function DashboardPage() {
 
           <S.Section aria-labelledby="dashboard-summary-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-summary-title">서비스 현황</S.SectionTitle>
-              <S.SectionDescription>전체 누적 기준</S.SectionDescription>
+              <S.SectionTitle id="dashboard-summary-title">관리 요약</S.SectionTitle>
+              <S.SectionDescription>현재 운영 수치</S.SectionDescription>
             </S.SectionHeader>
-            <S.SummaryGrid>{SERVICE_METRICS.map(renderMetricCard)}</S.SummaryGrid>
+            <S.SummaryGrid>
+              {[...SERVICE_METRICS, ...ACTION_METRICS].map(renderMetricCard)}
+            </S.SummaryGrid>
           </S.Section>
 
-          <S.Section aria-labelledby="dashboard-action-title">
+          <S.Section aria-labelledby="dashboard-pending-items-section-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-action-title">처리 필요</S.SectionTitle>
-              <S.SectionDescription>관리자 확인이 필요한 현황</S.SectionDescription>
+              <S.SectionTitle id="dashboard-pending-items-section-title">
+                처리 필요 항목
+              </S.SectionTitle>
+              <S.SectionDescription>지금 확인이 필요한 운영 작업</S.SectionDescription>
             </S.SectionHeader>
-            <S.SummaryGrid>{ACTION_METRICS.map(renderMetricCard)}</S.SummaryGrid>
+            <S.OperationsPanel aria-labelledby="dashboard-pending-items-title" $tone="action">
+              <S.OperationsPanelHeader>
+                <S.OperationsPanelTitle id="dashboard-pending-items-title">
+                  신고 검토 목록
+                  {summary || pendingItemsStatus !== 'loading' || pendingItems.length > 0 ? (
+                    <S.PanelCount>{pendingItemCount.toLocaleString()}건</S.PanelCount>
+                  ) : null}
+                </S.OperationsPanelTitle>
+                {pendingItemsStatus === 'loading' && pendingItems.length > 0 ? (
+                  <S.PanelUpdatingText>업데이트 중</S.PanelUpdatingText>
+                ) : null}
+              </S.OperationsPanelHeader>
+              {renderPendingItems()}
+            </S.OperationsPanel>
           </S.Section>
 
-          <S.PlaceholderSection aria-labelledby="dashboard-placeholder-title">
+          <S.Section aria-labelledby="dashboard-operational-metrics-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-placeholder-title">추가 운영 현황</S.SectionTitle>
-              <S.SectionDescription>준비 중인 운영 항목</S.SectionDescription>
+              <S.SectionTitle id="dashboard-operational-metrics-title">
+                추가 운영 현황
+              </S.SectionTitle>
+              <S.SectionDescription>
+                {summary?.operationalMetrics?.collectedAt
+                  ? `집계 기준: ${formatActivityDate(summary.operationalMetrics.collectedAt) ?? '시각 미상'}`
+                  : '서버 운영 지표'}
+              </S.SectionDescription>
             </S.SectionHeader>
-            <S.PlaceholderGrid>
-              <DashboardPlaceholderCard
-                icon="history"
-                label="최근 활동"
-                description="장소·게시글·제재 처리 내역"
-              />
-              <DashboardPlaceholderCard
-                icon="content_copy"
-                label="중복 장소 후보"
-                description="병합 검토가 필요한 장소"
-              />
-              <DashboardPlaceholderCard
-                icon="event_busy"
-                label="밴 만료 예정"
-                description="곧 밴이 해제되는 사용자"
-              />
-              <DashboardPlaceholderCard
-                icon="monitoring"
-                label="운영 추이"
-                description="기간별 장소·게시글 변화"
-              />
-            </S.PlaceholderGrid>
-          </S.PlaceholderSection>
+            <S.OperationalMetricGrid>
+              {OPERATIONAL_METRICS.map(renderOperationalMetricCard)}
+            </S.OperationalMetricGrid>
+          </S.Section>
+
+          <S.Section aria-labelledby="dashboard-recent-activities-title">
+            <S.SectionHeader>
+              <S.SectionTitle id="dashboard-recent-activities-title">최근 활동</S.SectionTitle>
+              <S.SectionDescription>장소·게시글·신고·제재의 최신 내역</S.SectionDescription>
+            </S.SectionHeader>
+            <S.OperationsPanel>
+              {recentActivitiesStatus === 'loading' && recentActivities ? (
+                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
+              ) : null}
+              {recentActivitiesStatus === 'error' && recentActivities
+                ? renderSectionError('최근 활동을 새로 불러오지 못했습니다.')
+                : null}
+              {renderActivityGroups()}
+            </S.OperationsPanel>
+          </S.Section>
         </S.PageContent>
       </S.MainArea>
     </S.AppShell>

@@ -276,8 +276,8 @@ export const TopActions = styled.div`
 `
 
 export const IconButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -399,13 +399,20 @@ export const PageDescription = styled.p`
 `
 
 export const UpdateMeta = styled.p`
+  min-width: 190px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   flex-shrink: 0;
   margin: 0;
   color: ${neutral.softText};
   font-size: 13px;
+
+  @media (max-width: 640px) {
+    min-width: 0;
+    justify-content: flex-start;
+  }
 `
 
 export const RefreshingText = styled.span`
@@ -448,10 +455,16 @@ export const SectionDescription = styled.p`
 
 export const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 
-  @media (max-width: 560px) { grid-template-columns: 1fr; }
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
 `
 
 export const PlaceholderGrid = styled.div`
@@ -460,13 +473,408 @@ export const PlaceholderGrid = styled.div`
   gap: 8px;
 `
 
+export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action' }>`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+`
+
+export const OperationsPanelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+`
+
+export const OperationsPanelTitle = styled.h3`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: ${neutral.strongText};
+  font-size: 15px;
+  font-weight: 700;
+`
+
+export const PanelCount = styled.span`
+  color: ${neutral.softText};
+  font-size: 12px;
+  font-weight: 500;
+`
+
+export const PanelUpdatingText = styled.span`
+  color: ${neutral.primary};
+  font-size: 12px;
+  font-weight: 600;
+`
+
+export const ActivityTabs = styled.div`
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`
+
+export const ActivityPanelMeta = styled.div`
+  min-height: 18px;
+  margin: -2px 0 8px;
+  color: ${neutral.primary};
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+`
+
+export const ActivityTabToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
+
+export const ActivityViewAllButton = styled.button`
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: ${neutral.muted};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+`
+
+export const ActivityTab = styled.button<{ $active?: boolean }>`
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border: 0;
+  border-bottom: 2px solid ${({ $active }) => ($active ? neutral.primary : 'transparent')};
+  border-radius: 0;
+  background: transparent;
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.surfaceLow};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+`
+
+export const ActivityTabCount = styled.span`
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 500;
+`
+
+export const ActivityGroups = styled.div`
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.border} transparent;
+`
+
+export const ActivityGroup = styled.div`
+  min-width: 0;
+`
+
+export const ActivityList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`
+
+export const ActivityItem = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid ${neutral.borderSoft};
+
+  &:last-child {
+    border-bottom: 0;
+  }
+`
+
+export const ActivityItemMain = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  span {
+    color: ${neutral.softText};
+    font-size: 12px;
+  }
+`
+
+export const ActivityItemDate = styled.time`
+  flex-shrink: 0;
+  color: ${neutral.softText};
+  font-size: 11px;
+  white-space: nowrap;
+`
+
+export const ActivityItemAside = styled.div`
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+`
+
+export const ActivityBadge = styled.span<{
+  $tone: 'neutral' | 'success' | 'warning' | 'error'
+}>`
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: ${({ $tone }) => {
+    if ($tone === 'success') return neutral.successTint
+    if ($tone === 'warning') return neutral.warningTint
+    if ($tone === 'error') return neutral.errorTint
+    return neutral.surfaceContainer
+  }};
+  color: ${({ $tone }) => {
+    if ($tone === 'success') return neutral.successText
+    if ($tone === 'warning') return neutral.warningText
+    if ($tone === 'error') return neutral.error
+    return neutral.softText
+  }};
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+`
+
+export const PendingList = styled.div`
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.border} transparent;
+`
+
+export const PendingItem = styled.button`
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border: 0;
+  border-bottom: 1px solid ${neutral.borderSoft};
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+`
+
+export const PendingItemMain = styled.span`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  span {
+    color: ${neutral.warningText};
+    font-size: 12px;
+  }
+`
+
+export const PendingItemMeta = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: ${neutral.softText};
+  font-size: 11px;
+
+  ${PendingItem}:hover & {
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+`
+
+export const EmptyState = styled.p`
+  margin: 0;
+  padding: 14px 8px;
+  color: ${neutral.softText};
+  font-size: 13px;
+  text-align: center;
+`
+
+export const DataStatus = styled.div<{ $tone?: 'error' | 'neutral' }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $tone }) => ($tone === 'error' ? neutral.errorTint : neutral.surfaceLow)};
+  color: ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.muted)};
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
+export const DataStatusText = styled.span`
+  min-width: 0;
+  color: ${neutral.muted};
+  font-size: 12px;
+  line-height: 1.4;
+`
+
+export const InlineRetryButton = styled.button`
+  min-height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primary};
+    color: ${neutral.primary};
+  }
+`
+
+export const ActivitySkeletonList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+export const ActivitySkeleton = styled.span`
+  width: 100%;
+  height: 44px;
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, ${neutral.surfaceContainer} 25%, ${neutral.surfaceHigh} 50%, ${neutral.surfaceContainer} 75%);
+  background-size: 200% 100%;
+  animation: ${loadingShimmer} 1.2s infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`
+
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 140px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  padding: 18px;
+  padding: 14px 16px;
   border: 1px solid ${neutral.border};
   border-radius: 10px;
   background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
@@ -493,12 +901,12 @@ export const SummaryCardTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 `
 
 export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -509,7 +917,7 @@ export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
 
 export const SummaryArrow = styled(MaterialIcon)`
   color: ${neutral.softText};
-  font-size: 18px;
+  font-size: 16px;
   transition: color 160ms ease;
 
   ${SummaryCard}:hover & {
@@ -523,10 +931,89 @@ export const SummaryLabel = styled.span`
   font-weight: 500;
 `
 
-export const SummaryValue = styled.strong`
+export const SummaryValue = styled.strong<{ $muted?: boolean }>`
   margin-top: 6px;
-  color: ${neutral.strongText};
-  font-size: 28px;
+  color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+`
+
+export const OperationalMetricGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const OperationalMetricCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
+  min-width: 0;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 9px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  color: ${neutral.text};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+
+  &:hover {
+    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
+    background: ${neutral.surfaceLow};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+`
+
+export const OperationalMetricIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
+  color: ${({ $tone }) => ($tone === 'action' ? neutral.warningText : neutral.primary)};
+
+  ${MaterialIcon} { font-size: 16px; }
+`
+
+export const OperationalMetricContent = styled.span`
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+`
+
+export const OperationalMetricLabel = styled.span`
+  overflow: hidden;
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const OperationalMetricValue = styled.strong<{ $muted?: boolean }>`
+  color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
+  font-size: 17px;
   font-weight: 700;
   line-height: 1;
 `
@@ -539,6 +1026,10 @@ export const Skeleton = styled.span`
   background: linear-gradient(90deg, ${neutral.surfaceContainer} 25%, ${neutral.surfaceHigh} 50%, ${neutral.surfaceContainer} 75%);
   background-size: 200% 100%;
   animation: ${loadingShimmer} 1.2s infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const StatusPanel = styled.div<{ $tone?: 'neutral' | 'error' | 'success' }>`
@@ -580,8 +1071,8 @@ export const RetryButton = styled.button`
 `
 
 export const RefreshButton = styled.button<{ $isLoading?: boolean }>`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   gap: 8px;

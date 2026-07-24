@@ -14,6 +14,7 @@ import { useAuth } from './useAuth'
 import type {
   AdminBannedUserDetail,
   AdminBannedUserDetailErrorResponse,
+  AdminBannedUserCounts,
   AdminBannedUserItem,
   AdminBannedUserListErrorResponse,
   AdminBannedUserListRequest,
@@ -59,6 +60,11 @@ interface LatestAdminBannedUserListRequest {
   page: number
   limit: number
   keyword: string
+  banType?: AdminBannedUserListRequest['banType']
+  from?: string
+  to?: string
+  sortBy?: AdminBannedUserListRequest['sortBy']
+  sortDirection?: AdminBannedUserListRequest['sortDirection']
 }
 
 function getAdminBannedUserErrorMessage(error: unknown) {
@@ -106,7 +112,9 @@ export function useAdminBannedUsers({
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [hasNext, setHasNext] = useState(false)
+  const [counts, setCounts] = useState<AdminBannedUserCounts | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasLoadedList, setHasLoadedList] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [selectedUserDetail, setSelectedUserDetail] =
@@ -161,6 +169,21 @@ export function useAdminBannedUsers({
         keyword: hasOwnRequestField(request, 'keyword')
           ? request.keyword ?? ''
           : latestListRequestRef.current.keyword,
+        banType: hasOwnRequestField(request, 'banType')
+          ? request.banType
+          : latestListRequestRef.current.banType,
+        from: hasOwnRequestField(request, 'from')
+          ? request.from
+          : latestListRequestRef.current.from,
+        to: hasOwnRequestField(request, 'to')
+          ? request.to
+          : latestListRequestRef.current.to,
+        sortBy: hasOwnRequestField(request, 'sortBy')
+          ? request.sortBy
+          : latestListRequestRef.current.sortBy,
+        sortDirection: hasOwnRequestField(request, 'sortDirection')
+          ? request.sortDirection
+          : latestListRequestRef.current.sortDirection,
       }
 
       try {
@@ -169,22 +192,29 @@ export function useAdminBannedUsers({
         const data = await getAdminBannedUsers(nextRequest)
 
         if (requestId === latestRequestIdRef.current) {
+          setHasLoadedList(true)
           setUsers(data.users)
           setPage(data.page)
           setTotalCount(data.totalCount)
           setTotalPages(data.totalPages)
           setHasNext(data.hasNext)
+          setCounts(data.counts ?? null)
           latestListRequestRef.current = {
             page: data.page,
             limit: data.limit,
             keyword: nextRequest.keyword,
+            banType: nextRequest.banType,
+            from: nextRequest.from,
+            to: nextRequest.to,
+            sortBy: nextRequest.sortBy,
+            sortDirection: nextRequest.sortDirection,
           }
         }
 
         return true
       } catch (error) {
         if (requestId === latestRequestIdRef.current) {
-          setUsers([])
+          setHasLoadedList(true)
           setIsError(true)
           setErrorMessage(getAdminBannedUserErrorMessage(error))
 
@@ -496,7 +526,9 @@ export function useAdminBannedUsers({
     totalCount,
     totalPages,
     hasNext,
+    counts,
     isLoading,
+    hasLoadedList,
     isError,
     errorMessage,
     selectedUserDetail,

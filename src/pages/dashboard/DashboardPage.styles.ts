@@ -516,7 +516,6 @@ export const PanelUpdatingText = styled.span`
 export const ActivityTabs = styled.div`
   display: flex;
   gap: 6px;
-  margin-bottom: 12px;
   overflow-x: auto;
   scrollbar-width: none;
 
@@ -525,16 +524,71 @@ export const ActivityTabs = styled.div`
   }
 `
 
-export const ActivityTab = styled.button<{ $active?: boolean }>`
+export const ActivityPanelMeta = styled.div`
+  min-height: 18px;
+  margin: -2px 0 8px;
+  color: ${neutral.primary};
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+`
+
+export const ActivityTabToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
+
+export const ActivityViewAllButton = styled.button`
   min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: ${neutral.muted};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: 2px;
+  }
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+`
+
+export const ActivityTab = styled.button<{ $active?: boolean }>`
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  padding: 0 10px;
-  border: 1px solid ${({ $active }) => ($active ? neutral.primary : neutral.border)};
-  border-radius: 7px;
-  background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
+  padding: 0 8px;
+  border: 0;
+  border-bottom: 2px solid ${({ $active }) => ($active ? neutral.primary : 'transparent')};
+  border-radius: 0;
+  background: transparent;
   color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
   font: inherit;
   font-size: 12px;
@@ -542,7 +596,7 @@ export const ActivityTab = styled.button<{ $active?: boolean }>`
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primary};
+    background: ${neutral.surfaceLow};
     color: ${neutral.primary};
   }
 

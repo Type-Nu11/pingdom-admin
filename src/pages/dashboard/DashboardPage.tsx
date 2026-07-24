@@ -435,26 +435,45 @@ function DashboardPage() {
       : groups.find((group) => group.rows.length > 0) ?? groups[0]
     const selectedTabId = `dashboard-activity-tab-${selectedGroup.key}`
     const activityPanelId = 'dashboard-activity-panel'
+    const activityNavigation = {
+      places: { route: '/places', label: '장소 관리에서 보기' },
+      posts: { route: '/main', label: '게시글 관리에서 보기' },
+      reports: {
+        route: '/main',
+        label: '신고 내역 보기',
+        state: { reviewStatus: 'PROCESSED' as const },
+      },
+      userSanctions: { route: '/bans', label: '사용자 밴에서 보기' },
+    }[selectedGroup.key]
 
     return (
       <>
-        <S.ActivityTabs role="tablist" aria-label="최근 활동 유형">
-          {groups.map((group) => (
-            <S.ActivityTab
-              key={group.key}
-              type="button"
-              id={`dashboard-activity-tab-${group.key}`}
-              role="tab"
-              aria-selected={selectedGroup.key === group.key}
-              aria-controls={activityPanelId}
-              $active={selectedGroup.key === group.key}
-              onClick={() => setActiveActivityTab(group.key)}
-            >
-              {group.title}
-              <S.ActivityTabCount>{group.rows.length}</S.ActivityTabCount>
-            </S.ActivityTab>
-          ))}
-        </S.ActivityTabs>
+        <S.ActivityTabToolbar>
+          <S.ActivityTabs role="tablist" aria-label="최근 활동 유형">
+            {groups.map((group) => (
+              <S.ActivityTab
+                key={group.key}
+                type="button"
+                id={`dashboard-activity-tab-${group.key}`}
+                role="tab"
+                aria-selected={selectedGroup.key === group.key}
+                aria-controls={activityPanelId}
+                $active={selectedGroup.key === group.key}
+                onClick={() => setActiveActivityTab(group.key)}
+              >
+                {group.title}
+                <S.ActivityTabCount>{group.rows.length}</S.ActivityTabCount>
+              </S.ActivityTab>
+            ))}
+          </S.ActivityTabs>
+          <S.ActivityViewAllButton
+            type="button"
+            onClick={() => navigate(activityNavigation.route, activityNavigation.state ? { state: activityNavigation.state } : undefined)}
+          >
+            {activityNavigation.label}
+            <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+          </S.ActivityViewAllButton>
+        </S.ActivityTabToolbar>
         {selectedGroup.rows.length === 0 ? (
           <S.EmptyState
             id={activityPanelId}

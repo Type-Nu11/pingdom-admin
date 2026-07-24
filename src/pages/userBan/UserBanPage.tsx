@@ -6,7 +6,9 @@ import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminBanType,
   AdminBannedUserListRequest,
+  AdminBannedUserListSortBy,
   AdminUserBanRequest,
+  AdminSortDirection,
   AdminUserSanctionAction,
   AdminUserSanctionHistoryItem,
 } from '../../types/adminUserBan.types'
@@ -15,6 +17,26 @@ import * as S from '../place/PlaceManagePage.styles'
 
 const ADMIN_BANNED_USER_PAGE_SIZE = 20
 const DEFAULT_TEMPORARY_BAN_DURATION_DAYS = '7'
+const BAN_TYPE_FILTER_OPTIONS = [
+  { value: '', label: '전체 유형' },
+  { value: 'PERMANENT', label: '영구 밴' },
+  { value: 'TEMPORARY', label: '기간 밴' },
+]
+const BAN_LIST_SORT_OPTIONS = [
+  { value: 'BANNED_AT', label: '밴 처리일' },
+  { value: 'EXPIRES_AT', label: '만료일' },
+  { value: 'USER_ID', label: '사용자 ID' },
+]
+const SORT_DIRECTION_OPTIONS = [
+  { value: 'DESC', label: '내림차순' },
+  { value: 'ASC', label: '오름차순' },
+]
+const SANCTION_ACTION_FILTER_OPTIONS = [
+  { value: '', label: '전체 상태' },
+  { value: 'APPLIED', label: '밴 처리' },
+  { value: 'RELEASED', label: '밴 해제' },
+  { value: 'EXPIRED', label: '기간 만료' },
+]
 
 type BadgeTone = 'danger' | 'warning' | 'success' | 'neutral'
 
@@ -144,10 +166,37 @@ function parsePositiveInteger(value: string) {
   return parsedValue
 }
 
+function formatCount(value?: number | null) {
+  return typeof value === 'number' ? value.toLocaleString() : '-'
+}
+
+function formatCountWithUnit(value: number | null, unit: string) {
+  return typeof value === 'number' ? `${value.toLocaleString()}${unit}` : '-'
+}
+
+function hasInvalidDateRange(from: string, to: string) {
+  return Boolean(from && to && new Date(from).getTime() > new Date(to).getTime())
+}
+
+function normalizeDateTimeInput(value: string) {
+  if (!value) {
+    return undefined
+  }
+
+  return value.length === 16 ? `${value}:00` : value
+}
+
 function UserBanPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const [banSearchQuery, setBanSearchQuery] = useState('')
+  const [banTypeFilter, setBanTypeFilter] = useState<AdminBanType | ''>('')
+  const [banFrom, setBanFrom] = useState('')
+  const [banTo, setBanTo] = useState('')
+  const [banSortBy, setBanSortBy] =
+    useState<AdminBannedUserListSortBy>('BANNED_AT')
+  const [banSortDirection, setBanSortDirection] =
+    useState<AdminSortDirection>('DESC')
   const [banTargetUserId, setBanTargetUserId] = useState('')
   const [banType, setBanType] = useState<AdminBanType>('PERMANENT')
   const [banDurationDays, setBanDurationDays] = useState(
@@ -155,17 +204,30 @@ function UserBanPage() {
   )
   const [banReason, setBanReason] = useState('')
   const [banFormError, setBanFormError] = useState('')
+  const [listFilterError, setListFilterError] = useState('')
   const [isBanConfirmOpen, setIsBanConfirmOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [releaseReason, setReleaseReason] = useState('')
   const [isReleaseConfirmOpen, setIsReleaseConfirmOpen] = useState(false)
+  const [sanctionHistoryBanType, setSanctionHistoryBanType] = useState<
+    AdminBanType | ''
+  >('')
+  const [sanctionHistoryAction, setSanctionHistoryAction] = useState<
+    AdminUserSanctionAction | ''
+  >('')
+  const [sanctionHistoryFrom, setSanctionHistoryFrom] = useState('')
+  const [sanctionHistoryTo, setSanctionHistoryTo] = useState('')
+  const [sanctionHistoryFilterError, setSanctionHistoryFilterError] =
+    useState('')
   const {
     users,
     page,
     totalCount,
     totalPages,
     hasNext,
+    counts,
     isLoading,
+    hasLoadedList,
     isError,
     errorMessage,
     selectedUserDetail,
@@ -200,10 +262,21 @@ function UserBanPage() {
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const safeTotalPages = Math.max(totalPages, 1)
   const hasUsers = users.length > 0
-  const totalBannedUserCount = totalCount
+  const totalBannedUserCount = hasLoadedList
+    ? counts?.total ?? totalCount
+    : null
+  const currentPageUserCount = hasLoadedList ? users.length : null
   const banPreviewTargetUserId = parsePositiveInteger(banTargetUserId)
   const banPreviewDurationDays = parsePositiveInteger(banDurationDays)
   const safeSanctionHistoryTotalPages = Math.max(sanctionHistoryTotalPages, 1)
+  const hasActiveListFilters = Boolean(
+    banSearchQuery.trim() ||
+      banTypeFilter ||
+      banFrom ||
+      banTo ||
+      banSortBy !== 'BANNED_AT' ||
+      banSortDirection !== 'DESC'
+  )
   const isBanTargetStatusCurrent =
     typeof banPreviewTargetUserId === 'number' &&
     banTargetStatus?.userId === banPreviewTargetUserId
@@ -213,6 +286,19 @@ function UserBanPage() {
   const buildListRequest = (nextPage = 1): AdminBannedUserListRequest => ({
     page: nextPage,
     keyword: banSearchQuery.trim(),
+    banType: banTypeFilter || undefined,
+    from: normalizeDateTimeInput(banFrom),
+    to: normalizeDateTimeInput(banTo),
+    sortBy: banSortBy,
+    sortDirection: banSortDirection,
+  })
+
+  const buildSanctionHistoryRequest = (nextPage = 1) => ({
+    page: nextPage,
+    banType: sanctionHistoryBanType || undefined,
+    action: sanctionHistoryAction || undefined,
+    from: normalizeDateTimeInput(sanctionHistoryFrom),
+    to: normalizeDateTimeInput(sanctionHistoryTo),
   })
 
   const buildBanRequest = () => {
@@ -250,6 +336,11 @@ function UserBanPage() {
     setSelectedUserId(null)
     setReleaseReason('')
     setIsReleaseConfirmOpen(false)
+    setSanctionHistoryBanType('')
+    setSanctionHistoryAction('')
+    setSanctionHistoryFrom('')
+    setSanctionHistoryTo('')
+    setSanctionHistoryFilterError('')
     clearBannedUserDetail()
   }
 
@@ -262,22 +353,77 @@ function UserBanPage() {
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
+    if (hasInvalidDateRange(banFrom, banTo)) {
+      setListFilterError('처리 종료일은 처리 시작일 이후여야 합니다.')
+      return
+    }
+
+    setListFilterError('')
     clearSelection()
     void fetchAdminBannedUsers(buildListRequest(1))
   }
 
   const handleRefresh = () => {
+    if (hasInvalidDateRange(banFrom, banTo)) {
+      setListFilterError('처리 종료일은 처리 시작일 이후여야 합니다.')
+      return
+    }
+
+    setListFilterError('')
     clearSelection()
     void fetchAdminBannedUsers(buildListRequest(page))
   }
 
-  const handleResetSearch = () => {
+  const handleResetFilters = () => {
     setBanSearchQuery('')
+    setBanTypeFilter('')
+    setBanFrom('')
+    setBanTo('')
+    setBanSortBy('BANNED_AT')
+    setBanSortDirection('DESC')
+    setListFilterError('')
     clearSelection()
     void fetchAdminBannedUsers({
       page: 1,
       keyword: '',
+      banType: undefined,
+      from: undefined,
+      to: undefined,
+      sortBy: 'BANNED_AT',
+      sortDirection: 'DESC',
     })
+  }
+
+  const handleResetSanctionHistoryFilters = () => {
+    if (!selectedUserId) {
+      return
+    }
+
+    setSanctionHistoryBanType('')
+    setSanctionHistoryAction('')
+    setSanctionHistoryFrom('')
+    setSanctionHistoryTo('')
+    setSanctionHistoryFilterError('')
+    void fetchUserSanctionHistories(selectedUserId, { page: 1 })
+  }
+
+  const handleSanctionHistorySearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!selectedUserId) {
+      return
+    }
+
+    if (hasInvalidDateRange(sanctionHistoryFrom, sanctionHistoryTo)) {
+      setSanctionHistoryFilterError('처리 종료일은 처리 시작일 이후여야 합니다.')
+      return
+    }
+
+    setSanctionHistoryFilterError('')
+    void fetchUserSanctionHistories(
+      selectedUserId,
+      buildSanctionHistoryRequest()
+    )
   }
 
   const handleBanSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -353,8 +499,13 @@ function UserBanPage() {
       setSelectedUserId(request.targetUserId)
       setReleaseReason('')
       setIsReleaseConfirmOpen(false)
+      setSanctionHistoryBanType('')
+      setSanctionHistoryAction('')
+      setSanctionHistoryFrom('')
+      setSanctionHistoryTo('')
+      setSanctionHistoryFilterError('')
       void fetchAdminBannedUserDetail(request.targetUserId)
-      void fetchUserSanctionHistories(request.targetUserId)
+      void fetchUserSanctionHistories(request.targetUserId, { page: 1 })
       setBanTargetUserId('')
       setBanType('PERMANENT')
       setBanDurationDays(DEFAULT_TEMPORARY_BAN_DURATION_DAYS)
@@ -376,8 +527,13 @@ function UserBanPage() {
     setSelectedUserId(userId)
     setReleaseReason('')
     setIsReleaseConfirmOpen(false)
+    setSanctionHistoryBanType('')
+    setSanctionHistoryAction('')
+    setSanctionHistoryFrom('')
+    setSanctionHistoryTo('')
+    setSanctionHistoryFilterError('')
     void fetchAdminBannedUserDetail(userId)
-    void fetchUserSanctionHistories(userId)
+    void fetchUserSanctionHistories(userId, { page: 1 })
   }
 
   const handleSanctionHistoryPageChange = (nextPage: number) => {
@@ -391,7 +547,7 @@ function UserBanPage() {
     }
 
     void fetchUserSanctionHistories(selectedUserId, {
-      page: nextPage,
+      ...buildSanctionHistoryRequest(nextPage),
     })
   }
 
@@ -514,46 +670,142 @@ function UserBanPage() {
             <U.FilterPanel>
               <U.FilterTopLine>
                 <U.ResultSummary>
-                  전체 밴 사용자 <strong>{totalBannedUserCount.toLocaleString()}명</strong>
+                  전체 밴 사용자{' '}
+                  <strong>{formatCountWithUnit(totalBannedUserCount, '명')}</strong>
                   {' · '}
-                  현재 페이지 <strong>{users.length.toLocaleString()}명</strong> 표시
+                  현재 페이지{' '}
+                  <strong>{formatCountWithUnit(currentPageUserCount, '명')}</strong>{' '}
+                  표시
                 </U.ResultSummary>
               </U.FilterTopLine>
 
               <U.FilterForm onSubmit={handleSearchSubmit}>
-                <U.FilterField>
-                  검색어
-                  <U.SearchInput
-                    type="search"
-                    value={banSearchQuery}
-                    placeholder="사용자 ID 또는 닉네임 검색"
-                    aria-label="사용자 ID 또는 닉네임 검색"
-                    onChange={(event) => setBanSearchQuery(event.target.value)}
-                  />
-                </U.FilterField>
-                <U.FilterActions>
-                  <U.PrimaryButton type="submit" disabled={isLoading}>
-                    <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
-                    {isLoading ? '조회 중' : '조회'}
-                  </U.PrimaryButton>
-                  <U.SecondaryButton
-                    type="button"
-                    disabled={isLoading}
-                    onClick={handleRefresh}
-                  >
-                    <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                    새로고침
-                  </U.SecondaryButton>
-                  <U.SecondaryButton
-                    type="button"
-                    disabled={isLoading || !banSearchQuery.trim()}
-                    onClick={handleResetSearch}
-                  >
-                    검색 초기화
-                  </U.SecondaryButton>
-                </U.FilterActions>
+                  <U.FilterField>
+                    검색어
+                    <U.SearchInput
+                      type="search"
+                      value={banSearchQuery}
+                      placeholder="사용자 ID 또는 닉네임 검색"
+                      aria-label="사용자 ID 또는 닉네임 검색"
+                      onChange={(event) => setBanSearchQuery(event.target.value)}
+                    />
+                  </U.FilterField>
+                  <U.FilterActions>
+                    <U.PrimaryButton type="submit" disabled={isLoading}>
+                      <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
+                      {isLoading ? '조회 중' : '조회'}
+                    </U.PrimaryButton>
+                    <U.SecondaryButton
+                      type="button"
+                      disabled={isLoading}
+                      onClick={handleRefresh}
+                    >
+                      <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+                      새로고침
+                    </U.SecondaryButton>
+                    <U.SecondaryButton
+                      type="button"
+                      disabled={isLoading || !hasActiveListFilters}
+                      onClick={handleResetFilters}
+                    >
+                      필터 초기화
+                    </U.SecondaryButton>
+                  </U.FilterActions>
+
+                  <U.AdvancedFilterPanel>
+                    <U.FilterField>
+                      밴 유형
+                      <U.SelectInput
+                        aria-label="밴 유형 필터"
+                        value={banTypeFilter}
+                        onChange={(event) =>
+                          setBanTypeFilter(event.target.value as AdminBanType | '')
+                        }
+                      >
+                        {BAN_TYPE_FILTER_OPTIONS.map((option) => (
+                          <option key={option.value || 'ALL'} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </U.SelectInput>
+                    </U.FilterField>
+                    <U.FilterField>
+                      처리 시작일
+                      <U.DateInput
+                        type="datetime-local"
+                        aria-label="밴 처리 시작일"
+                        value={banFrom}
+                        onChange={(event) => setBanFrom(event.target.value)}
+                      />
+                    </U.FilterField>
+                    <U.FilterField>
+                      처리 종료일
+                      <U.DateInput
+                        type="datetime-local"
+                        aria-label="밴 처리 종료일"
+                        value={banTo}
+                        onChange={(event) => setBanTo(event.target.value)}
+                      />
+                    </U.FilterField>
+                    <U.FilterField>
+                      정렬 기준
+                      <U.SelectInput
+                        aria-label="밴 사용자 정렬 기준"
+                        value={banSortBy}
+                        onChange={(event) =>
+                          setBanSortBy(event.target.value as AdminBannedUserListSortBy)
+                        }
+                      >
+                        {BAN_LIST_SORT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </U.SelectInput>
+                    </U.FilterField>
+                    <U.FilterField>
+                      정렬 방향
+                      <U.SelectInput
+                        aria-label="밴 사용자 정렬 방향"
+                        value={banSortDirection}
+                        onChange={(event) =>
+                          setBanSortDirection(event.target.value as AdminSortDirection)
+                        }
+                      >
+                        {SORT_DIRECTION_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </U.SelectInput>
+                    </U.FilterField>
+                  </U.AdvancedFilterPanel>
               </U.FilterForm>
             </U.FilterPanel>
+
+            {listFilterError ? (
+              <U.Notice $variant="error" role="alert">
+                {listFilterError}
+              </U.Notice>
+            ) : null}
+
+            <U.SummaryGrid>
+              <U.MetricItem>
+                <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
+                <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
+                <U.MetricHint>{isLoading ? '조회 중' : '현재 조회 조건 기준'}</U.MetricHint>
+              </U.MetricItem>
+              <U.MetricItem>
+                <U.MetricLabel>영구 밴</U.MetricLabel>
+                <U.MetricValue>{formatCount(counts?.permanent)}</U.MetricValue>
+                <U.MetricHint>서버 응답 기준</U.MetricHint>
+              </U.MetricItem>
+              <U.MetricItem>
+                <U.MetricLabel>기간 밴</U.MetricLabel>
+                <U.MetricValue>{formatCount(counts?.temporary)}</U.MetricValue>
+                <U.MetricHint>서버 응답 기준</U.MetricHint>
+              </U.MetricItem>
+            </U.SummaryGrid>
 
             {actionErrorMessage ? (
               <U.Notice $variant="error" role="alert">
@@ -710,9 +962,20 @@ function UserBanPage() {
                 </U.SectionHeader>
                 <U.SectionBody>
                   {isError ? (
-                    <U.Notice $variant="error" role="alert">
-                      {errorMessage}
-                    </U.Notice>
+                    <>
+                      <U.Notice $variant="error" role="alert">
+                        {errorMessage}
+                      </U.Notice>
+                      <U.FilterActions>
+                        <U.SecondaryButton
+                          type="button"
+                          disabled={isLoading}
+                          onClick={handleRefresh}
+                        >
+                          다시 시도
+                        </U.SecondaryButton>
+                      </U.FilterActions>
+                    </>
                   ) : null}
                   <U.TableWrap>
                     <U.Table>

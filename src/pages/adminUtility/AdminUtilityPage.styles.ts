@@ -234,12 +234,164 @@ const inputControlStyle = css`
   }
 `
 
-export const SelectInput = styled.select`
-  ${inputControlStyle}
+export const DatePickerRoot = styled.div`
+  position: relative;
+  min-width: 0;
 `
 
-export const DateInput = styled.input`
+export const DatePickerButton = styled.button`
   ${inputControlStyle}
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+
+  .date-picker-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .date-picker-icon {
+    flex: 0 0 auto;
+    color: ${neutral.primary};
+    font-size: 18px;
+  }
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+  }
+`
+
+export const DatePickerPopover = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: min(300px, calc(100vw - 40px));
+  padding: 14px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 18px 42px ${neutral.shadow};
+`
+
+export const DatePickerHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+`
+
+export const DatePickerTitle = styled.strong`
+  color: ${neutral.strongText};
+  font-size: 14px;
+  font-weight: 700;
+`
+
+export const DatePickerIconButton = styled.button`
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  &:hover {
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+`
+
+export const DatePickerWeekdays = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+`
+
+export const DatePickerGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+`
+
+export const DatePickerDayButton = styled.button<{
+  $outside?: boolean
+  $selected?: boolean
+  $today?: boolean
+}>`
+  min-width: 0;
+  aspect-ratio: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid
+    ${({ $selected, $today }) =>
+      $selected ? neutral.primary : $today ? neutral.primarySoft : 'transparent'};
+  border-radius: 7px;
+  background: ${({ $selected }) =>
+    $selected ? neutral.primary : 'transparent'};
+  color: ${({ $selected, $outside }) =>
+    $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${({ $selected }) =>
+      $selected ? neutral.primaryHover : neutral.primaryTint};
+    color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primary)};
+  }
+`
+
+export const DatePickerFooter = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid ${neutral.borderSoft};
+`
+
+export const DatePickerTimeField = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 600;
+`
+
+export const DatePickerTimeInput = styled.input`
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    outline: 1px solid ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
 `
 
 export const FilterMenuRoot = styled.div`
@@ -398,6 +550,36 @@ export const SectionTitle = styled.h2`
   color: ${neutral.strongText};
   font-size: 16px;
   font-weight: 700;
+`
+
+export const DetailTabList = styled.div`
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid ${neutral.border};
+`
+
+export const DetailTabButton = styled.button<{ $active?: boolean }>`
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid
+    ${({ $active }) => ($active ? neutral.primary : 'transparent')};
+  background: transparent;
+  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: -2px;
+  }
 `
 
 export const SectionBody = styled.div`

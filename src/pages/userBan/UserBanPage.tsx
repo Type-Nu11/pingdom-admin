@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminBannedUsers } from '../../hooks/useAdminBannedUsers'
@@ -186,6 +186,312 @@ function normalizeDateTimeInput(value: string) {
   return value.length === 16 ? `${value}:00` : value
 }
 
+interface FilterMenuOption {
+  value: string
+  label: string
+}
+
+interface AdminFilterMenuProps {
+  ariaLabel: string
+  options: FilterMenuOption[]
+  value: string
+  onChange: (value: string) => void
+}
+
+function AdminFilterMenu({
+  ariaLabel,
+  options,
+  value,
+  onChange,
+}: AdminFilterMenuProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const selectedOption = options.find((option) => option.value === value)
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
+  return (
+    <U.FilterMenuRoot ref={rootRef}>
+      <U.FilterMenuButton
+        type="button"
+        $open={isOpen}
+        aria-label={ariaLabel}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <span className="filter-menu-label">
+          {selectedOption?.label ?? options[0]?.label ?? '-'}
+        </span>
+        <S.MaterialIcon className="filter-menu-icon" aria-hidden="true">
+          expand_more
+        </S.MaterialIcon>
+      </U.FilterMenuButton>
+      {isOpen ? (
+        <U.FilterMenuList role="listbox" aria-label={ariaLabel}>
+          {options.map((option) => (
+            <U.FilterMenuOption
+              key={option.value || 'ALL'}
+              type="button"
+              role="option"
+              $active={option.value === value}
+              aria-selected={option.value === value}
+              onClick={() => {
+                onChange(option.value)
+                setIsOpen(false)
+              }}
+            >
+              {option.label}
+              {option.value === value ? (
+                <S.MaterialIcon className="filter-menu-icon" aria-hidden="true">
+                  check
+                </S.MaterialIcon>
+              ) : null}
+            </U.FilterMenuOption>
+          ))}
+        </U.FilterMenuList>
+      ) : null}
+    </U.FilterMenuRoot>
+  )
+}
+
+const DATE_WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+function padDatePart(value: number) {
+  return String(value).padStart(2, '0')
+}
+
+function parseDateTimeInput(value: string) {
+  const parsed = value ? new Date(value) : new Date()
+
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
+}
+
+function formatDateTimeInput(date: Date) {
+  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(
+    date.getDate()
+  )}T${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
+}
+
+function formatDatePickerLabel(value: string) {
+  if (!value) {
+    return '날짜와 시간을 선택하세요'
+  }
+
+  const date = parseDateTimeInput(value)
+
+  return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}. ${padDatePart(
+    date.getHours()
+  )}:${padDatePart(date.getMinutes())}`
+}
+
+function getCalendarDays(viewDate: Date) {
+  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1)
+  const calendarStart = new Date(
+    viewDate.getFullYear(),
+    viewDate.getMonth(),
+    1 - firstDay.getDay()
+  )
+
+  return Array.from({ length: 42 }, (_, index) =>
+    new Date(
+      calendarStart.getFullYear(),
+      calendarStart.getMonth(),
+      calendarStart.getDate() + index
+    )
+  )
+}
+
+function isSameDate(left: Date | null, right: Date) {
+  return Boolean(
+    left &&
+      left.getFullYear() === right.getFullYear() &&
+      left.getMonth() === right.getMonth() &&
+      left.getDate() === right.getDate()
+  )
+}
+
+interface AdminDatePickerProps {
+  ariaLabel: string
+  value: string
+  onChange: (value: string) => void
+}
+
+function AdminDatePicker({
+  ariaLabel,
+  value,
+  onChange,
+}: AdminDatePickerProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [viewDate, setViewDate] = useState(() => parseDateTimeInput(value))
+  const rootRef = useRef<HTMLDivElement>(null)
+  const selectedDate = value ? parseDateTimeInput(value) : null
+  const calendarDays = getCalendarDays(viewDate)
+  const selectedTime = selectedDate
+    ? `${padDatePart(selectedDate.getHours())}:${padDatePart(selectedDate.getMinutes())}`
+    : '00:00'
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
+  const handleDateSelect = (date: Date) => {
+    const nextDate = selectedDate ? new Date(selectedDate) : new Date(date)
+
+    nextDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+    if (!selectedDate) {
+      nextDate.setHours(0, 0, 0, 0)
+    }
+
+    onChange(formatDateTimeInput(nextDate))
+  }
+
+  const handleTimeChange = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number)
+    const nextDate = selectedDate ? new Date(selectedDate) : new Date(viewDate)
+
+    nextDate.setHours(hours || 0, minutes || 0, 0, 0)
+    onChange(formatDateTimeInput(nextDate))
+  }
+
+  return (
+    <U.DatePickerRoot ref={rootRef}>
+      <U.DatePickerButton
+        type="button"
+        aria-label={ariaLabel}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+        onClick={() => {
+          if (value) {
+            setViewDate(parseDateTimeInput(value))
+          }
+          setIsOpen((open) => !open)
+        }}
+      >
+        <span className="date-picker-label">{formatDatePickerLabel(value)}</span>
+        <S.MaterialIcon className="date-picker-icon" aria-hidden="true">
+          calendar_month
+        </S.MaterialIcon>
+      </U.DatePickerButton>
+      {isOpen ? (
+        <U.DatePickerPopover role="dialog" aria-label={ariaLabel}>
+          <U.DatePickerHeader>
+            <U.DatePickerIconButton
+              type="button"
+              aria-label="이전 달"
+              onClick={() =>
+                setViewDate(
+                  (current) =>
+                    new Date(current.getFullYear(), current.getMonth() - 1, 1)
+                )
+              }
+            >
+              <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
+            </U.DatePickerIconButton>
+            <U.DatePickerTitle>
+              {viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월
+            </U.DatePickerTitle>
+            <U.DatePickerIconButton
+              type="button"
+              aria-label="다음 달"
+              onClick={() =>
+                setViewDate(
+                  (current) =>
+                    new Date(current.getFullYear(), current.getMonth() + 1, 1)
+                )
+              }
+            >
+              <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
+            </U.DatePickerIconButton>
+          </U.DatePickerHeader>
+          <U.DatePickerWeekdays aria-hidden="true">
+            {DATE_WEEKDAYS.map((weekday) => (
+              <span key={weekday}>{weekday}</span>
+            ))}
+          </U.DatePickerWeekdays>
+          <U.DatePickerGrid>
+            {calendarDays.map((date) => (
+              <U.DatePickerDayButton
+                key={date.toISOString()}
+                type="button"
+                $outside={date.getMonth() !== viewDate.getMonth()}
+                $selected={isSameDate(selectedDate, date)}
+                $today={isSameDate(new Date(), date)}
+                aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
+                aria-pressed={isSameDate(selectedDate, date)}
+                onClick={() => handleDateSelect(date)}
+              >
+                {date.getDate()}
+              </U.DatePickerDayButton>
+            ))}
+          </U.DatePickerGrid>
+          <U.DatePickerFooter>
+            <U.DatePickerTimeField>
+              시간
+              <U.DatePickerTimeInput
+                type="time"
+                value={selectedTime}
+                aria-label="선택한 날짜의 시간"
+                onChange={(event) => handleTimeChange(event.target.value)}
+              />
+            </U.DatePickerTimeField>
+            <U.FilterActions>
+              <U.SecondaryButton
+                type="button"
+                onClick={() => {
+                  onChange('')
+                  setIsOpen(false)
+                }}
+              >
+                초기화
+              </U.SecondaryButton>
+              <U.PrimaryButton type="button" onClick={() => setIsOpen(false)}>
+                적용
+              </U.PrimaryButton>
+            </U.FilterActions>
+          </U.DatePickerFooter>
+        </U.DatePickerPopover>
+      ) : null}
+    </U.DatePickerRoot>
+  )
+}
+
 function UserBanPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
@@ -206,7 +512,9 @@ function UserBanPage() {
   const [banFormError, setBanFormError] = useState('')
   const [listFilterError, setListFilterError] = useState('')
   const [isBanConfirmOpen, setIsBanConfirmOpen] = useState(false)
+  const [isBanFormOpen, setIsBanFormOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [detailTab, setDetailTab] = useState<'info' | 'history'>('info')
   const [releaseReason, setReleaseReason] = useState('')
   const [isReleaseConfirmOpen, setIsReleaseConfirmOpen] = useState(false)
   const [sanctionHistoryBanType, setSanctionHistoryBanType] = useState<
@@ -265,7 +573,27 @@ function UserBanPage() {
   const totalBannedUserCount = hasLoadedList
     ? counts?.total ?? totalCount
     : null
-  const currentPageUserCount = hasLoadedList ? users.length : null
+  const resultRangeLabel = (() => {
+    if (isError && !hasUsers) {
+      return '조회 실패'
+    }
+
+    if (!hasLoadedList) {
+      return isLoading ? '조회 중' : '-'
+    }
+
+    if (totalCount === 0) {
+      return '0건'
+    }
+
+    const rangeStart = (page - 1) * ADMIN_BANNED_USER_PAGE_SIZE + 1
+    const rangeEnd = Math.min(
+      rangeStart + users.length - 1,
+      totalCount
+    )
+
+    return `${rangeStart}–${rangeEnd} / ${totalCount.toLocaleString()}건`
+  })()
   const banPreviewTargetUserId = parsePositiveInteger(banTargetUserId)
   const banPreviewDurationDays = parsePositiveInteger(banDurationDays)
   const safeSanctionHistoryTotalPages = Math.max(sanctionHistoryTotalPages, 1)
@@ -497,6 +825,8 @@ function UserBanPage() {
       }
 
       setSelectedUserId(request.targetUserId)
+      setDetailTab('info')
+      setIsBanFormOpen(false)
       setReleaseReason('')
       setIsReleaseConfirmOpen(false)
       setSanctionHistoryBanType('')
@@ -525,6 +855,8 @@ function UserBanPage() {
 
   const handleSelectBannedUser = (userId: number) => {
     setSelectedUserId(userId)
+    setDetailTab('info')
+    setIsBanFormOpen(false)
     setReleaseReason('')
     setIsReleaseConfirmOpen(false)
     setSanctionHistoryBanType('')
@@ -715,97 +1047,66 @@ function UserBanPage() {
                   <U.AdvancedFilterPanel>
                     <U.FilterField>
                       밴 유형
-                      <U.SelectInput
-                        aria-label="밴 유형 필터"
+                      <AdminFilterMenu
+                        ariaLabel="밴 유형 필터"
+                        options={BAN_TYPE_FILTER_OPTIONS}
                         value={banTypeFilter}
-                        onChange={(event) =>
-                          setBanTypeFilter(event.target.value as AdminBanType | '')
+                        onChange={(value) =>
+                          setBanTypeFilter(value as AdminBanType | '')
                         }
-                      >
-                        {BAN_TYPE_FILTER_OPTIONS.map((option) => (
-                          <option key={option.value || 'ALL'} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </U.SelectInput>
+                      />
                     </U.FilterField>
                     <U.FilterField>
                       처리 시작일
-                      <U.DateInput
-                        type="datetime-local"
-                        aria-label="밴 처리 시작일"
+                      <AdminDatePicker
+                        ariaLabel="밴 처리 시작일"
                         value={banFrom}
-                        onChange={(event) => setBanFrom(event.target.value)}
+                        onChange={setBanFrom}
                       />
                     </U.FilterField>
                     <U.FilterField>
                       처리 종료일
-                      <U.DateInput
-                        type="datetime-local"
-                        aria-label="밴 처리 종료일"
+                      <AdminDatePicker
+                        ariaLabel="밴 처리 종료일"
                         value={banTo}
-                        onChange={(event) => setBanTo(event.target.value)}
+                        onChange={setBanTo}
                       />
                     </U.FilterField>
                     <U.FilterField>
                       정렬 기준
-                      <U.SelectInput
-                        aria-label="밴 사용자 정렬 기준"
+                      <AdminFilterMenu
+                        ariaLabel="밴 사용자 정렬 기준"
+                        options={BAN_LIST_SORT_OPTIONS}
                         value={banSortBy}
-                        onChange={(event) =>
-                          setBanSortBy(event.target.value as AdminBannedUserListSortBy)
+                        onChange={(value) =>
+                          setBanSortBy(value as AdminBannedUserListSortBy)
                         }
-                      >
-                        {BAN_LIST_SORT_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </U.SelectInput>
+                      />
                     </U.FilterField>
                     <U.FilterField>
                       정렬 방향
-                      <U.SelectInput
-                        aria-label="밴 사용자 정렬 방향"
+                      <AdminFilterMenu
+                        ariaLabel="밴 사용자 정렬 방향"
+                        options={SORT_DIRECTION_OPTIONS}
                         value={banSortDirection}
-                        onChange={(event) =>
-                          setBanSortDirection(event.target.value as AdminSortDirection)
+                        onChange={(value) =>
+                          setBanSortDirection(value as AdminSortDirection)
                         }
-                      >
-                        {SORT_DIRECTION_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </U.SelectInput>
+                      />
                     </U.FilterField>
                   </U.AdvancedFilterPanel>
               </U.FilterForm>
             </U.FilterPanel>
+
+            <U.ResultSummary>
+              조회 결과 <strong>{resultRangeLabel}</strong>
+            </U.ResultSummary>
 
             {listFilterError ? (
               <U.Notice $variant="error" role="alert">
                 {listFilterError}
               </U.Notice>
             ) : null}
-
-            <U.SummaryGrid>
-              <U.MetricItem>
-                <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
-                <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
-                <U.MetricHint>{isLoading ? '조회 중' : '현재 조회 조건 기준'}</U.MetricHint>
-              </U.MetricItem>
-              <U.MetricItem>
-                <U.MetricLabel>영구 밴</U.MetricLabel>
-                <U.MetricValue>{formatCount(counts?.permanent)}</U.MetricValue>
-                <U.MetricHint>서버 응답 기준</U.MetricHint>
-              </U.MetricItem>
-              <U.MetricItem>
-                <U.MetricLabel>기간 밴</U.MetricLabel>
-                <U.MetricValue>{formatCount(counts?.temporary)}</U.MetricValue>
-                <U.MetricHint>서버 응답 기준</U.MetricHint>
-              </U.MetricItem>
-            </U.SummaryGrid>
 
             {actionErrorMessage ? (
               <U.Notice $variant="error" role="alert">
@@ -1129,7 +1430,30 @@ function UserBanPage() {
                         </U.BadgeGroup>
                       </U.DetailSummaryCard>
 
-                      <U.DetailGroup>
+                      <U.DetailTabList role="tablist" aria-label="사용자 상세 탭">
+                        <U.DetailTabButton
+                          type="button"
+                          role="tab"
+                          aria-selected={detailTab === 'info'}
+                          $active={detailTab === 'info'}
+                          onClick={() => setDetailTab('info')}
+                        >
+                          상세 정보
+                        </U.DetailTabButton>
+                        <U.DetailTabButton
+                          type="button"
+                          role="tab"
+                          aria-selected={detailTab === 'history'}
+                          $active={detailTab === 'history'}
+                          onClick={() => setDetailTab('history')}
+                        >
+                          제재 이력
+                        </U.DetailTabButton>
+                      </U.DetailTabList>
+
+                      {detailTab === 'info' ? (
+                        <>
+                        <U.DetailGroup>
                         <U.DetailGroupTitle>밴 정보</U.DetailGroupTitle>
                         <U.DetailList>
                           <U.DetailRow>
@@ -1189,73 +1513,50 @@ function UserBanPage() {
                           </U.DetailRow>
                         </U.DetailList>
                       </U.DetailGroup>
-
+                        </>
+                      ) : (
                       <U.DetailGroup>
                         <U.DetailGroupTitle>제재 이력</U.DetailGroupTitle>
                         <U.FilterForm onSubmit={handleSanctionHistorySearch}>
                           <U.AdvancedFilterPanel>
                             <U.FilterField>
                               제재 유형
-                              <U.SelectInput
-                                aria-label="제재 이력 유형 필터"
+                              <AdminFilterMenu
+                                ariaLabel="제재 이력 유형 필터"
+                                options={BAN_TYPE_FILTER_OPTIONS}
                                 value={sanctionHistoryBanType}
-                                onChange={(event) =>
-                                  setSanctionHistoryBanType(
-                                    event.target.value as AdminBanType | ''
-                                  )
-                                }
-                              >
-                                {BAN_TYPE_FILTER_OPTIONS.map((option) => (
-                                  <option
-                                    key={option.value || 'ALL'}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </U.SelectInput>
-                            </U.FilterField>
-                            <U.FilterField>
-                              처리 상태
-                              <U.SelectInput
-                                aria-label="제재 이력 처리 상태 필터"
-                                value={sanctionHistoryAction}
-                                onChange={(event) =>
-                                  setSanctionHistoryAction(
-                                    event.target.value as AdminUserSanctionAction | ''
-                                  )
-                                }
-                              >
-                                {SANCTION_ACTION_FILTER_OPTIONS.map((option) => (
-                                  <option
-                                    key={option.value || 'ALL'}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </U.SelectInput>
-                            </U.FilterField>
-                            <U.FilterField>
-                              처리 시작일
-                              <U.DateInput
-                                type="datetime-local"
-                                aria-label="제재 이력 처리 시작일"
-                                value={sanctionHistoryFrom}
-                                onChange={(event) =>
-                                  setSanctionHistoryFrom(event.target.value)
+                                onChange={(value) =>
+                                  setSanctionHistoryBanType(value as AdminBanType | '')
                                 }
                               />
                             </U.FilterField>
                             <U.FilterField>
-                              처리 종료일
-                              <U.DateInput
-                                type="datetime-local"
-                                aria-label="제재 이력 처리 종료일"
-                                value={sanctionHistoryTo}
-                                onChange={(event) =>
-                                  setSanctionHistoryTo(event.target.value)
+                              처리 상태
+                              <AdminFilterMenu
+                                ariaLabel="제재 이력 처리 상태 필터"
+                                options={SANCTION_ACTION_FILTER_OPTIONS}
+                                value={sanctionHistoryAction}
+                                onChange={(value) =>
+                                  setSanctionHistoryAction(
+                                    value as AdminUserSanctionAction | ''
+                                  )
                                 }
+                              />
+                            </U.FilterField>
+                            <U.FilterField>
+                              처리 시작일
+                              <AdminDatePicker
+                                ariaLabel="제재 이력 처리 시작일"
+                                value={sanctionHistoryFrom}
+                                onChange={setSanctionHistoryFrom}
+                              />
+                            </U.FilterField>
+                            <U.FilterField>
+                              처리 종료일
+                              <AdminDatePicker
+                                ariaLabel="제재 이력 처리 종료일"
+                                value={sanctionHistoryTo}
+                                onChange={setSanctionHistoryTo}
                               />
                             </U.FilterField>
                             <U.FilterActions>
@@ -1369,6 +1670,7 @@ function UserBanPage() {
                           </U.DetailEmpty>
                         )}
                       </U.DetailGroup>
+                      )}
 
                       <U.DetailGroup>
                         <U.DetailGroupTitle>밴 해제</U.DetailGroupTitle>

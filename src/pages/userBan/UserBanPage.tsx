@@ -1192,6 +1192,103 @@ function UserBanPage() {
 
                       <U.DetailGroup>
                         <U.DetailGroupTitle>제재 이력</U.DetailGroupTitle>
+                        <U.FilterForm onSubmit={handleSanctionHistorySearch}>
+                          <U.AdvancedFilterPanel>
+                            <U.FilterField>
+                              제재 유형
+                              <U.SelectInput
+                                aria-label="제재 이력 유형 필터"
+                                value={sanctionHistoryBanType}
+                                onChange={(event) =>
+                                  setSanctionHistoryBanType(
+                                    event.target.value as AdminBanType | ''
+                                  )
+                                }
+                              >
+                                {BAN_TYPE_FILTER_OPTIONS.map((option) => (
+                                  <option
+                                    key={option.value || 'ALL'}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </U.SelectInput>
+                            </U.FilterField>
+                            <U.FilterField>
+                              처리 상태
+                              <U.SelectInput
+                                aria-label="제재 이력 처리 상태 필터"
+                                value={sanctionHistoryAction}
+                                onChange={(event) =>
+                                  setSanctionHistoryAction(
+                                    event.target.value as AdminUserSanctionAction | ''
+                                  )
+                                }
+                              >
+                                {SANCTION_ACTION_FILTER_OPTIONS.map((option) => (
+                                  <option
+                                    key={option.value || 'ALL'}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </U.SelectInput>
+                            </U.FilterField>
+                            <U.FilterField>
+                              처리 시작일
+                              <U.DateInput
+                                type="datetime-local"
+                                aria-label="제재 이력 처리 시작일"
+                                value={sanctionHistoryFrom}
+                                onChange={(event) =>
+                                  setSanctionHistoryFrom(event.target.value)
+                                }
+                              />
+                            </U.FilterField>
+                            <U.FilterField>
+                              처리 종료일
+                              <U.DateInput
+                                type="datetime-local"
+                                aria-label="제재 이력 처리 종료일"
+                                value={sanctionHistoryTo}
+                                onChange={(event) =>
+                                  setSanctionHistoryTo(event.target.value)
+                                }
+                              />
+                            </U.FilterField>
+                            <U.FilterActions>
+                              <U.PrimaryButton
+                                type="submit"
+                                disabled={isSanctionHistoryLoading}
+                              >
+                                <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
+                                {isSanctionHistoryLoading ? '조회 중' : '조회'}
+                              </U.PrimaryButton>
+                              <U.SecondaryButton
+                                type="button"
+                                disabled={
+                                  isSanctionHistoryLoading ||
+                                  !(
+                                    sanctionHistoryBanType ||
+                                    sanctionHistoryAction ||
+                                    sanctionHistoryFrom ||
+                                    sanctionHistoryTo
+                                  )
+                                }
+                                onClick={handleResetSanctionHistoryFilters}
+                              >
+                                초기화
+                              </U.SecondaryButton>
+                            </U.FilterActions>
+                          </U.AdvancedFilterPanel>
+                        </U.FilterForm>
+                        {sanctionHistoryFilterError ? (
+                          <U.Notice $variant="error" role="alert">
+                            {sanctionHistoryFilterError}
+                          </U.Notice>
+                        ) : null}
                         {isSanctionHistoryLoading ? (
                           <U.DetailEmpty>
                             <S.MaterialIcon aria-hidden="true">hourglass_empty</S.MaterialIcon>

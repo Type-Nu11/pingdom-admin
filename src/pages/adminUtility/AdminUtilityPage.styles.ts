@@ -867,6 +867,25 @@ export const ActionHelpText = styled.span`
   line-height: 1.4;
 `
 
+export const ActionInfoText = styled.span`
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.muted};
+  font-size: 12px;
+  line-height: 1.5;
+
+  .material-symbols-rounded {
+    flex: 0 0 auto;
+    color: ${neutral.primary};
+    font-size: 17px;
+  }
+`
+
 export const Pagination = styled.nav`
   display: flex;
   align-items: center;

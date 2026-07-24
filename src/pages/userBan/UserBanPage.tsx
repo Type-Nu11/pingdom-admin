@@ -992,7 +992,6 @@ function UserBanPage() {
           <U.PageStack>
             <U.IntroBand>
               <U.IntroText>
-                <U.IntroTitle>사용자 밴</U.IntroTitle>
                 <U.IntroDescription>
                   밴 사용자를 조회하고 제재 처리 및 해제를 관리합니다.
                 </U.IntroDescription>
@@ -1064,7 +1063,7 @@ function UserBanPage() {
                       />
                     </U.FilterField>
                     <U.FilterField>
-                      처리 시작일
+                      시작 일시
                       <AdminDatePicker
                         ariaLabel="밴 처리 시작일"
                         value={banFrom}
@@ -1072,7 +1071,7 @@ function UserBanPage() {
                       />
                     </U.FilterField>
                     <U.FilterField>
-                      처리 종료일
+                      종료 일시
                       <AdminDatePicker
                         ariaLabel="밴 처리 종료일"
                         value={banTo}
@@ -1128,7 +1127,7 @@ function UserBanPage() {
               <U.SectionHeader>
                 <U.SectionTitle>사용자 밴 처리</U.SectionTitle>
                 <U.FilterActions>
-                  <U.DetailMeta>사용자 ID 기준</U.DetailMeta>
+                  <U.DetailMeta>사용자 ID를 입력해 새로운 제재를 처리합니다.</U.DetailMeta>
                   <U.SecondaryButton
                     type="button"
                     aria-expanded={isBanFormOpen}
@@ -1247,11 +1246,14 @@ function UserBanPage() {
                       ) : null}
                     </U.DetailSummaryCard>
                   ) : null}
-                  <U.ActionHelpText>
-                    기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
-                    <br />
-                    밴 처리 후에도 기존 게시글은 유지됩니다.
-                  </U.ActionHelpText>
+                  <U.ActionInfoText>
+                    <S.MaterialIcon aria-hidden="true">info</S.MaterialIcon>
+                    <span>
+                      기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
+                      <br />
+                      밴 처리 후에도 기존 게시글은 유지됩니다.
+                    </span>
+                  </U.ActionInfoText>
                   <U.FilterActions>
                     <U.SecondaryButton
                       type="button"
@@ -1407,14 +1409,14 @@ function UserBanPage() {
                       </U.TableStatusBadge>
                     </U.BadgeGroup>
                   ) : (
-                    <U.StatusBadge $tone="warning">선택 필요</U.StatusBadge>
+                    <U.DetailMeta>목록에서 사용자를 선택해 주세요.</U.DetailMeta>
                   )}
                 </U.SectionHeader>
                 <U.SectionBody>
                   {!selectedUserId ? (
                     <U.DetailEmpty>
                       <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>
-                      <strong>밴 유저를 선택해 주세요.</strong>
+                      <strong>사용자를 선택해 주세요.</strong>
                       <span>왼쪽 목록에서 사용자를 선택하면 상세 정보가 표시됩니다.</span>
                     </U.DetailEmpty>
                   ) : isDetailLoading ? (

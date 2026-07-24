@@ -192,8 +192,10 @@ export const AdvancedFilterPanel = styled.div`
   grid-column: 1 / -1;
   gap: 10px;
   align-items: end;
-  padding-top: 12px;
-  border-top: 1px solid ${neutral.borderSoft};
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
 
   @media (max-width: 1160px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));

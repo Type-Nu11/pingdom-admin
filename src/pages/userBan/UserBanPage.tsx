@@ -587,7 +587,12 @@ function UserBanPage() {
 
     return `${rangeStart}–${rangeEnd} / ${totalCount.toLocaleString()}건`
   })()
-  const getMetricHint = (value?: number | null) => {
+  const getMetricHint = (
+    value?: number | null,
+    hint = banSearchQuery.trim()
+      ? '검색어 기준 전체 밴 현황'
+      : '전체 밴 사용자 현황'
+  ) => {
     if (isLoading) {
       return '조회 중'
     }
@@ -596,7 +601,7 @@ function UserBanPage() {
       return '불러오기 실패'
     }
 
-    return typeof value === 'number' ? '현재 조회 조건 기준' : '집계 미제공'
+    return typeof value === 'number' ? hint : '집계 미제공'
   }
   const banPreviewTargetUserId = parsePositiveInteger(banTargetUserId)
   const banPreviewDurationDays = parsePositiveInteger(banDurationDays)
@@ -1003,7 +1008,12 @@ function UserBanPage() {
               <U.MetricItem>
                 <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
                 <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
-                <U.MetricHint>{getMetricHint(totalBannedUserCount)}</U.MetricHint>
+                <U.MetricHint>
+                  {getMetricHint(
+                    totalBannedUserCount,
+                    counts?.total == null ? '현재 조회 결과' : undefined
+                  )}
+                </U.MetricHint>
               </U.MetricItem>
               <U.MetricItem>
                 <U.MetricLabel>영구 밴</U.MetricLabel>

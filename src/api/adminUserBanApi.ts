@@ -18,6 +18,12 @@ const ADMIN_USERS_API_PATH = '/admin/users'
 const DEFAULT_ADMIN_BANNED_USER_PAGE = 1
 const DEFAULT_ADMIN_BANNED_USER_LIMIT = 20
 const DEFAULT_ADMIN_BANNED_USER_KEYWORD = ''
+const DEFAULT_ADMIN_BANNED_USER_SORT_BY: NonNullable<
+  AdminBannedUserListRequest['sortBy']
+> = 'BANNED_AT'
+const DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION: NonNullable<
+  AdminBannedUserListRequest['sortDirection']
+> = 'DESC'
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE = 1
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_LIMIT = 5
 
@@ -53,8 +59,8 @@ export async function getAdminBannedUsers({
   banType,
   from,
   to,
-  sortBy,
-  sortDirection,
+  sortBy = DEFAULT_ADMIN_BANNED_USER_SORT_BY,
+  sortDirection = DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION,
 }: AdminBannedUserListRequest = {}) {
   const { data } = await customAxios.get<AdminBannedUserListResponse>(
     ADMIN_BANNED_USERS_API_PATH,

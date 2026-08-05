@@ -29,6 +29,12 @@ import type {
 
 const DEFAULT_ADMIN_BANNED_USER_PAGE = 1
 const DEFAULT_ADMIN_BANNED_USER_LIMIT = 20
+const DEFAULT_ADMIN_BANNED_USER_SORT_BY: NonNullable<
+  AdminBannedUserListRequest['sortBy']
+> = 'BANNED_AT'
+const DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION: NonNullable<
+  AdminBannedUserListRequest['sortDirection']
+> = 'DESC'
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE = 1
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_LIMIT = 5
 const ADMIN_BANNED_USER_ERROR_MESSAGE =
@@ -152,6 +158,8 @@ export function useAdminBannedUsers({
     page: initialPage,
     limit,
     keyword: '',
+    sortBy: DEFAULT_ADMIN_BANNED_USER_SORT_BY,
+    sortDirection: DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION,
   })
 
   const fetchAdminBannedUsers = useCallback(
@@ -225,7 +233,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 밴 유저 목록 조회 실패', error)
+        if (requestId === latestRequestIdRef.current) {
+          logDebugError('관리자 밴 유저 목록 조회 실패', error)
+        }
 
         return false
       } finally {
@@ -290,7 +300,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 밴 유저 상세 조회 실패', error)
+        if (requestId === latestDetailRequestIdRef.current) {
+          logDebugError('관리자 밴 유저 상세 조회 실패', error)
+        }
 
         return null
       } finally {
@@ -337,7 +349,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 사용자 제재 상태 조회 실패', error)
+        if (requestId === latestBanTargetStatusRequestIdRef.current) {
+          logDebugError('관리자 사용자 제재 상태 조회 실패', error)
+        }
 
         return null
       } finally {
@@ -386,7 +400,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 사용자 제재 이력 조회 실패', error)
+        if (requestId === latestSanctionHistoryRequestIdRef.current) {
+          logDebugError('관리자 사용자 제재 이력 조회 실패', error)
+        }
 
         return null
       } finally {

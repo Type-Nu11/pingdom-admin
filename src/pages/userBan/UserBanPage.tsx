@@ -391,7 +391,7 @@ function AdminDatePicker({
     <U.DatePickerRoot ref={rootRef}>
       <U.DatePickerButton
         type="button"
-        aria-label={ariaLabel}
+        aria-label={`${ariaLabel}, ${formatDatePickerLabel(value)}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         onClick={() => {

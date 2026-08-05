@@ -173,7 +173,7 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
 export const FilterForm = styled.form`
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto;
-  gap: 10px;
+  gap: 12px;
   align-items: end;
 
   @media (max-width: 760px) {
@@ -183,10 +183,11 @@ export const FilterForm = styled.form`
 
 export const AdvancedFilterPanel = styled.div`
   grid-template-columns:
-    minmax(132px, 0.8fr)
-    minmax(132px, 0.8fr)
-    minmax(150px, 0.9fr)
-    minmax(120px, 0.7fr)
+    minmax(120px, 0.8fr)
+    minmax(140px, 0.9fr)
+    minmax(140px, 0.9fr)
+    minmax(120px, 0.8fr)
+    minmax(120px, 0.8fr)
     auto;
   display: grid;
   grid-column: 1 / -1;
@@ -214,6 +215,13 @@ export const FilterField = styled.label`
   color: ${neutral.muted};
   font-size: 12px;
   font-weight: 500;
+`
+
+export const FilterHelpText = styled.span`
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
 `
 
 const inputControlStyle = css`
@@ -488,7 +496,8 @@ export const FilterActions = styled.div`
 
 export const MetricItem = styled.section`
   min-width: 0;
-  padding: 16px;
+  min-height: 92px;
+  padding: 14px 16px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
@@ -503,10 +512,10 @@ export const MetricLabel = styled.p`
 
 export const MetricValue = styled.strong`
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   overflow: hidden;
   color: ${neutral.strongText};
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   line-height: 1.1;
   text-overflow: ellipsis;
@@ -515,7 +524,7 @@ export const MetricValue = styled.strong`
 
 export const MetricHint = styled.span`
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   color: ${neutral.softText};
   font-size: 12px;
   line-height: 1.4;
@@ -523,10 +532,10 @@ export const MetricHint = styled.span`
 
 export const WorkGrid = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.7fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(420px, 1fr);
   gap: 16px;
 
-  @media (max-width: 780px) {
+  @media (max-width: 1040px) {
     grid-template-columns: 1fr;
   }
 `
@@ -668,8 +677,40 @@ export const SecondaryButton = styled.button`
   }
 `
 
+export const IconActionButton = styled.button`
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
 export const TableWrap = styled.div`
-  overflow-x: auto;
+  max-height: 520px;
+  overflow: auto;
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
 `
@@ -682,7 +723,11 @@ export const Table = styled.table`
 `
 
 export const TableHeadCell = styled.th`
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 12px;
+  border-bottom: 1px solid ${neutral.borderSoft};
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font-weight: 600;
@@ -699,6 +744,11 @@ export const TableRow = styled.tr<{ $active?: boolean }>`
       $active ? neutral.primaryTint : neutral.surfaceLow};
   }
 
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: -2px;
+  }
+
   ${({ $active }) =>
     $active &&
     css`
@@ -709,9 +759,13 @@ export const TableRow = styled.tr<{ $active?: boolean }>`
 `
 
 export const TableCell = styled.td`
-  padding: 14px 12px;
+  padding: 12px;
   border-top: 1px solid ${neutral.borderSoft};
   color: ${neutral.text};
+`
+
+export const TableDateCell = styled(TableCell)`
+  white-space: nowrap;
 `
 
 export const TableStrongText = styled.strong`
@@ -936,6 +990,9 @@ export const DetailHeaderStack = styled.div`
 `
 
 export const DetailSummaryCard = styled.section`
+  position: sticky;
+  top: 12px;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -943,6 +1000,7 @@ export const DetailSummaryCard = styled.section`
   border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
   background: ${neutral.primaryTint};
+  box-shadow: 0 6px 16px ${neutral.shadow};
 `
 
 export const DetailTitle = styled.strong`

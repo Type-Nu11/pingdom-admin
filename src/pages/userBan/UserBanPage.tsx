@@ -53,7 +53,8 @@ function formatBanType(value: string) {
 }
 
 function getBanTypeTone(value: string): BadgeTone {
-  return value === 'TEMPORARY' ? 'warning' : 'danger'
+  void value
+  return 'neutral'
 }
 
 function getBanStatusTone(isBanned: boolean): BadgeTone {
@@ -1018,29 +1019,77 @@ function UserBanPage() {
 
             <U.FilterPanel>
               <U.FilterForm onSubmit={handleSearchSubmit}>
+                <U.FilterField>
+                  검색어
+                  <U.SearchInput
+                    type="search"
+                    value={banSearchQuery}
+                    placeholder="사용자 ID 또는 닉네임 검색"
+                    aria-label="사용자 ID 또는 닉네임 검색"
+                    onChange={(event) => setBanSearchQuery(event.target.value)}
+                  />
+                  <U.FilterHelpText>
+                    숫자는 사용자 ID, 문자는 닉네임 기준으로 검색합니다.
+                  </U.FilterHelpText>
+                </U.FilterField>
+                <U.FilterActions>
+                  <U.PrimaryButton type="submit" disabled={isLoading}>
+                    <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
+                    {isLoading ? '조회 중' : '조회'}
+                  </U.PrimaryButton>
+                </U.FilterActions>
+
+                <U.AdvancedFilterPanel>
                   <U.FilterField>
-                    검색어
-                    <U.SearchInput
-                      type="search"
-                      value={banSearchQuery}
-                      placeholder="사용자 ID 또는 닉네임 검색"
-                      aria-label="사용자 ID 또는 닉네임 검색"
-                      onChange={(event) => setBanSearchQuery(event.target.value)}
+                    밴 유형
+                    <AdminFilterMenu
+                      ariaLabel="밴 유형 필터"
+                      options={BAN_TYPE_FILTER_OPTIONS}
+                      value={banTypeFilter}
+                      onChange={(value) =>
+                        setBanTypeFilter(value as AdminBanType | '')
+                      }
+                    />
+                  </U.FilterField>
+                  <U.FilterField>
+                    시작 일시
+                    <AdminDatePicker
+                      ariaLabel="밴 처리 시작일"
+                      value={banFrom}
+                      onChange={setBanFrom}
+                    />
+                  </U.FilterField>
+                  <U.FilterField>
+                    종료 일시
+                    <AdminDatePicker
+                      ariaLabel="밴 처리 종료일"
+                      value={banTo}
+                      onChange={setBanTo}
+                    />
+                  </U.FilterField>
+                  <U.FilterField>
+                    정렬 기준
+                    <AdminFilterMenu
+                      ariaLabel="밴 사용자 정렬 기준"
+                      options={BAN_LIST_SORT_OPTIONS}
+                      value={banSortBy}
+                      onChange={(value) =>
+                        setBanSortBy(value as AdminBannedUserListSortBy)
+                      }
+                    />
+                  </U.FilterField>
+                  <U.FilterField>
+                    정렬 방향
+                    <AdminFilterMenu
+                      ariaLabel="밴 사용자 정렬 방향"
+                      options={SORT_DIRECTION_OPTIONS}
+                      value={banSortDirection}
+                      onChange={(value) =>
+                        setBanSortDirection(value as AdminSortDirection)
+                      }
                     />
                   </U.FilterField>
                   <U.FilterActions>
-                    <U.PrimaryButton type="submit" disabled={isLoading}>
-                      <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
-                      {isLoading ? '조회 중' : '조회'}
-                    </U.PrimaryButton>
-                    <U.SecondaryButton
-                      type="button"
-                      disabled={isLoading}
-                      onClick={handleRefresh}
-                    >
-                      <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                      새로고침
-                    </U.SecondaryButton>
                     <U.SecondaryButton
                       type="button"
                       disabled={isLoading || !hasActiveListFilters}
@@ -1048,59 +1097,17 @@ function UserBanPage() {
                     >
                       필터 초기화
                     </U.SecondaryButton>
+                    <U.IconActionButton
+                      type="button"
+                      aria-label="밴 사용자 목록 새로고침"
+                      title="목록 새로고침"
+                      disabled={isLoading}
+                      onClick={handleRefresh}
+                    >
+                      <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+                    </U.IconActionButton>
                   </U.FilterActions>
-
-                  <U.AdvancedFilterPanel>
-                    <U.FilterField>
-                      밴 유형
-                      <AdminFilterMenu
-                        ariaLabel="밴 유형 필터"
-                        options={BAN_TYPE_FILTER_OPTIONS}
-                        value={banTypeFilter}
-                        onChange={(value) =>
-                          setBanTypeFilter(value as AdminBanType | '')
-                        }
-                      />
-                    </U.FilterField>
-                    <U.FilterField>
-                      시작 일시
-                      <AdminDatePicker
-                        ariaLabel="밴 처리 시작일"
-                        value={banFrom}
-                        onChange={setBanFrom}
-                      />
-                    </U.FilterField>
-                    <U.FilterField>
-                      종료 일시
-                      <AdminDatePicker
-                        ariaLabel="밴 처리 종료일"
-                        value={banTo}
-                        onChange={setBanTo}
-                      />
-                    </U.FilterField>
-                    <U.FilterField>
-                      정렬 기준
-                      <AdminFilterMenu
-                        ariaLabel="밴 사용자 정렬 기준"
-                        options={BAN_LIST_SORT_OPTIONS}
-                        value={banSortBy}
-                        onChange={(value) =>
-                          setBanSortBy(value as AdminBannedUserListSortBy)
-                        }
-                      />
-                    </U.FilterField>
-                    <U.FilterField>
-                      정렬 방향
-                      <AdminFilterMenu
-                        ariaLabel="밴 사용자 정렬 방향"
-                        options={SORT_DIRECTION_OPTIONS}
-                        value={banSortDirection}
-                        onChange={(value) =>
-                          setBanSortDirection(value as AdminSortDirection)
-                        }
-                      />
-                    </U.FilterField>
-                  </U.AdvancedFilterPanel>
+                </U.AdvancedFilterPanel>
               </U.FilterForm>
             </U.FilterPanel>
 
@@ -1319,7 +1326,18 @@ function UserBanPage() {
                             <U.TableRow
                               key={bannedUser.userId}
                               $active={selectedUserId === bannedUser.userId}
+                              tabIndex={0}
+                              role="button"
+                              aria-current={
+                                selectedUserId === bannedUser.userId ? 'true' : undefined
+                              }
                               onClick={() => handleSelectBannedUser(bannedUser.userId)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                  event.preventDefault()
+                                  handleSelectBannedUser(bannedUser.userId)
+                                }
+                              }}
                             >
                               <U.TableCell>
                                 <U.TableStrongText>
@@ -1341,15 +1359,15 @@ function UserBanPage() {
                                   {bannedUser.banned ? '밴 중' : '해제됨'}
                                 </U.TableStatusBadge>
                               </U.TableCell>
-                              <U.TableCell>
+                              <U.TableDateCell>
                                 {formatBanDate(bannedUser.bannedAt)}
-                              </U.TableCell>
-                              <U.TableCell>
+                              </U.TableDateCell>
+                              <U.TableDateCell>
                                 {formatBanExpiresAt(
                                   bannedUser.banType,
                                   bannedUser.banExpiresAt
                                 )}
-                              </U.TableCell>
+                              </U.TableDateCell>
                             </U.TableRow>
                           ))
                         ) : (

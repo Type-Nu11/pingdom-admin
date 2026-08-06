@@ -482,15 +482,39 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
   }
 `
 
-export const FilterActions = styled.div`
+export const FilterActions = styled.div<{ $alignWithField?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   justify-content: flex-end;
 
+  ${({ $alignWithField }) =>
+    $alignWithField &&
+    css`
+      align-self: start;
+      padding-top: 20px;
+    `}
+
   @media (max-width: 1160px) {
     justify-content: flex-start;
+  }
+
+  @media (max-width: 760px) {
+    padding-top: 0;
+  }
+`
+
+export const DetailFilterActions = styled(FilterActions)`
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+
+  @media (max-width: 520px) {
+    justify-content: stretch;
+
+    > button {
+      flex: 1;
+    }
   }
 `
 

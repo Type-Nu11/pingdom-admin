@@ -53,8 +53,7 @@ function formatBanType(value: string) {
 }
 
 function getBanTypeTone(value: string): BadgeTone {
-  void value
-  return 'neutral'
+  return value === 'TEMPORARY' ? 'warning' : 'neutral'
 }
 
 function getBanStatusTone(isBanned: boolean): BadgeTone {
@@ -72,10 +71,9 @@ function formatBanDate(value?: string | null) {
     return value
   }
 
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
+  return `${date.getFullYear()}.${padDatePart(date.getMonth() + 1)}.${padDatePart(
+    date.getDate()
+  )} ${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
 }
 
 function formatBanExpiresAt(banType: string, value?: string | null) {
@@ -291,7 +289,7 @@ function formatDateTimeInput(date: Date) {
 
 function formatDatePickerLabel(value: string) {
   if (!value) {
-    return '날짜와 시간을 선택하세요'
+    return '일시 선택'
   }
 
   const date = parseDateTimeInput(value)
@@ -587,22 +585,6 @@ function UserBanPage() {
 
     return `${rangeStart}–${rangeEnd} / ${totalCount.toLocaleString()}건`
   })()
-  const getMetricHint = (
-    value?: number | null,
-    hint = banSearchQuery.trim()
-      ? '검색어 기준 전체 밴 현황'
-      : '전체 밴 사용자 현황'
-  ) => {
-    if (isLoading) {
-      return '조회 중'
-    }
-
-    if (isError && !hasSuccessfulListResponse) {
-      return '불러오기 실패'
-    }
-
-    return typeof value === 'number' ? hint : '집계 미제공'
-  }
   const banPreviewTargetUserId = parsePositiveInteger(banTargetUserId)
   const banPreviewDurationDays = parsePositiveInteger(banDurationDays)
   const safeSanctionHistoryTotalPages = Math.max(sanctionHistoryTotalPages, 1)
@@ -1008,22 +990,14 @@ function UserBanPage() {
               <U.MetricItem>
                 <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
                 <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
-                <U.MetricHint>
-                  {getMetricHint(
-                    totalBannedUserCount,
-                    counts?.total == null ? '현재 조회 결과' : undefined
-                  )}
-                </U.MetricHint>
               </U.MetricItem>
               <U.MetricItem>
                 <U.MetricLabel>영구 밴</U.MetricLabel>
                 <U.MetricValue>{formatCount(counts?.permanent)}</U.MetricValue>
-                <U.MetricHint>{getMetricHint(counts?.permanent)}</U.MetricHint>
               </U.MetricItem>
               <U.MetricItem>
                 <U.MetricLabel>기간 밴</U.MetricLabel>
                 <U.MetricValue>{formatCount(counts?.temporary)}</U.MetricValue>
-                <U.MetricHint>{getMetricHint(counts?.temporary)}</U.MetricHint>
               </U.MetricItem>
             </U.SummaryGrid>
 
@@ -1042,7 +1016,7 @@ function UserBanPage() {
                     숫자는 사용자 ID, 문자는 닉네임 기준으로 검색합니다.
                   </U.FilterHelpText>
                 </U.FilterField>
-                <U.FilterActions>
+                <U.FilterActions $alignWithField>
                   <U.PrimaryButton type="submit" disabled={isLoading}>
                     <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
                     {isLoading ? '조회 중' : '조회'}
@@ -1062,7 +1036,7 @@ function UserBanPage() {
                     />
                   </U.FilterField>
                   <U.FilterField>
-                    시작 일시
+                    처리 기간 시작
                     <AdminDatePicker
                       ariaLabel="밴 처리 시작일"
                       value={banFrom}
@@ -1070,7 +1044,7 @@ function UserBanPage() {
                     />
                   </U.FilterField>
                   <U.FilterField>
-                    종료 일시
+                    처리 기간 종료
                     <AdminDatePicker
                       ariaLabel="밴 처리 종료일"
                       value={banTo}
@@ -1141,10 +1115,9 @@ function UserBanPage() {
             ) : null}
 
             <U.Section>
-              <U.SectionHeader>
-                <U.SectionTitle>사용자 밴 처리</U.SectionTitle>
-                <U.FilterActions>
-                  <U.DetailMeta>사용자 ID를 입력해 새로운 제재를 처리합니다.</U.DetailMeta>
+                <U.SectionHeader>
+                  <U.SectionTitle>사용자 밴 처리</U.SectionTitle>
+                  <U.FilterActions>
                   <U.SecondaryButton
                     type="button"
                     aria-expanded={isBanFormOpen}
@@ -1153,7 +1126,7 @@ function UserBanPage() {
                     <S.MaterialIcon aria-hidden="true">
                       {isBanFormOpen ? 'expand_less' : 'expand_more'}
                     </S.MaterialIcon>
-                    {isBanFormOpen ? '접기' : '밴 처리 열기'}
+                    {isBanFormOpen ? '접기' : '열기'}
                   </U.SecondaryButton>
                 </U.FilterActions>
               </U.SectionHeader>
@@ -1353,7 +1326,7 @@ function UserBanPage() {
                                 <U.TableStrongText>
                                   {bannedUser.username || '사용자명 없음'}
                                 </U.TableStrongText>
-                                <U.TableSubText>ID {bannedUser.userId}</U.TableSubText>
+                                <U.TableSubText>사용자 ID {bannedUser.userId}</U.TableSubText>
                               </U.TableCell>
                               <U.TableCell>
                                 <U.TableStatusBadge
@@ -1389,7 +1362,7 @@ function UserBanPage() {
                       </U.Table>
                     </U.TableWrap>
                   )}
-                  {hasUsers && !isError && totalCount > 0 ? (
+                  {hasUsers && !isError && totalCount > 0 && safeTotalPages > 1 ? (
                     <U.Pagination aria-label="밴 사용자 목록 페이지네이션">
                       <U.SecondaryButton
                         type="button"
@@ -1436,16 +1409,14 @@ function UserBanPage() {
                         {selectedUserDetail.banned ? '밴 중' : '해제됨'}
                       </U.TableStatusBadge>
                     </U.BadgeGroup>
-                  ) : (
-                    <U.DetailMeta>목록에서 사용자를 선택해 주세요.</U.DetailMeta>
-                  )}
+                  ) : null}
                 </U.SectionHeader>
                 <U.SectionBody>
                   {!selectedUserId ? (
                     <U.DetailEmpty>
                       <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>
                       <strong>사용자를 선택해 주세요.</strong>
-                      <span>왼쪽 목록에서 사용자를 선택하면 상세 정보가 표시됩니다.</span>
+                      <span>목록에서 선택하면 제재 정보와 이력이 표시됩니다.</span>
                     </U.DetailEmpty>
                   ) : isDetailLoading ? (
                     <U.DetailEmpty>

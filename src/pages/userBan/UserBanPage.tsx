@@ -38,6 +38,25 @@ const SANCTION_ACTION_FILTER_OPTIONS = [
   { value: 'EXPIRED', label: '기간 만료' },
 ]
 
+const ADMIN_ROLE_LABELS: Record<string, string> = {
+  ADMIN: '관리자',
+  MODERATOR: '운영자',
+  USER: '일반 사용자',
+}
+
+const COUNTRY_LABELS: Record<string, string> = {
+  KR: '대한민국',
+  JP: '일본',
+  US: '미국',
+}
+
+const BAN_REASON_LABELS: Record<string, string> = {
+  POLICY_VIOLATION: '운영 정책 위반',
+  REPORT_BULK_ACCEPTED: '신고 일괄 승인으로 처리',
+  SPAM: '스팸 또는 도배',
+  HARASSMENT: '괴롭힘 또는 부적절한 행위',
+}
+
 type BadgeTone = 'danger' | 'warning' | 'success' | 'neutral'
 
 function formatBanType(value: string) {
@@ -100,12 +119,28 @@ function formatOptionalText(value?: string | number | null) {
   return String(value)
 }
 
+function formatRole(value?: string | null) {
+  if (!value) {
+    return '-'
+  }
+
+  return ADMIN_ROLE_LABELS[value] ?? value.replaceAll('_', ' ')
+}
+
+function formatCountry(value?: string | null) {
+  if (!value) {
+    return '-'
+  }
+
+  return COUNTRY_LABELS[value] ?? value
+}
+
 function formatBanReason(value?: string | null) {
   if (!value) {
     return '등록된 밴 사유가 없습니다.'
   }
 
-  return value
+  return BAN_REASON_LABELS[value] ?? value.replaceAll('_', ' ')
 }
 
 function formatSanctionAction(value: AdminUserSanctionAction) {
@@ -165,8 +200,8 @@ function parsePositiveInteger(value: string) {
   return parsedValue
 }
 
-function formatCount(value?: number | null) {
-  return typeof value === 'number' ? value.toLocaleString() : '-'
+function formatCountWithUnit(value?: number | null, unit = '건') {
+  return typeof value === 'number' ? `${value.toLocaleString()}${unit}` : '-'
 }
 
 function hasInvalidDateRange(from: string, to: string) {
@@ -510,6 +545,8 @@ function UserBanPage() {
   const [isBanFormOpen, setIsBanFormOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [detailTab, setDetailTab] = useState<'info' | 'history'>('info')
+  const [isSanctionHistoryFilterOpen, setIsSanctionHistoryFilterOpen] =
+    useState(false)
   const [releaseReason, setReleaseReason] = useState('')
   const [isReleaseConfirmOpen, setIsReleaseConfirmOpen] = useState(false)
   const [sanctionHistoryBanType, setSanctionHistoryBanType] = useState<
@@ -660,6 +697,7 @@ function UserBanPage() {
     setSanctionHistoryFrom('')
     setSanctionHistoryTo('')
     setSanctionHistoryFilterError('')
+    setIsSanctionHistoryFilterOpen(false)
     clearBannedUserDetail()
   }
 
@@ -724,6 +762,14 @@ function UserBanPage() {
     setSanctionHistoryTo('')
     setSanctionHistoryFilterError('')
     void fetchUserSanctionHistories(selectedUserId, { page: 1 })
+  }
+
+  const handleDetailTabChange = (nextTab: 'info' | 'history') => {
+    setDetailTab(nextTab)
+
+    if (nextTab === 'history' && selectedUserId) {
+      void fetchUserSanctionHistories(selectedUserId, { page: 1 })
+    }
   }
 
   const handleSanctionHistorySearch = (event: FormEvent<HTMLFormElement>) => {
@@ -826,7 +872,6 @@ function UserBanPage() {
       setSanctionHistoryTo('')
       setSanctionHistoryFilterError('')
       void fetchAdminBannedUserDetail(request.targetUserId)
-      void fetchUserSanctionHistories(request.targetUserId, { page: 1 })
       setBanTargetUserId('')
       setBanType('PERMANENT')
       setBanDurationDays(DEFAULT_TEMPORARY_BAN_DURATION_DAYS)
@@ -855,8 +900,8 @@ function UserBanPage() {
     setSanctionHistoryFrom('')
     setSanctionHistoryTo('')
     setSanctionHistoryFilterError('')
+    setIsSanctionHistoryFilterOpen(false)
     void fetchAdminBannedUserDetail(userId)
-    void fetchUserSanctionHistories(userId, { page: 1 })
   }
 
   const handleSanctionHistoryPageChange = (nextPage: number) => {
@@ -874,22 +919,21 @@ function UserBanPage() {
     })
   }
 
-  const handleReleaseSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    if (!selectedUserDetail || releasingUserId !== null) {
-      return
-    }
-
-    setIsReleaseConfirmOpen(true)
-  }
-
   const handleCloseReleaseConfirm = () => {
     if (releasingUserId !== null) {
       return
     }
 
     setIsReleaseConfirmOpen(false)
+  }
+
+  const handleCloseBanForm = () => {
+    if (banningUserId !== null) {
+      return
+    }
+
+    setIsBanFormOpen(false)
+    setBanFormError('')
   }
 
   const handleConfirmRelease = () => {
@@ -1278,9 +1322,9 @@ function UserBanPage() {
                           {selectedUserDetail.username || '사용자명 없음'}
                         </U.DetailTitle>
                         <U.DetailMeta>
-                          ID {selectedUserDetail.userId} ·{' '}
-                          {formatOptionalText(selectedUserDetail.role)} ·{' '}
-                          {formatOptionalText(selectedUserDetail.country)}
+                          사용자 ID {selectedUserDetail.userId} ·{' '}
+                          {formatRole(selectedUserDetail.role)} ·{' '}
+                          {formatCountry(selectedUserDetail.country)}
                         </U.DetailMeta>
                         <U.BadgeGroup>
                           <U.TableStatusBadge
@@ -1302,7 +1346,7 @@ function UserBanPage() {
                           role="tab"
                           aria-selected={detailTab === 'info'}
                           $active={detailTab === 'info'}
-                          onClick={() => setDetailTab('info')}
+                          onClick={() => handleDetailTabChange('info')}
                         >
                           상세 정보
                         </U.DetailTabButton>
@@ -1311,7 +1355,7 @@ function UserBanPage() {
                           role="tab"
                           aria-selected={detailTab === 'history'}
                           $active={detailTab === 'history'}
-                          onClick={() => setDetailTab('history')}
+                          onClick={() => handleDetailTabChange('history')}
                         >
                           제재 이력
                         </U.DetailTabButton>
@@ -1367,11 +1411,11 @@ function UserBanPage() {
                           </U.DetailRow>
                           <U.DetailRow>
                             <dt>국가</dt>
-                            <dd>{formatOptionalText(selectedUserDetail.country)}</dd>
+                            <dd>{formatCountry(selectedUserDetail.country)}</dd>
                           </U.DetailRow>
                           <U.DetailRow>
                             <dt>권한</dt>
-                            <dd>{formatOptionalText(selectedUserDetail.role)}</dd>
+                            <dd>{formatRole(selectedUserDetail.role)}</dd>
                           </U.DetailRow>
                           <U.DetailRow>
                             <dt>가입일</dt>
@@ -1382,9 +1426,26 @@ function UserBanPage() {
                         </>
                       ) : (
                       <U.DetailGroup>
-                        <U.DetailGroupTitle>제재 이력</U.DetailGroupTitle>
-                        <U.FilterForm onSubmit={handleSanctionHistorySearch}>
-                          <U.DetailFilterPanel>
+                        <U.DetailGroupHeader>
+                          <U.DetailGroupTitle>
+                            제재 이력 {formatCountWithUnit(sanctionHistoryTotalCount)}
+                          </U.DetailGroupTitle>
+                          <U.CompactButton
+                            type="button"
+                            aria-expanded={isSanctionHistoryFilterOpen}
+                            onClick={() =>
+                              setIsSanctionHistoryFilterOpen((isOpen) => !isOpen)
+                            }
+                          >
+                            <S.MaterialIcon aria-hidden="true">
+                              {isSanctionHistoryFilterOpen ? 'expand_less' : 'tune'}
+                            </S.MaterialIcon>
+                            {isSanctionHistoryFilterOpen ? '필터 닫기' : '필터'}
+                          </U.CompactButton>
+                        </U.DetailGroupHeader>
+                        {isSanctionHistoryFilterOpen ? (
+                          <U.FilterForm onSubmit={handleSanctionHistorySearch}>
+                            <U.DetailFilterPanel>
                             <U.FilterField>
                               제재 유형
                               <AdminFilterMenu
@@ -1449,8 +1510,9 @@ function UserBanPage() {
                                 초기화
                               </U.SecondaryButton>
                             </U.DetailFilterActions>
-                          </U.DetailFilterPanel>
-                        </U.FilterForm>
+                            </U.DetailFilterPanel>
+                          </U.FilterForm>
+                        ) : null}
                         {sanctionHistoryFilterError ? (
                           <U.Notice $variant="error" role="alert">
                             {sanctionHistoryFilterError}
@@ -1478,55 +1540,56 @@ function UserBanPage() {
                                     </U.TableStatusBadge>
                                   </dt>
                                   <dd>
-                                    <strong>{formatBanType(history.banType)}</strong>
-                                    <br />
-                                    {formatBanReason(history.reason)}
-                                    <br />
-                                    {formatSanctionHistoryPeriod(history)}
-                                    <br />
-                                    {formatSanctionHistorySummary(history)}
+                                    <U.SanctionHistoryHeader>
+                                      <strong>{formatBanType(history.banType)}</strong>
+                                    </U.SanctionHistoryHeader>
+                                    <U.SanctionHistoryMeta>
+                                      {formatBanReason(history.reason)}
+                                    </U.SanctionHistoryMeta>
+                                    <U.SanctionHistoryMeta>
+                                      {formatSanctionHistoryPeriod(history)} ·{' '}
+                                      {formatSanctionHistorySummary(history)}
+                                    </U.SanctionHistoryMeta>
                                   </dd>
                                 </U.DetailRow>
                               ))}
                             </U.DetailList>
-                            <U.Pagination aria-label="사용자 제재 이력 페이지네이션">
-                              <U.SecondaryButton
-                                type="button"
-                                disabled={
-                                  isSanctionHistoryLoading ||
-                                  sanctionHistoryPage <= 1
-                                }
-                                onClick={() =>
-                                  handleSanctionHistoryPageChange(
-                                    sanctionHistoryPage - 1
-                                  )
-                                }
-                              >
-                                이전
-                              </U.SecondaryButton>
-                              <U.PaginationStatus>
-                                {sanctionHistoryPage} /{' '}
-                                {safeSanctionHistoryTotalPages}
-                              </U.PaginationStatus>
-                              <U.SecondaryButton
-                                type="button"
-                                disabled={
-                                  isSanctionHistoryLoading ||
-                                  !sanctionHistoryHasNext
-                                }
-                                onClick={() =>
-                                  handleSanctionHistoryPageChange(
-                                    sanctionHistoryPage + 1
-                                  )
-                                }
-                              >
-                                다음
-                              </U.SecondaryButton>
-                            </U.Pagination>
-                            <U.ActionHelpText>
-                              총 {sanctionHistoryTotalCount.toLocaleString()}건의
-                              제재 이력이 있습니다.
-                            </U.ActionHelpText>
+                            {safeSanctionHistoryTotalPages > 1 ? (
+                              <U.Pagination aria-label="사용자 제재 이력 페이지네이션">
+                                <U.SecondaryButton
+                                  type="button"
+                                  disabled={
+                                    isSanctionHistoryLoading ||
+                                    sanctionHistoryPage <= 1
+                                  }
+                                  onClick={() =>
+                                    handleSanctionHistoryPageChange(
+                                      sanctionHistoryPage - 1
+                                    )
+                                  }
+                                >
+                                  이전
+                                </U.SecondaryButton>
+                                <U.PaginationStatus>
+                                  {sanctionHistoryPage} /{' '}
+                                  {safeSanctionHistoryTotalPages}
+                                </U.PaginationStatus>
+                                <U.SecondaryButton
+                                  type="button"
+                                  disabled={
+                                    isSanctionHistoryLoading ||
+                                    !sanctionHistoryHasNext
+                                  }
+                                  onClick={() =>
+                                    handleSanctionHistoryPageChange(
+                                      sanctionHistoryPage + 1
+                                    )
+                                  }
+                                >
+                                  다음
+                                </U.SecondaryButton>
+                              </U.Pagination>
+                            ) : null}
                           </>
                         ) : (
                           <U.DetailEmpty>
@@ -1541,30 +1604,16 @@ function UserBanPage() {
                       <U.DetailGroup>
                         <U.DetailGroupTitle>밴 해제</U.DetailGroupTitle>
                         {selectedUserDetail.banned ? (
-                          <U.ActionPanel onSubmit={handleReleaseSubmit}>
-                            <U.ActionLabel>
-                              해제 사유
-                              <U.TextArea
-                                value={releaseReason}
-                                maxLength={255}
-                                placeholder="운영 검토 결과 해제 등 사유를 입력하세요."
-                                onChange={(event) =>
-                                  setReleaseReason(event.target.value)
-                                }
-                              />
-                            </U.ActionLabel>
-                            <U.ActionHelpText>
-                              사유는 최대 255자까지 저장됩니다.
-                            </U.ActionHelpText>
-                            <U.PrimaryButton
-                              type="submit"
+                          <U.FilterActions>
+                            <U.SecondaryButton
+                              type="button"
                               disabled={releasingUserId === selectedUserDetail.userId}
+                              onClick={() => setIsReleaseConfirmOpen(true)}
                             >
-                              {releasingUserId === selectedUserDetail.userId
-                                ? '해제 중'
-                                : '밴 해제 요청'}
-                            </U.PrimaryButton>
-                          </U.ActionPanel>
+                              <S.MaterialIcon aria-hidden="true">lock_open</S.MaterialIcon>
+                              밴 해제
+                            </U.SecondaryButton>
+                          </U.FilterActions>
                         ) : (
                           <U.Notice role="status">
                             이 사용자는 밴 해제 처리되었습니다. 제재 이력에서 해제

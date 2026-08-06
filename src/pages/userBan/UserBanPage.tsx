@@ -986,20 +986,23 @@ function UserBanPage() {
               </U.IntroText>
             </U.IntroBand>
 
-            <U.SummaryGrid>
-              <U.MetricItem>
-                <U.MetricLabel>전체 밴 사용자</U.MetricLabel>
-                <U.MetricValue>{formatCount(totalBannedUserCount)}</U.MetricValue>
-              </U.MetricItem>
-              <U.MetricItem>
-                <U.MetricLabel>영구 밴</U.MetricLabel>
-                <U.MetricValue>{formatCount(counts?.permanent)}</U.MetricValue>
-              </U.MetricItem>
-              <U.MetricItem>
-                <U.MetricLabel>기간 밴</U.MetricLabel>
-                <U.MetricValue>{formatCount(counts?.temporary)}</U.MetricValue>
-              </U.MetricItem>
-            </U.SummaryGrid>
+            <U.SummaryBar aria-label="밴 현황">
+              <U.SummaryBarTitle>밴 현황</U.SummaryBarTitle>
+              <U.SummaryBarItems>
+                <U.SummaryBarItem>
+                  <span>전체</span>
+                  <strong>{formatCountWithUnit(totalBannedUserCount, '명')}</strong>
+                </U.SummaryBarItem>
+                <U.SummaryBarItem>
+                  <span>영구 밴</span>
+                  <strong>{formatCountWithUnit(counts?.permanent, '명')}</strong>
+                </U.SummaryBarItem>
+                <U.SummaryBarItem>
+                  <span>기간 밴</span>
+                  <strong>{formatCountWithUnit(counts?.temporary, '명')}</strong>
+                </U.SummaryBarItem>
+              </U.SummaryBarItems>
+            </U.SummaryBar>
 
             <U.FilterPanel>
               <U.FilterForm onSubmit={handleSearchSubmit}>
@@ -1114,163 +1117,23 @@ function UserBanPage() {
               <U.Notice role="status">{actionSuccessMessage}</U.Notice>
             ) : null}
 
-            <U.Section>
+            <U.WorkGrid>
+              <U.WorkSection>
                 <U.SectionHeader>
-                  <U.SectionTitle>사용자 밴 처리</U.SectionTitle>
-                  <U.FilterActions>
-                  <U.SecondaryButton
+                  <U.SectionTitle>밴 사용자 목록</U.SectionTitle>
+                  <U.CompactButton
                     type="button"
                     aria-expanded={isBanFormOpen}
-                    onClick={() => setIsBanFormOpen((isOpen) => !isOpen)}
+                    onClick={() => {
+                      setBanFormError('')
+                      setIsBanFormOpen(true)
+                    }}
                   >
-                    <S.MaterialIcon aria-hidden="true">
-                      {isBanFormOpen ? 'expand_less' : 'expand_more'}
-                    </S.MaterialIcon>
-                    {isBanFormOpen ? '접기' : '열기'}
-                  </U.SecondaryButton>
-                </U.FilterActions>
-              </U.SectionHeader>
-              {isBanFormOpen ? <U.SectionBody>
-                {banFormError ? (
-                  <U.Notice $variant="error" role="alert">
-                    {banFormError}
-                  </U.Notice>
-                ) : null}
-                <U.ActionPanel onSubmit={handleBanSubmit}>
-                  <U.FormGrid>
-                    <U.Field>
-                      사용자 ID
-                      <U.FieldInput
-                        type="number"
-                        min="1"
-                        inputMode="numeric"
-                        value={banTargetUserId}
-                        placeholder="밴 처리할 사용자 ID"
-                        onChange={(event) =>
-                          handleBanTargetUserIdChange(event.target.value)
-                        }
-                      />
-                    </U.Field>
-                    <U.Field as="div">
-                      밴 유형
-                      <U.SegmentGroup aria-label="밴 유형 선택">
-                        <U.SegmentButton
-                          type="button"
-                          $active={banType === 'PERMANENT'}
-                          aria-pressed={banType === 'PERMANENT'}
-                          onClick={() => setBanType('PERMANENT')}
-                        >
-                          영구 밴
-                        </U.SegmentButton>
-                        <U.SegmentButton
-                          type="button"
-                          $active={banType === 'TEMPORARY'}
-                          aria-pressed={banType === 'TEMPORARY'}
-                          onClick={() => setBanType('TEMPORARY')}
-                        >
-                          기간 밴
-                        </U.SegmentButton>
-                      </U.SegmentGroup>
-                    </U.Field>
-                    {banType === 'TEMPORARY' ? (
-                      <U.Field>
-                        밴 기간
-                        <U.FieldInput
-                          type="number"
-                          min="1"
-                          inputMode="numeric"
-                          value={banDurationDays}
-                          placeholder="일 단위"
-                          onChange={(event) =>
-                            setBanDurationDays(event.target.value)
-                          }
-                        />
-                      </U.Field>
-                    ) : null}
-                  </U.FormGrid>
-                  <U.ActionLabel>
-                    밴 사유
-                    <U.TextArea
-                      value={banReason}
-                      maxLength={255}
-                      placeholder="반복 신고, 운영 정책 위반 등 밴 사유를 입력하세요."
-                      onChange={(event) => setBanReason(event.target.value)}
-                    />
-                  </U.ActionLabel>
-                  {banTargetStatusErrorMessage ? (
-                    <U.Notice $variant="error" role="alert">
-                      {banTargetStatusErrorMessage}
-                    </U.Notice>
-                  ) : null}
-                  {isBanTargetStatusCurrent && banTargetStatus ? (
-                    <U.DetailSummaryCard>
-                      <U.DetailTitle>
-                        {banTargetStatus.username || '사용자명 없음'}
-                      </U.DetailTitle>
-                      <U.DetailMeta>
-                        사용자 ID {banTargetStatus.userId} · 현재 상태{' '}
-                        {banTargetStatus.banned ? '밴 중' : '제재 없음'}
-                      </U.DetailMeta>
-                      <U.BadgeGroup>
-                        <U.TableStatusBadge
-                          $tone={getBanStatusTone(banTargetStatus.banned)}
-                        >
-                          {banTargetStatus.banned ? '밴 중' : '제재 없음'}
-                        </U.TableStatusBadge>
-                        {banTargetStatus.banned && banTargetStatus.banType ? (
-                          <U.TableStatusBadge
-                            $tone={getBanTypeTone(banTargetStatus.banType)}
-                          >
-                            {formatBanType(banTargetStatus.banType)}
-                          </U.TableStatusBadge>
-                        ) : null}
-                      </U.BadgeGroup>
-                      {banTargetStatus.banned ? (
-                        <U.DetailMeta>
-                          {formatBanReason(banTargetStatus.banReason)} · 만료일{' '}
-                          {formatBanExpiresAt(
-                            banTargetStatus.banType ?? '',
-                            banTargetStatus.banExpiresAt
-                          )}
-                        </U.DetailMeta>
-                      ) : null}
-                    </U.DetailSummaryCard>
-                  ) : null}
-                  <U.ActionInfoText>
-                    <S.MaterialIcon aria-hidden="true">info</S.MaterialIcon>
-                    <span>
-                      기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
-                      <br />
-                      밴 처리 후에도 기존 게시글은 유지됩니다.
-                    </span>
-                  </U.ActionInfoText>
-                  <U.FilterActions>
-                    <U.SecondaryButton
-                      type="button"
-                      disabled={isBanTargetStatusLoading || !banTargetUserId.trim()}
-                      onClick={handleCheckBanTargetStatus}
-                    >
-                      <S.MaterialIcon aria-hidden="true">policy</S.MaterialIcon>
-                      {isBanTargetStatusLoading ? '확인 중' : '상태 확인'}
-                    </U.SecondaryButton>
-                    <U.PrimaryButton
-                      type="submit"
-                      disabled={banningUserId !== null || isBanTargetAlreadyBanned}
-                    >
-                      <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
-                      {banningUserId !== null ? '처리 중' : '밴 처리'}
-                    </U.PrimaryButton>
-                  </U.FilterActions>
-                </U.ActionPanel>
-              </U.SectionBody> : null}
-            </U.Section>
-
-            <U.WorkGrid>
-              <U.Section>
-                <U.SectionHeader>
-                  <U.SectionTitle>밴 내역</U.SectionTitle>
+                    <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                    새 밴 처리
+                  </U.CompactButton>
                 </U.SectionHeader>
-                <U.SectionBody>
+                <U.WorkSectionBody>
                   {isError ? (
                     <>
                       <U.Notice $variant="error" role="alert">
@@ -1383,35 +1246,16 @@ function UserBanPage() {
                       </U.SecondaryButton>
                     </U.Pagination>
                   ) : null}
-                </U.SectionBody>
-              </U.Section>
+                </U.WorkSectionBody>
+              </U.WorkSection>
 
-              <U.Section>
+              <U.WorkSection>
                 <U.SectionHeader>
                   <U.DetailHeaderStack>
-                    <U.SectionTitle>밴 사용자 상세</U.SectionTitle>
-                    {selectedUserDetail ? (
-                      <U.DetailMeta>
-                        사용자 ID {selectedUserDetail.userId}
-                      </U.DetailMeta>
-                    ) : null}
+                    <U.SectionTitle>선택 사용자 상세</U.SectionTitle>
                   </U.DetailHeaderStack>
-                  {selectedUserDetail ? (
-                    <U.BadgeGroup>
-                      <U.TableStatusBadge
-                        $tone={getBanTypeTone(selectedUserDetail.banType)}
-                      >
-                        {formatBanType(selectedUserDetail.banType)}
-                      </U.TableStatusBadge>
-                      <U.TableStatusBadge
-                        $tone={getBanStatusTone(selectedUserDetail.banned)}
-                      >
-                        {selectedUserDetail.banned ? '밴 중' : '해제됨'}
-                      </U.TableStatusBadge>
-                    </U.BadgeGroup>
-                  ) : null}
                 </U.SectionHeader>
-                <U.SectionBody>
+                <U.WorkSectionBody>
                   {!selectedUserId ? (
                     <U.DetailEmpty>
                       <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>

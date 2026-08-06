@@ -1844,6 +1844,16 @@ function UserBanPage() {
               밴 해제는 사용자 제재 상태와 처리 이력에 반영됩니다. 입력한
               사유를 확인한 뒤 진행해 주세요.
             </U.ConfirmDescription>
+            <U.ActionLabel>
+              해제 사유
+              <U.TextArea
+                value={releaseReason}
+                maxLength={255}
+                placeholder="운영 검토 결과 해제 등 사유를 입력하세요."
+                onChange={(event) => setReleaseReason(event.target.value)}
+              />
+              <U.ActionHelpText>사유는 최대 255자까지 저장됩니다.</U.ActionHelpText>
+            </U.ActionLabel>
             <U.ConfirmMeta>
               <span>사용자</span>
               {selectedUserDetail.username || '사용자명 없음'} · ID{' '}

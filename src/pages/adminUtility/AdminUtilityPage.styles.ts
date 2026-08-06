@@ -92,6 +92,68 @@ export const SummaryGrid = styled.div`
   }
 `
 
+export const SummaryBar = styled.section`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 76px;
+  padding: 14px 18px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+`
+
+export const SummaryBarTitle = styled.strong`
+  flex: 0 0 auto;
+  color: ${neutral.strongText};
+  font-size: 14px;
+  font-weight: 700;
+`
+
+export const SummaryBarItems = styled.div`
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+`
+
+export const SummaryBarItem = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-left: 1px solid ${neutral.borderSoft};
+
+  span {
+    overflow: hidden;
+    color: ${neutral.muted};
+    font-size: 12px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 22px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 10px;
+
+    strong {
+      font-size: 18px;
+    }
+  }
+`
+
 export const FilterPanel = styled.section`
   display: flex;
   flex-direction: column;
@@ -575,9 +637,12 @@ export const WorkGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(420px, 1fr);
   gap: 16px;
+  min-height: 560px;
+  height: min(720px, calc(100vh - 300px));
 
   @media (max-width: 1040px) {
     grid-template-columns: 1fr;
+    height: auto;
   }
 `
 
@@ -636,6 +701,17 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
 
 export const SectionBody = styled.div`
   padding: 18px;
+`
+
+export const WorkSection = styled(Section)`
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`
+
+export const WorkSectionBody = styled(SectionBody)`
+  min-height: 0;
+  overflow: auto;
 `
 
 export const Toolbar = styled.div`
@@ -1080,6 +1156,49 @@ export const DetailGroupTitle = styled.h3`
   font-weight: 700;
 `
 
+export const DetailGroupHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  > ${DetailGroupTitle} {
+    margin-bottom: 0;
+  }
+`
+
+export const CompactButton = styled(SecondaryButton)`
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+`
+
+export const SanctionHistoryHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    color: ${neutral.strongText};
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const SanctionHistoryMeta = styled.span`
+  display: block;
+  margin-top: 4px;
+  color: ${neutral.softText};
+  font-size: 12px;
+  line-height: 1.45;
+`
+
 export const DetailList = styled.dl`
   display: flex;
   flex-direction: column;
@@ -1135,6 +1254,12 @@ export const ConfirmDialog = styled.section`
   border-radius: 8px;
   background: ${neutral.surface};
   box-shadow: 0 24px 64px ${neutral.strongShadow};
+`
+
+export const FormDialog = styled(ConfirmDialog)`
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 `
 
 export const ConfirmIcon = styled.div`

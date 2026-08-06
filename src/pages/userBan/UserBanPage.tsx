@@ -1623,12 +1623,156 @@ function UserBanPage() {
                       </U.DetailGroup>
                     </U.DetailStack>
                   ) : null}
-                </U.SectionBody>
-              </U.Section>
+                </U.WorkSectionBody>
+              </U.WorkSection>
             </U.WorkGrid>
           </U.PageStack>
         </U.Content>
       </S.MainArea>
+
+      {isBanFormOpen ? (
+        <U.ConfirmOverlay role="presentation" onMouseDown={handleCloseBanForm}>
+          <U.FormDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ban-form-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <U.ConfirmIcon aria-hidden="true">
+              <S.MaterialIcon>block</S.MaterialIcon>
+            </U.ConfirmIcon>
+            <U.ConfirmTitle id="ban-form-title">새 사용자 밴 처리</U.ConfirmTitle>
+            <U.ConfirmDescription>
+              사용자 상태를 확인한 뒤 밴 유형과 사유를 입력해 제재를 처리합니다.
+            </U.ConfirmDescription>
+            {banFormError ? (
+              <U.Notice $variant="error" role="alert">
+                {banFormError}
+              </U.Notice>
+            ) : null}
+            <U.ActionPanel onSubmit={handleBanSubmit}>
+              <U.FormGrid>
+                <U.Field>
+                  사용자 ID
+                  <U.FieldInput
+                    type="number"
+                    min="1"
+                    inputMode="numeric"
+                    value={banTargetUserId}
+                    placeholder="밴 처리할 사용자 ID"
+                    onChange={(event) =>
+                      handleBanTargetUserIdChange(event.target.value)
+                    }
+                  />
+                </U.Field>
+                <U.Field as="div">
+                  밴 유형
+                  <U.SegmentGroup aria-label="밴 유형 선택">
+                    <U.SegmentButton
+                      type="button"
+                      $active={banType === 'PERMANENT'}
+                      aria-pressed={banType === 'PERMANENT'}
+                      onClick={() => setBanType('PERMANENT')}
+                    >
+                      영구 밴
+                    </U.SegmentButton>
+                    <U.SegmentButton
+                      type="button"
+                      $active={banType === 'TEMPORARY'}
+                      aria-pressed={banType === 'TEMPORARY'}
+                      onClick={() => setBanType('TEMPORARY')}
+                    >
+                      기간 밴
+                    </U.SegmentButton>
+                  </U.SegmentGroup>
+                </U.Field>
+                {banType === 'TEMPORARY' ? (
+                  <U.Field>
+                    밴 기간
+                    <U.FieldInput
+                      type="number"
+                      min="1"
+                      inputMode="numeric"
+                      value={banDurationDays}
+                      placeholder="일 단위"
+                      onChange={(event) => setBanDurationDays(event.target.value)}
+                    />
+                  </U.Field>
+                ) : null}
+              </U.FormGrid>
+              <U.ActionLabel>
+                밴 사유
+                <U.TextArea
+                  value={banReason}
+                  maxLength={255}
+                  placeholder="반복 신고, 운영 정책 위반 등 밴 사유를 입력하세요."
+                  onChange={(event) => setBanReason(event.target.value)}
+                />
+              </U.ActionLabel>
+              {banTargetStatusErrorMessage ? (
+                <U.Notice $variant="error" role="alert">
+                  {banTargetStatusErrorMessage}
+                </U.Notice>
+              ) : null}
+              {isBanTargetStatusCurrent && banTargetStatus ? (
+                <U.DetailSummaryCard>
+                  <U.DetailTitle>
+                    {banTargetStatus.username || '사용자명 없음'}
+                  </U.DetailTitle>
+                  <U.DetailMeta>
+                    사용자 ID {banTargetStatus.userId} · 현재 상태{' '}
+                    {banTargetStatus.banned ? '밴 중' : '제재 없음'}
+                  </U.DetailMeta>
+                  <U.BadgeGroup>
+                    <U.TableStatusBadge $tone={getBanStatusTone(banTargetStatus.banned)}>
+                      {banTargetStatus.banned ? '밴 중' : '제재 없음'}
+                    </U.TableStatusBadge>
+                    {banTargetStatus.banned && banTargetStatus.banType ? (
+                      <U.TableStatusBadge $tone={getBanTypeTone(banTargetStatus.banType)}>
+                        {formatBanType(banTargetStatus.banType)}
+                      </U.TableStatusBadge>
+                    ) : null}
+                  </U.BadgeGroup>
+                  {banTargetStatus.banned ? (
+                    <U.DetailMeta>
+                      {formatBanReason(banTargetStatus.banReason)} · 만료일{' '}
+                      {formatBanExpiresAt(
+                        banTargetStatus.banType ?? '',
+                        banTargetStatus.banExpiresAt
+                      )}
+                    </U.DetailMeta>
+                  ) : null}
+                </U.DetailSummaryCard>
+              ) : null}
+              <U.ActionInfoText>
+                <S.MaterialIcon aria-hidden="true">info</S.MaterialIcon>
+                <span>
+                  기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
+                  <br />
+                  밴 처리 후에도 기존 게시글은 유지됩니다.
+                </span>
+              </U.ActionInfoText>
+              <U.FilterActions>
+                <U.SecondaryButton
+                  type="button"
+                  disabled={isBanTargetStatusLoading || !banTargetUserId.trim()}
+                  onClick={handleCheckBanTargetStatus}
+                >
+                  <S.MaterialIcon aria-hidden="true">policy</S.MaterialIcon>
+                  {isBanTargetStatusLoading ? '확인 중' : '상태 확인'}
+                </U.SecondaryButton>
+                <U.PrimaryButton
+                  type="submit"
+                  disabled={banningUserId !== null || isBanTargetAlreadyBanned}
+                >
+                  <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
+                  {banningUserId !== null ? '처리 중' : '밴 처리'}
+                </U.PrimaryButton>
+              </U.FilterActions>
+            </U.ActionPanel>
+          </U.FormDialog>
+        </U.ConfirmOverlay>
+      ) : null}
 
       {isBanConfirmOpen ? (
         <U.ConfirmOverlay role="presentation" onMouseDown={handleCloseBanConfirm}>

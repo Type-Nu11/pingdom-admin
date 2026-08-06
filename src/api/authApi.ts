@@ -2,7 +2,6 @@ import customAxios from './customAxios'
 import type {
   LoginRequest,
   LoginResponse,
-  RefreshTokenRequest,
   RefreshTokenResponse,
 } from '../types/auth.types'
 
@@ -15,14 +14,11 @@ export async function login(payload: LoginRequest) {
   return data
 }
 
-export async function refreshToken(payload: RefreshTokenRequest) {
-  const { data } = await customAxios.post<RefreshTokenResponse>(
-    TOKEN_REFRESH_API_PATH,
-    payload
-  )
+export async function refreshToken() {
+  const { data } = await customAxios.post<RefreshTokenResponse>(TOKEN_REFRESH_API_PATH)
   return data
 }
 
-export async function logout(payload: RefreshTokenRequest) {
-  await customAxios.post<void>(LOGOUT_API_PATH, payload)
+export async function logout() {
+  await customAxios.post<void>(LOGOUT_API_PATH)
 }

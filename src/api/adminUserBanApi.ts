@@ -18,6 +18,12 @@ const ADMIN_USERS_API_PATH = '/admin/users'
 const DEFAULT_ADMIN_BANNED_USER_PAGE = 1
 const DEFAULT_ADMIN_BANNED_USER_LIMIT = 20
 const DEFAULT_ADMIN_BANNED_USER_KEYWORD = ''
+const DEFAULT_ADMIN_BANNED_USER_SORT_BY: NonNullable<
+  AdminBannedUserListRequest['sortBy']
+> = 'BANNED_AT'
+const DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION: NonNullable<
+  AdminBannedUserListRequest['sortDirection']
+> = 'DESC'
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE = 1
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_LIMIT = 5
 
@@ -25,13 +31,24 @@ function getAdminBannedUserListParams({
   page,
   limit,
   keyword,
-}: Required<Pick<AdminBannedUserListRequest, 'page' | 'limit' | 'keyword'>>) {
+  banType,
+  from,
+  to,
+  sortBy,
+  sortDirection,
+}: Required<Pick<AdminBannedUserListRequest, 'page' | 'limit' | 'keyword'>> &
+  Omit<AdminBannedUserListRequest, 'page' | 'limit' | 'keyword'>) {
   const normalizedKeyword = keyword.trim()
 
   return {
     page,
     limit,
     keyword: normalizedKeyword || undefined,
+    banType,
+    from,
+    to,
+    sortBy,
+    sortDirection,
   }
 }
 
@@ -39,6 +56,11 @@ export async function getAdminBannedUsers({
   page = DEFAULT_ADMIN_BANNED_USER_PAGE,
   limit = DEFAULT_ADMIN_BANNED_USER_LIMIT,
   keyword = DEFAULT_ADMIN_BANNED_USER_KEYWORD,
+  banType,
+  from,
+  to,
+  sortBy = DEFAULT_ADMIN_BANNED_USER_SORT_BY,
+  sortDirection = DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION,
 }: AdminBannedUserListRequest = {}) {
   const { data } = await customAxios.get<AdminBannedUserListResponse>(
     ADMIN_BANNED_USERS_API_PATH,
@@ -47,6 +69,11 @@ export async function getAdminBannedUsers({
         page,
         limit,
         keyword,
+        banType,
+        from,
+        to,
+        sortBy,
+        sortDirection,
       }),
     }
   )

@@ -3,6 +3,7 @@ import type { LoginResponse, RefreshTokenResponse } from '../types/auth.types'
 import type { AuthState, AuthUser } from '../app/providers/AuthContext'
 
 const AUTH_STORAGE_CHANGE_EVENT = 'pingdom-auth-storage-change'
+const LEGACY_REFRESH_TOKEN_STORAGE_KEY = 'refreshToken'
 
 function canUseStorage() {
   return typeof localStorage !== 'undefined'
@@ -72,11 +73,8 @@ export function getStoredAccessToken() {
   return getStoredString(AUTH_STORAGE_KEYS.accessToken)
 }
 
-export function getStoredRefreshToken() {
-  return getStoredString(AUTH_STORAGE_KEYS.refreshToken)
-}
-
 export function getStoredAuthState(): AuthState | null {
+  removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
   const accessToken = getStoredAccessToken()
 
   if (!accessToken) {
@@ -85,7 +83,6 @@ export function getStoredAuthState(): AuthState | null {
 
   return {
     accessToken,
-    refreshToken: getStoredString(AUTH_STORAGE_KEYS.refreshToken),
     user: {
       id: parseStoredNumber(getStoredString(AUTH_STORAGE_KEYS.userId)),
       username: getStoredString(AUTH_STORAGE_KEYS.username),
@@ -102,7 +99,6 @@ export function getStoredAuthState(): AuthState | null {
 export function createAuthStateFromLogin(data: LoginResponse): AuthState {
   return {
     accessToken: data.accessToken,
-    refreshToken: data.refreshToken,
     user: {
       id: normalizeAuthNumber(data.id),
       username: normalizeAuthString(data.username),
@@ -117,8 +113,8 @@ export function createAuthStateFromLogin(data: LoginResponse): AuthState {
 }
 
 export function saveLoginAuth(data: LoginResponse) {
+  removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
-  setStoredString(AUTH_STORAGE_KEYS.refreshToken, data.refreshToken)
   setStoredString(AUTH_STORAGE_KEYS.userId, stringifyAuthNumber(data.id))
   setStoredString(AUTH_STORAGE_KEYS.username, normalizeAuthString(data.username))
   removeStoredValue(AUTH_STORAGE_KEYS.name)
@@ -134,12 +130,12 @@ export function saveLoginAuth(data: LoginResponse) {
 
 export function saveRefreshedAuthTokens(data: RefreshTokenResponse) {
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
-  setStoredString(AUTH_STORAGE_KEYS.refreshToken, data.refreshToken)
   notifyAuthStorageChange()
 }
 
 export function clearStoredAuth() {
   Object.values(AUTH_STORAGE_KEYS).forEach(removeStoredValue)
+  removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
   notifyAuthStorageChange()
 }
 

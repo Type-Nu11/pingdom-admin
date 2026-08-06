@@ -12,10 +12,6 @@ export interface AuthErrorResponse<
   errors?: TErrors
 }
 
-export interface RefreshTokenRequest {
-  refreshToken: string
-}
-
 export interface LoginResponse {
   id: number
   username: string
@@ -26,12 +22,11 @@ export interface LoginResponse {
   country: string
   message: string
   accessToken: string
-  refreshToken: string
+  role?: string | null
 }
 
 export interface RefreshTokenResponse {
   accessToken: string
-  refreshToken: string
 }
 
 export interface ValidationErrorResponse {

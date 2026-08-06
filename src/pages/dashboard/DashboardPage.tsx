@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -44,7 +45,7 @@ interface DashboardOperationalMetric {
   tone: 'neutral' | 'action'
 }
 
-type DashboardUtilityKey = 'notifications' | 'help'
+type DashboardUtilityKey = 'help'
 type DashboardActivityTabKey = 'places' | 'posts' | 'reports' | 'userSanctions'
 
 interface DashboardActivityRow {
@@ -659,12 +660,10 @@ function DashboardPage() {
       return null
     }
 
-    const isNotificationPanel = activeUtility === 'notifications'
-
     return (
       <S.UtilityPanel role="status">
         <S.UtilityPanelHeader>
-          <strong>{isNotificationPanel ? '알림' : '도움말'}</strong>
+          <strong>도움말</strong>
           <S.UtilityPanelClose
             type="button"
             aria-label="패널 닫기"
@@ -674,9 +673,7 @@ function DashboardPage() {
           </S.UtilityPanelClose>
         </S.UtilityPanelHeader>
         <S.UtilityPanelText>
-          {isNotificationPanel
-            ? '알림 API가 연결되면 새로운 운영 이벤트를 표시합니다.'
-            : '관리자 화면 도움말은 기능 연결 후 제공됩니다.'}
+          관리자 화면 도움말은 기능 연결 후 제공됩니다.
         </S.UtilityPanelText>
       </S.UtilityPanel>
     )
@@ -747,19 +744,7 @@ function DashboardPage() {
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
-            <S.IconButton
-              type="button"
-              aria-label="알림"
-              title="알림"
-              aria-expanded={activeUtility === 'notifications'}
-              onClick={() =>
-                setActiveUtility((current) =>
-                  current === 'notifications' ? null : 'notifications'
-                )
-              }
-            >
-              <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
-            </S.IconButton>
+            <AdminNotificationButton />
             <S.IconButton
               type="button"
               aria-label="도움말"

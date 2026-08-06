@@ -1031,9 +1031,6 @@ export const DetailHeaderStack = styled.div`
 `
 
 export const DetailSummaryCard = styled.section`
-  position: sticky;
-  top: 12px;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 10px;

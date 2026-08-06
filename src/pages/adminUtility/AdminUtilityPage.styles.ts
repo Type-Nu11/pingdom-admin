@@ -207,6 +207,23 @@ export const AdvancedFilterPanel = styled.div`
   }
 `
 
+export const DetailFilterPanel = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`
+
 export const FilterField = styled.label`
   min-width: 0;
   display: flex;

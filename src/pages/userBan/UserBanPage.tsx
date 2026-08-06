@@ -1540,7 +1540,7 @@ function UserBanPage() {
                       <U.DetailGroup>
                         <U.DetailGroupTitle>제재 이력</U.DetailGroupTitle>
                         <U.FilterForm onSubmit={handleSanctionHistorySearch}>
-                          <U.AdvancedFilterPanel>
+                          <U.DetailFilterPanel>
                             <U.FilterField>
                               제재 유형
                               <AdminFilterMenu
@@ -1581,7 +1581,7 @@ function UserBanPage() {
                                 onChange={setSanctionHistoryTo}
                               />
                             </U.FilterField>
-                            <U.FilterActions>
+                            <U.DetailFilterActions>
                               <U.PrimaryButton
                                 type="submit"
                                 disabled={isSanctionHistoryLoading}
@@ -1604,8 +1604,8 @@ function UserBanPage() {
                               >
                                 초기화
                               </U.SecondaryButton>
-                            </U.FilterActions>
-                          </U.AdvancedFilterPanel>
+                            </U.DetailFilterActions>
+                          </U.DetailFilterPanel>
                         </U.FilterForm>
                         {sanctionHistoryFilterError ? (
                           <U.Notice $variant="error" role="alert">

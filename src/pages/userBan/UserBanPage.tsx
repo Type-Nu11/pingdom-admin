@@ -851,7 +851,10 @@ function UserBanPage() {
     setDetailTab(nextTab)
 
     if (nextTab === 'history' && selectedUserId) {
-      void fetchUserSanctionHistories(selectedUserId, { page: 1 })
+      void fetchUserSanctionHistories(
+        selectedUserId,
+        buildSanctionHistoryRequest(1)
+      )
     }
   }
 
@@ -1881,6 +1884,11 @@ function UserBanPage() {
               밴 처리 후 사용자는 서비스 이용이 제한됩니다. 대상 사용자와 밴 유형을
               확인한 뒤 진행해 주세요.
             </U.ConfirmDescription>
+            {actionErrorMessage ? (
+              <U.Notice $variant="error" role="alert">
+                {actionErrorMessage}
+              </U.Notice>
+            ) : null}
             <U.ConfirmMeta>
               <span>사용자 ID</span>
               {banPreviewTargetUserId ?? '-'}
@@ -1932,6 +1940,11 @@ function UserBanPage() {
               밴 해제는 사용자 제재 상태와 처리 이력에 반영됩니다. 입력한
               사유를 확인한 뒤 진행해 주세요.
             </U.ConfirmDescription>
+            {actionErrorMessage ? (
+              <U.Notice $variant="error" role="alert">
+                {actionErrorMessage}
+              </U.Notice>
+            ) : null}
             <U.ActionLabel>
               해제 사유
               <U.TextArea

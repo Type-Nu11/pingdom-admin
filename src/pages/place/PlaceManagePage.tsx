@@ -679,7 +679,7 @@ function PlaceManagePage() {
 
               {isLoading && places.length === 0 ? (
                 <S.EmptyState>장소 목록을 불러오는 중입니다.</S.EmptyState>
-              ) : isError ? (
+              ) : isError && places.length === 0 ? (
                 <S.EmptyState>
                   {errorMessage}
                   <S.RetryButton
@@ -691,42 +691,56 @@ function PlaceManagePage() {
                   </S.RetryButton>
                 </S.EmptyState>
               ) : places.length > 0 ? (
-                places.map((place) => {
-                  const isSelected = selectedPlace?.id === place.id
-                  const placeCategoryLabel = getPlaceCategoryLabel(place)
-                  const placeDisplayName = getPlaceDisplayName(place)
+                <>
+                  {isError ? (
+                    <S.EmptyState role="alert">
+                      {errorMessage}
+                      <S.RetryButton
+                        type="button"
+                        disabled={isLoading}
+                        onClick={handleRefresh}
+                      >
+                        다시 시도
+                      </S.RetryButton>
+                    </S.EmptyState>
+                  ) : null}
+                  {places.map((place) => {
+                    const isSelected = selectedPlace?.id === place.id
+                    const placeCategoryLabel = getPlaceCategoryLabel(place)
+                    const placeDisplayName = getPlaceDisplayName(place)
 
-                  return (
-                    <S.PlaceItem
-                      key={place.id}
-                      type="button"
-                      $active={isSelected}
-                      aria-pressed={isSelected}
-                      onClick={() => handleSelectPlace(place)}
-                    >
-                      <S.PlaceThumb>
-                        <S.MaterialIcon aria-hidden="true">
-                          {getPlaceCategoryIconName(place)}
-                        </S.MaterialIcon>
-                      </S.PlaceThumb>
-                      <S.PlaceInfo>
-                        <S.PlaceTitleRow>
-                          <S.PlaceName>{placeDisplayName}</S.PlaceName>
-                          <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
-                        </S.PlaceTitleRow>
-                        <S.PlaceMeta>
-                          <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
-                          <span>{place.address || '주소 정보 없음'}</span>
-                        </S.PlaceMeta>
-                        <S.PlaceMetaLine aria-label={`${placeDisplayName} 장소 지표`}>
-                          <span>등록자 {getPlaceRegistrantLabel(place)}</span>
-                          <span>Lv.{getPlaceLevel(place)}</span>
-                          <span>사진 {getPlacePhotoCount(place)}장</span>
-                        </S.PlaceMetaLine>
-                      </S.PlaceInfo>
-                    </S.PlaceItem>
-                  )
-                })
+                    return (
+                      <S.PlaceItem
+                        key={place.id}
+                        type="button"
+                        $active={isSelected}
+                        aria-pressed={isSelected}
+                        onClick={() => handleSelectPlace(place)}
+                      >
+                        <S.PlaceThumb>
+                          <S.MaterialIcon aria-hidden="true">
+                            {getPlaceCategoryIconName(place)}
+                          </S.MaterialIcon>
+                        </S.PlaceThumb>
+                        <S.PlaceInfo>
+                          <S.PlaceTitleRow>
+                            <S.PlaceName>{placeDisplayName}</S.PlaceName>
+                            <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
+                          </S.PlaceTitleRow>
+                          <S.PlaceMeta>
+                            <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
+                            <span>{place.address || '주소 정보 없음'}</span>
+                          </S.PlaceMeta>
+                          <S.PlaceMetaLine aria-label={`${placeDisplayName} 장소 지표`}>
+                            <span>등록자 {getPlaceRegistrantLabel(place)}</span>
+                            <span>Lv.{getPlaceLevel(place)}</span>
+                            <span>사진 {getPlacePhotoCount(place)}장</span>
+                          </S.PlaceMetaLine>
+                        </S.PlaceInfo>
+                      </S.PlaceItem>
+                    )
+                  })}
+                </>
               ) : placeKeyword ? (
                 <S.EmptyState>
                   검색 결과가 없습니다.
@@ -1065,7 +1079,7 @@ function PlaceManagePage() {
             </S.DeleteConfirmMeta>
             <S.DeleteConfirmWarning>
               {deleteConfirmPlace.postCount > 0
-                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개가 영향을 받을 수 있습니다. 삭제 전 연결 상태를 확인해 주세요.`
+                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개도 함께 삭제됩니다. 삭제 전에 연결 게시글을 확인해 주세요.`
                 : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
             </S.DeleteConfirmWarning>
 

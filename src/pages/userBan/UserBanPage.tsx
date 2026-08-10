@@ -305,6 +305,8 @@ function AdminFilterMenu({
 }
 
 const DATE_WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => padDatePart(index))
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => padDatePart(index))
 
 function padDatePart(value: number) {
   return String(value).padStart(2, '0')
@@ -372,6 +374,7 @@ function AdminDatePicker({
   onChange,
 }: AdminDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
   const [viewDate, setViewDate] = useState(() => parseDateTimeInput(value))
   const rootRef = useRef<HTMLDivElement>(null)
   const selectedDate = value ? parseDateTimeInput(value) : null
@@ -384,11 +387,13 @@ function AdminDatePicker({
     const handlePointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
         setIsOpen(false)
+        setIsTimePickerOpen(false)
       }
     }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsOpen(false)
+        setIsTimePickerOpen(false)
       }
     }
 
@@ -431,6 +436,7 @@ function AdminDatePicker({
           if (value) {
             setViewDate(parseDateTimeInput(value))
           }
+          setIsTimePickerOpen(false)
           setIsOpen((open) => !open)
         }}
       >
@@ -493,25 +499,85 @@ function AdminDatePicker({
           </U.DatePickerGrid>
           <U.DatePickerFooter>
             <U.DatePickerTimeField>
-              시간
-              <U.DatePickerTimeInput
-                type="time"
-                value={selectedTime}
-                aria-label="선택한 날짜의 시간"
-                onChange={(event) => handleTimeChange(event.target.value)}
-              />
+              <U.DatePickerTimeLabel>시간 설정</U.DatePickerTimeLabel>
+              <U.DatePickerTimePicker>
+                <U.DatePickerTimeButton
+                  type="button"
+                  aria-label="선택한 날짜의 시간"
+                  aria-expanded={isTimePickerOpen}
+                  aria-haspopup="listbox"
+                  onClick={() => setIsTimePickerOpen((open) => !open)}
+                >
+                  <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
+                  <span>{selectedTime}</span>
+                  <S.MaterialIcon aria-hidden="true">expand_more</S.MaterialIcon>
+                </U.DatePickerTimeButton>
+                {isTimePickerOpen ? (
+                  <U.DatePickerTimeMenu aria-label="시간 선택">
+                    <U.DatePickerTimeMenuTitle>시간 선택</U.DatePickerTimeMenuTitle>
+                    <U.DatePickerTimeColumns>
+                      <U.DatePickerTimeColumn>
+                        <U.DatePickerTimeColumnLabel>시</U.DatePickerTimeColumnLabel>
+                        <U.DatePickerTimeOptions role="listbox" aria-label="시 선택">
+                          {HOUR_OPTIONS.map((hour) => (
+                            <U.DatePickerTimeOption
+                              key={hour}
+                              type="button"
+                              role="option"
+                              $selected={selectedTime.slice(0, 2) === hour}
+                              aria-selected={selectedTime.slice(0, 2) === hour}
+                              onClick={() => {
+                                handleTimeChange(`${hour}:${selectedTime.slice(3)}`)
+                              }}
+                            >
+                              {hour}
+                            </U.DatePickerTimeOption>
+                          ))}
+                        </U.DatePickerTimeOptions>
+                      </U.DatePickerTimeColumn>
+                      <U.DatePickerTimeSeparator>:</U.DatePickerTimeSeparator>
+                      <U.DatePickerTimeColumn>
+                        <U.DatePickerTimeColumnLabel>분</U.DatePickerTimeColumnLabel>
+                        <U.DatePickerTimeOptions role="listbox" aria-label="분 선택">
+                          {MINUTE_OPTIONS.map((minute) => (
+                            <U.DatePickerTimeOption
+                              key={minute}
+                              type="button"
+                              role="option"
+                              $selected={selectedTime.slice(3) === minute}
+                              aria-selected={selectedTime.slice(3) === minute}
+                              onClick={() => {
+                                handleTimeChange(`${selectedTime.slice(0, 2)}:${minute}`)
+                              }}
+                            >
+                              {minute}
+                            </U.DatePickerTimeOption>
+                          ))}
+                        </U.DatePickerTimeOptions>
+                      </U.DatePickerTimeColumn>
+                    </U.DatePickerTimeColumns>
+                  </U.DatePickerTimeMenu>
+                ) : null}
+              </U.DatePickerTimePicker>
             </U.DatePickerTimeField>
             <U.FilterActions>
               <U.SecondaryButton
                 type="button"
                 onClick={() => {
                   onChange('')
+                  setIsTimePickerOpen(false)
                   setIsOpen(false)
                 }}
               >
                 초기화
               </U.SecondaryButton>
-              <U.PrimaryButton type="button" onClick={() => setIsOpen(false)}>
+              <U.PrimaryButton
+                type="button"
+                onClick={() => {
+                  setIsTimePickerOpen(false)
+                  setIsOpen(false)
+                }}
+              >
                 적용
               </U.PrimaryButton>
             </U.FilterActions>

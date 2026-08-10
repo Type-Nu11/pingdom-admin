@@ -489,30 +489,147 @@ export const DatePickerFooter = styled.div`
   border-top: 1px solid ${neutral.borderSoft};
 `
 
-export const DatePickerTimeField = styled.label`
+export const DatePickerTimeField = styled.div`
   display: flex;
   flex-direction: column;
   gap: 5px;
+`
+
+export const DatePickerTimeLabel = styled.span`
   color: ${neutral.muted};
   font-size: 11px;
   font-weight: 600;
 `
 
-export const DatePickerTimeInput = styled.input`
-  min-height: 34px;
-  padding: 0 8px;
+export const DatePickerTimePicker = styled.div`
+  position: relative;
+`
+
+export const DatePickerTimeButton = styled.button`
+  min-width: 118px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 7px;
+  border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
   font-size: 12px;
+  cursor: pointer;
 
-  &:focus {
+  > span {
+    flex: 1;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+
+  > span:first-child {
+    color: ${neutral.primary};
+    font-size: 17px;
+  }
+
+  > span:last-child {
+    color: ${neutral.softText};
+    font-size: 17px;
+  }
+
+  &:hover,
+  &:focus-visible {
     border-color: ${neutral.primary};
-    outline: 1px solid ${neutral.primary};
+    outline: none;
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
+`
+
+export const DatePickerTimeMenu = styled.div`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 2;
+  width: 174px;
+  padding: 10px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 14px 32px ${neutral.shadow};
+`
+
+export const DatePickerTimeMenuTitle = styled.strong`
+  display: block;
+  margin-bottom: 8px;
+  color: ${neutral.strongText};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const DatePickerTimeColumns = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+`
+
+export const DatePickerTimeColumn = styled.div`
+  min-width: 0;
+`
+
+export const DatePickerTimeColumnLabel = styled.span`
+  display: block;
+  margin-bottom: 4px;
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+`
+
+export const DatePickerTimeOptions = styled.div`
+  max-height: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  padding: 2px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surfaceLow};
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.border} transparent;
+`
+
+export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
+  min-height: 28px;
+  border: 1px solid
+    ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
+  border-radius: 6px;
+  background: ${({ $selected }) =>
+    $selected ? neutral.primaryTint : 'transparent'};
+  color: ${({ $selected }) =>
+    $selected ? neutral.primary : neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${neutral.primarySoft};
+    outline: none;
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+`
+
+export const DatePickerTimeSeparator = styled.span`
+  align-self: end;
+  padding-bottom: 7px;
+  color: ${neutral.primary};
+  font-size: 16px;
+  font-weight: 700;
 `
 
 export const FilterMenuRoot = styled.div`

@@ -1065,7 +1065,7 @@ function PlaceManagePage() {
             </S.DeleteConfirmMeta>
             <S.DeleteConfirmWarning>
               {deleteConfirmPlace.postCount > 0
-                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개가 영향을 받을 수 있습니다. 삭제 전 연결 상태를 확인해 주세요.`
+                ? `연결된 게시글 ${deleteConfirmPlace.postCount.toLocaleString()}개도 함께 삭제됩니다. 삭제 전에 연결 게시글을 확인해 주세요.`
                 : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
             </S.DeleteConfirmWarning>
 

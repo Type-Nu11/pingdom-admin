@@ -1207,10 +1207,6 @@ function UserBanPage() {
               </U.FilterForm>
             </U.FilterPanel>
 
-            <U.ResultSummary>
-              조회 결과 <strong>{resultRangeLabel}</strong>
-            </U.ResultSummary>
-
             {listFilterError ? (
               <U.Notice $variant="error" role="alert">
                 {listFilterError}
@@ -1229,7 +1225,12 @@ function UserBanPage() {
             <U.WorkGrid>
               <U.WorkSection>
                 <U.SectionHeader>
-                  <U.SectionTitle>밴 사용자 목록</U.SectionTitle>
+                  <U.SectionHeading>
+                    <U.SectionTitle>밴 사용자 목록</U.SectionTitle>
+                    <U.ResultSummary>
+                      {resultRangeLabel}
+                    </U.ResultSummary>
+                  </U.SectionHeading>
                   <U.CompactButton
                     type="button"
                     aria-expanded={isBanFormOpen}
@@ -1666,7 +1667,7 @@ function UserBanPage() {
                       </U.DetailGroup>
                       )}
 
-                      <U.DetailGroup>
+                      <U.DetailActionGroup>
                         <U.DetailGroupTitle>밴 해제</U.DetailGroupTitle>
                         {selectedUserDetail.banned ? (
                           <U.FilterActions>
@@ -1685,7 +1686,7 @@ function UserBanPage() {
                             기록을 확인할 수 있습니다.
                           </U.Notice>
                         )}
-                      </U.DetailGroup>
+                      </U.DetailActionGroup>
                     </U.DetailStack>
                   ) : null}
                 </U.WorkSectionBody>

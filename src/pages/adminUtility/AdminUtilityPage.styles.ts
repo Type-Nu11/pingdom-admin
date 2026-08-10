@@ -189,6 +189,14 @@ export const ResultSummary = styled.p`
   }
 `
 
+export const SectionHeading = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+`
+
 export const SegmentGroup = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -1296,6 +1304,14 @@ export const DetailGroup = styled.section`
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
   background: ${neutral.surface};
+`
+
+export const DetailActionGroup = styled(DetailGroup)`
+  margin-top: 4px;
+  padding: 18px 0 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
 `
 
 export const DetailGroupTitle = styled.h3`

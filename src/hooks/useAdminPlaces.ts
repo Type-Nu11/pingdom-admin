@@ -32,6 +32,12 @@ const ADMIN_PLACE_CODE_MESSAGES = {
   INVALID_TOKEN: '로그인이 필요합니다. 다시 로그인해주세요.',
   ACCESS_DENIED: '관리자 권한이 필요합니다.',
   PLACE_NOT_FOUND: '장소를 찾을 수 없습니다.',
+  PLACE_EVENT_CONNECTED:
+    '연결된 기간형 이벤트가 있어 장소를 삭제할 수 없습니다.',
+  PLACE_CHECK_IN_CONNECTED:
+    '연결된 체크인 이력이 있어 장소를 삭제할 수 없습니다.',
+  PLACE_SCOUT_FIELD_REPORT_CONNECTED:
+    '연결된 Scout 현장 제보가 있어 장소를 삭제할 수 없습니다.',
 }
 
 type AdminPlaceApiErrorResponse =
@@ -162,7 +168,6 @@ export function useAdminPlaces({
       return true
     } catch (error) {
       if (requestId === latestRequestIdRef.current) {
-        setPlaces([])
         setIsError(true)
         setErrorMessage(getAdminPlaceErrorMessage(error))
 

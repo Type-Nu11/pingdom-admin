@@ -568,10 +568,19 @@ export const DatePickerTimeMenu = styled.div`
 
 export const DatePickerTimeMenuTitle = styled.strong`
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   color: ${neutral.strongText};
   font-size: 12px;
   font-weight: 700;
+`
+
+export const DatePickerTimePreview = styled.span`
+  display: block;
+  margin-bottom: 8px;
+  color: ${neutral.primary};
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 `
 
 export const DatePickerTimeColumns = styled.div`

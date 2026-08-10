@@ -383,6 +383,9 @@ function AdminDatePicker({
   const selectedTime = selectedDate
     ? `${padDatePart(selectedDate.getHours())}:${padDatePart(selectedDate.getMinutes())}`
     : '00:00'
+  const selectedDateTimeLabel = selectedDate
+    ? formatDatePickerLabel(value)
+    : `${viewDate.getFullYear()}. ${viewDate.getMonth() + 1}. ${viewDate.getDate()}. ${selectedTime}`
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -516,6 +519,7 @@ function AdminDatePicker({
                 {isTimePickerOpen ? (
                   <U.DatePickerTimeMenu aria-label="시간 선택">
                     <U.DatePickerTimeMenuTitle>시간 선택</U.DatePickerTimeMenuTitle>
+                    <U.DatePickerTimePreview>{selectedDateTimeLabel}</U.DatePickerTimePreview>
                     <U.DatePickerTimeColumns>
                       <U.DatePickerTimeColumn>
                         <U.DatePickerTimeColumnLabel>시</U.DatePickerTimeColumnLabel>

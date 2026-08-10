@@ -507,7 +507,7 @@ function AdminDatePicker({
               <U.DatePickerTimePicker>
                 <U.DatePickerTimeButton
                   type="button"
-                  aria-label="선택한 날짜의 시간"
+                  aria-label={`선택한 날짜의 시간 ${selectedTime}`}
                   aria-expanded={isTimePickerOpen}
                   aria-haspopup="listbox"
                   onClick={() => setIsTimePickerOpen((open) => !open)}
@@ -676,6 +676,12 @@ function UserBanPage() {
   const totalBannedUserCount = hasSuccessfulListResponse
     ? counts?.total ?? totalCount
     : null
+  const summaryScopeLabel =
+    counts?.total == null
+      ? '현재 조회 결과'
+      : banSearchQuery.trim()
+        ? '검색어 기준 전체 밴 현황'
+        : '전체 밴 현황'
   const resultRangeLabel = (() => {
     if (!hasSuccessfulListResponse) {
       return isLoading ? '조회 중' : '-'
@@ -1105,8 +1111,8 @@ function UserBanPage() {
               </U.IntroText>
             </U.IntroBand>
 
-            <U.SummaryBar aria-label="밴 현황">
-              <U.SummaryBarTitle>밴 현황</U.SummaryBarTitle>
+            <U.SummaryBar aria-label={summaryScopeLabel}>
+              <U.SummaryBarTitle>{summaryScopeLabel}</U.SummaryBarTitle>
               <U.SummaryBarItems>
                 <U.SummaryBarItem>
                   <span>전체</span>

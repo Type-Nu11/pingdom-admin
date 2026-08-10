@@ -42,20 +42,42 @@ export interface AdminNotificationUnreadCountResponse {
   unreadCount: number
 }
 
+export interface AdminNotificationReadResponse {
+  notificationId: number
+  read: boolean
+  message: string
+}
+
+export interface AdminNotificationReadAllResponse {
+  updatedCount: number
+  message: string
+}
+
+export type AdminNotificationDeliveryChannel = 'FCM' | 'EMAIL'
+
 export type AdminNotificationDeliveryStatus =
-  | 'PENDING'
-  | 'SENT'
+  | 'SUCCEEDED'
   | 'FAILED'
-  | 'READ'
+  | 'RETRY_SCHEDULED'
+  | 'FINAL_FAILED'
 
 export interface AdminNotificationDeliveryItem {
   deliveryId: number
-  notificationId: number
+  channel: AdminNotificationDeliveryChannel
   userId: number
+  notificationId?: number | null
   status: AdminNotificationDeliveryStatus
-  sentAt?: string | null
-  readAt?: string | null
+  notificationType?: AdminNotificationType | null
+  outboxEventId?: string | null
+  outboxEventType?: string | null
+  providerMessageId?: string | null
+  providerErrorCode?: string | null
+  errorCode?: string | null
+  failureReason?: string | null
+  retryable: boolean
+  attemptCount: number
   createdAt: string
+  updatedAt: string
 }
 
 export interface AdminNotificationDeliveryResponse {
@@ -68,9 +90,13 @@ export interface AdminNotificationDeliveryResponse {
 }
 
 export interface AdminNotificationDeliveryListRequest {
-  notificationId?: number
   userId?: number
+  channel?: AdminNotificationDeliveryChannel
   status?: AdminNotificationDeliveryStatus
+  notificationType?: AdminNotificationType
+  outboxEventType?: string
+  from?: string
+  to?: string
   page?: number
   limit?: number
 }

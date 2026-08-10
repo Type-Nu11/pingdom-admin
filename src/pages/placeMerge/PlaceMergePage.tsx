@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAdminPlace } from '../../api/adminPlaceApi'
+import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
 import { useAuth } from '../../hooks/useAuth'
@@ -411,6 +412,7 @@ function PlaceMergePage() {
             <Shell.TopTitle>중복 장소 관리</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
+            <AdminNotificationButton />
             <Shell.IconButton
               type="button"
               aria-label="탐지 결과 새로고침"

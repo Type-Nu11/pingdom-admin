@@ -92,6 +92,68 @@ export const SummaryGrid = styled.div`
   }
 `
 
+export const SummaryBar = styled.section`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 72px;
+  padding: 12px 18px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+`
+
+export const SummaryBarTitle = styled.strong`
+  flex: 0 0 auto;
+  color: ${neutral.strongText};
+  font-size: 14px;
+  font-weight: 700;
+`
+
+export const SummaryBarItems = styled.div`
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+`
+
+export const SummaryBarItem = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-left: 1px solid ${neutral.borderSoft};
+
+  span {
+    overflow: hidden;
+    color: ${neutral.muted};
+    font-size: 12px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 22px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 10px;
+
+    strong {
+      font-size: 18px;
+    }
+  }
+`
+
 export const FilterPanel = styled.section`
   display: flex;
   flex-direction: column;
@@ -125,6 +187,14 @@ export const ResultSummary = styled.p`
     color: ${neutral.strongText};
     font-weight: 600;
   }
+`
+
+export const SectionHeading = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
 `
 
 export const SegmentGroup = styled.div`
@@ -184,10 +254,8 @@ export const FilterForm = styled.form`
 export const AdvancedFilterPanel = styled.div`
   grid-template-columns:
     minmax(120px, 0.8fr)
-    minmax(140px, 0.9fr)
-    minmax(140px, 0.9fr)
-    minmax(120px, 0.8fr)
-    minmax(120px, 0.8fr)
+    minmax(260px, 1.6fr)
+    minmax(220px, 1.2fr)
     auto;
   display: grid;
   grid-column: 1 / -1;
@@ -207,6 +275,23 @@ export const AdvancedFilterPanel = styled.div`
   }
 `
 
+export const DetailFilterPanel = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`
+
 export const FilterField = styled.label`
   min-width: 0;
   display: flex;
@@ -215,6 +300,40 @@ export const FilterField = styled.label`
   color: ${neutral.muted};
   font-size: 12px;
   font-weight: 500;
+`
+
+export const FilterGroup = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 500;
+`
+
+export const FilterGroupLabel = styled.span`
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 500;
+`
+
+export const FilterGroupControls = styled.div`
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+
+  > * {
+    min-width: 0;
+  }
+`
+
+export const FilterRangeSeparator = styled.span`
+  color: ${neutral.softText};
+  font-size: 13px;
+  text-align: center;
 `
 
 export const FilterHelpText = styled.span`
@@ -378,30 +497,156 @@ export const DatePickerFooter = styled.div`
   border-top: 1px solid ${neutral.borderSoft};
 `
 
-export const DatePickerTimeField = styled.label`
+export const DatePickerTimeField = styled.div`
   display: flex;
   flex-direction: column;
   gap: 5px;
+`
+
+export const DatePickerTimeLabel = styled.span`
   color: ${neutral.muted};
   font-size: 11px;
   font-weight: 600;
 `
 
-export const DatePickerTimeInput = styled.input`
-  min-height: 34px;
-  padding: 0 8px;
+export const DatePickerTimePicker = styled.div`
+  position: relative;
+`
+
+export const DatePickerTimeButton = styled.button`
+  min-width: 118px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 7px;
+  border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
   font-size: 12px;
+  cursor: pointer;
 
-  &:focus {
+  > span {
+    flex: 1;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+
+  > span:first-child {
+    color: ${neutral.primary};
+    font-size: 17px;
+  }
+
+  > span:last-child {
+    color: ${neutral.softText};
+    font-size: 17px;
+  }
+
+  &:hover,
+  &:focus-visible {
     border-color: ${neutral.primary};
-    outline: 1px solid ${neutral.primary};
+    outline: none;
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
+`
+
+export const DatePickerTimeMenu = styled.div`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 2;
+  width: 174px;
+  padding: 10px;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 14px 32px ${neutral.shadow};
+`
+
+export const DatePickerTimeMenuTitle = styled.strong`
+  display: block;
+  margin-bottom: 4px;
+  color: ${neutral.strongText};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const DatePickerTimePreview = styled.span`
+  display: block;
+  margin-bottom: 8px;
+  color: ${neutral.primary};
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+`
+
+export const DatePickerTimeColumns = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+`
+
+export const DatePickerTimeColumn = styled.div`
+  min-width: 0;
+`
+
+export const DatePickerTimeColumnLabel = styled.span`
+  display: block;
+  margin-bottom: 4px;
+  color: ${neutral.softText};
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+`
+
+export const DatePickerTimeOptions = styled.div`
+  max-height: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  padding: 2px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surfaceLow};
+
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.border} transparent;
+`
+
+export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
+  min-height: 28px;
+  border: 1px solid
+    ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
+  border-radius: 6px;
+  background: ${({ $selected }) =>
+    $selected ? neutral.primaryTint : 'transparent'};
+  color: ${({ $selected }) =>
+    $selected ? neutral.primary : neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${neutral.primarySoft};
+    outline: none;
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+`
+
+export const DatePickerTimeSeparator = styled.span`
+  align-self: end;
+  padding-bottom: 7px;
+  color: ${neutral.primary};
+  font-size: 16px;
+  font-weight: 700;
 `
 
 export const FilterMenuRoot = styled.div`
@@ -482,15 +727,39 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
   }
 `
 
-export const FilterActions = styled.div`
+export const FilterActions = styled.div<{ $alignWithField?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   justify-content: flex-end;
 
+  ${({ $alignWithField }) =>
+    $alignWithField &&
+    css`
+      align-self: start;
+      padding-top: 20px;
+    `}
+
   @media (max-width: 1160px) {
     justify-content: flex-start;
+  }
+
+  @media (max-width: 760px) {
+    padding-top: 0;
+  }
+`
+
+export const DetailFilterActions = styled(FilterActions)`
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+
+  @media (max-width: 520px) {
+    justify-content: stretch;
+
+    > button {
+      flex: 1;
+    }
   }
 `
 
@@ -534,9 +803,12 @@ export const WorkGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(420px, 1fr);
   gap: 16px;
+  min-height: 560px;
+  height: min(720px, calc(100vh - 300px));
 
   @media (max-width: 1040px) {
     grid-template-columns: 1fr;
+    height: auto;
   }
 `
 
@@ -595,6 +867,17 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
 
 export const SectionBody = styled.div`
   padding: 18px;
+`
+
+export const WorkSection = styled(Section)`
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`
+
+export const WorkSectionBody = styled(SectionBody)`
+  min-height: 0;
+  overflow: auto;
 `
 
 export const Toolbar = styled.div`
@@ -990,9 +1273,6 @@ export const DetailHeaderStack = styled.div`
 `
 
 export const DetailSummaryCard = styled.section`
-  position: sticky;
-  top: 12px;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1035,11 +1315,62 @@ export const DetailGroup = styled.section`
   background: ${neutral.surface};
 `
 
+export const DetailActionGroup = styled(DetailGroup)`
+  margin-top: 4px;
+  padding: 18px 0 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
+`
+
 export const DetailGroupTitle = styled.h3`
   margin: 0 0 10px;
   color: ${neutral.strongText};
   font-size: 14px;
   font-weight: 700;
+`
+
+export const DetailGroupHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  > ${DetailGroupTitle} {
+    margin-bottom: 0;
+  }
+`
+
+export const CompactButton = styled(SecondaryButton)`
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+`
+
+export const SanctionHistoryHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    color: ${neutral.strongText};
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const SanctionHistoryMeta = styled.span`
+  display: block;
+  margin-top: 4px;
+  color: ${neutral.softText};
+  font-size: 12px;
+  line-height: 1.45;
 `
 
 export const DetailList = styled.dl`
@@ -1097,6 +1428,12 @@ export const ConfirmDialog = styled.section`
   border-radius: 8px;
   background: ${neutral.surface};
   box-shadow: 0 24px 64px ${neutral.strongShadow};
+`
+
+export const FormDialog = styled(ConfirmDialog)`
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 `
 
 export const ConfirmIcon = styled.div`

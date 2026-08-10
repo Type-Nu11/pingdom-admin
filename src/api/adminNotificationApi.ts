@@ -3,6 +3,8 @@ import type {
   AdminNotificationDeliveryListRequest,
   AdminNotificationDeliveryResponse,
   AdminNotificationListRequest,
+  AdminNotificationReadAllResponse,
+  AdminNotificationReadResponse,
   AdminNotificationResponse,
   AdminNotificationUnreadCountResponse,
 } from '../types/adminNotification.types'
@@ -36,7 +38,7 @@ export async function getAdminUnreadNotificationCount() {
 }
 
 export async function markAdminNotificationAsRead(notificationId: number) {
-  const response = await customAxios.patch<AdminNotificationResponse>(
+  const response = await customAxios.patch<AdminNotificationReadResponse>(
     `${ADMIN_NOTIFICATIONS_API_PATH}/${notificationId}/read`
   )
 
@@ -44,7 +46,7 @@ export async function markAdminNotificationAsRead(notificationId: number) {
 }
 
 export async function markAllAdminNotificationsAsRead() {
-  const response = await customAxios.patch<AdminNotificationResponse>(
+  const response = await customAxios.patch<AdminNotificationReadAllResponse>(
     `${ADMIN_NOTIFICATIONS_API_PATH}/read`
   )
 

@@ -700,6 +700,12 @@ function UserBanPage() {
       banSortBy !== 'BANNED_AT' ||
       banSortDirection !== 'DESC'
   )
+  const sanctionHistoryActiveFilterCount = [
+    sanctionHistoryBanType,
+    sanctionHistoryAction,
+    sanctionHistoryFrom,
+    sanctionHistoryTo,
+  ].filter(Boolean).length
   const isBanTargetStatusCurrent =
     typeof banPreviewTargetUserId === 'number' &&
     banTargetStatus?.userId === banPreviewTargetUserId
@@ -1506,7 +1512,13 @@ function UserBanPage() {
                             <S.MaterialIcon aria-hidden="true">
                               {isSanctionHistoryFilterOpen ? 'expand_less' : 'tune'}
                             </S.MaterialIcon>
-                            {isSanctionHistoryFilterOpen ? '필터 닫기' : '필터'}
+                            {isSanctionHistoryFilterOpen
+                              ? '필터 닫기'
+                              : `필터${
+                                  sanctionHistoryActiveFilterCount > 0
+                                    ? ` (${sanctionHistoryActiveFilterCount})`
+                                    : ''
+                                }`}
                           </U.CompactButton>
                         </U.DetailGroupHeader>
                         {isSanctionHistoryFilterOpen ? (

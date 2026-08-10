@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import styled from 'styled-components'
 import { useAuth } from '../../hooks/useAuth'
 import { adminColors } from '../../styles/theme'
+import { AdminNotificationProvider } from '../providers/AdminNotificationProvider'
 
 export function ProtectedRoute() {
   const { clearAuth, isAuthenticated, isAuthReady, user } = useAuth()
@@ -32,7 +33,11 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace />
   }
 
-  return <Outlet />
+  return (
+    <AdminNotificationProvider>
+      <Outlet />
+    </AdminNotificationProvider>
+  )
 }
 
 const RouteLoadingPage = styled.main`

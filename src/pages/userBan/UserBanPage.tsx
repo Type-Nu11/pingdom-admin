@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminBannedUsers } from '../../hooks/useAdminBannedUsers'
 import { useAuth } from '../../hooks/useAuth'
@@ -1077,9 +1078,7 @@ function UserBanPage() {
             <S.TopTitle>사용자 밴</S.TopTitle>
           </S.TopTitleGroup>
           <S.TopActions>
-            <S.IconButton type="button" aria-label="알림">
-              <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
-            </S.IconButton>
+            <AdminNotificationButton />
             <S.IconButton type="button" aria-label="도움말">
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
             </S.IconButton>

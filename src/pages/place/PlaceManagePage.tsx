@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import type {
   KakaoMapHandle,
   KakaoMapMarker,
@@ -583,9 +584,7 @@ function PlaceManagePage() {
               <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
               중복 장소 관리
             </S.TopActionButton>
-            <S.IconButton type="button" aria-label="알림">
-              <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
-            </S.IconButton>
+            <AdminNotificationButton />
             <S.IconButton type="button" aria-label="도움말">
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
             </S.IconButton>

@@ -2,6 +2,21 @@ import type { AuthErrorResponse } from './auth.types'
 
 export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST' | 'LEVEL_DESC'
 export type AdminPlacePostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
+export type AdminPlaceGeocodingSource = 'KAKAO' | 'USER_PIN' | 'ADMIN' | 'LEGACY'
+export type AdminPlaceOperatingStatus =
+  | 'OPERATING'
+  | 'TEMPORARILY_CLOSED'
+  | 'PERMANENTLY_CLOSED'
+export type AdminPlaceTouristCategory =
+  | 'K_POP'
+  | 'BEAUTY'
+  | 'FASHION'
+  | 'CAFE'
+  | 'FOOD'
+  | 'POP_UP'
+  | 'EXHIBITION'
+  | 'NIGHTLIFE'
+  | 'OTHER'
 
 export interface PlaceGrowthSnapshot {
   photoCount?: number
@@ -11,15 +26,41 @@ export interface PlaceGrowthSnapshot {
   progressPercent?: number
 }
 
+export interface AdminPlaceOperatingTimeRange {
+  opensAt: string
+  closesAt: string
+}
+
+export interface AdminPlaceRegularOperatingHour {
+  dayOfWeek: string
+  opensAt: string
+  closesAt: string
+}
+
+export interface AdminPlaceOperatingException {
+  date: string
+  closed: boolean
+  hours: AdminPlaceOperatingTimeRange[]
+}
+
 export interface AdminPlaceItem {
   id: number
   name: string
   address: string
+  roadAddress?: string | null
+  jibunAddress?: string | null
+  postalCode?: string | null
+  geocodingSource?: AdminPlaceGeocodingSource
+  operatingStatus?: AdminPlaceOperatingStatus
+  operatingStatusCheckedAt?: string | null
   latitude: number
   longitude: number
   userId: number
   category?: string
   categoryName?: string
+  englishName?: string | null
+  touristSummary?: string | null
+  touristCategories?: AdminPlaceTouristCategory[]
   registrant?: string
   placeGrowth?: PlaceGrowthSnapshot
 }
@@ -27,6 +68,7 @@ export interface AdminPlaceItem {
 export interface AdminPlacePostItem {
   id: number
   imageUrl: string
+  thumbnailUrl?: string | null
   title: string
   description: string
   userId: number
@@ -39,12 +81,23 @@ export interface AdminPlaceDetail {
   id: number
   name: string
   address: string
+  roadAddress?: string | null
+  jibunAddress?: string | null
+  postalCode?: string | null
+  geocodingSource?: AdminPlaceGeocodingSource
+  operatingStatus?: AdminPlaceOperatingStatus
+  operatingStatusCheckedAt?: string | null
+  regularHours?: AdminPlaceRegularOperatingHour[]
+  operatingExceptions?: AdminPlaceOperatingException[]
   latitude: number
   longitude: number
   userId: number
   username: string
   category?: string
   categoryName?: string
+  englishName?: string | null
+  touristSummary?: string | null
+  touristCategories?: AdminPlaceTouristCategory[]
   sortParam: AdminPlacePostSortParam
   postCount: number
   placeGrowth?: PlaceGrowthSnapshot
@@ -81,5 +134,10 @@ export type AdminPlaceDetailErrorResponse = AuthErrorResponse<
 >
 
 export type AdminPlaceDeleteErrorResponse = AuthErrorResponse<
-  'INVALID_TOKEN' | 'ACCESS_DENIED' | 'PLACE_NOT_FOUND'
+  | 'INVALID_TOKEN'
+  | 'ACCESS_DENIED'
+  | 'PLACE_NOT_FOUND'
+  | 'PLACE_EVENT_CONNECTED'
+  | 'PLACE_CHECK_IN_CONNECTED'
+  | 'PLACE_SCOUT_FIELD_REPORT_CONNECTED'
 >

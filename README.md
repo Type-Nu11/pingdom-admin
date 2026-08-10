@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="./public/pingdom-logo.png" alt="Pingdom" width="160" />
-</p>
+<img width="7680" height="4320" alt="image" src="https://github.com/user-attachments/assets/e374f778-89f4-4e30-a69a-2091e2866b84" />
 
 ---
 

@@ -1082,44 +1082,44 @@ function UserBanPage() {
                       }
                     />
                   </U.FilterField>
-                  <U.FilterField>
-                    처리 기간 시작
-                    <AdminDatePicker
-                      ariaLabel="밴 처리 시작일"
-                      value={banFrom}
-                      onChange={setBanFrom}
-                    />
-                  </U.FilterField>
-                  <U.FilterField>
-                    처리 기간 종료
-                    <AdminDatePicker
-                      ariaLabel="밴 처리 종료일"
-                      value={banTo}
-                      onChange={setBanTo}
-                    />
-                  </U.FilterField>
-                  <U.FilterField>
-                    정렬 기준
-                    <AdminFilterMenu
-                      ariaLabel="밴 사용자 정렬 기준"
-                      options={BAN_LIST_SORT_OPTIONS}
-                      value={banSortBy}
-                      onChange={(value) =>
-                        setBanSortBy(value as AdminBannedUserListSortBy)
-                      }
-                    />
-                  </U.FilterField>
-                  <U.FilterField>
-                    정렬 방향
-                    <AdminFilterMenu
-                      ariaLabel="밴 사용자 정렬 방향"
-                      options={SORT_DIRECTION_OPTIONS}
-                      value={banSortDirection}
-                      onChange={(value) =>
-                        setBanSortDirection(value as AdminSortDirection)
-                      }
-                    />
-                  </U.FilterField>
+                  <U.FilterGroup>
+                    <U.FilterGroupLabel>처리 기간</U.FilterGroupLabel>
+                    <U.FilterGroupControls>
+                      <AdminDatePicker
+                        ariaLabel="밴 처리 시작일"
+                        value={banFrom}
+                        onChange={setBanFrom}
+                      />
+                      <U.FilterRangeSeparator aria-hidden="true">—</U.FilterRangeSeparator>
+                      <AdminDatePicker
+                        ariaLabel="밴 처리 종료일"
+                        value={banTo}
+                        onChange={setBanTo}
+                      />
+                    </U.FilterGroupControls>
+                  </U.FilterGroup>
+                  <U.FilterGroup>
+                    <U.FilterGroupLabel>정렬</U.FilterGroupLabel>
+                    <U.FilterGroupControls>
+                      <AdminFilterMenu
+                        ariaLabel="밴 사용자 정렬 기준"
+                        options={BAN_LIST_SORT_OPTIONS}
+                        value={banSortBy}
+                        onChange={(value) =>
+                          setBanSortBy(value as AdminBannedUserListSortBy)
+                        }
+                      />
+                      <U.FilterRangeSeparator aria-hidden="true">·</U.FilterRangeSeparator>
+                      <AdminFilterMenu
+                        ariaLabel="밴 사용자 정렬 방향"
+                        options={SORT_DIRECTION_OPTIONS}
+                        value={banSortDirection}
+                        onChange={(value) =>
+                          setBanSortDirection(value as AdminSortDirection)
+                        }
+                      />
+                    </U.FilterGroupControls>
+                  </U.FilterGroup>
                   <U.FilterActions>
                     <U.SecondaryButton
                       type="button"

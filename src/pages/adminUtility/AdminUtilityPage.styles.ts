@@ -96,8 +96,8 @@ export const SummaryBar = styled.section`
   display: flex;
   align-items: center;
   gap: 20px;
-  min-height: 76px;
-  padding: 14px 18px;
+  min-height: 72px;
+  padding: 12px 18px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
@@ -246,10 +246,8 @@ export const FilterForm = styled.form`
 export const AdvancedFilterPanel = styled.div`
   grid-template-columns:
     minmax(120px, 0.8fr)
-    minmax(140px, 0.9fr)
-    minmax(140px, 0.9fr)
-    minmax(120px, 0.8fr)
-    minmax(120px, 0.8fr)
+    minmax(260px, 1.6fr)
+    minmax(220px, 1.2fr)
     auto;
   display: grid;
   grid-column: 1 / -1;
@@ -294,6 +292,40 @@ export const FilterField = styled.label`
   color: ${neutral.muted};
   font-size: 12px;
   font-weight: 500;
+`
+
+export const FilterGroup = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 500;
+`
+
+export const FilterGroupLabel = styled.span`
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 500;
+`
+
+export const FilterGroupControls = styled.div`
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+
+  > * {
+    min-width: 0;
+  }
+`
+
+export const FilterRangeSeparator = styled.span`
+  color: ${neutral.softText};
+  font-size: 13px;
+  text-align: center;
 `
 
 export const FilterHelpText = styled.span`

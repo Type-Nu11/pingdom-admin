@@ -184,10 +184,13 @@ function formatPostDate(value: string) {
     return value
   }
 
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
+  const pad = (part: number) => String(part).padStart(2, '0')
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join('.') + ` ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function formatOptionalPostDate(value?: string | null) {

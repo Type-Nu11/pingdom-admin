@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { deleteAdminPlace, getAdminPlace, getAdminPlaces } from '../api/adminPlaceApi'
+import {
+  deleteAdminPlace,
+  getAdminPlace,
+  getAdminPlaces,
+  updateAdminPlaceOperatingSchedule,
+  updateAdminPlaceOperatingStatus,
+} from '../api/adminPlaceApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
@@ -13,12 +19,16 @@ import type {
   AdminPlaceListErrorResponse,
   AdminPlaceListRequest,
   AdminPlaceListSortParam,
+  AdminPlaceOperatingScheduleUpdateRequest,
+  AdminPlaceOperatingStatusUpdateRequest,
+  AdminPlaceUpdateErrorResponse,
 } from '../types/adminPlace.types'
 
 const DEFAULT_ADMIN_PLACE_PAGE = 1
 const DEFAULT_ADMIN_PLACE_LIMIT = 10
 const DEFAULT_ADMIN_PLACE_SORT_PARAM: AdminPlaceListSortParam = 'LATEST'
 const ADMIN_PLACE_ERROR_MESSAGE = '장소 목록을 불러오는 중 오류가 발생했습니다.'
+const ADMIN_PLACE_UPDATE_ERROR_MESSAGE = '장소 운영 정보를 수정하는 중 오류가 발생했습니다.'
 const ADMIN_PLACE_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
   forbidden: '관리자 권한이 필요합니다.',
@@ -44,14 +54,20 @@ type AdminPlaceApiErrorResponse =
   | AdminPlaceListErrorResponse
   | AdminPlaceDetailErrorResponse
   | AdminPlaceDeleteErrorResponse
+  | AdminPlaceUpdateErrorResponse
 
-function getAdminPlaceErrorMessage(error: unknown) {
+type PlaceUpdateAction = 'operating-status' | 'operating-schedule'
+
+function getAdminPlaceErrorMessage(
+  error: unknown,
+  fallbackMessage = ADMIN_PLACE_ERROR_MESSAGE
+) {
   if (!isApiError<AdminPlaceApiErrorResponse>(error)) {
-    return ADMIN_PLACE_ERROR_MESSAGE
+    return fallbackMessage
   }
 
   return getAuthErrorMessage(error, {
-    fallbackMessage: ADMIN_PLACE_ERROR_MESSAGE,
+    fallbackMessage,
     codeMessages: ADMIN_PLACE_CODE_MESSAGES,
     categoryMessages: ADMIN_PLACE_CATEGORY_MESSAGES,
   })
@@ -90,9 +106,13 @@ export function useAdminPlaces({
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [deletingPlaceId, setDeletingPlaceId] = useState<number | null>(null)
+  const [updatingPlaceId, setUpdatingPlaceId] = useState<number | null>(null)
+  const [updatingPlaceAction, setUpdatingPlaceAction] =
+    useState<PlaceUpdateAction | null>(null)
   const latestRequestIdRef = useRef(0)
   const latestDetailRequestIdRef = useRef(0)
   const deletingPlaceIdRef = useRef<number | null>(null)
+  const updatingPlaceActionRef = useRef<PlaceUpdateAction | null>(null)
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
@@ -116,6 +136,10 @@ export function useAdminPlaces({
     clearActionSuccessTimeout()
     setActionSuccessMessage('')
   }, [clearActionSuccessTimeout])
+
+  const clearActionErrorMessage = useCallback(() => {
+    setActionErrorMessage('')
+  }, [])
 
   const showActionSuccessMessage = useCallback(
     (message: string) => {
@@ -293,6 +317,113 @@ export function useAdminPlaces({
     ]
   )
 
+  const updatePlaceOperatingStatus = useCallback(
+    async (placeId: number, payload: AdminPlaceOperatingStatusUpdateRequest) => {
+      if (updatingPlaceActionRef.current !== null) {
+        return false
+      }
+
+      updatingPlaceActionRef.current = 'operating-status'
+      setUpdatingPlaceId(placeId)
+      setUpdatingPlaceAction('operating-status')
+      setActionErrorMessage('')
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceOperatingStatus(placeId, payload)
+
+        setPlaces((prevPlaces) =>
+          prevPlaces.map((place) =>
+            place.id === placeId
+              ? {
+                  ...place,
+                  operatingStatus: data.operatingStatus,
+                  operatingStatusCheckedAt: data.operatingStatusCheckedAt,
+                }
+              : place
+          )
+        )
+        setPlaceDetail((prevPlaceDetail) =>
+          prevPlaceDetail?.id === placeId
+            ? {
+                ...prevPlaceDetail,
+                operatingStatus: data.operatingStatus,
+                operatingStatusCheckedAt: data.operatingStatusCheckedAt,
+              }
+            : prevPlaceDetail
+        )
+        showActionSuccessMessage(data.message || '장소 운영 상태를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setActionErrorMessage(
+          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
+        )
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 운영 상태 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceActionRef.current = null
+        setUpdatingPlaceId(null)
+        setUpdatingPlaceAction(null)
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
+  const updatePlaceOperatingSchedule = useCallback(
+    async (placeId: number, payload: AdminPlaceOperatingScheduleUpdateRequest) => {
+      if (updatingPlaceActionRef.current !== null) {
+        return false
+      }
+
+      updatingPlaceActionRef.current = 'operating-schedule'
+      setUpdatingPlaceId(placeId)
+      setUpdatingPlaceAction('operating-schedule')
+      setActionErrorMessage('')
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceOperatingSchedule(placeId, payload)
+
+        setPlaceDetail((prevPlaceDetail) =>
+          prevPlaceDetail?.id === placeId
+            ? {
+                ...prevPlaceDetail,
+                regularHours: data.regularHours,
+                operatingExceptions: data.exceptions,
+              }
+            : prevPlaceDetail
+        )
+        showActionSuccessMessage(data.message || '장소 영업시간을 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setActionErrorMessage(
+          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
+        )
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 영업시간 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceActionRef.current = null
+        setUpdatingPlaceId(null)
+        setUpdatingPlaceAction(null)
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
   useEffect(() => {
     void fetchAdminPlaces()
   }, [fetchAdminPlaces])
@@ -318,9 +449,14 @@ export function useAdminPlaces({
     isDetailLoading,
     detailErrorMessage,
     deletingPlaceId,
+    updatingPlaceId,
+    updatingPlaceAction,
     fetchAdminPlaces,
     fetchAdminPlaceDetail,
     clearPlaceDetail,
+    clearActionErrorMessage,
     deletePlace,
+    updatePlaceOperatingStatus,
+    updatePlaceOperatingSchedule,
   }
 }

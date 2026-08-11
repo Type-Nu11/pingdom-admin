@@ -1419,10 +1419,10 @@ export const PlaceThumb = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
 
   @media (max-width: 520px) {
     width: 40px;
@@ -1455,30 +1455,31 @@ export const PlaceName = styled.h3`
 `
 
 export const PlaceCategoryBadge = styled.span`
-  min-height: 24px;
+  min-height: 22px;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  padding: 3px 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 999px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
+  padding: 3px 7px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 6px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
 `
 
 export const ReportBadge = styled.span`
   flex-shrink: 0;
-  padding: 3px 7px;
-  border: 1px solid ${neutral.error};
-  border-radius: 999px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 6px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
 `
 
 export const PlaceMeta = styled.p`

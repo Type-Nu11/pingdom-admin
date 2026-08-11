@@ -122,9 +122,11 @@ function LoginPage() {
             </S.InputWrap>
           </S.Field>
 
-          {isError && errorMessage ? (
-            <S.ErrorMessage role="alert">{errorMessage}</S.ErrorMessage>
-          ) : null}
+          <S.ErrorMessageSlot aria-live="polite">
+            {isError && errorMessage ? (
+              <S.ErrorMessage role="alert">{errorMessage}</S.ErrorMessage>
+            ) : null}
+          </S.ErrorMessageSlot>
 
           <S.SubmitButton type="submit" disabled={isSubmitting}>
             <span>
@@ -134,7 +136,6 @@ function LoginPage() {
                   ? '로그인 중...'
                   : '로그인'}
             </span>
-            <S.ButtonIcon aria-hidden="true">arrow_forward</S.ButtonIcon>
           </S.SubmitButton>
         </S.Form>
 

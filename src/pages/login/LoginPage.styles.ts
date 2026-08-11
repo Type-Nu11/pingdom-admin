@@ -91,13 +91,16 @@ export const Description = styled.p`
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 22px;
 `
 
 export const Field = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  & + & {
+    margin-top: 22px;
+  }
 `
 
 export const Label = styled.label`
@@ -192,19 +195,24 @@ export const ErrorMessage = styled.p`
   line-height: 1.4;
 `
 
+export const ErrorMessageSlot = styled.div`
+  min-height: 44px;
+  margin-top: 12px;
+`
+
 export const SubmitButton = styled.button`
   width: 100%;
   height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   border: 0;
   border-radius: 8px;
   background: ${neutral.primary};
   color: ${neutral.primaryText};
   font-size: 14px;
   font-weight: 600;
+  margin-top: 12px;
   cursor: pointer;
   transition:
     opacity 160ms ease,
@@ -222,12 +230,6 @@ export const SubmitButton = styled.button`
     cursor: default;
     opacity: 0.72;
   }
-`
-
-export const ButtonIcon = styled(MaterialIcon)`
-  color: currentColor;
-  font-size: 18px;
-  opacity: 0.82;
 `
 
 export const FooterText = styled.p`

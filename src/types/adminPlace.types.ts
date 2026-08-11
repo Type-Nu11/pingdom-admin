@@ -7,6 +7,15 @@ export type AdminPlaceOperatingStatus =
   | 'OPERATING'
   | 'TEMPORARILY_CLOSED'
   | 'PERMANENTLY_CLOSED'
+export type AdminPlaceDiscoveryStatus = 'VISIBLE' | 'HIDDEN'
+export type AdminPlaceDayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY'
 export type AdminPlaceTouristCategory =
   | 'K_POP'
   | 'BEAUTY'
@@ -32,7 +41,7 @@ export interface AdminPlaceOperatingTimeRange {
 }
 
 export interface AdminPlaceRegularOperatingHour {
-  dayOfWeek: string
+  dayOfWeek: AdminPlaceDayOfWeek
   opensAt: string
   closesAt: string
 }
@@ -104,6 +113,59 @@ export interface AdminPlaceDetail {
   posts: AdminPlacePostItem[]
 }
 
+export interface AdminPlaceOperatingStatusUpdateRequest {
+  operatingStatus: AdminPlaceOperatingStatus
+  reason: string
+}
+
+export interface AdminPlaceOperatingStatusUpdateResponse {
+  placeId: number
+  operatingStatus: AdminPlaceOperatingStatus
+  operatingStatusCheckedAt: string
+  message: string
+}
+
+export interface AdminPlaceOperatingTimeRangeRequest {
+  opensAt: string
+  closesAt: string
+}
+
+export interface AdminPlaceRegularOperatingHourRequest {
+  dayOfWeek: AdminPlaceDayOfWeek
+  opensAt: string
+  closesAt: string
+}
+
+export interface AdminPlaceOperatingExceptionRequest {
+  date: string
+  closed?: boolean
+  hours?: AdminPlaceOperatingTimeRangeRequest[]
+}
+
+export interface AdminPlaceOperatingScheduleUpdateRequest {
+  regularHours?: AdminPlaceRegularOperatingHourRequest[]
+  exceptions?: AdminPlaceOperatingExceptionRequest[]
+  reason: string
+}
+
+export interface AdminPlaceOperatingScheduleUpdateResponse {
+  placeId: number
+  regularHours: AdminPlaceRegularOperatingHour[]
+  exceptions: AdminPlaceOperatingException[]
+  message: string
+}
+
+export interface AdminPlaceDiscoveryStatusUpdateRequest {
+  discoveryStatus: AdminPlaceDiscoveryStatus
+  reason: string
+}
+
+export interface AdminPlaceDiscoveryStatusUpdateResponse {
+  placeId: number
+  discoveryStatus: AdminPlaceDiscoveryStatus
+  message: string
+}
+
 export interface AdminPlaceListRequest {
   page?: number
   limit?: number
@@ -140,4 +202,8 @@ export type AdminPlaceDeleteErrorResponse = AuthErrorResponse<
   | 'PLACE_EVENT_CONNECTED'
   | 'PLACE_CHECK_IN_CONNECTED'
   | 'PLACE_SCOUT_FIELD_REPORT_CONNECTED'
+>
+
+export type AdminPlaceUpdateErrorResponse = AuthErrorResponse<
+  'INVALID_TOKEN' | 'ACCESS_DENIED' | 'PLACE_NOT_FOUND'
 >

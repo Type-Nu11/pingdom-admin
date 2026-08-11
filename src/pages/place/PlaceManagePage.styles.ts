@@ -1894,6 +1894,470 @@ export const ModalOverlay = styled.div`
   backdrop-filter: blur(3px);
 `
 
+export const OperatingDialogOverlay = styled(ModalOverlay)`
+  z-index: 130;
+`
+
+export const OperatingDialog = styled.section<{ $wide?: boolean }>`
+  width: ${({ $wide }) => ($wide ? 'min(840px, 100%)' : 'min(480px, 100%)')};
+  max-height: min(820px, calc(100vh - 64px));
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 24px 70px ${neutral.strongShadow};
+`
+
+export const OperatingDialogHeader = styled.header`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid ${neutral.border};
+`
+
+export const OperatingDialogEyebrow = styled.p`
+  margin: 0 0 4px;
+  color: ${neutral.primary};
+  font-size: 11px;
+  font-weight: 800;
+`
+
+export const OperatingDialogTitle = styled.h2`
+  margin: 0;
+  color: ${neutral.strongText};
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+`
+
+export const OperatingDialogCloseButton = styled.button`
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.border};
+    background: ${neutral.surfaceLow};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const OperatingDialogBody = styled.div`
+  min-height: 0;
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+`
+
+export const OperatingDialogDescription = styled.p`
+  margin: 0;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+  word-break: keep-all;
+`
+
+export const OperatingFormField = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 800;
+
+  small {
+    align-self: flex-end;
+    color: ${neutral.softText};
+    font-size: 11px;
+    font-weight: 600;
+  }
+`
+
+export const OperatingSelect = styled.select`
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingTextArea = styled.textarea`
+  min-height: 96px;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+
+  &::placeholder {
+    color: ${neutral.softText};
+  }
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingDangerNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const OperatingFormNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const OperatingEditorSection = styled.section`
+  padding: 14px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const OperatingEditorSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  > span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+  }
+`
+
+export const OperatingWeekList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 620px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const OperatingWeekRow = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+`
+
+export const OperatingCheckLabel = styled.label`
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: ${neutral.text};
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: ${neutral.primary};
+  }
+
+  input:disabled {
+    cursor: default;
+  }
+`
+
+export const OperatingTimeControls = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+`
+
+export const OperatingTimeInput = styled.input`
+  width: 104px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 2px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    background: ${neutral.surfaceLow};
+    color: ${neutral.softText};
+  }
+`
+
+export const OperatingExceptionEditorList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`
+
+export const OperatingExceptionEditor = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+`
+
+export const OperatingExceptionEditorHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+`
+
+export const OperatingDateInput = styled.input`
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 2px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    background: ${neutral.surfaceLow};
+    color: ${neutral.softText};
+  }
+`
+
+export const OperatingExceptionHours = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+`
+
+export const OperatingExceptionTimeRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`
+
+export const OperatingIconButton = styled.button`
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surface};
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 17px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.error};
+    background: ${neutral.errorTint};
+    color: ${neutral.error};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+`
+
+export const OperatingTextButton = styled.button`
+  width: fit-content;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${neutral.primary};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const OperatingDialogActions = styled.footer`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid ${neutral.border};
+  background: ${neutral.surfaceLow};
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+`
+
+export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  border-radius: 8px;
+  background: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  color: ${neutral.primaryText};
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
 export const PlaceModal = styled.section`
   width: min(520px, 100%);
   max-height: min(760px, 92vh);

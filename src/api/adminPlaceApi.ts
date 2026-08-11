@@ -2,9 +2,15 @@ import customAxios from './customAxios'
 import type {
   AdminPlaceDetail,
   AdminPlaceDetailRequest,
+  AdminPlaceDiscoveryStatusUpdateRequest,
+  AdminPlaceDiscoveryStatusUpdateResponse,
   AdminPlaceItem,
   AdminPlaceListRequest,
   AdminPlaceListResponse,
+  AdminPlaceOperatingScheduleUpdateRequest,
+  AdminPlaceOperatingScheduleUpdateResponse,
+  AdminPlaceOperatingStatusUpdateRequest,
+  AdminPlaceOperatingStatusUpdateResponse,
 } from '../types/adminPlace.types'
 
 const ADMIN_PLACES_API_PATH = '/admin/places'
@@ -53,6 +59,42 @@ export async function getAdminPlace(
 
 export async function deleteAdminPlace(placeId: number) {
   await customAxios.delete<void>(`${ADMIN_PLACES_API_PATH}/${placeId}/delete`)
+}
+
+export async function updateAdminPlaceOperatingStatus(
+  placeId: number,
+  payload: AdminPlaceOperatingStatusUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceOperatingStatusUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/operating-status`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceOperatingSchedule(
+  placeId: number,
+  payload: AdminPlaceOperatingScheduleUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceOperatingScheduleUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/operating-schedule`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceDiscoveryStatus(
+  placeId: number,
+  payload: AdminPlaceDiscoveryStatusUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceDiscoveryStatusUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/discovery-status`,
+    payload
+  )
+
+  return data
 }
 
 export type { AdminPlaceItem }

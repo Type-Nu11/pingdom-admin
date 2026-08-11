@@ -10,9 +10,13 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
+  AdminPlaceDayOfWeek,
   AdminPlaceDetail,
   AdminPlaceItem,
   AdminPlaceListSortParam,
+  AdminPlaceOperatingException,
+  AdminPlaceOperatingStatus,
+  AdminPlaceRegularOperatingHour,
 } from '../../types/adminPlace.types'
 import {
   getPlaceCategoryIconName,
@@ -30,6 +34,56 @@ const PLACE_SORT_OPTIONS = [
   { value: 'OLDEST', label: '오래된순' },
   { value: 'LEVEL_DESC', label: '레벨 높은순' },
 ]
+
+const PLACE_OPERATING_STATUS_OPTIONS: Array<{
+  value: AdminPlaceOperatingStatus
+  label: string
+}> = [
+  { value: 'OPERATING', label: '운영 중' },
+  { value: 'TEMPORARILY_CLOSED', label: '임시 휴업' },
+  { value: 'PERMANENTLY_CLOSED', label: '영구 폐업' },
+]
+
+const PLACE_DAY_OF_WEEK_OPTIONS: Array<{
+  value: AdminPlaceDayOfWeek
+  label: string
+}> = [
+  { value: 'MONDAY', label: '월요일' },
+  { value: 'TUESDAY', label: '화요일' },
+  { value: 'WEDNESDAY', label: '수요일' },
+  { value: 'THURSDAY', label: '목요일' },
+  { value: 'FRIDAY', label: '금요일' },
+  { value: 'SATURDAY', label: '토요일' },
+  { value: 'SUNDAY', label: '일요일' },
+]
+
+interface OperatingHourDraft {
+  dayOfWeek: AdminPlaceDayOfWeek
+  enabled: boolean
+  opensAt: string
+  closesAt: string
+}
+
+interface OperatingTimeRangeDraft {
+  id: string
+  opensAt: string
+  closesAt: string
+}
+
+interface OperatingExceptionDraft {
+  id: string
+  date: string
+  closed: boolean
+  hours: OperatingTimeRangeDraft[]
+}
+
+let operatingScheduleDraftId = 0
+
+function createOperatingScheduleDraftId() {
+  operatingScheduleDraftId += 1
+
+  return `operating-schedule-${operatingScheduleDraftId}`
+}
 function hasValidCoordinate(place: AdminPlaceItem) {
   return (
     typeof place.latitude === 'number' &&
@@ -115,6 +169,168 @@ function formatPlacePostDate(value: string) {
   }).format(date)
 }
 
+function formatOperatingStatus(status?: AdminPlaceOperatingStatus) {
+  return (
+    PLACE_OPERATING_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
+    '확인 전'
+  )
+}
+
+function getOperatingStatusTone(status?: AdminPlaceOperatingStatus) {
+  if (status === 'PERMANENTLY_CLOSED') {
+    return 'danger'
+  }
+
+  if (status === 'TEMPORARILY_CLOSED') {
+    return 'notice'
+  }
+
+  return 'normal'
+}
+
+function formatOperatingStatusCheckedAt(value?: string | null) {
+  if (!value) {
+    return '확인 시각 정보 없음'
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
+function getTimeInputValue(value?: string) {
+  if (!value) {
+    return ''
+  }
+
+  const match = value.match(/^(\d{2}:\d{2})/)
+
+  return match?.[1] ?? ''
+}
+
+function getApiTimeValue(value: string) {
+  return value.length === 5 ? `${value}:00` : value
+}
+
+function formatOperatingTime(value?: string) {
+  return getTimeInputValue(value) || '시간 미정'
+}
+
+function getDayOfWeekLabel(dayOfWeek: AdminPlaceDayOfWeek) {
+  return (
+    PLACE_DAY_OF_WEEK_OPTIONS.find((option) => option.value === dayOfWeek)?.label ??
+    dayOfWeek
+  )
+}
+
+function formatExceptionDate(dateValue: string) {
+  if (!dateValue) {
+    return '날짜 미정'
+  }
+
+  const date = new Date(`${dateValue}T00:00:00`)
+
+  if (Number.isNaN(date.getTime())) {
+    return dateValue
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  }).format(date)
+}
+
+function createOperatingHourDrafts(hours: AdminPlaceRegularOperatingHour[] = []) {
+  const hoursByDay = new Map(hours.map((hour) => [hour.dayOfWeek, hour]))
+
+  return PLACE_DAY_OF_WEEK_OPTIONS.map(({ value: dayOfWeek }) => {
+    const hour = hoursByDay.get(dayOfWeek)
+
+    return {
+      dayOfWeek,
+      enabled: Boolean(hour),
+      opensAt: getTimeInputValue(hour?.opensAt) || '09:00',
+      closesAt: getTimeInputValue(hour?.closesAt) || '18:00',
+    }
+  })
+}
+
+function createOperatingExceptionDraft(
+  exception?: AdminPlaceOperatingException
+): OperatingExceptionDraft {
+  const hours = (exception?.hours ?? []).map((hour) => ({
+    id: createOperatingScheduleDraftId(),
+    opensAt: getTimeInputValue(hour.opensAt) || '09:00',
+    closesAt: getTimeInputValue(hour.closesAt) || '18:00',
+  }))
+
+  return {
+    id: createOperatingScheduleDraftId(),
+    date: exception?.date ?? '',
+    closed: exception?.closed ?? true,
+    hours:
+      exception?.closed || hours.length > 0
+        ? hours
+        : [
+            {
+              id: createOperatingScheduleDraftId(),
+              opensAt: '09:00',
+              closesAt: '18:00',
+            },
+          ],
+  }
+}
+
+function getOperatingScheduleValidationMessage(
+  regularHours: OperatingHourDraft[],
+  exceptions: OperatingExceptionDraft[],
+  reason: string
+) {
+  if (!reason.trim()) {
+    return '수정 사유를 입력해주세요.'
+  }
+
+  const hasInvalidRegularHour = regularHours.some(
+    (hour) => hour.enabled && (!hour.opensAt || !hour.closesAt)
+  )
+
+  if (hasInvalidRegularHour) {
+    return '영업하는 요일의 시작 시간과 종료 시간을 모두 입력해주세요.'
+  }
+
+  const dates = new Set<string>()
+
+  for (const exception of exceptions) {
+    if (!exception.date) {
+      return '예외 일정의 날짜를 입력해주세요.'
+    }
+
+    if (dates.has(exception.date)) {
+      return '같은 날짜의 예외 일정은 한 번만 등록할 수 있습니다.'
+    }
+
+    dates.add(exception.date)
+
+    if (
+      !exception.closed &&
+      (exception.hours.length === 0 ||
+        exception.hours.some((hour) => !hour.opensAt || !hour.closesAt))
+    ) {
+      return '대체 영업일의 시작 시간과 종료 시간을 모두 입력해주세요.'
+    }
+  }
+
+  return ''
+}
+
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   if (totalPages < 1) {
     return []
@@ -151,6 +367,20 @@ function PlaceManagePage() {
     useState<AdminPlaceDetail | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
     useState(false)
+  const [operatingStatusEditPlace, setOperatingStatusEditPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [operatingStatusDraft, setOperatingStatusDraft] =
+    useState<AdminPlaceOperatingStatus>('OPERATING')
+  const [operatingStatusReason, setOperatingStatusReason] = useState('')
+  const [operatingStatusFormError, setOperatingStatusFormError] = useState('')
+  const [operatingScheduleEditPlace, setOperatingScheduleEditPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [regularHourDrafts, setRegularHourDrafts] = useState<OperatingHourDraft[]>([])
+  const [operatingExceptionDrafts, setOperatingExceptionDrafts] = useState<
+    OperatingExceptionDraft[]
+  >([])
+  const [operatingScheduleReason, setOperatingScheduleReason] = useState('')
+  const [operatingScheduleFormError, setOperatingScheduleFormError] = useState('')
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
   const {
@@ -168,10 +398,15 @@ function PlaceManagePage() {
     isDetailLoading,
     detailErrorMessage,
     deletingPlaceId,
+    updatingPlaceId,
+    updatingPlaceAction,
     fetchAdminPlaces,
     fetchAdminPlaceDetail,
     clearPlaceDetail,
+    clearActionErrorMessage,
     deletePlace,
+    updatePlaceOperatingStatus,
+    updatePlaceOperatingSchedule,
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
@@ -207,6 +442,8 @@ function PlaceManagePage() {
   const shouldShowDetailPostAllAction = placeDetail
     ? placeDetail.postCount > PLACE_DETAIL_POST_PREVIEW_LIMIT
     : false
+  const detailRegularHours = placeDetail?.regularHours ?? []
+  const detailOperatingExceptions = placeDetail?.operatingExceptions ?? []
   const placeMapMarkers = useMemo<KakaoMapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -486,6 +723,222 @@ function PlaceManagePage() {
     })
   }
 
+  const handleOpenOperatingStatusEdit = () => {
+    if (!placeDetail || updatingPlaceId !== null) {
+      return
+    }
+
+    setOperatingStatusEditPlace(placeDetail)
+    setOperatingStatusDraft(placeDetail.operatingStatus ?? 'OPERATING')
+    setOperatingStatusReason('')
+    setOperatingStatusFormError('')
+    clearActionErrorMessage()
+  }
+
+  const handleCloseOperatingStatusEdit = useCallback(() => {
+    if (updatingPlaceAction === 'operating-status') {
+      return
+    }
+
+    setOperatingStatusEditPlace(null)
+    setOperatingStatusFormError('')
+  }, [updatingPlaceAction])
+
+  const handleConfirmOperatingStatusEdit = () => {
+    if (!operatingStatusEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    if (!operatingStatusReason.trim()) {
+      setOperatingStatusFormError('운영 상태 확인 사유를 입력해주세요.')
+      return
+    }
+
+    setOperatingStatusFormError('')
+
+    void updatePlaceOperatingStatus(operatingStatusEditPlace.id, {
+      operatingStatus: operatingStatusDraft,
+      reason: operatingStatusReason.trim(),
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setOperatingStatusEditPlace(null)
+      }
+    })
+  }
+
+  const handleOpenOperatingScheduleEdit = () => {
+    if (!placeDetail || updatingPlaceId !== null) {
+      return
+    }
+
+    setOperatingScheduleEditPlace(placeDetail)
+    setRegularHourDrafts(createOperatingHourDrafts(placeDetail.regularHours))
+    setOperatingExceptionDrafts(
+      (placeDetail.operatingExceptions ?? []).map((exception) =>
+        createOperatingExceptionDraft(exception)
+      )
+    )
+    setOperatingScheduleReason('')
+    setOperatingScheduleFormError('')
+    clearActionErrorMessage()
+  }
+
+  const handleCloseOperatingScheduleEdit = useCallback(() => {
+    if (updatingPlaceAction === 'operating-schedule') {
+      return
+    }
+
+    setOperatingScheduleEditPlace(null)
+    setOperatingScheduleFormError('')
+  }, [updatingPlaceAction])
+
+  const handleRegularHourDraftChange = (
+    dayOfWeek: AdminPlaceDayOfWeek,
+    patch: Partial<OperatingHourDraft>
+  ) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((hour) =>
+        hour.dayOfWeek === dayOfWeek ? { ...hour, ...patch } : hour
+      )
+    )
+  }
+
+  const handleAddOperatingException = () => {
+    setOperatingExceptionDrafts((prevExceptions) => [
+      ...prevExceptions,
+      createOperatingExceptionDraft(),
+    ])
+  }
+
+  const handleOperatingExceptionChange = (
+    exceptionId: string,
+    patch: Partial<Pick<OperatingExceptionDraft, 'date' | 'closed'>>
+  ) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) => {
+        if (exception.id !== exceptionId) {
+          return exception
+        }
+
+        const nextException = { ...exception, ...patch }
+
+        if (patch.closed === false && nextException.hours.length === 0) {
+          nextException.hours = [
+            {
+              id: createOperatingScheduleDraftId(),
+              opensAt: '09:00',
+              closesAt: '18:00',
+            },
+          ]
+        }
+
+        return nextException
+      })
+    )
+  }
+
+  const handleRemoveOperatingException = (exceptionId: string) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.filter((exception) => exception.id !== exceptionId)
+    )
+  }
+
+  const handleOperatingExceptionHourChange = (
+    exceptionId: string,
+    hourId: string,
+    patch: Partial<Pick<OperatingTimeRangeDraft, 'opensAt' | 'closesAt'>>
+  ) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) =>
+        exception.id === exceptionId
+          ? {
+              ...exception,
+              hours: exception.hours.map((hour) =>
+                hour.id === hourId ? { ...hour, ...patch } : hour
+              ),
+            }
+          : exception
+      )
+    )
+  }
+
+  const handleAddOperatingExceptionHour = (exceptionId: string) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) =>
+        exception.id === exceptionId
+          ? {
+              ...exception,
+              hours: [
+                ...exception.hours,
+                {
+                  id: createOperatingScheduleDraftId(),
+                  opensAt: '09:00',
+                  closesAt: '18:00',
+                },
+              ],
+            }
+          : exception
+      )
+    )
+  }
+
+  const handleRemoveOperatingExceptionHour = (exceptionId: string, hourId: string) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) =>
+        exception.id === exceptionId
+          ? {
+              ...exception,
+              hours: exception.hours.filter((hour) => hour.id !== hourId),
+            }
+          : exception
+      )
+    )
+  }
+
+  const handleConfirmOperatingScheduleEdit = () => {
+    if (!operatingScheduleEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    const validationMessage = getOperatingScheduleValidationMessage(
+      regularHourDrafts,
+      operatingExceptionDrafts,
+      operatingScheduleReason
+    )
+
+    if (validationMessage) {
+      setOperatingScheduleFormError(validationMessage)
+      return
+    }
+
+    setOperatingScheduleFormError('')
+
+    void updatePlaceOperatingSchedule(operatingScheduleEditPlace.id, {
+      regularHours: regularHourDrafts
+        .filter((hour) => hour.enabled)
+        .map((hour) => ({
+          dayOfWeek: hour.dayOfWeek,
+          opensAt: getApiTimeValue(hour.opensAt),
+          closesAt: getApiTimeValue(hour.closesAt),
+        })),
+      exceptions: operatingExceptionDrafts.map((exception) => ({
+        date: exception.date,
+        closed: exception.closed,
+        hours: exception.closed
+          ? []
+          : exception.hours.map((hour) => ({
+              opensAt: getApiTimeValue(hour.opensAt),
+              closesAt: getApiTimeValue(hour.closesAt),
+            })),
+      })),
+      reason: operatingScheduleReason.trim(),
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setOperatingScheduleEditPlace(null)
+      }
+    })
+  }
+
   useEffect(() => {
     if (!selectedPlace || !hasValidCoordinate(selectedPlace)) {
       return
@@ -519,6 +972,36 @@ function PlaceManagePage() {
       window.removeEventListener('keydown', closeDeleteConfirmOnEscape)
     }
   }, [deleteConfirmPlace, handleCloseDeleteConfirm])
+
+  useEffect(() => {
+    function closeOperatingDialogOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') {
+        return
+      }
+
+      if (operatingStatusEditPlace) {
+        handleCloseOperatingStatusEdit()
+        return
+      }
+
+      handleCloseOperatingScheduleEdit()
+    }
+
+    if (!operatingStatusEditPlace && !operatingScheduleEditPlace) {
+      return
+    }
+
+    window.addEventListener('keydown', closeOperatingDialogOnEscape)
+
+    return () => {
+      window.removeEventListener('keydown', closeOperatingDialogOnEscape)
+    }
+  }, [
+    handleCloseOperatingScheduleEdit,
+    handleCloseOperatingStatusEdit,
+    operatingScheduleEditPlace,
+    operatingStatusEditPlace,
+  ])
 
   return (
     <S.AppShell>

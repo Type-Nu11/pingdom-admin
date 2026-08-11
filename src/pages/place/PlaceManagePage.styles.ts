@@ -587,6 +587,246 @@ export const DetailSectionTitle = styled.h4`
   font-weight: 800;
 `
 
+export const DetailSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  ${DetailSectionTitle} {
+    margin-bottom: 10px;
+  }
+`
+
+export const DetailInlineButton = styled.button`
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+  color: ${neutral.primary};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const OperatingSummary = styled.div`
+  overflow: hidden;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const OperatingSummaryRow = styled.div`
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid ${neutral.border};
+
+  &:first-child {
+    border-top: 0;
+  }
+`
+
+export const OperatingSummaryLabel = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  span {
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  small {
+    overflow: hidden;
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const OperatingSummaryAction = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+`
+
+export const OperatingStatusBadge = styled.span<{
+  $tone: 'normal' | 'notice' | 'danger'
+}>`
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid
+    ${({ $tone }) =>
+      $tone === 'danger'
+        ? neutral.error
+        : $tone === 'notice'
+          ? neutral.warning
+          : neutral.success};
+  border-radius: 999px;
+  background: ${({ $tone }) =>
+    $tone === 'danger'
+      ? neutral.errorTint
+      : $tone === 'notice'
+        ? neutral.warningTint
+        : neutral.successSurface};
+  color: ${({ $tone }) =>
+    $tone === 'danger'
+      ? neutral.error
+      : $tone === 'notice'
+        ? neutral.warningText
+        : neutral.successText};
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+`
+
+export const OperatingHoursList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const OperatingHoursItem = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surface};
+
+  span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  strong {
+    overflow: hidden;
+    color: ${neutral.text};
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const OperatingExceptionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+
+  span {
+    color: ${neutral.strongText};
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  small {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 700;
+  }
+`
+
+export const OperatingExceptionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+`
+
+export const OperatingExceptionItem = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surface};
+
+  span,
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  strong {
+    color: ${neutral.text};
+    font-size: 11px;
+    font-weight: 700;
+    text-align: right;
+  }
+`
+
+export const OperatingEmptyState = styled.p`
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+`
+
 export const DetailGrowthProgress = styled.div`
   margin-top: 10px;
   padding: 12px;

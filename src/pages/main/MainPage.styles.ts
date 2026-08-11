@@ -1198,46 +1198,29 @@ export const ModalStatusLine = styled.div`
   gap: 8px;
 `
 
-export const ModalMetricBadge = styled.span<{
-  $tone?: 'neutral' | 'normal' | 'reported' | 'processed'
-}>`
-  min-height: 26px;
-  display: inline-flex;
+export const ModalStats = styled.div`
+  display: flex;
   align-items: center;
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
-  background: ${neutral.surfaceHighest};
+  flex-wrap: wrap;
+  gap: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
+  font-weight: 600;
+  line-height: 1.4;
+`
+
+export const ModalStat = styled.span`
+  display: inline-flex;
+  align-items: center;
   white-space: nowrap;
 
-  ${({ $tone }) =>
-    $tone === 'normal' &&
-    css`
-      border-color: ${neutral.success};
-      background: ${neutral.successTint};
-      color: ${neutral.successText};
-    `}
-
-  ${({ $tone }) =>
-    $tone === 'reported' &&
-    css`
-      border-color: ${neutral.error};
-      background: ${neutral.errorTint};
-      color: ${neutral.error};
-    `}
-
-  ${({ $tone }) =>
-    $tone === 'processed' &&
-    css`
-      border-color: ${neutral.info};
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.info};
-    `}
+  & + &::before {
+    width: 1px;
+    height: 12px;
+    margin: 0 8px;
+    background: ${neutral.border};
+    content: '';
+  }
 `
 
 export const ModalImageFrame = styled.div`

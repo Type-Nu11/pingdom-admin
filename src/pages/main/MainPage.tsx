@@ -154,6 +154,25 @@ function getPostStatusLabel(post: AdminPost) {
   return '신고 없음'
 }
 
+function getPostDetailStatusLabel(post: AdminPost) {
+  const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
+
+  if (pendingReportCount > 0) {
+    return '신고 검토 필요'
+  }
+
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return '숨김 처리'
+  }
+
+  if (reports.length > 0) {
+    return '신고 처리 완료'
+  }
+
+  return '신고 없음'
+}
+
 function getPostReportSummaryLabel(post: AdminPost) {
   const reports = getPostReports(post)
   const pendingReportCount = getPendingPostReports(post).length
@@ -1143,32 +1162,17 @@ function MainPage() {
                   <S.ModalStatusRow aria-label="게시글 상태 요약">
                     <S.ModalStatusLine>
                       <S.StatusBadge $tone={getPostStatusTone(activePost)}>
-                        {getPostStatusLabel(activePost)}
+                        {getPostDetailStatusLabel(activePost)}
                       </S.StatusBadge>
-                      <S.ModalMetricBadge
+                      <S.StatusBadge
                         $tone={
                           activePost.visibilityStatus === 'AUTO_HIDDEN'
-                            ? 'reported'
+                            ? 'hidden'
                             : 'normal'
                         }
                       >
                         {getPostVisibilityLabel(activePost)}
-                      </S.ModalMetricBadge>
-                    </S.ModalStatusLine>
-                    <S.ModalStatusLine>
-                      <S.ModalMetricBadge
-                        $tone={activePendingReportCount > 0 ? 'reported' : 'neutral'}
-                      >
-                        미처리 신고 {formatCount(activePendingReportCount)}
-                      </S.ModalMetricBadge>
-                      <S.ModalMetricBadge
-                        $tone={activeReports.length > 0 ? 'processed' : 'neutral'}
-                      >
-                        전체 신고 {formatCount(activeReports.length)}
-                      </S.ModalMetricBadge>
-                      <S.ModalMetricBadge>
-                        좋아요 {formatCount(activePost.likeCount)}
-                      </S.ModalMetricBadge>
+                      </S.StatusBadge>
                     </S.ModalStatusLine>
                   </S.ModalStatusRow>
 

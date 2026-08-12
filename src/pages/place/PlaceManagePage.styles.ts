@@ -1441,6 +1441,14 @@ export const PlaceTitleRow = styled.div`
   gap: 8px;
 `
 
+export const PlaceTitleBadges = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+`
+
 export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
@@ -1466,6 +1474,22 @@ export const PlaceCategoryBadge = styled.span`
   color: ${neutral.primary};
   font-size: 11px;
   font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+`
+
+export const PlaceDiscoveryStatusBadge = styled.span`
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border: 1px solid ${neutral.borderDark};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
 `

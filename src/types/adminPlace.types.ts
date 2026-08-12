@@ -8,6 +8,7 @@ export type AdminPlaceOperatingStatus =
   | 'TEMPORARILY_CLOSED'
   | 'PERMANENTLY_CLOSED'
 export type AdminPlaceDiscoveryStatus = 'VISIBLE' | 'HIDDEN'
+export type AdminPlacePostVisibilityStatus = 'VISIBLE' | 'HIDDEN'
 export type AdminPlaceDayOfWeek =
   | 'MONDAY'
   | 'TUESDAY'
@@ -85,6 +86,8 @@ export interface AdminPlacePostItem {
   username: string
   createdAt: string
   likeCount: number
+  visibilityStatus?: AdminPlacePostVisibilityStatus
+  hiddenReason?: string | null
 }
 
 export interface AdminPlaceDetail {

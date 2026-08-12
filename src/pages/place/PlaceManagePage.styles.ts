@@ -2115,8 +2115,8 @@ export const OperatingWeekList = styled.div`
 export const OperatingWeekRow = styled.div`
   min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 10px;
   padding: 8px 10px;
   border: 1px solid ${neutral.border};

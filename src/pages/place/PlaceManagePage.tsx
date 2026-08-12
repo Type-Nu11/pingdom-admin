@@ -57,11 +57,9 @@ const PLACE_DAY_OF_WEEK_OPTIONS: Array<{
   { value: 'SUNDAY', label: '일요일' },
 ]
 
-interface OperatingHourDraft {
+interface RegularOperatingDayDraft {
   dayOfWeek: AdminPlaceDayOfWeek
-  enabled: boolean
-  opensAt: string
-  closesAt: string
+  hours: OperatingTimeRangeDraft[]
 }
 
 interface OperatingTimeRangeDraft {
@@ -249,16 +247,28 @@ function formatExceptionDate(dateValue: string) {
 }
 
 function createOperatingHourDrafts(hours: AdminPlaceRegularOperatingHour[] = []) {
-  const hoursByDay = new Map(hours.map((hour) => [hour.dayOfWeek, hour]))
+  const hoursByDay = new Map<
+    AdminPlaceDayOfWeek,
+    AdminPlaceRegularOperatingHour[]
+  >()
+
+  hours.forEach((hour) => {
+    const dayHours = hoursByDay.get(hour.dayOfWeek) ?? []
+
+    dayHours.push(hour)
+    hoursByDay.set(hour.dayOfWeek, dayHours)
+  })
 
   return PLACE_DAY_OF_WEEK_OPTIONS.map(({ value: dayOfWeek }) => {
-    const hour = hoursByDay.get(dayOfWeek)
+    const dayHours = hoursByDay.get(dayOfWeek) ?? []
 
     return {
       dayOfWeek,
-      enabled: Boolean(hour),
-      opensAt: getTimeInputValue(hour?.opensAt) || '09:00',
-      closesAt: getTimeInputValue(hour?.closesAt) || '18:00',
+      hours: dayHours.map((hour) => ({
+        id: createOperatingScheduleDraftId(),
+        opensAt: getTimeInputValue(hour.opensAt) || '09:00',
+        closesAt: getTimeInputValue(hour.closesAt) || '18:00',
+      })),
     }
   })
 }
@@ -290,7 +300,7 @@ function createOperatingExceptionDraft(
 }
 
 function getOperatingScheduleValidationMessage(
-  regularHours: OperatingHourDraft[],
+  regularHours: RegularOperatingDayDraft[],
   exceptions: OperatingExceptionDraft[],
   reason: string
 ) {
@@ -298,8 +308,8 @@ function getOperatingScheduleValidationMessage(
     return '수정 사유를 입력해주세요.'
   }
 
-  const hasInvalidRegularHour = regularHours.some(
-    (hour) => hour.enabled && (!hour.opensAt || !hour.closesAt)
+  const hasInvalidRegularHour = regularHours.some((day) =>
+    day.hours.some((hour) => !hour.opensAt || !hour.closesAt)
   )
 
   if (hasInvalidRegularHour) {
@@ -375,7 +385,9 @@ function PlaceManagePage() {
   const [operatingStatusFormError, setOperatingStatusFormError] = useState('')
   const [operatingScheduleEditPlace, setOperatingScheduleEditPlace] =
     useState<AdminPlaceDetail | null>(null)
-  const [regularHourDrafts, setRegularHourDrafts] = useState<OperatingHourDraft[]>([])
+  const [regularHourDrafts, setRegularHourDrafts] = useState<
+    RegularOperatingDayDraft[]
+  >([])
   const [operatingExceptionDrafts, setOperatingExceptionDrafts] = useState<
     OperatingExceptionDraft[]
   >([])
@@ -792,13 +804,85 @@ function PlaceManagePage() {
     setOperatingScheduleFormError('')
   }, [updatingPlaceAction])
 
-  const handleRegularHourDraftChange = (
+  const handleRegularOperatingDayEnabledChange = (
     dayOfWeek: AdminPlaceDayOfWeek,
-    patch: Partial<OperatingHourDraft>
+    enabled: boolean
   ) => {
     setRegularHourDrafts((prevHours) =>
-      prevHours.map((hour) =>
-        hour.dayOfWeek === dayOfWeek ? { ...hour, ...patch } : hour
+      prevHours.map((day) => {
+        if (day.dayOfWeek !== dayOfWeek) {
+          return day
+        }
+
+        return {
+          ...day,
+          hours: enabled
+            ? day.hours.length > 0
+              ? day.hours
+              : [
+                  {
+                    id: createOperatingScheduleDraftId(),
+                    opensAt: '09:00',
+                    closesAt: '18:00',
+                  },
+                ]
+            : [],
+        }
+      })
+    )
+  }
+
+  const handleRegularOperatingHourChange = (
+    dayOfWeek: AdminPlaceDayOfWeek,
+    hourId: string,
+    patch: Partial<Pick<OperatingTimeRangeDraft, 'opensAt' | 'closesAt'>>
+  ) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              hours: day.hours.map((hour) =>
+                hour.id === hourId ? { ...hour, ...patch } : hour
+              ),
+            }
+          : day
+      )
+    )
+  }
+
+  const handleAddRegularOperatingHour = (dayOfWeek: AdminPlaceDayOfWeek) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              hours: [
+                ...day.hours,
+                {
+                  id: createOperatingScheduleDraftId(),
+                  opensAt: '09:00',
+                  closesAt: '18:00',
+                },
+              ],
+            }
+          : day
+      )
+    )
+  }
+
+  const handleRemoveRegularOperatingHour = (
+    dayOfWeek: AdminPlaceDayOfWeek,
+    hourId: string
+  ) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              hours: day.hours.filter((hour) => hour.id !== hourId),
+            }
+          : day
       )
     )
   }
@@ -914,13 +998,13 @@ function PlaceManagePage() {
     setOperatingScheduleFormError('')
 
     void updatePlaceOperatingSchedule(operatingScheduleEditPlace.id, {
-      regularHours: regularHourDrafts
-        .filter((hour) => hour.enabled)
-        .map((hour) => ({
-          dayOfWeek: hour.dayOfWeek,
+      regularHours: regularHourDrafts.flatMap((day) =>
+        day.hours.map((hour) => ({
+          dayOfWeek: day.dayOfWeek,
           opensAt: getApiTimeValue(hour.opensAt),
           closesAt: getApiTimeValue(hour.closesAt),
-        })),
+        }))
+      ),
       exceptions: operatingExceptionDrafts.map((exception) => ({
         date: exception.date,
         closed: exception.closed,
@@ -1778,50 +1862,91 @@ function PlaceManagePage() {
                 <S.OperatingWeekList>
                   {regularHourDrafts.map((hour) => (
                     <S.OperatingWeekRow key={hour.dayOfWeek}>
-                      <S.OperatingCheckLabel>
-                        <input
-                          type="checkbox"
-                          checked={hour.enabled}
-                          disabled={updatingPlaceAction === 'operating-schedule'}
-                          onChange={(event) =>
-                            handleRegularHourDraftChange(hour.dayOfWeek, {
-                              enabled: event.target.checked,
-                            })
-                          }
-                        />
-                        <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
-                      </S.OperatingCheckLabel>
-                      <S.OperatingTimeControls>
-                        <S.OperatingTimeInput
-                          type="time"
-                          value={hour.opensAt}
-                          aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
-                          disabled={
-                            !hour.enabled ||
-                            updatingPlaceAction === 'operating-schedule'
-                          }
-                          onChange={(event) =>
-                            handleRegularHourDraftChange(hour.dayOfWeek, {
-                              opensAt: event.target.value,
-                            })
-                          }
-                        />
-                        <span>-</span>
-                        <S.OperatingTimeInput
-                          type="time"
-                          value={hour.closesAt}
-                          aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
-                          disabled={
-                            !hour.enabled ||
-                            updatingPlaceAction === 'operating-schedule'
-                          }
-                          onChange={(event) =>
-                            handleRegularHourDraftChange(hour.dayOfWeek, {
-                              closesAt: event.target.value,
-                            })
-                          }
-                        />
-                      </S.OperatingTimeControls>
+                      <div>
+                        <S.OperatingCheckLabel>
+                          <input
+                            type="checkbox"
+                            checked={hour.hours.length > 0}
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onChange={(event) =>
+                              handleRegularOperatingDayEnabledChange(
+                                hour.dayOfWeek,
+                                event.target.checked
+                              )
+                            }
+                          />
+                          <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
+                        </S.OperatingCheckLabel>
+                        {hour.hours.length > 0 ? (
+                          <S.OperatingTextButton
+                            type="button"
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onClick={() =>
+                              handleAddRegularOperatingHour(hour.dayOfWeek)
+                            }
+                          >
+                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                            시간대 추가
+                          </S.OperatingTextButton>
+                        ) : null}
+                      </div>
+                      {hour.hours.length > 0 ? (
+                        <S.OperatingExceptionHours>
+                          {hour.hours.map((timeRange) => (
+                            <S.OperatingExceptionTimeRow key={timeRange.id}>
+                              <S.OperatingTimeControls>
+                                <S.OperatingTimeInput
+                                  type="time"
+                                  value={timeRange.opensAt}
+                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
+                                  disabled={
+                                    updatingPlaceAction === 'operating-schedule'
+                                  }
+                                  onChange={(event) =>
+                                    handleRegularOperatingHourChange(
+                                      hour.dayOfWeek,
+                                      timeRange.id,
+                                      { opensAt: event.target.value }
+                                    )
+                                  }
+                                />
+                                <span>-</span>
+                                <S.OperatingTimeInput
+                                  type="time"
+                                  value={timeRange.closesAt}
+                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
+                                  disabled={
+                                    updatingPlaceAction === 'operating-schedule'
+                                  }
+                                  onChange={(event) =>
+                                    handleRegularOperatingHourChange(
+                                      hour.dayOfWeek,
+                                      timeRange.id,
+                                      { closesAt: event.target.value }
+                                    )
+                                  }
+                                />
+                              </S.OperatingTimeControls>
+                              <S.OperatingIconButton
+                                type="button"
+                                aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 영업시간 삭제`}
+                                title="시간 삭제"
+                                disabled={
+                                  updatingPlaceAction === 'operating-schedule'
+                                }
+                                onClick={() =>
+                                  handleRemoveRegularOperatingHour(
+                                    hour.dayOfWeek,
+                                    timeRange.id
+                                  )
+                                }
+                              >
+                                <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
+                              </S.OperatingIconButton>
+                            </S.OperatingExceptionTimeRow>
+                          ))}
+                        </S.OperatingExceptionHours>
+                      ) : null}
                     </S.OperatingWeekRow>
                   ))}
                 </S.OperatingWeekList>

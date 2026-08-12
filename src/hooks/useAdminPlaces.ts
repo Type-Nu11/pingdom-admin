@@ -3,6 +3,7 @@ import {
   deleteAdminPlace,
   getAdminPlace,
   getAdminPlaces,
+  updateAdminPlaceDiscoveryStatus,
   updateAdminPlaceOperatingSchedule,
   updateAdminPlaceOperatingStatus,
 } from '../api/adminPlaceApi'
@@ -15,6 +16,7 @@ import type {
   AdminPlaceDetail,
   AdminPlaceDetailErrorResponse,
   AdminPlaceDetailRequest,
+  AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceItem,
   AdminPlaceListErrorResponse,
   AdminPlaceListRequest,
@@ -56,7 +58,10 @@ type AdminPlaceApiErrorResponse =
   | AdminPlaceDeleteErrorResponse
   | AdminPlaceUpdateErrorResponse
 
-type PlaceUpdateAction = 'operating-status' | 'operating-schedule'
+type PlaceUpdateAction =
+  | 'operating-status'
+  | 'operating-schedule'
+  | 'discovery-status'
 
 function getAdminPlaceErrorMessage(
   error: unknown,
@@ -424,6 +429,63 @@ export function useAdminPlaces({
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
   )
 
+  const updatePlaceDiscoveryStatus = useCallback(
+    async (placeId: number, payload: AdminPlaceDiscoveryStatusUpdateRequest) => {
+      if (updatingPlaceActionRef.current !== null) {
+        return false
+      }
+
+      updatingPlaceActionRef.current = 'discovery-status'
+      setUpdatingPlaceId(placeId)
+      setUpdatingPlaceAction('discovery-status')
+      setActionErrorMessage('')
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceDiscoveryStatus(placeId, payload)
+
+        setPlaces((prevPlaces) =>
+          prevPlaces.map((place) =>
+            place.id === placeId
+              ? {
+                  ...place,
+                  discoveryStatus: data.discoveryStatus,
+                }
+              : place
+          )
+        )
+        setPlaceDetail((prevPlaceDetail) =>
+          prevPlaceDetail?.id === placeId
+            ? {
+                ...prevPlaceDetail,
+                discoveryStatus: data.discoveryStatus,
+              }
+            : prevPlaceDetail
+        )
+        showActionSuccessMessage(data.message || '장소 탐색 노출 상태를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setActionErrorMessage(
+          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
+        )
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 탐색 노출 상태 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceActionRef.current = null
+        setUpdatingPlaceId(null)
+        setUpdatingPlaceAction(null)
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
   useEffect(() => {
     void fetchAdminPlaces()
   }, [fetchAdminPlaces])
@@ -456,6 +518,7 @@ export function useAdminPlaces({
     clearPlaceDetail,
     clearActionErrorMessage,
     deletePlace,
+    updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
   }

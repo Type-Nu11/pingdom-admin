@@ -1862,7 +1862,7 @@ function PlaceManagePage() {
                 <S.OperatingWeekList>
                   {regularHourDrafts.map((hour) => (
                     <S.OperatingWeekRow key={hour.dayOfWeek}>
-                      <div>
+                      <S.OperatingWeekRowHeader>
                         <S.OperatingCheckLabel>
                           <input
                             type="checkbox"
@@ -1889,7 +1889,7 @@ function PlaceManagePage() {
                             시간대 추가
                           </S.OperatingTextButton>
                         ) : null}
-                      </div>
+                      </S.OperatingWeekRowHeader>
                       {hour.hours.length > 0 ? (
                         <S.OperatingExceptionHours>
                           {hour.hours.map((timeRange) => (

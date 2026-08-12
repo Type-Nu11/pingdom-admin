@@ -2124,6 +2124,13 @@ export const OperatingWeekRow = styled.div`
   background: ${neutral.surface};
 `
 
+export const OperatingWeekRowHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+`
+
 export const OperatingCheckLabel = styled.label`
   min-width: 0;
   display: inline-flex;

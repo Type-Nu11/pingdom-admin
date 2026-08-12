@@ -43,6 +43,17 @@ function LoginPage() {
         </S.Header>
 
         <S.Form
+          onKeyDownCapture={(event) => {
+            if (event.key !== 'Enter' || event.nativeEvent.isComposing) {
+              return
+            }
+
+            event.preventDefault()
+
+            if (!isSubmitting) {
+              event.currentTarget.requestSubmit()
+            }
+          }}
           onSubmit={async (event) => {
             event.preventDefault()
 

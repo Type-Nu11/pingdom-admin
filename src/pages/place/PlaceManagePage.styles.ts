@@ -688,7 +688,7 @@ export const OperatingSummaryAction = styled.div`
 `
 
 export const OperatingStatusBadge = styled.span<{
-  $tone: 'normal' | 'notice' | 'danger'
+  $tone: 'normal' | 'notice' | 'danger' | 'muted'
 }>`
   min-height: 28px;
   display: inline-flex;
@@ -701,20 +701,26 @@ export const OperatingStatusBadge = styled.span<{
         ? neutral.error
         : $tone === 'notice'
           ? neutral.warning
-          : neutral.success};
+          : $tone === 'muted'
+            ? neutral.borderDark
+            : neutral.success};
   border-radius: 999px;
   background: ${({ $tone }) =>
     $tone === 'danger'
       ? neutral.errorTint
       : $tone === 'notice'
         ? neutral.warningTint
-        : neutral.successSurface};
+        : $tone === 'muted'
+          ? neutral.surfaceHighest
+          : neutral.successSurface};
   color: ${({ $tone }) =>
     $tone === 'danger'
       ? neutral.error
       : $tone === 'notice'
         ? neutral.warningText
-        : neutral.successText};
+        : $tone === 'muted'
+          ? neutral.muted
+          : neutral.successText};
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;

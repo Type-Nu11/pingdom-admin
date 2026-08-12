@@ -84,6 +84,13 @@ function getPostTitle(post: AdminPost) {
   return post.name || `게시글-${post.id}`
 }
 
+function isSamePostTitleAndPlaceName(post: AdminPost) {
+  const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+  const placeName = post.placeName?.trim()
+
+  return Boolean(placeName && normalize(getPostTitle(post)) === normalize(placeName))
+}
+
 function getPostReports(post: AdminPost) {
   return Array.isArray(post.reports) ? post.reports : []
 }
@@ -362,6 +369,9 @@ function MainPage() {
   const activePostId = activePost?.id ?? null
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
+  const shouldShowActivePostPlaceName = activePost
+    ? Boolean(activePost.placeName && !isSamePostTitleAndPlaceName(activePost))
+    : false
   const activePendingReportCount = activePost
     ? getPendingPostReports(activePost).length
     : 0
@@ -1106,9 +1116,9 @@ function MainPage() {
                       ? ` (ID ${activePost.userId})`
                       : ''}
                   </S.ModalMetaChip>
-                  <S.ModalMetaChip>
-                    {activePost.placeName || '장소 정보 없음'}
-                  </S.ModalMetaChip>
+                  {shouldShowActivePostPlaceName ? (
+                    <S.ModalMetaChip>{activePost.placeName}</S.ModalMetaChip>
+                  ) : null}
                 </S.ModalMetaList>
               </div>
               <S.ModalCloseButton
@@ -1174,20 +1184,29 @@ function MainPage() {
                         {getPostVisibilityLabel(activePost)}
                       </S.StatusBadge>
                     </S.ModalStatusLine>
+                    <S.ModalStats aria-label="게시글 통계">
+                      {activePendingReportCount > 0 ? (
+                        <S.ModalStat>미처리 신고 {formatCount(activePendingReportCount)}</S.ModalStat>
+                      ) : null}
+                      {activeReports.length > 0 ? (
+                        <S.ModalStat>전체 신고 {formatCount(activeReports.length)}</S.ModalStat>
+                      ) : null}
+                      <S.ModalStat>좋아요 {formatCount(activePost.likeCount)}</S.ModalStat>
+                    </S.ModalStats>
                   </S.ModalStatusRow>
 
-                  <S.ModalInfoGrid>
-                    <S.ModalInfoItem $wide>
+                  <S.ModalDateList>
+                    <S.ModalDateItem>
                       <span>작성일</span>
                       <strong>{formatPostDate(activePost.createdAt)}</strong>
-                    </S.ModalInfoItem>
+                    </S.ModalDateItem>
                     {activePost.hiddenAt ? (
-                      <S.ModalInfoItem $wide>
+                      <S.ModalDateItem>
                         <span>숨김 처리일</span>
                         <strong>{formatPostDate(activePost.hiddenAt)}</strong>
-                      </S.ModalInfoItem>
+                      </S.ModalDateItem>
                     ) : null}
-                  </S.ModalInfoGrid>
+                  </S.ModalDateList>
 
                   <S.ModalPostDescriptionCard>
                     <S.ModalSectionTitle>게시글 내용</S.ModalSectionTitle>
@@ -1260,8 +1279,7 @@ function MainPage() {
                           <S.MaterialIcon>report_off</S.MaterialIcon>
                         </S.ModalEmptyIcon>
                         <S.ModalEmptyContent>
-                          <strong>신고 내역이 없습니다.</strong>
-                          <span>이 게시글은 접수된 신고 없이 확인되었습니다.</span>
+                          <strong>접수된 신고가 없습니다.</strong>
                         </S.ModalEmptyContent>
                       </S.ModalEmptyState>
                     )}
@@ -1308,7 +1326,9 @@ function MainPage() {
                     }}
                   >
                     <S.MaterialIcon aria-hidden="true">skip_next</S.MaterialIcon>
-                    <span>다음 게시글</span>
+                    <span>
+                      {nextReviewPost ? `다음 게시글 #${nextReviewPost.id}` : '다음 게시글'}
+                    </span>
                   </S.SecondaryButton>
                   <S.DangerButton
                     type="button"

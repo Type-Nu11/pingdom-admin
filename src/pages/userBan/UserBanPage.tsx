@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminBannedUsers } from '../../hooks/useAdminBannedUsers'
 import { useAuth } from '../../hooks/useAuth'
@@ -59,6 +60,10 @@ const BAN_REASON_LABELS: Record<string, string> = {
 }
 
 type BadgeTone = 'danger' | 'warning' | 'success' | 'neutral'
+
+function padDatePart(value: number) {
+  return String(value).padStart(2, '0')
+}
 
 function formatBanType(value: string) {
   if (value === 'PERMANENT') {
@@ -302,294 +307,6 @@ function AdminFilterMenu({
         </U.FilterMenuList>
       ) : null}
     </U.FilterMenuRoot>
-  )
-}
-
-const DATE_WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => padDatePart(index))
-const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => padDatePart(index))
-
-function padDatePart(value: number) {
-  return String(value).padStart(2, '0')
-}
-
-function parseDateTimeInput(value: string) {
-  const parsed = value ? new Date(value) : new Date()
-
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
-}
-
-function formatDateTimeInput(date: Date) {
-  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(
-    date.getDate()
-  )}T${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
-}
-
-function formatDatePickerLabel(value: string) {
-  if (!value) {
-    return '일시 선택'
-  }
-
-  const date = parseDateTimeInput(value)
-
-  return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}. ${padDatePart(
-    date.getHours()
-  )}:${padDatePart(date.getMinutes())}`
-}
-
-function getCalendarDays(viewDate: Date) {
-  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1)
-  const calendarStart = new Date(
-    viewDate.getFullYear(),
-    viewDate.getMonth(),
-    1 - firstDay.getDay()
-  )
-
-  return Array.from({ length: 42 }, (_, index) =>
-    new Date(
-      calendarStart.getFullYear(),
-      calendarStart.getMonth(),
-      calendarStart.getDate() + index
-    )
-  )
-}
-
-function isSameDate(left: Date | null, right: Date) {
-  return Boolean(
-    left &&
-      left.getFullYear() === right.getFullYear() &&
-      left.getMonth() === right.getMonth() &&
-      left.getDate() === right.getDate()
-  )
-}
-
-interface AdminDatePickerProps {
-  ariaLabel: string
-  value: string
-  onChange: (value: string) => void
-}
-
-function AdminDatePicker({
-  ariaLabel,
-  value,
-  onChange,
-}: AdminDatePickerProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
-  const [viewDate, setViewDate] = useState(() => parseDateTimeInput(value))
-  const rootRef = useRef<HTMLDivElement>(null)
-  const selectedDate = value ? parseDateTimeInput(value) : null
-  const calendarDays = getCalendarDays(viewDate)
-  const selectedTime = selectedDate
-    ? `${padDatePart(selectedDate.getHours())}:${padDatePart(selectedDate.getMinutes())}`
-    : '00:00'
-  const selectedDateTimeLabel = selectedDate
-    ? formatDatePickerLabel(value)
-    : `${viewDate.getFullYear()}. ${viewDate.getMonth() + 1}. ${viewDate.getDate()}. ${selectedTime}`
-
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setIsOpen(false)
-        setIsTimePickerOpen(false)
-      }
-    }
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-        setIsTimePickerOpen(false)
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [])
-
-  const handleDateSelect = (date: Date) => {
-    const nextDate = selectedDate ? new Date(selectedDate) : new Date(date)
-
-    nextDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-    if (!selectedDate) {
-      nextDate.setHours(0, 0, 0, 0)
-    }
-
-    onChange(formatDateTimeInput(nextDate))
-  }
-
-  const handleTimeChange = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number)
-    const nextDate = selectedDate ? new Date(selectedDate) : new Date(viewDate)
-
-    nextDate.setHours(hours || 0, minutes || 0, 0, 0)
-    onChange(formatDateTimeInput(nextDate))
-  }
-
-  return (
-    <U.DatePickerRoot ref={rootRef}>
-      <U.DatePickerButton
-        type="button"
-        aria-label={`${ariaLabel}, ${formatDatePickerLabel(value)}`}
-        aria-expanded={isOpen}
-        aria-haspopup="dialog"
-        onClick={() => {
-          if (value) {
-            setViewDate(parseDateTimeInput(value))
-          }
-          setIsTimePickerOpen(false)
-          setIsOpen((open) => !open)
-        }}
-      >
-        <span className="date-picker-label">{formatDatePickerLabel(value)}</span>
-        <S.MaterialIcon className="date-picker-icon" aria-hidden="true">
-          calendar_month
-        </S.MaterialIcon>
-      </U.DatePickerButton>
-      {isOpen ? (
-        <U.DatePickerPopover role="dialog" aria-label={ariaLabel}>
-          <U.DatePickerHeader>
-            <U.DatePickerIconButton
-              type="button"
-              aria-label="이전 달"
-              onClick={() =>
-                setViewDate(
-                  (current) =>
-                    new Date(current.getFullYear(), current.getMonth() - 1, 1)
-                )
-              }
-            >
-              <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
-            </U.DatePickerIconButton>
-            <U.DatePickerTitle>
-              {viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월
-            </U.DatePickerTitle>
-            <U.DatePickerIconButton
-              type="button"
-              aria-label="다음 달"
-              onClick={() =>
-                setViewDate(
-                  (current) =>
-                    new Date(current.getFullYear(), current.getMonth() + 1, 1)
-                )
-              }
-            >
-              <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
-            </U.DatePickerIconButton>
-          </U.DatePickerHeader>
-          <U.DatePickerWeekdays aria-hidden="true">
-            {DATE_WEEKDAYS.map((weekday) => (
-              <span key={weekday}>{weekday}</span>
-            ))}
-          </U.DatePickerWeekdays>
-          <U.DatePickerGrid>
-            {calendarDays.map((date) => (
-              <U.DatePickerDayButton
-                key={date.toISOString()}
-                type="button"
-                $outside={date.getMonth() !== viewDate.getMonth()}
-                $selected={isSameDate(selectedDate, date)}
-                $today={isSameDate(new Date(), date)}
-                aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
-                aria-pressed={isSameDate(selectedDate, date)}
-                onClick={() => handleDateSelect(date)}
-              >
-                {date.getDate()}
-              </U.DatePickerDayButton>
-            ))}
-          </U.DatePickerGrid>
-          <U.DatePickerFooter>
-            <U.DatePickerTimeField>
-              <U.DatePickerTimeLabel>시간 설정</U.DatePickerTimeLabel>
-              <U.DatePickerTimePicker>
-                <U.DatePickerTimeButton
-                  type="button"
-                  aria-label={`선택한 날짜의 시간 ${selectedTime}`}
-                  aria-expanded={isTimePickerOpen}
-                  aria-haspopup="listbox"
-                  onClick={() => setIsTimePickerOpen((open) => !open)}
-                >
-                  <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
-                  <span>{selectedTime}</span>
-                  <S.MaterialIcon aria-hidden="true">expand_more</S.MaterialIcon>
-                </U.DatePickerTimeButton>
-                {isTimePickerOpen ? (
-                  <U.DatePickerTimeMenu aria-label="시간 선택">
-                    <U.DatePickerTimeMenuTitle>시간 선택</U.DatePickerTimeMenuTitle>
-                    <U.DatePickerTimePreview>{selectedDateTimeLabel}</U.DatePickerTimePreview>
-                    <U.DatePickerTimeColumns>
-                      <U.DatePickerTimeColumn>
-                        <U.DatePickerTimeColumnLabel>시</U.DatePickerTimeColumnLabel>
-                        <U.DatePickerTimeOptions role="listbox" aria-label="시 선택">
-                          {HOUR_OPTIONS.map((hour) => (
-                            <U.DatePickerTimeOption
-                              key={hour}
-                              type="button"
-                              role="option"
-                              $selected={selectedTime.slice(0, 2) === hour}
-                              aria-selected={selectedTime.slice(0, 2) === hour}
-                              onClick={() => {
-                                handleTimeChange(`${hour}:${selectedTime.slice(3)}`)
-                              }}
-                            >
-                              {hour}
-                            </U.DatePickerTimeOption>
-                          ))}
-                        </U.DatePickerTimeOptions>
-                      </U.DatePickerTimeColumn>
-                      <U.DatePickerTimeSeparator>:</U.DatePickerTimeSeparator>
-                      <U.DatePickerTimeColumn>
-                        <U.DatePickerTimeColumnLabel>분</U.DatePickerTimeColumnLabel>
-                        <U.DatePickerTimeOptions role="listbox" aria-label="분 선택">
-                          {MINUTE_OPTIONS.map((minute) => (
-                            <U.DatePickerTimeOption
-                              key={minute}
-                              type="button"
-                              role="option"
-                              $selected={selectedTime.slice(3) === minute}
-                              aria-selected={selectedTime.slice(3) === minute}
-                              onClick={() => {
-                                handleTimeChange(`${selectedTime.slice(0, 2)}:${minute}`)
-                              }}
-                            >
-                              {minute}
-                            </U.DatePickerTimeOption>
-                          ))}
-                        </U.DatePickerTimeOptions>
-                      </U.DatePickerTimeColumn>
-                    </U.DatePickerTimeColumns>
-                  </U.DatePickerTimeMenu>
-                ) : null}
-              </U.DatePickerTimePicker>
-            </U.DatePickerTimeField>
-            <U.FilterActions>
-              <U.SecondaryButton
-                type="button"
-                onClick={() => {
-                  onChange('')
-                  setIsTimePickerOpen(false)
-                  setIsOpen(false)
-                }}
-              >
-                초기화
-              </U.SecondaryButton>
-              <U.PrimaryButton
-                type="button"
-                onClick={() => {
-                  setIsTimePickerOpen(false)
-                  setIsOpen(false)
-                }}
-              >
-                적용
-              </U.PrimaryButton>
-            </U.FilterActions>
-          </U.DatePickerFooter>
-        </U.DatePickerPopover>
-      ) : null}
-    </U.DatePickerRoot>
   )
 }
 
@@ -1169,13 +886,13 @@ function UserBanPage() {
                   <U.FilterGroup>
                     <U.FilterGroupLabel>처리 기간</U.FilterGroupLabel>
                     <U.FilterGroupControls>
-                      <AdminDatePicker
+                      <AdminDateTimePicker
                         ariaLabel="밴 처리 시작일"
                         value={banFrom}
                         onChange={setBanFrom}
                       />
                       <U.FilterRangeSeparator aria-hidden="true">—</U.FilterRangeSeparator>
-                      <AdminDatePicker
+                      <AdminDateTimePicker
                         ariaLabel="밴 처리 종료일"
                         value={banTo}
                         onChange={setBanTo}
@@ -1563,7 +1280,7 @@ function UserBanPage() {
                             </U.FilterField>
                             <U.FilterField>
                               처리 시작일
-                              <AdminDatePicker
+                              <AdminDateTimePicker
                                 ariaLabel="제재 이력 처리 시작일"
                                 value={sanctionHistoryFrom}
                                 onChange={setSanctionHistoryFrom}
@@ -1571,7 +1288,7 @@ function UserBanPage() {
                             </U.FilterField>
                             <U.FilterField>
                               처리 종료일
-                              <AdminDatePicker
+                              <AdminDateTimePicker
                                 ariaLabel="제재 이력 처리 종료일"
                                 value={sanctionHistoryTo}
                                 onChange={setSanctionHistoryTo}

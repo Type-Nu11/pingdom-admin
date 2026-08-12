@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import {
+  AdminDatePicker,
+  AdminTimePicker,
+} from '../../components/common/AdminDateTimePicker'
 import type {
   KakaoMapHandle,
   KakaoMapMarker,
@@ -2143,34 +2147,32 @@ function PlaceManagePage() {
                           {hour.hours.map((timeRange) => (
                             <S.OperatingExceptionTimeRow key={timeRange.id}>
                               <S.OperatingTimeControls>
-                                <S.OperatingTimeInput
-                                  type="time"
+                                <AdminTimePicker
                                   value={timeRange.opensAt}
-                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
+                                  ariaLabel={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
                                   disabled={
                                     updatingPlaceAction === 'operating-schedule'
                                   }
-                                  onChange={(event) =>
+                                  onChange={(value) =>
                                     handleRegularOperatingHourChange(
                                       hour.dayOfWeek,
                                       timeRange.id,
-                                      { opensAt: event.target.value }
+                                      { opensAt: value }
                                     )
                                   }
                                 />
                                 <span>-</span>
-                                <S.OperatingTimeInput
-                                  type="time"
+                                <AdminTimePicker
                                   value={timeRange.closesAt}
-                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
+                                  ariaLabel={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
                                   disabled={
                                     updatingPlaceAction === 'operating-schedule'
                                   }
-                                  onChange={(event) =>
+                                  onChange={(value) =>
                                     handleRegularOperatingHourChange(
                                       hour.dayOfWeek,
                                       timeRange.id,
-                                      { closesAt: event.target.value }
+                                      { closesAt: value }
                                     )
                                   }
                                 />
@@ -2217,14 +2219,13 @@ function PlaceManagePage() {
                     {operatingExceptionDrafts.map((exception) => (
                       <S.OperatingExceptionEditor key={exception.id}>
                         <S.OperatingExceptionEditorHeader>
-                          <S.OperatingDateInput
-                            type="date"
+                          <AdminDatePicker
                             value={exception.date}
-                            aria-label="예외 일정 날짜"
+                            ariaLabel="예외 일정 날짜"
                             disabled={updatingPlaceAction === 'operating-schedule'}
-                            onChange={(event) =>
+                            onChange={(value) =>
                               handleOperatingExceptionChange(exception.id, {
-                                date: event.target.value,
+                                date: value,
                               })
                             }
                           />
@@ -2256,34 +2257,32 @@ function PlaceManagePage() {
                             {exception.hours.map((hour) => (
                               <S.OperatingExceptionTimeRow key={hour.id}>
                                 <S.OperatingTimeControls>
-                                  <S.OperatingTimeInput
-                                    type="time"
+                                  <AdminTimePicker
                                     value={hour.opensAt}
-                                    aria-label="대체 영업 시작 시간"
+                                    ariaLabel="대체 영업 시작 시간"
                                     disabled={
                                       updatingPlaceAction === 'operating-schedule'
                                     }
-                                    onChange={(event) =>
+                                    onChange={(value) =>
                                       handleOperatingExceptionHourChange(
                                         exception.id,
                                         hour.id,
-                                        { opensAt: event.target.value }
+                                        { opensAt: value }
                                       )
                                     }
                                   />
                                   <span>-</span>
-                                  <S.OperatingTimeInput
-                                    type="time"
+                                  <AdminTimePicker
                                     value={hour.closesAt}
-                                    aria-label="대체 영업 종료 시간"
+                                    ariaLabel="대체 영업 종료 시간"
                                     disabled={
                                       updatingPlaceAction === 'operating-schedule'
                                     }
-                                    onChange={(event) =>
+                                    onChange={(value) =>
                                       handleOperatingExceptionHourChange(
                                         exception.id,
                                         hour.id,
-                                        { closesAt: event.target.value }
+                                        { closesAt: value }
                                       )
                                     }
                                   />

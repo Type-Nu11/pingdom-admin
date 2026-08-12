@@ -57,6 +57,17 @@ const PLACE_DISCOVERY_STATUS_OPTIONS: Array<{
   { value: 'HIDDEN', label: '탐색 숨김' },
 ]
 
+const PLACE_OPERATING_STATUS_DESCRIPTIONS: Record<AdminPlaceOperatingStatus, string> = {
+  OPERATING: '앱 장소 조회와 추천에 계속 노출됩니다.',
+  TEMPORARILY_CLOSED: '일시적인 휴업 상태로 관리합니다.',
+  PERMANENTLY_CLOSED: '앱 장소 조회와 추천에서 숨겨집니다.',
+}
+
+const PLACE_DISCOVERY_STATUS_DESCRIPTIONS: Record<AdminPlaceDiscoveryStatus, string> = {
+  VISIBLE: '공개 탐색과 자동완성, 추천 후보에 노출합니다.',
+  HIDDEN: '공개 탐색, 자동완성, 북마크 목록, 추천 후보에서 제외합니다.',
+}
+
 const PLACE_DAY_OF_WEEK_OPTIONS: Array<{
   value: AdminPlaceDayOfWeek
   label: string
@@ -1898,24 +1909,31 @@ function PlaceManagePage() {
                 {operatingStatusEditPlace.name}의 운영 상태를 변경합니다. 비운영 상태의
                 장소는 앱 장소 조회와 추천에서 숨겨집니다.
               </S.OperatingDialogDescription>
-              <S.OperatingFormField>
-                <span>운영 상태</span>
-                <S.OperatingSelect
-                  value={operatingStatusDraft}
-                  disabled={updatingPlaceAction === 'operating-status'}
-                  onChange={(event) => {
-                    setOperatingStatusDraft(
-                      event.target.value as AdminPlaceOperatingStatus
-                    )
-                    setOperatingStatusFormError('')
-                  }}
-                >
+              <S.OperatingFormField as="fieldset">
+                <legend>운영 상태</legend>
+                <S.OperatingOptionGrid>
                   {PLACE_OPERATING_STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <S.OperatingOption
+                      key={option.value}
+                      $selected={operatingStatusDraft === option.value}
+                      $tone={option.value === 'PERMANENTLY_CLOSED' ? 'danger' : 'normal'}
+                    >
+                      <input
+                        type="radio"
+                        name="place-operating-status"
+                        value={option.value}
+                        checked={operatingStatusDraft === option.value}
+                        disabled={updatingPlaceAction === 'operating-status'}
+                        onChange={() => {
+                          setOperatingStatusDraft(option.value)
+                          setOperatingStatusFormError('')
+                        }}
+                      />
+                      <strong>{option.label}</strong>
+                      <small>{PLACE_OPERATING_STATUS_DESCRIPTIONS[option.value]}</small>
+                    </S.OperatingOption>
                   ))}
-                </S.OperatingSelect>
+                </S.OperatingOptionGrid>
               </S.OperatingFormField>
               {operatingStatusDraft === 'PERMANENTLY_CLOSED' ? (
                 <S.OperatingDangerNotice>
@@ -2002,24 +2020,31 @@ function PlaceManagePage() {
                 {discoveryStatusEditPlace.name}의 공개 탐색 노출 여부를 변경합니다.
                 장소는 관리자 목록과 지도에서 계속 관리할 수 있습니다.
               </S.OperatingDialogDescription>
-              <S.OperatingFormField>
-                <span>탐색 상태</span>
-                <S.OperatingSelect
-                  value={discoveryStatusDraft}
-                  disabled={updatingPlaceAction === 'discovery-status'}
-                  onChange={(event) => {
-                    setDiscoveryStatusDraft(
-                      event.target.value as AdminPlaceDiscoveryStatus
-                    )
-                    setDiscoveryStatusFormError('')
-                  }}
-                >
+              <S.OperatingFormField as="fieldset">
+                <legend>탐색 상태</legend>
+                <S.OperatingOptionGrid>
                   {PLACE_DISCOVERY_STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <S.OperatingOption
+                      key={option.value}
+                      $selected={discoveryStatusDraft === option.value}
+                      $tone={option.value === 'HIDDEN' ? 'muted' : 'normal'}
+                    >
+                      <input
+                        type="radio"
+                        name="place-discovery-status"
+                        value={option.value}
+                        checked={discoveryStatusDraft === option.value}
+                        disabled={updatingPlaceAction === 'discovery-status'}
+                        onChange={() => {
+                          setDiscoveryStatusDraft(option.value)
+                          setDiscoveryStatusFormError('')
+                        }}
+                      />
+                      <strong>{option.label}</strong>
+                      <small>{PLACE_DISCOVERY_STATUS_DESCRIPTIONS[option.value]}</small>
+                    </S.OperatingOption>
                   ))}
-                </S.OperatingSelect>
+                </S.OperatingOptionGrid>
               </S.OperatingFormField>
               {discoveryStatusDraft === 'HIDDEN' ? (
                 <S.OperatingInfoNotice>

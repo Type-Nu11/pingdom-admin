@@ -2065,6 +2065,90 @@ export const OperatingFormField = styled.label`
     font-size: 11px;
     font-weight: 600;
   }
+
+  &:is(fieldset) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    padding: 0;
+  }
+`
+
+export const OperatingOptionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const OperatingOption = styled.label<{
+  $selected?: boolean
+  $tone?: 'normal' | 'danger' | 'muted'
+}>`
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid
+    ${({ $selected, $tone }) =>
+      $selected
+        ? $tone === 'danger'
+          ? neutral.error
+          : neutral.primary
+        : neutral.border};
+  border-radius: 8px;
+  background: ${({ $selected, $tone }) =>
+    $selected
+      ? $tone === 'danger'
+        ? neutral.errorTint
+        : neutral.primaryTint
+      : neutral.surface};
+  color: ${neutral.text};
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  strong {
+    color: ${({ $selected, $tone }) =>
+      $selected && $tone === 'danger' ? neutral.error : neutral.strongText};
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  small {
+    align-self: auto;
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  &:hover:not(:has(input:disabled)) {
+    border-color: ${({ $tone }) => ($tone === 'danger' ? neutral.error : neutral.primarySoft)};
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:has(input:disabled) {
+    cursor: default;
+    opacity: 0.55;
+  }
 `
 
 export const OperatingSelect = styled.select`

@@ -993,6 +993,44 @@ export const DetailPostTitleButton = styled.button<{ $variant?: 'action' }>`
     `}
 `
 
+export const DetailPostTitleRow = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  > button {
+    min-width: 0;
+    flex: 1;
+  }
+`
+
+export const DetailPostVisibilityBadge = styled.span`
+  min-height: 22px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+`
+
+export const DetailPostVisibilityReason = styled.span`
+  display: block;
+  margin-top: 5px;
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+`
+
 export const DetailPostMeta = styled.span`
   display: block;
   margin-top: 6px;

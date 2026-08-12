@@ -2094,6 +2094,18 @@ export const OperatingDangerNotice = styled.p`
   line-height: 1.5;
 `
 
+export const OperatingInfoNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
 export const OperatingFormNotice = styled.p`
   margin: 0;
   padding: 11px 12px;

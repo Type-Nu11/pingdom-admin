@@ -1946,6 +1946,108 @@ function PlaceManagePage() {
         </S.OperatingDialogOverlay>
       ) : null}
 
+      {discoveryStatusEditPlace ? (
+        <S.OperatingDialogOverlay
+          role="presentation"
+          onMouseDown={handleCloseDiscoveryStatusEdit}
+        >
+          <S.OperatingDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discovery-status-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.OperatingDialogHeader>
+              <div>
+                <S.OperatingDialogEyebrow>탐색 관리</S.OperatingDialogEyebrow>
+                <S.OperatingDialogTitle id="discovery-status-dialog-title">
+                  탐색 상태 변경
+                </S.OperatingDialogTitle>
+              </div>
+              <S.OperatingDialogCloseButton
+                type="button"
+                aria-label="탐색 상태 변경 닫기"
+                disabled={updatingPlaceAction === 'discovery-status'}
+                onClick={handleCloseDiscoveryStatusEdit}
+              >
+                <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+              </S.OperatingDialogCloseButton>
+            </S.OperatingDialogHeader>
+            <S.OperatingDialogBody>
+              <S.OperatingDialogDescription>
+                {discoveryStatusEditPlace.name}의 공개 탐색 노출 여부를 변경합니다.
+                장소는 관리자 목록과 지도에서 계속 관리할 수 있습니다.
+              </S.OperatingDialogDescription>
+              <S.OperatingFormField>
+                <span>탐색 상태</span>
+                <S.OperatingSelect
+                  value={discoveryStatusDraft}
+                  disabled={updatingPlaceAction === 'discovery-status'}
+                  onChange={(event) => {
+                    setDiscoveryStatusDraft(
+                      event.target.value as AdminPlaceDiscoveryStatus
+                    )
+                    setDiscoveryStatusFormError('')
+                  }}
+                >
+                  {PLACE_DISCOVERY_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </S.OperatingSelect>
+              </S.OperatingFormField>
+              {discoveryStatusDraft === 'HIDDEN' ? (
+                <S.OperatingInfoNotice>
+                  탐색 숨김으로 변경하면 공개 탐색·자동완성·북마크 목록·추천 후보에서
+                  제외됩니다.
+                </S.OperatingInfoNotice>
+              ) : null}
+              <S.OperatingFormField>
+                <span>변경 사유</span>
+                <S.OperatingTextArea
+                  value={discoveryStatusReason}
+                  maxLength={500}
+                  placeholder="예: 운영 정책 검토를 위해 탐색 노출을 중지"
+                  disabled={updatingPlaceAction === 'discovery-status'}
+                  onChange={(event) => {
+                    setDiscoveryStatusReason(event.target.value)
+                    setDiscoveryStatusFormError('')
+                  }}
+                />
+                <small>{discoveryStatusReason.length}/500</small>
+              </S.OperatingFormField>
+              {discoveryStatusFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {discoveryStatusFormError}
+                </S.OperatingFormNotice>
+              ) : null}
+              {actionErrorMessage && !discoveryStatusFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {actionErrorMessage}
+                </S.OperatingFormNotice>
+              ) : null}
+            </S.OperatingDialogBody>
+            <S.OperatingDialogActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'discovery-status'}
+                onClick={handleCloseDiscoveryStatusEdit}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.OperatingPrimaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'discovery-status'}
+                onClick={handleConfirmDiscoveryStatusEdit}
+              >
+                {updatingPlaceAction === 'discovery-status' ? '저장 중' : '상태 저장'}
+              </S.OperatingPrimaryButton>
+            </S.OperatingDialogActions>
+          </S.OperatingDialog>
+        </S.OperatingDialogOverlay>
+      ) : null}
+
       {operatingScheduleEditPlace ? (
         <S.OperatingDialogOverlay
           role="presentation"

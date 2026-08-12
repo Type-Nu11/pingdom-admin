@@ -176,6 +176,14 @@ function formatPlacePostDate(value: string) {
   }).format(date)
 }
 
+function formatPlacePostHiddenReason(hiddenReason?: string | null) {
+  if (hiddenReason === 'ADMIN_HIDDEN') {
+    return '관리자 숨김'
+  }
+
+  return '숨김 처리됨'
+}
+
 function formatOperatingStatus(status?: AdminPlaceOperatingStatus) {
   return (
     PLACE_OPERATING_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
@@ -1726,15 +1734,27 @@ function PlaceManagePage() {
                                       )}
                                     </S.DetailPostImage>
                                     <S.DetailPostText>
-                                      <S.DetailPostTitleButton
-                                        type="button"
-                                        onClick={() => handleOpenPostDetail(post.id)}
-                                      >
-                                        {post.title || `게시글 #${post.id}`}
-                                      </S.DetailPostTitleButton>
+                                      <S.DetailPostTitleRow>
+                                        <S.DetailPostTitleButton
+                                          type="button"
+                                          onClick={() => handleOpenPostDetail(post.id)}
+                                        >
+                                          {post.title || `게시글 #${post.id}`}
+                                        </S.DetailPostTitleButton>
+                                        {post.visibilityStatus === 'HIDDEN' ? (
+                                          <S.DetailPostVisibilityBadge>
+                                            숨김
+                                          </S.DetailPostVisibilityBadge>
+                                        ) : null}
+                                      </S.DetailPostTitleRow>
                                       <p>
                                         {post.description || '설명 없음'}
                                       </p>
+                                      {post.visibilityStatus === 'HIDDEN' ? (
+                                        <S.DetailPostVisibilityReason>
+                                          숨김 사유: {formatPlacePostHiddenReason(post.hiddenReason)}
+                                        </S.DetailPostVisibilityReason>
+                                      ) : null}
                                       <S.DetailPostMeta>
                                         {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
                                         {post.likeCount.toLocaleString()} ·{' '}

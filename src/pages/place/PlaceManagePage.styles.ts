@@ -2184,32 +2184,41 @@ export const OperatingEditorSectionHeader = styled.div`
 `
 
 export const OperatingWeekList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-
-  @media (max-width: 620px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
 `
 
 export const OperatingWeekRow = styled.div`
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: flex-start;
   gap: 10px;
   padding: 8px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 7px;
   background: ${neutral.surface};
+
+  > div:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  @media (max-width: 620px) {
+    flex-direction: column;
+  }
 `
 
 export const OperatingWeekRowHeader = styled.div`
+  width: 140px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
+  @media (max-width: 620px) {
+    width: 100%;
+  }
 `
 
 export const OperatingCheckLabel = styled.label`
@@ -2291,6 +2300,10 @@ export const OperatingExceptionEditorHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
+  > div:first-child {
+    width: 150px;
+  }
 `
 
 export const OperatingDateInput = styled.input`

@@ -2109,7 +2109,7 @@ function PlaceManagePage() {
               <S.OperatingEditorSection>
                 <S.OperatingEditorSectionHeader>
                   <strong>정규 영업시간</strong>
-                  <span>영업하지 않는 요일은 해제하세요.</span>
+                  <span>영업하는 요일을 선택하세요.</span>
                 </S.OperatingEditorSectionHeader>
                 <S.OperatingWeekList>
                   {regularHourDrafts.map((hour) => (

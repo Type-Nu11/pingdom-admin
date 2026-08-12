@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLogin } from '../../hooks/useLogin'
 import { useAuth } from '../../hooks/useAuth'
@@ -9,6 +9,8 @@ function LoginPage() {
   const { isAuthenticated, isAuthReady } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const usernameInputRef = useRef<HTMLInputElement>(null)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
   const {
     username,
     setUsername,
@@ -41,12 +43,38 @@ function LoginPage() {
         </S.Header>
 
         <S.Form
+          onKeyDownCapture={(event) => {
+            if (event.key !== 'Enter' || event.nativeEvent.isComposing) {
+              return
+            }
+
+            event.preventDefault()
+
+            if (!isSubmitting) {
+              event.currentTarget.requestSubmit()
+            }
+          }}
           onSubmit={async (event) => {
             event.preventDefault()
-            const isSuccess = await handleLogin()
 
-            if (isSuccess) {
+            if (isSubmitting) {
+              return
+            }
+
+            const result = await handleLogin()
+
+            if (result === 'success') {
               setIsRedirecting(true)
+              return
+            }
+
+            if (result === 'username-required') {
+              usernameInputRef.current?.focus()
+              return
+            }
+
+            if (result === 'password-required' || result === 'credential-error') {
+              passwordInputRef.current?.focus()
             }
           }}
         >
@@ -56,6 +84,7 @@ function LoginPage() {
               <S.InputIcon aria-hidden="true">person</S.InputIcon>
               <S.Input
                 id="username"
+                ref={usernameInputRef}
                 type="text"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
@@ -71,6 +100,7 @@ function LoginPage() {
               <S.InputIcon aria-hidden="true">key</S.InputIcon>
               <S.Input
                 id="password"
+                ref={passwordInputRef}
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -92,9 +122,11 @@ function LoginPage() {
             </S.InputWrap>
           </S.Field>
 
-          {isError && errorMessage ? (
-            <S.ErrorMessage role="alert">{errorMessage}</S.ErrorMessage>
-          ) : null}
+          <S.ErrorMessageSlot aria-live="polite">
+            {isError && errorMessage ? (
+              <S.ErrorMessage role="alert">{errorMessage}</S.ErrorMessage>
+            ) : null}
+          </S.ErrorMessageSlot>
 
           <S.SubmitButton type="submit" disabled={isSubmitting}>
             <span>
@@ -104,7 +136,6 @@ function LoginPage() {
                   ? '로그인 중...'
                   : '로그인'}
             </span>
-            <S.ButtonIcon aria-hidden="true">arrow_forward</S.ButtonIcon>
           </S.SubmitButton>
         </S.Form>
 

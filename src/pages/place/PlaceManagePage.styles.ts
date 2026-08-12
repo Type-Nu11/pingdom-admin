@@ -2000,7 +2000,7 @@ export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   left: 20px;
   z-index: 6;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   max-width: min(360px, calc(100% - 40px));
   min-height: 36px;
@@ -2038,7 +2038,6 @@ export const MapInfoText = styled.span`
 export const MapInfoDot = styled.span`
   width: 8px;
   height: 8px;
-  margin-top: 4px;
   flex-shrink: 0;
   border-radius: 999px;
   background: ${neutral.primary};

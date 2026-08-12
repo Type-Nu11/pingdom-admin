@@ -260,33 +260,11 @@ function getApiTimeValue(value: string) {
   return value.length === 5 ? `${value}:00` : value
 }
 
-function formatOperatingTime(value?: string) {
-  return getTimeInputValue(value) || '시간 미정'
-}
-
 function getDayOfWeekLabel(dayOfWeek: AdminPlaceDayOfWeek) {
   return (
     PLACE_DAY_OF_WEEK_OPTIONS.find((option) => option.value === dayOfWeek)?.label ??
     dayOfWeek
   )
-}
-
-function formatExceptionDate(dateValue: string) {
-  if (!dateValue) {
-    return '날짜 미정'
-  }
-
-  const date = new Date(`${dateValue}T00:00:00`)
-
-  if (Number.isNaN(date.getTime())) {
-    return dateValue
-  }
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  }).format(date)
 }
 
 function createOperatingHourDrafts(hours: AdminPlaceRegularOperatingHour[] = []) {
@@ -1345,6 +1323,15 @@ function PlaceManagePage() {
               </S.PanelResultSummary>
             </S.PanelControls>
 
+            {isError && places.length > 0 ? (
+              <S.ListInlineNotice role="alert">
+                <span>{errorMessage} 기존 결과를 표시합니다.</span>
+                <S.RetryButton type="button" disabled={isLoading} onClick={handleRefresh}>
+                  다시 시도
+                </S.RetryButton>
+              </S.ListInlineNotice>
+            ) : null}
+
             <S.PlaceList
               ref={placeListRef}
               aria-label="장소 목록"
@@ -1357,7 +1344,18 @@ function PlaceManagePage() {
               ) : null}
 
               {isLoading && places.length === 0 ? (
-                <S.EmptyState>장소 목록을 불러오는 중입니다.</S.EmptyState>
+                <S.PlaceListSkeleton aria-label="장소 목록을 불러오는 중입니다">
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <S.PlaceSkeletonItem key={index}>
+                      <S.PlaceSkeletonThumbnail />
+                      <S.PlaceSkeletonContent>
+                        <S.PlaceSkeletonLine $width="68%" />
+                        <S.PlaceSkeletonLine $width="92%" />
+                        <S.PlaceSkeletonLine $width="52%" />
+                      </S.PlaceSkeletonContent>
+                    </S.PlaceSkeletonItem>
+                  ))}
+                </S.PlaceListSkeleton>
               ) : isError && places.length === 0 ? (
                 <S.EmptyState>
                   {errorMessage}
@@ -1371,18 +1369,6 @@ function PlaceManagePage() {
                 </S.EmptyState>
               ) : places.length > 0 ? (
                 <>
-                  {isError ? (
-                    <S.EmptyState role="alert">
-                      {errorMessage}
-                      <S.RetryButton
-                        type="button"
-                        disabled={isLoading}
-                        onClick={handleRefresh}
-                      >
-                        다시 시도
-                      </S.RetryButton>
-                    </S.EmptyState>
-                  ) : null}
                   {places.map((place) => {
                     const isSelected = selectedPlace?.id === place.id
                     const placeCategoryLabel = getPlaceCategoryLabel(place)
@@ -1533,12 +1519,25 @@ function PlaceManagePage() {
                         장소 상세 정보를 불러오는 중입니다.
                       </S.DetailStatus>
                     ) : detailErrorMessage ? (
-                      <S.DetailNotice role="alert">{detailErrorMessage}</S.DetailNotice>
+                      <S.DetailErrorState role="alert">
+                        <p>{detailErrorMessage}</p>
+                        <S.RetryButton
+                          type="button"
+                          disabled={isDetailLoading}
+                          onClick={() => {
+                            if (selectedPlace) {
+                              void fetchAdminPlaceDetail(selectedPlace.id)
+                            }
+                          }}
+                        >
+                          다시 시도
+                        </S.RetryButton>
+                      </S.DetailErrorState>
                     ) : placeDetail ? (
                       <>
                         <S.DetailMetaList>
                           <S.DetailMetaGroup>
-                            <S.DetailMetaGroupTitle>기본 정보</S.DetailMetaGroupTitle>
+                            <S.DetailMetaGroupTitle>장소 정보</S.DetailMetaGroupTitle>
                             <S.DetailMetaRow>
                               <span>장소 ID</span>
                               <strong>{placeDetail.id}</strong>
@@ -1553,9 +1552,6 @@ function PlaceManagePage() {
                                 {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
                               </strong>
                             </S.DetailMetaRow>
-                          </S.DetailMetaGroup>
-                          <S.DetailMetaGroup>
-                            <S.DetailMetaGroupTitle>위치 정보</S.DetailMetaGroupTitle>
                             <S.DetailMetaRow>
                               <span>주소</span>
                               <strong>{placeDetail.address || '주소 정보 없음'}</strong>
@@ -1645,53 +1641,20 @@ function PlaceManagePage() {
                                 영업시간 수정
                               </S.DetailInlineButton>
                             </S.OperatingSummaryRow>
+                            <S.OperatingSummaryRow>
+                              <S.OperatingSummaryLabel>
+                                <span>예외 일정</span>
+                                <small>{detailOperatingExceptions.length}건 등록됨</small>
+                              </S.OperatingSummaryLabel>
+                              <S.DetailInlineButton
+                                type="button"
+                                disabled={updatingPlaceId !== null}
+                                onClick={handleOpenOperatingScheduleEdit}
+                              >
+                                일정 관리
+                              </S.DetailInlineButton>
+                            </S.OperatingSummaryRow>
                           </S.OperatingSummary>
-
-                          {detailRegularHours.length > 0 ? (
-                            <S.OperatingHoursList aria-label="정규 영업시간">
-                              {detailRegularHours.map((hour) => (
-                                <S.OperatingHoursItem key={hour.dayOfWeek}>
-                                  <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
-                                  <strong>
-                                    {formatOperatingTime(hour.opensAt)} -{' '}
-                                    {formatOperatingTime(hour.closesAt)}
-                                  </strong>
-                                </S.OperatingHoursItem>
-                              ))}
-                            </S.OperatingHoursList>
-                          ) : (
-                            <S.OperatingEmptyState>
-                              정규 영업시간이 등록되지 않았습니다.
-                            </S.OperatingEmptyState>
-                          )}
-
-                          <S.OperatingExceptionHeader>
-                            <span>예외 일정</span>
-                            <small>{detailOperatingExceptions.length}건</small>
-                          </S.OperatingExceptionHeader>
-                          {detailOperatingExceptions.length > 0 ? (
-                            <S.OperatingExceptionsList aria-label="예외 영업 일정">
-                              {detailOperatingExceptions.map((exception) => (
-                                <S.OperatingExceptionItem key={exception.date}>
-                                  <span>{formatExceptionDate(exception.date)}</span>
-                                  <strong>
-                                    {exception.closed
-                                      ? '종일 휴무'
-                                      : exception.hours
-                                          .map(
-                                            (hour) =>
-                                              `${formatOperatingTime(hour.opensAt)} - ${formatOperatingTime(hour.closesAt)}`
-                                          )
-                                          .join(', ') || '시간 미정'}
-                                  </strong>
-                                </S.OperatingExceptionItem>
-                              ))}
-                            </S.OperatingExceptionsList>
-                          ) : (
-                            <S.OperatingEmptyState>
-                              등록된 예외 일정이 없습니다.
-                            </S.OperatingEmptyState>
-                          )}
                         </S.DetailSection>
 
                         <S.DetailSection>

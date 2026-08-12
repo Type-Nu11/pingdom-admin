@@ -518,6 +518,25 @@ export const DetailNotice = styled.p`
   line-height: 1.5;
 `
 
+export const DetailErrorState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+`
+
 export const DetailMetaList = styled.div`
   display: flex;
   flex-direction: column;
@@ -1280,6 +1299,32 @@ export const PanelResultSummary = styled.div`
   font-weight: 600;
 `
 
+export const ListInlineNotice = styled.div`
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 16px 10px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+
+  button {
+    min-height: 30px;
+    flex: 0 0 auto;
+    padding: 0 9px;
+    border-color: ${neutral.error};
+    color: ${neutral.error};
+    font-size: 12px;
+  }
+`
+
 export const ClearFilterButton = styled.button`
   flex-shrink: 0;
   border: 0;
@@ -1404,6 +1449,54 @@ export const PlaceList = styled.div`
 
   @media (max-width: 900px) {
     max-height: 560px;
+  }
+`
+
+export const PlaceListSkeleton = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+`
+
+export const PlaceSkeletonItem = styled.div`
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid ${neutral.borderSoft};
+`
+
+export const PlaceSkeletonThumbnail = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: ${neutral.surfaceHigh};
+`
+
+export const PlaceSkeletonContent = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+`
+
+export const PlaceSkeletonLine = styled.span<{ $width: string }>`
+  width: ${({ $width }) => $width};
+  height: 11px;
+  display: block;
+  border-radius: 3px;
+  background: ${neutral.surfaceHigh};
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: place-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes place-skeleton-pulse {
+    50% {
+      opacity: 0.55;
+    }
   }
 `
 

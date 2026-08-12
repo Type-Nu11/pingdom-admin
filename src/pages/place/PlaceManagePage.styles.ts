@@ -899,7 +899,8 @@ export const DetailPostList = styled.div`
   gap: 10px;
 `
 
-export const DetailPostItem = styled.article`
+export const DetailPostItem = styled.button`
+  width: 100%;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
   gap: 10px;
@@ -907,6 +908,20 @@ export const DetailPostItem = styled.article`
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
   background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
 `
 
 export const DetailPostImage = styled.div`
@@ -951,65 +966,17 @@ export const DetailPostText = styled.div`
   }
 `
 
-export const DetailPostTitleButton = styled.button<{ $variant?: 'action' }>`
+export const DetailPostTitle = styled.span`
   max-width: 100%;
   display: block;
   overflow: hidden;
-  padding: 0;
-  border: 0;
-  background: transparent;
   color: ${neutral.strongText};
-  font: inherit;
   font-size: 13px;
   font-weight: 800;
   line-height: 1.4;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
-
-  &:hover {
-    color: ${neutral.primary};
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${neutral.primary};
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
-
-  ${({ $variant }) =>
-    $variant === 'action' &&
-    css`
-      width: fit-content;
-      min-height: 30px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin-top: 8px;
-      padding: 0 8px;
-      border: 1px solid ${neutral.border};
-      border-radius: 7px;
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.primary};
-      font-size: 12px;
-      line-height: 1;
-      text-decoration: none;
-
-      ${MaterialIcon} {
-        font-size: 16px;
-      }
-
-      &:hover {
-        border-color: ${neutral.primarySoft};
-        background: ${neutral.primaryTint};
-        color: ${neutral.primary};
-        text-decoration: none;
-      }
-    `}
 `
 
 export const DetailPostTitleRow = styled.div`
@@ -1018,36 +985,45 @@ export const DetailPostTitleRow = styled.div`
   align-items: flex-start;
   gap: 8px;
 
-  > button {
+  > span {
     min-width: 0;
     flex: 1;
   }
 `
 
 export const DetailPostVisibilityBadge = styled.span`
-  min-height: 22px;
+  min-height: 18px;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  padding: 2px 7px;
+  padding: 1px 5px;
   border: 1px solid ${neutral.border};
   border-radius: 6px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
 `
 
 export const DetailPostVisibilityReason = styled.span`
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   margin-top: 5px;
   color: ${neutral.muted};
   font-size: 11px;
   font-weight: 700;
   line-height: 1.4;
+
+  > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `
 
 export const DetailPostMeta = styled.span`
@@ -1529,7 +1505,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
     box-shadow 160ms ease;
 
   &:hover {
-    background: ${neutral.primaryTint};
+    background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surfaceLow)};
   }
 
   &:focus-visible {
@@ -1594,9 +1570,7 @@ export const PlaceName = styled.h3`
   font-weight: 700;
   line-height: 1.35;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
 `
 
 export const PlaceCategoryBadge = styled.span`
@@ -2172,19 +2146,15 @@ export const OperatingFormField = styled.label`
 
 export const OperatingOptionGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
-
-  @media (max-width: 520px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
 `
 
 export const OperatingOption = styled.label<{
   $selected?: boolean
   $tone?: 'normal' | 'danger' | 'muted'
 }>`
-  min-height: 92px;
+  min-height: 74px;
   display: flex;
   flex-direction: column;
   gap: 5px;

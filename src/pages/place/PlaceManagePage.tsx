@@ -470,6 +470,10 @@ function PlaceManagePage() {
   const isPlaceDetailOpen = selectedPlace !== null
   const isDeletingSelectedPlace =
     selectedPlace !== null && deletingPlaceId === selectedPlace.id
+  const isOperatingStatusUnchanged =
+    operatingStatusEditPlace?.operatingStatus === operatingStatusDraft
+  const isDiscoveryStatusUnchanged =
+    discoveryStatusEditPlace?.discoveryStatus === discoveryStatusDraft
   const detailGrowthProgress = placeDetail
     ? getDetailGrowthProgress(placeDetail)
     : null
@@ -789,6 +793,10 @@ function PlaceManagePage() {
       return
     }
 
+    if (operatingStatusEditPlace.operatingStatus === operatingStatusDraft) {
+      return
+    }
+
     if (!operatingStatusReason.trim()) {
       setOperatingStatusFormError('운영 상태 확인 사유를 입력해주세요.')
       return
@@ -829,6 +837,10 @@ function PlaceManagePage() {
 
   const handleConfirmDiscoveryStatusEdit = () => {
     if (!discoveryStatusEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    if (discoveryStatusEditPlace.discoveryStatus === discoveryStatusDraft) {
       return
     }
 
@@ -1389,7 +1401,9 @@ function PlaceManagePage() {
                         </S.PlaceThumb>
                         <S.PlaceInfo>
                           <S.PlaceTitleRow>
-                            <S.PlaceName>{placeDisplayName}</S.PlaceName>
+                            <S.PlaceName title={placeDisplayName}>
+                              {placeDisplayName}
+                            </S.PlaceName>
                             <S.PlaceTitleBadges>
                               <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                               {place.discoveryStatus === 'HIDDEN' ? (
@@ -1401,7 +1415,9 @@ function PlaceManagePage() {
                           </S.PlaceTitleRow>
                           <S.PlaceMeta>
                             <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
-                            <span>{place.address || '주소 정보 없음'}</span>
+                            <span title={place.address || '주소 정보 없음'}>
+                              {place.address || '주소 정보 없음'}
+                            </span>
                           </S.PlaceMeta>
                           <S.PlaceMetaLine aria-label={`${placeDisplayName} 장소 지표`}>
                             <span>등록자 {getPlaceRegistrantLabel(place)}</span>
@@ -1696,7 +1712,11 @@ function PlaceManagePage() {
                             <>
                               <S.DetailPostList>
                                 {detailPostPreviewItems.map((post) => (
-                                  <S.DetailPostItem key={post.id}>
+                                  <S.DetailPostItem
+                                    key={post.id}
+                                    type="button"
+                                    onClick={() => handleOpenPostDetail(post.id)}
+                                  >
                                     <S.DetailPostImage>
                                       {post.imageUrl ? (
                                         <img
@@ -1713,24 +1733,21 @@ function PlaceManagePage() {
                                     </S.DetailPostImage>
                                     <S.DetailPostText>
                                       <S.DetailPostTitleRow>
-                                        <S.DetailPostTitleButton
-                                          type="button"
-                                          onClick={() => handleOpenPostDetail(post.id)}
+                                        <S.DetailPostTitle
+                                          title={post.title || `게시글 #${post.id}`}
                                         >
                                           {post.title || `게시글 #${post.id}`}
-                                        </S.DetailPostTitleButton>
-                                        {post.visibilityStatus === 'HIDDEN' ? (
-                                          <S.DetailPostVisibilityBadge>
-                                            숨김
-                                          </S.DetailPostVisibilityBadge>
-                                        ) : null}
+                                        </S.DetailPostTitle>
                                       </S.DetailPostTitleRow>
-                                      <p>
+                                      <p title={post.description || '설명 없음'}>
                                         {post.description || '설명 없음'}
                                       </p>
                                       {post.visibilityStatus === 'HIDDEN' ? (
                                         <S.DetailPostVisibilityReason>
-                                          숨김 사유: {formatPlacePostHiddenReason(post.hiddenReason)}
+                                          <S.DetailPostVisibilityBadge>숨김</S.DetailPostVisibilityBadge>
+                                          <span>
+                                            숨김 사유: {formatPlacePostHiddenReason(post.hiddenReason)}
+                                          </span>
                                         </S.DetailPostVisibilityReason>
                                       ) : null}
                                       <S.DetailPostMeta>
@@ -1738,16 +1755,6 @@ function PlaceManagePage() {
                                         {post.likeCount.toLocaleString()} ·{' '}
                                         {formatPlacePostDate(post.createdAt)}
                                       </S.DetailPostMeta>
-                                      <S.DetailPostTitleButton
-                                        $variant="action"
-                                        type="button"
-                                        onClick={() => handleOpenPostDetail(post.id)}
-                                      >
-                                        <span>게시글 상세 보기</span>
-                                        <S.MaterialIcon aria-hidden="true">
-                                          chevron_right
-                                        </S.MaterialIcon>
-                                      </S.DetailPostTitleButton>
                                     </S.DetailPostText>
                                   </S.DetailPostItem>
                                 ))}
@@ -1853,7 +1860,6 @@ function PlaceManagePage() {
           >
             <S.OperatingDialogHeader>
               <div>
-                <S.OperatingDialogEyebrow>운영 관리</S.OperatingDialogEyebrow>
                 <S.OperatingDialogTitle id="operating-status-dialog-title">
                   운영 상태 변경
                 </S.OperatingDialogTitle>
@@ -1939,7 +1945,9 @@ function PlaceManagePage() {
               <S.OperatingPrimaryButton
                 type="button"
                 $danger={operatingStatusDraft === 'PERMANENTLY_CLOSED'}
-                disabled={updatingPlaceAction === 'operating-status'}
+                disabled={
+                  updatingPlaceAction === 'operating-status' || isOperatingStatusUnchanged
+                }
                 onClick={handleConfirmOperatingStatusEdit}
               >
                 {updatingPlaceAction === 'operating-status'
@@ -1964,7 +1972,6 @@ function PlaceManagePage() {
           >
             <S.OperatingDialogHeader>
               <div>
-                <S.OperatingDialogEyebrow>탐색 관리</S.OperatingDialogEyebrow>
                 <S.OperatingDialogTitle id="discovery-status-dialog-title">
                   탐색 상태 변경
                 </S.OperatingDialogTitle>
@@ -2050,7 +2057,9 @@ function PlaceManagePage() {
               </S.SecondaryButton>
               <S.OperatingPrimaryButton
                 type="button"
-                disabled={updatingPlaceAction === 'discovery-status'}
+                disabled={
+                  updatingPlaceAction === 'discovery-status' || isDiscoveryStatusUnchanged
+                }
                 onClick={handleConfirmDiscoveryStatusEdit}
               >
                 {updatingPlaceAction === 'discovery-status' ? '저장 중' : '상태 저장'}
@@ -2074,7 +2083,6 @@ function PlaceManagePage() {
           >
             <S.OperatingDialogHeader>
               <div>
-                <S.OperatingDialogEyebrow>운영 관리</S.OperatingDialogEyebrow>
                 <S.OperatingDialogTitle id="operating-schedule-dialog-title">
                   영업시간 수정
                 </S.OperatingDialogTitle>
@@ -2090,8 +2098,7 @@ function PlaceManagePage() {
             </S.OperatingDialogHeader>
             <S.OperatingDialogBody>
               <S.OperatingDialogDescription>
-                {operatingScheduleEditPlace.name}의 정규 영업시간과 예외 일정을 전체
-                교체합니다.
+                {operatingScheduleEditPlace.name}의 영업시간과 예외 일정을 수정합니다.
               </S.OperatingDialogDescription>
 
               <S.OperatingEditorSection>
@@ -2117,18 +2124,6 @@ function PlaceManagePage() {
                           />
                           <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
                         </S.OperatingCheckLabel>
-                        {hour.hours.length > 0 ? (
-                          <S.OperatingTextButton
-                            type="button"
-                            disabled={updatingPlaceAction === 'operating-schedule'}
-                            onClick={() =>
-                              handleAddRegularOperatingHour(hour.dayOfWeek)
-                            }
-                          >
-                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
-                            시간대 추가
-                          </S.OperatingTextButton>
-                        ) : null}
                       </S.OperatingWeekRowHeader>
                       {hour.hours.length > 0 ? (
                         <S.OperatingExceptionHours>
@@ -2183,6 +2178,16 @@ function PlaceManagePage() {
                               </S.OperatingIconButton>
                             </S.OperatingExceptionTimeRow>
                           ))}
+                          <S.OperatingTextButton
+                            type="button"
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onClick={() =>
+                              handleAddRegularOperatingHour(hour.dayOfWeek)
+                            }
+                          >
+                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                            시간대 추가
+                          </S.OperatingTextButton>
                         </S.OperatingExceptionHours>
                       ) : null}
                     </S.OperatingWeekRow>

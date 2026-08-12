@@ -52,16 +52,24 @@ export const Trigger = styled.button`
   }
 
   ${Icon} {
-    color: ${neutral.primary};
+    color: ${neutral.muted};
   }
 
   &:hover:not(:disabled) {
     border-color: ${neutral.primarySoft};
+
+    ${Icon} {
+      color: ${neutral.primary};
+    }
   }
 
   &:focus-visible {
     border-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
+
+    ${Icon} {
+      color: ${neutral.primary};
+    }
   }
 
   &:disabled {

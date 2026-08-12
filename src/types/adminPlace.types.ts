@@ -62,6 +62,7 @@ export interface AdminPlaceItem {
   geocodingSource?: AdminPlaceGeocodingSource
   operatingStatus?: AdminPlaceOperatingStatus
   operatingStatusCheckedAt?: string | null
+  discoveryStatus?: AdminPlaceDiscoveryStatus
   latitude: number
   longitude: number
   userId: number
@@ -96,6 +97,7 @@ export interface AdminPlaceDetail {
   geocodingSource?: AdminPlaceGeocodingSource
   operatingStatus?: AdminPlaceOperatingStatus
   operatingStatusCheckedAt?: string | null
+  discoveryStatus?: AdminPlaceDiscoveryStatus
   regularHours?: AdminPlaceRegularOperatingHour[]
   operatingExceptions?: AdminPlaceOperatingException[]
   latitude: number

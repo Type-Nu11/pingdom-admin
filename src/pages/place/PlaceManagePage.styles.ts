@@ -688,7 +688,7 @@ export const OperatingSummaryAction = styled.div`
 `
 
 export const OperatingStatusBadge = styled.span<{
-  $tone: 'normal' | 'notice' | 'danger'
+  $tone: 'normal' | 'notice' | 'danger' | 'muted'
 }>`
   min-height: 28px;
   display: inline-flex;
@@ -701,20 +701,26 @@ export const OperatingStatusBadge = styled.span<{
         ? neutral.error
         : $tone === 'notice'
           ? neutral.warning
-          : neutral.success};
+          : $tone === 'muted'
+            ? neutral.borderDark
+            : neutral.success};
   border-radius: 999px;
   background: ${({ $tone }) =>
     $tone === 'danger'
       ? neutral.errorTint
       : $tone === 'notice'
         ? neutral.warningTint
-        : neutral.successSurface};
+        : $tone === 'muted'
+          ? neutral.surfaceHighest
+          : neutral.successSurface};
   color: ${({ $tone }) =>
     $tone === 'danger'
       ? neutral.error
       : $tone === 'notice'
         ? neutral.warningText
-        : neutral.successText};
+        : $tone === 'muted'
+          ? neutral.muted
+          : neutral.successText};
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
@@ -1441,6 +1447,14 @@ export const PlaceTitleRow = styled.div`
   gap: 8px;
 `
 
+export const PlaceTitleBadges = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+`
+
 export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
@@ -1466,6 +1480,22 @@ export const PlaceCategoryBadge = styled.span`
   color: ${neutral.primary};
   font-size: 11px;
   font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+`
+
+export const PlaceDiscoveryStatusBadge = styled.span`
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border: 1px solid ${neutral.borderDark};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
 `
@@ -2059,6 +2089,18 @@ export const OperatingDangerNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const OperatingInfoNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;

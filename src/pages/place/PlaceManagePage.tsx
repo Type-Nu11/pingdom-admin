@@ -12,6 +12,7 @@ import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminPlaceDayOfWeek,
   AdminPlaceDetail,
+  AdminPlaceDiscoveryStatus,
   AdminPlaceItem,
   AdminPlaceListSortParam,
   AdminPlaceOperatingException,
@@ -42,6 +43,14 @@ const PLACE_OPERATING_STATUS_OPTIONS: Array<{
   { value: 'OPERATING', label: '운영 중' },
   { value: 'TEMPORARILY_CLOSED', label: '임시 휴업' },
   { value: 'PERMANENTLY_CLOSED', label: '영구 폐업' },
+]
+
+const PLACE_DISCOVERY_STATUS_OPTIONS: Array<{
+  value: AdminPlaceDiscoveryStatus
+  label: string
+}> = [
+  { value: 'VISIBLE', label: '탐색 노출' },
+  { value: 'HIDDEN', label: '탐색 숨김' },
 ]
 
 const PLACE_DAY_OF_WEEK_OPTIONS: Array<{
@@ -184,6 +193,17 @@ function getOperatingStatusTone(status?: AdminPlaceOperatingStatus) {
   }
 
   return 'normal'
+}
+
+function formatDiscoveryStatus(status?: AdminPlaceDiscoveryStatus) {
+  return (
+    PLACE_DISCOVERY_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
+    '상태 확인 전'
+  )
+}
+
+function getDiscoveryStatusTone(status?: AdminPlaceDiscoveryStatus) {
+  return status === 'HIDDEN' ? 'muted' : 'normal'
 }
 
 function formatOperatingStatusCheckedAt(value?: string | null) {
@@ -383,6 +403,12 @@ function PlaceManagePage() {
     useState<AdminPlaceOperatingStatus>('OPERATING')
   const [operatingStatusReason, setOperatingStatusReason] = useState('')
   const [operatingStatusFormError, setOperatingStatusFormError] = useState('')
+  const [discoveryStatusEditPlace, setDiscoveryStatusEditPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [discoveryStatusDraft, setDiscoveryStatusDraft] =
+    useState<AdminPlaceDiscoveryStatus>('VISIBLE')
+  const [discoveryStatusReason, setDiscoveryStatusReason] = useState('')
+  const [discoveryStatusFormError, setDiscoveryStatusFormError] = useState('')
   const [operatingScheduleEditPlace, setOperatingScheduleEditPlace] =
     useState<AdminPlaceDetail | null>(null)
   const [regularHourDrafts, setRegularHourDrafts] = useState<
@@ -417,6 +443,7 @@ function PlaceManagePage() {
     clearPlaceDetail,
     clearActionErrorMessage,
     deletePlace,
+    updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
   } = useAdminPlaces({
@@ -778,6 +805,57 @@ function PlaceManagePage() {
     })
   }
 
+  const handleOpenDiscoveryStatusEdit = () => {
+    if (!placeDetail || !placeDetail.discoveryStatus || updatingPlaceId !== null) {
+      return
+    }
+
+    setDiscoveryStatusEditPlace(placeDetail)
+    setDiscoveryStatusDraft(placeDetail.discoveryStatus)
+    setDiscoveryStatusReason('')
+    setDiscoveryStatusFormError('')
+    clearActionErrorMessage()
+  }
+
+  const handleCloseDiscoveryStatusEdit = useCallback(() => {
+    if (updatingPlaceAction === 'discovery-status') {
+      return
+    }
+
+    setDiscoveryStatusEditPlace(null)
+    setDiscoveryStatusFormError('')
+  }, [updatingPlaceAction])
+
+  const handleConfirmDiscoveryStatusEdit = () => {
+    if (!discoveryStatusEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    if (!discoveryStatusReason.trim()) {
+      setDiscoveryStatusFormError('탐색 상태 변경 사유를 입력해주세요.')
+      return
+    }
+
+    setDiscoveryStatusFormError('')
+
+    void updatePlaceDiscoveryStatus(discoveryStatusEditPlace.id, {
+      discoveryStatus: discoveryStatusDraft,
+      reason: discoveryStatusReason.trim(),
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setSelectedPlace((currentPlace) =>
+          currentPlace?.id === discoveryStatusEditPlace.id
+            ? {
+                ...currentPlace,
+                discoveryStatus: discoveryStatusDraft,
+              }
+            : currentPlace
+        )
+        setDiscoveryStatusEditPlace(null)
+      }
+    })
+  }
+
   const handleOpenOperatingScheduleEdit = () => {
     if (!placeDetail || updatingPlaceId !== null) {
       return
@@ -1063,6 +1141,11 @@ function PlaceManagePage() {
         return
       }
 
+      if (discoveryStatusEditPlace) {
+        handleCloseDiscoveryStatusEdit()
+        return
+      }
+
       if (operatingStatusEditPlace) {
         handleCloseOperatingStatusEdit()
         return
@@ -1071,7 +1154,11 @@ function PlaceManagePage() {
       handleCloseOperatingScheduleEdit()
     }
 
-    if (!operatingStatusEditPlace && !operatingScheduleEditPlace) {
+    if (
+      !discoveryStatusEditPlace &&
+      !operatingStatusEditPlace &&
+      !operatingScheduleEditPlace
+    ) {
       return
     }
 
@@ -1081,6 +1168,8 @@ function PlaceManagePage() {
       window.removeEventListener('keydown', closeOperatingDialogOnEscape)
     }
   }, [
+    discoveryStatusEditPlace,
+    handleCloseDiscoveryStatusEdit,
     handleCloseOperatingScheduleEdit,
     handleCloseOperatingStatusEdit,
     operatingScheduleEditPlace,
@@ -1292,7 +1381,14 @@ function PlaceManagePage() {
                         <S.PlaceInfo>
                           <S.PlaceTitleRow>
                             <S.PlaceName>{placeDisplayName}</S.PlaceName>
-                            <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
+                            <S.PlaceTitleBadges>
+                              <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
+                              {place.discoveryStatus === 'HIDDEN' ? (
+                                <S.PlaceDiscoveryStatusBadge>
+                                  탐색 숨김
+                                </S.PlaceDiscoveryStatusBadge>
+                              ) : null}
+                            </S.PlaceTitleBadges>
                           </S.PlaceTitleRow>
                           <S.PlaceMeta>
                             <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
@@ -1450,7 +1546,7 @@ function PlaceManagePage() {
 
                         <S.DetailSection>
                           <S.DetailSectionHeader>
-                            <S.DetailSectionTitle>운영 관리</S.DetailSectionTitle>
+                            <S.DetailSectionTitle>운영 및 탐색 관리</S.DetailSectionTitle>
                           </S.DetailSectionHeader>
                           <S.OperatingSummary>
                             <S.OperatingSummaryRow>
@@ -1474,6 +1570,36 @@ function PlaceManagePage() {
                                   type="button"
                                   disabled={updatingPlaceId !== null}
                                   onClick={handleOpenOperatingStatusEdit}
+                                >
+                                  상태 변경
+                                </S.DetailInlineButton>
+                              </S.OperatingSummaryAction>
+                            </S.OperatingSummaryRow>
+                            <S.OperatingSummaryRow>
+                              <S.OperatingSummaryLabel>
+                                <span>탐색 상태</span>
+                                <small>
+                                  {placeDetail.discoveryStatus === 'HIDDEN'
+                                    ? '공개 탐색·자동완성·북마크 목록·추천 후보에서 제외됩니다.'
+                                    : placeDetail.discoveryStatus === 'VISIBLE'
+                                      ? '공개 탐색과 자동완성, 추천 후보에 노출됩니다.'
+                                      : '서버 응답에서 탐색 상태를 확인하지 못했습니다.'}
+                                </small>
+                              </S.OperatingSummaryLabel>
+                              <S.OperatingSummaryAction>
+                                <S.OperatingStatusBadge
+                                  $tone={getDiscoveryStatusTone(
+                                    placeDetail.discoveryStatus
+                                  )}
+                                >
+                                  {formatDiscoveryStatus(placeDetail.discoveryStatus)}
+                                </S.OperatingStatusBadge>
+                                <S.DetailInlineButton
+                                  type="button"
+                                  disabled={
+                                    updatingPlaceId !== null || !placeDetail.discoveryStatus
+                                  }
+                                  onClick={handleOpenDiscoveryStatusEdit}
                                 >
                                   상태 변경
                                 </S.DetailInlineButton>
@@ -1814,6 +1940,108 @@ function PlaceManagePage() {
                 {updatingPlaceAction === 'operating-status'
                   ? '저장 중'
                   : '상태 저장'}
+              </S.OperatingPrimaryButton>
+            </S.OperatingDialogActions>
+          </S.OperatingDialog>
+        </S.OperatingDialogOverlay>
+      ) : null}
+
+      {discoveryStatusEditPlace ? (
+        <S.OperatingDialogOverlay
+          role="presentation"
+          onMouseDown={handleCloseDiscoveryStatusEdit}
+        >
+          <S.OperatingDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discovery-status-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.OperatingDialogHeader>
+              <div>
+                <S.OperatingDialogEyebrow>탐색 관리</S.OperatingDialogEyebrow>
+                <S.OperatingDialogTitle id="discovery-status-dialog-title">
+                  탐색 상태 변경
+                </S.OperatingDialogTitle>
+              </div>
+              <S.OperatingDialogCloseButton
+                type="button"
+                aria-label="탐색 상태 변경 닫기"
+                disabled={updatingPlaceAction === 'discovery-status'}
+                onClick={handleCloseDiscoveryStatusEdit}
+              >
+                <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+              </S.OperatingDialogCloseButton>
+            </S.OperatingDialogHeader>
+            <S.OperatingDialogBody>
+              <S.OperatingDialogDescription>
+                {discoveryStatusEditPlace.name}의 공개 탐색 노출 여부를 변경합니다.
+                장소는 관리자 목록과 지도에서 계속 관리할 수 있습니다.
+              </S.OperatingDialogDescription>
+              <S.OperatingFormField>
+                <span>탐색 상태</span>
+                <S.OperatingSelect
+                  value={discoveryStatusDraft}
+                  disabled={updatingPlaceAction === 'discovery-status'}
+                  onChange={(event) => {
+                    setDiscoveryStatusDraft(
+                      event.target.value as AdminPlaceDiscoveryStatus
+                    )
+                    setDiscoveryStatusFormError('')
+                  }}
+                >
+                  {PLACE_DISCOVERY_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </S.OperatingSelect>
+              </S.OperatingFormField>
+              {discoveryStatusDraft === 'HIDDEN' ? (
+                <S.OperatingInfoNotice>
+                  탐색 숨김으로 변경하면 공개 탐색·자동완성·북마크 목록·추천 후보에서
+                  제외됩니다.
+                </S.OperatingInfoNotice>
+              ) : null}
+              <S.OperatingFormField>
+                <span>변경 사유</span>
+                <S.OperatingTextArea
+                  value={discoveryStatusReason}
+                  maxLength={500}
+                  placeholder="예: 운영 정책 검토를 위해 탐색 노출을 중지"
+                  disabled={updatingPlaceAction === 'discovery-status'}
+                  onChange={(event) => {
+                    setDiscoveryStatusReason(event.target.value)
+                    setDiscoveryStatusFormError('')
+                  }}
+                />
+                <small>{discoveryStatusReason.length}/500</small>
+              </S.OperatingFormField>
+              {discoveryStatusFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {discoveryStatusFormError}
+                </S.OperatingFormNotice>
+              ) : null}
+              {actionErrorMessage && !discoveryStatusFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {actionErrorMessage}
+                </S.OperatingFormNotice>
+              ) : null}
+            </S.OperatingDialogBody>
+            <S.OperatingDialogActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'discovery-status'}
+                onClick={handleCloseDiscoveryStatusEdit}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.OperatingPrimaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'discovery-status'}
+                onClick={handleConfirmDiscoveryStatusEdit}
+              >
+                {updatingPlaceAction === 'discovery-status' ? '저장 중' : '상태 저장'}
               </S.OperatingPrimaryButton>
             </S.OperatingDialogActions>
           </S.OperatingDialog>

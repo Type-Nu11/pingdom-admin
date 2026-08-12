@@ -10,9 +10,13 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
+  AdminPlaceDayOfWeek,
   AdminPlaceDetail,
   AdminPlaceItem,
   AdminPlaceListSortParam,
+  AdminPlaceOperatingException,
+  AdminPlaceOperatingStatus,
+  AdminPlaceRegularOperatingHour,
 } from '../../types/adminPlace.types'
 import {
   getPlaceCategoryIconName,
@@ -30,6 +34,54 @@ const PLACE_SORT_OPTIONS = [
   { value: 'OLDEST', label: '오래된순' },
   { value: 'LEVEL_DESC', label: '레벨 높은순' },
 ]
+
+const PLACE_OPERATING_STATUS_OPTIONS: Array<{
+  value: AdminPlaceOperatingStatus
+  label: string
+}> = [
+  { value: 'OPERATING', label: '운영 중' },
+  { value: 'TEMPORARILY_CLOSED', label: '임시 휴업' },
+  { value: 'PERMANENTLY_CLOSED', label: '영구 폐업' },
+]
+
+const PLACE_DAY_OF_WEEK_OPTIONS: Array<{
+  value: AdminPlaceDayOfWeek
+  label: string
+}> = [
+  { value: 'MONDAY', label: '월요일' },
+  { value: 'TUESDAY', label: '화요일' },
+  { value: 'WEDNESDAY', label: '수요일' },
+  { value: 'THURSDAY', label: '목요일' },
+  { value: 'FRIDAY', label: '금요일' },
+  { value: 'SATURDAY', label: '토요일' },
+  { value: 'SUNDAY', label: '일요일' },
+]
+
+interface RegularOperatingDayDraft {
+  dayOfWeek: AdminPlaceDayOfWeek
+  hours: OperatingTimeRangeDraft[]
+}
+
+interface OperatingTimeRangeDraft {
+  id: string
+  opensAt: string
+  closesAt: string
+}
+
+interface OperatingExceptionDraft {
+  id: string
+  date: string
+  closed: boolean
+  hours: OperatingTimeRangeDraft[]
+}
+
+let operatingScheduleDraftId = 0
+
+function createOperatingScheduleDraftId() {
+  operatingScheduleDraftId += 1
+
+  return `operating-schedule-${operatingScheduleDraftId}`
+}
 function hasValidCoordinate(place: AdminPlaceItem) {
   return (
     typeof place.latitude === 'number' &&
@@ -115,6 +167,180 @@ function formatPlacePostDate(value: string) {
   }).format(date)
 }
 
+function formatOperatingStatus(status?: AdminPlaceOperatingStatus) {
+  return (
+    PLACE_OPERATING_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
+    '확인 전'
+  )
+}
+
+function getOperatingStatusTone(status?: AdminPlaceOperatingStatus) {
+  if (status === 'PERMANENTLY_CLOSED') {
+    return 'danger'
+  }
+
+  if (status === 'TEMPORARILY_CLOSED') {
+    return 'notice'
+  }
+
+  return 'normal'
+}
+
+function formatOperatingStatusCheckedAt(value?: string | null) {
+  if (!value) {
+    return '확인 시각 정보 없음'
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
+function getTimeInputValue(value?: string) {
+  if (!value) {
+    return ''
+  }
+
+  const match = value.match(/^(\d{2}:\d{2})/)
+
+  return match?.[1] ?? ''
+}
+
+function getApiTimeValue(value: string) {
+  return value.length === 5 ? `${value}:00` : value
+}
+
+function formatOperatingTime(value?: string) {
+  return getTimeInputValue(value) || '시간 미정'
+}
+
+function getDayOfWeekLabel(dayOfWeek: AdminPlaceDayOfWeek) {
+  return (
+    PLACE_DAY_OF_WEEK_OPTIONS.find((option) => option.value === dayOfWeek)?.label ??
+    dayOfWeek
+  )
+}
+
+function formatExceptionDate(dateValue: string) {
+  if (!dateValue) {
+    return '날짜 미정'
+  }
+
+  const date = new Date(`${dateValue}T00:00:00`)
+
+  if (Number.isNaN(date.getTime())) {
+    return dateValue
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  }).format(date)
+}
+
+function createOperatingHourDrafts(hours: AdminPlaceRegularOperatingHour[] = []) {
+  const hoursByDay = new Map<
+    AdminPlaceDayOfWeek,
+    AdminPlaceRegularOperatingHour[]
+  >()
+
+  hours.forEach((hour) => {
+    const dayHours = hoursByDay.get(hour.dayOfWeek) ?? []
+
+    dayHours.push(hour)
+    hoursByDay.set(hour.dayOfWeek, dayHours)
+  })
+
+  return PLACE_DAY_OF_WEEK_OPTIONS.map(({ value: dayOfWeek }) => {
+    const dayHours = hoursByDay.get(dayOfWeek) ?? []
+
+    return {
+      dayOfWeek,
+      hours: dayHours.map((hour) => ({
+        id: createOperatingScheduleDraftId(),
+        opensAt: getTimeInputValue(hour.opensAt) || '09:00',
+        closesAt: getTimeInputValue(hour.closesAt) || '18:00',
+      })),
+    }
+  })
+}
+
+function createOperatingExceptionDraft(
+  exception?: AdminPlaceOperatingException
+): OperatingExceptionDraft {
+  const hours = (exception?.hours ?? []).map((hour) => ({
+    id: createOperatingScheduleDraftId(),
+    opensAt: getTimeInputValue(hour.opensAt) || '09:00',
+    closesAt: getTimeInputValue(hour.closesAt) || '18:00',
+  }))
+
+  return {
+    id: createOperatingScheduleDraftId(),
+    date: exception?.date ?? '',
+    closed: exception?.closed ?? true,
+    hours:
+      exception?.closed || hours.length > 0
+        ? hours
+        : [
+            {
+              id: createOperatingScheduleDraftId(),
+              opensAt: '09:00',
+              closesAt: '18:00',
+            },
+          ],
+  }
+}
+
+function getOperatingScheduleValidationMessage(
+  regularHours: RegularOperatingDayDraft[],
+  exceptions: OperatingExceptionDraft[],
+  reason: string
+) {
+  if (!reason.trim()) {
+    return '수정 사유를 입력해주세요.'
+  }
+
+  const hasInvalidRegularHour = regularHours.some((day) =>
+    day.hours.some((hour) => !hour.opensAt || !hour.closesAt)
+  )
+
+  if (hasInvalidRegularHour) {
+    return '영업하는 요일의 시작 시간과 종료 시간을 모두 입력해주세요.'
+  }
+
+  const dates = new Set<string>()
+
+  for (const exception of exceptions) {
+    if (!exception.date) {
+      return '예외 일정의 날짜를 입력해주세요.'
+    }
+
+    if (dates.has(exception.date)) {
+      return '같은 날짜의 예외 일정은 한 번만 등록할 수 있습니다.'
+    }
+
+    dates.add(exception.date)
+
+    if (
+      !exception.closed &&
+      (exception.hours.length === 0 ||
+        exception.hours.some((hour) => !hour.opensAt || !hour.closesAt))
+    ) {
+      return '대체 영업일의 시작 시간과 종료 시간을 모두 입력해주세요.'
+    }
+  }
+
+  return ''
+}
+
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   if (totalPages < 1) {
     return []
@@ -151,6 +377,22 @@ function PlaceManagePage() {
     useState<AdminPlaceDetail | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
     useState(false)
+  const [operatingStatusEditPlace, setOperatingStatusEditPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [operatingStatusDraft, setOperatingStatusDraft] =
+    useState<AdminPlaceOperatingStatus>('OPERATING')
+  const [operatingStatusReason, setOperatingStatusReason] = useState('')
+  const [operatingStatusFormError, setOperatingStatusFormError] = useState('')
+  const [operatingScheduleEditPlace, setOperatingScheduleEditPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [regularHourDrafts, setRegularHourDrafts] = useState<
+    RegularOperatingDayDraft[]
+  >([])
+  const [operatingExceptionDrafts, setOperatingExceptionDrafts] = useState<
+    OperatingExceptionDraft[]
+  >([])
+  const [operatingScheduleReason, setOperatingScheduleReason] = useState('')
+  const [operatingScheduleFormError, setOperatingScheduleFormError] = useState('')
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
   const {
@@ -168,10 +410,15 @@ function PlaceManagePage() {
     isDetailLoading,
     detailErrorMessage,
     deletingPlaceId,
+    updatingPlaceId,
+    updatingPlaceAction,
     fetchAdminPlaces,
     fetchAdminPlaceDetail,
     clearPlaceDetail,
+    clearActionErrorMessage,
     deletePlace,
+    updatePlaceOperatingStatus,
+    updatePlaceOperatingSchedule,
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
@@ -207,6 +454,8 @@ function PlaceManagePage() {
   const shouldShowDetailPostAllAction = placeDetail
     ? placeDetail.postCount > PLACE_DETAIL_POST_PREVIEW_LIMIT
     : false
+  const detailRegularHours = placeDetail?.regularHours ?? []
+  const detailOperatingExceptions = placeDetail?.operatingExceptions ?? []
   const placeMapMarkers = useMemo<KakaoMapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -486,6 +735,294 @@ function PlaceManagePage() {
     })
   }
 
+  const handleOpenOperatingStatusEdit = () => {
+    if (!placeDetail || updatingPlaceId !== null) {
+      return
+    }
+
+    setOperatingStatusEditPlace(placeDetail)
+    setOperatingStatusDraft(placeDetail.operatingStatus ?? 'OPERATING')
+    setOperatingStatusReason('')
+    setOperatingStatusFormError('')
+    clearActionErrorMessage()
+  }
+
+  const handleCloseOperatingStatusEdit = useCallback(() => {
+    if (updatingPlaceAction === 'operating-status') {
+      return
+    }
+
+    setOperatingStatusEditPlace(null)
+    setOperatingStatusFormError('')
+  }, [updatingPlaceAction])
+
+  const handleConfirmOperatingStatusEdit = () => {
+    if (!operatingStatusEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    if (!operatingStatusReason.trim()) {
+      setOperatingStatusFormError('운영 상태 확인 사유를 입력해주세요.')
+      return
+    }
+
+    setOperatingStatusFormError('')
+
+    void updatePlaceOperatingStatus(operatingStatusEditPlace.id, {
+      operatingStatus: operatingStatusDraft,
+      reason: operatingStatusReason.trim(),
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setOperatingStatusEditPlace(null)
+      }
+    })
+  }
+
+  const handleOpenOperatingScheduleEdit = () => {
+    if (!placeDetail || updatingPlaceId !== null) {
+      return
+    }
+
+    setOperatingScheduleEditPlace(placeDetail)
+    setRegularHourDrafts(createOperatingHourDrafts(placeDetail.regularHours))
+    setOperatingExceptionDrafts(
+      (placeDetail.operatingExceptions ?? []).map((exception) =>
+        createOperatingExceptionDraft(exception)
+      )
+    )
+    setOperatingScheduleReason('')
+    setOperatingScheduleFormError('')
+    clearActionErrorMessage()
+  }
+
+  const handleCloseOperatingScheduleEdit = useCallback(() => {
+    if (updatingPlaceAction === 'operating-schedule') {
+      return
+    }
+
+    setOperatingScheduleEditPlace(null)
+    setOperatingScheduleFormError('')
+  }, [updatingPlaceAction])
+
+  const handleRegularOperatingDayEnabledChange = (
+    dayOfWeek: AdminPlaceDayOfWeek,
+    enabled: boolean
+  ) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) => {
+        if (day.dayOfWeek !== dayOfWeek) {
+          return day
+        }
+
+        return {
+          ...day,
+          hours: enabled
+            ? day.hours.length > 0
+              ? day.hours
+              : [
+                  {
+                    id: createOperatingScheduleDraftId(),
+                    opensAt: '09:00',
+                    closesAt: '18:00',
+                  },
+                ]
+            : [],
+        }
+      })
+    )
+  }
+
+  const handleRegularOperatingHourChange = (
+    dayOfWeek: AdminPlaceDayOfWeek,
+    hourId: string,
+    patch: Partial<Pick<OperatingTimeRangeDraft, 'opensAt' | 'closesAt'>>
+  ) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              hours: day.hours.map((hour) =>
+                hour.id === hourId ? { ...hour, ...patch } : hour
+              ),
+            }
+          : day
+      )
+    )
+  }
+
+  const handleAddRegularOperatingHour = (dayOfWeek: AdminPlaceDayOfWeek) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              hours: [
+                ...day.hours,
+                {
+                  id: createOperatingScheduleDraftId(),
+                  opensAt: '09:00',
+                  closesAt: '18:00',
+                },
+              ],
+            }
+          : day
+      )
+    )
+  }
+
+  const handleRemoveRegularOperatingHour = (
+    dayOfWeek: AdminPlaceDayOfWeek,
+    hourId: string
+  ) => {
+    setRegularHourDrafts((prevHours) =>
+      prevHours.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              hours: day.hours.filter((hour) => hour.id !== hourId),
+            }
+          : day
+      )
+    )
+  }
+
+  const handleAddOperatingException = () => {
+    setOperatingExceptionDrafts((prevExceptions) => [
+      ...prevExceptions,
+      createOperatingExceptionDraft(),
+    ])
+  }
+
+  const handleOperatingExceptionChange = (
+    exceptionId: string,
+    patch: Partial<Pick<OperatingExceptionDraft, 'date' | 'closed'>>
+  ) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) => {
+        if (exception.id !== exceptionId) {
+          return exception
+        }
+
+        const nextException = { ...exception, ...patch }
+
+        if (patch.closed === false && nextException.hours.length === 0) {
+          nextException.hours = [
+            {
+              id: createOperatingScheduleDraftId(),
+              opensAt: '09:00',
+              closesAt: '18:00',
+            },
+          ]
+        }
+
+        return nextException
+      })
+    )
+  }
+
+  const handleRemoveOperatingException = (exceptionId: string) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.filter((exception) => exception.id !== exceptionId)
+    )
+  }
+
+  const handleOperatingExceptionHourChange = (
+    exceptionId: string,
+    hourId: string,
+    patch: Partial<Pick<OperatingTimeRangeDraft, 'opensAt' | 'closesAt'>>
+  ) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) =>
+        exception.id === exceptionId
+          ? {
+              ...exception,
+              hours: exception.hours.map((hour) =>
+                hour.id === hourId ? { ...hour, ...patch } : hour
+              ),
+            }
+          : exception
+      )
+    )
+  }
+
+  const handleAddOperatingExceptionHour = (exceptionId: string) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) =>
+        exception.id === exceptionId
+          ? {
+              ...exception,
+              hours: [
+                ...exception.hours,
+                {
+                  id: createOperatingScheduleDraftId(),
+                  opensAt: '09:00',
+                  closesAt: '18:00',
+                },
+              ],
+            }
+          : exception
+      )
+    )
+  }
+
+  const handleRemoveOperatingExceptionHour = (exceptionId: string, hourId: string) => {
+    setOperatingExceptionDrafts((prevExceptions) =>
+      prevExceptions.map((exception) =>
+        exception.id === exceptionId
+          ? {
+              ...exception,
+              hours: exception.hours.filter((hour) => hour.id !== hourId),
+            }
+          : exception
+      )
+    )
+  }
+
+  const handleConfirmOperatingScheduleEdit = () => {
+    if (!operatingScheduleEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    const validationMessage = getOperatingScheduleValidationMessage(
+      regularHourDrafts,
+      operatingExceptionDrafts,
+      operatingScheduleReason
+    )
+
+    if (validationMessage) {
+      setOperatingScheduleFormError(validationMessage)
+      return
+    }
+
+    setOperatingScheduleFormError('')
+
+    void updatePlaceOperatingSchedule(operatingScheduleEditPlace.id, {
+      regularHours: regularHourDrafts.flatMap((day) =>
+        day.hours.map((hour) => ({
+          dayOfWeek: day.dayOfWeek,
+          opensAt: getApiTimeValue(hour.opensAt),
+          closesAt: getApiTimeValue(hour.closesAt),
+        }))
+      ),
+      exceptions: operatingExceptionDrafts.map((exception) => ({
+        date: exception.date,
+        closed: exception.closed,
+        hours: exception.closed
+          ? []
+          : exception.hours.map((hour) => ({
+              opensAt: getApiTimeValue(hour.opensAt),
+              closesAt: getApiTimeValue(hour.closesAt),
+            })),
+      })),
+      reason: operatingScheduleReason.trim(),
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        setOperatingScheduleEditPlace(null)
+      }
+    })
+  }
+
   useEffect(() => {
     if (!selectedPlace || !hasValidCoordinate(selectedPlace)) {
       return
@@ -519,6 +1056,36 @@ function PlaceManagePage() {
       window.removeEventListener('keydown', closeDeleteConfirmOnEscape)
     }
   }, [deleteConfirmPlace, handleCloseDeleteConfirm])
+
+  useEffect(() => {
+    function closeOperatingDialogOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') {
+        return
+      }
+
+      if (operatingStatusEditPlace) {
+        handleCloseOperatingStatusEdit()
+        return
+      }
+
+      handleCloseOperatingScheduleEdit()
+    }
+
+    if (!operatingStatusEditPlace && !operatingScheduleEditPlace) {
+      return
+    }
+
+    window.addEventListener('keydown', closeOperatingDialogOnEscape)
+
+    return () => {
+      window.removeEventListener('keydown', closeOperatingDialogOnEscape)
+    }
+  }, [
+    handleCloseOperatingScheduleEdit,
+    handleCloseOperatingStatusEdit,
+    operatingScheduleEditPlace,
+    operatingStatusEditPlace,
+  ])
 
   return (
     <S.AppShell>
@@ -882,6 +1449,103 @@ function PlaceManagePage() {
                         </S.DetailMetaList>
 
                         <S.DetailSection>
+                          <S.DetailSectionHeader>
+                            <S.DetailSectionTitle>운영 관리</S.DetailSectionTitle>
+                          </S.DetailSectionHeader>
+                          <S.OperatingSummary>
+                            <S.OperatingSummaryRow>
+                              <S.OperatingSummaryLabel>
+                                <span>운영 상태</span>
+                                <small>
+                                  {formatOperatingStatusCheckedAt(
+                                    placeDetail.operatingStatusCheckedAt
+                                  )}
+                                </small>
+                              </S.OperatingSummaryLabel>
+                              <S.OperatingSummaryAction>
+                                <S.OperatingStatusBadge
+                                  $tone={getOperatingStatusTone(
+                                    placeDetail.operatingStatus
+                                  )}
+                                >
+                                  {formatOperatingStatus(placeDetail.operatingStatus)}
+                                </S.OperatingStatusBadge>
+                                <S.DetailInlineButton
+                                  type="button"
+                                  disabled={updatingPlaceId !== null}
+                                  onClick={handleOpenOperatingStatusEdit}
+                                >
+                                  상태 변경
+                                </S.DetailInlineButton>
+                              </S.OperatingSummaryAction>
+                            </S.OperatingSummaryRow>
+                            <S.OperatingSummaryRow>
+                              <S.OperatingSummaryLabel>
+                                <span>정규 영업시간</span>
+                                <small>
+                                  {detailRegularHours.length > 0
+                                    ? `${detailRegularHours.length}개 요일 설정됨`
+                                    : '등록된 정규 영업시간 없음'}
+                                </small>
+                              </S.OperatingSummaryLabel>
+                              <S.DetailInlineButton
+                                type="button"
+                                disabled={updatingPlaceId !== null}
+                                onClick={handleOpenOperatingScheduleEdit}
+                              >
+                                영업시간 수정
+                              </S.DetailInlineButton>
+                            </S.OperatingSummaryRow>
+                          </S.OperatingSummary>
+
+                          {detailRegularHours.length > 0 ? (
+                            <S.OperatingHoursList aria-label="정규 영업시간">
+                              {detailRegularHours.map((hour) => (
+                                <S.OperatingHoursItem key={hour.dayOfWeek}>
+                                  <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
+                                  <strong>
+                                    {formatOperatingTime(hour.opensAt)} -{' '}
+                                    {formatOperatingTime(hour.closesAt)}
+                                  </strong>
+                                </S.OperatingHoursItem>
+                              ))}
+                            </S.OperatingHoursList>
+                          ) : (
+                            <S.OperatingEmptyState>
+                              정규 영업시간이 등록되지 않았습니다.
+                            </S.OperatingEmptyState>
+                          )}
+
+                          <S.OperatingExceptionHeader>
+                            <span>예외 일정</span>
+                            <small>{detailOperatingExceptions.length}건</small>
+                          </S.OperatingExceptionHeader>
+                          {detailOperatingExceptions.length > 0 ? (
+                            <S.OperatingExceptionsList aria-label="예외 영업 일정">
+                              {detailOperatingExceptions.map((exception) => (
+                                <S.OperatingExceptionItem key={exception.date}>
+                                  <span>{formatExceptionDate(exception.date)}</span>
+                                  <strong>
+                                    {exception.closed
+                                      ? '종일 휴무'
+                                      : exception.hours
+                                          .map(
+                                            (hour) =>
+                                              `${formatOperatingTime(hour.opensAt)} - ${formatOperatingTime(hour.closesAt)}`
+                                          )
+                                          .join(', ') || '시간 미정'}
+                                  </strong>
+                                </S.OperatingExceptionItem>
+                              ))}
+                            </S.OperatingExceptionsList>
+                          ) : (
+                            <S.OperatingEmptyState>
+                              등록된 예외 일정이 없습니다.
+                            </S.OperatingEmptyState>
+                          )}
+                        </S.DetailSection>
+
+                        <S.DetailSection>
                           <S.DetailSectionTitle>장소 성장</S.DetailSectionTitle>
                           <S.PlaceMetaLine>
                             <span>
@@ -1050,6 +1714,414 @@ function PlaceManagePage() {
           <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
           <span>{actionSuccessMessage}</span>
         </S.ActionToast>
+      ) : null}
+
+      {operatingStatusEditPlace ? (
+        <S.OperatingDialogOverlay
+          role="presentation"
+          onMouseDown={handleCloseOperatingStatusEdit}
+        >
+          <S.OperatingDialog
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="operating-status-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.OperatingDialogHeader>
+              <div>
+                <S.OperatingDialogEyebrow>운영 관리</S.OperatingDialogEyebrow>
+                <S.OperatingDialogTitle id="operating-status-dialog-title">
+                  운영 상태 변경
+                </S.OperatingDialogTitle>
+              </div>
+              <S.OperatingDialogCloseButton
+                type="button"
+                aria-label="운영 상태 변경 닫기"
+                disabled={updatingPlaceAction === 'operating-status'}
+                onClick={handleCloseOperatingStatusEdit}
+              >
+                <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+              </S.OperatingDialogCloseButton>
+            </S.OperatingDialogHeader>
+            <S.OperatingDialogBody>
+              <S.OperatingDialogDescription>
+                {operatingStatusEditPlace.name}의 운영 상태를 변경합니다. 비운영 상태의
+                장소는 앱 장소 조회와 추천에서 숨겨집니다.
+              </S.OperatingDialogDescription>
+              <S.OperatingFormField>
+                <span>운영 상태</span>
+                <S.OperatingSelect
+                  value={operatingStatusDraft}
+                  disabled={updatingPlaceAction === 'operating-status'}
+                  onChange={(event) => {
+                    setOperatingStatusDraft(
+                      event.target.value as AdminPlaceOperatingStatus
+                    )
+                    setOperatingStatusFormError('')
+                  }}
+                >
+                  {PLACE_OPERATING_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </S.OperatingSelect>
+              </S.OperatingFormField>
+              {operatingStatusDraft === 'PERMANENTLY_CLOSED' ? (
+                <S.OperatingDangerNotice>
+                  영구 폐업으로 변경하면 해당 장소는 앱에서 노출되지 않습니다.
+                </S.OperatingDangerNotice>
+              ) : null}
+              <S.OperatingFormField>
+                <span>확인 사유</span>
+                <S.OperatingTextArea
+                  value={operatingStatusReason}
+                  maxLength={500}
+                  placeholder="예: 현장 확인 결과 임시 휴업"
+                  disabled={updatingPlaceAction === 'operating-status'}
+                  onChange={(event) => {
+                    setOperatingStatusReason(event.target.value)
+                    setOperatingStatusFormError('')
+                  }}
+                />
+                <small>{operatingStatusReason.length}/500</small>
+              </S.OperatingFormField>
+              {operatingStatusFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {operatingStatusFormError}
+                </S.OperatingFormNotice>
+              ) : null}
+              {actionErrorMessage && !operatingStatusFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {actionErrorMessage}
+                </S.OperatingFormNotice>
+              ) : null}
+            </S.OperatingDialogBody>
+            <S.OperatingDialogActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'operating-status'}
+                onClick={handleCloseOperatingStatusEdit}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.OperatingPrimaryButton
+                type="button"
+                $danger={operatingStatusDraft === 'PERMANENTLY_CLOSED'}
+                disabled={updatingPlaceAction === 'operating-status'}
+                onClick={handleConfirmOperatingStatusEdit}
+              >
+                {updatingPlaceAction === 'operating-status'
+                  ? '저장 중'
+                  : '상태 저장'}
+              </S.OperatingPrimaryButton>
+            </S.OperatingDialogActions>
+          </S.OperatingDialog>
+        </S.OperatingDialogOverlay>
+      ) : null}
+
+      {operatingScheduleEditPlace ? (
+        <S.OperatingDialogOverlay
+          role="presentation"
+          onMouseDown={handleCloseOperatingScheduleEdit}
+        >
+          <S.OperatingDialog
+            $wide
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="operating-schedule-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.OperatingDialogHeader>
+              <div>
+                <S.OperatingDialogEyebrow>운영 관리</S.OperatingDialogEyebrow>
+                <S.OperatingDialogTitle id="operating-schedule-dialog-title">
+                  영업시간 수정
+                </S.OperatingDialogTitle>
+              </div>
+              <S.OperatingDialogCloseButton
+                type="button"
+                aria-label="영업시간 수정 닫기"
+                disabled={updatingPlaceAction === 'operating-schedule'}
+                onClick={handleCloseOperatingScheduleEdit}
+              >
+                <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+              </S.OperatingDialogCloseButton>
+            </S.OperatingDialogHeader>
+            <S.OperatingDialogBody>
+              <S.OperatingDialogDescription>
+                {operatingScheduleEditPlace.name}의 정규 영업시간과 예외 일정을 전체
+                교체합니다.
+              </S.OperatingDialogDescription>
+
+              <S.OperatingEditorSection>
+                <S.OperatingEditorSectionHeader>
+                  <strong>정규 영업시간</strong>
+                  <span>영업하지 않는 요일은 해제하세요.</span>
+                </S.OperatingEditorSectionHeader>
+                <S.OperatingWeekList>
+                  {regularHourDrafts.map((hour) => (
+                    <S.OperatingWeekRow key={hour.dayOfWeek}>
+                      <S.OperatingWeekRowHeader>
+                        <S.OperatingCheckLabel>
+                          <input
+                            type="checkbox"
+                            checked={hour.hours.length > 0}
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onChange={(event) =>
+                              handleRegularOperatingDayEnabledChange(
+                                hour.dayOfWeek,
+                                event.target.checked
+                              )
+                            }
+                          />
+                          <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
+                        </S.OperatingCheckLabel>
+                        {hour.hours.length > 0 ? (
+                          <S.OperatingTextButton
+                            type="button"
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onClick={() =>
+                              handleAddRegularOperatingHour(hour.dayOfWeek)
+                            }
+                          >
+                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                            시간대 추가
+                          </S.OperatingTextButton>
+                        ) : null}
+                      </S.OperatingWeekRowHeader>
+                      {hour.hours.length > 0 ? (
+                        <S.OperatingExceptionHours>
+                          {hour.hours.map((timeRange) => (
+                            <S.OperatingExceptionTimeRow key={timeRange.id}>
+                              <S.OperatingTimeControls>
+                                <S.OperatingTimeInput
+                                  type="time"
+                                  value={timeRange.opensAt}
+                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
+                                  disabled={
+                                    updatingPlaceAction === 'operating-schedule'
+                                  }
+                                  onChange={(event) =>
+                                    handleRegularOperatingHourChange(
+                                      hour.dayOfWeek,
+                                      timeRange.id,
+                                      { opensAt: event.target.value }
+                                    )
+                                  }
+                                />
+                                <span>-</span>
+                                <S.OperatingTimeInput
+                                  type="time"
+                                  value={timeRange.closesAt}
+                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
+                                  disabled={
+                                    updatingPlaceAction === 'operating-schedule'
+                                  }
+                                  onChange={(event) =>
+                                    handleRegularOperatingHourChange(
+                                      hour.dayOfWeek,
+                                      timeRange.id,
+                                      { closesAt: event.target.value }
+                                    )
+                                  }
+                                />
+                              </S.OperatingTimeControls>
+                              <S.OperatingIconButton
+                                type="button"
+                                aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 영업시간 삭제`}
+                                title="시간 삭제"
+                                disabled={
+                                  updatingPlaceAction === 'operating-schedule'
+                                }
+                                onClick={() =>
+                                  handleRemoveRegularOperatingHour(
+                                    hour.dayOfWeek,
+                                    timeRange.id
+                                  )
+                                }
+                              >
+                                <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
+                              </S.OperatingIconButton>
+                            </S.OperatingExceptionTimeRow>
+                          ))}
+                        </S.OperatingExceptionHours>
+                      ) : null}
+                    </S.OperatingWeekRow>
+                  ))}
+                </S.OperatingWeekList>
+              </S.OperatingEditorSection>
+
+              <S.OperatingEditorSection>
+                <S.OperatingEditorSectionHeader>
+                  <strong>예외 일정</strong>
+                  <S.DetailInlineButton
+                    type="button"
+                    disabled={updatingPlaceAction === 'operating-schedule'}
+                    onClick={handleAddOperatingException}
+                  >
+                    <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                    일정 추가
+                  </S.DetailInlineButton>
+                </S.OperatingEditorSectionHeader>
+                {operatingExceptionDrafts.length > 0 ? (
+                  <S.OperatingExceptionEditorList>
+                    {operatingExceptionDrafts.map((exception) => (
+                      <S.OperatingExceptionEditor key={exception.id}>
+                        <S.OperatingExceptionEditorHeader>
+                          <S.OperatingDateInput
+                            type="date"
+                            value={exception.date}
+                            aria-label="예외 일정 날짜"
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onChange={(event) =>
+                              handleOperatingExceptionChange(exception.id, {
+                                date: event.target.value,
+                              })
+                            }
+                          />
+                          <S.OperatingIconButton
+                            type="button"
+                            aria-label="예외 일정 삭제"
+                            title="일정 삭제"
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onClick={() => handleRemoveOperatingException(exception.id)}
+                          >
+                            <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                          </S.OperatingIconButton>
+                        </S.OperatingExceptionEditorHeader>
+                        <S.OperatingCheckLabel>
+                          <input
+                            type="checkbox"
+                            checked={exception.closed}
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onChange={(event) =>
+                              handleOperatingExceptionChange(exception.id, {
+                                closed: event.target.checked,
+                              })
+                            }
+                          />
+                          <span>종일 휴무</span>
+                        </S.OperatingCheckLabel>
+                        {!exception.closed ? (
+                          <S.OperatingExceptionHours>
+                            {exception.hours.map((hour) => (
+                              <S.OperatingExceptionTimeRow key={hour.id}>
+                                <S.OperatingTimeControls>
+                                  <S.OperatingTimeInput
+                                    type="time"
+                                    value={hour.opensAt}
+                                    aria-label="대체 영업 시작 시간"
+                                    disabled={
+                                      updatingPlaceAction === 'operating-schedule'
+                                    }
+                                    onChange={(event) =>
+                                      handleOperatingExceptionHourChange(
+                                        exception.id,
+                                        hour.id,
+                                        { opensAt: event.target.value }
+                                      )
+                                    }
+                                  />
+                                  <span>-</span>
+                                  <S.OperatingTimeInput
+                                    type="time"
+                                    value={hour.closesAt}
+                                    aria-label="대체 영업 종료 시간"
+                                    disabled={
+                                      updatingPlaceAction === 'operating-schedule'
+                                    }
+                                    onChange={(event) =>
+                                      handleOperatingExceptionHourChange(
+                                        exception.id,
+                                        hour.id,
+                                        { closesAt: event.target.value }
+                                      )
+                                    }
+                                  />
+                                </S.OperatingTimeControls>
+                                <S.OperatingIconButton
+                                  type="button"
+                                  aria-label="대체 영업 시간 삭제"
+                                  title="시간 삭제"
+                                  disabled={
+                                    exception.hours.length <= 1 ||
+                                    updatingPlaceAction === 'operating-schedule'
+                                  }
+                                  onClick={() =>
+                                    handleRemoveOperatingExceptionHour(
+                                      exception.id,
+                                      hour.id
+                                    )
+                                  }
+                                >
+                                  <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
+                                </S.OperatingIconButton>
+                              </S.OperatingExceptionTimeRow>
+                            ))}
+                            <S.OperatingTextButton
+                              type="button"
+                              disabled={updatingPlaceAction === 'operating-schedule'}
+                              onClick={() => handleAddOperatingExceptionHour(exception.id)}
+                            >
+                              <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                              시간대 추가
+                            </S.OperatingTextButton>
+                          </S.OperatingExceptionHours>
+                        ) : null}
+                      </S.OperatingExceptionEditor>
+                    ))}
+                  </S.OperatingExceptionEditorList>
+                ) : (
+                  <S.OperatingEmptyState>
+                    등록된 예외 일정이 없습니다.
+                  </S.OperatingEmptyState>
+                )}
+              </S.OperatingEditorSection>
+
+              <S.OperatingFormField>
+                <span>수정 사유</span>
+                <S.OperatingTextArea
+                  value={operatingScheduleReason}
+                  maxLength={500}
+                  placeholder="예: 광복절 휴무와 주말 영업시간 반영"
+                  disabled={updatingPlaceAction === 'operating-schedule'}
+                  onChange={(event) => {
+                    setOperatingScheduleReason(event.target.value)
+                    setOperatingScheduleFormError('')
+                  }}
+                />
+                <small>{operatingScheduleReason.length}/500</small>
+              </S.OperatingFormField>
+              {operatingScheduleFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {operatingScheduleFormError}
+                </S.OperatingFormNotice>
+              ) : null}
+              {actionErrorMessage && !operatingScheduleFormError ? (
+                <S.OperatingFormNotice role="alert">
+                  {actionErrorMessage}
+                </S.OperatingFormNotice>
+              ) : null}
+            </S.OperatingDialogBody>
+            <S.OperatingDialogActions>
+              <S.SecondaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'operating-schedule'}
+                onClick={handleCloseOperatingScheduleEdit}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.OperatingPrimaryButton
+                type="button"
+                disabled={updatingPlaceAction === 'operating-schedule'}
+                onClick={handleConfirmOperatingScheduleEdit}
+              >
+                {updatingPlaceAction === 'operating-schedule' ? '저장 중' : '영업시간 저장'}
+              </S.OperatingPrimaryButton>
+            </S.OperatingDialogActions>
+          </S.OperatingDialog>
+        </S.OperatingDialogOverlay>
       ) : null}
 
       {deleteConfirmPlace ? (

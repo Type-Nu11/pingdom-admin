@@ -80,11 +80,10 @@ export const Trigger = styled.button`
 `
 
 export const Popover = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
+  position: fixed;
   z-index: 150;
   width: min(300px, calc(100vw - 40px));
+  box-sizing: border-box;
   padding: 14px;
   border: 1px solid ${neutral.border};
   border-radius: 10px;
@@ -225,11 +224,10 @@ export const TimePickerRoot = styled.div`
 `
 
 export const TimeMenu = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
+  position: fixed;
   z-index: 151;
   width: 184px;
+  box-sizing: border-box;
   padding: 10px;
   border: 1px solid ${neutral.border};
   border-radius: 10px;

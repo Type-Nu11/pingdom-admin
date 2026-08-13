@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { createPortal } from 'react-dom'
 import * as S from './AdminDateTimePicker.styles'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -67,6 +74,68 @@ function isSameDay(left: Date | null, right: Date) {
   )
 }
 
+interface FloatingPosition {
+  top: number
+  left: number
+}
+
+function useFloatingLayerPosition(
+  isOpen: boolean,
+  anchorRef: React.RefObject<HTMLElement | null>,
+  layerRef: React.RefObject<HTMLElement | null>
+) {
+  const [position, setPosition] = useState<FloatingPosition | null>(null)
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    let animationFrameId = 0
+
+    const updatePosition = () => {
+      const anchor = anchorRef.current
+      const layer = layerRef.current
+
+      if (!anchor || !layer) {
+        return
+      }
+
+      const edgeMargin = 20
+      const gap = 8
+      const anchorRect = anchor.getBoundingClientRect()
+      const layerRect = layer.getBoundingClientRect()
+      const left = Math.min(
+        Math.max(edgeMargin, anchorRect.left),
+        window.innerWidth - layerRect.width - edgeMargin
+      )
+      const preferredTop = anchorRect.bottom + gap
+      const top =
+        preferredTop + layerRect.height <= window.innerHeight - edgeMargin
+          ? preferredTop
+          : Math.max(edgeMargin, anchorRect.top - layerRect.height - gap)
+
+      setPosition({ top, left })
+    }
+
+    animationFrameId = window.requestAnimationFrame(updatePosition)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [anchorRef, isOpen, layerRef])
+
+  return position
+}
+
+function isInsidePickerLayer(target: EventTarget | null) {
+  return target instanceof Element && target.closest('[data-admin-picker-layer]') !== null
+}
+
 interface PickerProps {
   ariaLabel: string
   value: string
@@ -111,6 +180,8 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
   const [isOpen, setIsOpen] = useState(false)
   const [viewDate, setViewDate] = useState(() => parseValue(value))
   const rootRef = useRef<HTMLDivElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const floatingPosition = useFloatingLayerPosition(isOpen, rootRef, popoverRef)
   const selectedDate = value ? parseValue(value) : null
   const calendarDays = useMemo(() => getCalendarDays(viewDate), [viewDate])
   const timeValue = selectedDate
@@ -122,7 +193,11 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
 
   useEffect(() => {
     const close = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      if (
+        !rootRef.current?.contains(event.target as Node) &&
+        !popoverRef.current?.contains(event.target as Node) &&
+        !isInsidePickerLayer(event.target)
+      ) {
         setIsOpen(false)
       }
     }
@@ -177,8 +252,19 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
         <span>{formatDateLabel(value, includeTime)}</span>
         <S.Icon aria-hidden="true">calendar_month</S.Icon>
       </S.Trigger>
-      {isOpen ? (
-        <S.Popover role="dialog" aria-label={ariaLabel}>
+      {isOpen
+        ? createPortal(
+            <S.Popover
+              ref={popoverRef}
+              role="dialog"
+              aria-label={ariaLabel}
+              data-admin-picker-layer
+              style={
+                floatingPosition
+                  ? { top: floatingPosition.top, left: floatingPosition.left }
+                  : { top: -9999, left: -9999, visibility: 'hidden' }
+              }
+            >
           <S.CalendarHeader>
             <S.IconButton
               type="button"
@@ -253,8 +339,10 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
               </S.PrimaryButton>
             </S.Footer>
           ) : null}
-        </S.Popover>
-      ) : null}
+            </S.Popover>,
+            document.body
+          )
+        : null}
     </S.Root>
   )
 }
@@ -262,13 +350,19 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
 export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: PickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const floatingPosition = useFloatingLayerPosition(isOpen, rootRef, menuRef)
   const normalizedValue = /^\d{2}:\d{2}$/.test(value) ? value : '00:00'
   const selectedHour = normalizedValue.slice(0, 2)
   const selectedMinute = normalizedValue.slice(3, 5)
 
   useEffect(() => {
     const close = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      if (
+        !rootRef.current?.contains(event.target as Node) &&
+        !menuRef.current?.contains(event.target as Node) &&
+        !isInsidePickerLayer(event.target)
+      ) {
         setIsOpen(false)
       }
     }
@@ -293,15 +387,26 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
         type="button"
         aria-label={`${ariaLabel}, ${normalizedValue}`}
         aria-expanded={isOpen}
-        aria-haspopup="listbox"
+        aria-haspopup="dialog"
         disabled={disabled}
         onClick={() => setIsOpen((open) => !open)}
       >
         <span>{normalizedValue}</span>
         <S.Icon aria-hidden="true">schedule</S.Icon>
       </S.Trigger>
-      {isOpen ? (
-        <S.TimeMenu aria-label={ariaLabel}>
+      {isOpen
+        ? createPortal(
+            <S.TimeMenu
+              ref={menuRef}
+              role="dialog"
+              aria-label={ariaLabel}
+              data-admin-picker-layer
+              style={
+                floatingPosition
+                  ? { top: floatingPosition.top, left: floatingPosition.left }
+                  : { top: -9999, left: -9999, visibility: 'hidden' }
+              }
+            >
           <S.TimeMenuTitle>{ariaLabel}</S.TimeMenuTitle>
           <S.TimeColumns>
             <S.TimeColumn>
@@ -340,8 +445,10 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
               </S.TimeOptions>
             </S.TimeColumn>
           </S.TimeColumns>
-        </S.TimeMenu>
-      ) : null}
+            </S.TimeMenu>,
+            document.body
+          )
+        : null}
     </S.TimePickerRoot>
   )
 }

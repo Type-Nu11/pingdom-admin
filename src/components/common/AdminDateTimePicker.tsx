@@ -1,9 +1,11 @@
 import {
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
 import * as S from './AdminDateTimePicker.styles'
@@ -134,6 +136,31 @@ function useFloatingLayerPosition(
 
 function isInsidePickerLayer(target: EventTarget | null) {
   return target instanceof Element && target.closest('[data-admin-picker-layer]') !== null
+}
+
+function getNextOptionIndex(
+  event: ReactKeyboardEvent<HTMLButtonElement>,
+  currentIndex: number,
+  optionCount: number
+) {
+  switch (event.key) {
+    case 'ArrowDown':
+      return (currentIndex + 1) % optionCount
+    case 'ArrowUp':
+      return (currentIndex - 1 + optionCount) % optionCount
+    case 'Home':
+      return 0
+    case 'End':
+      return optionCount - 1
+    default:
+      return null
+  }
+}
+
+function focusTimeOption(optionId: string) {
+  window.requestAnimationFrame(() => {
+    document.getElementById(optionId)?.focus()
+  })
 }
 
 interface PickerProps {
@@ -351,10 +378,33 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
   const [isOpen, setIsOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const pickerId = useId()
   const floatingPosition = useFloatingLayerPosition(isOpen, rootRef, menuRef)
-  const normalizedValue = /^\d{2}:\d{2}$/.test(value) ? value : '00:00'
+  const normalizedValue = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value) ? value : '00:00'
   const selectedHour = normalizedValue.slice(0, 2)
   const selectedMinute = normalizedValue.slice(3, 5)
+
+  const getOptionId = (unit: 'hour' | 'minute', option: string) =>
+    `${pickerId}-${unit}-${option}`
+
+  const handleOptionKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    options: string[],
+    currentIndex: number,
+    unit: 'hour' | 'minute',
+    onSelect: (option: string) => void
+  ) => {
+    const nextIndex = getNextOptionIndex(event, currentIndex, options.length)
+
+    if (nextIndex === null) {
+      return
+    }
+
+    event.preventDefault()
+    const nextOption = options[nextIndex]
+    onSelect(nextOption)
+    focusTimeOption(getOptionId(unit, nextOption))
+  }
 
   useEffect(() => {
     const close = (event: PointerEvent) => {
@@ -390,6 +440,15 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
         aria-haspopup="dialog"
         disabled={disabled}
         onClick={() => setIsOpen((open) => !open)}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+            return
+          }
+
+          event.preventDefault()
+          setIsOpen(true)
+          focusTimeOption(getOptionId('hour', selectedHour))
+        }}
       >
         <span>{normalizedValue}</span>
         <S.Icon aria-hidden="true">schedule</S.Icon>
@@ -414,12 +473,23 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
               <S.TimeOptions role="listbox" aria-label="시 선택">
                 {HOURS.map((hour) => (
                   <S.TimeOption
+                    id={getOptionId('hour', hour)}
                     key={hour}
                     type="button"
                     role="option"
                     $selected={selectedHour === hour}
                     aria-selected={selectedHour === hour}
+                    tabIndex={selectedHour === hour ? 0 : -1}
                     onClick={() => onChange(`${hour}:${selectedMinute}`)}
+                    onKeyDown={(event) =>
+                      handleOptionKeyDown(
+                        event,
+                        HOURS,
+                        HOURS.indexOf(hour),
+                        'hour',
+                        (nextHour) => onChange(`${nextHour}:${selectedMinute}`)
+                      )
+                    }
                   >
                     {hour}
                   </S.TimeOption>
@@ -432,12 +502,23 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
               <S.TimeOptions role="listbox" aria-label="분 선택">
                 {MINUTES.map((minute) => (
                   <S.TimeOption
+                    id={getOptionId('minute', minute)}
                     key={minute}
                     type="button"
                     role="option"
                     $selected={selectedMinute === minute}
                     aria-selected={selectedMinute === minute}
+                    tabIndex={selectedMinute === minute ? 0 : -1}
                     onClick={() => onChange(`${selectedHour}:${minute}`)}
+                    onKeyDown={(event) =>
+                      handleOptionKeyDown(
+                        event,
+                        MINUTES,
+                        MINUTES.indexOf(minute),
+                        'minute',
+                        (nextMinute) => onChange(`${selectedHour}:${nextMinute}`)
+                      )
+                    }
                   >
                     {minute}
                   </S.TimeOption>

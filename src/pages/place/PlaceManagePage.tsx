@@ -463,7 +463,6 @@ function PlaceManagePage() {
     totalCount > 0
       ? `${pageStart.toLocaleString()}–${pageEnd.toLocaleString()} / ${totalCount.toLocaleString()}개`
       : '0개'
-  const pageCountLabel = totalCount > 0 ? `${safeTotalPages}페이지` : '0페이지'
   const selectedPlaceHasCoordinate = selectedPlace
     ? hasValidCoordinate(selectedPlace)
     : false
@@ -1324,9 +1323,7 @@ function PlaceManagePage() {
               </S.PanelActionGroup>
 
               <S.PanelResultSummary>
-                <span>
-                  {pageRangeLabel} · {pageCountLabel}
-                </span>
+                <span>{pageRangeLabel}</span>
                 {hasActivePlaceFilter ? (
                   <S.ClearFilterButton type="button" onClick={handleClearPlaceFilters}>
                     검색 초기화

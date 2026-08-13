@@ -41,7 +41,7 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 220px;
+  width: 248px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -274,7 +274,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   height: 100vh;
-  margin-left: 220px;
+  margin-left: 248px;
   display: flex;
   overflow: hidden;
   flex-direction: column;

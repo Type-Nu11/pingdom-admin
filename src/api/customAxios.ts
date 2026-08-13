@@ -3,7 +3,6 @@ import type { RefreshTokenResponse } from '../types/auth.types'
 import {
   clearStoredAuth,
   getStoredAccessToken,
-  getStoredRefreshToken,
   saveRefreshedAuthTokens,
 } from '../utils/authStorage'
 
@@ -34,7 +33,7 @@ export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
   return axios.isAxiosError(error)
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_BASE_URL
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
 let tokenRefreshRequest: Promise<RefreshTokenResponse> | null = null
 
@@ -90,6 +89,7 @@ function classifyApiError(error: AxiosError): ApiErrorCategory {
 const customAxios = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
+  withCredentials: true,
 })
 
 const AUTH_EXCLUDED_PATHS = ['/auth/admin/login', TOKEN_REFRESH_API_PATH, '/auth/logout']
@@ -135,28 +135,17 @@ function shouldRefreshAccessToken(
       error.response?.status === 401 &&
       !config._retry &&
       shouldAttachAccessToken(config.url) &&
-      getStoredRefreshToken()
+      getRequestAccessToken(config)
   )
 }
 
 async function requestTokenRefresh() {
-  const refreshToken = getStoredRefreshToken()
-
-  if (!refreshToken) {
-    throw new Error('리프레시 토큰이 없습니다.')
-  }
-
   tokenRefreshRequest ??= axios
-    .post<RefreshTokenResponse>(
-      TOKEN_REFRESH_API_PATH,
-      {
-        refreshToken,
-      },
-      {
-        baseURL: API_BASE_URL,
-        timeout: 10000,
-      }
-    )
+    .post<RefreshTokenResponse>(TOKEN_REFRESH_API_PATH, undefined, {
+      baseURL: API_BASE_URL,
+      timeout: 10000,
+      withCredentials: true,
+    })
     .then(({ data }) => {
       saveRefreshedAuthTokens(data)
 

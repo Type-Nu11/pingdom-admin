@@ -14,7 +14,6 @@ export interface AuthUser {
 
 export interface AuthState {
   accessToken: string
-  refreshToken: string
   user: AuthUser | null
 }
 
@@ -29,7 +28,6 @@ export interface AuthContextValue extends AuthState {
 
 export const EMPTY_AUTH_STATE: AuthState = {
   accessToken: '',
-  refreshToken: '',
   user: null,
 }
 

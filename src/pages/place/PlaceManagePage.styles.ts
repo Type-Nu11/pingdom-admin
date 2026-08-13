@@ -41,7 +41,7 @@ export const SideNav = styled.nav`
   top: 0;
   left: 0;
   z-index: 50;
-  width: 248px;
+  width: 220px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -274,7 +274,7 @@ export const LogoutButton = styled.button`
 
 export const MainArea = styled.div`
   height: 100vh;
-  margin-left: 248px;
+  margin-left: 220px;
   display: flex;
   overflow: hidden;
   flex-direction: column;
@@ -347,20 +347,46 @@ export const IconButton = styled.button`
   }
 `
 
+export const TopActionButton = styled.button`
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 18px;
+  }
+`
+
 export const SplitContent = styled.div<{
   $isPanelCollapsed?: boolean
 }>`
   min-height: 0;
   display: grid;
   grid-template-columns: ${({ $isPanelCollapsed }) =>
-    `${$isPanelCollapsed ? '0' : '320px'} minmax(0, 1fr)`};
+    `${$isPanelCollapsed ? '0' : '380px'} minmax(0, 1fr)`};
   flex: 1;
   overflow: hidden;
   transition: grid-template-columns 180ms ease;
 
   @media (max-width: 1180px) {
     grid-template-columns: ${({ $isPanelCollapsed }) =>
-      `${$isPanelCollapsed ? '0' : '300px'} minmax(0, 1fr)`};
+      `${$isPanelCollapsed ? '0' : '340px'} minmax(0, 1fr)`};
   }
 
   @media (max-width: 900px) {
@@ -492,6 +518,25 @@ export const DetailNotice = styled.p`
   line-height: 1.5;
 `
 
+export const DetailErrorState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+`
+
 export const DetailMetaList = styled.div`
   display: flex;
   flex-direction: column;
@@ -561,6 +606,252 @@ export const DetailSectionTitle = styled.h4`
   font-weight: 800;
 `
 
+export const DetailSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  ${DetailSectionTitle} {
+    margin-bottom: 10px;
+  }
+`
+
+export const DetailInlineButton = styled.button`
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+  color: ${neutral.primary};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const OperatingSummary = styled.div`
+  overflow: hidden;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const OperatingSummaryRow = styled.div`
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid ${neutral.border};
+
+  &:first-child {
+    border-top: 0;
+  }
+`
+
+export const OperatingSummaryLabel = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  span {
+    color: ${neutral.text};
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  small {
+    overflow: hidden;
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const OperatingSummaryAction = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+`
+
+export const OperatingStatusBadge = styled.span<{
+  $tone: 'normal' | 'notice' | 'danger' | 'muted'
+}>`
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid
+    ${({ $tone }) =>
+      $tone === 'danger'
+        ? neutral.error
+        : $tone === 'notice'
+          ? neutral.warning
+          : $tone === 'muted'
+            ? neutral.borderDark
+            : neutral.success};
+  border-radius: 999px;
+  background: ${({ $tone }) =>
+    $tone === 'danger'
+      ? neutral.errorTint
+      : $tone === 'notice'
+        ? neutral.warningTint
+        : $tone === 'muted'
+          ? neutral.surfaceHighest
+          : neutral.successSurface};
+  color: ${({ $tone }) =>
+    $tone === 'danger'
+      ? neutral.error
+      : $tone === 'notice'
+        ? neutral.warningText
+        : $tone === 'muted'
+          ? neutral.muted
+          : neutral.successText};
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+`
+
+export const OperatingHoursList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const OperatingHoursItem = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surface};
+
+  span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  strong {
+    overflow: hidden;
+    color: ${neutral.text};
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const OperatingExceptionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+
+  span {
+    color: ${neutral.strongText};
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  small {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 700;
+  }
+`
+
+export const OperatingExceptionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+`
+
+export const OperatingExceptionItem = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surface};
+
+  span,
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  strong {
+    color: ${neutral.text};
+    font-size: 11px;
+    font-weight: 700;
+    text-align: right;
+  }
+`
+
+export const OperatingEmptyState = styled.p`
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 7px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+`
+
 export const DetailGrowthProgress = styled.div`
   margin-top: 10px;
   padding: 12px;
@@ -608,7 +899,8 @@ export const DetailPostList = styled.div`
   gap: 10px;
 `
 
-export const DetailPostItem = styled.article`
+export const DetailPostItem = styled.button`
+  width: 100%;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
   gap: 10px;
@@ -616,6 +908,20 @@ export const DetailPostItem = styled.article`
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
   background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
 `
 
 export const DetailPostImage = styled.div`
@@ -660,65 +966,64 @@ export const DetailPostText = styled.div`
   }
 `
 
-export const DetailPostTitleButton = styled.button<{ $variant?: 'action' }>`
+export const DetailPostTitle = styled.span`
   max-width: 100%;
   display: block;
   overflow: hidden;
-  padding: 0;
-  border: 0;
-  background: transparent;
   color: ${neutral.strongText};
-  font: inherit;
   font-size: 13px;
   font-weight: 800;
   line-height: 1.4;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
+`
 
-  &:hover {
-    color: ${neutral.primary};
-    text-decoration: underline;
-    text-underline-offset: 3px;
+export const DetailPostTitleRow = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  > span {
+    min-width: 0;
+    flex: 1;
   }
+`
 
-  &:focus-visible {
-    outline: 2px solid ${neutral.primary};
-    outline-offset: 2px;
-    border-radius: 4px;
+export const DetailPostVisibilityBadge = styled.span`
+  min-height: 18px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+`
+
+export const DetailPostVisibilityReason = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-
-  ${({ $variant }) =>
-    $variant === 'action' &&
-    css`
-      width: fit-content;
-      min-height: 30px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin-top: 8px;
-      padding: 0 8px;
-      border: 1px solid ${neutral.border};
-      border-radius: 7px;
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.primary};
-      font-size: 12px;
-      line-height: 1;
-      text-decoration: none;
-
-      ${MaterialIcon} {
-        font-size: 16px;
-      }
-
-      &:hover {
-        border-color: ${neutral.primarySoft};
-        background: ${neutral.primaryTint};
-        color: ${neutral.primary};
-        text-decoration: none;
-      }
-    `}
 `
 
 export const DetailPostMeta = styled.span`
@@ -815,8 +1120,8 @@ export const DetailDeleteButton = styled(DetailActionButton)`
 export const PanelControls = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px;
+  gap: 10px;
+  padding: 14px 16px;
   border-bottom: 1px solid ${neutral.border};
 
   @media (max-width: 520px) {
@@ -867,7 +1172,7 @@ export const PanelCount = styled.p`
   min-height: 23px;
   margin: 0;
   color: ${neutral.muted};
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
 
   strong {
@@ -967,7 +1272,33 @@ export const PanelResultSummary = styled.div`
   gap: 12px;
   color: ${neutral.muted};
   font-size: 12px;
+  font-weight: 600;
+`
+
+export const ListInlineNotice = styled.div`
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 16px 10px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.45;
+
+  button {
+    min-height: 30px;
+    flex: 0 0 auto;
+    padding: 0 9px;
+    border-color: ${neutral.error};
+    color: ${neutral.error};
+    font-size: 12px;
+  }
 `
 
 export const ClearFilterButton = styled.button`
@@ -1052,10 +1383,10 @@ export const IconFilterButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.primary};
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: ${neutral.primary};
-  color: ${neutral.primaryText};
+  background: ${neutral.surface};
+  color: ${neutral.muted};
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -1064,7 +1395,8 @@ export const IconFilterButton = styled.button`
 
   &:hover:not(:disabled) {
     border-color: ${neutral.primaryHover};
-    background: ${neutral.primaryHover};
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
   }
 
   &:disabled {
@@ -1078,8 +1410,69 @@ export const PlaceList = styled.div`
   flex: 1;
   overflow-y: auto;
 
+  scrollbar-width: thin;
+  scrollbar-color: ${neutral.borderDark} transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid ${neutral.surface};
+    border-radius: 999px;
+    background: ${neutral.borderDark};
+  }
+
   @media (max-width: 900px) {
     max-height: 560px;
+  }
+`
+
+export const PlaceListSkeleton = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+`
+
+export const PlaceSkeletonItem = styled.div`
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid ${neutral.borderSoft};
+`
+
+export const PlaceSkeletonThumbnail = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: ${neutral.surfaceHigh};
+`
+
+export const PlaceSkeletonContent = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+`
+
+export const PlaceSkeletonLine = styled.span<{ $width: string }>`
+  width: ${({ $width }) => $width};
+  height: 11px;
+  display: block;
+  border-radius: 3px;
+  background: ${neutral.surfaceHigh};
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: place-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes place-skeleton-pulse {
+    50% {
+      opacity: 0.55;
+    }
   }
 `
 
@@ -1100,7 +1493,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border: 0;
   border-bottom: 1px solid ${neutral.border};
   background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surface)};
@@ -1112,7 +1505,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
     box-shadow 160ms ease;
 
   &:hover {
-    background: ${neutral.primaryTint};
+    background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surfaceLow)};
   }
 
   &:focus-visible {
@@ -1123,7 +1516,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
   ${({ $active }) =>
     $active &&
     css`
-      box-shadow: inset 3px 0 0 ${neutral.primary};
+      box-shadow: inset 4px 0 0 ${neutral.primary};
     `}
 
   @media (max-width: 520px) {
@@ -1139,10 +1532,10 @@ export const PlaceThumb = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
 
   @media (max-width: 520px) {
     width: 40px;
@@ -1161,42 +1554,67 @@ export const PlaceTitleRow = styled.div`
   gap: 8px;
 `
 
+export const PlaceTitleBadges = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+`
+
 export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
   color: ${neutral.strongText};
   font-size: 15px;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
 
 export const PlaceCategoryBadge = styled.span`
-  min-height: 24px;
+  min-height: 22px;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  padding: 3px 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 999px;
-  background: ${neutral.surfaceLow};
+  padding: 3px 7px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 6px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+`
+
+export const PlaceDiscoveryStatusBadge = styled.span`
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border: 1px solid ${neutral.borderDark};
+  border-radius: 6px;
+  background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
 `
 
 export const ReportBadge = styled.span`
   flex-shrink: 0;
-  padding: 3px 7px;
-  border: 1px solid ${neutral.error};
-  border-radius: 999px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 6px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
 `
 
 export const PlaceMeta = styled.p`
@@ -1224,7 +1642,7 @@ export const PlaceMetaLine = styled.p`
   margin: 9px 0 0;
   color: ${neutral.softText};
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.45;
 
   span {
@@ -1552,25 +1970,25 @@ export const MapControlButton = styled.button`
 
 export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   position: absolute;
-  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '66px' : '20px')};
+  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '62px' : '16px')};
   left: 20px;
   z-index: 6;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   max-width: min(360px, calc(100% - 40px));
-  min-height: 44px;
-  padding: 8px 12px;
+  min-height: 36px;
+  padding: 7px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.softOverlay};
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   box-shadow: 0 8px 22px ${neutral.shadow};
 
   @media (max-width: 720px) {
-    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '60px' : '12px')};
+    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '56px' : '12px')};
     left: 12px;
     max-width: min(340px, calc(100% - 24px));
   }
@@ -1584,23 +2002,16 @@ export const MapInfoText = styled.span`
 
   strong {
     color: ${neutral.text};
-    font-size: 12px;
-    font-weight: 800;
-    line-height: 1.35;
-  }
-
-  span {
-    color: ${neutral.muted};
     font-size: 11px;
     font-weight: 700;
     line-height: 1.35;
   }
+
 `
 
 export const MapInfoDot = styled.span`
   width: 8px;
   height: 8px;
-  margin-top: 4px;
   flex-shrink: 0;
   border-radius: 999px;
   background: ${neutral.primary};
@@ -1616,6 +2027,582 @@ export const ModalOverlay = styled.div`
   padding: 32px;
   background: ${neutral.overlay};
   backdrop-filter: blur(3px);
+`
+
+export const OperatingDialogOverlay = styled(ModalOverlay)`
+  z-index: 130;
+`
+
+export const OperatingDialog = styled.section<{ $wide?: boolean }>`
+  width: ${({ $wide }) => ($wide ? 'min(840px, 100%)' : 'min(480px, 100%)')};
+  max-height: min(820px, calc(100vh - 64px));
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+  box-shadow: 0 24px 70px ${neutral.strongShadow};
+`
+
+export const OperatingDialogHeader = styled.header`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid ${neutral.border};
+`
+
+export const OperatingDialogEyebrow = styled.p`
+  margin: 0 0 4px;
+  color: ${neutral.primary};
+  font-size: 11px;
+  font-weight: 800;
+`
+
+export const OperatingDialogTitle = styled.h2`
+  margin: 0;
+  color: ${neutral.strongText};
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+`
+
+export const OperatingDialogCloseButton = styled.button`
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.border};
+    background: ${neutral.surfaceLow};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const OperatingDialogBody = styled.div`
+  min-height: 0;
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+`
+
+export const OperatingDialogDescription = styled.p`
+  margin: 0;
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+  word-break: keep-all;
+`
+
+export const OperatingFormField = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 800;
+
+  small {
+    align-self: flex-end;
+    color: ${neutral.softText};
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  &:is(fieldset) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    padding: 0;
+  }
+`
+
+export const OperatingOptionGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+`
+
+export const OperatingOption = styled.label<{
+  $selected?: boolean
+  $tone?: 'normal' | 'danger' | 'muted'
+}>`
+  min-height: 74px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid
+    ${({ $selected, $tone }) =>
+      $selected
+        ? $tone === 'danger'
+          ? neutral.error
+          : neutral.primary
+        : neutral.border};
+  border-radius: 8px;
+  background: ${({ $selected, $tone }) =>
+    $selected
+      ? $tone === 'danger'
+        ? neutral.errorTint
+        : neutral.primaryTint
+      : neutral.surface};
+  color: ${neutral.text};
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  strong {
+    color: ${({ $selected, $tone }) =>
+      $selected && $tone === 'danger' ? neutral.error : neutral.strongText};
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  small {
+    align-self: auto;
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  &:hover:not(:has(input:disabled)) {
+    border-color: ${({ $tone }) => ($tone === 'danger' ? neutral.error : neutral.primarySoft)};
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:has(input:disabled) {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingSelect = styled.select`
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingTextArea = styled.textarea`
+  min-height: 96px;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+
+  &::placeholder {
+    color: ${neutral.softText};
+  }
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingDangerNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const OperatingInfoNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const OperatingFormNotice = styled.p`
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+`
+
+export const OperatingEditorSection = styled.section`
+  padding: 14px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+`
+
+export const OperatingEditorSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  strong {
+    color: ${neutral.strongText};
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  > span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+  }
+`
+
+export const OperatingWeekList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+export const OperatingWeekRow = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+
+  > div:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  @media (max-width: 620px) {
+    flex-direction: column;
+  }
+`
+
+export const OperatingWeekRowHeader = styled.div`
+  width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  @media (max-width: 620px) {
+    width: 100%;
+  }
+`
+
+export const OperatingCheckLabel = styled.label`
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: ${neutral.text};
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: ${neutral.primary};
+  }
+
+  input:disabled {
+    cursor: default;
+  }
+`
+
+export const OperatingTimeControls = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+  color: ${neutral.muted};
+  font-size: 12px;
+  font-weight: 800;
+`
+
+export const OperatingTimeInput = styled.input`
+  width: 104px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 2px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    background: ${neutral.surfaceLow};
+    color: ${neutral.softText};
+  }
+`
+
+export const OperatingExceptionEditorList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`
+
+export const OperatingExceptionEditor = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 7px;
+  background: ${neutral.surface};
+`
+
+export const OperatingExceptionEditorHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  > div:first-child {
+    width: 150px;
+  }
+`
+
+export const OperatingDateInput = styled.input`
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 2px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    background: ${neutral.surfaceLow};
+    color: ${neutral.softText};
+  }
+`
+
+export const OperatingExceptionHours = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+`
+
+export const OperatingExceptionTimeRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`
+
+export const OperatingIconButton = styled.button`
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid ${neutral.border};
+  border-radius: 6px;
+  background: ${neutral.surface};
+  color: ${neutral.muted};
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 17px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: ${neutral.error};
+    background: ${neutral.errorTint};
+    color: ${neutral.error};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+`
+
+export const OperatingTextButton = styled.button`
+  width: fit-content;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${neutral.primary};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  ${MaterialIcon} {
+    font-size: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`
+
+export const OperatingDialogActions = styled.footer`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid ${neutral.border};
+  background: ${neutral.surfaceLow};
+
+  @media (max-width: 520px) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+`
+
+export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  border-radius: 8px;
+  background: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  color: ${neutral.primaryText};
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
 `
 
 export const PlaceModal = styled.section`

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { login as requestLogin } from '../api/authApi'
@@ -19,6 +19,13 @@ const LOGIN_CODE_MESSAGES = {
   ADMIN_ACCESS_REQUIRED: '관리자 권한이 있는 계정으로 로그인해주세요.',
 }
 
+type LoginResult =
+  | 'success'
+  | 'username-required'
+  | 'password-required'
+  | 'credential-error'
+  | 'failed'
+
 export function useLogin() {
   const { login } = useAuth()
   const [username, setUsername] = useState('')
@@ -26,6 +33,7 @@ export function useLogin() {
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const isSubmittingRef = useRef(false)
 
   const handleLogin = async () => {
     setIsError(false)
@@ -36,16 +44,21 @@ export function useLogin() {
     if (!trimmedUsername) {
       setIsError(true)
       setErrorMessage('아이디를 입력해주세요.')
-      return false
+      return 'username-required' satisfies LoginResult
     }
 
     if (!password) {
       setIsError(true)
       setErrorMessage('비밀번호를 입력해주세요.')
-      return false
+      return 'password-required' satisfies LoginResult
+    }
+
+    if (isSubmittingRef.current) {
+      return 'failed' satisfies LoginResult
     }
 
     try {
+      isSubmittingRef.current = true
       setIsLoading(true)
 
       const payload: LoginRequest = {
@@ -57,7 +70,7 @@ export function useLogin() {
 
       login(data)
 
-      return true
+      return 'success' satisfies LoginResult
     } catch (error) {
       setIsError(true)
 
@@ -70,13 +83,21 @@ export function useLogin() {
           })
         )
         logDebugError('로그인 실패', error)
+
+        if (
+          error.response?.data?.code === 'INVALID_CREDENTIALS' ||
+          error.category === 'unauthorized'
+        ) {
+          return 'credential-error' satisfies LoginResult
+        }
       } else {
         setErrorMessage(LOGIN_ERROR_MESSAGE)
         logDebugError('로그인 실패', error)
       }
 
-      return false
+      return 'failed' satisfies LoginResult
     } finally {
+      isSubmittingRef.current = false
       setIsLoading(false)
     }
   }

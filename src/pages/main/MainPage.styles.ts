@@ -1198,46 +1198,29 @@ export const ModalStatusLine = styled.div`
   gap: 8px;
 `
 
-export const ModalMetricBadge = styled.span<{
-  $tone?: 'neutral' | 'normal' | 'reported' | 'processed'
-}>`
-  min-height: 26px;
-  display: inline-flex;
+export const ModalStats = styled.div`
+  display: flex;
   align-items: center;
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
-  background: ${neutral.surfaceHighest};
+  flex-wrap: wrap;
+  gap: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
+  font-weight: 600;
+  line-height: 1.4;
+`
+
+export const ModalStat = styled.span`
+  display: inline-flex;
+  align-items: center;
   white-space: nowrap;
 
-  ${({ $tone }) =>
-    $tone === 'normal' &&
-    css`
-      border-color: ${neutral.success};
-      background: ${neutral.successTint};
-      color: ${neutral.successText};
-    `}
-
-  ${({ $tone }) =>
-    $tone === 'reported' &&
-    css`
-      border-color: ${neutral.error};
-      background: ${neutral.errorTint};
-      color: ${neutral.error};
-    `}
-
-  ${({ $tone }) =>
-    $tone === 'processed' &&
-    css`
-      border-color: ${neutral.info};
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.info};
-    `}
+  & + &::before {
+    width: 1px;
+    height: 12px;
+    margin: 0 8px;
+    background: ${neutral.border};
+    content: '';
+  }
 `
 
 export const ModalImageFrame = styled.div`
@@ -1305,47 +1288,35 @@ export const ModalExternalLink = styled.a`
   }
 `
 
-export const ModalInfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-
-  @media (max-width: 720px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+export const ModalDateList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 16px;
+  padding: 2px 0 12px;
+  border-bottom: 1px solid ${neutral.border};
 `
 
-export const ModalInfoItem = styled.div<{ $wide?: boolean }>`
+export const ModalDateItem = styled.div`
+  display: inline-flex;
+  align-items: baseline;
   min-width: 0;
-  padding: 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
-
-  ${({ $wide }) =>
-    $wide &&
-    css`
-      grid-column: 1 / -1;
-    `}
-
-  span,
-  strong {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  gap: 8px;
 
   span {
-    margin-bottom: 4px;
+    flex-shrink: 0;
     color: ${neutral.muted};
     font-size: 12px;
+    font-weight: 600;
   }
 
   strong {
+    overflow: hidden;
     color: ${neutral.strongText};
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 `
 
@@ -1462,6 +1433,7 @@ export const ReportList = styled.ul`
 
 export const ReportItem = styled.li<{
   $status?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'RESTORED'
+  $highlighted?: boolean
 }>`
   padding: 14px;
   border: 1px solid ${neutral.border};
@@ -1473,6 +1445,13 @@ export const ReportItem = styled.li<{
     css`
       border-color: ${neutral.error};
       box-shadow: inset 3px 0 0 ${neutral.error};
+    `}
+
+  ${({ $highlighted }) =>
+    $highlighted &&
+    css`
+      border-color: ${neutral.primary};
+      box-shadow: 0 0 0 3px ${neutral.primarySoft};
     `}
 `
 

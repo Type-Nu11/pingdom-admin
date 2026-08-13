@@ -83,12 +83,16 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
 export function getPlaceCategoryLabel(place: PlaceCategorySource) {
   const categoryName = place.categoryName?.trim()
   const category = place.category?.trim()
+  const normalizedCategoryName = normalizeCategoryKey(categoryName)
   const normalizedCategory = normalizeCategoryKey(category)
 
   return (
-    categoryName ||
+    (normalizedCategoryName
+      ? CATEGORY_LABEL_BY_KEY[normalizedCategoryName]
+      : undefined) ||
     (normalizedCategory ? CATEGORY_LABEL_BY_KEY[normalizedCategory] : undefined) ||
     category ||
+    categoryName ||
     '카테고리 없음'
   )
 }

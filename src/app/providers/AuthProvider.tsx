@@ -46,20 +46,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [])
 
   const logout = useCallback(async () => {
-    const refreshToken = authState.refreshToken
-
     clearAuth()
 
-    if (!refreshToken) {
-      return
-    }
-
     try {
-      await requestLogout({ refreshToken })
+      await requestLogout()
     } catch (error) {
       logDebugError('로그아웃 요청 실패', error)
     }
-  }, [authState.refreshToken, clearAuth])
+  }, [clearAuth])
 
   const updateUser = useCallback((user: Partial<AuthUser>) => {
     setAuthState((prevState) => {

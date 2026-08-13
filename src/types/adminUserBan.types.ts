@@ -2,6 +2,11 @@ import type { AuthErrorResponse } from './auth.types'
 
 export type AdminBanType = 'PERMANENT' | 'TEMPORARY'
 export type AdminUserSanctionAction = 'APPLIED' | 'RELEASED' | 'EXPIRED'
+export type AdminBannedUserListSortBy =
+  | 'BANNED_AT'
+  | 'EXPIRES_AT'
+  | 'USER_ID'
+export type AdminSortDirection = 'ASC' | 'DESC'
 
 export interface AdminBannedUserItem {
   userId: number
@@ -32,6 +37,17 @@ export interface AdminBannedUserListRequest {
   page?: number
   limit?: number
   keyword?: string
+  banType?: AdminBanType
+  from?: string
+  to?: string
+  sortBy?: AdminBannedUserListSortBy
+  sortDirection?: AdminSortDirection
+}
+
+export interface AdminBannedUserCounts {
+  total: number
+  permanent: number
+  temporary: number
 }
 
 export interface AdminBannedUserListResponse {
@@ -41,6 +57,7 @@ export interface AdminBannedUserListResponse {
   totalCount: number
   totalPages: number
   hasNext: boolean
+  counts?: AdminBannedUserCounts | null
 }
 
 export interface AdminUserBanReleaseRequest {

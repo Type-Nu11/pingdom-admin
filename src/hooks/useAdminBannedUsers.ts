@@ -14,6 +14,7 @@ import { useAuth } from './useAuth'
 import type {
   AdminBannedUserDetail,
   AdminBannedUserDetailErrorResponse,
+  AdminBannedUserCounts,
   AdminBannedUserItem,
   AdminBannedUserListErrorResponse,
   AdminBannedUserListRequest,
@@ -28,10 +29,16 @@ import type {
 
 const DEFAULT_ADMIN_BANNED_USER_PAGE = 1
 const DEFAULT_ADMIN_BANNED_USER_LIMIT = 20
+const DEFAULT_ADMIN_BANNED_USER_SORT_BY: NonNullable<
+  AdminBannedUserListRequest['sortBy']
+> = 'BANNED_AT'
+const DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION: NonNullable<
+  AdminBannedUserListRequest['sortDirection']
+> = 'DESC'
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE = 1
 const DEFAULT_ADMIN_USER_SANCTION_HISTORY_LIMIT = 5
 const ADMIN_BANNED_USER_ERROR_MESSAGE =
-  '밴 유저 목록을 불러오는 중 오류가 발생했습니다.'
+  '밴 사용자 목록을 불러오는 중 오류가 발생했습니다.'
 const ADMIN_BANNED_USER_CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
   forbidden: '관리자 권한이 필요합니다.',
@@ -59,6 +66,11 @@ interface LatestAdminBannedUserListRequest {
   page: number
   limit: number
   keyword: string
+  banType?: AdminBannedUserListRequest['banType']
+  from?: string
+  to?: string
+  sortBy?: AdminBannedUserListRequest['sortBy']
+  sortDirection?: AdminBannedUserListRequest['sortDirection']
 }
 
 function getAdminBannedUserErrorMessage(error: unknown) {
@@ -106,7 +118,10 @@ export function useAdminBannedUsers({
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [hasNext, setHasNext] = useState(false)
+  const [counts, setCounts] = useState<AdminBannedUserCounts | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasLoadedList, setHasLoadedList] = useState(false)
+  const [hasSuccessfulListResponse, setHasSuccessfulListResponse] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [selectedUserDetail, setSelectedUserDetail] =
@@ -143,6 +158,8 @@ export function useAdminBannedUsers({
     page: initialPage,
     limit,
     keyword: '',
+    sortBy: DEFAULT_ADMIN_BANNED_USER_SORT_BY,
+    sortDirection: DEFAULT_ADMIN_BANNED_USER_SORT_DIRECTION,
   })
 
   const fetchAdminBannedUsers = useCallback(
@@ -161,6 +178,21 @@ export function useAdminBannedUsers({
         keyword: hasOwnRequestField(request, 'keyword')
           ? request.keyword ?? ''
           : latestListRequestRef.current.keyword,
+        banType: hasOwnRequestField(request, 'banType')
+          ? request.banType
+          : latestListRequestRef.current.banType,
+        from: hasOwnRequestField(request, 'from')
+          ? request.from
+          : latestListRequestRef.current.from,
+        to: hasOwnRequestField(request, 'to')
+          ? request.to
+          : latestListRequestRef.current.to,
+        sortBy: hasOwnRequestField(request, 'sortBy')
+          ? request.sortBy
+          : latestListRequestRef.current.sortBy,
+        sortDirection: hasOwnRequestField(request, 'sortDirection')
+          ? request.sortDirection
+          : latestListRequestRef.current.sortDirection,
       }
 
       try {
@@ -169,22 +201,30 @@ export function useAdminBannedUsers({
         const data = await getAdminBannedUsers(nextRequest)
 
         if (requestId === latestRequestIdRef.current) {
+          setHasLoadedList(true)
           setUsers(data.users)
           setPage(data.page)
           setTotalCount(data.totalCount)
           setTotalPages(data.totalPages)
           setHasNext(data.hasNext)
+          setCounts(data.counts ?? null)
+          setHasSuccessfulListResponse(true)
           latestListRequestRef.current = {
             page: data.page,
             limit: data.limit,
             keyword: nextRequest.keyword,
+            banType: nextRequest.banType,
+            from: nextRequest.from,
+            to: nextRequest.to,
+            sortBy: nextRequest.sortBy,
+            sortDirection: nextRequest.sortDirection,
           }
         }
 
         return true
       } catch (error) {
         if (requestId === latestRequestIdRef.current) {
-          setUsers([])
+          setHasLoadedList(true)
           setIsError(true)
           setErrorMessage(getAdminBannedUserErrorMessage(error))
 
@@ -193,7 +233,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 밴 유저 목록 조회 실패', error)
+        if (requestId === latestRequestIdRef.current) {
+          logDebugError('관리자 밴 유저 목록 조회 실패', error)
+        }
 
         return false
       } finally {
@@ -258,7 +300,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 밴 유저 상세 조회 실패', error)
+        if (requestId === latestDetailRequestIdRef.current) {
+          logDebugError('관리자 밴 유저 상세 조회 실패', error)
+        }
 
         return null
       } finally {
@@ -305,7 +349,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 사용자 제재 상태 조회 실패', error)
+        if (requestId === latestBanTargetStatusRequestIdRef.current) {
+          logDebugError('관리자 사용자 제재 상태 조회 실패', error)
+        }
 
         return null
       } finally {
@@ -354,7 +400,9 @@ export function useAdminBannedUsers({
           }
         }
 
-        logDebugError('관리자 사용자 제재 이력 조회 실패', error)
+        if (requestId === latestSanctionHistoryRequestIdRef.current) {
+          logDebugError('관리자 사용자 제재 이력 조회 실패', error)
+        }
 
         return null
       } finally {
@@ -496,7 +544,10 @@ export function useAdminBannedUsers({
     totalCount,
     totalPages,
     hasNext,
+    counts,
     isLoading,
+    hasLoadedList,
+    hasSuccessfulListResponse,
     isError,
     errorMessage,
     selectedUserDetail,

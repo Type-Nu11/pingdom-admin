@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import SortDropdown from '../../components/common/SortDropdown'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
@@ -54,7 +55,9 @@ const ADMIN_POST_REPORT_STATUS_LABELS: Record<AdminPostReportStatus, string> = {
 
 interface MainPageLocationState {
   openPostId?: number
+  reportId?: number
   postSearchKeyword?: string
+  reviewStatus?: AdminPostReviewStatus
 }
 
 interface ReportActionConfirmState {
@@ -79,6 +82,13 @@ function getPostOwner(post: AdminPost) {
 
 function getPostTitle(post: AdminPost) {
   return post.name || `게시글-${post.id}`
+}
+
+function isSamePostTitleAndPlaceName(post: AdminPost) {
+  const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+  const placeName = post.placeName?.trim()
+
+  return Boolean(placeName && normalize(getPostTitle(post)) === normalize(placeName))
 }
 
 function getPostReports(post: AdminPost) {
@@ -151,6 +161,25 @@ function getPostStatusLabel(post: AdminPost) {
   return '신고 없음'
 }
 
+function getPostDetailStatusLabel(post: AdminPost) {
+  const reports = getPostReports(post)
+  const pendingReportCount = getPendingPostReports(post).length
+
+  if (pendingReportCount > 0) {
+    return '신고 검토 필요'
+  }
+
+  if (post.visibilityStatus === 'AUTO_HIDDEN') {
+    return '숨김 처리'
+  }
+
+  if (reports.length > 0) {
+    return '신고 처리 완료'
+  }
+
+  return '신고 없음'
+}
+
 function getPostReportSummaryLabel(post: AdminPost) {
   const reports = getPostReports(post)
   const pendingReportCount = getPendingPostReports(post).length
@@ -181,10 +210,13 @@ function formatPostDate(value: string) {
     return value
   }
 
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
+  const pad = (part: number) => String(part).padStart(2, '0')
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join('.') + ` ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function formatOptionalPostDate(value?: string | null) {
@@ -291,6 +323,7 @@ function MainPage() {
   )
   const [reportActionConfirm, setReportActionConfirm] =
     useState<ReportActionConfirmState | null>(null)
+  const [highlightedReportId, setHighlightedReportId] = useState<number | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
     useState(false)
   const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
@@ -336,6 +369,9 @@ function MainPage() {
   const activePostId = activePost?.id ?? null
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
+  const shouldShowActivePostPlaceName = activePost
+    ? Boolean(activePost.placeName && !isSamePostTitleAndPlaceName(activePost))
+    : false
   const activePendingReportCount = activePost
     ? getPendingPostReports(activePost).length
     : 0
@@ -375,13 +411,15 @@ function MainPage() {
 
   const handleOpenPostDetail = useCallback(
     (post: AdminPost) => {
+      setHighlightedReportId(null)
       setSelectedPost(post)
       void fetchAdminPostDetail(post.id)
     },
     [fetchAdminPostDetail]
   )
   const handleOpenPostDetailById = useCallback(
-    (postId: number) => {
+    (postId: number, reportId?: number) => {
+      setHighlightedReportId(reportId ?? null)
       setSelectedPost(createPendingPost(postId))
       void fetchAdminPostDetail(postId)
     },
@@ -618,27 +656,35 @@ function MainPage() {
   useEffect(() => {
     const locationState = location.state as MainPageLocationState | null
     const openPostId = locationState?.openPostId
+    const reportId = locationState?.reportId
     const postSearchKeyword = locationState?.postSearchKeyword?.trim()
+    const reviewStatus = locationState?.reviewStatus
 
-    if (postSearchKeyword) {
+    if (postSearchKeyword || reviewStatus) {
       const applySearchTimer = window.setTimeout(() => {
         clearPendingPostSearch()
         clearPostDetail()
-        shouldSkipNextSearchEffectRef.current = true
-        latestPostKeywordRef.current = postSearchKeyword
-        latestReviewFilterRef.current = 'ALL'
+        shouldSkipNextSearchEffectRef.current = Boolean(postSearchKeyword)
+        latestPostKeywordRef.current = postSearchKeyword ?? ''
+        latestReviewFilterRef.current = reviewStatus ?? 'ALL'
         setSelectedPost(null)
-        setSelectedReviewFilter('ALL')
-        setPostSearchQuery(postSearchKeyword)
+        setHighlightedReportId(
+          typeof reportId === 'number' && Number.isFinite(reportId) ? reportId : null
+        )
+        setSelectedReviewFilter(reviewStatus ?? 'ALL')
+        setPostSearchQuery(postSearchKeyword ?? '')
 
         void fetchReviewPosts(
           {
             page: 1,
             sortParam: latestSortParamRef.current,
             keyword: postSearchKeyword,
-            reviewStatus: 'ALL',
+            reviewStatus: reviewStatus ?? 'ALL',
           }
         )
+        if (typeof openPostId === 'number' && Number.isFinite(openPostId)) {
+          handleOpenPostDetailById(openPostId, reportId)
+        }
         navigate(location.pathname, { replace: true, state: null })
       }, 0)
 
@@ -652,7 +698,7 @@ function MainPage() {
     }
 
     const openDetailTimer = window.setTimeout(() => {
-      handleOpenPostDetailById(openPostId)
+      handleOpenPostDetailById(openPostId, reportId)
       navigate(location.pathname, { replace: true, state: null })
     }, 0)
 
@@ -765,10 +811,9 @@ function MainPage() {
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button" disabled aria-label="대시보드 점검 중">
+          <S.MenuButton type="button" onClick={() => navigate('/dashboard')}>
             <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
             <span>대시보드</span>
-            <S.MenuStatusText>점검 중</S.MenuStatusText>
           </S.MenuButton>
           <S.MenuButton type="button" onClick={() => navigate('/places')}>
             <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
@@ -811,9 +856,7 @@ function MainPage() {
         <S.TopBar>
           <S.TopTitle>게시글 관리</S.TopTitle>
           <S.TopActions>
-            <S.IconButton type="button" aria-label="알림">
-              <S.MaterialIcon aria-hidden="true">notifications</S.MaterialIcon>
-            </S.IconButton>
+            <AdminNotificationButton />
             <S.IconButton type="button" aria-label="도움말">
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
             </S.IconButton>
@@ -1073,9 +1116,9 @@ function MainPage() {
                       ? ` (ID ${activePost.userId})`
                       : ''}
                   </S.ModalMetaChip>
-                  <S.ModalMetaChip>
-                    {activePost.placeName || '장소 정보 없음'}
-                  </S.ModalMetaChip>
+                  {shouldShowActivePostPlaceName ? (
+                    <S.ModalMetaChip>{activePost.placeName}</S.ModalMetaChip>
+                  ) : null}
                 </S.ModalMetaList>
               </div>
               <S.ModalCloseButton
@@ -1129,47 +1172,41 @@ function MainPage() {
                   <S.ModalStatusRow aria-label="게시글 상태 요약">
                     <S.ModalStatusLine>
                       <S.StatusBadge $tone={getPostStatusTone(activePost)}>
-                        {getPostStatusLabel(activePost)}
+                        {getPostDetailStatusLabel(activePost)}
                       </S.StatusBadge>
-                      <S.ModalMetricBadge
+                      <S.StatusBadge
                         $tone={
                           activePost.visibilityStatus === 'AUTO_HIDDEN'
-                            ? 'reported'
+                            ? 'hidden'
                             : 'normal'
                         }
                       >
                         {getPostVisibilityLabel(activePost)}
-                      </S.ModalMetricBadge>
+                      </S.StatusBadge>
                     </S.ModalStatusLine>
-                    <S.ModalStatusLine>
-                      <S.ModalMetricBadge
-                        $tone={activePendingReportCount > 0 ? 'reported' : 'neutral'}
-                      >
-                        미처리 신고 {formatCount(activePendingReportCount)}
-                      </S.ModalMetricBadge>
-                      <S.ModalMetricBadge
-                        $tone={activeReports.length > 0 ? 'processed' : 'neutral'}
-                      >
-                        전체 신고 {formatCount(activeReports.length)}
-                      </S.ModalMetricBadge>
-                      <S.ModalMetricBadge>
-                        좋아요 {formatCount(activePost.likeCount)}
-                      </S.ModalMetricBadge>
-                    </S.ModalStatusLine>
+                    <S.ModalStats aria-label="게시글 통계">
+                      {activePendingReportCount > 0 ? (
+                        <S.ModalStat>미처리 신고 {formatCount(activePendingReportCount)}</S.ModalStat>
+                      ) : null}
+                      {activeReports.length > 0 ? (
+                        <S.ModalStat>전체 신고 {formatCount(activeReports.length)}</S.ModalStat>
+                      ) : null}
+                      <S.ModalStat>좋아요 {formatCount(activePost.likeCount)}</S.ModalStat>
+                    </S.ModalStats>
                   </S.ModalStatusRow>
 
-                  <S.ModalInfoGrid>
-                    <S.ModalInfoItem $wide>
+                  <S.ModalDateList>
+                    <S.ModalDateItem>
                       <span>작성일</span>
                       <strong>{formatPostDate(activePost.createdAt)}</strong>
-                    </S.ModalInfoItem>
+                    </S.ModalDateItem>
                     {activePost.hiddenAt ? (
-                      <S.ModalInfoItem $wide>
+                      <S.ModalDateItem>
                         <span>숨김 처리일</span>
                         <strong>{formatPostDate(activePost.hiddenAt)}</strong>
-                      </S.ModalInfoItem>
+                      </S.ModalDateItem>
                     ) : null}
-                  </S.ModalInfoGrid>
+                  </S.ModalDateList>
 
                   <S.ModalPostDescriptionCard>
                     <S.ModalSectionTitle>게시글 내용</S.ModalSectionTitle>
@@ -1208,6 +1245,7 @@ function MainPage() {
                           <S.ReportItem
                             key={report.reportId}
                             $status={report.status}
+                            $highlighted={report.reportId === highlightedReportId}
                           >
                             <S.ReportHeader>
                               <div>
@@ -1241,8 +1279,7 @@ function MainPage() {
                           <S.MaterialIcon>report_off</S.MaterialIcon>
                         </S.ModalEmptyIcon>
                         <S.ModalEmptyContent>
-                          <strong>신고 내역이 없습니다.</strong>
-                          <span>이 게시글은 접수된 신고 없이 확인되었습니다.</span>
+                          <strong>접수된 신고가 없습니다.</strong>
                         </S.ModalEmptyContent>
                       </S.ModalEmptyState>
                     )}
@@ -1289,7 +1326,9 @@ function MainPage() {
                     }}
                   >
                     <S.MaterialIcon aria-hidden="true">skip_next</S.MaterialIcon>
-                    <span>다음 게시글</span>
+                    <span>
+                      {nextReviewPost ? `다음 게시글 #${nextReviewPost.id}` : '다음 게시글'}
+                    </span>
                   </S.SecondaryButton>
                   <S.DangerButton
                     type="button"

@@ -92,7 +92,12 @@ const customAxios = axios.create({
   withCredentials: true,
 })
 
-const AUTH_EXCLUDED_PATHS = ['/auth/admin/login', TOKEN_REFRESH_API_PATH, '/auth/logout']
+const AUTH_EXCLUDED_PATHS = [
+  '/auth/admin/login',
+  '/auth/login',
+  TOKEN_REFRESH_API_PATH,
+  '/auth/logout',
+]
 
 function shouldAttachAccessToken(url = '') {
   return !AUTH_EXCLUDED_PATHS.some((path) => url.startsWith(path))

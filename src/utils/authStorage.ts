@@ -92,6 +92,7 @@ export function getStoredAuthState(): AuthState | null {
       profileImageUrl: getStoredString(AUTH_STORAGE_KEYS.profileImageUrl),
       language: getStoredString(AUTH_STORAGE_KEYS.language),
       country: getStoredString(AUTH_STORAGE_KEYS.country),
+      role: getStoredString(AUTH_STORAGE_KEYS.role),
     },
   }
 }
@@ -108,6 +109,7 @@ export function createAuthStateFromLogin(data: LoginResponse): AuthState {
       profileImageUrl: normalizeAuthString(data.profileImageUrl),
       language: normalizeAuthString(data.language),
       country: normalizeAuthString(data.country),
+      role: normalizeAuthString(data.role),
     },
   }
 }
@@ -126,6 +128,7 @@ export function saveLoginAuth(data: LoginResponse) {
   )
   setStoredString(AUTH_STORAGE_KEYS.language, normalizeAuthString(data.language))
   setStoredString(AUTH_STORAGE_KEYS.country, normalizeAuthString(data.country))
+  setStoredString(AUTH_STORAGE_KEYS.role, normalizeAuthString(data.role))
 }
 
 export function saveRefreshedAuthTokens(data: RefreshTokenResponse) {
@@ -178,6 +181,10 @@ export function updateStoredAuthUser(user: Partial<AuthUser>) {
 
   if (typeof user.country === 'string') {
     setStoredString(AUTH_STORAGE_KEYS.country, user.country)
+  }
+
+  if (typeof user.role === 'string') {
+    setStoredString(AUTH_STORAGE_KEYS.role, user.role)
   }
 }
 

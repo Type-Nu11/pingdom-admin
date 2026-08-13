@@ -8,6 +8,7 @@ import { AdminNotificationProvider } from '../providers/AdminNotificationProvide
 export function ProtectedRoute() {
   const { clearAuth, isAuthenticated, isAuthReady, user } = useAuth()
   const hasBrokenAuthState = isAuthReady && isAuthenticated && !user
+  const hasNonAdminRole = Boolean(user?.role) && user?.role !== 'ADMIN'
 
   useEffect(() => {
     if (hasBrokenAuthState) {
@@ -29,7 +30,7 @@ export function ProtectedRoute() {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || hasNonAdminRole) {
     return <Navigate to="/login" replace />
   }
 

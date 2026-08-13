@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
-import { login as requestLogin } from '../api/authApi'
+import { login as requestLogin, type LoginMode } from '../api/authApi'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type { LoginErrorResponse, LoginRequest } from '../types/auth.types'
@@ -26,7 +26,7 @@ type LoginResult =
   | 'credential-error'
   | 'failed'
 
-export function useLogin() {
+export function useLogin(mode: LoginMode = 'admin') {
   const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -66,7 +66,7 @@ export function useLogin() {
         password,
       }
 
-      const data = await requestLogin(payload)
+      const data = await requestLogin(payload, mode)
 
       login(data)
 

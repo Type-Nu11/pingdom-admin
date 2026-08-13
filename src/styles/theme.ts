@@ -1,47 +1,49 @@
 // 관리자 웹에서 공통으로 사용할 스타일 기준입니다.
 export const semanticColors = {
   primary: {
-    normal: '#FF1956',
-    alternative: '#FF4A75',
-    assistive: '#FFC9D3',
+    normal: '#FF174F',
+    alternative: '#FF416A',
+    assistive: '#FFC1CE',
   },
   secondary: {
-    normal: '#BFC1C1',
-    alternative: '#D1D4D5',
-    assistive: '#F8F8F8',
+    normal: '#BFC0C2',
+    alternative: '#D0D1D2',
+    assistive: '#F7F7F7',
   },
   label: {
-    normal: '#0C0C0D',
+    normal: '#0B0B0C',
     strong: '#000000',
-    neutral: '#3B3B40',
-    alternative: '#5E5E66',
-    assistive: '#767680',
-    disabled: '#EFEFEF',
+    neutral: '#45454A',
+    alternative: '#65666D',
+    assistive: '#85868D',
+    disabled: '#EEEEEF',
   },
   line: {
-    normal: '#E4E4E5',
-    neutral: '#F2F2F3',
-    alternative: '#F6F6F7',
+    normal: '#E2E2E3',
+    neutral: '#EEEEEF',
+    alternative: '#F5F5F6',
   },
   fill: {
-    normal: '#F6F6F7',
-    neutral: '#F2F2F3',
-    alternative: '#E4E4E5',
+    normal: '#F7F7F8',
+    neutral: '#F1F1F2',
+    alternative: '#E3E3E4',
     support: '#FFFFFF',
     assistive: '#FFFFFF',
   },
   background: {
     normal: '#FFFFFF',
-    neutral: '#F2F2F3',
-    alternative: '#FCFCFD',
+    neutral: '#F1F1F2',
+    alternative: '#FAFAFA',
   },
   static: {
     black: '#000000',
     white: '#FFFFFF',
-    error: '#EE2B2B',
-    info: '#008BFF',
-    success: '#20DF33',
-    warning: '#FFCC00',
+  },
+  status: {
+    error: '#F52B2F',
+    info: '#118CF4',
+    success: '#20DD39',
+    warning: '#FFC512',
   },
 } as const
 
@@ -64,17 +66,17 @@ export const adminColors = {
   primary: semanticColors.primary.normal,
   primaryHover: semanticColors.primary.alternative,
   primarySoft: semanticColors.primary.assistive,
-  primaryTint: '#FF19560A',
+  primaryTint: '#FF174F12',
   primaryText: semanticColors.static.white,
   error: '#D92D3A',
   errorTint: '#D92D3A14',
   errorHover: '#C82835',
-  info: semanticColors.static.info,
-  success: '#16A34A',
+  info: semanticColors.status.info,
+  success: semanticColors.status.success,
   successTint: '#EAF8EF',
   successSurface: '#F7FFFA',
   successText: '#157A36',
-  warning: '#F59F00',
+  warning: semanticColors.status.warning,
   warningTint: '#FFF3E3',
   warningSurface: '#FFF3D6',
   warningText: '#7A4D00',
@@ -84,9 +86,48 @@ export const adminColors = {
   strongShadow: '#0000002E',
 } as const
 
+export const typography = {
+  title1: {
+    bold: { fontSize: 28, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 28, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 28, fontWeight: 400, lineHeight: 1.3 },
+  },
+  title2: {
+    bold: { fontSize: 24, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 24, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 24, fontWeight: 400, lineHeight: 1.3 },
+  },
+  headline1: {
+    bold: { fontSize: 20, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 20, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 20, fontWeight: 400, lineHeight: 1.3 },
+  },
+  headline2: {
+    bold: { fontSize: 18, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 18, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 18, fontWeight: 400, lineHeight: 1.3 },
+  },
+  body: {
+    bold: { fontSize: 16, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 16, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 16, fontWeight: 400, lineHeight: 1.3 },
+  },
+  label: {
+    bold: { fontSize: 14, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 14, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 14, fontWeight: 400, lineHeight: 1.3 },
+  },
+  caption: {
+    bold: { fontSize: 12, fontWeight: 700, lineHeight: 1.3 },
+    medium: { fontSize: 12, fontWeight: 500, lineHeight: 1.3 },
+    regular: { fontSize: 12, fontWeight: 400, lineHeight: 1.3 },
+  },
+} as const
+
 export const theme = {
   semanticColors,
   adminColors,
+  typography,
   color: {
     background: adminColors.background,
     surface: adminColors.surface,

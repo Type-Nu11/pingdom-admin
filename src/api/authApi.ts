@@ -6,11 +6,15 @@ import type {
 } from '../types/auth.types'
 
 const LOGIN_API_PATH = '/auth/admin/login'
+const MERCHANT_LOGIN_API_PATH = '/auth/login'
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
 const LOGOUT_API_PATH = '/auth/logout'
 
-export async function login(payload: LoginRequest) {
-  const { data } = await customAxios.post<LoginResponse>(LOGIN_API_PATH, payload)
+export type LoginMode = 'admin' | 'merchant'
+
+export async function login(payload: LoginRequest, mode: LoginMode = 'admin') {
+  const loginPath = mode === 'admin' ? LOGIN_API_PATH : MERCHANT_LOGIN_API_PATH
+  const { data } = await customAxios.post<LoginResponse>(loginPath, payload)
   return data
 }
 

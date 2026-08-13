@@ -10,6 +10,7 @@ export interface AuthUser {
   profileImageUrl: string
   language: string
   country: string
+  role: string
 }
 
 export interface AuthState {

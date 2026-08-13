@@ -518,6 +518,25 @@ export const DetailNotice = styled.p`
   line-height: 1.5;
 `
 
+export const DetailErrorState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+`
+
 export const DetailMetaList = styled.div`
   display: flex;
   flex-direction: column;
@@ -880,7 +899,8 @@ export const DetailPostList = styled.div`
   gap: 10px;
 `
 
-export const DetailPostItem = styled.article`
+export const DetailPostItem = styled.button`
+  width: 100%;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
   gap: 10px;
@@ -888,6 +908,20 @@ export const DetailPostItem = styled.article`
   border: 1px solid ${neutral.borderSoft};
   border-radius: 8px;
   background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
 `
 
 export const DetailPostImage = styled.div`
@@ -932,65 +966,17 @@ export const DetailPostText = styled.div`
   }
 `
 
-export const DetailPostTitleButton = styled.button<{ $variant?: 'action' }>`
+export const DetailPostTitle = styled.span`
   max-width: 100%;
   display: block;
   overflow: hidden;
-  padding: 0;
-  border: 0;
-  background: transparent;
   color: ${neutral.strongText};
-  font: inherit;
   font-size: 13px;
   font-weight: 800;
   line-height: 1.4;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
-
-  &:hover {
-    color: ${neutral.primary};
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${neutral.primary};
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
-
-  ${({ $variant }) =>
-    $variant === 'action' &&
-    css`
-      width: fit-content;
-      min-height: 30px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin-top: 8px;
-      padding: 0 8px;
-      border: 1px solid ${neutral.border};
-      border-radius: 7px;
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.primary};
-      font-size: 12px;
-      line-height: 1;
-      text-decoration: none;
-
-      ${MaterialIcon} {
-        font-size: 16px;
-      }
-
-      &:hover {
-        border-color: ${neutral.primarySoft};
-        background: ${neutral.primaryTint};
-        color: ${neutral.primary};
-        text-decoration: none;
-      }
-    `}
 `
 
 export const DetailPostTitleRow = styled.div`
@@ -999,36 +985,45 @@ export const DetailPostTitleRow = styled.div`
   align-items: flex-start;
   gap: 8px;
 
-  > button {
+  > span {
     min-width: 0;
     flex: 1;
   }
 `
 
 export const DetailPostVisibilityBadge = styled.span`
-  min-height: 22px;
+  min-height: 18px;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  padding: 2px 7px;
+  padding: 1px 5px;
   border: 1px solid ${neutral.border};
   border-radius: 6px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
 `
 
 export const DetailPostVisibilityReason = styled.span`
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   margin-top: 5px;
   color: ${neutral.muted};
   font-size: 11px;
   font-weight: 700;
   line-height: 1.4;
+
+  > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `
 
 export const DetailPostMeta = styled.span`
@@ -1280,6 +1275,32 @@ export const PanelResultSummary = styled.div`
   font-weight: 600;
 `
 
+export const ListInlineNotice = styled.div`
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 16px 10px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+
+  button {
+    min-height: 30px;
+    flex: 0 0 auto;
+    padding: 0 9px;
+    border-color: ${neutral.error};
+    color: ${neutral.error};
+    font-size: 12px;
+  }
+`
+
 export const ClearFilterButton = styled.button`
   flex-shrink: 0;
   border: 0;
@@ -1407,6 +1428,54 @@ export const PlaceList = styled.div`
   }
 `
 
+export const PlaceListSkeleton = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+`
+
+export const PlaceSkeletonItem = styled.div`
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid ${neutral.borderSoft};
+`
+
+export const PlaceSkeletonThumbnail = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: ${neutral.surfaceHigh};
+`
+
+export const PlaceSkeletonContent = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+`
+
+export const PlaceSkeletonLine = styled.span<{ $width: string }>`
+  width: ${({ $width }) => $width};
+  height: 11px;
+  display: block;
+  border-radius: 3px;
+  background: ${neutral.surfaceHigh};
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: place-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes place-skeleton-pulse {
+    50% {
+      opacity: 0.55;
+    }
+  }
+`
+
 export const ListStatus = styled.div`
   position: sticky;
   top: 0;
@@ -1436,7 +1505,7 @@ export const PlaceItem = styled.button<{ $active?: boolean }>`
     box-shadow 160ms ease;
 
   &:hover {
-    background: ${neutral.primaryTint};
+    background: ${({ $active }) => ($active ? neutral.primaryTint : neutral.surfaceLow)};
   }
 
   &:focus-visible {
@@ -1501,9 +1570,7 @@ export const PlaceName = styled.h3`
   font-weight: 700;
   line-height: 1.35;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
 `
 
 export const PlaceCategoryBadge = styled.span`
@@ -1907,7 +1974,7 @@ export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   left: 20px;
   z-index: 6;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   max-width: min(360px, calc(100% - 40px));
   min-height: 36px;
@@ -1945,7 +2012,6 @@ export const MapInfoText = styled.span`
 export const MapInfoDot = styled.span`
   width: 8px;
   height: 8px;
-  margin-top: 4px;
   flex-shrink: 0;
   border-radius: 999px;
   background: ${neutral.primary};
@@ -2064,6 +2130,86 @@ export const OperatingFormField = styled.label`
     color: ${neutral.softText};
     font-size: 11px;
     font-weight: 600;
+  }
+
+  &:is(fieldset) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    padding: 0;
+  }
+`
+
+export const OperatingOptionGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+`
+
+export const OperatingOption = styled.label<{
+  $selected?: boolean
+  $tone?: 'normal' | 'danger' | 'muted'
+}>`
+  min-height: 74px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid
+    ${({ $selected, $tone }) =>
+      $selected
+        ? $tone === 'danger'
+          ? neutral.error
+          : neutral.primary
+        : neutral.border};
+  border-radius: 8px;
+  background: ${({ $selected, $tone }) =>
+    $selected
+      ? $tone === 'danger'
+        ? neutral.errorTint
+        : neutral.primaryTint
+      : neutral.surface};
+  color: ${neutral.text};
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  strong {
+    color: ${({ $selected, $tone }) =>
+      $selected && $tone === 'danger' ? neutral.error : neutral.strongText};
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  small {
+    align-self: auto;
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  &:hover:not(:has(input:disabled)) {
+    border-color: ${({ $tone }) => ($tone === 'danger' ? neutral.error : neutral.primarySoft)};
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:has(input:disabled) {
+    cursor: default;
+    opacity: 0.55;
   }
 `
 
@@ -2184,32 +2330,41 @@ export const OperatingEditorSectionHeader = styled.div`
 `
 
 export const OperatingWeekList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-
-  @media (max-width: 620px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
 `
 
 export const OperatingWeekRow = styled.div`
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: flex-start;
   gap: 10px;
   padding: 8px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 7px;
   background: ${neutral.surface};
+
+  > div:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  @media (max-width: 620px) {
+    flex-direction: column;
+  }
 `
 
 export const OperatingWeekRowHeader = styled.div`
+  width: 140px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
+  @media (max-width: 620px) {
+    width: 100%;
+  }
 `
 
 export const OperatingCheckLabel = styled.label`
@@ -2291,6 +2446,10 @@ export const OperatingExceptionEditorHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
+  > div:first-child {
+    width: 150px;
+  }
 `
 
 export const OperatingDateInput = styled.input`

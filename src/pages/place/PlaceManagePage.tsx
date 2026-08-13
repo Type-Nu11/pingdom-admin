@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import {
+  AdminDatePicker,
+  AdminTimePicker,
+} from '../../components/common/AdminDateTimePicker'
 import type {
   KakaoMapHandle,
   KakaoMapMarker,
@@ -52,6 +56,17 @@ const PLACE_DISCOVERY_STATUS_OPTIONS: Array<{
   { value: 'VISIBLE', label: '탐색 노출' },
   { value: 'HIDDEN', label: '탐색 숨김' },
 ]
+
+const PLACE_OPERATING_STATUS_DESCRIPTIONS: Record<AdminPlaceOperatingStatus, string> = {
+  OPERATING: '앱 장소 조회와 추천에 계속 노출됩니다.',
+  TEMPORARILY_CLOSED: '일시적인 휴업 상태로 관리합니다.',
+  PERMANENTLY_CLOSED: '앱 장소 조회와 추천에서 숨겨집니다.',
+}
+
+const PLACE_DISCOVERY_STATUS_DESCRIPTIONS: Record<AdminPlaceDiscoveryStatus, string> = {
+  VISIBLE: '공개 탐색과 자동완성, 추천 후보에 노출합니다.',
+  HIDDEN: '공개 탐색, 자동완성, 북마크 목록, 추천 후보에서 제외합니다.',
+}
 
 const PLACE_DAY_OF_WEEK_OPTIONS: Array<{
   value: AdminPlaceDayOfWeek
@@ -245,33 +260,11 @@ function getApiTimeValue(value: string) {
   return value.length === 5 ? `${value}:00` : value
 }
 
-function formatOperatingTime(value?: string) {
-  return getTimeInputValue(value) || '시간 미정'
-}
-
 function getDayOfWeekLabel(dayOfWeek: AdminPlaceDayOfWeek) {
   return (
     PLACE_DAY_OF_WEEK_OPTIONS.find((option) => option.value === dayOfWeek)?.label ??
     dayOfWeek
   )
-}
-
-function formatExceptionDate(dateValue: string) {
-  if (!dateValue) {
-    return '날짜 미정'
-  }
-
-  const date = new Date(`${dateValue}T00:00:00`)
-
-  if (Number.isNaN(date.getTime())) {
-    return dateValue
-  }
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  }).format(date)
 }
 
 function createOperatingHourDrafts(hours: AdminPlaceRegularOperatingHour[] = []) {
@@ -470,13 +463,16 @@ function PlaceManagePage() {
     totalCount > 0
       ? `${pageStart.toLocaleString()}–${pageEnd.toLocaleString()} / ${totalCount.toLocaleString()}개`
       : '0개'
-  const pageCountLabel = totalCount > 0 ? `${safeTotalPages}페이지` : '0페이지'
   const selectedPlaceHasCoordinate = selectedPlace
     ? hasValidCoordinate(selectedPlace)
     : false
   const isPlaceDetailOpen = selectedPlace !== null
   const isDeletingSelectedPlace =
     selectedPlace !== null && deletingPlaceId === selectedPlace.id
+  const isOperatingStatusUnchanged =
+    operatingStatusEditPlace?.operatingStatus === operatingStatusDraft
+  const isDiscoveryStatusUnchanged =
+    discoveryStatusEditPlace?.discoveryStatus === discoveryStatusDraft
   const detailGrowthProgress = placeDetail
     ? getDetailGrowthProgress(placeDetail)
     : null
@@ -796,6 +792,10 @@ function PlaceManagePage() {
       return
     }
 
+    if (operatingStatusEditPlace.operatingStatus === operatingStatusDraft) {
+      return
+    }
+
     if (!operatingStatusReason.trim()) {
       setOperatingStatusFormError('운영 상태 확인 사유를 입력해주세요.')
       return
@@ -836,6 +836,10 @@ function PlaceManagePage() {
 
   const handleConfirmDiscoveryStatusEdit = () => {
     if (!discoveryStatusEditPlace || updatingPlaceAction !== null) {
+      return
+    }
+
+    if (discoveryStatusEditPlace.discoveryStatus === discoveryStatusDraft) {
       return
     }
 
@@ -1319,9 +1323,7 @@ function PlaceManagePage() {
               </S.PanelActionGroup>
 
               <S.PanelResultSummary>
-                <span>
-                  {pageRangeLabel} · {pageCountLabel}
-                </span>
+                <span>{pageRangeLabel}</span>
                 {hasActivePlaceFilter ? (
                   <S.ClearFilterButton type="button" onClick={handleClearPlaceFilters}>
                     검색 초기화
@@ -1329,6 +1331,15 @@ function PlaceManagePage() {
                 ) : null}
               </S.PanelResultSummary>
             </S.PanelControls>
+
+            {isError && places.length > 0 ? (
+              <S.ListInlineNotice role="alert">
+                <span>{errorMessage} 기존 결과를 표시합니다.</span>
+                <S.RetryButton type="button" disabled={isLoading} onClick={handleRefresh}>
+                  다시 시도
+                </S.RetryButton>
+              </S.ListInlineNotice>
+            ) : null}
 
             <S.PlaceList
               ref={placeListRef}
@@ -1342,7 +1353,18 @@ function PlaceManagePage() {
               ) : null}
 
               {isLoading && places.length === 0 ? (
-                <S.EmptyState>장소 목록을 불러오는 중입니다.</S.EmptyState>
+                <S.PlaceListSkeleton aria-label="장소 목록을 불러오는 중입니다">
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <S.PlaceSkeletonItem key={index}>
+                      <S.PlaceSkeletonThumbnail />
+                      <S.PlaceSkeletonContent>
+                        <S.PlaceSkeletonLine $width="68%" />
+                        <S.PlaceSkeletonLine $width="92%" />
+                        <S.PlaceSkeletonLine $width="52%" />
+                      </S.PlaceSkeletonContent>
+                    </S.PlaceSkeletonItem>
+                  ))}
+                </S.PlaceListSkeleton>
               ) : isError && places.length === 0 ? (
                 <S.EmptyState>
                   {errorMessage}
@@ -1356,18 +1378,6 @@ function PlaceManagePage() {
                 </S.EmptyState>
               ) : places.length > 0 ? (
                 <>
-                  {isError ? (
-                    <S.EmptyState role="alert">
-                      {errorMessage}
-                      <S.RetryButton
-                        type="button"
-                        disabled={isLoading}
-                        onClick={handleRefresh}
-                      >
-                        다시 시도
-                      </S.RetryButton>
-                    </S.EmptyState>
-                  ) : null}
                   {places.map((place) => {
                     const isSelected = selectedPlace?.id === place.id
                     const placeCategoryLabel = getPlaceCategoryLabel(place)
@@ -1388,7 +1398,9 @@ function PlaceManagePage() {
                         </S.PlaceThumb>
                         <S.PlaceInfo>
                           <S.PlaceTitleRow>
-                            <S.PlaceName>{placeDisplayName}</S.PlaceName>
+                            <S.PlaceName title={placeDisplayName}>
+                              {placeDisplayName}
+                            </S.PlaceName>
                             <S.PlaceTitleBadges>
                               <S.PlaceCategoryBadge>{placeCategoryLabel}</S.PlaceCategoryBadge>
                               {place.discoveryStatus === 'HIDDEN' ? (
@@ -1400,7 +1412,9 @@ function PlaceManagePage() {
                           </S.PlaceTitleRow>
                           <S.PlaceMeta>
                             <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
-                            <span>{place.address || '주소 정보 없음'}</span>
+                            <span title={place.address || '주소 정보 없음'}>
+                              {place.address || '주소 정보 없음'}
+                            </span>
                           </S.PlaceMeta>
                           <S.PlaceMetaLine aria-label={`${placeDisplayName} 장소 지표`}>
                             <span>등록자 {getPlaceRegistrantLabel(place)}</span>
@@ -1518,12 +1532,25 @@ function PlaceManagePage() {
                         장소 상세 정보를 불러오는 중입니다.
                       </S.DetailStatus>
                     ) : detailErrorMessage ? (
-                      <S.DetailNotice role="alert">{detailErrorMessage}</S.DetailNotice>
+                      <S.DetailErrorState role="alert">
+                        <p>{detailErrorMessage}</p>
+                        <S.RetryButton
+                          type="button"
+                          disabled={isDetailLoading}
+                          onClick={() => {
+                            if (selectedPlace) {
+                              void fetchAdminPlaceDetail(selectedPlace.id)
+                            }
+                          }}
+                        >
+                          다시 시도
+                        </S.RetryButton>
+                      </S.DetailErrorState>
                     ) : placeDetail ? (
                       <>
                         <S.DetailMetaList>
                           <S.DetailMetaGroup>
-                            <S.DetailMetaGroupTitle>기본 정보</S.DetailMetaGroupTitle>
+                            <S.DetailMetaGroupTitle>장소 정보</S.DetailMetaGroupTitle>
                             <S.DetailMetaRow>
                               <span>장소 ID</span>
                               <strong>{placeDetail.id}</strong>
@@ -1538,9 +1565,6 @@ function PlaceManagePage() {
                                 {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
                               </strong>
                             </S.DetailMetaRow>
-                          </S.DetailMetaGroup>
-                          <S.DetailMetaGroup>
-                            <S.DetailMetaGroupTitle>위치 정보</S.DetailMetaGroupTitle>
                             <S.DetailMetaRow>
                               <span>주소</span>
                               <strong>{placeDetail.address || '주소 정보 없음'}</strong>
@@ -1630,53 +1654,20 @@ function PlaceManagePage() {
                                 영업시간 수정
                               </S.DetailInlineButton>
                             </S.OperatingSummaryRow>
+                            <S.OperatingSummaryRow>
+                              <S.OperatingSummaryLabel>
+                                <span>예외 일정</span>
+                                <small>{detailOperatingExceptions.length}건 등록됨</small>
+                              </S.OperatingSummaryLabel>
+                              <S.DetailInlineButton
+                                type="button"
+                                disabled={updatingPlaceId !== null}
+                                onClick={handleOpenOperatingScheduleEdit}
+                              >
+                                일정 관리
+                              </S.DetailInlineButton>
+                            </S.OperatingSummaryRow>
                           </S.OperatingSummary>
-
-                          {detailRegularHours.length > 0 ? (
-                            <S.OperatingHoursList aria-label="정규 영업시간">
-                              {detailRegularHours.map((hour) => (
-                                <S.OperatingHoursItem key={hour.dayOfWeek}>
-                                  <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
-                                  <strong>
-                                    {formatOperatingTime(hour.opensAt)} -{' '}
-                                    {formatOperatingTime(hour.closesAt)}
-                                  </strong>
-                                </S.OperatingHoursItem>
-                              ))}
-                            </S.OperatingHoursList>
-                          ) : (
-                            <S.OperatingEmptyState>
-                              정규 영업시간이 등록되지 않았습니다.
-                            </S.OperatingEmptyState>
-                          )}
-
-                          <S.OperatingExceptionHeader>
-                            <span>예외 일정</span>
-                            <small>{detailOperatingExceptions.length}건</small>
-                          </S.OperatingExceptionHeader>
-                          {detailOperatingExceptions.length > 0 ? (
-                            <S.OperatingExceptionsList aria-label="예외 영업 일정">
-                              {detailOperatingExceptions.map((exception) => (
-                                <S.OperatingExceptionItem key={exception.date}>
-                                  <span>{formatExceptionDate(exception.date)}</span>
-                                  <strong>
-                                    {exception.closed
-                                      ? '종일 휴무'
-                                      : exception.hours
-                                          .map(
-                                            (hour) =>
-                                              `${formatOperatingTime(hour.opensAt)} - ${formatOperatingTime(hour.closesAt)}`
-                                          )
-                                          .join(', ') || '시간 미정'}
-                                  </strong>
-                                </S.OperatingExceptionItem>
-                              ))}
-                            </S.OperatingExceptionsList>
-                          ) : (
-                            <S.OperatingEmptyState>
-                              등록된 예외 일정이 없습니다.
-                            </S.OperatingEmptyState>
-                          )}
                         </S.DetailSection>
 
                         <S.DetailSection>
@@ -1718,7 +1709,11 @@ function PlaceManagePage() {
                             <>
                               <S.DetailPostList>
                                 {detailPostPreviewItems.map((post) => (
-                                  <S.DetailPostItem key={post.id}>
+                                  <S.DetailPostItem
+                                    key={post.id}
+                                    type="button"
+                                    onClick={() => handleOpenPostDetail(post.id)}
+                                  >
                                     <S.DetailPostImage>
                                       {post.imageUrl ? (
                                         <img
@@ -1735,24 +1730,21 @@ function PlaceManagePage() {
                                     </S.DetailPostImage>
                                     <S.DetailPostText>
                                       <S.DetailPostTitleRow>
-                                        <S.DetailPostTitleButton
-                                          type="button"
-                                          onClick={() => handleOpenPostDetail(post.id)}
+                                        <S.DetailPostTitle
+                                          title={post.title || `게시글 #${post.id}`}
                                         >
                                           {post.title || `게시글 #${post.id}`}
-                                        </S.DetailPostTitleButton>
-                                        {post.visibilityStatus === 'HIDDEN' ? (
-                                          <S.DetailPostVisibilityBadge>
-                                            숨김
-                                          </S.DetailPostVisibilityBadge>
-                                        ) : null}
+                                        </S.DetailPostTitle>
                                       </S.DetailPostTitleRow>
-                                      <p>
+                                      <p title={post.description || '설명 없음'}>
                                         {post.description || '설명 없음'}
                                       </p>
                                       {post.visibilityStatus === 'HIDDEN' ? (
                                         <S.DetailPostVisibilityReason>
-                                          숨김 사유: {formatPlacePostHiddenReason(post.hiddenReason)}
+                                          <S.DetailPostVisibilityBadge>숨김</S.DetailPostVisibilityBadge>
+                                          <span>
+                                            숨김 사유: {formatPlacePostHiddenReason(post.hiddenReason)}
+                                          </span>
                                         </S.DetailPostVisibilityReason>
                                       ) : null}
                                       <S.DetailPostMeta>
@@ -1760,16 +1752,6 @@ function PlaceManagePage() {
                                         {post.likeCount.toLocaleString()} ·{' '}
                                         {formatPlacePostDate(post.createdAt)}
                                       </S.DetailPostMeta>
-                                      <S.DetailPostTitleButton
-                                        $variant="action"
-                                        type="button"
-                                        onClick={() => handleOpenPostDetail(post.id)}
-                                      >
-                                        <span>게시글 상세 보기</span>
-                                        <S.MaterialIcon aria-hidden="true">
-                                          chevron_right
-                                        </S.MaterialIcon>
-                                      </S.DetailPostTitleButton>
                                     </S.DetailPostText>
                                   </S.DetailPostItem>
                                 ))}
@@ -1875,7 +1857,6 @@ function PlaceManagePage() {
           >
             <S.OperatingDialogHeader>
               <div>
-                <S.OperatingDialogEyebrow>운영 관리</S.OperatingDialogEyebrow>
                 <S.OperatingDialogTitle id="operating-status-dialog-title">
                   운영 상태 변경
                 </S.OperatingDialogTitle>
@@ -1894,24 +1875,31 @@ function PlaceManagePage() {
                 {operatingStatusEditPlace.name}의 운영 상태를 변경합니다. 비운영 상태의
                 장소는 앱 장소 조회와 추천에서 숨겨집니다.
               </S.OperatingDialogDescription>
-              <S.OperatingFormField>
-                <span>운영 상태</span>
-                <S.OperatingSelect
-                  value={operatingStatusDraft}
-                  disabled={updatingPlaceAction === 'operating-status'}
-                  onChange={(event) => {
-                    setOperatingStatusDraft(
-                      event.target.value as AdminPlaceOperatingStatus
-                    )
-                    setOperatingStatusFormError('')
-                  }}
-                >
+              <S.OperatingFormField as="fieldset">
+                <legend>운영 상태</legend>
+                <S.OperatingOptionGrid>
                   {PLACE_OPERATING_STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <S.OperatingOption
+                      key={option.value}
+                      $selected={operatingStatusDraft === option.value}
+                      $tone={option.value === 'PERMANENTLY_CLOSED' ? 'danger' : 'normal'}
+                    >
+                      <input
+                        type="radio"
+                        name="place-operating-status"
+                        value={option.value}
+                        checked={operatingStatusDraft === option.value}
+                        disabled={updatingPlaceAction === 'operating-status'}
+                        onChange={() => {
+                          setOperatingStatusDraft(option.value)
+                          setOperatingStatusFormError('')
+                        }}
+                      />
+                      <strong>{option.label}</strong>
+                      <small>{PLACE_OPERATING_STATUS_DESCRIPTIONS[option.value]}</small>
+                    </S.OperatingOption>
                   ))}
-                </S.OperatingSelect>
+                </S.OperatingOptionGrid>
               </S.OperatingFormField>
               {operatingStatusDraft === 'PERMANENTLY_CLOSED' ? (
                 <S.OperatingDangerNotice>
@@ -1954,7 +1942,9 @@ function PlaceManagePage() {
               <S.OperatingPrimaryButton
                 type="button"
                 $danger={operatingStatusDraft === 'PERMANENTLY_CLOSED'}
-                disabled={updatingPlaceAction === 'operating-status'}
+                disabled={
+                  updatingPlaceAction === 'operating-status' || isOperatingStatusUnchanged
+                }
                 onClick={handleConfirmOperatingStatusEdit}
               >
                 {updatingPlaceAction === 'operating-status'
@@ -1979,7 +1969,6 @@ function PlaceManagePage() {
           >
             <S.OperatingDialogHeader>
               <div>
-                <S.OperatingDialogEyebrow>탐색 관리</S.OperatingDialogEyebrow>
                 <S.OperatingDialogTitle id="discovery-status-dialog-title">
                   탐색 상태 변경
                 </S.OperatingDialogTitle>
@@ -1998,24 +1987,31 @@ function PlaceManagePage() {
                 {discoveryStatusEditPlace.name}의 공개 탐색 노출 여부를 변경합니다.
                 장소는 관리자 목록과 지도에서 계속 관리할 수 있습니다.
               </S.OperatingDialogDescription>
-              <S.OperatingFormField>
-                <span>탐색 상태</span>
-                <S.OperatingSelect
-                  value={discoveryStatusDraft}
-                  disabled={updatingPlaceAction === 'discovery-status'}
-                  onChange={(event) => {
-                    setDiscoveryStatusDraft(
-                      event.target.value as AdminPlaceDiscoveryStatus
-                    )
-                    setDiscoveryStatusFormError('')
-                  }}
-                >
+              <S.OperatingFormField as="fieldset">
+                <legend>탐색 상태</legend>
+                <S.OperatingOptionGrid>
                   {PLACE_DISCOVERY_STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <S.OperatingOption
+                      key={option.value}
+                      $selected={discoveryStatusDraft === option.value}
+                      $tone={option.value === 'HIDDEN' ? 'muted' : 'normal'}
+                    >
+                      <input
+                        type="radio"
+                        name="place-discovery-status"
+                        value={option.value}
+                        checked={discoveryStatusDraft === option.value}
+                        disabled={updatingPlaceAction === 'discovery-status'}
+                        onChange={() => {
+                          setDiscoveryStatusDraft(option.value)
+                          setDiscoveryStatusFormError('')
+                        }}
+                      />
+                      <strong>{option.label}</strong>
+                      <small>{PLACE_DISCOVERY_STATUS_DESCRIPTIONS[option.value]}</small>
+                    </S.OperatingOption>
                   ))}
-                </S.OperatingSelect>
+                </S.OperatingOptionGrid>
               </S.OperatingFormField>
               {discoveryStatusDraft === 'HIDDEN' ? (
                 <S.OperatingInfoNotice>
@@ -2058,7 +2054,9 @@ function PlaceManagePage() {
               </S.SecondaryButton>
               <S.OperatingPrimaryButton
                 type="button"
-                disabled={updatingPlaceAction === 'discovery-status'}
+                disabled={
+                  updatingPlaceAction === 'discovery-status' || isDiscoveryStatusUnchanged
+                }
                 onClick={handleConfirmDiscoveryStatusEdit}
               >
                 {updatingPlaceAction === 'discovery-status' ? '저장 중' : '상태 저장'}
@@ -2082,7 +2080,6 @@ function PlaceManagePage() {
           >
             <S.OperatingDialogHeader>
               <div>
-                <S.OperatingDialogEyebrow>운영 관리</S.OperatingDialogEyebrow>
                 <S.OperatingDialogTitle id="operating-schedule-dialog-title">
                   영업시간 수정
                 </S.OperatingDialogTitle>
@@ -2098,14 +2095,13 @@ function PlaceManagePage() {
             </S.OperatingDialogHeader>
             <S.OperatingDialogBody>
               <S.OperatingDialogDescription>
-                {operatingScheduleEditPlace.name}의 정규 영업시간과 예외 일정을 전체
-                교체합니다.
+                {operatingScheduleEditPlace.name}의 영업시간과 예외 일정을 수정합니다.
               </S.OperatingDialogDescription>
 
               <S.OperatingEditorSection>
                 <S.OperatingEditorSectionHeader>
                   <strong>정규 영업시간</strong>
-                  <span>영업하지 않는 요일은 해제하세요.</span>
+                  <span>영업하는 요일을 선택하세요.</span>
                 </S.OperatingEditorSectionHeader>
                 <S.OperatingWeekList>
                   {regularHourDrafts.map((hour) => (
@@ -2125,52 +2121,38 @@ function PlaceManagePage() {
                           />
                           <span>{getDayOfWeekLabel(hour.dayOfWeek)}</span>
                         </S.OperatingCheckLabel>
-                        {hour.hours.length > 0 ? (
-                          <S.OperatingTextButton
-                            type="button"
-                            disabled={updatingPlaceAction === 'operating-schedule'}
-                            onClick={() =>
-                              handleAddRegularOperatingHour(hour.dayOfWeek)
-                            }
-                          >
-                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
-                            시간대 추가
-                          </S.OperatingTextButton>
-                        ) : null}
                       </S.OperatingWeekRowHeader>
                       {hour.hours.length > 0 ? (
                         <S.OperatingExceptionHours>
                           {hour.hours.map((timeRange) => (
                             <S.OperatingExceptionTimeRow key={timeRange.id}>
                               <S.OperatingTimeControls>
-                                <S.OperatingTimeInput
-                                  type="time"
+                                <AdminTimePicker
                                   value={timeRange.opensAt}
-                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
+                                  ariaLabel={`${getDayOfWeekLabel(hour.dayOfWeek)} 시작 시간`}
                                   disabled={
                                     updatingPlaceAction === 'operating-schedule'
                                   }
-                                  onChange={(event) =>
+                                  onChange={(value) =>
                                     handleRegularOperatingHourChange(
                                       hour.dayOfWeek,
                                       timeRange.id,
-                                      { opensAt: event.target.value }
+                                      { opensAt: value }
                                     )
                                   }
                                 />
                                 <span>-</span>
-                                <S.OperatingTimeInput
-                                  type="time"
+                                <AdminTimePicker
                                   value={timeRange.closesAt}
-                                  aria-label={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
+                                  ariaLabel={`${getDayOfWeekLabel(hour.dayOfWeek)} 종료 시간`}
                                   disabled={
                                     updatingPlaceAction === 'operating-schedule'
                                   }
-                                  onChange={(event) =>
+                                  onChange={(value) =>
                                     handleRegularOperatingHourChange(
                                       hour.dayOfWeek,
                                       timeRange.id,
-                                      { closesAt: event.target.value }
+                                      { closesAt: value }
                                     )
                                   }
                                 />
@@ -2193,6 +2175,16 @@ function PlaceManagePage() {
                               </S.OperatingIconButton>
                             </S.OperatingExceptionTimeRow>
                           ))}
+                          <S.OperatingTextButton
+                            type="button"
+                            disabled={updatingPlaceAction === 'operating-schedule'}
+                            onClick={() =>
+                              handleAddRegularOperatingHour(hour.dayOfWeek)
+                            }
+                          >
+                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                            시간대 추가
+                          </S.OperatingTextButton>
                         </S.OperatingExceptionHours>
                       ) : null}
                     </S.OperatingWeekRow>
@@ -2217,14 +2209,13 @@ function PlaceManagePage() {
                     {operatingExceptionDrafts.map((exception) => (
                       <S.OperatingExceptionEditor key={exception.id}>
                         <S.OperatingExceptionEditorHeader>
-                          <S.OperatingDateInput
-                            type="date"
+                          <AdminDatePicker
                             value={exception.date}
-                            aria-label="예외 일정 날짜"
+                            ariaLabel="예외 일정 날짜"
                             disabled={updatingPlaceAction === 'operating-schedule'}
-                            onChange={(event) =>
+                            onChange={(value) =>
                               handleOperatingExceptionChange(exception.id, {
-                                date: event.target.value,
+                                date: value,
                               })
                             }
                           />
@@ -2256,34 +2247,32 @@ function PlaceManagePage() {
                             {exception.hours.map((hour) => (
                               <S.OperatingExceptionTimeRow key={hour.id}>
                                 <S.OperatingTimeControls>
-                                  <S.OperatingTimeInput
-                                    type="time"
+                                  <AdminTimePicker
                                     value={hour.opensAt}
-                                    aria-label="대체 영업 시작 시간"
+                                    ariaLabel="대체 영업 시작 시간"
                                     disabled={
                                       updatingPlaceAction === 'operating-schedule'
                                     }
-                                    onChange={(event) =>
+                                    onChange={(value) =>
                                       handleOperatingExceptionHourChange(
                                         exception.id,
                                         hour.id,
-                                        { opensAt: event.target.value }
+                                        { opensAt: value }
                                       )
                                     }
                                   />
                                   <span>-</span>
-                                  <S.OperatingTimeInput
-                                    type="time"
+                                  <AdminTimePicker
                                     value={hour.closesAt}
-                                    aria-label="대체 영업 종료 시간"
+                                    ariaLabel="대체 영업 종료 시간"
                                     disabled={
                                       updatingPlaceAction === 'operating-schedule'
                                     }
-                                    onChange={(event) =>
+                                    onChange={(value) =>
                                       handleOperatingExceptionHourChange(
                                         exception.id,
                                         hour.id,
-                                        { closesAt: event.target.value }
+                                        { closesAt: value }
                                       )
                                     }
                                   />

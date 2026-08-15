@@ -684,6 +684,13 @@ function PlaceManagePage() {
           <S.TopActions>
             <S.TopActionButton
               type="button"
+              onClick={() => navigate('/places/information-verification')}
+            >
+              <S.MaterialIcon aria-hidden="true">fact_check</S.MaterialIcon>
+              정보 검증
+            </S.TopActionButton>
+            <S.TopActionButton
+              type="button"
               onClick={() => navigate('/places/duplicate-candidates')}
             >
               <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>

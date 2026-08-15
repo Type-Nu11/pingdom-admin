@@ -734,6 +734,14 @@ function DashboardPage() {
         <S.TopBar>
           <S.TopTitle as="h1">대시보드</S.TopTitle>
           <S.TopActions>
+            <S.IconButton
+              type="button"
+              aria-label="Merchant Owner 운영"
+              title="Merchant Owner 운영"
+              onClick={() => navigate('/merchant-owners')}
+            >
+              <S.MaterialIcon aria-hidden="true">storefront</S.MaterialIcon>
+            </S.IconButton>
             <S.RefreshButton
               type="button"
               aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}

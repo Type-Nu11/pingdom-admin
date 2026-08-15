@@ -684,10 +684,10 @@ function PlaceManagePage() {
           <S.TopActions>
             <S.TopActionButton
               type="button"
-              onClick={() => navigate('/places/duplicates')}
+              onClick={() => navigate('/places/duplicate-candidates')}
             >
               <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
-              중복 장소 관리
+              중복 후보 검토
             </S.TopActionButton>
             <AdminNotificationButton />
             <S.IconButton type="button" aria-label="도움말">

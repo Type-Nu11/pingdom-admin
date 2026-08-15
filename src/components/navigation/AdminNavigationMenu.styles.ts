@@ -1,191 +1,115 @@
 import styled, { css } from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
-export const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  background: rgb(15 23 42 / 52%);
-  backdrop-filter: blur(3px);
-`
-
-export const Dialog = styled.section`
-  width: min(1120px, 100%);
-  max-height: min(820px, calc(100vh - 64px));
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid ${adminColors.border};
-  border-radius: 14px;
-  background: ${adminColors.surface};
-  box-shadow: 0 24px 72px rgb(15 23 42 / 24%);
-`
-
-export const Header = styled.header`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 26px 28px 22px;
-  border-bottom: 1px solid ${adminColors.border};
-`
-
-export const Eyebrow = styled.p`
-  margin: 0 0 6px;
-  color: ${adminColors.primary};
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-`
-
-export const Title = styled.h2`
-  margin: 0;
-  color: ${adminColors.strongText};
-  font-size: 24px;
-  line-height: 1.3;
-`
-
-export const Description = styled.p`
-  margin: 7px 0 0;
-  color: ${adminColors.muted};
-  font-size: 14px;
-`
-
-export const CloseButton = styled.button`
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  background: ${adminColors.surface};
-  color: ${adminColors.muted};
-  cursor: pointer;
-
-  &:hover {
-    border-color: ${adminColors.primarySoft};
-    background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
-  }
-`
-
-export const GroupList = styled.div`
+export const Navigation = styled.div`
   display: grid;
-  gap: 24px;
-  overflow-y: auto;
-  padding: 24px 28px 30px;
+  gap: 18px;
+  padding: 18px 14px 6px;
+  border-top: 1px solid ${adminColors.borderSoft};
+
+  @media (max-width: 900px) {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 0 0 0 8px;
+    border-top: 0;
+  }
 `
 
 export const Group = styled.section`
   display: grid;
-  gap: 12px;
-`
+  gap: 6px;
 
-export const GroupHeader = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
+  @media (max-width: 900px) {
+    flex-shrink: 0;
+  }
 `
 
 export const GroupTitle = styled.h3`
   margin: 0;
-  color: ${adminColors.strongText};
-  font-size: 16px;
-`
-
-export const GroupDescription = styled.p`
-  margin: 0;
+  padding: 0 10px;
   color: ${adminColors.muted};
-  font-size: 13px;
-`
-
-export const ItemGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 
   @media (max-width: 900px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (max-width: 620px) {
-    grid-template-columns: 1fr;
+    display: none;
   }
 `
 
-export const ItemButton = styled.button<{ $active?: boolean }>`
-  min-width: 0;
+export const ItemList = styled.div`
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 20px;
-  align-items: center;
-  gap: 12px;
-  padding: 13px;
-  border: 1px solid ${adminColors.borderSoft};
-  border-radius: 10px;
-  background: ${adminColors.surface};
-  color: ${adminColors.text};
-  text-align: left;
-  cursor: pointer;
+  gap: 2px;
 
-  > span:nth-child(2) {
-    min-width: 0;
-    display: grid;
-    gap: 3px;
+  @media (max-width: 900px) {
+    display: flex;
+    gap: 2px;
   }
-
-  strong,
-  small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  strong {
-    color: ${adminColors.strongText};
-    font-size: 14px;
-  }
-
-  small {
-    color: ${adminColors.muted};
-    font-size: 12px;
-  }
-
-  > span:last-child {
-    color: ${adminColors.muted};
-  }
-
-  &:hover {
-    border-color: ${adminColors.primarySoft};
-    background: ${adminColors.primaryTint};
-  }
-
-  ${({ $active }) => $active && css`
-    border-color: ${adminColors.primary};
-    background: ${adminColors.primaryTint};
-  `}
 `
 
-export const ItemIcon = styled.span<{ $active?: boolean }>`
-  width: 40px;
-  height: 40px;
+export const MaterialIcon = styled.span`
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${adminColors.borderSoft};
-  border-radius: 9px;
-  background: ${adminColors.surfaceLow};
-  color: ${adminColors.muted};
+  overflow: hidden;
+  flex-shrink: 0;
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 400;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 20;
+`
 
-  ${({ $active }) => $active && css`
-    border-color: ${adminColors.primarySoft};
-    background: ${adminColors.surface};
+export const ItemButton = styled.button<{ $active?: boolean }>`
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: ${adminColors.muted};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+
+  &:hover {
+    background: ${adminColors.primaryTint};
     color: ${adminColors.primary};
-  `}
+  }
+
+  ${({ $active }) =>
+    $active &&
+    css`
+      background: ${adminColors.primaryTint};
+      color: ${adminColors.primary};
+      font-weight: 700;
+
+      ${MaterialIcon} {
+        font-variation-settings:
+          'FILL' 1,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 20;
+      }
+    `}
+
+  @media (max-width: 900px) {
+    width: auto;
+    min-height: 40px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 `

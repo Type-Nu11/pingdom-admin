@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { PlaceInformationEvidencePanel } from '../../components/placeVerification/PlaceInformationEvidencePanel'
 import { PlaceInformationReportPanel } from '../../components/placeVerification/PlaceInformationReportPanel'
 import { PlaceInformationReverificationPanel } from '../../components/placeVerification/PlaceInformationReverificationPanel'
@@ -87,6 +88,7 @@ function PlaceVerificationPage() {
           <Shell.MenuButton type="button" $active onClick={() => navigate('/places')}><Shell.MaterialIcon aria-hidden="true">location_on</Shell.MaterialIcon><span>장소 관리</span></Shell.MenuButton>
           <Shell.MenuButton type="button" onClick={() => navigate('/main')}><Shell.MaterialIcon aria-hidden="true">description</Shell.MaterialIcon><span>게시글 관리</span></Shell.MenuButton>
           <Shell.MenuButton type="button" onClick={() => navigate('/bans')}><Shell.MaterialIcon aria-hidden="true">block</Shell.MaterialIcon><span>사용자 밴</span></Shell.MenuButton>
+          <AdminNavigationMenu />
         </Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile aria-label="관리자 계정">

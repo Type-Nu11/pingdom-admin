@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAdminPlace } from '../../api/adminPlaceApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
 import { useAuth } from '../../hooks/useAuth'
@@ -379,6 +380,7 @@ function PlaceMergePage() {
             <Shell.MaterialIcon aria-hidden="true">block</Shell.MaterialIcon>
             <span>사용자 밴</span>
           </Shell.MenuButton>
+          <AdminNavigationMenu />
         </Shell.SideMenu>
 
         <Shell.SideFooter>

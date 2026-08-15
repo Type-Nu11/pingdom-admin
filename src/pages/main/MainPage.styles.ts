@@ -98,12 +98,15 @@ export const BrandLogo = styled.img`
 export const SideMenu = styled.div`
   display: flex;
   flex: 1;
+  min-height: 0;
   flex-direction: column;
+  overflow-y: auto;
   padding: 18px 0;
 
   @media (max-width: 900px) {
     flex: 0 1 auto;
     flex-direction: row;
+    overflow-y: hidden;
     overflow-x: auto;
     padding: 8px;
   }

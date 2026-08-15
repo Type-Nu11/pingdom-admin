@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminReports } from '../../hooks/useAdminReports'
 import { useAuth } from '../../hooks/useAuth'
@@ -67,6 +68,7 @@ function ReportedUsersPage() {
           <Shell.MenuButton type="button" onClick={() => navigate('/places')}><Shell.MaterialIcon aria-hidden="true">location_on</Shell.MaterialIcon><span>장소 관리</span></Shell.MenuButton>
           <Shell.MenuButton type="button" $active onClick={() => navigate('/main')}><Shell.MaterialIcon aria-hidden="true">description</Shell.MaterialIcon><span>게시글 관리</span></Shell.MenuButton>
           <Shell.MenuButton type="button" onClick={() => navigate('/bans')}><Shell.MaterialIcon aria-hidden="true">block</Shell.MaterialIcon><span>사용자 밴</span></Shell.MenuButton>
+          <AdminNavigationMenu />
         </Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile>

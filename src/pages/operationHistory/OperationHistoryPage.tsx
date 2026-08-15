@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminOperationHistories } from '../../hooks/useAdminOperationHistories'
@@ -213,6 +214,7 @@ function OperationHistoryPage() {
             <Shell.MaterialIcon aria-hidden="true">history</Shell.MaterialIcon>
             <span>운영 이력</span>
           </Shell.MenuButton>
+          <AdminNavigationMenu />
         </Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile>

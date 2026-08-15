@@ -11,6 +11,8 @@ import type {
   AdminPlaceOperatingScheduleUpdateResponse,
   AdminPlaceOperatingStatusUpdateRequest,
   AdminPlaceOperatingStatusUpdateResponse,
+  AdminPlaceTouristInfoUpdateRequest,
+  AdminPlaceTouristInfoUpdateResponse,
 } from '../types/adminPlace.types'
 
 const ADMIN_PLACES_API_PATH = '/admin/places'
@@ -93,6 +95,18 @@ export async function updateAdminPlaceDiscoveryStatus(
 ) {
   const { data } = await customAxios.patch<AdminPlaceDiscoveryStatusUpdateResponse>(
     `${ADMIN_PLACES_API_PATH}/${placeId}/discovery-status`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceTouristInfo(
+  placeId: number,
+  payload: AdminPlaceTouristInfoUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceTouristInfoUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/tourist-info`,
     payload
   )
 

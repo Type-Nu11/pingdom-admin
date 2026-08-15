@@ -180,6 +180,70 @@ export interface AdminPlaceDiscoveryStatusUpdateResponse {
   message: string
 }
 
+export interface AdminPlaceTouristInfoUpdateRequest {
+  englishName?: string | null
+  touristSummary?: string | null
+  touristCategories?: AdminPlaceTouristCategory[]
+  reason: string
+}
+
+export interface AdminPlaceTouristInfoUpdateResponse {
+  placeId: number
+  englishName: string | null
+  touristSummary: string | null
+  touristCategories: AdminPlaceTouristCategory[]
+  message: string
+}
+
+export type AdminPlaceOperatingNoticeType =
+  | 'TEMPORARY_CLOSURE'
+  | 'HOURS_CHANGE'
+  | 'CROWDING'
+  | 'REOPENING'
+  | 'GENERAL'
+
+export type AdminPlaceOperatingNoticeSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
+
+export type AdminPlaceOperatingNoticeStatus =
+  | 'SCHEDULED'
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'CANCELED'
+
+export interface AdminPlaceOperatingNoticeCreateRequest {
+  noticeType: AdminPlaceOperatingNoticeType
+  severity: AdminPlaceOperatingNoticeSeverity
+  message: string
+  startsAt: string
+  expiresAt: string
+}
+
+export interface AdminPlaceOperatingNoticeUpdateRequest {
+  severity: AdminPlaceOperatingNoticeSeverity
+  message: string
+}
+
+export interface AdminPlaceOperatingNoticeCancelRequest {
+  cancelReason: string
+}
+
+export interface AdminPlaceOperatingNoticeResponse {
+  id: number
+  placeId: number
+  noticeType: AdminPlaceOperatingNoticeType
+  severity: AdminPlaceOperatingNoticeSeverity
+  status: AdminPlaceOperatingNoticeStatus
+  message: string
+  startsAt: string
+  expiresAt: string
+  expiredAt: string | null
+  canceledAt: string | null
+  cancelReason: string | null
+  visibleNow: boolean
+}
+
+export type AdminPlaceOperatingNoticeExpireResponse = Record<string, number>
+
 export interface AdminPlaceListRequest {
   page?: number
   limit?: number

@@ -5,6 +5,8 @@ import {
   PlaceOperationPanel,
   type PlaceOperation,
 } from '../../components/place/PlaceOperationPanel'
+import { PlaceOperatingNoticeDialog } from '../../components/place/PlaceOperatingNoticeDialog'
+import { PlaceTouristInfoDialog } from '../../components/place/PlaceTouristInfoDialog'
 import { PlaceDangerZoneDialog } from '../../components/place/PlaceDangerZoneDialog'
 import { PlaceInspector } from '../../components/place/PlaceInspector'
 import { PlaceMapPanel } from '../../components/place/PlaceMapPanel'
@@ -14,6 +16,7 @@ import type {
   KakaoMapMarker,
 } from '../../components/map/KakaoMap'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
+import { useAdminPlaceOperatingNotices } from '../../hooks/useAdminPlaceOperatingNotices'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -77,6 +80,10 @@ function PlaceManagePage() {
     action: PlaceOperation
     place: AdminPlaceDetail
   } | null>(null)
+  const [touristInfoEditPlace, setTouristInfoEditPlace] =
+    useState<AdminPlaceDetail | null>(null)
+  const [operatingNoticePlace, setOperatingNoticePlace] =
+    useState<AdminPlaceDetail | null>(null)
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const [selectedCategory, setSelectedCategory] = useState<AdminPlaceCategory | ''>('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
@@ -105,9 +112,19 @@ function PlaceManagePage() {
     updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
+    updatePlaceTouristInfo,
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
+  const {
+    runningActions: noticeRunningActions,
+    actionErrors: noticeActionErrors,
+    clearActionError: clearNoticeActionError,
+    createNotice,
+    updateNotice,
+    cancelNotice,
+    expireNotices,
+  } = useAdminPlaceOperatingNotices()
   const safeTotalPages = Math.max(totalPages, 1)
   const visiblePageNumbers = getVisiblePageNumbers(page, safeTotalPages)
   const placeKeyword = placeSearchQuery.trim()
@@ -470,6 +487,43 @@ function PlaceManagePage() {
     [placeOperation?.place.id]
   )
 
+  const handleOpenTouristInfo = () => {
+    if (!placeDetail || updatingPlaceIds['tourist-info'] !== null) {
+      return
+    }
+
+    clearUpdateErrorMessage('tourist-info')
+    setTouristInfoEditPlace(placeDetail)
+  }
+
+  const handleCloseTouristInfo = useCallback(() => {
+    if (updatingPlaceIds['tourist-info'] !== null) {
+      return
+    }
+
+    setTouristInfoEditPlace(null)
+  }, [updatingPlaceIds])
+
+  const handleOpenOperatingNotices = () => {
+    if (!placeDetail) {
+      return
+    }
+
+    clearNoticeActionError('create')
+    clearNoticeActionError('update')
+    clearNoticeActionError('cancel')
+    clearNoticeActionError('expire')
+    setOperatingNoticePlace(placeDetail)
+  }
+
+  const handleCloseOperatingNotices = useCallback(() => {
+    if (Object.values(noticeRunningActions).some(Boolean)) {
+      return
+    }
+
+    setOperatingNoticePlace(null)
+  }, [noticeRunningActions])
+
   useEffect(() => {
     if (!selectedPlace || !hasValidCoordinate(selectedPlace)) {
       return
@@ -612,6 +666,8 @@ function PlaceManagePage() {
                 onRetry={(placeId) => void fetchAdminPlaceDetail(placeId)}
                 onFocusMap={focusPlaceOnVisibleMap}
                 onOpenOperation={handleOpenPlaceOperation}
+                onOpenTouristInfo={handleOpenTouristInfo}
+                onOpenOperatingNotices={handleOpenOperatingNotices}
                 onOpenPost={handleOpenPostDetail}
                 onOpenPlacePosts={handleOpenPlacePosts}
                 onOpenDelete={handleOpenDeleteConfirm}
@@ -639,6 +695,30 @@ function PlaceManagePage() {
           onUpdateOperatingStatus={updatePlaceOperatingStatus}
           onUpdateDiscoveryStatus={updatePlaceDiscoveryStatus}
           onUpdateOperatingSchedule={updatePlaceOperatingSchedule}
+        />
+      ) : null}
+
+      {touristInfoEditPlace ? (
+        <PlaceTouristInfoDialog
+          place={touristInfoEditPlace}
+          isSaving={updatingPlaceIds['tourist-info'] !== null}
+          errorMessage={updateErrorMessages['tourist-info']}
+          onClose={handleCloseTouristInfo}
+          onSubmit={updatePlaceTouristInfo}
+        />
+      ) : null}
+
+      {operatingNoticePlace ? (
+        <PlaceOperatingNoticeDialog
+          place={operatingNoticePlace}
+          runningActions={noticeRunningActions}
+          actionErrors={noticeActionErrors}
+          onClearActionError={clearNoticeActionError}
+          onClose={handleCloseOperatingNotices}
+          onCreate={createNotice}
+          onUpdate={updateNotice}
+          onCancel={cancelNotice}
+          onExpire={expireNotices}
         />
       ) : null}
 

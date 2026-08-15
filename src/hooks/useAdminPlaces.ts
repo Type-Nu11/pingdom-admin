@@ -6,6 +6,7 @@ import {
   updateAdminPlaceDiscoveryStatus,
   updateAdminPlaceOperatingSchedule,
   updateAdminPlaceOperatingStatus,
+  updateAdminPlaceTouristInfo,
 } from '../api/adminPlaceApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -24,6 +25,7 @@ import type {
   AdminPlaceListSortParam,
   AdminPlaceOperatingScheduleUpdateRequest,
   AdminPlaceOperatingStatusUpdateRequest,
+  AdminPlaceTouristInfoUpdateRequest,
   AdminPlaceUpdateErrorResponse,
 } from '../types/adminPlace.types'
 
@@ -63,6 +65,7 @@ type PlaceUpdateAction =
   | 'operating-status'
   | 'operating-schedule'
   | 'discovery-status'
+  | 'tourist-info'
 
 type PlaceUpdateState<T> = Record<PlaceUpdateAction, T>
 
@@ -70,12 +73,14 @@ const EMPTY_PLACE_UPDATE_IDS: PlaceUpdateState<number | null> = {
   'operating-status': null,
   'operating-schedule': null,
   'discovery-status': null,
+  'tourist-info': null,
 }
 
 const EMPTY_PLACE_UPDATE_ERRORS: PlaceUpdateState<string> = {
   'operating-status': '',
   'operating-schedule': '',
   'discovery-status': '',
+  'tourist-info': '',
 }
 
 type LatestAdminPlaceListRequest = {
@@ -530,6 +535,70 @@ export function useAdminPlaces({
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
   )
 
+  const updatePlaceTouristInfo = useCallback(
+    async (placeId: number, payload: AdminPlaceTouristInfoUpdateRequest) => {
+      const action: PlaceUpdateAction = 'tourist-info'
+      if (updatingPlaceIdsRef.current[action] !== null) {
+        return false
+      }
+
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceTouristInfo(placeId, payload)
+
+        setPlaces((current) =>
+          current.map((place) =>
+            place.id === placeId
+              ? {
+                  ...place,
+                  englishName: data.englishName,
+                  touristSummary: data.touristSummary,
+                  touristCategories: data.touristCategories,
+                }
+              : place
+          )
+        )
+        setPlaceDetail((current) =>
+          current?.id === placeId
+            ? {
+                ...current,
+                englishName: data.englishName,
+                touristSummary: data.touristSummary,
+                touristCategories: data.touristCategories,
+              }
+            : current
+        )
+        showActionSuccessMessage(data.message || '장소 관광 정보를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 관광 정보 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
   useEffect(() => {
     void fetchAdminPlaces()
   }, [fetchAdminPlaces])
@@ -565,5 +634,6 @@ export function useAdminPlaces({
     updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
+    updatePlaceTouristInfo,
   }
 }

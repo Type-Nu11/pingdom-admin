@@ -2262,6 +2262,146 @@ export const OperatingSelect = styled.select`
   }
 `
 
+export const OperatingTextInput = styled.input`
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 0;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+
+  &::placeholder {
+    color: ${neutral.softText};
+  }
+
+  &:focus {
+    border-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingFieldRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 620px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const OperatingCategoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 620px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`
+
+export const OperatingCategoryOption = styled.label<{ $selected?: boolean }>`
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
+  color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: ${neutral.primary};
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:has(input:disabled) {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingActionTabs = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border-radius: 9px;
+  background: ${neutral.surfaceHighest};
+
+  @media (max-width: 620px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`
+
+export const OperatingActionTab = styled.button<{ $active?: boolean; $danger?: boolean }>`
+  min-height: 38px;
+  padding: 0 9px;
+  border: 1px solid ${({ $active, $danger }) =>
+    $active ? ($danger ? neutral.error : neutral.border) : 'transparent'};
+  border-radius: 7px;
+  background: ${({ $active }) => ($active ? neutral.surface : 'transparent')};
+  color: ${({ $active, $danger }) =>
+    $active && $danger ? neutral.error : $active ? neutral.primary : neutral.muted};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const OperatingResultNotice = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 8px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.text};
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  strong {
+    color: ${neutral.primary};
+    font-weight: 800;
+  }
+`
+
 export const OperatingTextArea = styled.textarea`
   min-height: 96px;
   resize: vertical;

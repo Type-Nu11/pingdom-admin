@@ -23,6 +23,14 @@ const FLAME_MARKER_IMAGE_URL_BY_KIND = {
 }
 
 const CATEGORY_LABEL_BY_KEY: Record<string, string> = {
+  카페: '카페',
+  식당: '식당',
+  관광: '관광',
+  풍경: '풍경',
+  문화: '문화',
+  쇼핑: '쇼핑',
+  숙박: '숙박',
+  체험: '체험',
   FOOD: '음식',
   RESTAURANT: '음식',
   MUSIC: '음악',
@@ -47,7 +55,9 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
   if (
     categoryText.includes('food') ||
     categoryText.includes('restaurant') ||
-    categoryText.includes('음식')
+    categoryText.includes('음식') ||
+    categoryText.includes('식당') ||
+    categoryText.includes('카페')
   ) {
     return 'food'
   }
@@ -55,7 +65,8 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
   if (
     categoryText.includes('music') ||
     categoryText.includes('concert') ||
-    categoryText.includes('음악')
+    categoryText.includes('음악') ||
+    categoryText.includes('문화')
   ) {
     return 'music'
   }
@@ -64,7 +75,8 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
     categoryText.includes('fashion') ||
     categoryText.includes('feshion') ||
     categoryText.includes('style') ||
-    categoryText.includes('패션')
+    categoryText.includes('패션') ||
+    categoryText.includes('쇼핑')
   ) {
     return 'fashion'
   }
@@ -72,7 +84,8 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
   if (
     categoryText.includes('game') ||
     categoryText.includes('게임') ||
-    categoryText.includes('play')
+    categoryText.includes('play') ||
+    categoryText.includes('체험')
   ) {
     return 'game'
   }

@@ -1,6 +1,15 @@
 import type { AuthErrorResponse } from './auth.types'
 
 export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST' | 'LEVEL_DESC'
+export type AdminPlaceCategory =
+  | '카페'
+  | '식당'
+  | '관광'
+  | '풍경'
+  | '문화'
+  | '쇼핑'
+  | '숙박'
+  | '체험'
 export type AdminPlacePostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
 export type AdminPlaceGeocodingSource = 'KAKAO' | 'USER_PIN' | 'ADMIN' | 'LEGACY'
 export type AdminPlaceOperatingStatus =
@@ -176,6 +185,7 @@ export interface AdminPlaceListRequest {
   limit?: number
   sortParam?: AdminPlaceListSortParam
   keyword?: string
+  category?: AdminPlaceCategory
 }
 
 export interface AdminPlaceListResponse {

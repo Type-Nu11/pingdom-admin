@@ -12,6 +12,7 @@ import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type {
+  AdminPlaceCategory,
   AdminPlaceDeleteErrorResponse,
   AdminPlaceDetail,
   AdminPlaceDetailErrorResponse,
@@ -62,6 +63,21 @@ type PlaceUpdateAction =
   | 'operating-status'
   | 'operating-schedule'
   | 'discovery-status'
+
+type LatestAdminPlaceListRequest = {
+  page: number
+  limit: number
+  sortParam: AdminPlaceListSortParam
+  keyword: string
+  category?: AdminPlaceCategory
+}
+
+function hasOwnRequestProperty(
+  request: AdminPlaceListRequest,
+  property: keyof AdminPlaceListRequest
+) {
+  return Object.prototype.hasOwnProperty.call(request, property)
+}
 
 function getAdminPlaceErrorMessage(
   error: unknown,
@@ -121,7 +137,7 @@ export function useAdminPlaces({
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
-  const latestListRequestRef = useRef<Required<AdminPlaceListRequest>>({
+  const latestListRequestRef = useRef<LatestAdminPlaceListRequest>({
     page: initialPage,
     limit,
     sortParam,
@@ -173,6 +189,9 @@ export function useAdminPlaces({
       limit: request.limit ?? latestListRequestRef.current.limit,
       sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
       keyword: request.keyword ?? latestListRequestRef.current.keyword,
+      category: hasOwnRequestProperty(request, 'category')
+        ? request.category
+        : latestListRequestRef.current.category,
     }
 
     try {
@@ -191,6 +210,7 @@ export function useAdminPlaces({
           limit: data.limit,
           sortParam: nextRequest.sortParam,
           keyword: nextRequest.keyword,
+          category: nextRequest.category,
         }
       }
 

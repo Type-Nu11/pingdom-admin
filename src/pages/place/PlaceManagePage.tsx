@@ -14,6 +14,7 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
+  AdminPlaceCategory,
   AdminPlaceDayOfWeek,
   AdminPlaceDetail,
   AdminPlaceDiscoveryStatus,
@@ -38,6 +39,19 @@ const PLACE_SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
   { value: 'LEVEL_DESC', label: '레벨 높은순' },
+]
+const PLACE_CATEGORY_OPTIONS: Array<{
+  value: AdminPlaceCategory
+  label: string
+}> = [
+  { value: '카페', label: '카페' },
+  { value: '식당', label: '식당' },
+  { value: '관광', label: '관광' },
+  { value: '풍경', label: '풍경' },
+  { value: '문화', label: '문화' },
+  { value: '쇼핑', label: '쇼핑' },
+  { value: '숙박', label: '숙박' },
+  { value: '체험', label: '체험' },
 ]
 
 const PLACE_OPERATING_STATUS_OPTIONS: Array<{
@@ -390,6 +404,7 @@ function PlaceManagePage() {
   const placeListRef = useRef<HTMLDivElement | null>(null)
   const isSearchEffectReadyRef = useRef(false)
   const latestSortParamRef = useRef(DEFAULT_PLACE_SORT_PARAM)
+  const latestCategoryRef = useRef<AdminPlaceCategory | undefined>(undefined)
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<AdminPlaceItem | null>(null)
@@ -421,6 +436,7 @@ function PlaceManagePage() {
   const [operatingScheduleReason, setOperatingScheduleReason] = useState('')
   const [operatingScheduleFormError, setOperatingScheduleFormError] = useState('')
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
+  const [selectedCategory, setSelectedCategory] = useState<AdminPlaceCategory | ''>('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
   const {
     places,
@@ -455,7 +471,7 @@ function PlaceManagePage() {
   const showEdgePageButtons = safeTotalPages > MAX_VISIBLE_PAGE_NUMBER_COUNT
   const placeKeyword = placeSearchQuery.trim()
   const showPagination = safeTotalPages > 1
-  const hasActivePlaceFilter = placeKeyword.length > 0
+  const hasActivePlaceFilter = placeKeyword.length > 0 || selectedCategory !== ''
   const isUpdatingList = isLoading && places.length > 0
   const pageStart = totalCount > 0 ? (page - 1) * ADMIN_PLACE_PAGE_SIZE + 1 : 0
   const pageEnd = totalCount > 0 ? pageStart + places.length - 1 : 0
@@ -597,6 +613,10 @@ function PlaceManagePage() {
   }, [selectedSortParam])
 
   useEffect(() => {
+    latestCategoryRef.current = selectedCategory || undefined
+  }, [selectedCategory])
+
+  useEffect(() => {
     if (!isSearchEffectReadyRef.current) {
       isSearchEffectReadyRef.current = true
 
@@ -618,6 +638,7 @@ function PlaceManagePage() {
         page: 1,
         sortParam: latestSortParamRef.current,
         keyword: nextKeyword,
+        category: latestCategoryRef.current,
       }).then((isSuccess) => {
         if (isSuccess) {
           scrollPlaceListToTop()
@@ -657,7 +678,7 @@ function PlaceManagePage() {
     handleClosePlaceDetail()
   }
 
-  const handleClearPlaceFilters = () => {
+  const handleClearPlaceSearch = () => {
     clearPendingPlaceSearch()
     shouldSkipNextSearchEffectRef.current = true
     setPlaceSearchQuery('')
@@ -667,6 +688,26 @@ function PlaceManagePage() {
       page: 1,
       sortParam: selectedSortParam,
       keyword: '',
+      category: selectedCategory || undefined,
+    }).then((isSuccess) => {
+      if (isSuccess) {
+        scrollPlaceListToTop()
+      }
+    })
+  }
+
+  const handleClearPlaceFilters = () => {
+    clearPendingPlaceSearch()
+    shouldSkipNextSearchEffectRef.current = true
+    setPlaceSearchQuery('')
+    setSelectedCategory('')
+    handleClosePlaceDetail()
+
+    void fetchAdminPlaces({
+      page: 1,
+      sortParam: selectedSortParam,
+      keyword: '',
+      category: undefined,
     }).then((isSuccess) => {
       if (isSuccess) {
         handleClosePlaceDetail()
@@ -682,6 +723,7 @@ function PlaceManagePage() {
       page,
       sortParam: selectedSortParam,
       keyword: placeKeyword,
+      category: selectedCategory || undefined,
     }).then((isSuccess) => {
       if (isSuccess) {
         handleClosePlaceDetail()
@@ -700,9 +742,29 @@ function PlaceManagePage() {
       page: 1,
       sortParam: nextSortParam,
       keyword: placeKeyword,
+      category: selectedCategory || undefined,
     }).then((isSuccess) => {
       if (isSuccess) {
         handleClosePlaceDetail()
+        scrollPlaceListToTop()
+      }
+    })
+  }
+
+  const handleCategoryChange = (value: string) => {
+    const nextCategory = value as AdminPlaceCategory | ''
+
+    clearPendingPlaceSearch()
+    setSelectedCategory(nextCategory)
+    handleClosePlaceDetail()
+
+    void fetchAdminPlaces({
+      page: 1,
+      sortParam: selectedSortParam,
+      keyword: placeKeyword,
+      category: nextCategory || undefined,
+    }).then((isSuccess) => {
+      if (isSuccess) {
         scrollPlaceListToTop()
       }
     })
@@ -722,6 +784,7 @@ function PlaceManagePage() {
       page: nextPageNumber,
       sortParam: selectedSortParam,
       keyword: placeKeyword,
+      category: selectedCategory || undefined,
     }).then((isSuccess) => {
       if (isSuccess) {
         handleClosePlaceDetail()
@@ -1264,7 +1327,7 @@ function PlaceManagePage() {
             <S.PanelControls>
               <S.PanelSummary>
                 <S.PanelCount>
-                  {placeKeyword ? '검색 결과' : '전체 장소'}{' '}
+                  {hasActivePlaceFilter ? '필터 결과' : '전체 장소'}{' '}
                   <strong>{totalCount.toLocaleString()}</strong>개
                 </S.PanelCount>
                 <S.PanelCollapseButton
@@ -1293,7 +1356,7 @@ function PlaceManagePage() {
                     type="button"
                     aria-label="검색어 지우기"
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={handleClearPlaceFilters}
+                    onClick={handleClearPlaceSearch}
                   >
                     <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
                   </S.SearchClearButton>
@@ -1306,9 +1369,22 @@ function PlaceManagePage() {
                   value={selectedSortParam}
                   options={PLACE_SORT_OPTIONS}
                   disabled={isLoading}
-                  width="124px"
+                  width="100%"
                   onChange={handleSortChange}
                 />
+                <S.CategorySelect
+                  value={selectedCategory}
+                  aria-label="장소 카테고리 필터"
+                  disabled={isLoading}
+                  onChange={(event) => handleCategoryChange(event.target.value)}
+                >
+                  <option value="">전체 카테고리</option>
+                  {PLACE_CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </S.CategorySelect>
                 <S.IconFilterButton
                   type="button"
                   aria-label={
@@ -1326,7 +1402,7 @@ function PlaceManagePage() {
                 <span>{pageRangeLabel}</span>
                 {hasActivePlaceFilter ? (
                   <S.ClearFilterButton type="button" onClick={handleClearPlaceFilters}>
-                    검색 초기화
+                    필터 초기화
                   </S.ClearFilterButton>
                 ) : null}
               </S.PanelResultSummary>
@@ -1426,11 +1502,11 @@ function PlaceManagePage() {
                     )
                   })}
                 </>
-              ) : placeKeyword ? (
+              ) : hasActivePlaceFilter ? (
                 <S.EmptyState>
-                  검색 결과가 없습니다.
+                  선택한 조건에 맞는 장소가 없습니다.
                   <S.RetryButton type="button" onClick={handleClearPlaceFilters}>
-                    검색 초기화
+                    필터 초기화
                   </S.RetryButton>
                 </S.EmptyState>
               ) : (

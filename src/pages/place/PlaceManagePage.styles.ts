@@ -1163,9 +1163,34 @@ export const PanelCollapseButton = styled.button`
 export const PanelActionGroup = styled.div`
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, 0.9fr) 40px;
   align-items: center;
   gap: 8px;
+`
+
+export const CategorySelect = styled.select`
+  height: 40px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  outline: 1px solid transparent;
+  background: ${neutral.surface};
+  color: ${neutral.text};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible {
+    border-color: ${neutral.primary};
+    outline-color: ${neutral.primary};
+    box-shadow: 0 0 0 3px ${neutral.primaryTint};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 `
 
 export const PanelCount = styled.p`

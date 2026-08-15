@@ -24,6 +24,7 @@ export async function getAdminPlaces({
   limit = DEFAULT_ADMIN_PLACE_LIMIT,
   sortParam = DEFAULT_ADMIN_PLACE_SORT_PARAM,
   keyword = DEFAULT_ADMIN_PLACE_KEYWORD,
+  category,
 }: AdminPlaceListRequest = {}) {
   const { data } = await customAxios.get<AdminPlaceListResponse>(
     ADMIN_PLACES_API_PATH,
@@ -33,6 +34,7 @@ export async function getAdminPlaces({
         limit,
         sortParam,
         keyword,
+        category,
       },
     }
   )

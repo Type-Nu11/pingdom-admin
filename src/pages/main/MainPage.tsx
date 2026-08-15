@@ -235,21 +235,6 @@ function formatOptionalReportCreatedDate(value?: string | null) {
   return formatPostDate(value)
 }
 
-function createPendingPost(postId: number): AdminPost {
-  return {
-    id: postId,
-    name: `게시글 #${postId}`,
-    imageUrl: '',
-    userId: 0,
-    username: '불러오는 중',
-    createdAt: '',
-    description: '',
-    likeCount: 0,
-    placeName: '',
-    reports: [],
-  }
-}
-
 interface AdminPostImageProps {
   post: AdminPost
 }
@@ -318,6 +303,7 @@ function MainPage() {
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
     null
   )
@@ -367,7 +353,7 @@ function MainPage() {
     [fetchAdminPosts]
   )
   const activePost = postDetail ?? selectedPost
-  const activePostId = activePost?.id ?? null
+  const activePostId = selectedPostId
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
   const shouldShowActivePostPlaceName = activePost
@@ -414,6 +400,7 @@ function MainPage() {
     (post: AdminPost) => {
       setHighlightedReportId(null)
       setSelectedPost(post)
+      setSelectedPostId(post.id)
       void fetchAdminPostDetail(post.id)
     },
     [fetchAdminPostDetail]
@@ -421,13 +408,15 @@ function MainPage() {
   const handleOpenPostDetailById = useCallback(
     (postId: number, reportId?: number) => {
       setHighlightedReportId(reportId ?? null)
-      setSelectedPost(createPendingPost(postId))
+      setSelectedPost(null)
+      setSelectedPostId(postId)
       void fetchAdminPostDetail(postId)
     },
     [fetchAdminPostDetail]
   )
   const handleClosePostDetail = useCallback(() => {
     setSelectedPost(null)
+    setSelectedPostId(null)
     setDeleteConfirmPost(null)
     setReportActionConfirm(null)
     setHasDeleteConfirmAttempted(false)
@@ -677,6 +666,7 @@ function MainPage() {
         latestPostKeywordRef.current = postSearchKeyword ?? ''
         latestReviewFilterRef.current = reviewStatus ?? 'ALL'
         setSelectedPost(null)
+        setSelectedPostId(null)
         setHighlightedReportId(
           typeof reportId === 'number' && Number.isFinite(reportId) ? reportId : null
         )
@@ -782,7 +772,7 @@ function MainPage() {
   ])
 
   useEffect(() => {
-    if (!selectedPost) {
+    if (selectedPostId === null) {
       return
     }
 
@@ -807,7 +797,7 @@ function MainPage() {
     handleClosePostDetail,
     handleCloseReportActionConfirm,
     reportActionConfirm,
-    selectedPost,
+    selectedPostId,
   ])
 
   return (
@@ -1361,6 +1351,22 @@ function MainPage() {
                 </S.ModalFooterActions>
               </S.ModalFooterControls>
             </S.ModalFooter>
+          </S.ModalContent>
+        </S.ModalOverlay>
+      ) : null}
+
+      {selectedPostId !== null && !activePost ? (
+        <S.ModalOverlay role="presentation" onMouseDown={handleClosePostDetail}>
+          <S.ModalContent role="dialog" aria-modal="true" aria-labelledby="post-loading-title" onMouseDown={(event) => event.stopPropagation()}>
+            <S.ModalHeader>
+              <div><S.ModalTitle id="post-loading-title">게시글 #{selectedPostId}</S.ModalTitle></div>
+              <S.ModalCloseButton type="button" aria-label="게시글 상세 닫기" onClick={handleClosePostDetail}><S.MaterialIcon aria-hidden="true">close</S.MaterialIcon></S.ModalCloseButton>
+            </S.ModalHeader>
+            <S.ModalBody>
+              <S.ModalNotice role={detailErrorMessage ? 'alert' : 'status'}>
+                {detailErrorMessage || (isDetailLoading ? '게시글 상세 정보를 불러오는 중입니다.' : '게시글 상세 정보가 없습니다.')}
+              </S.ModalNotice>
+            </S.ModalBody>
           </S.ModalContent>
         </S.ModalOverlay>
       ) : null}

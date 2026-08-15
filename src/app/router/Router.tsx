@@ -27,6 +27,7 @@ import VerifiedBoostProductPage from '../../pages/verifiedBoostProduct/VerifiedB
 import UserRolePage from '../../pages/userRole/UserRolePage'
 import MerchantPlaceClaimPage from '../../pages/merchantPlaceClaim/MerchantPlaceClaimPage'
 import S3OrphanPage from '../../pages/s3Orphan/S3OrphanPage'
+import NotificationOperationsPage from '../../pages/notificationOperations/NotificationOperationsPage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -85,6 +86,7 @@ export function Router() {
           <Route path="/users/roles" element={<UserRolePage />} />
           <Route path="/merchant-place-claims" element={<MerchantPlaceClaimPage />} />
           <Route path="/s3-orphans" element={<S3OrphanPage />} />
+          <Route path="/operations/notifications" element={<NotificationOperationsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

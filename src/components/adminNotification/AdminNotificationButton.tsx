@@ -198,6 +198,9 @@ export function AdminNotificationButton() {
               {unreadCount ? <NotificationPanelCount>{unreadCount}건 미확인</NotificationPanelCount> : null}
             </NotificationPanelHeading>
             <NotificationPanelActions>
+              <MarkAllButton type="button" onClick={() => { navigate('/operations/notifications'); setIsOpen(false) }}>
+                운영 화면
+              </MarkAllButton>
               <MarkAllButton
                 type="button"
                 disabled={!unreadCount || isActionLoading}

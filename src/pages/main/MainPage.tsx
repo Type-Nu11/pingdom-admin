@@ -326,6 +326,7 @@ function MainPage() {
   const [highlightedReportId, setHighlightedReportId] = useState<number | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
     useState(false)
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState('')
   const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
     useState(false)
   const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
@@ -430,9 +431,10 @@ function MainPage() {
     setDeleteConfirmPost(null)
     setReportActionConfirm(null)
     setHasDeleteConfirmAttempted(false)
+    setDeleteConfirmationId('')
     setHasReportActionConfirmAttempted(false)
     clearPostDetail()
-  }, [clearPostDetail])
+  }, [clearPostDetail, setDeleteConfirmationId])
 
   const handleCloseDeleteConfirm = useCallback(() => {
     if (isDeleting) {
@@ -441,7 +443,8 @@ function MainPage() {
 
     setDeleteConfirmPost(null)
     setHasDeleteConfirmAttempted(false)
-  }, [isDeleting])
+    setDeleteConfirmationId('')
+  }, [isDeleting, setDeleteConfirmationId])
 
   const handleOpenReportActionConfirm = useCallback(
     (actionStatus: AdminPostReportActionStatus) => {
@@ -563,10 +566,16 @@ function MainPage() {
 
     setDeleteConfirmPost(activePost)
     setHasDeleteConfirmAttempted(false)
+    setDeleteConfirmationId('')
   }
 
   const handleConfirmDeletePost = () => {
-    if (!deleteConfirmPost || isLoading || isDeleting) {
+    if (
+      !deleteConfirmPost ||
+      deleteConfirmationId !== String(deleteConfirmPost.id) ||
+      isLoading ||
+      isDeleting
+    ) {
       return
     }
 
@@ -1139,6 +1148,14 @@ function MainPage() {
               >
                 <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
               </S.ModalCloseButton>
+              <S.DangerButton
+                type="button"
+                disabled={isLoading || isDeleting || isDetailLoading}
+                onClick={handleDeleteActivePost}
+              >
+                <S.MaterialIcon aria-hidden="true">warning</S.MaterialIcon>
+                <span>삭제 Danger Zone</span>
+              </S.DangerButton>
             </S.ModalHeader>
 
             <S.ModalBody>
@@ -1341,14 +1358,6 @@ function MainPage() {
                       {nextReviewPost ? `다음 게시글 #${nextReviewPost.id}` : '다음 게시글'}
                     </span>
                   </S.SecondaryButton>
-                  <S.DangerButton
-                    type="button"
-                    disabled={isLoading || isDeleting}
-                    onClick={handleDeleteActivePost}
-                  >
-                    <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
-                    <span>{deletingPostId === activePost.id ? '삭제 중' : '삭제'}</span>
-                  </S.DangerButton>
                 </S.ModalFooterActions>
               </S.ModalFooterControls>
             </S.ModalFooter>
@@ -1464,6 +1473,14 @@ function MainPage() {
             <S.DeleteConfirmMeta>
               {getPostTitle(deleteConfirmPost)} · {getPostOwner(deleteConfirmPost)}
             </S.DeleteConfirmMeta>
+            <S.SearchInput
+              value={deleteConfirmationId}
+              inputMode="numeric"
+              placeholder={`게시글 ID ${deleteConfirmPost.id} 입력`}
+              aria-label="삭제할 게시글 ID 확인"
+              disabled={isDeleting}
+              onChange={(event) => setDeleteConfirmationId(event.target.value.trim())}
+            />
 
             {hasDeleteConfirmAttempted && actionErrorMessage ? (
               <S.DeleteConfirmNotice role="alert">
@@ -1481,7 +1498,11 @@ function MainPage() {
               </S.SecondaryButton>
               <S.DangerButton
                 type="button"
-                disabled={isLoading || isDeleting}
+                disabled={
+                  isLoading ||
+                  isDeleting ||
+                  deleteConfirmationId !== String(deleteConfirmPost.id)
+                }
                 onClick={handleConfirmDeletePost}
               >
                 <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>

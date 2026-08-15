@@ -15,6 +15,7 @@ import PlaceMergePage from '../../pages/placeMerge/PlaceMergePage'
 import PlaceDuplicateCandidatePage from '../../pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage'
 import PlaceVerificationPage from '../../pages/placeVerification/PlaceVerificationPage'
 import UserBanPage from '../../pages/userBan/UserBanPage'
+import ReportedUsersPage from '../../pages/reportedUsers/ReportedUsersPage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -61,6 +62,7 @@ export function Router() {
             element={<PlaceVerificationPage />}
           />
           <Route path="/bans" element={<UserBanPage />} />
+          <Route path="/reports/reported-users" element={<ReportedUsersPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

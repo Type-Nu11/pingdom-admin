@@ -877,6 +877,13 @@ function MainPage() {
             </div>
 
             <S.HeaderActions>
+              <S.OutlineButton
+                type="button"
+                onClick={() => navigate('/reports/reported-users')}
+              >
+                <S.MaterialIcon aria-hidden="true">person_alert</S.MaterialIcon>
+                신고 사용자
+              </S.OutlineButton>
               <SortDropdown
                 ariaLabel="게시글 목록 정렬"
                 value={selectedSortParam}

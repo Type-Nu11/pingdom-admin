@@ -300,3 +300,96 @@ export const Link = styled.a`
     text-decoration: underline;
   }
 `
+
+export const MetricGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const MetricCard = styled.div`
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  span {
+    display: block;
+    color: ${neutral.muted};
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+    margin-top: 5px;
+    color: ${neutral.strongText};
+    font-size: 18px;
+    font-weight: 800;
+  }
+`
+
+export const TableScroll = styled.div`
+  overflow-x: auto;
+`
+
+export const Table = styled.table`
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid ${neutral.borderSoft};
+    color: ${neutral.text};
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  th {
+    background: ${neutral.surfaceLow};
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  th:first-child,
+  td:first-child {
+    min-width: 220px;
+    text-align: left;
+  }
+
+  tbody tr:hover {
+    background: ${neutral.primaryTint};
+  }
+`
+
+export const TableTitle = styled.strong`
+  display: block;
+  overflow: hidden;
+  max-width: 260px;
+  color: ${neutral.strongText};
+  font-size: 12px;
+  text-overflow: ellipsis;
+`
+
+export const TableMeta = styled.span`
+  display: block;
+  overflow: hidden;
+  max-width: 260px;
+  margin-top: 3px;
+  color: ${neutral.muted};
+  font-size: 10px;
+  text-overflow: ellipsis;
+`

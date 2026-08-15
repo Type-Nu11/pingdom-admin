@@ -684,6 +684,13 @@ function PlaceManagePage() {
           <S.TopActions>
             <S.TopActionButton
               type="button"
+              onClick={() => navigate('/recommendations/metrics')}
+            >
+              <S.MaterialIcon aria-hidden="true">monitoring</S.MaterialIcon>
+              추천 성과
+            </S.TopActionButton>
+            <S.TopActionButton
+              type="button"
               onClick={() => navigate('/places/information-verification')}
             >
               <S.MaterialIcon aria-hidden="true">fact_check</S.MaterialIcon>

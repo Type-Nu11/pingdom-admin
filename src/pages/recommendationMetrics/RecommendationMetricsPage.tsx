@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { RecommendationPolicyPanel } from '../../components/recommendation/RecommendationPolicyPanel'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import {
   type RecommendationMetricQuery,
@@ -15,7 +16,7 @@ import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 
-type Tab = 'metrics' | 'compare' | 'explanation'
+type Tab = 'metrics' | 'compare' | 'explanation' | 'policy'
 
 const SORT_OPTIONS: Array<{ value: RecommendationMetricSortBy; label: string }> = [
   { value: 'SMOOTHED_CTR', label: '보정 CTR' },
@@ -155,6 +156,7 @@ function RecommendationMetricsPage() {
             <S.TabButton type="button" role="tab" $active={tab === 'metrics'} aria-selected={tab === 'metrics'} onClick={() => { setTab('metrics'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">monitoring</Shell.MaterialIcon>성과 조회</S.TabButton>
             <S.TabButton type="button" role="tab" $active={tab === 'compare'} aria-selected={tab === 'compare'} onClick={() => { setTab('compare'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>버전 비교</S.TabButton>
             <S.TabButton type="button" role="tab" $active={tab === 'explanation'} aria-selected={tab === 'explanation'} onClick={() => { setTab('explanation'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">manage_search</Shell.MaterialIcon>추천 설명</S.TabButton>
+            <S.TabButton type="button" role="tab" $active={tab === 'policy'} aria-selected={tab === 'policy'} onClick={() => { setTab('policy'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">tune</Shell.MaterialIcon>운영 정책</S.TabButton>
           </S.TabList>
 
           {tab === 'metrics' ? <>
@@ -191,6 +193,7 @@ function RecommendationMetricsPage() {
             {formError || hook.explanationErrorMessage ? <Shared.Notice $variant="error">{formError || hook.explanationErrorMessage}</Shared.Notice> : null}
             {hook.isExplanationLoading ? <Shared.EmptyStateCard><strong>추천 설명을 불러오는 중입니다.</strong></Shared.EmptyStateCard> : hook.explanation ? <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>추천 요청 {hook.explanation.requestId}</Shared.PanelTitle><Shared.PanelDescription>노출 순위와 최종 점수 구성 요소입니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.explanation.items.length.toLocaleString()}개 후보</Shared.PanelCount></Shared.PanelHeader><Shared.CompareBody><S.CardList>{hook.explanation.items.map((item) => <S.RecordCard key={`${item.ranking}-${item.placeId}`}><S.RecordHeader><div><S.RecordTitle>{item.ranking}위 · {item.placeName}</S.RecordTitle><S.RecordMeta>장소 #{item.placeId} · 사용자 #{item.userId} · {item.recommendationVersion}</S.RecordMeta></div><S.StatusBadge $tone={item.recommendationStage === 'STABLE' ? 'success' : 'warning'}>{item.recommendationStage === 'STABLE' ? '안정' : '실험'}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>후보 소스</dt><dd>{item.source}</dd></S.DetailItem><S.DetailItem><dt>거리</dt><dd>{item.distanceMeters.toLocaleString()}m</dd></S.DetailItem><S.DetailItem><dt>최종 점수</dt><dd>{item.finalScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>개인화 / 지역</dt><dd>{item.personalScore.toFixed(4)} / {item.geoScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>품질 / 참여</dt><dd>{item.qualityScore.toFixed(4)} / {item.engagementScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>전환 / 탐색</dt><dd>{item.conversionScore.toFixed(4)} / {item.explorationScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>신뢰 / 맥락</dt><dd>{item.trustScore.toFixed(4)} / {item.contextScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>혜택 / 가용 / 부스트</dt><dd>{item.benefitScore.toFixed(4)} / {item.availabilityScore.toFixed(4)} / {item.boostScore.toFixed(4)}</dd></S.DetailItem></S.DetailGrid></S.RecordCard>)}</S.CardList></Shared.CompareBody></Shared.Panel> : <Shared.EmptyStateCard><strong>추천 requestId로 설명 로그를 조회해주세요.</strong></Shared.EmptyStateCard>}
           </> : null}
+          {tab === 'policy' ? <RecommendationPolicyPanel /> : null}
         </Shared.PageStack></Shared.Content>
       </Shell.MainArea>
     </Shell.AppShell>

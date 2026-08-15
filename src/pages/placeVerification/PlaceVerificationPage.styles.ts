@@ -393,3 +393,38 @@ export const TableMeta = styled.span`
   font-size: 10px;
   text-overflow: ellipsis;
 `
+
+export const PolicyRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(170px, 1.2fr) 120px 120px minmax(160px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 13px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  @media (max-width: 860px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const CheckField = styled.label`
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${neutral.text};
+  font-size: 12px;
+  font-weight: 700;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: ${neutral.primary};
+  }
+`

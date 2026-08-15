@@ -8,6 +8,7 @@ import type {
 } from '../../types/adminPlace.types'
 import { getPlaceCategoryLabel } from '../../utils/placeCategory'
 import type { PlaceOperation } from './PlaceOperationPanel'
+import type { PlaceDataCorrectionAction } from './PlaceDataCorrectionDialog'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
 const POST_PREVIEW_LIMIT = 3
@@ -37,7 +38,10 @@ interface PlaceInspectorProps {
   placeDetail: AdminPlaceDetail | null
   isLoading: boolean
   errorMessage: string
-  updatingPlaceIds: Record<PlaceOperation | 'tourist-info', number | null>
+  updatingPlaceIds: Record<
+    PlaceOperation | PlaceDataCorrectionAction | 'tourist-info',
+    number | null
+  >
   deletingPlaceId: number | null
   onClose: () => void
   onRetry: (placeId: number) => void
@@ -45,6 +49,7 @@ interface PlaceInspectorProps {
   onOpenOperation: (action: PlaceOperation) => void
   onOpenTouristInfo: () => void
   onOpenOperatingNotices: () => void
+  onOpenDataCorrection: () => void
   onOpenPost: (postId: number) => void
   onOpenPlacePosts: (placeName: string) => void
   onOpenDelete: () => void
@@ -127,6 +132,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
       onOpenOperation,
       onOpenTouristInfo,
       onOpenOperatingNotices,
+      onOpenDataCorrection,
       onOpenPost,
       onOpenPlacePosts,
       onOpenDelete,
@@ -175,9 +181,22 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                 </S.DetailErrorState>
               ) : placeDetail ? (
                 <>
+                  <S.DetailSectionHeader>
+                    <S.DetailSectionTitle>장소 정보</S.DetailSectionTitle>
+                    <S.DetailInlineButton
+                      type="button"
+                      disabled={
+                        updatingPlaceIds.geocoding !== null ||
+                        updatingPlaceIds.coordinates !== null ||
+                        updatingPlaceIds['kakao-place-id'] !== null
+                      }
+                      onClick={onOpenDataCorrection}
+                    >
+                      정보 보정
+                    </S.DetailInlineButton>
+                  </S.DetailSectionHeader>
                   <S.DetailMetaList>
                     <S.DetailMetaGroup>
-                      <S.DetailMetaGroupTitle>장소 정보</S.DetailMetaGroupTitle>
                       <S.DetailMetaRow>
                         <span>장소 ID</span>
                         <strong>{placeDetail.id}</strong>
@@ -199,6 +218,14 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       <S.DetailMetaRow>
                         <span>좌표</span>
                         <strong>{formatCoordinate(placeDetail)}</strong>
+                      </S.DetailMetaRow>
+                      <S.DetailMetaRow>
+                        <span>좌표 출처</span>
+                        <strong>{placeDetail.geocodingSource || '출처 정보 없음'}</strong>
+                      </S.DetailMetaRow>
+                      <S.DetailMetaRow>
+                        <span>Kakao place ID</span>
+                        <strong>{placeDetail.kakaoPlaceId || '연결 정보 없음'}</strong>
                       </S.DetailMetaRow>
                     </S.DetailMetaGroup>
                   </S.DetailMetaList>

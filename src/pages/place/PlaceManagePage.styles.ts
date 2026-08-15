@@ -2341,9 +2341,9 @@ export const OperatingCategoryOption = styled.label<{ $selected?: boolean }>`
   }
 `
 
-export const OperatingActionTabs = styled.div`
+export const OperatingActionTabs = styled.div<{ $columns?: 3 | 4 }>`
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(${({ $columns = 4 }) => $columns}, minmax(0, 1fr));
   gap: 6px;
   padding: 5px;
   border-radius: 9px;
@@ -2351,6 +2351,69 @@ export const OperatingActionTabs = styled.div`
 
   @media (max-width: 620px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`
+
+export const OperatingComparisonGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+`
+
+export const OperatingComparisonItem = styled.div<{ $changed?: boolean }>`
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid ${({ $changed }) => ($changed ? neutral.primarySoft : neutral.border)};
+  border-radius: 8px;
+  background: ${({ $changed }) =>
+    $changed ? neutral.primaryTint : neutral.surfaceHighest};
+
+  span,
+  strong {
+    display: block;
+  }
+
+  span {
+    color: ${neutral.muted};
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  strong {
+    margin-top: 4px;
+    overflow: hidden;
+    color: ${neutral.strongText};
+    font-size: 13px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const OperatingComparisonArrow = styled(MaterialIcon)`
+  color: ${neutral.muted};
+  font-size: 18px;
+`
+
+export const OperatingCoordinateComparison = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceHighest};
+  color: ${neutral.muted};
+  font-size: 11px;
+  font-weight: 700;
+
+  strong {
+    color: ${neutral.primary};
+  }
+
+  ${MaterialIcon} {
+    font-size: 16px;
   }
 `
 

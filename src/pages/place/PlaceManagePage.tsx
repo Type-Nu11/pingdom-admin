@@ -7,6 +7,10 @@ import {
 } from '../../components/place/PlaceOperationPanel'
 import { PlaceOperatingNoticeDialog } from '../../components/place/PlaceOperatingNoticeDialog'
 import { PlaceTouristInfoDialog } from '../../components/place/PlaceTouristInfoDialog'
+import {
+  PlaceDataCorrectionDialog,
+  type PlaceDataCorrectionAction,
+} from '../../components/place/PlaceDataCorrectionDialog'
 import { PlaceDangerZoneDialog } from '../../components/place/PlaceDangerZoneDialog'
 import { PlaceInspector } from '../../components/place/PlaceInspector'
 import { PlaceMapPanel } from '../../components/place/PlaceMapPanel'
@@ -21,8 +25,10 @@ import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminPlaceCategory,
+  AdminPlaceCoordinatesUpdateRequest,
   AdminPlaceDetail,
   AdminPlaceDiscoveryStatus,
+  AdminPlaceGeocodingUpdateRequest,
   AdminPlaceItem,
   AdminPlaceListSortParam,
 } from '../../types/adminPlace.types'
@@ -84,6 +90,8 @@ function PlaceManagePage() {
     useState<AdminPlaceDetail | null>(null)
   const [operatingNoticePlace, setOperatingNoticePlace] =
     useState<AdminPlaceDetail | null>(null)
+  const [dataCorrectionPlace, setDataCorrectionPlace] =
+    useState<AdminPlaceDetail | null>(null)
   const [selectedSortParam, setSelectedSortParam] = useState(DEFAULT_PLACE_SORT_PARAM)
   const [selectedCategory, setSelectedCategory] = useState<AdminPlaceCategory | ''>('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
@@ -113,6 +121,9 @@ function PlaceManagePage() {
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
     updatePlaceTouristInfo,
+    updatePlaceKakaoPlaceId,
+    updatePlaceCoordinates,
+    updatePlaceGeocoding,
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
@@ -145,6 +156,14 @@ function PlaceManagePage() {
     placeOperation && updatingPlaceIds[placeOperation.action] !== null
       ? placeOperation.action
       : null
+  const activeDataCorrectionAction: PlaceDataCorrectionAction | null =
+    updatingPlaceIds.geocoding !== null
+      ? 'geocoding'
+      : updatingPlaceIds.coordinates !== null
+        ? 'coordinates'
+        : updatingPlaceIds['kakao-place-id'] !== null
+          ? 'kakao-place-id'
+          : null
   const placeMapMarkers = useMemo<KakaoMapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -524,6 +543,71 @@ function PlaceManagePage() {
     setOperatingNoticePlace(null)
   }, [noticeRunningActions])
 
+  const handleOpenDataCorrection = () => {
+    if (!placeDetail || activeDataCorrectionAction) {
+      return
+    }
+
+    clearUpdateErrorMessage('geocoding')
+    clearUpdateErrorMessage('coordinates')
+    clearUpdateErrorMessage('kakao-place-id')
+    setDataCorrectionPlace(placeDetail)
+  }
+
+  const handleCloseDataCorrection = useCallback(() => {
+    if (activeDataCorrectionAction) {
+      return
+    }
+
+    setDataCorrectionPlace(null)
+  }, [activeDataCorrectionAction])
+
+  const handleUpdateCoordinates = useCallback(
+    async (payload: AdminPlaceCoordinatesUpdateRequest) => {
+      if (!dataCorrectionPlace) {
+        return false
+      }
+
+      const isSuccess = await updatePlaceCoordinates(dataCorrectionPlace.id, payload)
+      if (isSuccess) {
+        setSelectedPlace((current) =>
+          current?.id === dataCorrectionPlace.id ? { ...current, ...payload } : current
+        )
+      }
+
+      return isSuccess
+    },
+    [dataCorrectionPlace, updatePlaceCoordinates]
+  )
+
+  const handleUpdateGeocoding = useCallback(
+    async (payload: AdminPlaceGeocodingUpdateRequest) => {
+      if (!dataCorrectionPlace) {
+        return false
+      }
+
+      const isSuccess = await updatePlaceGeocoding(dataCorrectionPlace.id, payload)
+      if (isSuccess) {
+        setSelectedPlace((current) =>
+          current?.id === dataCorrectionPlace.id
+            ? {
+                ...current,
+                address: payload.address,
+                roadAddress: payload.roadAddress,
+                jibunAddress: payload.jibunAddress,
+                postalCode: payload.postalCode,
+                latitude: payload.latitude,
+                longitude: payload.longitude,
+              }
+            : current
+        )
+      }
+
+      return isSuccess
+    },
+    [dataCorrectionPlace, updatePlaceGeocoding]
+  )
+
   useEffect(() => {
     if (!selectedPlace || !hasValidCoordinate(selectedPlace)) {
       return
@@ -668,6 +752,7 @@ function PlaceManagePage() {
                 onOpenOperation={handleOpenPlaceOperation}
                 onOpenTouristInfo={handleOpenTouristInfo}
                 onOpenOperatingNotices={handleOpenOperatingNotices}
+                onOpenDataCorrection={handleOpenDataCorrection}
                 onOpenPost={handleOpenPostDetail}
                 onOpenPlacePosts={handleOpenPlacePosts}
                 onOpenDelete={handleOpenDeleteConfirm}
@@ -719,6 +804,25 @@ function PlaceManagePage() {
           onUpdate={updateNotice}
           onCancel={cancelNotice}
           onExpire={expireNotices}
+        />
+      ) : null}
+
+      {dataCorrectionPlace ? (
+        <PlaceDataCorrectionDialog
+          place={dataCorrectionPlace}
+          updatingAction={activeDataCorrectionAction}
+          errorMessages={{
+            geocoding: updateErrorMessages.geocoding,
+            coordinates: updateErrorMessages.coordinates,
+            'kakao-place-id': updateErrorMessages['kakao-place-id'],
+          }}
+          onClearError={clearUpdateErrorMessage}
+          onClose={handleCloseDataCorrection}
+          onUpdateKakaoPlaceId={(payload) =>
+            updatePlaceKakaoPlaceId(dataCorrectionPlace.id, payload)
+          }
+          onUpdateCoordinates={handleUpdateCoordinates}
+          onUpdateGeocoding={handleUpdateGeocoding}
         />
       ) : null}
 

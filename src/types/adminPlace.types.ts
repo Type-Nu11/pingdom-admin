@@ -107,6 +107,7 @@ export interface AdminPlaceDetail {
   jibunAddress?: string | null
   postalCode?: string | null
   geocodingSource?: AdminPlaceGeocodingSource
+  kakaoPlaceId?: string | null
   operatingStatus?: AdminPlaceOperatingStatus
   operatingStatusCheckedAt?: string | null
   discoveryStatus?: AdminPlaceDiscoveryStatus
@@ -125,6 +126,50 @@ export interface AdminPlaceDetail {
   postCount: number
   placeGrowth?: PlaceGrowthSnapshot
   posts: AdminPlacePostItem[]
+}
+
+export interface AdminPlaceKakaoPlaceIdUpdateRequest {
+  kakaoPlaceId: string
+}
+
+export interface AdminPlaceKakaoPlaceIdUpdateResponse {
+  placeId: number
+  kakaoPlaceId: string
+  message: string
+}
+
+export interface AdminPlaceCoordinatesUpdateRequest {
+  latitude: number
+  longitude: number
+}
+
+export interface AdminPlaceCoordinatesUpdateResponse {
+  placeId: number
+  latitude: number
+  longitude: number
+  message: string
+}
+
+export interface AdminPlaceGeocodingUpdateRequest {
+  address: string
+  roadAddress?: string
+  jibunAddress?: string
+  postalCode?: string
+  latitude: number
+  longitude: number
+  reason: string
+}
+
+export interface AdminPlaceGeocodingUpdateResponse {
+  placeId: number
+  address: string
+  roadAddress?: string | null
+  jibunAddress?: string | null
+  postalCode?: string | null
+  geocodingSource: AdminPlaceGeocodingSource
+  latitude: number
+  longitude: number
+  message: string
 }
 
 export interface AdminPlaceOperatingStatusUpdateRequest {
@@ -284,5 +329,8 @@ export type AdminPlaceDeleteErrorResponse = AuthErrorResponse<
 >
 
 export type AdminPlaceUpdateErrorResponse = AuthErrorResponse<
-  'INVALID_TOKEN' | 'ACCESS_DENIED' | 'PLACE_NOT_FOUND'
+  | 'INVALID_TOKEN'
+  | 'ACCESS_DENIED'
+  | 'PLACE_NOT_FOUND'
+  | 'PLACE_KAKAO_PLACE_ID_CONFLICT'
 >

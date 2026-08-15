@@ -877,6 +877,10 @@ function MainPage() {
             </div>
 
             <S.HeaderActions>
+              <S.OutlineButton type="button" onClick={() => navigate('/s3-orphans')}>
+                <S.MaterialIcon aria-hidden="true">cloud_off</S.MaterialIcon>
+                S3 고아 객체
+              </S.OutlineButton>
               <S.OutlineButton
                 type="button"
                 onClick={() => navigate('/reports/reported-users')}

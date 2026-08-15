@@ -28,8 +28,9 @@ import UserRolePage from '../../pages/userRole/UserRolePage'
 import MerchantPlaceClaimPage from '../../pages/merchantPlaceClaim/MerchantPlaceClaimPage'
 import S3OrphanPage from '../../pages/s3Orphan/S3OrphanPage'
 import NotificationOperationsPage from '../../pages/notificationOperations/NotificationOperationsPage'
+import MerchantPreparationPage from '../../pages/merchantPreparation/MerchantPreparationPage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
-import { ProtectedRoute } from './ProtectedRoute'
+import { MerchantProtectedRoute, ProtectedRoute } from './ProtectedRoute'
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
@@ -60,6 +61,9 @@ export function Router() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route element={<MerchantProtectedRoute />}>
+          <Route path="/merchant" element={<MerchantPreparationPage />} />
+        </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/main" element={<MainPage />} />

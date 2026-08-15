@@ -5,10 +5,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { adminColors } from '../../styles/theme'
 import { AdminNotificationProvider } from '../providers/AdminNotificationProvider'
 
-export function ProtectedRoute() {
+function RoleProtectedRoute({ expectedRole, withNotifications = false }: { expectedRole: 'ADMIN' | 'MERCHANT_OWNER'; withNotifications?: boolean }) {
   const { clearAuth, isAuthenticated, isAuthReady, user } = useAuth()
   const hasBrokenAuthState = isAuthReady && isAuthenticated && !user
-  const hasNonAdminRole = Boolean(user?.role) && user?.role !== 'ADMIN'
 
   useEffect(() => {
     if (hasBrokenAuthState) {
@@ -30,16 +29,24 @@ export function ProtectedRoute() {
     )
   }
 
-  if (!isAuthenticated || hasNonAdminRole) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 
-  return (
+  if (user?.role !== expectedRole) {
+    const fallback = user?.role === 'ADMIN' ? '/dashboard' : user?.role === 'MERCHANT_OWNER' ? '/merchant' : '/login'
+    return <Navigate to={fallback} replace />
+  }
+
+  return withNotifications ? (
     <AdminNotificationProvider>
       <Outlet />
     </AdminNotificationProvider>
-  )
+  ) : <Outlet />
 }
+
+export function ProtectedRoute() { return <RoleProtectedRoute expectedRole="ADMIN" withNotifications /> }
+export function MerchantProtectedRoute() { return <RoleProtectedRoute expectedRole="MERCHANT_OWNER" /> }
 
 const RouteLoadingPage = styled.main`
   min-height: 100vh;

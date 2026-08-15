@@ -16,6 +16,7 @@ import PlaceDuplicateCandidatePage from '../../pages/placeDuplicateCandidate/Pla
 import PlaceVerificationPage from '../../pages/placeVerification/PlaceVerificationPage'
 import UserBanPage from '../../pages/userBan/UserBanPage'
 import ReportedUsersPage from '../../pages/reportedUsers/ReportedUsersPage'
+import ReportAppealPage from '../../pages/reportAppeal/ReportAppealPage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -63,6 +64,7 @@ export function Router() {
           />
           <Route path="/bans" element={<UserBanPage />} />
           <Route path="/reports/reported-users" element={<ReportedUsersPage />} />
+          <Route path="/reports/appeals" element={<ReportAppealPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

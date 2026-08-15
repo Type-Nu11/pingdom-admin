@@ -23,6 +23,7 @@ import TrustScorePage from '../../pages/trustScore/TrustScorePage'
 import MerchantVerificationPage from '../../pages/merchantVerification/MerchantVerificationPage'
 import VisitorVerificationPage from '../../pages/visitorVerification/VisitorVerificationPage'
 import ScoutPage from '../../pages/scout/ScoutPage'
+import VerifiedBoostProductPage from '../../pages/verifiedBoostProduct/VerifiedBoostProductPage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -77,6 +78,7 @@ export function Router() {
           <Route path="/merchant-verifications" element={<MerchantVerificationPage />} />
           <Route path="/visitor-verifications" element={<VisitorVerificationPage />} />
           <Route path="/scouts" element={<ScoutPage />} />
+          <Route path="/verified-boost-products" element={<VerifiedBoostProductPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

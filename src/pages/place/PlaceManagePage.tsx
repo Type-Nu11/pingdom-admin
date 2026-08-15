@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import {
   PlaceOperationPanel,
   type PlaceOperation,
@@ -651,6 +652,7 @@ function PlaceManagePage() {
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
             <span>사용자 밴</span>
           </S.MenuButton>
+          <AdminNavigationMenu />
         </S.SideMenu>
 
         <S.SideFooter>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -705,6 +706,7 @@ function DashboardPage() {
             <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
             <span>사용자 밴</span>
           </S.MenuButton>
+          <AdminNavigationMenu />
         </S.SideMenu>
 
         <S.SideFooter>

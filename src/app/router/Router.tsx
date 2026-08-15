@@ -19,6 +19,7 @@ import ReportedUsersPage from '../../pages/reportedUsers/ReportedUsersPage'
 import ReportAppealPage from '../../pages/reportAppeal/ReportAppealPage'
 import RecommendationMetricsPage from '../../pages/recommendationMetrics/RecommendationMetricsPage'
 import MerchantOwnerPage from '../../pages/merchantOwner/MerchantOwnerPage'
+import TrustScorePage from '../../pages/trustScore/TrustScorePage'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -69,6 +70,7 @@ export function Router() {
           <Route path="/reports/appeals" element={<ReportAppealPage />} />
           <Route path="/recommendations/metrics" element={<RecommendationMetricsPage />} />
           <Route path="/merchant-owners" element={<MerchantOwnerPage />} />
+          <Route path="/trust-score" element={<TrustScorePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

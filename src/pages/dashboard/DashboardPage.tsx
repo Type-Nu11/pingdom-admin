@@ -736,6 +736,14 @@ function DashboardPage() {
           <S.TopActions>
             <S.IconButton
               type="button"
+              aria-label="Trust Score 운영"
+              title="Trust Score 운영"
+              onClick={() => navigate('/trust-score')}
+            >
+              <S.MaterialIcon aria-hidden="true">verified_user</S.MaterialIcon>
+            </S.IconButton>
+            <S.IconButton
+              type="button"
               aria-label="Merchant Owner 운영"
               title="Merchant Owner 운영"
               onClick={() => navigate('/merchant-owners')}

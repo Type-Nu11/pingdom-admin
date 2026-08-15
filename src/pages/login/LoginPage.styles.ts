@@ -1,8 +1,6 @@
 import styled from 'styled-components'
 import { adminColors, typography } from '../../styles/theme'
 
-type LoginMode = 'admin' | 'merchant'
-
 export const MaterialIcon = styled.span`
   width: 1em;
   height: 1em;
@@ -49,17 +47,15 @@ export const StartShell = styled.div`
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 64px);
-  transform: translateY(24px);
 
   @media (max-width: 640px) {
     min-height: calc(100vh - 48px);
-    transform: none;
   }
 `
 
 export const CenterShell = styled(StartShell)`
   justify-content: center;
-  min-height: calc(100vh - 136px);
+  min-height: calc(100vh - 64px);
 `
 
 export const BrandHeader = styled.header`
@@ -109,142 +105,9 @@ export const Description = styled.p`
   line-height: ${typography.body.regular.lineHeight};
 `
 
-export const RoleGrid = styled.div`
-  width: min(100%, 620px);
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 32px;
-  margin-top: 72px;
-
-  @media (max-width: 620px) {
-    grid-template-columns: 1fr;
-    max-width: 360px;
-    gap: 20px;
-    margin-top: 30px;
-  }
-`
-
-export const RoleCard = styled.button<{ $mode: LoginMode }>`
-  min-width: 0;
-  min-height: 350px;
-  --role-accent: ${({ $mode }) => ($mode === 'admin' ? adminColors.info : adminColors.warning)};
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-  border: 2px solid var(--role-accent);
-  border-radius: 24px;
-  background: ${({ $mode }) => ($mode === 'admin' ? '#EFF8FF' : '#FFFBEA')};
-  background: color-mix(in srgb, var(--role-accent) 8%, ${adminColors.surface});
-  color: ${adminColors.text};
-  text-align: center;
-  cursor: pointer;
-  box-shadow: 0 14px 28px ${adminColors.shadow};
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-
-  &:hover {
-    box-shadow: 0 20px 42px color-mix(in srgb, var(--role-accent) 24%, transparent);
-    transform: translateY(-5px);
-  }
-
-  &:focus-visible {
-    outline: 3px solid ${adminColors.borderDark};
-    outline-offset: 4px;
-  }
-`
-
-export const RoleArtwork = styled.div<{ $mode: LoginMode }>`
-  position: relative;
-  height: 205px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
-  background: transparent;
-  color: ${({ $mode }) => ($mode === 'admin' ? adminColors.info : adminColors.warning)};
-
-  &::before {
-    position: absolute;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: currentColor;
-    content: '';
-    opacity: 0.13;
-  }
-
-  &::after {
-    position: absolute;
-    inset: 18px 24px auto;
-    height: 42px;
-    border-radius: 999px;
-    background: currentColor;
-    content: '';
-    opacity: 0.08;
-    filter: blur(18px);
-  }
-
-  ${MaterialIcon} {
-    position: relative;
-    z-index: 1;
-    width: 100px;
-    height: 100px;
-    border: 8px solid currentColor;
-    border-radius: 32px;
-    background: ${adminColors.surface}b8;
-    font-size: 58px;
-    box-shadow: 0 14px 28px color-mix(in srgb, currentColor 22%, transparent);
-  }
-`
-
-export const ArtworkCircle = styled.span<{ $position: 'top' | 'bottom' }>`
-  position: absolute;
-  width: ${({ $position }) => ($position === 'top' ? '58px' : '34px')};
-  height: ${({ $position }) => ($position === 'top' ? '58px' : '34px')};
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.12;
-  ${({ $position }) =>
-    $position === 'top'
-      ? 'top: -18px; right: 28px;'
-      : 'bottom: 16px; left: 28px;'}
-`
-
-export const RoleCardContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 82px;
-  padding: 18px 20px 8px;
-`
-
-export const RoleTitle = styled.strong`
-  color: ${adminColors.strongText};
-  font-size: ${typography.headline1.bold.fontSize}px;
-  font-weight: ${typography.headline1.bold.fontWeight};
-  letter-spacing: -0.05em;
-  line-height: ${typography.headline1.bold.lineHeight};
-`
-
-export const RoleCta = styled.span<{ $mode: LoginMode }>`
-  margin-top: auto;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: ${({ $mode }) => ($mode === 'admin' ? adminColors.info : adminColors.warning)};
-  color: ${({ $mode }) => ($mode === 'admin' ? adminColors.primaryText : adminColors.strongText)};
-  font-size: ${typography.label.bold.fontSize}px;
-  font-weight: ${typography.label.bold.fontWeight};
-  line-height: ${typography.label.bold.lineHeight};
-`
-
 export const LoginPanel = styled.div`
   width: min(100%, 450px);
-  margin-top: 42px;
+  margin-top: 34px;
   padding: 26px;
   border: 1px solid ${adminColors.border};
   border-radius: 22px;
@@ -429,39 +292,6 @@ export const FooterText = styled.p`
   font-weight: ${typography.label.regular.fontWeight};
   line-height: ${typography.label.regular.lineHeight};
   text-align: center;
-`
-
-export const BackButton = styled.button`
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 18px;
-  padding: 0 16px;
-  border: 1px solid ${adminColors.border};
-  border-radius: 999px;
-  background: ${adminColors.surface};
-  color: ${adminColors.muted};
-  font-size: ${typography.label.medium.fontSize}px;
-  font-weight: ${typography.label.medium.fontWeight};
-  line-height: ${typography.label.medium.lineHeight};
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    color 160ms ease,
-    border-color 160ms ease;
-
-  &:hover {
-    border-color: ${adminColors.borderDark};
-    background: ${adminColors.surfaceContainer};
-    color: ${adminColors.text};
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${adminColors.primary};
-    outline-offset: 3px;
-  }
 `
 
 export const FooterLink = styled.a`

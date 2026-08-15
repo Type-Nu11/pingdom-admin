@@ -829,6 +829,10 @@ function UserBanPage() {
                   밴 사용자를 조회하고 제재 처리 및 해제를 관리합니다.
                 </U.IntroDescription>
               </U.IntroText>
+              <U.SecondaryButton type="button" onClick={() => navigate('/users/roles')}>
+                <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>
+                관리자 역할 관리
+              </U.SecondaryButton>
             </U.IntroBand>
 
             <U.SummaryBar aria-label={summaryScopeLabel}>

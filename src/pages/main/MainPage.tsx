@@ -5,6 +5,7 @@ import SortDropdown from '../../components/common/SortDropdown'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
+import { normalizeAdminPostQuery, parseAdminPostQuery, serializeAdminPostQuery } from '../../utils/adminPostQuery'
 import type {
   AdminPost,
   AdminPostListRequest,
@@ -302,6 +303,8 @@ function MainPage() {
   const latestReviewFilterRef = useRef<AdminPostReviewStatus>('ALL')
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const [initialQuery] = useState(() => parseAdminPostQuery(new URLSearchParams(location.search)))
+  const initialQueryRef = useRef(initialQuery)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
@@ -315,12 +318,10 @@ function MainPage() {
   const [deleteConfirmationId, setDeleteConfirmationId] = useState('')
   const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
     useState(false)
-  const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
-    DEFAULT_ADMIN_POST_SORT_PARAM
-  )
+  const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(initialQuery.sortParam)
   const [selectedReviewFilter, setSelectedReviewFilter] =
-    useState<AdminPostReviewStatus>('ALL')
-  const [postSearchQuery, setPostSearchQuery] = useState('')
+    useState<AdminPostReviewStatus>(initialQuery.reviewStatus ?? 'ALL')
+  const [postSearchQuery, setPostSearchQuery] = useState(initialQuery.keyword)
   const {
     posts,
     page,
@@ -352,6 +353,12 @@ function MainPage() {
     (request: AdminPostListRequest = {}) => fetchAdminPosts(request),
     [fetchAdminPosts]
   )
+  const syncPostQuery = useCallback((request: AdminPostListRequest) => {
+    const query = normalizeAdminPostQuery(request, initialQueryRef.current)
+    initialQueryRef.current = query
+    const search = serializeAdminPostQuery(query).toString()
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true })
+  }, [location.pathname, navigate])
   const activePost = postDetail ?? selectedPost
   const activePostId = selectedPostId
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
@@ -474,6 +481,7 @@ function MainPage() {
 
     clearPendingPostSearch()
     setSelectedReviewFilter(nextFilter)
+    syncPostQuery({ page: 1, sortParam: selectedSortParam, keyword: postKeyword, reviewStatus: nextFilter })
 
     void fetchReviewPosts(
       {
@@ -497,6 +505,7 @@ function MainPage() {
     clearPendingPostSearch()
     shouldSkipNextSearchEffectRef.current = true
     setPostSearchQuery('')
+    syncPostQuery({ page: 1, sortParam: selectedSortParam, keyword: '', reviewStatus: selectedReviewFilter })
 
     void fetchReviewPosts(
       {
@@ -520,6 +529,7 @@ function MainPage() {
     }
 
     clearPendingPostSearch()
+    syncPostQuery({ page: nextPageNumber, sortParam: selectedSortParam, keyword: postKeyword, reviewStatus: selectedReviewFilter })
 
     void fetchReviewPosts(
       {
@@ -646,9 +656,7 @@ function MainPage() {
   }, [selectedReviewFilter])
 
   useEffect(() => {
-    void fetchReviewPosts({
-      reviewStatus: 'ALL',
-    })
+    void fetchReviewPosts(initialQueryRef.current)
   }, [fetchReviewPosts])
 
   useEffect(() => {
@@ -684,7 +692,7 @@ function MainPage() {
         if (typeof openPostId === 'number' && Number.isFinite(openPostId)) {
           handleOpenPostDetailById(openPostId, reportId)
         }
-        navigate(location.pathname, { replace: true, state: null })
+        navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
       }, 0)
 
       return () => {
@@ -698,7 +706,7 @@ function MainPage() {
 
     const openDetailTimer = window.setTimeout(() => {
       handleOpenPostDetailById(openPostId, reportId)
-      navigate(location.pathname, { replace: true, state: null })
+      navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
     }, 0)
 
     return () => {
@@ -710,6 +718,7 @@ function MainPage() {
     fetchReviewPosts,
     handleOpenPostDetailById,
     location.pathname,
+    location.search,
     location.state,
     navigate,
   ])
@@ -729,7 +738,8 @@ function MainPage() {
         reviewStatus: latestReviewFilterRef.current,
       }
     )
-  }, [fetchReviewPosts, selectedSortParam])
+    syncPostQuery({ page: 1, sortParam: selectedSortParam, keyword: latestPostKeywordRef.current, reviewStatus: latestReviewFilterRef.current })
+  }, [fetchReviewPosts, selectedSortParam, syncPostQuery])
 
   useEffect(() => {
     if (!isSearchEffectReadyRef.current) {
@@ -758,6 +768,7 @@ function MainPage() {
         }
       ).then((data) => {
         if (data) {
+          syncPostQuery({ page: 1, sortParam: latestSortParamRef.current, keyword: nextKeyword, reviewStatus: latestReviewFilterRef.current })
           scrollPageContentToTop()
         }
       })
@@ -769,6 +780,7 @@ function MainPage() {
     fetchReviewPosts,
     postSearchQuery,
     scrollPageContentToTop,
+    syncPostQuery,
   ])
 
   useEffect(() => {

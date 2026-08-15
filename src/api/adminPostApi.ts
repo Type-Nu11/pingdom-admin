@@ -5,6 +5,7 @@ import type {
   AdminPostListResponse,
   AdminPostReportBulkActionResponse,
 } from '../types/adminPost.types'
+import { normalizeAdminPostQuery } from '../utils/adminPostQuery'
 
 const ADMIN_POSTS_API_PATH = '/admin/posts'
 const DEFAULT_ADMIN_POST_PAGE = 1
@@ -12,14 +13,8 @@ const DEFAULT_ADMIN_POST_LIMIT = 20
 const DEFAULT_ADMIN_POST_SORT_PARAM = 'LATEST'
 const DEFAULT_ADMIN_POST_KEYWORD = ''
 
-export async function getAdminPosts({
-  page = DEFAULT_ADMIN_POST_PAGE,
-  limit = DEFAULT_ADMIN_POST_LIMIT,
-  sortParam = DEFAULT_ADMIN_POST_SORT_PARAM,
-  keyword = DEFAULT_ADMIN_POST_KEYWORD,
-  reviewStatus,
-  reportStatus,
-}: AdminPostListRequest = {}) {
+export async function getAdminPosts(request: AdminPostListRequest = {}) {
+  const { page, limit, sortParam, keyword, reviewStatus, reportStatus } = normalizeAdminPostQuery({ page: DEFAULT_ADMIN_POST_PAGE, limit: DEFAULT_ADMIN_POST_LIMIT, sortParam: DEFAULT_ADMIN_POST_SORT_PARAM, keyword: DEFAULT_ADMIN_POST_KEYWORD, ...request })
   const { data } = await customAxios.get<AdminPostListResponse>(
     ADMIN_POSTS_API_PATH,
     {
@@ -29,7 +24,7 @@ export async function getAdminPosts({
         sortParam,
         keyword,
         reviewStatus,
-        reportStatus: reviewStatus ? undefined : reportStatus,
+        reportStatus,
       },
     }
   )

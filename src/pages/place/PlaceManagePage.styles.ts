@@ -3176,6 +3176,21 @@ export const DeleteConfirmWarning = styled.p`
   word-break: keep-all;
 `
 
+export const DeleteConfirmInput = styled.input`
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.surface};
+  color: ${neutral.strongText};
+  font: inherit;
+  text-align: center;
+
+  &:focus { outline: 3px solid ${neutral.errorTint}; }
+  &:disabled { opacity: 0.6; }
+`
+
 export const DeleteConfirmNotice = styled.p`
   margin: 12px 0 0;
   padding: 12px;

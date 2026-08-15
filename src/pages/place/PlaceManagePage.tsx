@@ -703,6 +703,14 @@ function PlaceManagePage() {
               <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
               중복 후보 검토
             </S.TopActionButton>
+            <S.TopActionButton
+              type="button"
+              disabled={!placeDetail || isDetailLoading || isDeletingSelectedPlace}
+              onClick={handleOpenDeleteConfirm}
+            >
+              <S.MaterialIcon aria-hidden="true">warning</S.MaterialIcon>
+              삭제 Danger Zone
+            </S.TopActionButton>
             <AdminNotificationButton />
             <S.IconButton type="button" aria-label="도움말">
               <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
@@ -759,7 +767,6 @@ function PlaceManagePage() {
                 isLoading={isDetailLoading}
                 errorMessage={detailErrorMessage}
                 updatingPlaceIds={updatingPlaceIds}
-                deletingPlaceId={deletingPlaceId}
                 onClose={handleClosePlaceDetail}
                 onRetry={(placeId) => void fetchAdminPlaceDetail(placeId)}
                 onFocusMap={focusPlaceOnVisibleMap}
@@ -769,7 +776,6 @@ function PlaceManagePage() {
                 onOpenDataCorrection={handleOpenDataCorrection}
                 onOpenPost={handleOpenPostDetail}
                 onOpenPlacePosts={handleOpenPlacePosts}
-                onOpenDelete={handleOpenDeleteConfirm}
               />
             }
           />

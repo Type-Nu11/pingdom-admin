@@ -42,7 +42,6 @@ interface PlaceInspectorProps {
     PlaceOperation | PlaceDataCorrectionAction | 'tourist-info',
     number | null
   >
-  deletingPlaceId: number | null
   onClose: () => void
   onRetry: (placeId: number) => void
   onFocusMap: (place: AdminPlaceItem) => void
@@ -52,7 +51,6 @@ interface PlaceInspectorProps {
   onOpenDataCorrection: () => void
   onOpenPost: (postId: number) => void
   onOpenPlacePosts: (placeName: string) => void
-  onOpenDelete: () => void
 }
 
 function hasValidCoordinate(place: AdminPlaceItem) {
@@ -125,7 +123,6 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
       isLoading,
       errorMessage,
       updatingPlaceIds,
-      deletingPlaceId,
       onClose,
       onRetry,
       onFocusMap,
@@ -135,15 +132,12 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
       onOpenDataCorrection,
       onOpenPost,
       onOpenPlacePosts,
-      onOpenDelete,
     },
     ref
   ) {
     const growthProgress = placeDetail ? getGrowthProgress(placeDetail) : null
     const growthProgressLabel = growthProgress === null ? '-' : `${growthProgress}%`
     const previewPosts = placeDetail?.posts.slice(0, POST_PREVIEW_LIMIT) ?? []
-    const isDeletingSelected =
-      selectedPlace !== null && deletingPlaceId === selectedPlace.id
 
     return (
       <S.PlaceDetailPanel ref={ref} $open={selectedPlace !== null}>
@@ -483,14 +477,6 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                 <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
                 <span>위치 보기</span>
               </S.DetailActionButton>
-              <S.DetailDeleteButton
-                type="button"
-                disabled={!placeDetail || isLoading || isDeletingSelected}
-                onClick={onOpenDelete}
-              >
-                <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
-                <span>{isDeletingSelected ? '삭제 중' : '장소 삭제'}</span>
-              </S.DetailDeleteButton>
             </S.DetailFooter>
           </>
         ) : null}

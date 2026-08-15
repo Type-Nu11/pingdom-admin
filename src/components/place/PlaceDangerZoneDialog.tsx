@@ -20,6 +20,7 @@ export function PlaceDangerZoneDialog({
   onDeleted,
 }: PlaceDangerZoneDialogProps) {
   const [hasAttempted, setHasAttempted] = useState(false)
+  const [confirmationId, setConfirmationId] = useState('')
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null)
   const isDeleting = deletingPlaceId !== null
 
@@ -52,7 +53,7 @@ export function PlaceDangerZoneDialog({
   }
 
   const handleDelete = async () => {
-    if (isDeleting) {
+    if (isDeleting || confirmationId !== String(place.id)) {
       return
     }
 
@@ -88,6 +89,17 @@ export function PlaceDangerZoneDialog({
             ? `연결된 게시글 ${place.postCount.toLocaleString()}개도 함께 삭제됩니다. 삭제 전에 연결 게시글을 확인해 주세요.`
             : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
         </S.DeleteConfirmWarning>
+        <S.DeleteConfirmDescription>
+          연결된 이벤트·체크인·Scout 현장 제보가 있으면 서버가 삭제를 차단합니다.
+        </S.DeleteConfirmDescription>
+        <S.DeleteConfirmInput
+          value={confirmationId}
+          inputMode="numeric"
+          placeholder={`장소 ID ${place.id} 입력`}
+          aria-label="삭제할 장소 ID 확인"
+          disabled={isDeleting}
+          onChange={(event) => setConfirmationId(event.target.value.trim())}
+        />
 
         {hasAttempted && errorMessage ? (
           <S.DeleteConfirmNotice role="alert">{errorMessage}</S.DeleteConfirmNotice>
@@ -97,7 +109,7 @@ export function PlaceDangerZoneDialog({
           <S.SecondaryButton
             ref={cancelButtonRef}
             type="button"
-            disabled={isDeleting}
+            disabled={isDeleting || confirmationId !== String(place.id)}
             onClick={handleClose}
           >
             취소

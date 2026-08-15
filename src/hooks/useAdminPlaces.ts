@@ -64,6 +64,20 @@ type PlaceUpdateAction =
   | 'operating-schedule'
   | 'discovery-status'
 
+type PlaceUpdateState<T> = Record<PlaceUpdateAction, T>
+
+const EMPTY_PLACE_UPDATE_IDS: PlaceUpdateState<number | null> = {
+  'operating-status': null,
+  'operating-schedule': null,
+  'discovery-status': null,
+}
+
+const EMPTY_PLACE_UPDATE_ERRORS: PlaceUpdateState<string> = {
+  'operating-status': '',
+  'operating-schedule': '',
+  'discovery-status': '',
+}
+
 type LatestAdminPlaceListRequest = {
   page: number
   limit: number
@@ -121,19 +135,22 @@ export function useAdminPlaces({
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [actionErrorMessage, setActionErrorMessage] = useState('')
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('')
+  const [updateErrorMessages, setUpdateErrorMessages] =
+    useState<PlaceUpdateState<string>>(EMPTY_PLACE_UPDATE_ERRORS)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   const [placeDetail, setPlaceDetail] = useState<AdminPlaceDetail | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [deletingPlaceId, setDeletingPlaceId] = useState<number | null>(null)
-  const [updatingPlaceId, setUpdatingPlaceId] = useState<number | null>(null)
-  const [updatingPlaceAction, setUpdatingPlaceAction] =
-    useState<PlaceUpdateAction | null>(null)
+  const [updatingPlaceIds, setUpdatingPlaceIds] =
+    useState<PlaceUpdateState<number | null>>(EMPTY_PLACE_UPDATE_IDS)
   const latestRequestIdRef = useRef(0)
   const latestDetailRequestIdRef = useRef(0)
   const deletingPlaceIdRef = useRef<number | null>(null)
-  const updatingPlaceActionRef = useRef<PlaceUpdateAction | null>(null)
+  const updatingPlaceIdsRef = useRef<PlaceUpdateState<number | null>>({
+    ...EMPTY_PLACE_UPDATE_IDS,
+  })
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
@@ -158,8 +175,8 @@ export function useAdminPlaces({
     setActionSuccessMessage('')
   }, [clearActionSuccessTimeout])
 
-  const clearActionErrorMessage = useCallback(() => {
-    setActionErrorMessage('')
+  const clearUpdateErrorMessage = useCallback((action: PlaceUpdateAction) => {
+    setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
   }, [])
 
   const showActionSuccessMessage = useCallback(
@@ -181,7 +198,6 @@ export function useAdminPlaces({
 
     setIsError(false)
     setErrorMessage('')
-    setActionErrorMessage('')
     clearActionSuccessMessage()
 
     const nextRequest = {
@@ -250,7 +266,6 @@ export function useAdminPlaces({
       setIsDetailLoading(true)
       setPlaceDetail(null)
       setDetailErrorMessage('')
-      setActionErrorMessage('')
 
       try {
         const data = await getAdminPlace(placeId, request)
@@ -289,7 +304,7 @@ export function useAdminPlaces({
       }
 
       deletingPlaceIdRef.current = placeId
-      setActionErrorMessage('')
+      setDeleteErrorMessage('')
       clearActionSuccessMessage()
 
       try {
@@ -308,7 +323,7 @@ export function useAdminPlaces({
         const isRefreshSuccess = await fetchAdminPlaces({ page: targetPage })
 
         if (!isRefreshSuccess) {
-          setActionErrorMessage('장소는 삭제됐지만 목록을 다시 불러오지 못했습니다.')
+          setDeleteErrorMessage('장소는 삭제됐지만 목록을 다시 불러오지 못했습니다.')
         }
 
         showActionSuccessMessage(`장소 #${placeId}을 삭제했습니다.`)
@@ -316,7 +331,7 @@ export function useAdminPlaces({
         return true
       } catch (error) {
         clearActionSuccessMessage()
-        setActionErrorMessage(getAdminPlaceErrorMessage(error))
+        setDeleteErrorMessage(getAdminPlaceErrorMessage(error))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -344,14 +359,14 @@ export function useAdminPlaces({
 
   const updatePlaceOperatingStatus = useCallback(
     async (placeId: number, payload: AdminPlaceOperatingStatusUpdateRequest) => {
-      if (updatingPlaceActionRef.current !== null) {
+      const action: PlaceUpdateAction = 'operating-status'
+      if (updatingPlaceIdsRef.current[action] !== null) {
         return false
       }
 
-      updatingPlaceActionRef.current = 'operating-status'
-      setUpdatingPlaceId(placeId)
-      setUpdatingPlaceAction('operating-status')
-      setActionErrorMessage('')
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
       clearActionSuccessMessage()
 
       try {
@@ -381,9 +396,13 @@ export function useAdminPlaces({
 
         return true
       } catch (error) {
-        setActionErrorMessage(
-          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
-        )
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -393,9 +412,8 @@ export function useAdminPlaces({
 
         return false
       } finally {
-        updatingPlaceActionRef.current = null
-        setUpdatingPlaceId(null)
-        setUpdatingPlaceAction(null)
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
       }
     },
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
@@ -403,14 +421,14 @@ export function useAdminPlaces({
 
   const updatePlaceOperatingSchedule = useCallback(
     async (placeId: number, payload: AdminPlaceOperatingScheduleUpdateRequest) => {
-      if (updatingPlaceActionRef.current !== null) {
+      const action: PlaceUpdateAction = 'operating-schedule'
+      if (updatingPlaceIdsRef.current[action] !== null) {
         return false
       }
 
-      updatingPlaceActionRef.current = 'operating-schedule'
-      setUpdatingPlaceId(placeId)
-      setUpdatingPlaceAction('operating-schedule')
-      setActionErrorMessage('')
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
       clearActionSuccessMessage()
 
       try {
@@ -429,9 +447,13 @@ export function useAdminPlaces({
 
         return true
       } catch (error) {
-        setActionErrorMessage(
-          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
-        )
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -441,9 +463,8 @@ export function useAdminPlaces({
 
         return false
       } finally {
-        updatingPlaceActionRef.current = null
-        setUpdatingPlaceId(null)
-        setUpdatingPlaceAction(null)
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
       }
     },
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
@@ -451,14 +472,14 @@ export function useAdminPlaces({
 
   const updatePlaceDiscoveryStatus = useCallback(
     async (placeId: number, payload: AdminPlaceDiscoveryStatusUpdateRequest) => {
-      if (updatingPlaceActionRef.current !== null) {
+      const action: PlaceUpdateAction = 'discovery-status'
+      if (updatingPlaceIdsRef.current[action] !== null) {
         return false
       }
 
-      updatingPlaceActionRef.current = 'discovery-status'
-      setUpdatingPlaceId(placeId)
-      setUpdatingPlaceAction('discovery-status')
-      setActionErrorMessage('')
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
       clearActionSuccessMessage()
 
       try {
@@ -486,9 +507,13 @@ export function useAdminPlaces({
 
         return true
       } catch (error) {
-        setActionErrorMessage(
-          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
-        )
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -498,9 +523,8 @@ export function useAdminPlaces({
 
         return false
       } finally {
-        updatingPlaceActionRef.current = null
-        setUpdatingPlaceId(null)
-        setUpdatingPlaceAction(null)
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
       }
     },
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
@@ -525,18 +549,18 @@ export function useAdminPlaces({
     isLoading,
     isError,
     errorMessage,
-    actionErrorMessage,
+    deleteErrorMessage,
+    updateErrorMessages,
     actionSuccessMessage,
     placeDetail,
     isDetailLoading,
     detailErrorMessage,
     deletingPlaceId,
-    updatingPlaceId,
-    updatingPlaceAction,
+    updatingPlaceIds,
     fetchAdminPlaces,
     fetchAdminPlaceDetail,
     clearPlaceDetail,
-    clearActionErrorMessage,
+    clearUpdateErrorMessage,
     deletePlace,
     updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,

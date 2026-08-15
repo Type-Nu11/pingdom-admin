@@ -736,6 +736,14 @@ function DashboardPage() {
           <S.TopActions>
             <S.IconButton
               type="button"
+              aria-label="관리자 운영 이력"
+              title="관리자 운영 이력"
+              onClick={() => navigate('/operations/history')}
+            >
+              <S.MaterialIcon aria-hidden="true">history</S.MaterialIcon>
+            </S.IconButton>
+            <S.IconButton
+              type="button"
               aria-label="Trust Score 운영"
               title="Trust Score 운영"
               onClick={() => navigate('/trust-score')}

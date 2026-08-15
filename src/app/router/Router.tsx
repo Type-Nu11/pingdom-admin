@@ -48,6 +48,9 @@ const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
 const NotificationOperationsPage = lazy(
   () => import('../../pages/notificationOperations/NotificationOperationsPage'),
 )
+const OperationHistoryPage = lazy(
+  () => import('../../pages/operationHistory/OperationHistoryPage'),
+)
 const MerchantPreparationPage = lazy(
   () => import('../../pages/merchantPreparation/MerchantPreparationPage'),
 )
@@ -130,6 +133,7 @@ export function Router() {
               path="/operations/notifications"
               element={<NotificationOperationsPage />}
             />
+            <Route path="/operations/history" element={<OperationHistoryPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

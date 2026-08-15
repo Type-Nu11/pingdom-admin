@@ -35,9 +35,9 @@
 
 | 상태 | 개수 | 범위 |
 | --- | ---: | --- |
-| `implemented` | 122 | 실제 관리자 route/API/hook/page 연결 |
+| `implemented` | 124 | 실제 관리자 route/API/hook/page 연결 |
 | `partial` | 3 | `/admin/place-registration-applications/**` legacy 후보 |
-| `missing` | 2 | 감사 로그, 개인정보 처리 이력 (#32) |
+| `missing` | 0 | 현재 없음 |
 | `blocked` | 6 | 광고 2개 (#34), 기간형 이벤트 4개 (#44) |
 
 `/admin/ad`와 `/admin/place-events`는 생성·수정·취소 API만으로 운영 화면을 만들지 않습니다. 목록·상세 GET 계약과 상태 조회 기준이 백엔드에 추가될 때까지 blocked 상태를 유지합니다.

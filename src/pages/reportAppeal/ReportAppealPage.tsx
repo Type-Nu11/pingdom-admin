@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminReportAppeals } from '../../hooks/useAdminReportAppeals'
@@ -102,17 +103,19 @@ function ReportAppealPage() {
             </Shared.PageHeader>
             {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
             {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}
-            <Shared.Panel>
-              <Shared.PanelHeader>
-                <div><Shared.PanelTitle>처리 상태</Shared.PanelTitle><Shared.PanelDescription>상태별 이의제기를 조회합니다.</Shared.PanelDescription></div>
-                <Form.Select aria-label="이의제기 상태" value={status} disabled={isLoading || processingAppealId !== null} onChange={(event) => changeStatus(event.target.value as AdminReportAppealStatus | '')}>
-                  <option value="">전체 상태</option>
-                  <option value="SUBMITTED">검토 대기</option>
-                  <option value="APPROVED">승인</option>
-                  <option value="REJECTED">반려</option>
-                </Form.Select>
-              </Shared.PanelHeader>
-            </Shared.Panel>
+            <AdminStatusFilter
+              label="처리 상태"
+              description="상태별 이의제기를 조회합니다."
+              aria-label="이의제기 상태"
+              value={status}
+              disabled={isLoading || processingAppealId !== null}
+              onChange={(event) => changeStatus(event.target.value as AdminReportAppealStatus | '')}
+            >
+              <option value="">전체 상태</option>
+              <option value="SUBMITTED">검토 대기</option>
+              <option value="APPROVED">승인</option>
+              <option value="REJECTED">반려</option>
+            </AdminStatusFilter>
             {errorMessage ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}
             <Shared.Workspace>
               <Shared.Panel>

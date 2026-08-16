@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAdminPlace } from '../../api/adminPlaceApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import {
@@ -359,30 +360,24 @@ function PlaceDuplicateCandidatePage() {
             {actionErrorMessage ? <S.Notice $variant="error">{actionErrorMessage}</S.Notice> : null}
             {actionSuccessMessage ? <S.Notice $variant="success">{actionSuccessMessage}</S.Notice> : null}
 
-            <S.Panel>
-              <S.PanelHeader>
-                <div>
-                  <S.PanelTitle>검토 상태</S.PanelTitle>
-                  <S.PanelDescription>상태별 후보를 조회합니다.</S.PanelDescription>
-                </div>
-                <Shell.OperatingSelect
-                  aria-label="중복 후보 상태"
-                  value={status}
-                  disabled={isLoading || activeAction !== null}
-                  onChange={(event) =>
-                    handleStatusChange(
-                      event.target.value as AdminPlaceDuplicateCandidateStatus
-                    )
-                  }
-                >
-                  {STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Shell.OperatingSelect>
-              </S.PanelHeader>
-            </S.Panel>
+            <AdminStatusFilter
+              label="검토 상태"
+              description="상태별 후보를 조회합니다."
+              aria-label="중복 후보 상태"
+              value={status}
+              disabled={isLoading || activeAction !== null}
+              onChange={(event) =>
+                handleStatusChange(
+                  event.target.value as AdminPlaceDuplicateCandidateStatus
+                )
+              }
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </AdminStatusFilter>
 
             {errorMessage ? <S.Notice $variant="error">{errorMessage}</S.Notice> : null}
             {isLoading && candidates.length === 0 ? (

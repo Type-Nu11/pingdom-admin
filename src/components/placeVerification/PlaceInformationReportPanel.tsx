@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AdminStatusFilter } from '../common/AdminStatusFilter'
 import type { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
 import type {
   PlaceInformationDispute,
@@ -108,24 +109,18 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
       {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
       {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}
 
-      <Shared.Panel>
-        <Shared.PanelHeader>
-          <div>
-            <Shared.PanelTitle>신고 상태</Shared.PanelTitle>
-            <Shared.PanelDescription>상태를 선택하면 첫 페이지부터 다시 조회합니다.</Shared.PanelDescription>
-          </div>
-          <S.Select
-            aria-label="장소 정보 신고 상태"
-            value={status}
-            disabled={isLoading || activeAction !== null}
-            onChange={(event) => handleStatusChange(event.target.value as PlaceInformationReportStatus | '')}
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value || 'ALL'} value={option.value}>{option.label}</option>
-            ))}
-          </S.Select>
-        </Shared.PanelHeader>
-      </Shared.Panel>
+      <AdminStatusFilter
+        label="신고 상태"
+        description="상태를 선택하면 첫 페이지부터 다시 조회합니다."
+        aria-label="장소 정보 신고 상태"
+        value={status}
+        disabled={isLoading || activeAction !== null}
+        onChange={(event) => handleStatusChange(event.target.value as PlaceInformationReportStatus | '')}
+      >
+        {STATUS_OPTIONS.map((option) => (
+          <option key={option.value || 'ALL'} value={option.value}>{option.label}</option>
+        ))}
+      </AdminStatusFilter>
 
       {errorMessage ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}
       <Shared.Workspace>

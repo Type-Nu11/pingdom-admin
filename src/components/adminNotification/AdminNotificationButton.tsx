@@ -118,10 +118,15 @@ export function AdminNotificationButton() {
   const {
     notifications,
     unreadCount,
+    pendingWorkItems,
+    pendingWorkCount,
+    pendingWorkStatus,
+    pendingWorkErrorMessage,
     status,
     errorMessage,
     isActionLoading,
     fetchNotifications,
+    refreshPendingWork,
     markAsRead,
     markAllAsRead,
   } = useAdminNotifications()
@@ -134,7 +139,11 @@ export function AdminNotificationButton() {
     if (notifications === null && status === 'idle') {
       void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })
     }
-  }, [fetchNotifications, isOpen, notifications, status])
+
+    if (pendingWorkStatus === 'idle') {
+      void refreshPendingWork()
+    }
+  }, [fetchNotifications, isOpen, notifications, pendingWorkStatus, refreshPendingWork, status])
 
   useEffect(() => {
     if (!isOpen) {
@@ -174,20 +183,29 @@ export function AdminNotificationButton() {
     }
   }
 
-  const visibleUnreadCount = unreadCount === null ? null : unreadCount > 99 ? '99+' : unreadCount
+  const attentionCount = unreadCount === null && pendingWorkCount === null
+    ? null
+    : (unreadCount ?? 0) + (pendingWorkCount ?? 0)
+  const visibleAttentionCount = attentionCount === null
+    ? null
+    : attentionCount > 99 ? '99+' : attentionCount
 
   return (
     <NotificationRoot ref={rootRef}>
       <NotificationTrigger
         type="button"
-        aria-label={visibleUnreadCount ? `알림 ${visibleUnreadCount}건` : '알림'}
+        aria-label={visibleAttentionCount ? `확인 필요 ${visibleAttentionCount}건` : '알림'}
         title="알림"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => setIsOpen((current) => {
+          const next = !current
+          if (next) void refreshPendingWork()
+          return next
+        })}
       >
         <MaterialIcon aria-hidden="true">notifications</MaterialIcon>
-        {visibleUnreadCount ? <UnreadCount>{visibleUnreadCount}</UnreadCount> : null}
+        {visibleAttentionCount ? <UnreadCount>{visibleAttentionCount}</UnreadCount> : null}
       </NotificationTrigger>
 
       {isOpen ? (
@@ -195,7 +213,7 @@ export function AdminNotificationButton() {
           <NotificationPanelHeader>
             <NotificationPanelHeading>
               <strong>알림</strong>
-              {unreadCount ? <NotificationPanelCount>{unreadCount}건 미확인</NotificationPanelCount> : null}
+              {attentionCount ? <NotificationPanelCount>{attentionCount}건 확인 필요</NotificationPanelCount> : null}
             </NotificationPanelHeading>
             <NotificationPanelActions>
               <MarkAllButton type="button" onClick={() => { navigate('/operations/notifications'); setIsOpen(false) }}>
@@ -219,62 +237,117 @@ export function AdminNotificationButton() {
             </NotificationPanelActions>
           </NotificationPanelHeader>
 
-          {status === 'loading' && !notifications ? (
-            <NotificationSkeletonList aria-label="알림 불러오는 중">
-              {[1, 2, 3].map((item) => <NotificationSkeleton key={item} />)}
-            </NotificationSkeletonList>
-          ) : status === 'error' && !notifications ? (
-            <NotificationState role="alert">
-              <MaterialIcon aria-hidden="true">error_outline</MaterialIcon>
-              <span>{errorMessage}</span>
-              <RetryButton
-                type="button"
-                onClick={() => void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })}
-              >
-                다시 시도
-              </RetryButton>
-            </NotificationState>
-          ) : notifications && notifications.length > 0 ? (
-            <NotificationList>
-              {status === 'error' ? (
-                <InlineError role="alert">
-                  <span>{errorMessage}</span>
-                  <RetryButton
+          <NotificationContent>
+            {pendingWorkStatus === 'loading' && pendingWorkItems === null ? (
+              <PendingWorkSection aria-label="처리 필요 업무 불러오는 중">
+                <NotificationSectionHeader><strong>처리 필요</strong></NotificationSectionHeader>
+                <PendingWorkLoading>업무 현황을 확인하고 있습니다.</PendingWorkLoading>
+              </PendingWorkSection>
+            ) : pendingWorkItems && pendingWorkItems.length > 0 ? (
+              <PendingWorkSection>
+                <NotificationSectionHeader>
+                  <strong>처리 필요</strong>
+                  <span>{pendingWorkCount?.toLocaleString()}건</span>
+                </NotificationSectionHeader>
+                {pendingWorkErrorMessage ? (
+                  <InlineError role="alert">
+                    <span>{pendingWorkErrorMessage}</span>
+                    <RetryButton type="button" onClick={() => void refreshPendingWork()}>
+                      다시 확인
+                    </RetryButton>
+                  </InlineError>
+                ) : null}
+                {pendingWorkItems.map((pendingWork) => (
+                  <PendingWorkButton
+                    key={pendingWork.key}
                     type="button"
-                    onClick={() => void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })}
+                    onClick={() => {
+                      navigate(
+                        pendingWork.path,
+                        pendingWork.state ? { state: pendingWork.state } : undefined,
+                      )
+                      setIsOpen(false)
+                    }}
                   >
-                    다시 시도
+                    <PendingWorkText>
+                      <strong>{pendingWork.title}</strong>
+                      <span>{pendingWork.description}</span>
+                    </PendingWorkText>
+                    <PendingWorkCount>{pendingWork.count.toLocaleString()}</PendingWorkCount>
+                    <MaterialIcon aria-hidden="true">chevron_right</MaterialIcon>
+                  </PendingWorkButton>
+                ))}
+              </PendingWorkSection>
+            ) : pendingWorkStatus === 'error' ? (
+              <PendingWorkSection>
+                <NotificationSectionHeader><strong>처리 필요</strong></NotificationSectionHeader>
+                <InlineError role="alert">
+                  <span>{pendingWorkErrorMessage}</span>
+                  <RetryButton type="button" onClick={() => void refreshPendingWork()}>
+                    다시 확인
                   </RetryButton>
                 </InlineError>
-              ) : null}
-              {notifications.map((notification) => (
-                <NotificationRow
-                  key={notification.notificationId}
-                  notification={notification}
-                  disabled={isActionLoading}
-                  onClick={() => void handleNotificationClick(notification)}
-                />
-              ))}
-              {status === 'loading' ? <UpdatingText>알림 업데이트 중</UpdatingText> : null}
-            </NotificationList>
-          ) : status === 'error' ? (
-            <NotificationState role="alert">
-              <MaterialIcon aria-hidden="true">error_outline</MaterialIcon>
-              <span>{errorMessage}</span>
-              <RetryButton
-                type="button"
-                onClick={() => void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })}
-              >
-                다시 시도
-              </RetryButton>
-            </NotificationState>
-          ) : (
-            <NotificationState>
-              <MaterialIcon aria-hidden="true">notifications_none</MaterialIcon>
-              <strong>새로운 알림이 없습니다.</strong>
-              <span>새로운 운영 이벤트가 생기면 이곳에 표시됩니다.</span>
-            </NotificationState>
-          )}
+              </PendingWorkSection>
+            ) : null}
+
+            <NotificationSectionHeader><strong>새 알림</strong></NotificationSectionHeader>
+            {status === 'loading' && !notifications ? (
+              <NotificationSkeletonList aria-label="알림 불러오는 중">
+                {[1, 2, 3].map((item) => <NotificationSkeleton key={item} />)}
+              </NotificationSkeletonList>
+            ) : status === 'error' && !notifications ? (
+              <NotificationState role="alert">
+                <MaterialIcon aria-hidden="true">error_outline</MaterialIcon>
+                <span>{errorMessage}</span>
+                <RetryButton
+                  type="button"
+                  onClick={() => void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })}
+                >
+                  다시 시도
+                </RetryButton>
+              </NotificationState>
+            ) : notifications && notifications.length > 0 ? (
+              <NotificationList>
+                {status === 'error' ? (
+                  <InlineError role="alert">
+                    <span>{errorMessage}</span>
+                    <RetryButton
+                      type="button"
+                      onClick={() => void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })}
+                    >
+                      다시 시도
+                    </RetryButton>
+                  </InlineError>
+                ) : null}
+                {notifications.map((notification) => (
+                  <NotificationRow
+                    key={notification.notificationId}
+                    notification={notification}
+                    disabled={isActionLoading}
+                    onClick={() => void handleNotificationClick(notification)}
+                  />
+                ))}
+                {status === 'loading' ? <UpdatingText>알림 업데이트 중</UpdatingText> : null}
+              </NotificationList>
+            ) : status === 'error' ? (
+              <NotificationState role="alert">
+                <MaterialIcon aria-hidden="true">error_outline</MaterialIcon>
+                <span>{errorMessage}</span>
+                <RetryButton
+                  type="button"
+                  onClick={() => void fetchNotifications({ page: 1, limit: NOTIFICATION_PAGE_SIZE })}
+                >
+                  다시 시도
+                </RetryButton>
+              </NotificationState>
+            ) : (
+              <NotificationState>
+                <MaterialIcon aria-hidden="true">notifications_none</MaterialIcon>
+                <strong>새로운 알림이 없습니다.</strong>
+                <span>새로운 운영 이벤트가 생기면 이곳에 표시됩니다.</span>
+              </NotificationState>
+            )}
+          </NotificationContent>
         </NotificationPanel>
       ) : null}
     </NotificationRoot>
@@ -364,7 +437,7 @@ const NotificationPanel = styled.section`
   top: 48px;
   right: 0;
   z-index: 70;
-  width: min(380px, calc(100vw - 32px));
+  width: min(420px, calc(100vw - 32px));
   overflow: hidden;
   border: 1px solid ${adminColors.border};
   border-radius: 10px;
@@ -460,9 +533,112 @@ const CloseButton = styled.button`
   ${MaterialIcon} { font-size: 18px; }
 `
 
-const NotificationList = styled.div`
-  max-height: min(520px, calc(100vh - 160px));
+const NotificationContent = styled.div`
+  max-height: min(560px, calc(100vh - 160px));
   overflow-y: auto;
+`
+
+const NotificationSectionHeader = styled.div`
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 16px;
+  border-bottom: 1px solid ${adminColors.borderSoft};
+  background: ${adminColors.surfaceLow};
+
+  strong {
+    color: ${adminColors.strongText};
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  span {
+    color: ${adminColors.primary};
+    font-size: 11px;
+    font-weight: 700;
+  }
+`
+
+const PendingWorkSection = styled.section`
+  border-bottom: 1px solid ${adminColors.border};
+`
+
+const PendingWorkButton = styled.button`
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 20px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border: 0;
+  border-bottom: 1px solid ${adminColors.borderSoft};
+  background: ${adminColors.surface};
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: ${adminColors.primaryTint};
+  }
+
+  ${MaterialIcon} {
+    color: ${adminColors.muted};
+    font-size: 18px;
+  }
+
+  ${focusStyle}
+`
+
+const PendingWorkText = styled.span`
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: ${adminColors.strongText};
+    font-size: 13px;
+  }
+
+  span {
+    color: ${adminColors.muted};
+    font-size: 11px;
+  }
+`
+
+const PendingWorkCount = styled.span`
+  min-width: 28px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: ${adminColors.primaryTint};
+  color: ${adminColors.primary};
+  font-size: 11px;
+  font-weight: 700;
+`
+
+const PendingWorkLoading = styled.p`
+  margin: 0;
+  padding: 14px 16px;
+  color: ${adminColors.muted};
+  font-size: 12px;
+`
+
+const NotificationList = styled.div`
+  min-width: 0;
 `
 
 const NotificationItem = styled.button<{ $unread: boolean }>`

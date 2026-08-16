@@ -19,9 +19,9 @@ export const StatusFilterHeader = styled(Shared.PanelHeader)`
 `
 
 export const StatusSelect = styled(Select)`
-  width: 240px;
-  flex: 0 0 240px;
-  padding-right: 36px;
+  width: 160px;
+  flex: 0 0 160px;
+  padding-right: 32px;
 
   @media (max-width: 620px) {
     width: 100%;

@@ -23,12 +23,36 @@ export const Row = styled.div`
   }
 `
 
+export const Heading = styled.div`
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+`
+
 export const Title = styled.h2`
   margin: 0;
   color: ${adminColors.strongText};
   font-size: 16px;
   font-weight: 800;
   white-space: nowrap;
+`
+
+export const Description = styled.p`
+  margin: 0;
+  color: ${adminColors.muted};
+  font-size: 12px;
+  line-height: 1.45;
+`
+
+export const Controls = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  @media (max-width: 620px) {
+    width: 100%;
+  }
 `
 
 export const Select = styled.select`

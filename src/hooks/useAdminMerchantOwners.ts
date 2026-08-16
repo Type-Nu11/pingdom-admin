@@ -10,6 +10,7 @@ import {
   updateAdminMerchantOwnerOnboarding,
   updateAdminMerchantOwnerPlaceQuality,
 } from '../api/adminMerchantOwnerApi'
+import { getAdminMerchantVerification } from '../api/adminMerchantVerificationApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
@@ -22,6 +23,10 @@ import type {
   AdminMerchantOwnerReviewRequest,
   MerchantOwnerStatus,
 } from '../types/adminMerchantOwner.types'
+import type {
+  AdminMerchantVerificationDetail,
+  AdminMerchantVerificationErrorResponse,
+} from '../types/adminMerchantVerification.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
@@ -47,12 +52,32 @@ function shouldClearAuth(error: unknown) {
     (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
 }
 
+function isVerificationNotFound(error: unknown) {
+  return isApiError<AdminMerchantVerificationErrorResponse>(error) &&
+    error.category === 'not-found'
+}
+
+function getVerificationErrorMessage(error: unknown) {
+  if (!isApiError<AdminMerchantVerificationErrorResponse>(error)) {
+    return 'Merchant 검증 상태를 불러오지 못했습니다.'
+  }
+  return getAuthErrorMessage(error, {
+    fallbackMessage: 'Merchant 검증 상태를 불러오지 못했습니다.',
+    categoryMessages: CATEGORY_MESSAGES,
+  })
+}
+
 export function useAdminMerchantOwners() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<MerchantOwnerStatus | ''>('PENDING')
   const [profiles, setProfiles] = useState<AdminMerchantOwnerProfile[]>([])
   const [profile, setProfile] = useState<AdminMerchantOwnerProfile | null>(null)
   const [places, setPlaces] = useState<AdminMerchantOwnerPlace[]>([])
+  const [verification, setVerification] = useState<AdminMerchantVerificationDetail | null>(null)
+  const [verificationLoadStatus, setVerificationLoadStatus] = useState<
+    'idle' | 'loading' | 'success' | 'missing' | 'error'
+  >('idle')
+  const [verificationErrorMessage, setVerificationErrorMessage] = useState('')
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
@@ -100,15 +125,35 @@ export function useAdminMerchantOwners() {
   const fetchDetail = useCallback(async (userId: number) => {
     const requestId = ++detailRef.current
     setIsDetailLoading(true); setDetailErrorMessage(''); setActionErrorMessage('')
+    setVerification(null); setVerificationLoadStatus('loading'); setVerificationErrorMessage('')
     try {
-      const [nextProfile, nextPlaces] = await Promise.all([
-        getAdminMerchantOwner(userId), getAdminMerchantOwnerPlaces(userId),
+      const verificationRequest = getAdminMerchantVerification(userId)
+        .then((data) => ({ kind: 'success' as const, data }))
+        .catch((error: unknown) => ({
+          kind: isVerificationNotFound(error) ? 'missing' as const : 'error' as const,
+          error,
+        }))
+      const [nextProfile, nextPlaces, verificationResult] = await Promise.all([
+        getAdminMerchantOwner(userId), getAdminMerchantOwnerPlaces(userId), verificationRequest,
       ])
-      if (requestId === detailRef.current) { setProfile(nextProfile); setPlaces(nextPlaces) }
+      if (requestId === detailRef.current) {
+        setProfile(nextProfile); setPlaces(nextPlaces)
+        if (verificationResult.kind === 'success') {
+          setVerification(verificationResult.data)
+          setVerificationLoadStatus('success')
+        } else if (verificationResult.kind === 'missing') {
+          setVerificationLoadStatus('missing')
+        } else {
+          setVerificationLoadStatus('error')
+          setVerificationErrorMessage(getVerificationErrorMessage(verificationResult.error))
+          if (shouldClearAuth(verificationResult.error)) clearAuth()
+          logDebugError('관리자 Merchant 검증 상태 조회 실패', verificationResult.error)
+        }
+      }
       return nextProfile
     } catch (error) {
       if (requestId === detailRef.current) {
-        setProfile(null); setPlaces([])
+        setProfile(null); setPlaces([]); setVerification(null); setVerificationLoadStatus('idle')
         setDetailErrorMessage(getErrorMessage(error, 'Merchant Owner 상세를 불러오지 못했습니다.'))
         if (shouldClearAuth(error)) clearAuth()
       }
@@ -141,9 +186,18 @@ export function useAdminMerchantOwners() {
   const replacePlaces = useCallback((userId: number, request: AdminMerchantOwnerPlaceUpdateRequest) => runAction('places', userId, () => replaceAdminMerchantOwnerPlaces(userId, request), '연결 장소를 변경했습니다.'), [runAction])
   const updateOnboarding = useCallback((userId: number, request: AdminMerchantOnboardingUpdateRequest) => runAction('onboarding', userId, () => updateAdminMerchantOwnerOnboarding(userId, request), '온보딩 상태를 변경했습니다.'), [runAction])
   const updateQuality = useCallback((userId: number, placeId: number, request: AdminMerchantOwnerPlaceQualityUpdateRequest) => runAction('quality', userId, () => updateAdminMerchantOwnerPlaceQuality(userId, placeId, request), '장소 운영 품질을 변경했습니다.'), [runAction])
-  const clearDetail = useCallback(() => { ++detailRef.current; setProfile(null); setPlaces([]); setDetailErrorMessage('') }, [])
+  const clearDetail = useCallback(() => {
+    ++detailRef.current
+    setProfile(null); setPlaces([]); setVerification(null)
+    setVerificationLoadStatus('idle'); setVerificationErrorMessage(''); setDetailErrorMessage('')
+  }, [])
+
+  const isApprovalEligible = verificationLoadStatus === 'success' &&
+    verification?.identityStatus === 'APPROVED' &&
+    verification.businessStatus === 'APPROVED' &&
+    verification.businessName === profile?.businessName
 
   useEffect(() => { void fetchProfiles('PENDING', 1) }, [fetchProfiles])
 
-  return { status, profiles, profile, places, page, totalCount, totalPages, hasNext, isLoading, isDetailLoading, activeAction, errorMessage, detailErrorMessage, actionErrorMessage, successMessage, fetchProfiles, fetchDetail, clearDetail, review, replacePlaces, updateOnboarding, updateQuality }
+  return { status, profiles, profile, places, verification, verificationLoadStatus, verificationErrorMessage, isApprovalEligible, page, totalCount, totalPages, hasNext, isLoading, isDetailLoading, activeAction, errorMessage, detailErrorMessage, actionErrorMessage, successMessage, fetchProfiles, fetchDetail, clearDetail, review, replacePlaces, updateOnboarding, updateQuality }
 }

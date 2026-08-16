@@ -3,18 +3,24 @@ import type {
   AdminNotificationItem,
   AdminNotificationListRequest,
 } from '../../types/adminNotification.types'
+import type { AdminPendingWorkItem } from '../../api/adminPendingWorkApi'
 
 export type NotificationLoadStatus = 'idle' | 'loading' | 'success' | 'error'
 
 export interface AdminNotificationContextValue {
   notifications: AdminNotificationItem[] | null
   unreadCount: number | null
+  pendingWorkItems: AdminPendingWorkItem[] | null
+  pendingWorkCount: number | null
+  pendingWorkStatus: NotificationLoadStatus
+  pendingWorkErrorMessage: string
   status: NotificationLoadStatus
   errorMessage: string
   isUnreadCountLoading: boolean
   isActionLoading: boolean
   fetchNotifications: (request?: AdminNotificationListRequest) => Promise<void>
   refreshUnreadCount: () => Promise<void>
+  refreshPendingWork: () => Promise<void>
   markAsRead: (notificationId: number) => Promise<boolean>
   markAllAsRead: () => Promise<boolean>
 }

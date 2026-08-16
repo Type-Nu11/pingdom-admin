@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -18,8 +18,8 @@ function formatDate(value?: string | null) { if (!value) return '정보 없음';
 function int(value: string, min = 0, max = Number.MAX_SAFE_INTEGER) { const parsed = Number(value); return Number.isInteger(parsed) && parsed >= min && parsed <= max ? parsed : null }
 
 function TrustScorePage() {
-  const navigate = useNavigate(); const { logout, user } = useAuth(); const hook = useAdminTrustScore()
-  const [tab, setTab] = useState<Tab>('reporter'); const [reporterId, setReporterId] = useState(''); const [anomalyReporterId, setAnomalyReporterId] = useState(''); const [unresolvedOnly, setUnresolvedOnly] = useState(true); const [enabledOnly, setEnabledOnly] = useState(false); const [dialog, setDialog] = useState<Dialog>(null); const [formError, setFormError] = useState(''); const [reason, setReason] = useState('')
+  const navigate = useNavigate(); const [searchParams, setSearchParams] = useSearchParams(); const { logout, user } = useAuth(); const hook = useAdminTrustScore(); const requestedTab = searchParams.get('tab'); const tab: Tab = requestedTab === 'anomalies' || requestedTab === 'rules' ? requestedTab : 'reporter'; const setTab = (next: Tab) => { const params = new URLSearchParams(searchParams); params.set('tab', next); setSearchParams(params, { replace: true }) }
+  const [reporterId, setReporterId] = useState(''); const [anomalyReporterId, setAnomalyReporterId] = useState(''); const [unresolvedOnly, setUnresolvedOnly] = useState(true); const [enabledOnly, setEnabledOnly] = useState(false); const [dialog, setDialog] = useState<Dialog>(null); const [formError, setFormError] = useState(''); const [reason, setReason] = useState('')
   const [ruleName, setRuleName] = useState(''); const [triggerType, setTriggerType] = useState<TrustScoreInterventionTrigger>('TRUST_SCORE_RANGE'); const [actionType, setActionType] = useState<TrustScoreInterventionAction>('WARN'); const [minScore, setMinScore] = useState('0'); const [maxScore, setMaxScore] = useState('100'); const [minSubmitted, setMinSubmitted] = useState('0'); const [minFalse, setMinFalse] = useState('0'); const [durationDays, setDurationDays] = useState(''); const [priority, setPriority] = useState('10')
   const adminIdentifier = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 

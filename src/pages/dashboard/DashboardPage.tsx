@@ -690,22 +690,6 @@ function DashboardPage() {
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button" $active aria-current="page">
-            <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
-            <span>대시보드</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/places')}>
-            <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-            <span>장소 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/main')}>
-            <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
-            <span>게시글 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/bans')}>
-            <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
-            <span>사용자 밴</span>
-          </S.MenuButton>
           <AdminNavigationMenu />
         </S.SideMenu>
 

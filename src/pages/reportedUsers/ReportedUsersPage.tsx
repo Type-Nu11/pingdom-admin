@@ -64,10 +64,6 @@ function ReportedUsersPage() {
       <Shell.SideNav aria-label="관리자 메뉴">
         <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src="/pingdom-logo.png" alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
         <Shell.SideMenu>
-          <Shell.MenuButton type="button" onClick={() => navigate('/dashboard')}><Shell.MaterialIcon aria-hidden="true">dashboard</Shell.MaterialIcon><span>대시보드</span></Shell.MenuButton>
-          <Shell.MenuButton type="button" onClick={() => navigate('/places')}><Shell.MaterialIcon aria-hidden="true">location_on</Shell.MaterialIcon><span>장소 관리</span></Shell.MenuButton>
-          <Shell.MenuButton type="button" $active onClick={() => navigate('/main')}><Shell.MaterialIcon aria-hidden="true">description</Shell.MaterialIcon><span>게시글 관리</span></Shell.MenuButton>
-          <Shell.MenuButton type="button" onClick={() => navigate('/bans')}><Shell.MaterialIcon aria-hidden="true">block</Shell.MaterialIcon><span>사용자 밴</span></Shell.MenuButton>
           <AdminNavigationMenu />
         </Shell.SideMenu>
         <Shell.SideFooter>

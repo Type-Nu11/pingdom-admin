@@ -4,15 +4,13 @@ import { adminColors } from '../../styles/theme'
 export const Navigation = styled.div`
   display: grid;
   gap: 18px;
-  padding: 18px 14px 6px;
-  border-top: 1px solid ${adminColors.borderSoft};
+  padding: 0 14px 6px;
 
   @media (max-width: 900px) {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 0 0 0 8px;
-    border-top: 0;
+    padding: 0;
   }
 `
 
@@ -111,5 +109,18 @@ export const ItemButton = styled.button<{ $active?: boolean }>`
     min-height: 40px;
     flex-shrink: 0;
     white-space: nowrap;
+  }
+`
+
+export const DashboardButton = styled(ItemButton)`
+  min-height: 48px;
+  margin-bottom: 2px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 14px;
+
+  @media (max-width: 900px) {
+    min-height: 40px;
+    margin-bottom: 0;
   }
 `

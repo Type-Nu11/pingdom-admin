@@ -17,6 +17,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '장소 · 검증',
     items: [
+      { label: '장소 관리', icon: 'location_on', path: '/places' },
       { label: '중복 장소 후보', icon: 'difference', path: '/places/duplicate-candidates' },
       { label: '장소 병합 · 복구', icon: 'merge', path: '/places/duplicates' },
       { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
@@ -29,8 +30,10 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '신고 · 추천',
     items: [
+      { label: '게시글 관리', icon: 'description', path: '/main' },
       { label: '신고 사용자', icon: 'report', path: '/reports/reported-users' },
       { label: '신고 이의제기', icon: 'gavel', path: '/reports/appeals' },
+      { label: '사용자 밴', icon: 'block', path: '/bans' },
       { label: '추천 성과 · 정책', icon: 'monitoring', path: '/recommendations/metrics' },
     ],
   },
@@ -60,8 +63,20 @@ export function AdminNavigationMenu() {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' })
   }, [pathname])
 
+  const dashboardActive = isCurrentPath(pathname, '/dashboard')
+
   return (
     <S.Navigation aria-label="세부 관리자 메뉴">
+      <S.DashboardButton
+        type="button"
+        $active={dashboardActive}
+        aria-current={dashboardActive ? 'page' : undefined}
+        ref={dashboardActive ? activeItemRef : undefined}
+        onClick={() => navigate('/dashboard')}
+      >
+        <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
+        <span>대시보드</span>
+      </S.DashboardButton>
       {NAVIGATION_GROUPS.map((group) => (
         <S.Group key={group.title}>
           <S.GroupTitle>{group.title}</S.GroupTitle>

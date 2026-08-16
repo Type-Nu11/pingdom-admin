@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './AdminNavigationMenu.styles'
 
@@ -13,14 +13,16 @@ interface NavigationGroup {
   items: NavigationItem[]
 }
 
+const PLACE_MANAGEMENT_CHILDREN: NavigationItem[] = [
+  { label: '중복 장소 후보', icon: 'difference', path: '/places/duplicate-candidates' },
+  { label: '장소 병합 · 복구', icon: 'merge', path: '/places/duplicates' },
+  { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
+]
+
 const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '장소 · 검증',
     items: [
-      { label: '장소 관리', icon: 'location_on', path: '/places' },
-      { label: '중복 장소 후보', icon: 'difference', path: '/places/duplicate-candidates' },
-      { label: '장소 병합 · 복구', icon: 'merge', path: '/places/duplicates' },
-      { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
       { label: 'Merchant 검증', icon: 'domain_verification', path: '/merchant-verifications' },
       { label: '방문자 검증', icon: 'person_check', path: '/visitor-verifications' },
       { label: '장소 Claim 심사', icon: 'store', path: '/merchant-place-claims' },
@@ -54,16 +56,21 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
 const isCurrentPath = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`)
 
+const isPlaceManagementPath = (pathname: string) =>
+  pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
+
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeItemRef = useRef<HTMLButtonElement>(null)
+  const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(() => isPlaceManagementPath(pathname))
 
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [pathname])
+  }, [isPlaceManagementOpen, pathname])
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
+  const placeManagementActive = isPlaceManagementPath(pathname)
 
   return (
     <S.Navigation aria-label="세부 관리자 메뉴">
@@ -81,6 +88,57 @@ export function AdminNavigationMenu() {
         <S.Group key={group.title}>
           <S.GroupTitle>{group.title}</S.GroupTitle>
           <S.ItemList>
+            {group.title === '장소 · 검증' ? (
+              <>
+                <S.PlaceToolbar $active={placeManagementActive}>
+                  <S.PlaceToolbarLink
+                    type="button"
+                    $active={pathname === '/places'}
+                    aria-current={pathname === '/places' ? 'page' : undefined}
+                    ref={pathname === '/places' ? activeItemRef : undefined}
+                    onClick={() => {
+                      setIsPlaceManagementOpen(true)
+                      navigate('/places')
+                    }}
+                  >
+                    <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
+                    <span>장소 관리</span>
+                  </S.PlaceToolbarLink>
+                  <S.PlaceToolbarToggle
+                    type="button"
+                    aria-label={`장소 관리 하위 메뉴 ${isPlaceManagementOpen ? '접기' : '펼치기'}`}
+                    aria-expanded={isPlaceManagementOpen}
+                    aria-controls="place-management-submenu"
+                    onClick={() => setIsPlaceManagementOpen((open) => !open)}
+                  >
+                    <S.MaterialIcon aria-hidden="true">
+                      {isPlaceManagementOpen ? 'expand_less' : 'expand_more'}
+                    </S.MaterialIcon>
+                  </S.PlaceToolbarToggle>
+                </S.PlaceToolbar>
+                {isPlaceManagementOpen ? (
+                  <S.ChildList id="place-management-submenu">
+                    {PLACE_MANAGEMENT_CHILDREN.map((item) => {
+                      const active = isCurrentPath(pathname, item.path)
+
+                      return (
+                        <S.ChildButton
+                          key={item.path}
+                          ref={active ? activeItemRef : undefined}
+                          type="button"
+                          $active={active}
+                          aria-current={active ? 'page' : undefined}
+                          onClick={() => navigate(item.path)}
+                        >
+                          <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>
+                          <span>{item.label}</span>
+                        </S.ChildButton>
+                      )
+                    })}
+                  </S.ChildList>
+                ) : null}
+              </>
+            ) : null}
             {group.items.map((item) => {
               const active = isCurrentPath(pathname, item.path)
 

@@ -124,3 +124,64 @@ export const DashboardButton = styled(ItemButton)`
     margin-bottom: 0;
   }
 `
+
+export const PlaceToolbar = styled.div<{ $active?: boolean }>`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  border-radius: 7px;
+
+  ${({ $active }) =>
+    $active &&
+    css`
+      background: ${adminColors.primaryTint};
+    `}
+`
+
+export const PlaceToolbarLink = styled(ItemButton)`
+  min-width: 0;
+  border-radius: 7px 0 0 7px;
+`
+
+export const PlaceToolbarToggle = styled.button`
+  min-width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: ${adminColors.muted};
+  cursor: pointer;
+
+  &:hover {
+    background: ${adminColors.primaryTint};
+    color: ${adminColors.primary};
+  }
+`
+
+export const ChildList = styled.div`
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 4px 18px;
+  padding-left: 9px;
+  border-left: 1px solid ${adminColors.border};
+
+  @media (max-width: 900px) {
+    display: flex;
+    margin: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+`
+
+export const ChildButton = styled(ItemButton)`
+  min-height: 34px;
+  padding: 7px 8px;
+  font-size: 12px;
+
+  ${MaterialIcon} {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+`

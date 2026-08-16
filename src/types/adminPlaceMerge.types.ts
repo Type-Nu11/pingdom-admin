@@ -70,6 +70,41 @@ export interface AdminPlaceRestoreResponse {
   message: string
 }
 
+export type AdminPlaceDuplicateCandidateStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'REJECTED'
+  | 'MERGED'
+
+export interface AdminPlaceDuplicateReviewCandidate {
+  candidateId: number
+  leftPlaceId: number
+  rightPlaceId: number
+  matchReason: string
+  confidenceScore: number
+  distanceMeters: number
+  status: AdminPlaceDuplicateCandidateStatus
+  reviewedByAdminUserId: number | null
+  reviewNote: string | null
+  mergeHistoryId: number | null
+  detectedAt: string
+  reviewedAt: string | null
+  updatedAt: string
+}
+
+export interface AdminPlaceDuplicateReviewCandidateListResponse {
+  candidates: AdminPlaceDuplicateReviewCandidate[]
+  totalCount: number
+}
+
+export interface AdminPlaceDuplicateDecisionRequest {
+  reviewNote: string
+}
+
+export interface AdminPlaceDuplicateCandidateMergeRequest {
+  targetPlaceId: number
+}
+
 export type AdminPlaceMergeErrorCode =
   | 'INVALID_TOKEN'
   | 'ACCESS_DENIED'

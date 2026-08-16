@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -689,22 +690,7 @@ function DashboardPage() {
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button" $active aria-current="page">
-            <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
-            <span>대시보드</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/places')}>
-            <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-            <span>장소 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/main')}>
-            <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
-            <span>게시글 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/bans')}>
-            <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
-            <span>사용자 밴</span>
-          </S.MenuButton>
+          <AdminNavigationMenu />
         </S.SideMenu>
 
         <S.SideFooter>
@@ -734,6 +720,30 @@ function DashboardPage() {
         <S.TopBar>
           <S.TopTitle as="h1">대시보드</S.TopTitle>
           <S.TopActions>
+            <S.IconButton
+              type="button"
+              aria-label="관리자 운영 이력"
+              title="관리자 운영 이력"
+              onClick={() => navigate('/operations/history')}
+            >
+              <S.MaterialIcon aria-hidden="true">history</S.MaterialIcon>
+            </S.IconButton>
+            <S.IconButton
+              type="button"
+              aria-label="Trust Score 운영"
+              title="Trust Score 운영"
+              onClick={() => navigate('/trust-score')}
+            >
+              <S.MaterialIcon aria-hidden="true">verified_user</S.MaterialIcon>
+            </S.IconButton>
+            <S.IconButton
+              type="button"
+              aria-label="Merchant Owner 운영"
+              title="Merchant Owner 운영"
+              onClick={() => navigate('/merchant-owners')}
+            >
+              <S.MaterialIcon aria-hidden="true">storefront</S.MaterialIcon>
+            </S.IconButton>
             <S.RefreshButton
               type="button"
               aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}

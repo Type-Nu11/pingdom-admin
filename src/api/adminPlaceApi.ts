@@ -4,13 +4,21 @@ import type {
   AdminPlaceDetailRequest,
   AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceDiscoveryStatusUpdateResponse,
+  AdminPlaceCoordinatesUpdateRequest,
+  AdminPlaceCoordinatesUpdateResponse,
+  AdminPlaceGeocodingUpdateRequest,
+  AdminPlaceGeocodingUpdateResponse,
   AdminPlaceItem,
+  AdminPlaceKakaoPlaceIdUpdateRequest,
+  AdminPlaceKakaoPlaceIdUpdateResponse,
   AdminPlaceListRequest,
   AdminPlaceListResponse,
   AdminPlaceOperatingScheduleUpdateRequest,
   AdminPlaceOperatingScheduleUpdateResponse,
   AdminPlaceOperatingStatusUpdateRequest,
   AdminPlaceOperatingStatusUpdateResponse,
+  AdminPlaceTouristInfoUpdateRequest,
+  AdminPlaceTouristInfoUpdateResponse,
 } from '../types/adminPlace.types'
 
 const ADMIN_PLACES_API_PATH = '/admin/places'
@@ -93,6 +101,54 @@ export async function updateAdminPlaceDiscoveryStatus(
 ) {
   const { data } = await customAxios.patch<AdminPlaceDiscoveryStatusUpdateResponse>(
     `${ADMIN_PLACES_API_PATH}/${placeId}/discovery-status`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceTouristInfo(
+  placeId: number,
+  payload: AdminPlaceTouristInfoUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceTouristInfoUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/tourist-info`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceKakaoPlaceId(
+  placeId: number,
+  payload: AdminPlaceKakaoPlaceIdUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceKakaoPlaceIdUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/kakao-place-id`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceCoordinates(
+  placeId: number,
+  payload: AdminPlaceCoordinatesUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceCoordinatesUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/coordinates`,
+    payload
+  )
+
+  return data
+}
+
+export async function updateAdminPlaceGeocoding(
+  placeId: number,
+  payload: AdminPlaceGeocodingUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceGeocodingUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/geocoding`,
     payload
   )
 

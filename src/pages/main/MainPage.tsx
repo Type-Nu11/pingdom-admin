@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import SortDropdown from '../../components/common/SortDropdown'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPosts } from '../../hooks/useAdminPosts'
 import { useAuth } from '../../hooks/useAuth'
+import { normalizeAdminPostQuery, parseAdminPostQuery, serializeAdminPostQuery } from '../../utils/adminPostQuery'
 import type {
   AdminPost,
   AdminPostListRequest,
@@ -235,21 +237,6 @@ function formatOptionalReportCreatedDate(value?: string | null) {
   return formatPostDate(value)
 }
 
-function createPendingPost(postId: number): AdminPost {
-  return {
-    id: postId,
-    name: `게시글 #${postId}`,
-    imageUrl: '',
-    userId: 0,
-    username: '불러오는 중',
-    createdAt: '',
-    description: '',
-    likeCount: 0,
-    placeName: '',
-    reports: [],
-  }
-}
-
 interface AdminPostImageProps {
   post: AdminPost
 }
@@ -317,7 +304,10 @@ function MainPage() {
   const latestReviewFilterRef = useRef<AdminPostReviewStatus>('ALL')
   const shouldSkipNextSearchEffectRef = useRef(false)
   const searchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const [initialQuery] = useState(() => parseAdminPostQuery(new URLSearchParams(location.search)))
+  const initialQueryRef = useRef(initialQuery)
   const [selectedPost, setSelectedPost] = useState<AdminPost | null>(null)
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<AdminPost | null>(
     null
   )
@@ -326,14 +316,13 @@ function MainPage() {
   const [highlightedReportId, setHighlightedReportId] = useState<number | null>(null)
   const [hasDeleteConfirmAttempted, setHasDeleteConfirmAttempted] =
     useState(false)
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState('')
   const [hasReportActionConfirmAttempted, setHasReportActionConfirmAttempted] =
     useState(false)
-  const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(
-    DEFAULT_ADMIN_POST_SORT_PARAM
-  )
+  const [selectedSortParam, setSelectedSortParam] = useState<AdminPostSortParam>(initialQuery.sortParam)
   const [selectedReviewFilter, setSelectedReviewFilter] =
-    useState<AdminPostReviewStatus>('ALL')
-  const [postSearchQuery, setPostSearchQuery] = useState('')
+    useState<AdminPostReviewStatus>(initialQuery.reviewStatus ?? 'ALL')
+  const [postSearchQuery, setPostSearchQuery] = useState(initialQuery.keyword)
   const {
     posts,
     page,
@@ -365,8 +354,14 @@ function MainPage() {
     (request: AdminPostListRequest = {}) => fetchAdminPosts(request),
     [fetchAdminPosts]
   )
+  const syncPostQuery = useCallback((request: AdminPostListRequest) => {
+    const query = normalizeAdminPostQuery(request, initialQueryRef.current)
+    initialQueryRef.current = query
+    const search = serializeAdminPostQuery(query).toString()
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true })
+  }, [location.pathname, navigate])
   const activePost = postDetail ?? selectedPost
-  const activePostId = activePost?.id ?? null
+  const activePostId = selectedPostId
   const selectedPostUrl = activePost ? getPostImageUrl(activePost) : ''
   const activeReports = activePost ? getPostReports(activePost) : []
   const shouldShowActivePostPlaceName = activePost
@@ -413,6 +408,7 @@ function MainPage() {
     (post: AdminPost) => {
       setHighlightedReportId(null)
       setSelectedPost(post)
+      setSelectedPostId(post.id)
       void fetchAdminPostDetail(post.id)
     },
     [fetchAdminPostDetail]
@@ -420,19 +416,22 @@ function MainPage() {
   const handleOpenPostDetailById = useCallback(
     (postId: number, reportId?: number) => {
       setHighlightedReportId(reportId ?? null)
-      setSelectedPost(createPendingPost(postId))
+      setSelectedPost(null)
+      setSelectedPostId(postId)
       void fetchAdminPostDetail(postId)
     },
     [fetchAdminPostDetail]
   )
   const handleClosePostDetail = useCallback(() => {
     setSelectedPost(null)
+    setSelectedPostId(null)
     setDeleteConfirmPost(null)
     setReportActionConfirm(null)
     setHasDeleteConfirmAttempted(false)
+    setDeleteConfirmationId('')
     setHasReportActionConfirmAttempted(false)
     clearPostDetail()
-  }, [clearPostDetail])
+  }, [clearPostDetail, setDeleteConfirmationId])
 
   const handleCloseDeleteConfirm = useCallback(() => {
     if (isDeleting) {
@@ -441,7 +440,8 @@ function MainPage() {
 
     setDeleteConfirmPost(null)
     setHasDeleteConfirmAttempted(false)
-  }, [isDeleting])
+    setDeleteConfirmationId('')
+  }, [isDeleting, setDeleteConfirmationId])
 
   const handleOpenReportActionConfirm = useCallback(
     (actionStatus: AdminPostReportActionStatus) => {
@@ -482,6 +482,7 @@ function MainPage() {
 
     clearPendingPostSearch()
     setSelectedReviewFilter(nextFilter)
+    syncPostQuery({ page: 1, sortParam: selectedSortParam, keyword: postKeyword, reviewStatus: nextFilter })
 
     void fetchReviewPosts(
       {
@@ -505,6 +506,7 @@ function MainPage() {
     clearPendingPostSearch()
     shouldSkipNextSearchEffectRef.current = true
     setPostSearchQuery('')
+    syncPostQuery({ page: 1, sortParam: selectedSortParam, keyword: '', reviewStatus: selectedReviewFilter })
 
     void fetchReviewPosts(
       {
@@ -528,6 +530,7 @@ function MainPage() {
     }
 
     clearPendingPostSearch()
+    syncPostQuery({ page: nextPageNumber, sortParam: selectedSortParam, keyword: postKeyword, reviewStatus: selectedReviewFilter })
 
     void fetchReviewPosts(
       {
@@ -563,10 +566,16 @@ function MainPage() {
 
     setDeleteConfirmPost(activePost)
     setHasDeleteConfirmAttempted(false)
+    setDeleteConfirmationId('')
   }
 
   const handleConfirmDeletePost = () => {
-    if (!deleteConfirmPost || isLoading || isDeleting) {
+    if (
+      !deleteConfirmPost ||
+      deleteConfirmationId !== String(deleteConfirmPost.id) ||
+      isLoading ||
+      isDeleting
+    ) {
       return
     }
 
@@ -648,9 +657,7 @@ function MainPage() {
   }, [selectedReviewFilter])
 
   useEffect(() => {
-    void fetchReviewPosts({
-      reviewStatus: 'ALL',
-    })
+    void fetchReviewPosts(initialQueryRef.current)
   }, [fetchReviewPosts])
 
   useEffect(() => {
@@ -668,6 +675,7 @@ function MainPage() {
         latestPostKeywordRef.current = postSearchKeyword ?? ''
         latestReviewFilterRef.current = reviewStatus ?? 'ALL'
         setSelectedPost(null)
+        setSelectedPostId(null)
         setHighlightedReportId(
           typeof reportId === 'number' && Number.isFinite(reportId) ? reportId : null
         )
@@ -685,7 +693,7 @@ function MainPage() {
         if (typeof openPostId === 'number' && Number.isFinite(openPostId)) {
           handleOpenPostDetailById(openPostId, reportId)
         }
-        navigate(location.pathname, { replace: true, state: null })
+        navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
       }, 0)
 
       return () => {
@@ -699,7 +707,7 @@ function MainPage() {
 
     const openDetailTimer = window.setTimeout(() => {
       handleOpenPostDetailById(openPostId, reportId)
-      navigate(location.pathname, { replace: true, state: null })
+      navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
     }, 0)
 
     return () => {
@@ -711,6 +719,7 @@ function MainPage() {
     fetchReviewPosts,
     handleOpenPostDetailById,
     location.pathname,
+    location.search,
     location.state,
     navigate,
   ])
@@ -730,7 +739,8 @@ function MainPage() {
         reviewStatus: latestReviewFilterRef.current,
       }
     )
-  }, [fetchReviewPosts, selectedSortParam])
+    syncPostQuery({ page: 1, sortParam: selectedSortParam, keyword: latestPostKeywordRef.current, reviewStatus: latestReviewFilterRef.current })
+  }, [fetchReviewPosts, selectedSortParam, syncPostQuery])
 
   useEffect(() => {
     if (!isSearchEffectReadyRef.current) {
@@ -759,6 +769,7 @@ function MainPage() {
         }
       ).then((data) => {
         if (data) {
+          syncPostQuery({ page: 1, sortParam: latestSortParamRef.current, keyword: nextKeyword, reviewStatus: latestReviewFilterRef.current })
           scrollPageContentToTop()
         }
       })
@@ -770,10 +781,11 @@ function MainPage() {
     fetchReviewPosts,
     postSearchQuery,
     scrollPageContentToTop,
+    syncPostQuery,
   ])
 
   useEffect(() => {
-    if (!selectedPost) {
+    if (selectedPostId === null) {
       return
     }
 
@@ -798,7 +810,7 @@ function MainPage() {
     handleClosePostDetail,
     handleCloseReportActionConfirm,
     reportActionConfirm,
-    selectedPost,
+    selectedPostId,
   ])
 
   return (
@@ -811,22 +823,7 @@ function MainPage() {
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button" onClick={() => navigate('/dashboard')}>
-            <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
-            <span>대시보드</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/places')}>
-            <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-            <span>장소 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" $active>
-            <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
-            <span>게시글 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/bans')}>
-            <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
-            <span>사용자 밴</span>
-          </S.MenuButton>
+          <AdminNavigationMenu />
         </S.SideMenu>
 
         <S.SideFooter>
@@ -877,6 +874,17 @@ function MainPage() {
             </div>
 
             <S.HeaderActions>
+              <S.OutlineButton type="button" onClick={() => navigate('/s3-orphans')}>
+                <S.MaterialIcon aria-hidden="true">cloud_off</S.MaterialIcon>
+                S3 고아 객체
+              </S.OutlineButton>
+              <S.OutlineButton
+                type="button"
+                onClick={() => navigate('/reports/reported-users')}
+              >
+                <S.MaterialIcon aria-hidden="true">person_alert</S.MaterialIcon>
+                신고 사용자
+              </S.OutlineButton>
               <SortDropdown
                 ariaLabel="게시글 목록 정렬"
                 value={selectedSortParam}
@@ -1128,6 +1136,14 @@ function MainPage() {
               >
                 <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
               </S.ModalCloseButton>
+              <S.DangerButton
+                type="button"
+                disabled={isLoading || isDeleting || isDetailLoading}
+                onClick={handleDeleteActivePost}
+              >
+                <S.MaterialIcon aria-hidden="true">warning</S.MaterialIcon>
+                <span>삭제 Danger Zone</span>
+              </S.DangerButton>
             </S.ModalHeader>
 
             <S.ModalBody>
@@ -1330,17 +1346,25 @@ function MainPage() {
                       {nextReviewPost ? `다음 게시글 #${nextReviewPost.id}` : '다음 게시글'}
                     </span>
                   </S.SecondaryButton>
-                  <S.DangerButton
-                    type="button"
-                    disabled={isLoading || isDeleting}
-                    onClick={handleDeleteActivePost}
-                  >
-                    <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
-                    <span>{deletingPostId === activePost.id ? '삭제 중' : '삭제'}</span>
-                  </S.DangerButton>
                 </S.ModalFooterActions>
               </S.ModalFooterControls>
             </S.ModalFooter>
+          </S.ModalContent>
+        </S.ModalOverlay>
+      ) : null}
+
+      {selectedPostId !== null && !activePost ? (
+        <S.ModalOverlay role="presentation" onMouseDown={handleClosePostDetail}>
+          <S.ModalContent role="dialog" aria-modal="true" aria-labelledby="post-loading-title" onMouseDown={(event) => event.stopPropagation()}>
+            <S.ModalHeader>
+              <div><S.ModalTitle id="post-loading-title">게시글 #{selectedPostId}</S.ModalTitle></div>
+              <S.ModalCloseButton type="button" aria-label="게시글 상세 닫기" onClick={handleClosePostDetail}><S.MaterialIcon aria-hidden="true">close</S.MaterialIcon></S.ModalCloseButton>
+            </S.ModalHeader>
+            <S.ModalBody>
+              <S.ModalNotice role={detailErrorMessage ? 'alert' : 'status'}>
+                {detailErrorMessage || (isDetailLoading ? '게시글 상세 정보를 불러오는 중입니다.' : '게시글 상세 정보가 없습니다.')}
+              </S.ModalNotice>
+            </S.ModalBody>
           </S.ModalContent>
         </S.ModalOverlay>
       ) : null}
@@ -1453,6 +1477,14 @@ function MainPage() {
             <S.DeleteConfirmMeta>
               {getPostTitle(deleteConfirmPost)} · {getPostOwner(deleteConfirmPost)}
             </S.DeleteConfirmMeta>
+            <S.SearchInput
+              value={deleteConfirmationId}
+              inputMode="numeric"
+              placeholder={`게시글 ID ${deleteConfirmPost.id} 입력`}
+              aria-label="삭제할 게시글 ID 확인"
+              disabled={isDeleting}
+              onChange={(event) => setDeleteConfirmationId(event.target.value.trim())}
+            />
 
             {hasDeleteConfirmAttempted && actionErrorMessage ? (
               <S.DeleteConfirmNotice role="alert">
@@ -1470,7 +1502,11 @@ function MainPage() {
               </S.SecondaryButton>
               <S.DangerButton
                 type="button"
-                disabled={isLoading || isDeleting}
+                disabled={
+                  isLoading ||
+                  isDeleting ||
+                  deleteConfirmationId !== String(deleteConfirmPost.id)
+                }
                 onClick={handleConfirmDeletePost}
               >
                 <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>

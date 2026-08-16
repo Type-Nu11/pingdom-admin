@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminBannedUsers } from '../../hooks/useAdminBannedUsers'
@@ -767,22 +768,7 @@ function UserBanPage() {
         </S.SideHeader>
 
         <S.SideMenu>
-          <S.MenuButton type="button" onClick={() => navigate('/dashboard')}>
-            <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
-            <span>대시보드</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/places')}>
-            <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
-            <span>장소 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" onClick={() => navigate('/main')}>
-            <S.MaterialIcon aria-hidden="true">description</S.MaterialIcon>
-            <span>게시글 관리</span>
-          </S.MenuButton>
-          <S.MenuButton type="button" $active>
-            <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
-            <span>사용자 밴</span>
-          </S.MenuButton>
+          <AdminNavigationMenu />
         </S.SideMenu>
 
         <S.SideFooter>
@@ -829,6 +815,10 @@ function UserBanPage() {
                   밴 사용자를 조회하고 제재 처리 및 해제를 관리합니다.
                 </U.IntroDescription>
               </U.IntroText>
+              <U.SecondaryButton type="button" onClick={() => navigate('/users/roles')}>
+                <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>
+                관리자 역할 관리
+              </U.SecondaryButton>
             </U.IntroBand>
 
             <U.SummaryBar aria-label={summaryScopeLabel}>

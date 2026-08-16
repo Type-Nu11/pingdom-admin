@@ -44,14 +44,23 @@ function LoginPage() {
     handleLogin,
   } = useLogin(activeMode)
   const isSubmitting = isLoading || isRedirecting
-  const isAdminSession =
-    isAuthenticated && (!user?.role || user.role === 'ADMIN')
+  const isAdminSession = isAuthenticated && user?.role === 'ADMIN'
 
   useEffect(() => {
     if (isAuthReady && isAdminSession) {
       navigate('/dashboard', { replace: true })
+      return
     }
-  }, [isAdminSession, isAuthReady, navigate])
+
+    if (isAuthReady && isMerchantSession) {
+      navigate('/merchant', { replace: true })
+      return
+    }
+
+    if (isAuthReady && isAuthenticated && user?.role !== 'ADMIN' && user?.role !== 'MERCHANT_OWNER') {
+      clearAuth()
+    }
+  }, [clearAuth, isAdminSession, isAuthReady, isAuthenticated, isMerchantSession, navigate, user?.role])
 
   const selectMode = (mode: LoginMode) => {
     if (isMerchantSession && mode === 'admin') {

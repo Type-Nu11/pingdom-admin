@@ -10,6 +10,7 @@ import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
+import { normalizeAdminPostQuery } from '../utils/adminPostQuery'
 import type {
   AdminPost,
   AdminPostDeleteErrorResponse,
@@ -92,13 +93,6 @@ function shouldClearAuth(error: unknown) {
     isApiError<AdminPostApiErrorResponse>(error) &&
     (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
   )
-}
-
-function hasOwnRequestProperty(
-  request: Partial<LatestAdminPostListRequest>,
-  property: keyof LatestAdminPostListRequest
-) {
-  return Object.prototype.hasOwnProperty.call(request, property)
 }
 
 function applyPostReportBulkActionResult(
@@ -210,22 +204,7 @@ export function useAdminPosts({
     setActionErrorMessage('')
     clearActionSuccessMessage()
 
-    const nextRequest = {
-      page: request.page ?? latestListRequestRef.current.page,
-      limit: request.limit ?? latestListRequestRef.current.limit,
-      sortParam: request.sortParam ?? latestListRequestRef.current.sortParam,
-      keyword: request.keyword ?? latestListRequestRef.current.keyword,
-      reviewStatus: hasOwnRequestProperty(request, 'reportStatus')
-        ? undefined
-        : hasOwnRequestProperty(request, 'reviewStatus')
-          ? request.reviewStatus
-          : latestListRequestRef.current.reviewStatus,
-      reportStatus: hasOwnRequestProperty(request, 'reviewStatus')
-        ? undefined
-        : hasOwnRequestProperty(request, 'reportStatus')
-          ? request.reportStatus
-          : latestListRequestRef.current.reportStatus,
-    }
+    const nextRequest = normalizeAdminPostQuery(request, latestListRequestRef.current)
 
     try {
       setIsLoading(true)

@@ -11,6 +11,10 @@ import {
   markAdminNotificationAsRead,
   markAllAdminNotificationsAsRead,
 } from '../../api/adminNotificationApi'
+import {
+  getAdminPendingWorkSummary,
+  type AdminPendingWorkItem,
+} from '../../api/adminPendingWorkApi'
 import { isApiError } from '../../api/customAxios'
 import type { AuthErrorResponse } from '../../types/auth.types'
 import type {
@@ -26,6 +30,7 @@ import {
 } from './AdminNotificationContext'
 
 const ADMIN_NOTIFICATION_POLL_INTERVAL_MS = 30_000
+const ADMIN_PENDING_WORK_POLL_INTERVAL_MS = 60_000
 
 function shouldClearAuth(error: unknown) {
   return (
@@ -65,13 +70,19 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
   const { clearAuth, isAuthenticated, isAuthReady } = useAuth()
   const [notifications, setNotifications] = useState<AdminNotificationItem[] | null>(null)
   const [unreadCount, setUnreadCount] = useState<number | null>(null)
+  const [pendingWorkItems, setPendingWorkItems] = useState<AdminPendingWorkItem[] | null>(null)
+  const [pendingWorkCount, setPendingWorkCount] = useState<number | null>(null)
+  const [pendingWorkStatus, setPendingWorkStatus] = useState<NotificationLoadStatus>('idle')
+  const [pendingWorkErrorMessage, setPendingWorkErrorMessage] = useState('')
   const [status, setStatus] = useState<NotificationLoadStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [isUnreadCountLoading, setIsUnreadCountLoading] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
   const notificationRequestIdRef = useRef(0)
   const unreadRequestIdRef = useRef(0)
+  const pendingWorkRequestIdRef = useRef(0)
   const isUnreadRequestInFlightRef = useRef(false)
+  const isPendingWorkRequestInFlightRef = useRef(false)
 
   const refreshUnreadCount = useCallback(async () => {
     if (!isAuthReady || !isAuthenticated || isUnreadRequestInFlightRef.current) {
@@ -138,6 +149,60 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
     },
     [clearAuth, isAuthReady, isAuthenticated]
   )
+
+  const refreshPendingWork = useCallback(async () => {
+    if (!isAuthReady || !isAuthenticated || isPendingWorkRequestInFlightRef.current) {
+      return
+    }
+
+    const requestId = pendingWorkRequestIdRef.current + 1
+    pendingWorkRequestIdRef.current = requestId
+    isPendingWorkRequestInFlightRef.current = true
+    setPendingWorkStatus('loading')
+    setPendingWorkErrorMessage('')
+
+    try {
+      const summary = await getAdminPendingWorkSummary()
+
+      if (requestId !== pendingWorkRequestIdRef.current) {
+        return
+      }
+
+      summary.failures.forEach((error, index) => {
+        logDebugError(`관리자 처리 필요 업무 조회 실패 ${index + 1}`, error)
+      })
+
+      if (summary.failures.some(shouldClearAuth)) {
+        clearAuth()
+      }
+
+      if (summary.failedCount === summary.checkedCount) {
+        setPendingWorkStatus('error')
+        setPendingWorkErrorMessage('처리 필요 업무를 불러오지 못했습니다.')
+        return
+      }
+
+      setPendingWorkItems(summary.items)
+      setPendingWorkCount(summary.totalCount)
+      setPendingWorkStatus('success')
+      setPendingWorkErrorMessage(
+        summary.failedCount > 0 ? '일부 업무 현황을 불러오지 못했습니다.' : '',
+      )
+    } catch (error) {
+      logDebugError('관리자 처리 필요 업무 조회 실패', error)
+
+      if (requestId === pendingWorkRequestIdRef.current) {
+        setPendingWorkStatus('error')
+        setPendingWorkErrorMessage('처리 필요 업무를 불러오지 못했습니다.')
+      }
+
+      if (shouldClearAuth(error)) {
+        clearAuth()
+      }
+    } finally {
+      isPendingWorkRequestInFlightRef.current = false
+    }
+  }, [clearAuth, isAuthReady, isAuthenticated])
 
   const markAsRead = useCallback(
     async (notificationId: number) => {
@@ -206,21 +271,32 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
     if (!isAuthReady || !isAuthenticated) {
       notificationRequestIdRef.current += 1
       unreadRequestIdRef.current += 1
+      pendingWorkRequestIdRef.current += 1
       setNotifications(null)
       setUnreadCount(null)
+      setPendingWorkItems(null)
+      setPendingWorkCount(null)
+      setPendingWorkStatus('idle')
+      setPendingWorkErrorMessage('')
       setStatus('idle')
       setErrorMessage('')
       return
     }
 
     void refreshUnreadCount()
+    void refreshPendingWork()
 
     let intervalId: number | null = null
+    let pendingWorkIntervalId: number | null = null
 
     const stopPolling = () => {
       if (intervalId !== null) {
         window.clearInterval(intervalId)
         intervalId = null
+      }
+      if (pendingWorkIntervalId !== null) {
+        window.clearInterval(pendingWorkIntervalId)
+        pendingWorkIntervalId = null
       }
     }
 
@@ -234,11 +310,15 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
       intervalId = window.setInterval(() => {
         void refreshUnreadCount()
       }, ADMIN_NOTIFICATION_POLL_INTERVAL_MS)
+      pendingWorkIntervalId = window.setInterval(() => {
+        void refreshPendingWork()
+      }, ADMIN_PENDING_WORK_POLL_INTERVAL_MS)
     }
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         void refreshUnreadCount()
+        void refreshPendingWork()
         startPolling()
       } else {
         stopPolling()
@@ -252,17 +332,22 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
       stopPolling()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [isAuthReady, isAuthenticated, refreshUnreadCount])
+  }, [isAuthReady, isAuthenticated, refreshPendingWork, refreshUnreadCount])
 
   const value: AdminNotificationContextValue = {
     notifications,
     unreadCount,
+    pendingWorkItems,
+    pendingWorkCount,
+    pendingWorkStatus,
+    pendingWorkErrorMessage,
     status,
     errorMessage,
     isUnreadCountLoading,
     isActionLoading,
     fetchNotifications,
     refreshUnreadCount,
+    refreshPendingWork,
     markAsRead,
     markAllAsRead,
   }

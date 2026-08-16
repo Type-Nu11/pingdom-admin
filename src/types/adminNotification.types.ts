@@ -100,3 +100,8 @@ export interface AdminNotificationDeliveryListRequest {
   page?: number
   limit?: number
 }
+
+export type AdminOutboxEventStatus = 'PENDING' | 'PROCESSING' | 'RETRY' | 'SUCCEEDED' | 'FAILED'
+export interface AdminOutboxEventItem { eventId:string; eventType:string; aggregateType:string; aggregateId:string; status:AdminOutboxEventStatus; attemptCount:number; nextAttemptAt:string|null; processingStartedAt:string|null; processedAt:string|null; lastError:string|null; createdAt:string; updatedAt:string }
+export interface AdminOutboxEventResponse { events:AdminOutboxEventItem[]; page:number; limit:number; totalCount:number; totalPages:number; hasNext:boolean }
+export interface AdminOutboxEventListRequest { status?:AdminOutboxEventStatus; eventType?:string; aggregateType?:string; aggregateId?:string; from?:string; to?:string; page?:number; limit?:number }

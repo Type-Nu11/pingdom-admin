@@ -7,6 +7,9 @@ import type {
   AdminNotificationReadResponse,
   AdminNotificationResponse,
   AdminNotificationUnreadCountResponse,
+  AdminOutboxEventItem,
+  AdminOutboxEventListRequest,
+  AdminOutboxEventResponse,
 } from '../types/adminNotification.types'
 
 const ADMIN_NOTIFICATIONS_API_PATH = '/admin/notifications'
@@ -27,6 +30,16 @@ export async function getAdminNotifications(
   )
 
   return response.data
+}
+
+export async function getAdminOutboxEvents(request: AdminOutboxEventListRequest = {}) {
+  const { data } = await customAxios.get<AdminOutboxEventResponse>('/admin/outbox-events', { params: { ...request, page: request.page ?? 1, limit: request.limit ?? 20 } })
+  return data
+}
+
+export async function retryAdminOutboxEvent(eventId: string, reason: string) {
+  const { data } = await customAxios.post<AdminOutboxEventItem>(`/admin/outbox-events/${eventId}/retry`, { reason })
+  return data
 }
 
 export async function getAdminUnreadNotificationCount() {

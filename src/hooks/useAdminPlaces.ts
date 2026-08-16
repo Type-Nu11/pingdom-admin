@@ -3,9 +3,13 @@ import {
   deleteAdminPlace,
   getAdminPlace,
   getAdminPlaces,
+  updateAdminPlaceCoordinates,
   updateAdminPlaceDiscoveryStatus,
+  updateAdminPlaceGeocoding,
+  updateAdminPlaceKakaoPlaceId,
   updateAdminPlaceOperatingSchedule,
   updateAdminPlaceOperatingStatus,
+  updateAdminPlaceTouristInfo,
 } from '../api/adminPlaceApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -13,17 +17,21 @@ import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type {
   AdminPlaceCategory,
+  AdminPlaceCoordinatesUpdateRequest,
   AdminPlaceDeleteErrorResponse,
   AdminPlaceDetail,
   AdminPlaceDetailErrorResponse,
   AdminPlaceDetailRequest,
   AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceItem,
+  AdminPlaceGeocodingUpdateRequest,
+  AdminPlaceKakaoPlaceIdUpdateRequest,
   AdminPlaceListErrorResponse,
   AdminPlaceListRequest,
   AdminPlaceListSortParam,
   AdminPlaceOperatingScheduleUpdateRequest,
   AdminPlaceOperatingStatusUpdateRequest,
+  AdminPlaceTouristInfoUpdateRequest,
   AdminPlaceUpdateErrorResponse,
 } from '../types/adminPlace.types'
 
@@ -51,6 +59,8 @@ const ADMIN_PLACE_CODE_MESSAGES = {
     '연결된 체크인 이력이 있어 장소를 삭제할 수 없습니다.',
   PLACE_SCOUT_FIELD_REPORT_CONNECTED:
     '연결된 Scout 현장 제보가 있어 장소를 삭제할 수 없습니다.',
+  PLACE_KAKAO_PLACE_ID_CONFLICT:
+    '이미 다른 장소에 연결된 Kakao place id입니다.',
 }
 
 type AdminPlaceApiErrorResponse =
@@ -63,6 +73,32 @@ type PlaceUpdateAction =
   | 'operating-status'
   | 'operating-schedule'
   | 'discovery-status'
+  | 'tourist-info'
+  | 'kakao-place-id'
+  | 'coordinates'
+  | 'geocoding'
+
+type PlaceUpdateState<T> = Record<PlaceUpdateAction, T>
+
+const EMPTY_PLACE_UPDATE_IDS: PlaceUpdateState<number | null> = {
+  'operating-status': null,
+  'operating-schedule': null,
+  'discovery-status': null,
+  'tourist-info': null,
+  'kakao-place-id': null,
+  coordinates: null,
+  geocoding: null,
+}
+
+const EMPTY_PLACE_UPDATE_ERRORS: PlaceUpdateState<string> = {
+  'operating-status': '',
+  'operating-schedule': '',
+  'discovery-status': '',
+  'tourist-info': '',
+  'kakao-place-id': '',
+  coordinates: '',
+  geocoding: '',
+}
 
 type LatestAdminPlaceListRequest = {
   page: number
@@ -121,19 +157,22 @@ export function useAdminPlaces({
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [actionErrorMessage, setActionErrorMessage] = useState('')
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('')
+  const [updateErrorMessages, setUpdateErrorMessages] =
+    useState<PlaceUpdateState<string>>(EMPTY_PLACE_UPDATE_ERRORS)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   const [placeDetail, setPlaceDetail] = useState<AdminPlaceDetail | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [deletingPlaceId, setDeletingPlaceId] = useState<number | null>(null)
-  const [updatingPlaceId, setUpdatingPlaceId] = useState<number | null>(null)
-  const [updatingPlaceAction, setUpdatingPlaceAction] =
-    useState<PlaceUpdateAction | null>(null)
+  const [updatingPlaceIds, setUpdatingPlaceIds] =
+    useState<PlaceUpdateState<number | null>>(EMPTY_PLACE_UPDATE_IDS)
   const latestRequestIdRef = useRef(0)
   const latestDetailRequestIdRef = useRef(0)
   const deletingPlaceIdRef = useRef<number | null>(null)
-  const updatingPlaceActionRef = useRef<PlaceUpdateAction | null>(null)
+  const updatingPlaceIdsRef = useRef<PlaceUpdateState<number | null>>({
+    ...EMPTY_PLACE_UPDATE_IDS,
+  })
   const actionSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
@@ -158,8 +197,8 @@ export function useAdminPlaces({
     setActionSuccessMessage('')
   }, [clearActionSuccessTimeout])
 
-  const clearActionErrorMessage = useCallback(() => {
-    setActionErrorMessage('')
+  const clearUpdateErrorMessage = useCallback((action: PlaceUpdateAction) => {
+    setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
   }, [])
 
   const showActionSuccessMessage = useCallback(
@@ -181,7 +220,6 @@ export function useAdminPlaces({
 
     setIsError(false)
     setErrorMessage('')
-    setActionErrorMessage('')
     clearActionSuccessMessage()
 
     const nextRequest = {
@@ -250,7 +288,6 @@ export function useAdminPlaces({
       setIsDetailLoading(true)
       setPlaceDetail(null)
       setDetailErrorMessage('')
-      setActionErrorMessage('')
 
       try {
         const data = await getAdminPlace(placeId, request)
@@ -289,7 +326,7 @@ export function useAdminPlaces({
       }
 
       deletingPlaceIdRef.current = placeId
-      setActionErrorMessage('')
+      setDeleteErrorMessage('')
       clearActionSuccessMessage()
 
       try {
@@ -308,7 +345,7 @@ export function useAdminPlaces({
         const isRefreshSuccess = await fetchAdminPlaces({ page: targetPage })
 
         if (!isRefreshSuccess) {
-          setActionErrorMessage('장소는 삭제됐지만 목록을 다시 불러오지 못했습니다.')
+          setDeleteErrorMessage('장소는 삭제됐지만 목록을 다시 불러오지 못했습니다.')
         }
 
         showActionSuccessMessage(`장소 #${placeId}을 삭제했습니다.`)
@@ -316,7 +353,7 @@ export function useAdminPlaces({
         return true
       } catch (error) {
         clearActionSuccessMessage()
-        setActionErrorMessage(getAdminPlaceErrorMessage(error))
+        setDeleteErrorMessage(getAdminPlaceErrorMessage(error))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -344,14 +381,14 @@ export function useAdminPlaces({
 
   const updatePlaceOperatingStatus = useCallback(
     async (placeId: number, payload: AdminPlaceOperatingStatusUpdateRequest) => {
-      if (updatingPlaceActionRef.current !== null) {
+      const action: PlaceUpdateAction = 'operating-status'
+      if (updatingPlaceIdsRef.current[action] !== null) {
         return false
       }
 
-      updatingPlaceActionRef.current = 'operating-status'
-      setUpdatingPlaceId(placeId)
-      setUpdatingPlaceAction('operating-status')
-      setActionErrorMessage('')
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
       clearActionSuccessMessage()
 
       try {
@@ -381,9 +418,13 @@ export function useAdminPlaces({
 
         return true
       } catch (error) {
-        setActionErrorMessage(
-          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
-        )
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -393,9 +434,8 @@ export function useAdminPlaces({
 
         return false
       } finally {
-        updatingPlaceActionRef.current = null
-        setUpdatingPlaceId(null)
-        setUpdatingPlaceAction(null)
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
       }
     },
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
@@ -403,14 +443,14 @@ export function useAdminPlaces({
 
   const updatePlaceOperatingSchedule = useCallback(
     async (placeId: number, payload: AdminPlaceOperatingScheduleUpdateRequest) => {
-      if (updatingPlaceActionRef.current !== null) {
+      const action: PlaceUpdateAction = 'operating-schedule'
+      if (updatingPlaceIdsRef.current[action] !== null) {
         return false
       }
 
-      updatingPlaceActionRef.current = 'operating-schedule'
-      setUpdatingPlaceId(placeId)
-      setUpdatingPlaceAction('operating-schedule')
-      setActionErrorMessage('')
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
       clearActionSuccessMessage()
 
       try {
@@ -429,9 +469,13 @@ export function useAdminPlaces({
 
         return true
       } catch (error) {
-        setActionErrorMessage(
-          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
-        )
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -441,9 +485,8 @@ export function useAdminPlaces({
 
         return false
       } finally {
-        updatingPlaceActionRef.current = null
-        setUpdatingPlaceId(null)
-        setUpdatingPlaceAction(null)
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
       }
     },
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
@@ -451,14 +494,14 @@ export function useAdminPlaces({
 
   const updatePlaceDiscoveryStatus = useCallback(
     async (placeId: number, payload: AdminPlaceDiscoveryStatusUpdateRequest) => {
-      if (updatingPlaceActionRef.current !== null) {
+      const action: PlaceUpdateAction = 'discovery-status'
+      if (updatingPlaceIdsRef.current[action] !== null) {
         return false
       }
 
-      updatingPlaceActionRef.current = 'discovery-status'
-      setUpdatingPlaceId(placeId)
-      setUpdatingPlaceAction('discovery-status')
-      setActionErrorMessage('')
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
       clearActionSuccessMessage()
 
       try {
@@ -486,9 +529,13 @@ export function useAdminPlaces({
 
         return true
       } catch (error) {
-        setActionErrorMessage(
-          getAdminPlaceErrorMessage(error, ADMIN_PLACE_UPDATE_ERROR_MESSAGE)
-        )
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
 
         if (shouldClearAuth(error)) {
           clearAuth()
@@ -498,9 +545,229 @@ export function useAdminPlaces({
 
         return false
       } finally {
-        updatingPlaceActionRef.current = null
-        setUpdatingPlaceId(null)
-        setUpdatingPlaceAction(null)
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
+  const updatePlaceTouristInfo = useCallback(
+    async (placeId: number, payload: AdminPlaceTouristInfoUpdateRequest) => {
+      const action: PlaceUpdateAction = 'tourist-info'
+      if (updatingPlaceIdsRef.current[action] !== null) {
+        return false
+      }
+
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceTouristInfo(placeId, payload)
+
+        setPlaces((current) =>
+          current.map((place) =>
+            place.id === placeId
+              ? {
+                  ...place,
+                  englishName: data.englishName,
+                  touristSummary: data.touristSummary,
+                  touristCategories: data.touristCategories,
+                }
+              : place
+          )
+        )
+        setPlaceDetail((current) =>
+          current?.id === placeId
+            ? {
+                ...current,
+                englishName: data.englishName,
+                touristSummary: data.touristSummary,
+                touristCategories: data.touristCategories,
+              }
+            : current
+        )
+        showActionSuccessMessage(data.message || '장소 관광 정보를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            ADMIN_PLACE_UPDATE_ERROR_MESSAGE
+          ),
+        }))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 관광 정보 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
+  const updatePlaceKakaoPlaceId = useCallback(
+    async (placeId: number, payload: AdminPlaceKakaoPlaceIdUpdateRequest) => {
+      const action: PlaceUpdateAction = 'kakao-place-id'
+      if (updatingPlaceIdsRef.current[action] !== null) {
+        return false
+      }
+
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceKakaoPlaceId(placeId, payload)
+
+        setPlaceDetail((current) =>
+          current?.id === placeId
+            ? { ...current, kakaoPlaceId: data.kakaoPlaceId || null }
+            : current
+        )
+        showActionSuccessMessage(data.message || 'Kakao place id를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            'Kakao place id를 수정하지 못했습니다.'
+          ),
+        }))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 Kakao place id 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
+  const updatePlaceCoordinates = useCallback(
+    async (placeId: number, payload: AdminPlaceCoordinatesUpdateRequest) => {
+      const action: PlaceUpdateAction = 'coordinates'
+      if (updatingPlaceIdsRef.current[action] !== null) {
+        return false
+      }
+
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceCoordinates(placeId, payload)
+        const coordinatePatch = {
+          latitude: data.latitude,
+          longitude: data.longitude,
+        }
+
+        setPlaces((current) =>
+          current.map((place) =>
+            place.id === placeId ? { ...place, ...coordinatePatch } : place
+          )
+        )
+        setPlaceDetail((current) =>
+          current?.id === placeId ? { ...current, ...coordinatePatch } : current
+        )
+        showActionSuccessMessage(data.message || '장소 좌표를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(error, '장소 좌표를 수정하지 못했습니다.'),
+        }))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 좌표 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
+  )
+
+  const updatePlaceGeocoding = useCallback(
+    async (placeId: number, payload: AdminPlaceGeocodingUpdateRequest) => {
+      const action: PlaceUpdateAction = 'geocoding'
+      if (updatingPlaceIdsRef.current[action] !== null) {
+        return false
+      }
+
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceGeocoding(placeId, payload)
+        const geocodingPatch = {
+          address: data.address,
+          roadAddress: data.roadAddress,
+          jibunAddress: data.jibunAddress,
+          postalCode: data.postalCode,
+          geocodingSource: data.geocodingSource,
+          latitude: data.latitude,
+          longitude: data.longitude,
+        }
+
+        setPlaces((current) =>
+          current.map((place) =>
+            place.id === placeId ? { ...place, ...geocodingPatch } : place
+          )
+        )
+        setPlaceDetail((current) =>
+          current?.id === placeId ? { ...current, ...geocodingPatch } : current
+        )
+        showActionSuccessMessage(data.message || '장소 주소와 좌표를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            '장소 주소와 좌표를 수정하지 못했습니다.'
+          ),
+        }))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 주소와 좌표 보정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
       }
     },
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
@@ -525,21 +792,25 @@ export function useAdminPlaces({
     isLoading,
     isError,
     errorMessage,
-    actionErrorMessage,
+    deleteErrorMessage,
+    updateErrorMessages,
     actionSuccessMessage,
     placeDetail,
     isDetailLoading,
     detailErrorMessage,
     deletingPlaceId,
-    updatingPlaceId,
-    updatingPlaceAction,
+    updatingPlaceIds,
     fetchAdminPlaces,
     fetchAdminPlaceDetail,
     clearPlaceDetail,
-    clearActionErrorMessage,
+    clearUpdateErrorMessage,
     deletePlace,
     updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
+    updatePlaceTouristInfo,
+    updatePlaceKakaoPlaceId,
+    updatePlaceCoordinates,
+    updatePlaceGeocoding,
   }
 }

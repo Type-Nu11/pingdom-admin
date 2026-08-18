@@ -103,8 +103,8 @@ export interface KakaoMapMarker {
   latitude: number
   longitude: number
   label: string
-  category?: string
-  categoryName?: string
+  category?: string | null
+  categoryName?: string | null
   level?: number
 }
 

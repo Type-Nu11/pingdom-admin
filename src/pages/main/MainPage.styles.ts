@@ -763,7 +763,7 @@ export const FeedbackText = styled.p<{ $variant?: 'success' | 'error' }>`
 export const MediaGrid = styled.ul`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 24px;
+  gap: 16px;
   margin: 0 0 48px;
   padding: 0;
   list-style: none;
@@ -855,7 +855,7 @@ export const MediaBody = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 16px;
+  padding: 14px;
 `
 
 export const MediaTitleRow = styled.div`
@@ -926,8 +926,8 @@ export const StatusBadge = styled.span<{
 export const MediaMetaList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 0;
 `
 
 export const MediaMeta = styled.div`
@@ -947,34 +947,6 @@ export const MediaMeta = styled.div`
   ${MaterialIcon} {
     flex-shrink: 0;
     font-size: 16px;
-  }
-`
-
-export const CardHint = styled.div`
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid ${neutral.borderSoft};
-  color: ${neutral.muted};
-  font-size: 13px;
-  font-weight: 700;
-
-  ${MaterialIcon} {
-    flex-shrink: 0;
-    font-size: 18px;
-    transition: transform 160ms ease;
-  }
-
-  ${MediaCard}:hover & {
-    color: ${neutral.primary};
-  }
-
-  ${MediaCard}:hover & ${MaterialIcon} {
-    transform: translateX(2px);
   }
 `
 

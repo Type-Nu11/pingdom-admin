@@ -64,15 +64,15 @@ export const IntroDescription = styled.p`
 `
 
 export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
-  min-height: 30px;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: 2px 8px;
   border: 1px solid
     ${({ $tone }) =>
       $tone === 'warning' ? neutral.warning : neutral.primarySoft};
-  border-radius: 8px;
+  border-radius: 6px;
   background: ${({ $tone }) =>
     $tone === 'warning' ? neutral.warningTint : neutral.primaryTint};
   color: ${({ $tone }) =>
@@ -1071,10 +1071,10 @@ export const TableSubText = styled.span`
 export const TableStatusBadge = styled.span<{
   $tone?: 'danger' | 'warning' | 'success' | 'neutral'
 }>`
-  min-height: 28px;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
-  padding: 0 9px;
+  padding: 2px 8px;
   border: 1px solid
     ${({ $tone }) => {
       if ($tone === 'warning') {
@@ -1086,12 +1086,12 @@ export const TableStatusBadge = styled.span<{
       }
 
       if ($tone === 'neutral') {
-        return neutral.borderDark
+        return neutral.primarySoft
       }
 
       return neutral.error
     }};
-  border-radius: 999px;
+  border-radius: 6px;
   background: ${({ $tone }) => {
     if ($tone === 'warning') {
       return neutral.warningTint
@@ -1102,7 +1102,7 @@ export const TableStatusBadge = styled.span<{
     }
 
     if ($tone === 'neutral') {
-      return neutral.surfaceLow
+      return neutral.primaryTint
     }
 
     return neutral.errorTint
@@ -1117,7 +1117,7 @@ export const TableStatusBadge = styled.span<{
     }
 
     if ($tone === 'neutral') {
-      return neutral.muted
+      return neutral.primary
     }
 
     return neutral.error

@@ -195,8 +195,11 @@ export const RecordDescription = styled.p`
 `
 
 export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger' }>`
+  min-height: 24px;
   flex-shrink: 0;
-  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
   border: 1px solid
     ${({ $tone }) =>
       $tone === 'success'
@@ -205,8 +208,8 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
           ? neutral.error
           : $tone === 'warning'
             ? neutral.warning
-            : neutral.borderDark};
-  border-radius: 999px;
+            : neutral.primarySoft};
+  border-radius: 6px;
   background: ${({ $tone }) =>
     $tone === 'success'
       ? neutral.successTint
@@ -214,7 +217,7 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
         ? neutral.errorTint
         : $tone === 'warning'
           ? neutral.warningTint
-          : neutral.surfaceLow};
+            : neutral.primaryTint};
   color: ${({ $tone }) =>
     $tone === 'success'
       ? neutral.successText
@@ -222,9 +225,9 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
         ? neutral.error
         : $tone === 'warning'
           ? neutral.warningText
-          : neutral.muted};
+            : neutral.primary};
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   white-space: nowrap;
 `
 

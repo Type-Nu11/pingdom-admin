@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { RecommendationPolicyPanel } from '../../components/recommendation/RecommendationPolicyPanel'
@@ -162,7 +163,7 @@ function RecommendationMetricsPage() {
               <S.Field>장소 키워드<S.Input value={keyword} placeholder="장소명 또는 주소" onChange={(event) => setKeyword(event.target.value)} /></S.Field>
               <S.Field>추천 버전<S.Input value={version} placeholder="place-rec-v1" onChange={(event) => setVersion(event.target.value)} /></S.Field>
               <S.Field>최근 N일<S.Input inputMode="numeric" value={days} placeholder="전체" onChange={(event) => setDays(event.target.value)} /></S.Field>
-              <S.Field>정렬<S.Select value={sortBy} onChange={(event) => setSortBy(event.target.value as RecommendationMetricSortBy)}>{SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</S.Select></S.Field>
+              <S.Field>정렬<AdminSelect aria-label="추천 지표 정렬" value={sortBy} width="100%" onChange={(event) => setSortBy(event.target.value as RecommendationMetricSortBy)}>{SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</AdminSelect></S.Field>
               <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>조회</Shared.PrimaryButton>
             </S.SearchBar>
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}

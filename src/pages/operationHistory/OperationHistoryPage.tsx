@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
@@ -462,7 +463,7 @@ function OperationHistoryPage() {
                     <S.FormGrid as="form" onSubmit={submitPrivacy}>
                       <S.Field>대상 사용자 ID<S.Input inputMode="numeric" value={subjectUserId} placeholder="전체" onChange={(event) => setSubjectUserId(event.target.value)} /></S.Field>
                       <S.Field>수행 사용자 ID<S.Input inputMode="numeric" value={privacyActorId} placeholder="전체" onChange={(event) => setPrivacyActorId(event.target.value)} /></S.Field>
-                      <S.Field>처리 유형<S.Select value={privacyAction} onChange={(event) => setPrivacyAction(event.target.value as PrivacyProcessingAction | '')}><option value="">전체</option>{Object.entries(PRIVACY_ACTION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</S.Select></S.Field>
+                      <S.Field>처리 유형<AdminSelect aria-label="개인정보 처리 유형" value={privacyAction} width="100%" onChange={(event) => setPrivacyAction(event.target.value as PrivacyProcessingAction | '')}><option value="">전체</option>{Object.entries(PRIVACY_ACTION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
                       <S.Field>시작 시각<AdminDateTimePicker ariaLabel="개인정보 처리 조회 시작 시각" value={privacyFrom} onChange={setPrivacyFrom} /></S.Field>
                       <S.Field>종료 시각<AdminDateTimePicker ariaLabel="개인정보 처리 조회 종료 시각" value={privacyTo} onChange={setPrivacyTo} /></S.Field>
                       <S.InlineActions><Shared.SecondaryButton type="button" onClick={resetPrivacy}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={isLoading}>조회</Shared.PrimaryButton></S.InlineActions>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AdminSelect } from '../common/AdminStatusSelect'
 import { AdminStatusFilter } from '../common/AdminStatusFilter'
 import type { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
 import type {
@@ -253,12 +254,12 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               <S.FormGrid>
                 {dialog.type === 'report' ? (
                   <S.WideField>검토 상태
-                    <S.Select value={reportStatus} disabled={activeAction !== null} onChange={(event) => setReportStatus(event.target.value as PlaceInformationReportReviewRequest['status'])}>
+                    <AdminSelect aria-label="신고 검토 결과" value={reportStatus} disabled={activeAction !== null} width="100%" onChange={(event) => setReportStatus(event.target.value as PlaceInformationReportReviewRequest['status'])}>
                       <option value="UNDER_REVIEW">검토 중</option>
                       <option value="ACCEPTED">신고 수용</option>
                       <option value="REJECTED">신고 반려</option>
                       <option value="RESOLVED">처리 완료</option>
-                    </S.Select>
+                    </AdminSelect>
                   </S.WideField>
                 ) : null}
                 <S.WideField>판정 근거 *

@@ -5,10 +5,13 @@ const neutral = adminColors
 
 export const TabList = styled.div`
   display: flex;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
   gap: 6px;
   padding: 5px;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
 `
 
@@ -39,9 +42,9 @@ export const SearchBar = styled.form`
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  padding: 16px;
+  padding: 12px 14px;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
 
   @media (max-width: 620px) {
@@ -69,7 +72,7 @@ export const Field = styled.label`
 
 const inputStyles = css`
   width: 100%;
-  min-height: 42px;
+  min-height: 40px;
   padding: 0 12px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
@@ -128,7 +131,7 @@ export const RecordCard = styled.article<{ $selected?: boolean }>`
   min-width: 0;
   padding: 14px;
   border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
-  border-radius: 9px;
+  border-radius: 8px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
 `
 
@@ -137,15 +140,27 @@ export const RecordButton = styled.button<{ $selected?: boolean }>`
   min-width: 0;
   padding: 14px;
   border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
-  border-radius: 9px;
+  border-radius: 8px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
+  box-shadow: ${({ $selected }) =>
+    $selected ? `inset 3px 0 0 ${neutral.primary}` : 'none'};
   color: inherit;
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
 
-  &:hover {
-    border-color: ${neutral.primarySoft};
-    background: ${neutral.primaryTint};
+  &:hover:not(:disabled) {
+    border-color: ${({ $selected }) =>
+      $selected ? neutral.primary : neutral.borderDark};
+    background: ${({ $selected }) =>
+      $selected ? neutral.primaryTint : neutral.surfaceLow};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
   }
 `
 

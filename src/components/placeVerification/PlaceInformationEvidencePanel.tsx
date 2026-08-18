@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AdminSelect } from '../common/AdminStatusSelect'
 import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
 import type {
   PlaceInformationEvidence,
@@ -190,10 +191,10 @@ export function PlaceInformationEvidencePanel({
               {dialog.type === 'create' ? (
                 <S.FormGrid>
                   <S.Field>출처 유형 *
-                    <S.Select value={sourceType} disabled={activeAction !== null} onChange={(event) => setSourceType(event.target.value as PlaceInformationSourceType)}>{SOURCE_TYPES.map((value) => <option key={value} value={value}>{SOURCE_TYPE_LABELS[value]}</option>)}</S.Select>
+                    <AdminSelect aria-label="출처 유형" value={sourceType} disabled={activeAction !== null} width="100%" onChange={(event) => setSourceType(event.target.value as PlaceInformationSourceType)}>{SOURCE_TYPES.map((value) => <option key={value} value={value}>{SOURCE_TYPE_LABELS[value]}</option>)}</AdminSelect>
                   </S.Field>
                   <S.Field>증빙 유형 *
-                    <S.Select value={evidenceType} disabled={activeAction !== null} onChange={(event) => setEvidenceType(event.target.value as PlaceInformationEvidenceType)}>{EVIDENCE_TYPES.map((value) => <option key={value} value={value}>{EVIDENCE_TYPE_LABELS[value]}</option>)}</S.Select>
+                    <AdminSelect aria-label="증빙 유형" value={evidenceType} disabled={activeAction !== null} width="100%" onChange={(event) => setEvidenceType(event.target.value as PlaceInformationEvidenceType)}>{EVIDENCE_TYPES.map((value) => <option key={value} value={value}>{EVIDENCE_TYPE_LABELS[value]}</option>)}</AdminSelect>
                   </S.Field>
                   <S.Field>외부 참조
                     <S.Input value={externalReference} maxLength={100} disabled={activeAction !== null} onChange={(event) => setExternalReference(event.target.value)} />
@@ -212,10 +213,10 @@ export function PlaceInformationEvidencePanel({
               ) : (
                 <S.FormGrid>
                   <S.WideField>검토 결과 *
-                    <S.Select value={verificationStatus} disabled={activeAction !== null} onChange={(event) => setVerificationStatus(event.target.value as typeof verificationStatus)}>
+                    <AdminSelect aria-label="검토 결과" value={verificationStatus} disabled={activeAction !== null} width="100%" onChange={(event) => setVerificationStatus(event.target.value as typeof verificationStatus)}>
                       <option value="ADMIN_VERIFIED">관리자 검증</option>
                       <option value="REJECTED">증빙 반려</option>
-                    </S.Select>
+                    </AdminSelect>
                   </S.WideField>
                   <S.WideField>검토 근거 *
                     <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError('') }} />

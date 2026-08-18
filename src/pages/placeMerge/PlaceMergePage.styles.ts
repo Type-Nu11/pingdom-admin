@@ -16,18 +16,23 @@ export const Content = styled.main`
 `
 
 export const PageStack = styled.div`
-  width: min(1480px, 100%);
+  width: min(1280px, 100%);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 `
 
 export const PageHeader = styled.header`
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
+
+  > div:first-child {
+    min-width: 0;
+    flex: 1 1 420px;
+  }
 
   @media (max-width: 720px) {
     flex-direction: column;
@@ -44,12 +49,13 @@ export const Eyebrow = styled.p`
 export const PageTitle = styled.h1`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: 24px;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.25;
 `
 
 export const PageDescription = styled.p`
+  max-width: 760px;
   margin: 10px 0 0;
   color: ${neutral.muted};
   font-size: 14px;
@@ -59,8 +65,17 @@ export const PageDescription = styled.p`
 export const HeaderActions = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   flex-shrink: 0;
+  max-width: 100%;
+  padding-bottom: 1px;
+
+  @media (max-width: 720px) {
+    width: 100%;
+    justify-content: flex-start;
+  }
 `
 
 export const HeaderButton = styled.button`
@@ -107,9 +122,9 @@ export const Notice = styled.p<{ $variant?: 'error' | 'success' }>`
 `
 
 export const Workspace = styled.div`
-  min-height: 560px;
+  min-height: 380px;
   display: grid;
-  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.75fr);
+  grid-template-columns: minmax(340px, 0.95fr) minmax(0, 1.35fr);
   gap: 16px;
 
   @media (max-width: 1080px) {
@@ -123,7 +138,7 @@ export const Panel = styled.section`
   flex-direction: column;
   overflow: hidden;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
 `
 
@@ -132,7 +147,8 @@ export const PanelHeader = styled.header`
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px;
+  min-height: 64px;
+  padding: 14px 16px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -161,7 +177,7 @@ export const ScrollArea = styled.div`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 12px 14px;
 `
 
 export const GroupList = styled.div`
@@ -455,7 +471,7 @@ export const ActionHint = styled.p`
 `
 
 export const PrimaryButton = styled.button`
-  min-height: 42px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -466,7 +482,7 @@ export const PrimaryButton = styled.button`
   border-radius: 8px;
   background: ${neutral.primary};
   color: ${neutral.primaryText};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   cursor: pointer;
 
@@ -491,7 +507,7 @@ export const SecondaryButton = styled.button`
   border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.text};
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 
@@ -509,7 +525,7 @@ export const SecondaryButton = styled.button`
 
 export const EmptyState = styled.div`
   display: flex;
-  min-height: 180px;
+  min-height: 160px;
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -531,9 +547,9 @@ export const EmptyState = styled.div`
 `
 
 export const EmptyStateCard = styled(EmptyState)`
-  min-height: 320px;
+  min-height: 220px;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
 `
 
@@ -545,12 +561,12 @@ export const EmptyStateActions = styled.div`
 `
 
 export const SelectionPrompt = styled(EmptyStateCard)`
-  min-height: 560px;
+  min-height: 280px;
 `
 
 export const HistoryPanel = styled.section`
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
 `
 
@@ -613,7 +629,7 @@ export const Modal = styled.section`
   overflow: hidden;
   flex-direction: column;
   border: 1px solid ${neutral.border};
-  border-radius: 12px;
+  border-radius: 8px;
   background: ${neutral.surface};
   box-shadow: 0 24px 70px ${neutral.strongShadow};
 `
@@ -623,7 +639,7 @@ export const ModalHeader = styled.header`
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
+  padding: 16px 18px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -655,7 +671,7 @@ export const ModalCloseButton = styled.button`
 
 export const ModalBody = styled.div`
   overflow-y: auto;
-  padding: 20px;
+  padding: 18px;
 `
 
 export const ModalWarning = styled.div`
@@ -709,7 +725,7 @@ export const ModalFooter = styled.footer`
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 14px 20px;
+  padding: 12px 18px;
   border-top: 1px solid ${neutral.border};
   background: ${neutral.surfaceLow};
 `

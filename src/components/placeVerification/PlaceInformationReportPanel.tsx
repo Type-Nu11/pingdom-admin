@@ -124,6 +124,11 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
       </AdminStatusFilter>
 
       {errorMessage ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}
+      {isLoading && reports.length === 0 ? (
+        <Shared.EmptyStateCard><strong>신고를 불러오는 중입니다.</strong></Shared.EmptyStateCard>
+      ) : reports.length === 0 ? (
+        <Shared.EmptyStateCard><strong>조건에 맞는 신고가 없습니다.</strong></Shared.EmptyStateCard>
+      ) : (
       <Shared.Workspace>
         <Shared.Panel>
           <Shared.PanelHeader>
@@ -161,11 +166,13 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               </S.CardList>
             )}
           </Shared.ScrollArea>
-          <S.Pagination>
-            <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => void fetchReports(status, page - 1)}>이전</Shared.SecondaryButton>
-            <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
-            <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => void fetchReports(status, page + 1)}>다음</Shared.SecondaryButton>
-          </S.Pagination>
+          {totalPages > 1 ? (
+            <S.Pagination>
+              <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => void fetchReports(status, page - 1)}>이전</Shared.SecondaryButton>
+              <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
+              <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => void fetchReports(status, page + 1)}>다음</Shared.SecondaryButton>
+            </S.Pagination>
+          ) : null}
         </Shared.Panel>
 
         <Shared.Panel>
@@ -242,6 +249,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
           </Shared.CompareBody>
         </Shared.Panel>
       </Shared.Workspace>
+      )}
 
       {dialog && reportDetail ? (
         <Shared.ModalOverlay role="presentation" onMouseDown={() => activeAction === null && setDialog(null)}>

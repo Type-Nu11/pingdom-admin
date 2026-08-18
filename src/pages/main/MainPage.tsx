@@ -854,9 +854,6 @@ function MainPage() {
           <S.TopTitle>게시글 관리</S.TopTitle>
           <S.TopActions>
             <AdminNotificationButton />
-            <S.IconButton type="button" aria-label="도움말">
-              <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
-            </S.IconButton>
           </S.TopActions>
         </S.TopBar>
 

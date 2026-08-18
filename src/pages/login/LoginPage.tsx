@@ -220,11 +220,8 @@ function LoginPage() {
                   ? '관리자 정보를 불러오는 중...'
                   : isLoading
                     ? '로그인 중...'
-                    : '로그인하기'}
+                    : '로그인'}
               </span>
-              {!isSubmitting ? (
-                <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
-              ) : null}
             </S.SubmitButton>
           </S.Form>
         </S.LoginPanel>

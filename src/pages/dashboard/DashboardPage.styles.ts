@@ -298,64 +298,6 @@ export const IconButton = styled.button`
   }
 `
 
-export const UtilityPanel = styled.div`
-  position: absolute;
-  top: 44px;
-  right: 0;
-  z-index: 60;
-  width: min(280px, calc(100vw - 32px));
-  padding: 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${neutral.surface};
-  box-shadow: 0 8px 24px ${neutral.shadow};
-`
-
-export const UtilityPanelHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-  strong {
-    color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 600;
-  }
-`
-
-export const UtilityPanelClose = styled.button`
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: ${neutral.softText};
-  cursor: pointer;
-
-  &:hover {
-    background: ${neutral.surfaceLow};
-    color: ${neutral.text};
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${neutral.primary};
-    outline-offset: 2px;
-  }
-
-  ${MaterialIcon} { font-size: 18px; }
-`
-
-export const UtilityPanelText = styled.p`
-  margin: 10px 0 0;
-  color: ${neutral.muted};
-  font-size: 13px;
-  line-height: 1.5;
-`
-
 export const PageContent = styled.main`
   width: min(calc(100% - 64px), 1100px);
   min-height: calc(100vh - 64px);

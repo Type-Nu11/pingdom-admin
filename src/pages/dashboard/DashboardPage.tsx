@@ -46,7 +46,6 @@ interface DashboardOperationalMetric {
   tone: 'neutral' | 'action'
 }
 
-type DashboardUtilityKey = 'help'
 type DashboardActivityTabKey = 'places' | 'posts' | 'reports' | 'userSanctions'
 
 interface DashboardActivityRow {
@@ -177,7 +176,6 @@ function DashboardPage() {
     lastUpdatedAt,
     fetchSummary,
   } = useAdminDashboard()
-  const [activeUtility, setActiveUtility] = useState<DashboardUtilityKey | null>(null)
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
@@ -656,30 +654,6 @@ function DashboardPage() {
     )
   }
 
-  function renderUtilityPanel() {
-    if (!activeUtility) {
-      return null
-    }
-
-    return (
-      <S.UtilityPanel role="status">
-        <S.UtilityPanelHeader>
-          <strong>도움말</strong>
-          <S.UtilityPanelClose
-            type="button"
-            aria-label="패널 닫기"
-            onClick={() => setActiveUtility(null)}
-          >
-            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
-          </S.UtilityPanelClose>
-        </S.UtilityPanelHeader>
-        <S.UtilityPanelText>
-          관리자 화면 도움말은 기능 연결 후 제공됩니다.
-        </S.UtilityPanelText>
-      </S.UtilityPanel>
-    )
-  }
-
   return (
     <S.AppShell>
       <S.SideNav aria-label="관리자 메뉴">
@@ -755,18 +729,6 @@ function DashboardPage() {
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
             <AdminNotificationButton />
-            <S.IconButton
-              type="button"
-              aria-label="도움말"
-              title="도움말"
-              aria-expanded={activeUtility === 'help'}
-              onClick={() =>
-                setActiveUtility((current) => (current === 'help' ? null : 'help'))
-              }
-            >
-              <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
-            </S.IconButton>
-            {renderUtilityPanel()}
           </S.TopActions>
         </S.TopBar>
 

@@ -898,6 +898,19 @@ export const OperationalMetricGrid = styled.div`
   }
 `
 
+export const OperationalEmptyState = styled.p`
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 13px;
+`
+
 export const OperationalMetricCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
   min-width: 0;
   min-height: 70px;

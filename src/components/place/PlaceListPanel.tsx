@@ -1,4 +1,5 @@
 import type { RefObject } from 'react'
+import { AdminSelect } from '../common/AdminStatusSelect'
 import SortDropdown from '../common/SortDropdown'
 import type {
   AdminPlaceCategory,
@@ -18,14 +19,15 @@ const SORT_OPTIONS = [
 ]
 
 const CATEGORY_OPTIONS: AdminPlaceCategory[] = [
+  '음식점',
+  '음악',
+  '팝업',
+  '패션',
+  '뷰티',
+  '전시',
   '카페',
-  '식당',
-  '관광',
-  '풍경',
-  '문화',
-  '쇼핑',
-  '숙박',
-  '체험',
+  '문화재',
+  '기타',
 ]
 
 interface PlaceListPanelProps {
@@ -156,10 +158,11 @@ export function PlaceListPanel({
             width="100%"
             onChange={onSortChange}
           />
-          <S.CategorySelect
+          <AdminSelect
             value={category}
             aria-label="장소 카테고리 필터"
             disabled={isLoading}
+            width="100%"
             onChange={(event) => onCategoryChange(event.target.value)}
           >
             <option value="">전체 카테고리</option>
@@ -168,7 +171,7 @@ export function PlaceListPanel({
                 {value}
               </option>
             ))}
-          </S.CategorySelect>
+          </AdminSelect>
           <S.IconFilterButton
             type="button"
             aria-label={isLoading ? '장소 목록을 불러오는 중입니다' : '장소 목록 새로고침'}

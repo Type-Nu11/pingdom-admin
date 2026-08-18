@@ -23,21 +23,26 @@ const FLAME_MARKER_IMAGE_URL_BY_KIND = {
 }
 
 const CATEGORY_LABEL_BY_KEY: Record<string, string> = {
+  음식점: '음식점',
+  음악: '음악',
+  팝업: '팝업',
+  패션: '패션',
+  뷰티: '뷰티',
+  전시: '전시',
   카페: '카페',
-  식당: '식당',
-  관광: '관광',
-  풍경: '풍경',
-  문화: '문화',
-  쇼핑: '쇼핑',
-  숙박: '숙박',
-  체험: '체험',
-  FOOD: '음식',
-  RESTAURANT: '음식',
+  문화재: '문화재',
+  기타: '기타',
+  FOOD: '음식점',
+  RESTAURANT: '음식점',
   MUSIC: '음악',
   CONCERT: '음악',
   FASHION: '패션',
   FESHION: '패션',
   STYLE: '패션',
+  BEAUTY: '뷰티',
+  POP_UP: '팝업',
+  EXHIBITION: '전시',
+  CULTURAL_HERITAGE: '문화재',
   GAME: '게임',
   ETC: '기타',
   OTHER: '기타',
@@ -65,8 +70,7 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
   if (
     categoryText.includes('music') ||
     categoryText.includes('concert') ||
-    categoryText.includes('음악') ||
-    categoryText.includes('문화')
+    categoryText.includes('음악')
   ) {
     return 'music'
   }
@@ -75,8 +79,7 @@ function getPlaceCategoryKind(place: PlaceCategorySource) {
     categoryText.includes('fashion') ||
     categoryText.includes('feshion') ||
     categoryText.includes('style') ||
-    categoryText.includes('패션') ||
-    categoryText.includes('쇼핑')
+    categoryText.includes('패션')
   ) {
     return 'fashion'
   }

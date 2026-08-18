@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
+import { AdminSelect } from '../common/AdminStatusSelect'
 import type { AdminPlaceNoticeAction } from '../../hooks/useAdminPlaceOperatingNotices'
 import type {
   AdminPlaceDetail,
@@ -331,9 +332,11 @@ export function PlaceOperatingNoticeDialog({
               <S.OperatingFieldRow>
                 <S.OperatingFormField>
                   <span>공지 유형 *</span>
-                  <S.OperatingSelect
+                  <AdminSelect
                     value={noticeType}
+                    aria-label="공지 유형"
                     disabled={isRunning}
+                    width="100%"
                     onChange={(event) => {
                       setNoticeType(event.target.value as AdminPlaceOperatingNoticeType)
                       clearFeedback()
@@ -344,13 +347,15 @@ export function PlaceOperatingNoticeDialog({
                         {option.label}
                       </option>
                     ))}
-                  </S.OperatingSelect>
+                  </AdminSelect>
                 </S.OperatingFormField>
                 <S.OperatingFormField>
                   <span>중요도 *</span>
-                  <S.OperatingSelect
+                  <AdminSelect
                     value={severity}
+                    aria-label="공지 중요도"
                     disabled={isRunning}
+                    width="100%"
                     onChange={(event) => {
                       setSeverity(event.target.value as AdminPlaceOperatingNoticeSeverity)
                       clearFeedback()
@@ -361,7 +366,7 @@ export function PlaceOperatingNoticeDialog({
                         {option.label}
                       </option>
                     ))}
-                  </S.OperatingSelect>
+                  </AdminSelect>
                 </S.OperatingFormField>
               </S.OperatingFieldRow>
 
@@ -416,9 +421,11 @@ export function PlaceOperatingNoticeDialog({
               {action === 'update' ? (
                 <S.OperatingFormField>
                   <span>중요도 *</span>
-                  <S.OperatingSelect
+                  <AdminSelect
                     value={severity}
+                    aria-label="공지 중요도"
                     disabled={isRunning}
+                    width="100%"
                     onChange={(event) => {
                       setSeverity(event.target.value as AdminPlaceOperatingNoticeSeverity)
                       clearFeedback()
@@ -429,7 +436,7 @@ export function PlaceOperatingNoticeDialog({
                         {option.label}
                       </option>
                     ))}
-                  </S.OperatingSelect>
+                  </AdminSelect>
                 </S.OperatingFormField>
               ) : null}
             </>

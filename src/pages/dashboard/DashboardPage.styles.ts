@@ -644,13 +644,13 @@ export const ActivityBadge = styled.span<{
     if ($tone === 'success') return neutral.successTint
     if ($tone === 'warning') return neutral.warningTint
     if ($tone === 'error') return neutral.errorTint
-    return neutral.surfaceContainer
+    return neutral.primaryTint
   }};
   color: ${({ $tone }) => {
     if ($tone === 'success') return neutral.successText
     if ($tone === 'warning') return neutral.warningText
     if ($tone === 'error') return neutral.error
-    return neutral.softText
+    return neutral.primary
   }};
   font-size: 11px;
   font-weight: 600;

@@ -881,10 +881,13 @@ export const MediaTitle = styled.h3`
 export const StatusBadge = styled.span<{
   $tone?: 'normal' | 'reported' | 'processed' | 'hidden'
 }>`
+  min-height: 24px;
   flex-shrink: 0;
-  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
   border: 1px solid ${neutral.primarySoft};
-  border-radius: 4px;
+  border-radius: 6px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
   font-size: 12px;
@@ -893,9 +896,9 @@ export const StatusBadge = styled.span<{
   ${({ $tone }) =>
     $tone === 'normal' &&
     css`
-      border-color: ${neutral.borderDark};
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.muted};
+      border-color: ${neutral.primarySoft};
+      background: ${neutral.primaryTint};
+      color: ${neutral.primary};
     `}
 
   ${({ $tone }) =>
@@ -910,15 +913,15 @@ export const StatusBadge = styled.span<{
     $tone === 'processed' &&
     css`
       border-color: ${neutral.info};
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.info};
+      background: ${neutral.infoTint};
+      color: ${neutral.infoText};
     `}
 
   ${({ $tone }) =>
     $tone === 'hidden' &&
     css`
       border-color: ${neutral.error};
-      background: ${neutral.surfaceHighest};
+      background: ${neutral.errorTint};
       color: ${neutral.error};
     `}
 `
@@ -1458,10 +1461,10 @@ export const ReportStatusBadge = styled.span<{
 }>`
   flex-shrink: 0;
   padding: 4px 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 4px;
-  background: ${neutral.surfaceContainer};
-  color: ${neutral.muted};
+  border: 1px solid ${neutral.primarySoft};
+  border-radius: 6px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
   font-size: 12px;
   font-weight: 700;
 
@@ -1484,17 +1487,17 @@ export const ReportStatusBadge = styled.span<{
   ${({ $status }) =>
     $status === 'DECLINED' &&
     css`
-      border-color: ${neutral.borderDark};
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.muted};
+      border-color: ${neutral.info};
+      background: ${neutral.infoTint};
+      color: ${neutral.infoText};
     `}
 
   ${({ $status }) =>
     $status === 'RESTORED' &&
     css`
       border-color: ${neutral.info};
-      background: ${neutral.surfaceHighest};
-      color: ${neutral.info};
+      background: ${neutral.infoTint};
+      color: ${neutral.infoText};
     `}
 `
 

@@ -17,36 +17,28 @@ type PlaceCategoryKind =
   | 'other'
 
 const MARKER_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
-  restaurant: new URL('../assets/placeMarkers/category/restaurant.svg', import.meta.url).href,
-  music: new URL('../assets/placeMarkers/category/music.svg', import.meta.url).href,
-  popup: new URL('../assets/placeMarkers/category/popup.svg', import.meta.url).href,
-  fashion: new URL('../assets/placeMarkers/category/fashion.svg', import.meta.url).href,
-  beauty: new URL('../assets/placeMarkers/category/beauty.svg', import.meta.url).href,
-  exhibition: new URL('../assets/placeMarkers/category/exhibition.svg', import.meta.url).href,
-  cafe: new URL('../assets/placeMarkers/category/cafe.svg', import.meta.url).href,
-  'cultural-heritage': new URL(
-    '../assets/placeMarkers/category/cultural-heritage.svg',
-    import.meta.url
-  ).href,
-  other: new URL('../assets/placeMarkers/category/other.svg', import.meta.url).href,
+  restaurant: new URL('../assets/placeMarkers/category/음식점.svg', import.meta.url).href,
+  music: new URL('../assets/placeMarkers/category/음악.svg', import.meta.url).href,
+  popup: new URL('../assets/placeMarkers/category/팝업.svg', import.meta.url).href,
+  fashion: new URL('../assets/placeMarkers/category/패션.svg', import.meta.url).href,
+  beauty: new URL('../assets/placeMarkers/category/뷰티.svg', import.meta.url).href,
+  exhibition: new URL('../assets/placeMarkers/category/전시.svg', import.meta.url).href,
+  cafe: new URL('../assets/placeMarkers/category/카페.svg', import.meta.url).href,
+  'cultural-heritage': new URL('../assets/placeMarkers/category/문화재.svg', import.meta.url).href,
+  other: new URL('../assets/placeMarkers/category/기타.svg', import.meta.url).href,
 }
 
 const FLAME_MARKER_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
-  restaurant: new URL('../assets/placeMarkers/category/restaurant-flame.svg', import.meta.url)
+  restaurant: new URL('../assets/placeMarkers/category/음식점-불꽃.svg', import.meta.url).href,
+  music: new URL('../assets/placeMarkers/category/음악-불꽃.svg', import.meta.url).href,
+  popup: new URL('../assets/placeMarkers/category/팝업-불꽃.svg', import.meta.url).href,
+  fashion: new URL('../assets/placeMarkers/category/패션-불꽃.svg', import.meta.url).href,
+  beauty: new URL('../assets/placeMarkers/category/뷰티-불꽃.svg', import.meta.url).href,
+  exhibition: new URL('../assets/placeMarkers/category/전시-불꽃.svg', import.meta.url).href,
+  cafe: new URL('../assets/placeMarkers/category/카페-불꽃.svg', import.meta.url).href,
+  'cultural-heritage': new URL('../assets/placeMarkers/category/문화재-불꽃.svg', import.meta.url)
     .href,
-  music: new URL('../assets/placeMarkers/category/music-flame.svg', import.meta.url).href,
-  popup: new URL('../assets/placeMarkers/category/popup-flame.svg', import.meta.url).href,
-  fashion: new URL('../assets/placeMarkers/category/fashion-flame.svg', import.meta.url)
-    .href,
-  beauty: new URL('../assets/placeMarkers/category/beauty-flame.svg', import.meta.url).href,
-  exhibition: new URL('../assets/placeMarkers/category/exhibition-flame.svg', import.meta.url)
-    .href,
-  cafe: new URL('../assets/placeMarkers/category/cafe-flame.svg', import.meta.url).href,
-  'cultural-heritage': new URL(
-    '../assets/placeMarkers/category/cultural-heritage-flame.svg',
-    import.meta.url
-  ).href,
-  other: new URL('../assets/placeMarkers/category/other-flame.svg', import.meta.url).href,
+  other: new URL('../assets/placeMarkers/category/기타-불꽃.svg', import.meta.url).href,
 }
 
 const CATEGORY_METADATA_BY_KEY: Record<

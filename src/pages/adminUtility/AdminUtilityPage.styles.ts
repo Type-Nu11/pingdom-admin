@@ -7,7 +7,7 @@ export const Content = styled.main`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 28px 32px 40px;
+  padding: 32px;
   background: ${neutral.background};
 
   @media (max-width: 720px) {
@@ -16,7 +16,7 @@ export const Content = styled.main`
 `
 
 export const PageStack = styled.div`
-  width: min(1180px, 100%);
+  width: min(1280px, 100%);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -26,8 +26,8 @@ export const IntroBand = styled.section`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  padding-bottom: 20px;
+  gap: 16px;
+  padding-bottom: 16px;
   border-bottom: 1px solid ${neutral.border};
 
   @media (max-width: 720px) {
@@ -64,7 +64,7 @@ export const IntroDescription = styled.p`
 `
 
 export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
-  min-height: 34px;
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -344,7 +344,7 @@ export const FilterHelpText = styled.span`
 `
 
 const inputControlStyle = css`
-  min-height: 42px;
+  min-height: 40px;
   min-width: 0;
   width: 100%;
   padding: 0 12px;
@@ -803,8 +803,8 @@ export const WorkGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(420px, 1fr);
   gap: 16px;
-  min-height: 560px;
-  height: min(720px, calc(100vh - 300px));
+  min-height: 480px;
+  height: min(680px, calc(100vh - 300px));
 
   @media (max-width: 1040px) {
     grid-template-columns: 1fr;
@@ -824,7 +824,8 @@ export const SectionHeader = styled.header`
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 18px;
+  min-height: 60px;
+  padding: 14px 16px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -866,7 +867,7 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
 `
 
 export const SectionBody = styled.div`
-  padding: 18px;
+  padding: 16px;
 `
 
 export const WorkSection = styled(Section)`
@@ -892,7 +893,7 @@ export const Toolbar = styled.div`
 `
 
 export const SearchInput = styled.input`
-  min-height: 44px;
+  min-height: 40px;
   min-width: 0;
   padding: 0 14px;
   border: 1px solid ${neutral.border};
@@ -918,7 +919,7 @@ export const SearchInput = styled.input`
 `
 
 const buttonStyle = css`
-  min-height: 42px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -961,8 +962,8 @@ export const SecondaryButton = styled.button`
 `
 
 export const IconActionButton = styled.button`
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1242,7 +1243,7 @@ export const PaginationStatus = styled.span`
 `
 
 export const DetailEmpty = styled.div`
-  min-height: 280px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
   align-items: center;

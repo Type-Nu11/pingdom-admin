@@ -139,32 +139,26 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
             <Shared.PanelCount>{totalCount.toLocaleString()}건</Shared.PanelCount>
           </Shared.PanelHeader>
           <Shared.ScrollArea>
-            {isLoading && reports.length === 0 ? (
-              <Shared.EmptyState><strong>신고를 불러오는 중입니다.</strong></Shared.EmptyState>
-            ) : reports.length === 0 ? (
-              <Shared.EmptyState><strong>조건에 맞는 신고가 없습니다.</strong></Shared.EmptyState>
-            ) : (
-              <S.CardList>
-                {reports.map((report) => (
-                  <S.RecordButton
-                    key={report.reportId}
-                    type="button"
-                    $selected={selectedReportId === report.reportId}
-                    onClick={() => {
-                      setSelectedReportId(report.reportId)
-                      void fetchReportDetail(report.reportId)
-                    }}
-                  >
-                    <S.RecordHeader>
-                      <S.RecordTitle>신고 #{report.reportId} · 장소 #{report.placeId}</S.RecordTitle>
-                      <S.StatusBadge $tone={getStatusTone(report.status)}>{REPORT_STATUS_LABELS[report.status]}</S.StatusBadge>
-                    </S.RecordHeader>
-                    <S.RecordMeta>{TARGET_TYPE_LABELS[report.targetType]} · {REASON_TYPE_LABELS[report.reasonType]} · {formatVerificationDate(report.createdAt)}</S.RecordMeta>
-                    <S.RecordDescription>{report.description}</S.RecordDescription>
-                  </S.RecordButton>
-                ))}
-              </S.CardList>
-            )}
+            <S.CardList>
+              {reports.map((report) => (
+                <S.RecordButton
+                  key={report.reportId}
+                  type="button"
+                  $selected={selectedReportId === report.reportId}
+                  onClick={() => {
+                    setSelectedReportId(report.reportId)
+                    void fetchReportDetail(report.reportId)
+                  }}
+                >
+                  <S.RecordHeader>
+                    <S.RecordTitle>신고 #{report.reportId} · 장소 #{report.placeId}</S.RecordTitle>
+                    <S.StatusBadge $tone={getStatusTone(report.status)}>{REPORT_STATUS_LABELS[report.status]}</S.StatusBadge>
+                  </S.RecordHeader>
+                  <S.RecordMeta>{TARGET_TYPE_LABELS[report.targetType]} · {REASON_TYPE_LABELS[report.reasonType]} · {formatVerificationDate(report.createdAt)}</S.RecordMeta>
+                  <S.RecordDescription>{report.description}</S.RecordDescription>
+                </S.RecordButton>
+              ))}
+            </S.CardList>
           </Shared.ScrollArea>
           {totalPages > 1 ? (
             <S.Pagination>

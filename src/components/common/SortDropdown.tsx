@@ -31,6 +31,7 @@ function SortDropdown({
 }: SortDropdownProps) {
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const selectedOption =
@@ -51,18 +52,10 @@ function SortDropdown({
       }
     }
 
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-      }
-    }
-
     window.addEventListener('mousedown', closeOnOutsideClick)
-    window.addEventListener('keydown', closeOnEscape)
 
     return () => {
       window.removeEventListener('mousedown', closeOnOutsideClick)
-      window.removeEventListener('keydown', closeOnEscape)
     }
   }, [isOpen])
 
@@ -71,8 +64,12 @@ function SortDropdown({
     setIsOpen(true)
   }
 
-  function closeDropdown() {
+  function closeDropdown(restoreFocus = false) {
     setIsOpen(false)
+
+    if (restoreFocus) {
+      triggerRef.current?.focus()
+    }
   }
 
   function toggleDropdown() {
@@ -105,7 +102,7 @@ function SortDropdown({
     }
 
     onChange(nextOption.value)
-    closeDropdown()
+    closeDropdown(true)
   }
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>) {
@@ -141,7 +138,7 @@ function SortDropdown({
       return
     }
 
-    if (event.key === 'Enter' && isOpen) {
+    if ((event.key === 'Enter' || event.key === ' ') && isOpen) {
       event.preventDefault()
       selectOption(activeIndex)
 
@@ -150,6 +147,12 @@ function SortDropdown({
 
     if (event.key === 'Escape' && isOpen) {
       event.preventDefault()
+      closeDropdown(true)
+
+      return
+    }
+
+    if (event.key === 'Tab' && isOpen) {
       closeDropdown()
     }
   }
@@ -157,11 +160,14 @@ function SortDropdown({
   return (
     <S.DropdownRoot ref={rootRef} $width={width}>
       <S.DropdownTrigger
+        ref={triggerRef}
         type="button"
+        role="combobox"
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={listboxId}
+        aria-activedescendant={isOpen ? `${listboxId}-option-${activeIndex}` : undefined}
         disabled={disabled}
         onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
@@ -175,7 +181,6 @@ function SortDropdown({
           id={listboxId}
           role="listbox"
           aria-label={ariaLabel}
-          aria-activedescendant={`${listboxId}-option-${activeIndex}`}
         >
           {options.map((option, index) => {
             const isSelected = option.value === value
@@ -188,10 +193,10 @@ function SortDropdown({
                 type="button"
                 role="option"
                 aria-selected={isSelected}
+                tabIndex={-1}
                 $selected={isSelected}
                 $highlighted={isHighlighted}
                 onMouseEnter={() => setActiveIndex(index)}
-                onKeyDown={handleKeyDown}
                 onClick={() => {
                   selectOption(index)
                 }}

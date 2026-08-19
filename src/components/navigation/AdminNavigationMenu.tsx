@@ -14,6 +14,7 @@ interface NavigationGroup {
 }
 
 const PLACE_MANAGEMENT_CHILDREN: NavigationItem[] = [
+  { label: '기간형 이벤트', icon: 'event', path: '/places/events' },
   { label: '중복 장소 후보', icon: 'difference', path: '/places/duplicate-candidates' },
   { label: '장소 병합 · 복구', icon: 'merge', path: '/places/duplicates' },
   { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },

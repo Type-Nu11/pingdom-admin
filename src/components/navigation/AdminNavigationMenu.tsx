@@ -47,6 +47,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
       { label: 'Trust Score', icon: 'verified_user', path: '/trust-score' },
       { label: '인증 부스트 상품', icon: 'rocket_launch', path: '/verified-boost-products' },
       { label: '사용자 역할', icon: 'manage_accounts', path: '/users/roles' },
+      { label: '광고 관리', icon: 'campaign', path: '/operations/ads' },
       { label: '알림 · Outbox', icon: 'notifications_active', path: '/operations/notifications' },
       { label: '운영 이력', icon: 'history', path: '/operations/history' },
       { label: 'S3 고아 객체', icon: 'cloud_off', path: '/s3-orphans' },

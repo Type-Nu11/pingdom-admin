@@ -43,8 +43,18 @@ export interface AdminPlaceEventActionRequest {
   reason: string
 }
 
-export interface AdminPlaceEventResponse extends AdminPlaceEventListItem {
-  message?: string
+export interface AdminPlaceEventResponse {
+  eventId: number
+  placeId: number
+  placeName: string
+  title: string
+  description?: string | null
+  eventType: AdminPlaceEventType
+  startAt: string
+  endAt: string
+  publicationStatus: AdminPlaceEventPublicationStatus
+  scheduleStatus: AdminPlaceEventScheduleStatus
+  message?: string | null
 }
 
 export interface AdminPlaceEventListParams {

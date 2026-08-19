@@ -14,13 +14,17 @@ import type {
   MerchantOperationalQualityStatus,
   MerchantOwnerStatus,
 } from '../../types/adminMerchantOwner.types'
+import type { MerchantVerificationStatus } from '../../types/adminMerchantVerification.types'
 import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
+import * as OwnerStyles from './MerchantOwnerPage.styles'
 
 const OWNER_STATUS: Record<MerchantOwnerStatus, string> = { PENDING: '승인 대기', ACTIVE: '활성', REJECTED: '거절', REVOKED: '회수' }
 const ONBOARDING_STATUS: Record<MerchantOnboardingStatus, string> = { NOT_STARTED: '시작 전', IN_PROGRESS: '진행 중', COMPLETED: '완료' }
 const QUALITY_STATUS: Record<MerchantOperationalQualityStatus, string> = { UNMEASURED: '미측정', HEALTHY: '양호', NEEDS_ATTENTION: '주의 필요', AT_RISK: '위험' }
+const VERIFICATION_STATUS: Record<MerchantVerificationStatus, string> = { PENDING: '심사 대기', APPROVED: '승인', REJECTED: '거절' }
+const verificationTone = (status: MerchantVerificationStatus) => status === 'APPROVED' ? 'success' : status === 'REJECTED' ? 'danger' : 'warning'
 type Dialog =
   | { type: 'review'; action: 'approve' | 'reject' | 'revoke' }
   | { type: 'places' }
@@ -61,6 +65,17 @@ function MerchantOwnerPage() {
   const [evaluatedAt, setEvaluatedAt] = useState('')
   const [formError, setFormError] = useState('')
   const adminIdentifier = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
+  const approvalBlockMessage = hook.verificationLoadStatus === 'loading'
+    ? 'Merchant 검증 상태를 확인하고 있습니다.'
+    : hook.verificationLoadStatus === 'missing'
+      ? 'Merchant 검증 신청이 없어 승인할 수 없습니다.'
+      : hook.verificationLoadStatus === 'error'
+        ? 'Merchant 검증 상태를 확인하지 못해 승인할 수 없습니다.'
+        : hook.verification && hook.verification.businessName !== hook.profile?.businessName
+          ? 'Merchant Owner 프로필의 상호명과 검증된 상호명이 일치해야 합니다.'
+          : !hook.isApprovalEligible
+            ? '신원 및 사업자 검증이 모두 승인되어야 합니다.'
+            : ''
 
   const changeStatus = (status: MerchantOwnerStatus | '') => {
     setSelectedUserId(null); hook.clearDetail(); void hook.fetchProfiles(status, 1)
@@ -68,6 +83,7 @@ function MerchantOwnerPage() {
   const selectProfile = (userId: number) => { setSelectedUserId(userId); void hook.fetchDetail(userId) }
   const openDialog = (next: Dialog) => {
     if (!next || !hook.profile) return
+    if (next.type === 'review' && next.action === 'approve' && !hook.isApprovalEligible) return
     setReason(''); setFormError('')
     if (next.type === 'places' || (next.type === 'review' && next.action === 'approve')) setPlaceIds(hook.profile.placeIds.join(', '))
     if (next.type === 'onboarding') {
@@ -85,6 +101,10 @@ function MerchantOwnerPage() {
     const trimmedReason = reason.trim()
     if (!trimmedReason) { setFormError('처리 사유를 입력해주세요.'); return }
     if (dialog.type === 'review') {
+      if (dialog.action === 'approve' && !hook.isApprovalEligible) {
+        setFormError(approvalBlockMessage)
+        return
+      }
       const ids = dialog.action === 'approve' ? parsePlaceIds(placeIds) : []
       if (ids === null) { setFormError('장소 ID는 쉼표로 구분한 1 이상의 정수로 입력해주세요.'); return }
       const result = await hook.review(dialog.action, userId, { reason: trimmedReason, placeIds: ids })
@@ -122,8 +142,9 @@ function MerchantOwnerPage() {
             <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>{hook.status ? OWNER_STATUS[hook.status] : '전체'} 신청</Shared.PanelTitle><Shared.PanelDescription>프로필을 선택해 신청 및 운영 정보를 확인합니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.totalCount.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader><Shared.ScrollArea>{hook.isLoading && hook.profiles.length === 0 ? <Shared.EmptyState><strong>신청 목록을 불러오는 중입니다.</strong></Shared.EmptyState> : hook.profiles.length === 0 ? <Shared.EmptyState><strong>조건에 맞는 신청이 없습니다.</strong></Shared.EmptyState> : <S.CardList>{hook.profiles.map((profile) => <S.RecordButton key={profile.userId} type="button" $selected={selectedUserId === profile.userId} onClick={() => selectProfile(profile.userId)}><S.RecordHeader><S.RecordTitle>{profile.businessName}</S.RecordTitle><S.StatusBadge $tone={profile.status === 'ACTIVE' ? 'success' : profile.status === 'PENDING' ? 'warning' : 'danger'}>{OWNER_STATUS[profile.status]}</S.StatusBadge></S.RecordHeader><S.RecordMeta>{profile.displayName} · 사용자 #{profile.userId}</S.RecordMeta><S.RecordDescription>{profile.description || '사업자 소개 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>}</Shared.ScrollArea><S.Pagination><Shared.SecondaryButton type="button" disabled={hook.page <= 1 || hook.isLoading} onClick={() => { setSelectedUserId(null); hook.clearDetail(); void hook.fetchProfiles(hook.status, hook.page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(hook.page, 1)} / {Math.max(hook.totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.hasNext || hook.isLoading} onClick={() => { setSelectedUserId(null); hook.clearDetail(); void hook.fetchProfiles(hook.status, hook.page + 1) }}>다음</Shared.SecondaryButton></S.Pagination></Shared.Panel>
             <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>프로필 및 연결 장소</Shared.PanelTitle><Shared.PanelDescription>상태 변경 전 연락처와 장소 운영 품질을 확인합니다.</Shared.PanelDescription></div></Shared.PanelHeader><Shared.CompareBody>{!selectedUserId ? <Shared.EmptyState><strong>확인할 Merchant Owner를 선택해주세요.</strong></Shared.EmptyState> : hook.isDetailLoading ? <Shared.EmptyState><strong>상세 정보를 불러오는 중입니다.</strong></Shared.EmptyState> : hook.detailErrorMessage ? <Shared.EmptyState><strong>{hook.detailErrorMessage}</strong><Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedUserId)}>다시 시도</Shared.SecondaryButton></Shared.EmptyState> : hook.profile ? <>
               <S.RecordHeader><div><S.RecordTitle>{hook.profile.businessName}</S.RecordTitle><S.RecordMeta>{hook.profile.displayName} · 사용자 #{hook.profile.userId}</S.RecordMeta></div><S.StatusBadge $tone={hook.profile.status === 'ACTIVE' ? 'success' : hook.profile.status === 'PENDING' ? 'warning' : 'danger'}>{OWNER_STATUS[hook.profile.status]}</S.StatusBadge></S.RecordHeader><S.RecordDescription>{hook.profile.description || '사업자 소개 없음'}</S.RecordDescription>
-              <S.DetailGrid><S.DetailItem><dt>이메일</dt><dd>{hook.profile.contactEmail}</dd></S.DetailItem><S.DetailItem><dt>전화번호</dt><dd>{hook.profile.contactPhone}</dd></S.DetailItem><S.DetailItem><dt>온보딩</dt><dd>{ONBOARDING_STATUS[hook.profile.onboardingStatus]} · {hook.profile.onboardingCompletionRate}%</dd></S.DetailItem><S.DetailItem><dt>심사</dt><dd>{hook.profile.reviewedBy ? `관리자 #${hook.profile.reviewedBy} · ${formatDate(hook.profile.reviewedAt)}` : '미심사'}</dd></S.DetailItem></S.DetailGrid>
-              <S.InlineActions>{hook.profile.status === 'PENDING' ? <><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'review', action: 'reject' })}>신청 거절</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'review', action: 'approve' })}>신청 승인</Shared.PrimaryButton></> : null}{hook.profile.status === 'ACTIVE' ? <><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'places' })}>연결 장소 변경</Shared.SecondaryButton><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'onboarding' })}>온보딩 변경</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'review', action: 'revoke' })}>권한 회수</Shared.PrimaryButton></> : null}</S.InlineActions>
+              <S.DetailGrid><S.DetailItem><dt>이메일</dt><dd>{hook.profile.contactEmail}</dd></S.DetailItem><S.DetailItem><dt>전화번호</dt><dd>{hook.profile.contactPhone}</dd></S.DetailItem><S.DetailItem><dt>온보딩</dt><dd>{ONBOARDING_STATUS[hook.profile.onboardingStatus]} · {hook.profile.onboardingCompletionRate}%</dd></S.DetailItem><S.DetailItem><dt>심사</dt><dd>{hook.profile.reviewedBy ? `관리자 #${hook.profile.reviewedBy} · ${formatDate(hook.profile.reviewedAt)}` : '미심사'}</dd></S.DetailItem><S.DetailItem><dt>신원 검증</dt><dd>{hook.verification ? <S.StatusBadge $tone={verificationTone(hook.verification.identityStatus)}>{VERIFICATION_STATUS[hook.verification.identityStatus]}</S.StatusBadge> : hook.verificationLoadStatus === 'loading' ? '확인 중' : hook.verificationLoadStatus === 'missing' ? '신청 없음' : '조회 실패'}</dd></S.DetailItem><S.DetailItem><dt>사업자 검증</dt><dd>{hook.verification ? <S.StatusBadge $tone={verificationTone(hook.verification.businessStatus)}>{VERIFICATION_STATUS[hook.verification.businessStatus]}</S.StatusBadge> : hook.verificationLoadStatus === 'loading' ? '확인 중' : hook.verificationLoadStatus === 'missing' ? '신청 없음' : '조회 실패'}</dd></S.DetailItem>{hook.verification ? <S.DetailItem><dt>검증 상호명</dt><dd>{hook.verification.businessName}</dd></S.DetailItem> : null}</S.DetailGrid>
+              {hook.profile.status === 'PENDING' && !hook.isApprovalEligible ? <OwnerStyles.ApprovalGuard><Shell.MaterialIcon aria-hidden="true">verified_user</Shell.MaterialIcon><div><strong>승인 선행 조건</strong>{hook.verificationErrorMessage || approvalBlockMessage}</div></OwnerStyles.ApprovalGuard> : null}
+              <S.InlineActions>{hook.profile.status === 'PENDING' ? <><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'review', action: 'reject' })}>신청 거절</Shared.SecondaryButton><Shared.PrimaryButton type="button" title={hook.isApprovalEligible ? undefined : approvalBlockMessage} disabled={hook.activeAction !== null || !hook.isApprovalEligible} onClick={() => openDialog({ type: 'review', action: 'approve' })}>신청 승인</Shared.PrimaryButton></> : null}{hook.profile.status === 'ACTIVE' ? <><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'places' })}>연결 장소 변경</Shared.SecondaryButton><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'onboarding' })}>온보딩 변경</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'review', action: 'revoke' })}>권한 회수</Shared.PrimaryButton></> : null}</S.InlineActions>
               <S.Section><S.SectionHeader><S.SectionTitle>연결 장소 {hook.places.length.toLocaleString()}개</S.SectionTitle></S.SectionHeader>{hook.places.length === 0 ? <Shared.EmptyState><strong>연결된 장소가 없습니다.</strong></Shared.EmptyState> : <S.CardList>{hook.places.map((place) => <S.RecordCard key={place.placeId}><S.RecordHeader><S.RecordTitle>장소 #{place.placeId}</S.RecordTitle><S.StatusBadge $tone={place.operationalQualityStatus === 'HEALTHY' ? 'success' : place.operationalQualityStatus === 'AT_RISK' ? 'danger' : 'warning'}>{QUALITY_STATUS[place.operationalQualityStatus]}</S.StatusBadge></S.RecordHeader><S.RecordMeta>응답 {place.reservationResponseRate}% · 취소 {place.reservationCancellationRate}% · 노쇼 {place.noShowRate}% · 평가 {formatDate(place.qualityEvaluatedAt)}</S.RecordMeta>{hook.profile?.status === 'ACTIVE' ? <S.InlineActions><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog({ type: 'quality', place })}>운영 품질 변경</Shared.SecondaryButton></S.InlineActions> : null}</S.RecordCard>)}</S.CardList>}</S.Section>
             </> : null}</Shared.CompareBody></Shared.Panel>
           </Shared.Workspace>

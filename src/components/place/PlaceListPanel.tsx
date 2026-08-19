@@ -18,14 +18,15 @@ const SORT_OPTIONS = [
 ]
 
 const CATEGORY_OPTIONS: AdminPlaceCategory[] = [
+  '음식점',
+  '음악',
+  '팝업',
+  '패션',
+  '뷰티',
+  '전시',
   '카페',
-  '식당',
-  '관광',
-  '풍경',
-  '문화',
-  '쇼핑',
-  '숙박',
-  '체험',
+  '문화재',
+  '기타',
 ]
 
 interface PlaceListPanelProps {

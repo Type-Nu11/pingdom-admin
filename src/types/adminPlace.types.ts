@@ -2,14 +2,15 @@ import type { AuthErrorResponse } from './auth.types'
 
 export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST' | 'LEVEL_DESC'
 export type AdminPlaceCategory =
+  | '음식점'
+  | '음악'
+  | '팝업'
+  | '패션'
+  | '뷰티'
+  | '전시'
   | '카페'
-  | '식당'
-  | '관광'
-  | '풍경'
-  | '문화'
-  | '쇼핑'
-  | '숙박'
-  | '체험'
+  | '문화재'
+  | '기타'
 export type AdminPlacePostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
 export type AdminPlaceGeocodingSource = 'KAKAO' | 'USER_PIN' | 'ADMIN' | 'LEGACY'
 export type AdminPlaceOperatingStatus =
@@ -76,8 +77,9 @@ export interface AdminPlaceItem {
   latitude: number
   longitude: number
   userId: number
-  category?: string
-  categoryName?: string
+  category?: string | null
+  categoryName?: string | null
+  level?: number
   englishName?: string | null
   touristSummary?: string | null
   touristCategories?: AdminPlaceTouristCategory[]
@@ -117,8 +119,9 @@ export interface AdminPlaceDetail {
   longitude: number
   userId: number
   username: string
-  category?: string
-  categoryName?: string
+  category?: string | null
+  categoryName?: string | null
+  level?: number
   englishName?: string | null
   touristSummary?: string | null
   touristCategories?: AdminPlaceTouristCategory[]

@@ -51,9 +51,7 @@ const NotificationOperationsPage = lazy(
 const OperationHistoryPage = lazy(
   () => import('../../pages/operationHistory/OperationHistoryPage'),
 )
-const MerchantPreparationPage = lazy(
-  () => import('../../pages/merchantPreparation/MerchantPreparationPage'),
-)
+const MerchantStorePage = lazy(() => import('../../pages/merchantStore/MerchantStorePage'))
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
@@ -86,7 +84,7 @@ export function Router() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<MerchantProtectedRoute />}>
-            <Route path="/merchant" element={<MerchantPreparationPage />} />
+            <Route path="/merchant" element={<MerchantStorePage />} />
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />

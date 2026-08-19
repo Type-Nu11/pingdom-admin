@@ -2,9 +2,9 @@ import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
 export const Panel = styled.section`
-  border: 1px solid ${adminColors.borderSoft};
+  border: 1px solid ${adminColors.border};
   border-radius: 8px;
-  background: ${adminColors.surfaceLow};
+  background: ${adminColors.surface};
 `
 
 export const Row = styled.div`
@@ -12,8 +12,8 @@ export const Row = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 60px;
-  padding: 10px 14px;
+  min-height: 56px;
+  padding: 8px 14px;
 
   @media (max-width: 460px) {
     align-items: stretch;
@@ -36,6 +36,7 @@ export const FilterIcon = styled.span`
   flex: 0 0 30px;
   place-items: center;
   border-radius: 8px;
+  border: 1px solid ${adminColors.primarySoft};
   background: ${adminColors.primaryTint};
   color: ${adminColors.primary};
   font-family: 'Material Symbols Outlined';
@@ -60,7 +61,7 @@ export const Title = styled.span`
 export const Description = styled.p`
   margin: 0;
   color: ${adminColors.muted};
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
 `
 

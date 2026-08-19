@@ -20,7 +20,7 @@ export const PageStack = styled.div`
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 `
 
 export const PageHeader = styled.header`
@@ -122,7 +122,7 @@ export const Notice = styled.p<{ $variant?: 'error' | 'success' }>`
 `
 
 export const Workspace = styled.div`
-  min-height: 380px;
+  min-height: 360px;
   display: grid;
   grid-template-columns: minmax(340px, 0.95fr) minmax(0, 1.35fr);
   gap: 16px;
@@ -147,8 +147,8 @@ export const PanelHeader = styled.header`
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  min-height: 64px;
-  padding: 14px 16px;
+  min-height: 58px;
+  padding: 12px 16px;
   border-bottom: 1px solid ${neutral.border};
 `
 
@@ -160,7 +160,7 @@ export const PanelTitle = styled.h2`
 `
 
 export const PanelDescription = styled.p`
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: ${neutral.muted};
   font-size: 12px;
   line-height: 1.45;
@@ -525,7 +525,7 @@ export const SecondaryButton = styled.button`
 
 export const EmptyState = styled.div`
   display: flex;
-  min-height: 160px;
+  min-height: 128px;
   align-items: center;
   justify-content: center;
   flex-direction: column;

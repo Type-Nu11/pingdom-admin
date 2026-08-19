@@ -698,9 +698,6 @@ function PlaceManagePage() {
               삭제 Danger Zone
             </S.TopActionButton>
             <AdminNotificationButton />
-            <S.IconButton type="button" aria-label="도움말">
-              <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
-            </S.IconButton>
           </S.TopActions>
         </S.TopBar>
 

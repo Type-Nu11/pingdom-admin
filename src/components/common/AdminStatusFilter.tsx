@@ -1,4 +1,5 @@
-import { useId, type ReactNode, type SelectHTMLAttributes } from 'react'
+import type { ReactNode, SelectHTMLAttributes } from 'react'
+import { AdminStatusSelect } from './AdminStatusSelect'
 import * as S from './AdminStatusFilter.styles'
 
 interface AdminStatusFilterProps extends SelectHTMLAttributes<HTMLSelectElement> {
@@ -14,20 +15,21 @@ export function AdminStatusFilter({
   children,
   ...selectProps
 }: AdminStatusFilterProps) {
-  const labelId = useId()
-
   return (
     <S.Panel>
       <S.Row>
-        <S.Heading>
-          <S.Title id={labelId}>{label}</S.Title>
-          {description ? <S.Description>{description}</S.Description> : null}
-        </S.Heading>
+        <S.LabelGroup>
+          <S.FilterIcon aria-hidden="true">filter_list</S.FilterIcon>
+          <S.Heading>
+            <S.Title>{label}</S.Title>
+            {description ? <S.Description>{description}</S.Description> : null}
+          </S.Heading>
+        </S.LabelGroup>
         <S.Controls>
           {controls ?? (
-            <S.Select aria-labelledby={labelId} {...selectProps}>
+            <AdminStatusSelect aria-label={label} {...selectProps}>
               {children}
-            </S.Select>
+            </AdminStatusSelect>
           )}
         </S.Controls>
       </S.Row>

@@ -72,6 +72,8 @@ export const adminColors = {
   errorTint: '#D92D3A14',
   errorHover: '#C82835',
   info: semanticColors.status.info,
+  infoTint: '#118CF414',
+  infoText: '#0A67B5',
   success: semanticColors.status.success,
   successTint: '#EAF8EF',
   successSurface: '#F7FFFA',

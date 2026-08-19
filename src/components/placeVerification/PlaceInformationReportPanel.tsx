@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AdminSelect } from '../common/AdminStatusSelect'
 import { AdminStatusFilter } from '../common/AdminStatusFilter'
 import type { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
 import type {
@@ -123,6 +124,11 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
       </AdminStatusFilter>
 
       {errorMessage ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}
+      {isLoading && reports.length === 0 ? (
+        <Shared.EmptyStateCard><strong>신고를 불러오는 중입니다.</strong></Shared.EmptyStateCard>
+      ) : reports.length === 0 ? (
+        <Shared.EmptyStateCard><strong>조건에 맞는 신고가 없습니다.</strong></Shared.EmptyStateCard>
+      ) : (
       <Shared.Workspace>
         <Shared.Panel>
           <Shared.PanelHeader>
@@ -133,38 +139,34 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
             <Shared.PanelCount>{totalCount.toLocaleString()}건</Shared.PanelCount>
           </Shared.PanelHeader>
           <Shared.ScrollArea>
-            {isLoading && reports.length === 0 ? (
-              <Shared.EmptyState><strong>신고를 불러오는 중입니다.</strong></Shared.EmptyState>
-            ) : reports.length === 0 ? (
-              <Shared.EmptyState><strong>조건에 맞는 신고가 없습니다.</strong></Shared.EmptyState>
-            ) : (
-              <S.CardList>
-                {reports.map((report) => (
-                  <S.RecordButton
-                    key={report.reportId}
-                    type="button"
-                    $selected={selectedReportId === report.reportId}
-                    onClick={() => {
-                      setSelectedReportId(report.reportId)
-                      void fetchReportDetail(report.reportId)
-                    }}
-                  >
-                    <S.RecordHeader>
-                      <S.RecordTitle>신고 #{report.reportId} · 장소 #{report.placeId}</S.RecordTitle>
-                      <S.StatusBadge $tone={getStatusTone(report.status)}>{REPORT_STATUS_LABELS[report.status]}</S.StatusBadge>
-                    </S.RecordHeader>
-                    <S.RecordMeta>{TARGET_TYPE_LABELS[report.targetType]} · {REASON_TYPE_LABELS[report.reasonType]} · {formatVerificationDate(report.createdAt)}</S.RecordMeta>
-                    <S.RecordDescription>{report.description}</S.RecordDescription>
-                  </S.RecordButton>
-                ))}
-              </S.CardList>
-            )}
+            <S.CardList>
+              {reports.map((report) => (
+                <S.RecordButton
+                  key={report.reportId}
+                  type="button"
+                  $selected={selectedReportId === report.reportId}
+                  onClick={() => {
+                    setSelectedReportId(report.reportId)
+                    void fetchReportDetail(report.reportId)
+                  }}
+                >
+                  <S.RecordHeader>
+                    <S.RecordTitle>신고 #{report.reportId} · 장소 #{report.placeId}</S.RecordTitle>
+                    <S.StatusBadge $tone={getStatusTone(report.status)}>{REPORT_STATUS_LABELS[report.status]}</S.StatusBadge>
+                  </S.RecordHeader>
+                  <S.RecordMeta>{TARGET_TYPE_LABELS[report.targetType]} · {REASON_TYPE_LABELS[report.reasonType]} · {formatVerificationDate(report.createdAt)}</S.RecordMeta>
+                  <S.RecordDescription>{report.description}</S.RecordDescription>
+                </S.RecordButton>
+              ))}
+            </S.CardList>
           </Shared.ScrollArea>
-          <S.Pagination>
-            <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => void fetchReports(status, page - 1)}>이전</Shared.SecondaryButton>
-            <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
-            <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => void fetchReports(status, page + 1)}>다음</Shared.SecondaryButton>
-          </S.Pagination>
+          {totalPages > 1 ? (
+            <S.Pagination>
+              <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => void fetchReports(status, page - 1)}>이전</Shared.SecondaryButton>
+              <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
+              <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => void fetchReports(status, page + 1)}>다음</Shared.SecondaryButton>
+            </S.Pagination>
+          ) : null}
         </Shared.Panel>
 
         <Shared.Panel>
@@ -241,6 +243,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
           </Shared.CompareBody>
         </Shared.Panel>
       </Shared.Workspace>
+      )}
 
       {dialog && reportDetail ? (
         <Shared.ModalOverlay role="presentation" onMouseDown={() => activeAction === null && setDialog(null)}>
@@ -253,12 +256,12 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               <S.FormGrid>
                 {dialog.type === 'report' ? (
                   <S.WideField>검토 상태
-                    <S.Select value={reportStatus} disabled={activeAction !== null} onChange={(event) => setReportStatus(event.target.value as PlaceInformationReportReviewRequest['status'])}>
+                    <AdminSelect aria-label="신고 검토 결과" value={reportStatus} disabled={activeAction !== null} width="100%" onChange={(event) => setReportStatus(event.target.value as PlaceInformationReportReviewRequest['status'])}>
                       <option value="UNDER_REVIEW">검토 중</option>
                       <option value="ACCEPTED">신고 수용</option>
                       <option value="REJECTED">신고 반려</option>
                       <option value="RESOLVED">처리 완료</option>
-                    </S.Select>
+                    </AdminSelect>
                   </S.WideField>
                 ) : null}
                 <S.WideField>판정 근거 *

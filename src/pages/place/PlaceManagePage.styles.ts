@@ -724,16 +724,16 @@ export const OperatingStatusBadge = styled.span<{
         : $tone === 'notice'
           ? neutral.warning
           : $tone === 'muted'
-            ? neutral.borderDark
+            ? neutral.primarySoft
             : neutral.success};
-  border-radius: 999px;
+  border-radius: 6px;
   background: ${({ $tone }) =>
     $tone === 'danger'
       ? neutral.errorTint
       : $tone === 'notice'
         ? neutral.warningTint
         : $tone === 'muted'
-          ? neutral.surfaceHighest
+          ? neutral.primaryTint
           : neutral.successSurface};
   color: ${({ $tone }) =>
     $tone === 'danger'
@@ -741,7 +741,7 @@ export const OperatingStatusBadge = styled.span<{
       : $tone === 'notice'
         ? neutral.warningText
         : $tone === 'muted'
-          ? neutral.muted
+          ? neutral.primary
           : neutral.successText};
   font-size: 11px;
   font-weight: 800;
@@ -1001,10 +1001,10 @@ export const DetailPostVisibilityBadge = styled.span`
   align-items: center;
   justify-content: center;
   padding: 1px 5px;
-  border: 1px solid ${neutral.border};
+  border: 1px solid ${neutral.error};
   border-radius: 6px;
-  background: ${neutral.surfaceHighest};
-  color: ${neutral.muted};
+  background: ${neutral.errorTint};
+  color: ${neutral.error};
   font-size: 10px;
   font-weight: 800;
   line-height: 1;
@@ -1623,10 +1623,10 @@ export const PlaceDiscoveryStatusBadge = styled.span`
   align-items: center;
   flex-shrink: 0;
   padding: 3px 7px;
-  border: 1px solid ${neutral.borderDark};
+  border: 1px solid ${neutral.primarySoft};
   border-radius: 6px;
-  background: ${neutral.surfaceHighest};
-  color: ${neutral.muted};
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
   font-size: 11px;
   font-weight: 700;
   line-height: 1.2;

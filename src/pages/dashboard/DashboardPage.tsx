@@ -46,7 +46,6 @@ interface DashboardOperationalMetric {
   tone: 'neutral' | 'action'
 }
 
-type DashboardUtilityKey = 'help'
 type DashboardActivityTabKey = 'places' | 'posts' | 'reports' | 'userSanctions'
 
 interface DashboardActivityRow {
@@ -177,11 +176,13 @@ function DashboardPage() {
     lastUpdatedAt,
     fetchSummary,
   } = useAdminDashboard()
-  const [activeUtility, setActiveUtility] = useState<DashboardUtilityKey | null>(null)
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
   const pendingItemCount = summary?.pendingReportCount ?? pendingItems.length
+  const visibleOperationalMetrics = summary?.operationalMetrics
+    ? OPERATIONAL_METRICS.filter((metric) => getOperationalMetricValue(metric.key) !== 0)
+    : OPERATIONAL_METRICS
 
   function getMetricValue(key: DashboardMetricKey) {
     if (summary && (status === 'success' || status === 'empty' || status === 'loading' || status === 'error')) {
@@ -656,30 +657,6 @@ function DashboardPage() {
     )
   }
 
-  function renderUtilityPanel() {
-    if (!activeUtility) {
-      return null
-    }
-
-    return (
-      <S.UtilityPanel role="status">
-        <S.UtilityPanelHeader>
-          <strong>도움말</strong>
-          <S.UtilityPanelClose
-            type="button"
-            aria-label="패널 닫기"
-            onClick={() => setActiveUtility(null)}
-          >
-            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
-          </S.UtilityPanelClose>
-        </S.UtilityPanelHeader>
-        <S.UtilityPanelText>
-          관리자 화면 도움말은 기능 연결 후 제공됩니다.
-        </S.UtilityPanelText>
-      </S.UtilityPanel>
-    )
-  }
-
   return (
     <S.AppShell>
       <S.SideNav aria-label="관리자 메뉴">
@@ -717,33 +694,9 @@ function DashboardPage() {
       </S.SideNav>
 
       <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <S.TopBar>
-          <S.TopTitle as="h1">대시보드</S.TopTitle>
-          <S.TopActions>
-            <S.IconButton
-              type="button"
-              aria-label="관리자 운영 이력"
-              title="관리자 운영 이력"
-              onClick={() => navigate('/operations/history')}
-            >
-              <S.MaterialIcon aria-hidden="true">history</S.MaterialIcon>
-            </S.IconButton>
-            <S.IconButton
-              type="button"
-              aria-label="Trust Score 운영"
-              title="Trust Score 운영"
-              onClick={() => navigate('/trust-score')}
-            >
-              <S.MaterialIcon aria-hidden="true">verified_user</S.MaterialIcon>
-            </S.IconButton>
-            <S.IconButton
-              type="button"
-              aria-label="Merchant Owner 운영"
-              title="Merchant Owner 운영"
-              onClick={() => navigate('/merchant-owners')}
-            >
-              <S.MaterialIcon aria-hidden="true">storefront</S.MaterialIcon>
-            </S.IconButton>
+          <S.TopBar>
+            <S.TopTitle as="h1">대시보드</S.TopTitle>
+            <S.TopActions>
             <S.RefreshButton
               type="button"
               aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}
@@ -755,18 +708,6 @@ function DashboardPage() {
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
             <AdminNotificationButton />
-            <S.IconButton
-              type="button"
-              aria-label="도움말"
-              title="도움말"
-              aria-expanded={activeUtility === 'help'}
-              onClick={() =>
-                setActiveUtility((current) => (current === 'help' ? null : 'help'))
-              }
-            >
-              <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
-            </S.IconButton>
-            {renderUtilityPanel()}
           </S.TopActions>
         </S.TopBar>
 
@@ -831,9 +772,15 @@ function DashboardPage() {
                   : '서버 운영 지표'}
               </S.SectionDescription>
             </S.SectionHeader>
-            <S.OperationalMetricGrid>
-              {OPERATIONAL_METRICS.map(renderOperationalMetricCard)}
-            </S.OperationalMetricGrid>
+            {visibleOperationalMetrics.length > 0 ? (
+              <S.OperationalMetricGrid>
+                {visibleOperationalMetrics.map(renderOperationalMetricCard)}
+              </S.OperationalMetricGrid>
+            ) : (
+              <S.OperationalEmptyState>
+                현재 확인이 필요한 추가 운영 지표가 없습니다.
+              </S.OperationalEmptyState>
+            )}
           </S.Section>
 
           <S.Section aria-labelledby="dashboard-recent-activities-title">

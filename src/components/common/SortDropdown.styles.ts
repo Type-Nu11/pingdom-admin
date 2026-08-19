@@ -5,6 +5,10 @@ export const DropdownRoot = styled.div<{ $width?: string }>`
   position: relative;
   width: ${({ $width }) => $width ?? '104px'};
   flex-shrink: 0;
+
+  @media (max-width: 460px) {
+    width: 100%;
+  }
 `
 
 export const DropdownTrigger = styled.button`
@@ -75,7 +79,7 @@ export const DropdownMenu = styled.div`
   overflow: hidden;
   padding: 4px;
   border: 1px solid ${adminColors.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${adminColors.surface};
   box-shadow: 0 14px 34px ${adminColors.shadow};
 `

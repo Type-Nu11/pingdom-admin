@@ -2,39 +2,60 @@ import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
 export const Panel = styled.section`
-  overflow: hidden;
   border: 1px solid ${adminColors.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${adminColors.surface};
 `
 
 export const Row = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 20px;
-  padding: 16px;
-  border-bottom: 1px solid ${adminColors.border};
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
 
-  @media (max-width: 620px) {
+  @media (max-width: 460px) {
     align-items: stretch;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
+`
+
+export const LabelGroup = styled.div`
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 9px;
+`
+
+export const FilterIcon = styled.span`
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid ${adminColors.primarySoft};
+  background: ${adminColors.primaryTint};
+  color: ${adminColors.primary};
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  font-variation-settings: 'FILL' 0, 'wght' 550, 'GRAD' 0, 'opsz' 20;
 `
 
 export const Heading = styled.div`
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 2px;
 `
 
-export const Title = styled.h2`
+export const Title = styled.span`
   margin: 0;
   color: ${adminColors.strongText};
-  font-size: 16px;
-  font-weight: 800;
-  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
 `
 
 export const Description = styled.p`
@@ -48,32 +69,13 @@ export const Controls = styled.div`
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-left: auto;
 
-  @media (max-width: 620px) {
+  @media (max-width: 460px) {
     width: 100%;
-  }
-`
-
-export const Select = styled.select`
-  width: 160px;
-  min-height: 42px;
-  flex: 0 0 160px;
-  padding: 0 32px 0 12px;
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  background: ${adminColors.surface};
-  color: ${adminColors.strongText};
-  font: inherit;
-  font-size: 13px;
-
-  &:focus {
-    border-color: ${adminColors.primary};
-    outline: 3px solid ${adminColors.primaryTint};
-  }
-
-  @media (max-width: 620px) {
-    width: 100%;
-    flex-basis: auto;
+    margin-left: 0;
   }
 `

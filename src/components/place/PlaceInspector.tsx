@@ -271,7 +271,11 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                         </S.OperatingSummaryLabel>
                         <S.OperatingSummaryAction>
                           <S.OperatingStatusBadge
-                            $tone={getOperatingTone(placeDetail.operatingStatus)}
+                            $tone={
+                              placeDetail.operatingStatus
+                                ? getOperatingTone(placeDetail.operatingStatus)
+                                : 'muted'
+                            }
                           >
                             {placeDetail.operatingStatus
                               ? OPERATING_STATUS_LABELS[placeDetail.operatingStatus]

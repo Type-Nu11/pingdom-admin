@@ -27,14 +27,14 @@ export const Icon = styled.span`
 
 export const Trigger = styled.button`
   width: 100%;
-  min-height: 36px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 0 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 7px;
+  border-radius: 8px;
   outline: 0;
   background: ${neutral.surface};
   color: ${neutral.text};

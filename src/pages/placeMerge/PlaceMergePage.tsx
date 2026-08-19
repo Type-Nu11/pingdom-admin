@@ -408,9 +408,6 @@ function PlaceMergePage() {
             >
               <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
             </Shell.IconButton>
-            <Shell.IconButton type="button" aria-label="도움말">
-              <Shell.MaterialIcon aria-hidden="true">help_outline</Shell.MaterialIcon>
-            </Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>
 

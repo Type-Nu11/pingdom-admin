@@ -182,21 +182,6 @@ function getPostDetailStatusLabel(post: AdminPost) {
   return '신고 없음'
 }
 
-function getPostReportSummaryLabel(post: AdminPost) {
-  const reports = getPostReports(post)
-  const pendingReportCount = getPendingPostReports(post).length
-
-  if (pendingReportCount > 0) {
-    return `미처리 신고 ${pendingReportCount}건`
-  }
-
-  if (reports.length > 0) {
-    return `처리 완료 ${reports.length}건`
-  }
-
-  return '신고 없음'
-}
-
 function formatCount(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '0'
 }
@@ -854,9 +839,6 @@ function MainPage() {
           <S.TopTitle>게시글 관리</S.TopTitle>
           <S.TopActions>
             <AdminNotificationButton />
-            <S.IconButton type="button" aria-label="도움말">
-              <S.MaterialIcon aria-hidden="true">help_outline</S.MaterialIcon>
-            </S.IconButton>
           </S.TopActions>
         </S.TopBar>
 
@@ -986,76 +968,60 @@ function MainPage() {
 
           {!isError && posts.length > 0 ? (
             <S.MediaGrid>
-              {posts.map((post) => (
-                <S.MediaCard
-                  key={post.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleOpenPostDetail(post)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      handleOpenPostDetail(post)
-                    }
-                  }}
-                >
-                  <AdminPostImage
-                    key={getPostImageUrl(post) || `post-image-${post.id}`}
-                    post={post}
-                  />
+              {posts.map((post) => {
+                const title = getPostTitle(post)
+                const owner = post.username
+                  ? `${post.username} · 사용자 ID ${post.userId}`
+                  : getPostOwner(post)
+                const hasDistinctPlaceName = Boolean(post.placeName && !isSamePostTitleAndPlaceName(post))
 
-                  <S.MediaBody>
-                    <S.MediaTitleRow>
-                      <S.MediaTitle>{getPostTitle(post)}</S.MediaTitle>
-                      <S.StatusBadge $tone={getPostStatusTone(post)}>
-                        {getPostStatusLabel(post)}
-                      </S.StatusBadge>
-                    </S.MediaTitleRow>
+                return (
+                  <S.MediaCard
+                    key={post.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`게시글 ${post.id} ${title} 상세 보기`}
+                    onClick={() => handleOpenPostDetail(post)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        handleOpenPostDetail(post)
+                      }
+                    }}
+                  >
+                    <AdminPostImage
+                      key={getPostImageUrl(post) || `post-image-${post.id}`}
+                      post={post}
+                    />
 
-                    <S.MediaMetaList>
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
-                        <span>{getPostOwner(post)}</span>
-                      </S.MediaMeta>
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">tag</S.MaterialIcon>
-                        <span>게시글 ID: {post.id}</span>
-                      </S.MediaMeta>
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
-                        <span>{post.placeName || '장소 정보 없음'}</span>
-                      </S.MediaMeta>
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">favorite</S.MaterialIcon>
-                        <span>좋아요 {formatCount(post.likeCount)}</span>
-                      </S.MediaMeta>
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">report</S.MaterialIcon>
-                        <span>{getPostReportSummaryLabel(post)}</span>
-                      </S.MediaMeta>
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
-                        <span>{formatPostDate(post.createdAt)}</span>
-                      </S.MediaMeta>
-                      {post.description ? (
+                    <S.MediaBody>
+                      <S.MediaTitleRow>
+                        <S.MediaTitle>{title}</S.MediaTitle>
+                        <S.StatusBadge $tone={getPostStatusTone(post)}>
+                          {getPostStatusLabel(post)}
+                        </S.StatusBadge>
+                      </S.MediaTitleRow>
+
+                      <S.MediaMetaList>
                         <S.MediaMeta>
-                          <S.MaterialIcon aria-hidden="true">notes</S.MaterialIcon>
-                          <span>{post.description}</span>
+                          <S.MaterialIcon aria-hidden="true">person</S.MaterialIcon>
+                          <span>{owner}</span>
                         </S.MediaMeta>
-                      ) : null}
-                      <S.MediaMeta>
-                        <S.MaterialIcon aria-hidden="true">badge</S.MaterialIcon>
-                        <span>사용자 ID: {post.userId}</span>
-                      </S.MediaMeta>
-                    </S.MediaMetaList>
-
-                    <S.CardHint>
-                      <span>클릭해서 상세 보기</span>
-                      <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
-                    </S.CardHint>
-                  </S.MediaBody>
-                </S.MediaCard>
-              ))}
+                        {hasDistinctPlaceName ? (
+                          <S.MediaMeta>
+                            <S.MaterialIcon aria-hidden="true">place</S.MaterialIcon>
+                            <span>{post.placeName}</span>
+                          </S.MediaMeta>
+                        ) : null}
+                        <S.MediaMeta>
+                          <S.MaterialIcon aria-hidden="true">schedule</S.MaterialIcon>
+                          <span>게시글 #{post.id} · {formatPostDate(post.createdAt)}</span>
+                        </S.MediaMeta>
+                      </S.MediaMetaList>
+                    </S.MediaBody>
+                  </S.MediaCard>
+                )
+              })}
             </S.MediaGrid>
           ) : null}
 

@@ -5,8 +5,6 @@ import {
   getMerchantPlaceDetail,
   getMerchantPlaceMedia,
   getMerchantPlaceOperating,
-  requestMerchantPlaceMediaUploadUrl,
-  updateMerchantPlaceMediaOrder,
   updateMerchantPlaceOperatingSchedule,
   updateMerchantPlaceOperatingStatus,
   updateMerchantRepresentativeMedia,
@@ -30,9 +28,7 @@ type OperationAction =
   | 'status'
   | 'schedule'
   | 'representative'
-  | 'order'
   | 'delete-media'
-  | 'upload-media'
   | null
 
 function sortMedia(response: MerchantPlaceMediaResponse) {
@@ -222,17 +218,6 @@ export function useMerchantPlaceOperations() {
     )
   }, [runAction, selectedPlaceId])
 
-  const updateMediaOrder = useCallback((mediaId: number, displayOrder: number) => {
-    if (!selectedPlaceId) return Promise.resolve(null)
-    return runAction(
-      'order',
-      () => updateMerchantPlaceMediaOrder(selectedPlaceId, mediaId, { displayOrder }),
-      () => { if (selectedPlaceId) void fetchPlaceOperations(selectedPlaceId) },
-      '미디어 순서를 변경했습니다.',
-      '미디어 순서를 변경하지 못했습니다.',
-    )
-  }, [fetchPlaceOperations, runAction, selectedPlaceId])
-
   const deleteMedia = useCallback((mediaId: number) => {
     if (!selectedPlaceId) return Promise.resolve(false)
     return runAction(
@@ -246,51 +231,6 @@ export function useMerchantPlaceOperations() {
       '미디어를 삭제하지 못했습니다.',
     )
   }, [fetchPlaceOperations, runAction, selectedPlaceId])
-
-  const uploadMedia = useCallback(async (file: File) => {
-    if (!selectedPlaceId || actionRef.current) return false
-    actionRef.current = 'upload-media'
-    setActiveAction('upload-media')
-    setActionErrorMessage('')
-    setSuccessMessage('')
-
-    try {
-      const upload = await requestMerchantPlaceMediaUploadUrl(selectedPlaceId, {
-        fileName: file.name,
-        contentType: file.type,
-        fileSize: file.size,
-      })
-      const response = await fetch(upload.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      })
-      if (!response.ok) throw new Error(`이미지 업로드 요청이 실패했습니다. (${response.status})`)
-
-      const nextMedia = sortMedia(await getMerchantPlaceMedia(selectedPlaceId))
-      if (!nextMedia.media.some((item) => item.imageUrl === upload.imageUrl || item.s3Key === upload.s3Key)) {
-        throw new Error('업로드한 이미지를 탐색 미디어 목록에서 찾지 못했습니다.')
-      }
-
-      if (mountedRef.current) {
-        setMedia(nextMedia)
-        setSuccessMessage('탐색 미디어를 업로드했습니다.')
-      }
-      return true
-    } catch (error) {
-      if (mountedRef.current) {
-        const message = error instanceof Error && error.message.includes('탐색 미디어 목록')
-          ? '이미지는 전송됐지만 탐색 미디어로 등록되지 않았습니다. 서버 업로드 등록 계약을 확인해주세요.'
-          : getErrorMessage(error, '탐색 미디어를 업로드하지 못했습니다.')
-        setActionErrorMessage(message)
-        logDebugError('상점주 탐색 미디어 업로드 실패', error)
-      }
-      return false
-    } finally {
-      actionRef.current = null
-      if (mountedRef.current) setActiveAction(null)
-    }
-  }, [getErrorMessage, selectedPlaceId])
 
   return {
     status,
@@ -311,8 +251,6 @@ export function useMerchantPlaceOperations() {
     updateOperatingStatus,
     updateOperatingSchedule,
     updateRepresentativeMedia,
-    updateMediaOrder,
     deleteMedia,
-    uploadMedia,
   }
 }

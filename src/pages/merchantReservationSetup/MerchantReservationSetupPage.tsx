@@ -99,8 +99,8 @@ function AvailabilityEditor({
       placeId,
       productId: selectedProduct.id,
       productType: selectedProduct.productType,
-      startsAt: new Date(startsAt).toISOString(),
-      endsAt: new Date(endsAt).toISOString(),
+      startsAt,
+      endsAt,
       totalCapacity: capacity,
     }
     const next = availability ? await onSave(availability.id, request) : await onCreate(request)

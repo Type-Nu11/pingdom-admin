@@ -44,6 +44,17 @@ function optionalText(value: string) {
   return value.trim() || null
 }
 
+function shouldReapplyProfile(profile: MerchantOwnerApplicationProfile | null) {
+  return profile?.status === 'REJECTED' || profile?.status === 'REVOKED'
+}
+
+function shouldReapplyVerification(verification: MerchantVerification | null) {
+  return (
+    verification?.identityStatus === 'REJECTED' ||
+    verification?.businessStatus === 'REJECTED'
+  )
+}
+
 export function useMerchantOnboarding() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<MerchantOnboardingLoadStatus>('loading')
@@ -135,14 +146,29 @@ export function useMerchantOnboarding() {
 
       try {
         const request = { ...values, description: optionalText(values.description ?? '') }
-        const nextProfile = profile
-          ? await updateMerchantOwnerApplicationProfile(request)
-          : await createMerchantOwnerApplicationProfile(request)
+        const isReapplying = shouldReapplyProfile(profile)
+        const shouldRefreshVerification = Boolean(
+          profile && verification && profile.businessName !== request.businessName,
+        )
+        const nextProfile = !profile || isReapplying
+          ? await createMerchantOwnerApplicationProfile(request)
+          : await updateMerchantOwnerApplicationProfile(request)
 
         if (!mountedRef.current) return false
 
         setProfile(nextProfile)
-        setSuccessMessage(profile ? '상점주 신청 정보를 저장했습니다.' : '상점주 신청 정보를 제출했습니다.')
+        if (shouldRefreshVerification) {
+          await fetchOnboarding()
+          if (!mountedRef.current) return false
+        }
+
+        setSuccessMessage(
+          !profile
+            ? '상점주 신청 정보를 제출했습니다.'
+            : isReapplying
+              ? '상점주 신청 정보를 재신청했습니다.'
+              : '상점주 신청 정보를 저장했습니다.',
+        )
         return true
       } catch (error) {
         if (mountedRef.current) {
@@ -156,11 +182,16 @@ export function useMerchantOnboarding() {
         if (mountedRef.current) setSavingSection(null)
       }
     },
-    [clearUnauthorizedSession, profile],
+    [clearUnauthorizedSession, fetchOnboarding, profile, verification],
   )
 
   const saveVerification = useCallback(
     async (request: MerchantVerificationRequest) => {
+      if (!profile) {
+        setVerificationErrorMessage('상점주 정보를 먼저 저장한 뒤 사업자 검증을 신청해주세요.')
+        return false
+      }
+
       if (savingRef.current) return false
 
       savingRef.current = 'verification'
@@ -169,14 +200,21 @@ export function useMerchantOnboarding() {
       setSuccessMessage('')
 
       try {
-        const nextVerification = verification
-          ? await updateMerchantVerification(request)
-          : await createMerchantVerification(request)
+        const isReapplying = shouldReapplyVerification(verification)
+        const nextVerification = !verification || isReapplying
+          ? await createMerchantVerification(request)
+          : await updateMerchantVerification(request)
 
         if (!mountedRef.current) return false
 
         setVerification(nextVerification)
-        setSuccessMessage(verification ? '사업자 검증 정보를 저장했습니다.' : '사업자 검증을 신청했습니다.')
+        setSuccessMessage(
+          !verification
+            ? '사업자 검증을 신청했습니다.'
+            : isReapplying
+              ? '사업자 검증을 재신청했습니다.'
+              : '사업자 검증 정보를 저장했습니다.',
+        )
         return true
       } catch (error) {
         if (mountedRef.current) {
@@ -190,7 +228,7 @@ export function useMerchantOnboarding() {
         if (mountedRef.current) setSavingSection(null)
       }
     },
-    [clearUnauthorizedSession, verification],
+    [clearUnauthorizedSession, profile, verification],
   )
 
   return {

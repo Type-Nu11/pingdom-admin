@@ -53,6 +53,7 @@ function ProfileForm({
   disabled: boolean
   onSave: (request: MerchantOwnerApplicationRequest) => Promise<boolean>
 }) {
+  const isReapplying = profile?.status === 'REJECTED' || profile?.status === 'REVOKED'
   const [businessName, setBusinessName] = useState(profile?.businessName ?? '')
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '')
   const [description, setDescription] = useState(profile?.description ?? '')
@@ -107,7 +108,7 @@ function ProfileForm({
         <S.FormHint>{description.length}/1000</S.FormHint>
       </Store.Field>
       {formError ? <S.FormNotice><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice></S.FormNotice> : null}
-      {!disabled ? <Store.FormFooter><Store.SaveButton type="submit" disabled={isSaving}>{isSaving ? '저장 중' : profile ? '신청 정보 저장' : '상점주 정보 신청'}</Store.SaveButton></Store.FormFooter> : null}
+      {!disabled ? <Store.FormFooter><Store.SaveButton type="submit" disabled={isSaving}>{isSaving ? '저장 중' : !profile ? '상점주 정보 신청' : isReapplying ? '상점주 정보 재신청' : '신청 정보 저장'}</Store.SaveButton></Store.FormFooter> : null}
     </Store.Form>
   )
 }
@@ -123,6 +124,7 @@ function VerificationForm({
   disabled: boolean
   onSave: (request: MerchantVerificationRequest) => Promise<boolean>
 }) {
+  const isReapplying = verification?.identityStatus === 'REJECTED' || verification?.businessStatus === 'REJECTED'
   const [legalName, setLegalName] = useState(verification?.legalName ?? '')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
   const [formError, setFormError] = useState('')
@@ -158,7 +160,7 @@ function VerificationForm({
         <S.FormHint>보안을 위해 저장된 번호는 일부만 표시됩니다. 수정·재신청 시 번호를 다시 입력해야 합니다.</S.FormHint>
       </Store.Field> : null}
       {formError ? <S.FormNotice><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice></S.FormNotice> : null}
-      {!disabled ? <Store.FormFooter><Store.SaveButton type="submit" disabled={isSaving}>{isSaving ? '저장 중' : verification ? '검증 정보 저장' : '사업자 검증 신청'}</Store.SaveButton></Store.FormFooter> : null}
+      {!disabled ? <Store.FormFooter><Store.SaveButton type="submit" disabled={isSaving}>{isSaving ? '저장 중' : !verification ? '사업자 검증 신청' : isReapplying ? '사업자 검증 재신청' : '검증 정보 저장'}</Store.SaveButton></Store.FormFooter> : null}
     </Store.Form>
   )
 }
@@ -172,7 +174,8 @@ function MerchantOnboardingPage() {
   const profileStatus = profile ? OWNER_STATUS[profile.status] : null
   const identityStatus = verification ? VERIFICATION_STATUS[verification.identityStatus] : null
   const businessStatus = verification ? VERIFICATION_STATUS[verification.businessStatus] : null
-  const isLocked = profile?.status === 'ACTIVE' || profile?.status === 'REVOKED'
+  const isLocked = profile?.status === 'ACTIVE'
+  const isVerificationDisabled = isLocked || !profile
 
   useEffect(() => {
     if (profile?.status === 'ACTIVE') {
@@ -242,8 +245,9 @@ function MerchantOnboardingPage() {
 
           <S.Panel>
             <S.PanelHeading><div><S.PanelTitle>사업자 검증</S.PanelTitle><S.PanelDescription>법적 성명과 사업자등록번호를 기준으로 신원·사업자 정보를 심사합니다.</S.PanelDescription></div>{verification ? <S.StatusBadge $tone={identityStatus?.tone === 'danger' || businessStatus?.tone === 'danger' ? 'danger' : identityStatus?.tone === 'active' && businessStatus?.tone === 'active' ? 'active' : 'pending'}>{identityStatus?.label === '승인' && businessStatus?.label === '승인' ? '검증 완료' : '검증 진행 중'}</S.StatusBadge> : null}</S.PanelHeading>
+            {!profile ? <S.FormHint>상점주 정보를 먼저 저장한 뒤 사업자 검증을 신청할 수 있습니다.</S.FormHint> : null}
             {onboarding.verificationErrorMessage ? <div style={{ marginBottom: 16 }}><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{onboarding.verificationErrorMessage}</Store.Notice></div> : null}
-            <VerificationForm key={verification?.updatedAt ?? 'new-verification'} verification={verification} isSaving={onboarding.isSavingVerification} disabled={isLocked} onSave={onboarding.saveVerification} />
+            <VerificationForm key={verification?.updatedAt ?? 'new-verification'} verification={verification} isSaving={onboarding.isSavingVerification} disabled={isVerificationDisabled} onSave={onboarding.saveVerification} />
           </S.Panel>
         </S.Stack>
       </Store.Content>

@@ -385,7 +385,7 @@ export const UploadArea = styled.div`
   span { color: ${colors.muted}; font-size: 12px; line-height: 1.45; }
 `
 
-export const UploadButton = styled.label`
+export const UploadButton = styled.button`
   min-height: 36px;
   display: inline-flex;
   align-items: center;
@@ -401,17 +401,9 @@ export const UploadButton = styled.label`
   cursor: pointer;
 
   &:hover { background: ${colors.primary}; color: ${colors.primaryText}; }
+  &:disabled { cursor: not-allowed; opacity: 0.56; }
 `
 
-export const HiddenFileInput = styled.input`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  clip-path: inset(50%);
-`
 
 export const ModalOverlay = styled.div`
   position: fixed;

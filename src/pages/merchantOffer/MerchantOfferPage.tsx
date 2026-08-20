@@ -35,10 +35,6 @@ function toDateTimeInput(value: string) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-function toIsoDateTime(value: string) {
-  return new Date(value).toISOString()
-}
-
 function labelEligibility(value: MerchantOffer['eligibilityPolicy']) {
   return value === 'PUBLIC' ? '누구나 발급 가능' : '활성 여행 일정 사용자'
 }
@@ -111,8 +107,8 @@ function OfferEditor({
       title: title.trim(),
       description: description.trim(),
       benefitDescription: benefitDescription.trim(),
-      startsAt: toIsoDateTime(startsAt),
-      endsAt: toIsoDateTime(endsAt),
+      startsAt,
+      endsAt,
       couponValidityDays: validityDays,
       eligibilityPolicy,
       inventoryPolicy,

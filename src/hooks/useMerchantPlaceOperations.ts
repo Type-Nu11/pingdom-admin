@@ -199,7 +199,11 @@ export function useMerchantPlaceOperations() {
       'schedule',
       () => updateMerchantPlaceOperatingSchedule(selectedPlaceId, request),
       (next) => {
-        setOperating(next)
+        setOperating((current) => current ? {
+          ...current,
+          regularHours: next.regularHours,
+          operatingExceptions: next.operatingExceptions,
+        } : current)
         setPlace((current) => current ? { ...current, regularHours: next.regularHours, operatingExceptions: next.operatingExceptions } : current)
       },
       '영업시간을 저장했습니다.',

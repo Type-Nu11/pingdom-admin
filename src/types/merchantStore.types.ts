@@ -249,6 +249,13 @@ export interface MerchantPlaceOperatingScheduleUpdateRequest {
   exceptions?: MerchantPlaceOperatingException[]
 }
 
+export interface MerchantPlaceOperatingScheduleResponse {
+  placeId: number
+  regularHours: MerchantPlaceRegularOperatingHour[]
+  operatingExceptions: MerchantPlaceOperatingException[]
+  message: string
+}
+
 export interface MerchantPlaceMediaItem {
   id: number
   placeId: number

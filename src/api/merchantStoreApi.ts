@@ -19,6 +19,7 @@ import type {
   MerchantPlaceMediaUploadRequest,
   MerchantPlaceMediaUploadResponse,
   MerchantPlaceOperating,
+  MerchantPlaceOperatingScheduleResponse,
   MerchantPlaceOperatingScheduleUpdateRequest,
   MerchantPlaceOperatingStatusUpdateRequest,
   MerchantOwnerProfile,
@@ -81,7 +82,7 @@ export async function updateMerchantPlaceOperatingSchedule(
   placeId: number,
   request: MerchantPlaceOperatingScheduleUpdateRequest
 ) {
-  const { data } = await customAxios.put<MerchantPlaceOperating>(
+  const { data } = await customAxios.put<MerchantPlaceOperatingScheduleResponse>(
     `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-schedule`,
     request
   )

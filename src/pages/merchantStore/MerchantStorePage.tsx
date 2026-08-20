@@ -273,7 +273,10 @@ function MerchantStorePage() {
                   <S.EmptyStoreTitle>관리할 장소를 연결해주세요.</S.EmptyStoreTitle>
                   <S.EmptyStoreDescription>PingDom에 이미 등록된 장소를 검색해 운영 권한을 신청할 수 있습니다. 심사와 연결이 완료되면 이 화면에서 가게 정보를 관리합니다.</S.EmptyStoreDescription>
                 </div>
-                <S.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>운영 장소 신청</S.EmptyStoreAction>
+                <S.EmptyStoreActions>
+                  <S.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</S.EmptyStoreAction>
+                  <S.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</S.EmptyStoreSecondaryAction>
+                </S.EmptyStoreActions>
               </S.EmptyStoreState>
             )}
           </>

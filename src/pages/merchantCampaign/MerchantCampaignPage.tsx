@@ -1,7 +1,10 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { useMerchantCampaigns } from '../../hooks/useMerchantCampaigns'
+import {
+  MERCHANT_CAMPAIGN_PAGE_LIMIT,
+  useMerchantCampaigns,
+} from '../../hooks/useMerchantCampaigns'
 import type {
   MerchantBrand,
   MerchantBrandRequest,
@@ -206,22 +209,43 @@ function MerchantCampaignPage() {
   const [brandDialog, setBrandDialog] = useState<BrandDialog>(null)
   const [preferredBrandId, setPreferredBrandId] = useState<number | null>(null)
   const selectedCampaign = campaign.campaigns.find((item) => item.id === selectedId) ?? null
-  const visibleCampaigns = useMemo(() => campaign.campaigns.filter((item) => statusFilter === 'ALL' || item.status === statusFilter), [campaign.campaigns, statusFilter])
+  const filteredCampaigns = useMemo(
+    () => campaign.campaigns.filter((item) => statusFilter === 'ALL' || item.status === statusFilter),
+    [campaign.campaigns, statusFilter]
+  )
+  const filteredTotalPages = Math.max(1, Math.ceil(filteredCampaigns.length / MERCHANT_CAMPAIGN_PAGE_LIMIT))
+  const visibleCampaigns = useMemo(
+    () => filteredCampaigns.slice(
+      (campaign.page - 1) * MERCHANT_CAMPAIGN_PAGE_LIMIT,
+      campaign.page * MERCHANT_CAMPAIGN_PAGE_LIMIT
+    ),
+    [campaign.page, filteredCampaigns]
+  )
   const isBusy = campaign.activeAction !== null
+  const currentCampaignPage = campaign.page
+  const goToPage = campaign.goToPage
 
   const handleLogout = () => { void logout(); navigate('/login', { replace: true }) }
   const startNew = () => { setSelectedId(null); setPreferredBrandId((current) => current ?? campaign.brands[0]?.id ?? null) }
+  const changeStatusFilter = (nextFilter: StatusFilter) => {
+    setStatusFilter(nextFilter)
+    campaign.goToPage(1)
+  }
+
+  useEffect(() => {
+    if (currentCampaignPage > filteredTotalPages) goToPage(filteredTotalPages)
+  }, [currentCampaignPage, filteredTotalPages, goToPage])
 
   if (campaign.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.Eyebrow>Merchant Portal</Store.Eyebrow><Store.PageTitle>이벤트 관리</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{campaign.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void campaign.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
-  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{campaign.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.Eyebrow>Merchant Portal</Store.Eyebrow><Store.PageTitle>이벤트 관리</Store.PageTitle><Store.PageDescription>연결된 장소의 팝업 이벤트를 초안으로 등록하고, 검토한 뒤 공개·종료합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" onClick={() => navigate('/merchant')}>내 가게 관리</S.HeaderButton><S.HeaderButton type="button" onClick={() => void campaign.fetchInitialData()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
+  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{campaign.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.Eyebrow>Merchant Portal</Store.Eyebrow><Store.PageTitle>이벤트 관리</Store.PageTitle><Store.PageDescription>연결된 장소의 팝업 이벤트를 초안으로 등록하고, 검토한 뒤 공개·종료합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" onClick={() => navigate('/merchant')}>내 가게 관리</S.HeaderButton><S.HeaderButton type="button" disabled={campaign.status === 'loading' || isBusy} onClick={() => void campaign.fetchInitialData()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
     {campaign.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{campaign.errorMessage}</Store.Notice> : null}
     {campaign.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{campaign.actionErrorMessage}</Store.Notice> : null}
     {campaign.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{campaign.successMessage}</Store.Notice> : null}
-    <S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>이벤트 목록</S.PanelTitle><S.PanelDescription>등록한 이벤트의 상태와 기간을 확인합니다.</S.PanelDescription></div><S.CreateButton type="button" onClick={startNew}>새 이벤트</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="이벤트 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} $selected={statusFilter === value} onClick={() => setStatusFilter(value)}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>총 {campaign.totalElements}건 · 현재 {campaign.page}/{Math.max(campaign.totalPages, 1)}페이지</S.ResultMeta>{campaign.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : visibleCampaigns.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 이벤트가 없습니다. 첫 이벤트를 초안으로 등록해보세요.' : '선택한 상태의 이벤트가 없습니다.'}</S.Empty> : <S.CampaignList>{visibleCampaigns.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => setSelectedId(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.brandName} · 장소 #{item.placeId}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}{campaign.totalPages > 1 ? <S.Pagination><S.PaginationButton type="button" disabled={isBusy || campaign.isListLoading || campaign.page <= 1} onClick={() => void campaign.fetchCampaigns(campaign.page - 1)}>이전</S.PaginationButton><S.PageText>{campaign.page} / {campaign.totalPages}</S.PageText><S.PaginationButton type="button" disabled={isBusy || campaign.isListLoading || !campaign.hasNext} onClick={() => void campaign.fetchCampaigns(campaign.page + 1)}>다음</S.PaginationButton></S.Pagination> : null}</S.Panel>
-      <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedCampaign ? '이벤트 상세' : '새 이벤트 등록'}</S.PanelTitle><S.PanelDescription>{selectedCampaign ? `이벤트 #${selectedCampaign.id} · 마지막 수정 ${formatDateTime(selectedCampaign.updatedAt)}` : '이벤트 정보를 입력한 뒤 초안으로 저장하세요.'}</S.PanelDescription></div>{selectedCampaign ? <S.StatusBadge $tone={STATUS[selectedCampaign.status].tone}>{STATUS[selectedCampaign.status].label}</S.StatusBadge> : null}</S.PanelHeader><CampaignEditor key={selectedCampaign?.id ?? `new-${preferredBrandId ?? 'none'}`} campaign={selectedCampaign} profilePlaceIds={campaign.profile?.placeIds ?? []} brands={campaign.brands} preferredBrandId={preferredBrandId} activeAction={campaign.activeAction} onCreate={campaign.createCampaign} onUpdate={campaign.updateCampaign} onPublish={campaign.publishCampaign} onClose={campaign.closeCampaign} onSelect={setSelectedId} onOpenBrand={(brand) => setBrandDialog({ brand })} /></S.Panel></S.Workspace>
+    <S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>이벤트 목록</S.PanelTitle><S.PanelDescription>등록한 이벤트의 상태와 기간을 확인합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={campaign.status !== 'ready' || isBusy} onClick={startNew}>새 이벤트</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="이벤트 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} disabled={campaign.status !== 'ready' || isBusy} $selected={statusFilter === value} onClick={() => changeStatusFilter(value)}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>총 {filteredCampaigns.length}건 · 현재 {campaign.page}/{filteredTotalPages}페이지</S.ResultMeta>{campaign.status === 'loading' || campaign.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : visibleCampaigns.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 이벤트가 없습니다. 첫 이벤트를 초안으로 등록해보세요.' : '선택한 상태의 이벤트가 없습니다.'}</S.Empty> : <S.CampaignList>{visibleCampaigns.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => setSelectedId(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.brandName} · 장소 #{item.placeId}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}{filteredTotalPages > 1 ? <S.Pagination><S.PaginationButton type="button" disabled={isBusy || campaign.isListLoading || campaign.page <= 1} onClick={() => campaign.goToPage(campaign.page - 1)}>이전</S.PaginationButton><S.PageText>{campaign.page} / {filteredTotalPages}</S.PageText><S.PaginationButton type="button" disabled={isBusy || campaign.isListLoading || campaign.page >= filteredTotalPages} onClick={() => campaign.goToPage(campaign.page + 1)}>다음</S.PaginationButton></S.Pagination> : null}</S.Panel>
+      <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedCampaign ? '이벤트 상세' : '새 이벤트 등록'}</S.PanelTitle><S.PanelDescription>{selectedCampaign ? `이벤트 #${selectedCampaign.id} · 마지막 수정 ${formatDateTime(selectedCampaign.updatedAt)}` : '이벤트 정보를 입력한 뒤 초안으로 저장하세요.'}</S.PanelDescription></div>{selectedCampaign ? <S.StatusBadge $tone={STATUS[selectedCampaign.status].tone}>{STATUS[selectedCampaign.status].label}</S.StatusBadge> : null}</S.PanelHeader>{campaign.status === 'loading' ? <S.Empty>이벤트 관리 정보를 불러오는 중입니다.</S.Empty> : <CampaignEditor key={selectedCampaign?.id ?? `new-${preferredBrandId ?? 'none'}`} campaign={selectedCampaign} profilePlaceIds={campaign.profile?.placeIds ?? []} brands={campaign.brands} preferredBrandId={preferredBrandId} activeAction={campaign.activeAction} onCreate={campaign.createCampaign} onUpdate={campaign.updateCampaign} onPublish={campaign.publishCampaign} onClose={campaign.closeCampaign} onSelect={setSelectedId} onOpenBrand={(brand) => setBrandDialog({ brand })} />}</S.Panel></S.Workspace>
     {brandDialog ? <BrandDialogForm brand={brandDialog.brand} activeAction={campaign.activeAction} onClose={() => setBrandDialog(null)} onCreate={campaign.createBrand} onUpdate={campaign.updateBrand} onCreated={(brandId) => { setPreferredBrandId(brandId); setBrandDialog(null) }} /> : null}
   </Store.Content></Store.Page>
 }

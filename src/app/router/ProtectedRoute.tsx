@@ -28,13 +28,7 @@ function RoleProtectedRoute({ expectedRole, withNotifications = false }: { expec
   }
 
   if (user?.role !== expectedRole) {
-    const fallback = user?.role === 'ADMIN'
-      ? '/dashboard'
-      : user?.role === 'MERCHANT_OWNER'
-        ? '/merchant'
-        : user?.role === 'USER'
-          ? '/merchant/onboarding'
-          : '/login'
+    const fallback = user?.role === 'ADMIN' ? '/dashboard' : user?.role === 'MERCHANT_OWNER' ? '/merchant' : '/login'
     return <Navigate to={fallback} replace />
   }
 
@@ -47,37 +41,3 @@ function RoleProtectedRoute({ expectedRole, withNotifications = false }: { expec
 
 export function ProtectedRoute() { return <RoleProtectedRoute expectedRole="ADMIN" withNotifications /> }
 export function MerchantProtectedRoute() { return <RoleProtectedRoute expectedRole="MERCHANT_OWNER" /> }
-
-export function MerchantOnboardingRoute() {
-  const { clearAuth, isAuthenticated, isAuthReady, user } = useAuth()
-  const hasBrokenAuthState = isAuthReady && isAuthenticated && !user
-
-  useEffect(() => {
-    if (hasBrokenAuthState) {
-      clearAuth()
-    }
-  }, [clearAuth, hasBrokenAuthState])
-
-  if (!isAuthReady || hasBrokenAuthState) {
-    return (
-      <RouteLoadingFallback
-        title="상점주 신청 정보를 준비하는 중입니다."
-        description="잠시만 기다리면 신청 화면으로 이동합니다."
-      />
-    )
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (user?.role === 'ADMIN') {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  if (user?.role !== 'USER' && user?.role !== 'MERCHANT_OWNER') {
-    return <Navigate to="/login" replace />
-  }
-
-  return <Outlet />
-}

@@ -5,6 +5,14 @@ export type MerchantOnboardingStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE
 export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
+export type MerchantOperatingNoticeType =
+  | 'TEMPORARY_CLOSURE'
+  | 'HOURS_CHANGE'
+  | 'CROWDING'
+  | 'REOPENING'
+  | 'GENERAL'
+export type MerchantOperatingNoticeSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
+export type MerchantOperatingNoticeStatus = 'SCHEDULED' | 'ACTIVE' | 'EXPIRED' | 'CANCELED'
 
 export interface MerchantOwnerProfile {
   userId: number
@@ -134,6 +142,47 @@ export interface MerchantReservableProduct {
   productType: 'GENERAL' | 'TICKET' | 'CLASS'
   name: string
   status: ReservableProductStatus
+}
+
+export interface MerchantOperatingNotice {
+  id: number
+  placeId: number
+  noticeType: MerchantOperatingNoticeType
+  severity: MerchantOperatingNoticeSeverity
+  status: MerchantOperatingNoticeStatus
+  message: string
+  startsAt: string
+  expiresAt: string
+  expiredAt: string | null
+  canceledAt: string | null
+  cancelReason: string | null
+  createdAt: string
+  updatedAt: string
+  visibleNow: boolean
+}
+
+export interface MerchantOperatingNoticeListResponse {
+  placeId: number
+  currentlyOperating: boolean
+  checkedAt: string
+  notices: MerchantOperatingNotice[]
+}
+
+export interface MerchantOperatingNoticeRequest {
+  noticeType: MerchantOperatingNoticeType
+  severity: MerchantOperatingNoticeSeverity
+  message: string
+  startsAt: string
+  expiresAt: string
+}
+
+export interface MerchantOperatingNoticeUpdateRequest {
+  severity: MerchantOperatingNoticeSeverity
+  message: string
+}
+
+export interface MerchantOperatingNoticeCancelRequest {
+  cancelReason: string
 }
 
 export type MerchantStoreErrorResponse = AuthErrorResponse<string>

@@ -7,6 +7,11 @@ import type {
   MerchantBrandRequest,
   MerchantBrand,
   MerchantOfferPageResponse,
+  MerchantOperatingNotice,
+  MerchantOperatingNoticeCancelRequest,
+  MerchantOperatingNoticeListResponse,
+  MerchantOperatingNoticeRequest,
+  MerchantOperatingNoticeUpdateRequest,
   MerchantOwnerProfile,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
@@ -111,6 +116,48 @@ export async function getMerchantOffers() {
 export async function getMerchantReservableProducts() {
   const { data } = await customAxios.get<MerchantReservableProduct[]>(
     `${MERCHANT_OWNER_PATH}/reservable-products`
+  )
+  return data
+}
+
+export async function getMerchantOperatingNotices(placeId: number) {
+  const { data } = await customAxios.get<MerchantOperatingNoticeListResponse>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-notices`
+  )
+  return data
+}
+
+export async function createMerchantOperatingNotice(
+  placeId: number,
+  request: MerchantOperatingNoticeRequest
+) {
+  const { data } = await customAxios.post<MerchantOperatingNotice>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-notices`,
+    request
+  )
+  return data
+}
+
+export async function updateMerchantOperatingNotice(
+  placeId: number,
+  noticeId: number,
+  request: MerchantOperatingNoticeUpdateRequest
+) {
+  const { data } = await customAxios.patch<MerchantOperatingNotice>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-notices/${noticeId}`,
+    request
+  )
+  return data
+}
+
+export async function cancelMerchantOperatingNotice(
+  placeId: number,
+  noticeId: number,
+  request: MerchantOperatingNoticeCancelRequest
+) {
+  const { data } = await customAxios.post<MerchantOperatingNotice>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-notices/${noticeId}/cancel`,
+    request
   )
   return data
 }

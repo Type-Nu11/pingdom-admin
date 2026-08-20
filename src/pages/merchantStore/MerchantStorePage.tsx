@@ -135,6 +135,7 @@ function MerchantStorePage() {
   const activeCampaignCount = store.campaigns.filter((campaign) => campaign.status === 'PUBLISHED').length
   const activeOfferCount = store.offers.filter((offer) => offer.status === 'PUBLISHED').length
   const activeProductCount = store.reservableProducts.filter((product) => product.status === 'ACTIVE').length
+  const visibleNoticeCount = store.operatingNotices.filter((notice) => notice.visibleNow).length
 
   const handleLogout = () => {
     void logout()
@@ -212,6 +213,7 @@ function MerchantStorePage() {
               <S.QuickLinks aria-label="가게 관리 바로가기">
                 <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-information')}>기본 정보</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/campaigns')}>이벤트 관리</S.QuickLink>
+                <S.QuickLink type="button" onClick={() => navigate('/merchant/operating-notices')}>운영 공지</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-offers')}>혜택·예약</S.QuickLink>
               </S.QuickLinks>
             </S.StoreSummary>
@@ -261,6 +263,7 @@ function MerchantStorePage() {
                       <S.StatusList>
                         <S.StatusRow><div><strong>상점주 계정</strong><span>승인된 계정만 장소 정보를 수정할 수 있습니다.</span></div><S.StateText $tone={ownerStatus?.tone === 'active' ? 'active' : ownerStatus?.tone === 'pending' ? 'pending' : 'neutral'}>{ownerStatus?.label ?? '확인 중'}</S.StateText></S.StatusRow>
                         <S.StatusRow><div><strong>장소 연결</strong><span>현재 관리 권한이 연결된 장소입니다.</span></div><S.StateText $tone={store.selectedPlaceId ? 'active' : 'neutral'}>{store.selectedPlaceId ? `장소 #${store.selectedPlaceId}` : '연결 없음'}</S.StateText></S.StatusRow>
+                        <S.StatusRow><div><strong>운영 공지</strong><span>방문자에게 현재 노출 중인 운영 안내입니다.</span></div><S.StateText $tone={visibleNoticeCount > 0 ? 'pending' : 'neutral'}>{visibleNoticeCount > 0 ? `${visibleNoticeCount}건 노출 중` : '노출 공지 없음'}</S.StateText></S.StatusRow>
                       </S.StatusList>
                     </S.Section>
                   </S.Column>

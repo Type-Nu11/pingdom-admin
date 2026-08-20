@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getMerchantCampaigns,
   getMerchantOffers,
+  getMerchantOperatingNotices,
   getMerchantOwnerProfile,
   getMerchantPlaceInformation,
   getMerchantReservableProducts,
@@ -12,6 +13,7 @@ import { isApiError } from '../api/customAxios'
 import type {
   MerchantCampaign,
   MerchantOffer,
+  MerchantOperatingNotice,
   MerchantOwnerProfile,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
@@ -51,6 +53,7 @@ export function useMerchantStore() {
   const [placeInformation, setPlaceInformation] = useState<MerchantPlaceInformation | null>(null)
   const [campaigns, setCampaigns] = useState<MerchantCampaign[]>([])
   const [offers, setOffers] = useState<MerchantOffer[]>([])
+  const [operatingNotices, setOperatingNotices] = useState<MerchantOperatingNotice[]>([])
   const [reservableProducts, setReservableProducts] = useState<MerchantReservableProduct[]>([])
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
@@ -97,19 +100,21 @@ export function useMerchantStore() {
       setPlaceInformation(null)
       setCampaigns([])
       setOffers([])
+      setOperatingNotices([])
       setReservableProducts([])
       setSectionErrorMessage('')
 
-      const [informationResult, campaignsResult, offersResult, productsResult] = await Promise.allSettled([
+      const [informationResult, campaignsResult, offersResult, productsResult, noticesResult] = await Promise.allSettled([
         getMerchantPlaceInformation(placeId),
         getMerchantCampaigns(),
         getMerchantOffers(),
         getMerchantReservableProducts(),
+        getMerchantOperatingNotices(placeId),
       ])
 
       if (!mountedRef.current) return
 
-      const failures = [informationResult, campaignsResult, offersResult, productsResult].filter(
+      const failures = [informationResult, campaignsResult, offersResult, productsResult, noticesResult].filter(
         (result): result is PromiseRejectedResult => result.status === 'rejected'
       )
 
@@ -124,6 +129,9 @@ export function useMerchantStore() {
       }
       if (productsResult.status === 'fulfilled') {
         setReservableProducts(productsResult.value.filter((product) => product.placeId === placeId))
+      }
+      if (noticesResult.status === 'fulfilled') {
+        setOperatingNotices(noticesResult.value.notices)
       }
 
       if (failures.length > 0) {
@@ -206,6 +214,7 @@ export function useMerchantStore() {
     placeInformation,
     campaigns,
     offers,
+    operatingNotices,
     reservableProducts,
     errorMessage,
     sectionErrorMessage,

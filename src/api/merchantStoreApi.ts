@@ -1,6 +1,11 @@
 import customAxios from './customAxios'
 import type {
   MerchantCampaignPageResponse,
+  MerchantCampaign,
+  MerchantCampaignRequest,
+  MerchantBrandPageResponse,
+  MerchantBrandRequest,
+  MerchantBrand,
   MerchantOfferPageResponse,
   MerchantOwnerProfile,
   MerchantPlaceInformation,
@@ -33,10 +38,64 @@ export async function updateMerchantPlaceInformation(
   return data
 }
 
-export async function getMerchantCampaigns() {
+export async function getMerchantCampaigns(params: { page?: number; limit?: number } = {}) {
   const { data } = await customAxios.get<MerchantCampaignPageResponse>(
     `${MERCHANT_OWNER_PATH}/campaigns`,
-    { params: { page: 1, limit: 20 } }
+    { params: { page: 1, limit: 20, ...params } }
+  )
+  return data
+}
+
+export async function createMerchantCampaign(request: MerchantCampaignRequest) {
+  const { data } = await customAxios.post<MerchantCampaign>(
+    `${MERCHANT_OWNER_PATH}/campaigns`,
+    request,
+  )
+  return data
+}
+
+export async function updateMerchantCampaign(campaignId: number, request: MerchantCampaignRequest) {
+  const { data } = await customAxios.patch<MerchantCampaign>(
+    `${MERCHANT_OWNER_PATH}/campaigns/${campaignId}`,
+    request,
+  )
+  return data
+}
+
+export async function publishMerchantCampaign(campaignId: number) {
+  const { data } = await customAxios.post<MerchantCampaign>(
+    `${MERCHANT_OWNER_PATH}/campaigns/${campaignId}/publish`,
+  )
+  return data
+}
+
+export async function closeMerchantCampaign(campaignId: number) {
+  const { data } = await customAxios.post<MerchantCampaign>(
+    `${MERCHANT_OWNER_PATH}/campaigns/${campaignId}/close`,
+  )
+  return data
+}
+
+export async function getMerchantBrands(params: { page?: number; limit?: number } = {}) {
+  const { data } = await customAxios.get<MerchantBrandPageResponse>(
+    `${MERCHANT_OWNER_PATH}/campaigns/brands`,
+    { params: { page: 1, limit: 100, ...params } },
+  )
+  return data
+}
+
+export async function createMerchantBrand(request: MerchantBrandRequest) {
+  const { data } = await customAxios.post<MerchantBrand>(
+    `${MERCHANT_OWNER_PATH}/campaigns/brands`,
+    request,
+  )
+  return data
+}
+
+export async function updateMerchantBrand(brandId: number, request: MerchantBrandRequest) {
+  const { data } = await customAxios.patch<MerchantBrand>(
+    `${MERCHANT_OWNER_PATH}/campaigns/brands/${brandId}`,
+    request,
   )
   return data
 }

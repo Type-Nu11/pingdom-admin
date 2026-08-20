@@ -28,10 +28,10 @@ function LoginPage() {
   const [selectedMode, setSelectedMode] = useState<LoginMode>('admin')
   const [showPassword, setShowPassword] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
-  const [merchantLoginComplete, setMerchantLoginComplete] = useState(false)
   const usernameInputRef = useRef<HTMLInputElement>(null)
   const passwordInputRef = useRef<HTMLInputElement>(null)
   const isMerchantSession = isAuthenticated && user?.role === 'MERCHANT_OWNER'
+  const isMerchantApplicantSession = isAuthenticated && user?.role === 'USER'
   const activeMode = isMerchantSession ? 'merchant' : selectedMode
   const {
     username,
@@ -57,41 +57,23 @@ function LoginPage() {
       return
     }
 
-    if (isAuthReady && isAuthenticated && user?.role !== 'ADMIN' && user?.role !== 'MERCHANT_OWNER') {
+    if (isAuthReady && isMerchantApplicantSession) {
+      navigate('/merchant/onboarding', { replace: true })
+      return
+    }
+
+    if (isAuthReady && isAuthenticated && user?.role !== 'ADMIN' && user?.role !== 'MERCHANT_OWNER' && user?.role !== 'USER') {
       clearAuth()
     }
-  }, [clearAuth, isAdminSession, isAuthReady, isAuthenticated, isMerchantSession, navigate, user?.role])
+  }, [clearAuth, isAdminSession, isAuthReady, isAuthenticated, isMerchantApplicantSession, isMerchantSession, navigate, user?.role])
 
   const selectMode = (mode: LoginMode) => {
     if (isMerchantSession && mode === 'admin') {
       clearAuth()
     }
 
-    setMerchantLoginComplete(false)
     setShowPassword(false)
     setSelectedMode(mode)
-  }
-
-  if (activeMode === 'merchant' && (merchantLoginComplete || isMerchantSession)) {
-    return (
-      <S.Page>
-        <S.CenterShell>
-          <S.BrandHeader>
-            <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
-          </S.BrandHeader>
-          <S.SuccessCard>
-            <S.SuccessIconBox>
-              <S.MaterialIcon aria-hidden="true">check</S.MaterialIcon>
-            </S.SuccessIconBox>
-            <S.SuccessTitle>상점주 로그인이 완료됐어요</S.SuccessTitle>
-            <S.SuccessDescription>
-              상점주 포털을 준비 중입니다. 서비스가 열리면
-              <br />이 계정으로 바로 이용할 수 있어요.
-            </S.SuccessDescription>
-          </S.SuccessCard>
-        </S.CenterShell>
-      </S.Page>
-    )
   }
 
   return (
@@ -144,11 +126,7 @@ function LoginPage() {
               const result = await handleLogin()
 
               if (result === 'success') {
-                if (activeMode === 'admin') {
-                  setIsRedirecting(true)
-                } else {
-                  setMerchantLoginComplete(true)
-                }
+                setIsRedirecting(true)
                 return
               }
 
@@ -217,7 +195,7 @@ function LoginPage() {
             <S.SubmitButton type="submit" disabled={isSubmitting}>
               <span>
                 {isRedirecting
-                  ? '관리자 정보를 불러오는 중...'
+                  ? '로그인 정보를 불러오는 중...'
                   : isLoading
                     ? '로그인 중...'
                     : '로그인'}

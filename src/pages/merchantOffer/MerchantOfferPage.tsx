@@ -132,7 +132,7 @@ function OfferEditor({
       <S.Field $wide>만료 정책<S.Input value={labelExpiry(offer.expiryPolicy)} disabled /></S.Field>
       <S.FormActions>
         {offer.status === 'DRAFT' ? <S.ActionButton type="button" $variant="primary" disabled={isBusy} onClick={() => void onPublish(offer.id)}>{activeAction === 'publish' ? '공개 중' : '공개하기'}</S.ActionButton> : null}
-        {offer.status === 'PUBLISHED' ? <S.ActionButton type="button" $variant="danger" disabled={isBusy} onClick={() => void onClose(offer.id)}>{activeAction === 'close' ? '종료 중' : '혜택 종료'}</S.ActionButton> : null}
+        {offer.status === 'PUBLISHED' ? <S.ActionButton type="button" $variant="danger" disabled={isBusy} onClick={() => { if (window.confirm('혜택을 종료하면 새 쿠폰 발급이 중단되며 다시 공개할 수 없습니다. 종료할까요?')) void onClose(offer.id) }}>{activeAction === 'close' ? '종료 중' : '혜택 종료'}</S.ActionButton> : null}
       </S.FormActions>
     </S.Form></S.Editor>
   }

@@ -13,6 +13,18 @@ export type MerchantOperatingNoticeType =
   | 'GENERAL'
 export type MerchantOperatingNoticeSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 export type MerchantOperatingNoticeStatus = 'SCHEDULED' | 'ACTIVE' | 'EXPIRED' | 'CANCELED'
+export type MerchantPlaceOperatingStatus =
+  | 'OPERATING'
+  | 'TEMPORARILY_CLOSED'
+  | 'PERMANENTLY_CLOSED'
+export type MerchantPlaceDayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY'
 
 export interface MerchantOwnerProfile {
   userId: number
@@ -183,6 +195,102 @@ export interface MerchantOperatingNoticeUpdateRequest {
 
 export interface MerchantOperatingNoticeCancelRequest {
   cancelReason: string
+}
+
+export interface MerchantPlaceOperatingTimeRange {
+  opensAt: string
+  closesAt: string
+}
+
+export interface MerchantPlaceRegularOperatingHour extends MerchantPlaceOperatingTimeRange {
+  dayOfWeek: MerchantPlaceDayOfWeek
+}
+
+export interface MerchantPlaceOperatingException {
+  date: string
+  closed: boolean
+  hours: MerchantPlaceOperatingTimeRange[]
+}
+
+export interface MerchantPlaceDetail {
+  id: number
+  name: string
+  englishName: string | null
+  category: string | null
+  address: string | null
+  roadAddress: string | null
+  jibunAddress: string | null
+  postalCode: string | null
+  latitude: number
+  longitude: number
+  imageUrl: string | null
+  operatingStatus: MerchantPlaceOperatingStatus
+  operatingStatusCheckedAt: string | null
+  regularHours: MerchantPlaceRegularOperatingHour[]
+  operatingExceptions: MerchantPlaceOperatingException[]
+}
+
+export interface MerchantPlaceOperating {
+  placeId: number
+  operatingStatus: MerchantPlaceOperatingStatus
+  operatingStatusCheckedAt: string | null
+  currentlyOperating: boolean
+  checkedAt: string
+  regularHours: MerchantPlaceRegularOperatingHour[]
+  operatingExceptions: MerchantPlaceOperatingException[]
+}
+
+export interface MerchantPlaceOperatingStatusUpdateRequest {
+  operatingStatus: MerchantPlaceOperatingStatus
+}
+
+export interface MerchantPlaceOperatingScheduleUpdateRequest {
+  regularHours?: MerchantPlaceRegularOperatingHour[]
+  exceptions?: MerchantPlaceOperatingException[]
+}
+
+export interface MerchantPlaceOperatingScheduleResponse {
+  placeId: number
+  regularHours: MerchantPlaceRegularOperatingHour[]
+  operatingExceptions: MerchantPlaceOperatingException[]
+  message: string
+}
+
+export interface MerchantPlaceMediaItem {
+  id: number
+  placeId: number
+  purpose: 'VERIFICATION' | 'EXPLORATION'
+  imageUrl: string
+  s3Key: string | null
+  thumbnailUrl: string | null
+  thumbnailS3Key: string | null
+  sourceMapImageId: number | null
+  displayOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MerchantPlaceMediaResponse {
+  placeId: number
+  representativeMediaId: number | null
+  media: MerchantPlaceMediaItem[]
+}
+
+export interface MerchantPlaceMediaUploadRequest {
+  fileName: string
+  contentType: string
+  fileSize: number
+}
+
+export interface MerchantPlaceMediaUploadResponse {
+  uploadUrl: string
+  imageUrl: string
+  s3Key: string
+  expiresAt: string
+}
+
+export interface MerchantPlaceMediaOrderUpdateRequest {
+  displayOrder: number
 }
 
 export type MerchantStoreErrorResponse = AuthErrorResponse<string>

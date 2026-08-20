@@ -12,6 +12,16 @@ import type {
   MerchantOperatingNoticeListResponse,
   MerchantOperatingNoticeRequest,
   MerchantOperatingNoticeUpdateRequest,
+  MerchantPlaceDetail,
+  MerchantPlaceMediaItem,
+  MerchantPlaceMediaOrderUpdateRequest,
+  MerchantPlaceMediaResponse,
+  MerchantPlaceMediaUploadRequest,
+  MerchantPlaceMediaUploadResponse,
+  MerchantPlaceOperating,
+  MerchantPlaceOperatingScheduleResponse,
+  MerchantPlaceOperatingScheduleUpdateRequest,
+  MerchantPlaceOperatingStatusUpdateRequest,
   MerchantOwnerProfile,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
@@ -41,6 +51,84 @@ export async function updateMerchantPlaceInformation(
     request
   )
   return data
+}
+
+export async function getMerchantPlaceDetail(placeId: number) {
+  const { data } = await customAxios.get<MerchantPlaceDetail>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}`
+  )
+  return data
+}
+
+export async function getMerchantPlaceOperating(placeId: number) {
+  const { data } = await customAxios.get<MerchantPlaceOperating>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating`
+  )
+  return data
+}
+
+export async function updateMerchantPlaceOperatingStatus(
+  placeId: number,
+  request: MerchantPlaceOperatingStatusUpdateRequest
+) {
+  const { data } = await customAxios.patch<MerchantPlaceOperating>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-status`,
+    request
+  )
+  return data
+}
+
+export async function updateMerchantPlaceOperatingSchedule(
+  placeId: number,
+  request: MerchantPlaceOperatingScheduleUpdateRequest
+) {
+  const { data } = await customAxios.put<MerchantPlaceOperatingScheduleResponse>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/operating-schedule`,
+    request
+  )
+  return data
+}
+
+export async function getMerchantPlaceMedia(placeId: number) {
+  const { data } = await customAxios.get<MerchantPlaceMediaResponse>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/media`
+  )
+  return data
+}
+
+export async function requestMerchantPlaceMediaUploadUrl(
+  placeId: number,
+  request: MerchantPlaceMediaUploadRequest
+) {
+  const { data } = await customAxios.post<MerchantPlaceMediaUploadResponse>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/media/upload-url`,
+    request
+  )
+  return data
+}
+
+export async function updateMerchantPlaceMediaOrder(
+  placeId: number,
+  mediaId: number,
+  request: MerchantPlaceMediaOrderUpdateRequest
+) {
+  const { data } = await customAxios.patch<MerchantPlaceMediaItem>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/media/${mediaId}`,
+    request
+  )
+  return data
+}
+
+export async function updateMerchantRepresentativeMedia(placeId: number, mediaId: number) {
+  const { data } = await customAxios.put<MerchantPlaceMediaResponse>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/media/representative`,
+    { mediaId }
+  )
+  return data
+}
+
+export async function deleteMerchantPlaceMedia(placeId: number, mediaId: number) {
+  await customAxios.delete<void>(`${MERCHANT_OWNER_PATH}/places/${placeId}/media/${mediaId}`)
 }
 
 export async function getMerchantCampaigns(params: { page?: number; limit?: number } = {}) {

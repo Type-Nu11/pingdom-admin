@@ -7,7 +7,11 @@ import {
   useLocation,
 } from 'react-router-dom'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
-import { MerchantProtectedRoute, ProtectedRoute } from './ProtectedRoute'
+import {
+  MerchantOnboardingRoute,
+  MerchantProtectedRoute,
+  ProtectedRoute,
+} from './ProtectedRoute'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
@@ -52,6 +56,9 @@ const OperationHistoryPage = lazy(
   () => import('../../pages/operationHistory/OperationHistoryPage'),
 )
 const MerchantStorePage = lazy(() => import('../../pages/merchantStore/MerchantStorePage'))
+const MerchantOnboardingPage = lazy(
+  () => import('../../pages/merchantOnboarding/MerchantOnboardingPage'),
+)
 const PlaceEventPage = lazy(() => import('../../pages/placeEvent/PlaceEventPage'))
 const AdManagementPage = lazy(
   () => import('../../pages/adManagement/AdManagementPage'),
@@ -89,6 +96,9 @@ export function Router() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<MerchantProtectedRoute />}>
             <Route path="/merchant" element={<MerchantStorePage />} />
+          </Route>
+          <Route element={<MerchantOnboardingRoute />}>
+            <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />

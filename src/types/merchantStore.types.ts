@@ -148,6 +148,36 @@ export interface MerchantOfferPageResponse {
   hasNext: boolean
 }
 
+export interface MerchantOfferCreateRequest {
+  placeId: number
+  title: string
+  description: string
+  benefitDescription: string
+  startsAt: string
+  endsAt: string
+  totalQuantity?: number
+  couponValidityDays: number
+  eligibilityPolicy?: MerchantOffer['eligibilityPolicy']
+  inventoryPolicy?: MerchantOffer['inventoryPolicy']
+  expiryPolicy?: MerchantOffer['expiryPolicy']
+}
+
+export type MerchantCouponStatus = 'ISSUED' | 'REDEEMED' | 'EXPIRED'
+
+export interface MerchantCouponRedeemRequest {
+  code: string
+}
+
+export interface MerchantCoupon {
+  id: number
+  offerId: number
+  code: string
+  status: MerchantCouponStatus
+  issuedAt: string
+  expiresAt: string
+  redeemedAt: string | null
+}
+
 export interface MerchantReservableProduct {
   id: number
   placeId: number

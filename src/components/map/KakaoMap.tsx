@@ -55,7 +55,14 @@ type KakaoMaps = {
     zIndex: number
   }) => KakaoMapOverlay
   event: {
-    addListener: (target: unknown, eventName: string, handler: () => void) => void
+    addListener: (target: unknown, eventName: string, handler: (...args: unknown[]) => void) => void
+  }
+}
+
+type KakaoMapClickEvent = {
+  latLng?: {
+    getLat: () => number
+    getLng: () => number
   }
 }
 
@@ -94,6 +101,7 @@ interface KakaoMapProps {
   activeMarkerId?: number | null
   fitBoundsKey?: string
   onMarkerClick?: (markerId: number) => void
+  onMapClick?: (coordinate: { latitude: number; longitude: number }) => void
 }
 
 type MarkerClickRef = MutableRefObject<KakaoMapProps['onMarkerClick']>
@@ -181,6 +189,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     fitBoundsKey = '',
     markers = [],
     onMarkerClick,
+    onMapClick,
   },
   ref
 ) {
@@ -188,6 +197,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   const mapInstanceRef = useRef<KakaoMapInstance | null>(null)
   const markerOverlayRefs = useRef<KakaoMapOverlay[]>([])
   const onMarkerClickRef = useRef<KakaoMapProps['onMarkerClick']>(onMarkerClick)
+  const onMapClickRef = useRef<KakaoMapProps['onMapClick']>(onMapClick)
   const lastFitBoundsKeyRef = useRef('')
   const wheelZoomTimerRef = useRef<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -290,6 +300,10 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   }, [onMarkerClick])
 
   useEffect(() => {
+    onMapClickRef.current = onMapClick
+  }, [onMapClick])
+
+  useEffect(() => {
     let isMounted = true
     let delayedMessageTimer: number | undefined
 
@@ -347,6 +361,21 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
         kakao.maps.event.addListener(map, 'zoom_changed', () => {
           if (isMounted) {
             setMapLevel(map.getLevel())
+          }
+        })
+
+        kakao.maps.event.addListener(map, 'click', (event) => {
+          const latLng = (event as KakaoMapClickEvent | undefined)?.latLng
+          const latitude = latLng?.getLat()
+          const longitude = latLng?.getLng()
+
+          if (
+            typeof latitude === 'number' &&
+            typeof longitude === 'number' &&
+            Number.isFinite(latitude) &&
+            Number.isFinite(longitude)
+          ) {
+            onMapClickRef.current?.({ latitude, longitude })
           }
         })
       } catch (error) {
@@ -511,7 +540,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
 
   return (
     <MapFrame className={className}>
-      <MapCanvas ref={mapContainerRef} />
+      <MapCanvas ref={mapContainerRef} $interactive={Boolean(onMapClick)} />
       {isLoading ? (
         <MapMessage>
           {isDelayed
@@ -696,13 +725,14 @@ const MapFrame = styled.div`
   max-width: 100%;
 `
 
-const MapCanvas = styled.div`
+const MapCanvas = styled.div<{ $interactive: boolean }>`
   width: 100%;
   height: 100%;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   overflow: hidden;
   background: ${neutral.surfaceLow};
+  cursor: ${({ $interactive }) => ($interactive ? 'crosshair' : 'default')};
 `
 
 const MapMessage = styled.p`

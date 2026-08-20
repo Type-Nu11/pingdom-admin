@@ -23,6 +23,7 @@ export const HeaderButton = styled.button`
 
   &:hover { border-color: ${colors.primary}; color: ${colors.primary}; background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
 
 export const Workspace = styled.div`
@@ -80,6 +81,7 @@ export const CreateButton = styled.button`
 
   &:hover { border-color: ${colors.primaryHover}; background: ${colors.primaryHover}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
 
 export const FilterBar = styled.div`
@@ -105,6 +107,7 @@ export const FilterButton = styled.button<{ $selected: boolean }>`
 
   &:hover { border-color: ${colors.primary}; color: ${colors.primary}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
 
 export const ResultMeta = styled.p`

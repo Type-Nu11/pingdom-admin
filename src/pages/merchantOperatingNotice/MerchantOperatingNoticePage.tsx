@@ -106,8 +106,8 @@ function NoticeEditor({
       noticeType,
       severity,
       message: message.trim(),
-      startsAt: startDate.toISOString(),
-      expiresAt: expireDate.toISOString(),
+      startsAt,
+      expiresAt,
     })
     if (next) setFormError('')
   }

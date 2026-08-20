@@ -7,11 +7,11 @@
 - 상위 이슈: #67
 - 매트릭스 이슈: #78
 - 운영 Swagger: `http://54.116.166.107:8080/v3/api-docs`
-- 확인일: 2026-08-19
-- Web operation: 137개
+- 확인일: 2026-08-20
+- Web operation: 143개
 - 기록 파일: [`web-api-contract-matrix.csv`](./web-api-contract-matrix.csv)
 
-2026-08-15 기준 로컬 백엔드 `src/test/resources/openapi-baseline/web.json`은 117개 operation입니다. 운영 Swagger와 비교하면 아래 20개 operation이 로컬 baseline에 없습니다.
+2026-08-15 기준 로컬 백엔드 `src/test/resources/openapi-baseline/web.json`은 117개 operation입니다. 운영 Swagger와 비교하면 아래 26개 operation이 로컬 baseline에 없습니다.
 
 - 사용자 역할 3개
 - Scout 프로필 8개
@@ -19,8 +19,9 @@
 - legacy 후보인 장소 등록 신청 3개
 - 광고 2개
 - 기간형 이벤트 2개
+- 상점주 신청·사업자 검증 6개
 
-따라서 운영 137개와 로컬 117개 중 어느 한쪽을 임의로 최신 계약으로 간주하지 않습니다. 배포 대상 백엔드의 canonical 계약을 확인한 뒤 차이를 해소해야 합니다.
+따라서 운영 143개와 로컬 117개 중 어느 한쪽을 임의로 최신 계약으로 간주하지 않습니다. 배포 대상 백엔드의 canonical 계약을 확인한 뒤 차이를 해소해야 합니다.
 
 ## 상태 규칙
 
@@ -37,12 +38,12 @@
 
 | 상태 | 개수 | 범위 |
 | --- | ---: | --- |
-| `implemented` | 134 | 실제 관리자 route/API/hook/page 연결 |
+| `implemented` | 140 | 실제 관리자 route/API/hook/page 연결 |
 | `partial` | 3 | `/admin/place-registration-applications/**` legacy 후보 |
 | `missing` | 0 | 현재 없음 |
 | `blocked` | 0 | 현재 없음 |
 
-`/admin/ad`와 `/admin/place-events`는 목록·상세 조회와 운영 mutation을 모두 관리자 화면에 연결했습니다.
+`/admin/ad`, `/admin/place-events`, `/users/me/merchant-owner-profile`, `/users/me/merchant-verification`은 목록·상세 조회와 운영 mutation을 모두 화면에 연결했습니다.
 
 ## Swagger 변경 확인 절차
 
@@ -78,7 +79,7 @@ comm -3 /tmp/matrix-web-operations.txt /tmp/swagger-web-operations.txt
 행 수와 필수 추적값은 다음 명령으로 확인합니다.
 
 ```bash
-test "$(($(wc -l < docs/web-api-contract-matrix.csv) - 1))" -eq 137
+test "$(($(wc -l < docs/web-api-contract-matrix.csv) - 1))" -eq 143
 awk -F',' 'NR > 1 && ($8 == "\"\"" || $9 == "\"\"") { print NR }' docs/web-api-contract-matrix.csv
 ```
 

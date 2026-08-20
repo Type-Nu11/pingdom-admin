@@ -5,6 +5,7 @@ export type MerchantOnboardingStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE
 export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
+export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
 export type MerchantOperatingNoticeType =
   | 'TEMPORARY_CLOSURE'
   | 'HOURS_CHANGE'
@@ -181,9 +182,36 @@ export interface MerchantCoupon {
 export interface MerchantReservableProduct {
   id: number
   placeId: number
-  productType: 'GENERAL' | 'TICKET' | 'CLASS'
+  productType: MerchantReservableProductType
   name: string
   status: ReservableProductStatus
+}
+
+export interface MerchantReservableProductCreateRequest {
+  placeId: number
+  productType: MerchantReservableProductType
+  name: string
+}
+
+export interface MerchantAvailability {
+  id: number
+  placeId: number
+  productId: number
+  productType: MerchantReservableProductType
+  startsAt: string
+  endsAt: string
+  totalCapacity: number
+  remainingCapacity: number
+  status: ReservableProductStatus
+}
+
+export interface MerchantAvailabilityUpsertRequest {
+  placeId: number
+  productId?: number
+  productType?: MerchantReservableProductType
+  startsAt: string
+  endsAt: string
+  totalCapacity?: number
 }
 
 export interface MerchantOperatingNotice {

@@ -29,7 +29,10 @@ import type {
   MerchantOwnerProfile,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
+  MerchantAvailability,
+  MerchantAvailabilityUpsertRequest,
   MerchantReservableProduct,
+  MerchantReservableProductCreateRequest,
 } from '../types/merchantStore.types'
 
 const MERCHANT_OWNER_PATH = '/merchant-owner'
@@ -245,6 +248,70 @@ export async function redeemMerchantCoupon(request: MerchantCouponRedeemRequest)
 export async function getMerchantReservableProducts() {
   const { data } = await customAxios.get<MerchantReservableProduct[]>(
     `${MERCHANT_OWNER_PATH}/reservable-products`
+  )
+  return data
+}
+
+export async function createMerchantReservableProduct(
+  request: MerchantReservableProductCreateRequest,
+) {
+  const { data } = await customAxios.post<MerchantReservableProduct>(
+    `${MERCHANT_OWNER_PATH}/reservable-products`,
+    request,
+  )
+  return data
+}
+
+export async function activateMerchantReservableProduct(productId: number) {
+  const { data } = await customAxios.post<MerchantReservableProduct>(
+    `${MERCHANT_OWNER_PATH}/reservable-products/${productId}/activate`,
+  )
+  return data
+}
+
+export async function deactivateMerchantReservableProduct(productId: number) {
+  const { data } = await customAxios.post<MerchantReservableProduct>(
+    `${MERCHANT_OWNER_PATH}/reservable-products/${productId}/deactivate`,
+  )
+  return data
+}
+
+export async function getMerchantAvailabilities() {
+  const { data } = await customAxios.get<MerchantAvailability[]>(
+    `${MERCHANT_OWNER_PATH}/availabilities`,
+  )
+  return data
+}
+
+export async function createMerchantAvailability(request: MerchantAvailabilityUpsertRequest) {
+  const { data } = await customAxios.post<MerchantAvailability>(
+    `${MERCHANT_OWNER_PATH}/availabilities`,
+    request,
+  )
+  return data
+}
+
+export async function updateMerchantAvailability(
+  availabilityId: number,
+  request: MerchantAvailabilityUpsertRequest,
+) {
+  const { data } = await customAxios.put<MerchantAvailability>(
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}`,
+    request,
+  )
+  return data
+}
+
+export async function activateMerchantAvailability(availabilityId: number) {
+  const { data } = await customAxios.post<MerchantAvailability>(
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/activate`,
+  )
+  return data
+}
+
+export async function deactivateMerchantAvailability(availabilityId: number) {
+  const { data } = await customAxios.post<MerchantAvailability>(
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/deactivate`,
   )
   return data
 }

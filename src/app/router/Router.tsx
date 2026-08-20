@@ -62,6 +62,9 @@ const MerchantOnboardingPage = lazy(
 const MerchantPlaceApplicationPage = lazy(
   () => import('../../pages/merchantPlaceApplication/MerchantPlaceApplicationPage'),
 )
+const MerchantPlaceRegistrationPage = lazy(
+  () => import('../../pages/merchantPlaceRegistration/MerchantPlaceRegistrationPage'),
+)
 const PlaceEventPage = lazy(() => import('../../pages/placeEvent/PlaceEventPage'))
 const AdManagementPage = lazy(
   () => import('../../pages/adManagement/AdManagementPage'),
@@ -100,6 +103,7 @@ export function Router() {
           <Route element={<MerchantProtectedRoute />}>
             <Route path="/merchant" element={<MerchantStorePage />} />
             <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
+            <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
           </Route>
           <Route element={<MerchantOnboardingRoute />}>
             <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />

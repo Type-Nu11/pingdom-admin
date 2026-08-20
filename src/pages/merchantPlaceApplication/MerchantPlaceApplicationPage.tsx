@@ -57,7 +57,9 @@ function ApplicationForm({
   onReopen: (applicationId: number) => Promise<MerchantPlaceApplication | null>
   onCancel: (applicationId: number) => Promise<MerchantPlaceApplication | null>
 }) {
-  const editable = canEdit(application)
+  const hasExistingAttachments = (application?.attachments.length ?? 0) > 0
+  const editable = canEdit(application) && !hasExistingAttachments
+  const canSubmitExistingAttachments = application?.status === 'DRAFT' && hasExistingAttachments
   const [legalName, setLegalName] = useState(application?.legalName ?? '')
   const [businessName, setBusinessName] = useState(application?.businessName ?? profile?.businessName ?? '')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
@@ -104,7 +106,6 @@ function ApplicationForm({
       merchantContactPhone: phone.trim(),
       existingPlaceId: selectedPlace.id,
       claimReason: reason.trim(),
-      attachments: [],
     }
   }
 
@@ -113,13 +114,6 @@ function ApplicationForm({
     const request = buildRequest()
     if (!request) return
     await onSave(application?.id ?? null, request)
-  }
-
-  const submit = async () => {
-    const request = buildRequest()
-    if (!request) return
-    const saved = await onSave(application?.id ?? null, request)
-    if (saved) await onSubmit(saved.id)
   }
 
   const choosePlace = (place: MerchantPlaceSearchItem) => {
@@ -132,7 +126,7 @@ function ApplicationForm({
     <Store.Form onSubmit={save}>
       {application && !editable ? <S.ReadonlyBlock>
         <strong>{STATUS[application.status].label}</strong><br />
-        {application.status === 'PENDING' ? '심사 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
+        {hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : application.status === 'PENDING' ? '심사 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
         {application.reviewReason ? <><br />검토 의견: {application.reviewReason}</> : null}
       </S.ReadonlyBlock> : null}
       <Store.Field>
@@ -179,14 +173,17 @@ function ApplicationForm({
         <S.SearchHint>{description.length}/1000</S.SearchHint>
       </Store.Field>
       <S.AttachmentNotice>
-        증빙 서류 업로드 계약은 서버 확인 후 연결합니다.
+        {hasExistingAttachments
+          ? '기존 증빙 서류는 보존됩니다. 첨부 파일 수정 기능은 별도 업로드 계약과 함께 제공됩니다.'
+          : '증빙 서류 업로드 기능이 준비되기 전에는 신청서를 임시 저장만 할 수 있습니다.'}
         {application?.attachments.length ? <S.AttachmentList>{application.attachments.map((attachment) => <li key={attachment.id}><strong>{attachment.originalFilename}</strong> · {attachment.documentType}</li>)}</S.AttachmentList> : null}
       </S.AttachmentNotice>
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>
-        {application?.status === 'REJECTED' || application?.status === 'CANCELED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(application.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
+        {application?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(application.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
         {application && (application.status === 'DRAFT' || application.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('이 운영 장소 신청을 취소할까요?')) void onCancel(application.id) }}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
-        {editable ? <><S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton><Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void submit()}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton></> : null}
+        {editable ? <><S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton><Store.SaveButton type="button" disabled title="증빙 서류 업로드 기능이 준비된 뒤 심사 요청할 수 있습니다.">첨부 업로드 준비 중</Store.SaveButton></> : null}
+        {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void onSubmit(application.id)}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
     </Store.Form>
   )

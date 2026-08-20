@@ -21,6 +21,8 @@ const STATUS: Record<MerchantPlaceApplicationStatus, { label: string; tone: 'dra
   CANCELED: { label: '취소됨', tone: 'neutral' },
 }
 
+const E164_PHONE_PATTERN = /^\+[1-9]\d{7,14}$/
+
 function formatDate(value: string | null) {
   if (!value) return '날짜 없음'
   const date = new Date(value)
@@ -32,6 +34,10 @@ function formatDate(value: string | null) {
 
 function canEdit(application: MerchantPlaceApplication | null) {
   return !application || application.status === 'DRAFT'
+}
+
+function normalizeE164Phone(value: string) {
+  return value.trim().replace(/[\s-]/g, '')
 }
 
 function ApplicationForm({
@@ -90,6 +96,11 @@ function ApplicationForm({
       setFormError('이메일 형식을 확인해주세요.')
       return null
     }
+    const normalizedPhone = normalizeE164Phone(phone)
+    if (!E164_PHONE_PATTERN.test(normalizedPhone)) {
+      setFormError('연락처는 국가번호를 포함한 국제 형식으로 입력해주세요. 예: +821012345678')
+      return null
+    }
     if (!selectedPlace || !reason.trim()) {
       setFormError('운영할 장소와 신청 사유를 입력해주세요.')
       return null
@@ -103,7 +114,7 @@ function ApplicationForm({
       merchantDisplayName: displayName.trim(),
       merchantDescription: description.trim() || null,
       merchantContactEmail: email.trim(),
-      merchantContactPhone: phone.trim(),
+      merchantContactPhone: normalizedPhone,
       existingPlaceId: selectedPlace.id,
       claimReason: reason.trim(),
     }
@@ -151,7 +162,8 @@ function ApplicationForm({
       </Store.Field>
       <Store.Field>
         연락처
-        <Store.Input value={phone} maxLength={30} disabled={!editable || activeAction !== null} onChange={(event) => setPhone(event.target.value)} />
+        <Store.Input type="tel" value={phone} inputMode="tel" maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setPhone(event.target.value)} />
+        <S.SearchHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SearchHint>
       </Store.Field>
       <Store.Field $wide>
         운영할 장소

@@ -594,6 +594,17 @@ export const EmptyStoreDescription = styled.p`
   line-height: 1.55;
 `
 
+export const EmptyStoreActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 680px) {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+`
+
 export const EmptyStoreAction = styled.button`
   min-height: 42px;
   padding: 0 13px;
@@ -611,9 +622,16 @@ export const EmptyStoreAction = styled.button`
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
   @media (max-width: 680px) {
-    grid-column: 1 / -1;
-    width: 100%;
+    flex: 1;
   }
+`
+
+export const EmptyStoreSecondaryAction = styled(EmptyStoreAction)`
+  border-color: ${colors.primarySoft};
+  background: ${colors.surface};
+  color: ${colors.primary};
+
+  &:hover { background: ${colors.primaryTint}; border-color: ${colors.primary}; }
 `
 
 export const Skeleton = styled.div<{ $height?: number }>`

@@ -23,7 +23,7 @@ import type {
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
-const PAGE_LIMIT = 20
+export const MERCHANT_CAMPAIGN_PAGE_LIMIT = 20
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type CampaignAction = 'create' | 'update' | 'publish' | 'close' | 'create-brand' | 'update-brand' | null
@@ -32,6 +32,44 @@ function replaceById<T extends { id: number }>(items: T[], next: T) {
   const index = items.findIndex((item) => item.id === next.id)
   if (index === -1) return [next, ...items]
   return items.map((item) => (item.id === next.id ? next : item))
+}
+
+async function getAllMerchantCampaigns() {
+  const firstPage = await getMerchantCampaigns({
+    page: 1,
+    limit: MERCHANT_CAMPAIGN_PAGE_LIMIT,
+  })
+
+  if (firstPage.totalPages <= 1) {
+    return firstPage.items
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
+      getMerchantCampaigns({
+        page: index + 2,
+        limit: MERCHANT_CAMPAIGN_PAGE_LIMIT,
+      })
+    )
+  )
+
+  return [firstPage.items, ...remainingPages.map((page) => page.items)].flat()
+}
+
+async function getAllMerchantBrands() {
+  const firstPage = await getMerchantBrands({ page: 1, limit: 100 })
+
+  if (firstPage.totalPages <= 1) {
+    return firstPage.items
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
+      getMerchantBrands({ page: index + 2, limit: 100 })
+    )
+  )
+
+  return [firstPage.items, ...remainingPages.map((page) => page.items)].flat()
 }
 
 export function useMerchantCampaigns() {
@@ -53,6 +91,17 @@ export function useMerchantCampaigns() {
   const actionRef = useRef<CampaignAction>(null)
   const listRequestRef = useRef(0)
 
+  const applyCampaigns = useCallback((items: MerchantCampaign[], requestedPage = 1) => {
+    const nextTotalPages = Math.max(1, Math.ceil(items.length / MERCHANT_CAMPAIGN_PAGE_LIMIT))
+    const nextPage = Math.min(Math.max(requestedPage, 1), nextTotalPages)
+
+    setCampaigns(items)
+    setPage(nextPage)
+    setTotalElements(items.length)
+    setTotalPages(nextTotalPages)
+    setHasNext(nextPage < nextTotalPages)
+  }, [])
+
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
     if (error.category === 'unauthorized') clearAuth()
@@ -68,20 +117,16 @@ export function useMerchantCampaigns() {
     })
   }, [clearAuth])
 
-  const fetchCampaigns = useCallback(async (nextPage = page) => {
+  const fetchCampaigns = useCallback(async (nextPage = 1) => {
     const requestId = listRequestRef.current + 1
     listRequestRef.current = requestId
     setIsListLoading(true)
     setErrorMessage('')
 
     try {
-      const result = await getMerchantCampaigns({ page: nextPage, limit: PAGE_LIMIT })
+      const items = await getAllMerchantCampaigns()
       if (!mountedRef.current || requestId !== listRequestRef.current) return false
-      setCampaigns(result.items)
-      setPage(result.page)
-      setTotalElements(result.totalElements)
-      setTotalPages(result.totalPages)
-      setHasNext(result.hasNext)
+      applyCampaigns(items, nextPage)
       return true
     } catch (error) {
       if (mountedRef.current && requestId === listRequestRef.current) {
@@ -92,27 +137,22 @@ export function useMerchantCampaigns() {
     } finally {
       if (mountedRef.current && requestId === listRequestRef.current) setIsListLoading(false)
     }
-  }, [getErrorMessage, page])
+  }, [applyCampaigns, getErrorMessage])
 
   const fetchInitialData = useCallback(async () => {
     setStatus('loading')
+    setIsListLoading(true)
     setErrorMessage('')
     const [profileResult, campaignResult, brandResult] = await Promise.allSettled([
       getMerchantOwnerProfile(),
-      getMerchantCampaigns({ page: 1, limit: PAGE_LIMIT }),
-      getMerchantBrands(),
+      getAllMerchantCampaigns(),
+      getAllMerchantBrands(),
     ])
 
     if (!mountedRef.current) return
     if (profileResult.status === 'fulfilled') setProfile(profileResult.value)
-    if (campaignResult.status === 'fulfilled') {
-      setCampaigns(campaignResult.value.items)
-      setPage(campaignResult.value.page)
-      setTotalElements(campaignResult.value.totalElements)
-      setTotalPages(campaignResult.value.totalPages)
-      setHasNext(campaignResult.value.hasNext)
-    }
-    if (brandResult.status === 'fulfilled') setBrands(brandResult.value.items)
+    if (campaignResult.status === 'fulfilled') applyCampaigns(campaignResult.value, 1)
+    if (brandResult.status === 'fulfilled') setBrands(brandResult.value)
 
     if (profileResult.status === 'rejected' || campaignResult.status === 'rejected') {
       ;[profileResult, campaignResult, brandResult].forEach((result) => {
@@ -121,17 +161,19 @@ export function useMerchantCampaigns() {
           logDebugError('상점주 이벤트 초기 조회 실패', result.reason)
         }
       })
+      setIsListLoading(false)
       setStatus('error')
       setErrorMessage('이벤트 관리 정보를 불러오지 못했습니다.')
       return
     }
 
     setStatus('ready')
+    setIsListLoading(false)
     if (brandResult.status === 'rejected') {
       logDebugError('상점주 브랜드 목록 조회 실패', brandResult.reason)
       setErrorMessage('브랜드 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.')
     }
-  }, [clearAuth])
+  }, [applyCampaigns, clearAuth])
 
   useEffect(() => {
     mountedRef.current = true
@@ -223,10 +265,14 @@ export function useMerchantCampaigns() {
     '브랜드 정보를 저장하지 못했습니다.',
   ), [runAction])
 
+  const goToPage = useCallback((nextPage: number) => {
+    setPage(Math.min(Math.max(nextPage, 1), totalPages || 1))
+  }, [totalPages])
+
   return {
     status, profile, campaigns, brands, page, totalElements, totalPages, hasNext,
     isListLoading, errorMessage, actionErrorMessage, successMessage, activeAction,
-    fetchInitialData, fetchCampaigns, createCampaign, updateCampaign, publishCampaign,
+    fetchInitialData, fetchCampaigns, goToPage, createCampaign, updateCampaign, publishCampaign,
     closeCampaign, createBrand, updateBrand,
   }
 }

@@ -124,7 +124,9 @@ function RegistrationForm({
   onComplete: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
   onCancel: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
 }) {
-  const editable = canEdit(registration)
+  const hasExistingAttachments = (registration?.attachments.length ?? 0) > 0
+  const editable = canEdit(registration) && !hasExistingAttachments
+  const canSubmitExistingAttachments = registration?.status === 'DRAFT' && hasExistingAttachments
   const [placeName, setPlaceName] = useState(registration?.placeName ?? '')
   const [category, setCategory] = useState<MerchantPlaceCategory>(registration?.category ?? 'RESTAURANT')
   const [roadAddress, setRoadAddress] = useState(registration?.roadAddress ?? '')
@@ -195,7 +197,7 @@ function RegistrationForm({
 
   return (
     <Store.Form onSubmit={save}>
-      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{registration.status === 'PENDING' ? '심사 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '관리자 승인이 완료됐습니다. 최종 장소 등록을 요청해주세요.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
+      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '관리자 승인이 완료됐습니다. 최종 장소 등록을 요청해주세요.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
       <S.Section><S.SectionLegend>장소 기본 정보</S.SectionLegend><S.SectionHint>방문자에게 표시될 가게의 기본 정보를 입력하세요.</S.SectionHint>
         <Store.Field $wide>장소명<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setPlaceName(event.target.value)} /></Store.Field>
         <Store.Field>카테고리<S.CategorySelect value={category} disabled={!editable || activeAction !== null} onChange={(event) => setCategory(event.target.value as MerchantPlaceCategory)}>{CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</S.CategorySelect></Store.Field>
@@ -215,13 +217,14 @@ function RegistrationForm({
         <Store.Field $wide><S.ScheduleList>{schedule.map((day) => <S.ScheduleRow key={day.dayOfWeek}><S.DayName>{DAYS.find((item) => item.value === day.dayOfWeek)?.label}</S.DayName><S.DayStatus>{([['OPEN', '영업'], ['CLOSED', '휴무'], ['OPEN_24_HOURS', '24시간']] as const).map(([value, label]) => <S.DayStatusButton type="button" key={value} $selected={day.status === value} disabled={!editable || activeAction !== null} onClick={() => updateSchedule(day.dayOfWeek, { status: value })}>{label}</S.DayStatusButton>)}</S.DayStatus><S.TimeInput type="time" value={day.opensAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(event) => updateSchedule(day.dayOfWeek, { opensAt: event.target.value })} /><S.TimeInput type="time" value={day.closesAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(event) => updateSchedule(day.dayOfWeek, { closesAt: event.target.value })} /></S.ScheduleRow>)}</S.ScheduleList></Store.Field>
         <Store.Field $wide><S.TagList>{TAGS.map((tag) => <S.TagButton type="button" key={tag.value} $selected={tags.includes(tag.value)} disabled={!editable || activeAction !== null} onClick={() => toggleTag(tag.value)}>{tag.label}</S.TagButton>)}</S.TagList></Store.Field>
       </S.Section>
-      <S.Section><S.SectionLegend>증빙 파일</S.SectionLegend><S.AttachmentNotice>대표 이미지와 사업자 증빙 파일 업로드는 상점주용 업로드 API가 제공된 뒤 연결합니다.{registration?.attachments.length ? <ul>{registration.attachments.map((attachment) => <li key={attachment.id}>{attachment.originalFilename} · {attachment.documentType}</li>)}</ul> : null}</S.AttachmentNotice></S.Section>
+      <S.Section><S.SectionLegend>증빙 파일</S.SectionLegend><S.AttachmentNotice>{hasExistingAttachments ? '기존 증빙 서류는 보존됩니다. 첨부 파일 수정 기능은 별도 업로드 계약과 함께 제공됩니다.' : '증빙 서류 업로드 기능이 준비되기 전에는 신청서를 임시 저장만 할 수 있습니다.'}{registration?.attachments.length ? <ul>{registration.attachments.map((attachment) => <li key={attachment.id}>{attachment.originalFilename} · {attachment.documentType}</li>)}</ul> : null}</S.AttachmentNotice></S.Section>
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>
-        {(registration?.status === 'REJECTED' || registration?.status === 'CANCELED') ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(registration.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
+        {registration?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(registration.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
         {registration?.status === 'APPROVED' ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('승인된 신청서를 실제 장소로 등록할까요?')) void onComplete(registration.id) }}>{activeAction === 'complete' ? '등록 중' : '장소 등록 완료'}</Store.SaveButton> : null}
         {registration && (registration.status === 'DRAFT' || registration.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('이 신규 장소 등록 신청을 취소할까요?')) void onCancel(registration.id) }}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
-        {editable ? <><S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton><Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void submit()}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton></> : null}
+        {editable ? <><S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton><Store.SaveButton type="button" disabled title="증빙 서류 업로드 기능이 준비된 뒤 심사 요청할 수 있습니다.">첨부 업로드 준비 중</Store.SaveButton></> : null}
+        {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void submit()}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
     </Store.Form>
   )

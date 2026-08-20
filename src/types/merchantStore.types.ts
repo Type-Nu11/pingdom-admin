@@ -66,6 +66,39 @@ export interface MerchantCampaignPageResponse {
   hasNext: boolean
 }
 
+export interface MerchantCampaignRequest {
+  brandId: number
+  placeId: number
+  title: string
+  description: string
+  startsAt: string
+  endsAt: string
+}
+
+export interface MerchantBrand {
+  id: number
+  name: string
+  description: string | null
+  logoUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MerchantBrandRequest {
+  name: string
+  description?: string
+  logoUrl?: string
+}
+
+export interface MerchantBrandPageResponse {
+  items: MerchantBrand[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
 export interface MerchantOffer {
   id: number
   placeId: number

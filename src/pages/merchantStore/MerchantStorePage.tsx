@@ -211,7 +211,7 @@ function MerchantStorePage() {
               </div>
               <S.QuickLinks aria-label="가게 관리 바로가기">
                 <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-information')}>기본 정보</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-campaigns')}>이벤트</S.QuickLink>
+                <S.QuickLink type="button" onClick={() => navigate('/merchant/campaigns')}>이벤트 관리</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-offers')}>혜택·예약</S.QuickLink>
               </S.QuickLinks>
             </S.StoreSummary>
@@ -240,7 +240,7 @@ function MerchantStorePage() {
                     </S.Section>
 
                     <S.Section id="merchant-store-campaigns">
-                      <S.SectionHeading><div><S.SectionTitle>이벤트</S.SectionTitle><S.SectionDescription>현재 등록된 이벤트의 공개 상태와 기간을 확인합니다.</S.SectionDescription></div></S.SectionHeading>
+                      <S.SectionHeading><div><S.SectionTitle>이벤트</S.SectionTitle><S.SectionDescription>현재 등록된 이벤트의 공개 상태와 기간을 확인합니다.</S.SectionDescription></div><S.QuickLink type="button" onClick={() => navigate('/merchant/campaigns')}>전체 관리</S.QuickLink></S.SectionHeading>
                       {store.campaigns.length === 0 ? <S.Empty>등록된 이벤트가 없습니다.</S.Empty> : <S.ResourceList>{store.campaigns.slice(0, 4).map((campaign) => <S.ResourceRow key={campaign.id}><S.ResourceTop><S.ResourceTitle title={campaign.title}>{campaign.title}</S.ResourceTitle><S.ResourceBadge $active={campaign.status === 'PUBLISHED'}>{campaign.status === 'PUBLISHED' ? '공개 중' : campaign.status === 'DRAFT' ? '초안' : '종료'}</S.ResourceBadge></S.ResourceTop><S.ResourceMeta>{formatDate(campaign.startsAt)} - {formatDate(campaign.endsAt)}</S.ResourceMeta></S.ResourceRow>)}</S.ResourceList>}
                     </S.Section>
                   </S.Column>

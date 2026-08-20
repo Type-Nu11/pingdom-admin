@@ -212,6 +212,7 @@ function MerchantStorePage() {
               </div>
               <S.QuickLinks aria-label="가게 관리 바로가기">
                 <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-information')}>기본 정보</S.QuickLink>
+                <S.QuickLink type="button" onClick={() => navigate('/merchant/place-operations')}>운영 정보</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/campaigns')}>이벤트 관리</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/operating-notices')}>운영 공지</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-offers')}>혜택·예약</S.QuickLink>

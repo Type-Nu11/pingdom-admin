@@ -42,7 +42,7 @@ function ProductCreator({
   onCreate: (request: MerchantReservableProductCreateRequest) => Promise<MerchantReservableProduct | null>
 }) {
   const [name, setName] = useState('')
-  const [productType, setProductType] = useState<MerchantReservableProductType>('GENERAL')
+  const [productType, setProductType] = useState<MerchantReservableProductType>('TICKET')
   const [formError, setFormError] = useState('')
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -53,7 +53,7 @@ function ProductCreator({
     if (next) setName('')
   }
 
-  return <S.Editor><S.Form onSubmit={submit}><S.Field $wide>상품명<S.Input value={name} maxLength={100} disabled={isBusy} onChange={(event) => setName(event.target.value)} /></S.Field><S.Field>상품 유형<S.Select value={productType} disabled={isBusy} onChange={(event) => setProductType(event.target.value as MerchantReservableProductType)}><option value="GENERAL">일반 예약</option><option value="TICKET">티켓</option><option value="CLASS">클래스</option></S.Select></S.Field><S.Field><S.FieldHint>상품 내용 수정 API는 현재 제공되지 않습니다.</S.FieldHint></S.Field>{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions><S.ActionButton type="submit" $variant="primary" disabled={isBusy}>상품 등록</S.ActionButton></S.FormActions></S.Form></S.Editor>
+  return <S.Editor><S.Form onSubmit={submit}><S.Field $wide>상품명<S.Input value={name} maxLength={100} disabled={isBusy} onChange={(event) => setName(event.target.value)} /></S.Field><S.Field>상품 유형<S.Select value={productType} disabled={isBusy} onChange={(event) => setProductType(event.target.value as MerchantReservableProductType)}><option value="TICKET">티켓</option><option value="CLASS">클래스</option></S.Select></S.Field><S.Field><S.FieldHint>상품 내용 수정 API는 현재 제공되지 않습니다.</S.FieldHint></S.Field>{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions><S.ActionButton type="submit" $variant="primary" disabled={isBusy}>상품 등록</S.ActionButton></S.FormActions></S.Form></S.Editor>
 }
 
 function AvailabilityEditor({

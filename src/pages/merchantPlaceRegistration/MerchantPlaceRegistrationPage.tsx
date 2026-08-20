@@ -25,6 +25,8 @@ const STATUS: Record<MerchantPlaceRegistrationStatus, { label: string; tone: 'dr
   CANCELED: { label: '취소됨', tone: 'neutral' },
 }
 
+const E164_PHONE_PATTERN = /^\+[1-9]\d{7,14}$/
+
 const CATEGORIES: Array<{ value: MerchantPlaceCategory; label: string }> = [
   { value: 'RESTAURANT', label: '음식점' }, { value: 'MUSIC', label: '음악' },
   { value: 'POP_UP', label: '팝업' }, { value: 'FASHION', label: '패션' },
@@ -70,6 +72,10 @@ function formatDate(value: string | null) {
 
 function canEdit(registration: MerchantPlaceRegistration | null) {
   return !registration || registration.status === 'DRAFT'
+}
+
+function normalizeE164Phone(value: string) {
+  return value.trim().replace(/[\s-]/g, '')
 }
 
 function toTime(value: string) {
@@ -168,6 +174,12 @@ function RegistrationForm({
       setFormError('영업일의 시작 시간과 종료 시간을 확인해주세요.')
       return null
     }
+    const normalizedBusinessPhone = normalizeE164Phone(businessPhone)
+    const normalizedApplicantPhone = normalizeE164Phone(applicantPhone)
+    if (!E164_PHONE_PATTERN.test(normalizedBusinessPhone) || !E164_PHONE_PATTERN.test(normalizedApplicantPhone)) {
+      setFormError('연락처는 국가번호를 포함한 국제 형식으로 입력해주세요. 예: +821012345678')
+      return null
+    }
     setFormError('')
     const operatingDays: MerchantPlaceRegistrationOperatingDay[] = schedule.map((day) => ({
       dayOfWeek: day.dayOfWeek,
@@ -177,7 +189,7 @@ function RegistrationForm({
     return {
       placeName: placeName.trim(), category, latitude: numericLatitude, longitude: numericLongitude,
       roadAddress: roadAddress.trim(), jibunAddress: jibunAddress.trim(), postalCode: postalCode.trim(),
-      description: description.trim(), businessContactPhone: businessPhone.trim(), applicantContactPhone: applicantPhone.trim(),
+      description: description.trim(), businessContactPhone: normalizedBusinessPhone, applicantContactPhone: normalizedApplicantPhone,
       tags, timezone: 'Asia/Seoul', operatingDays,
     }
   }
@@ -201,14 +213,14 @@ function RegistrationForm({
       <S.Section><S.SectionLegend>장소 기본 정보</S.SectionLegend><S.SectionHint>방문자에게 표시될 가게의 기본 정보를 입력하세요.</S.SectionHint>
         <Store.Field $wide>장소명<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setPlaceName(event.target.value)} /></Store.Field>
         <Store.Field>카테고리<S.CategorySelect value={category} disabled={!editable || activeAction !== null} onChange={(event) => setCategory(event.target.value as MerchantPlaceCategory)}>{CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</S.CategorySelect></Store.Field>
-        <Store.Field>사업장 연락처<Store.Input type="tel" value={businessPhone} maxLength={30} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessPhone(event.target.value)} /></Store.Field>
+        <Store.Field>사업장 연락처<Store.Input type="tel" inputMode="tel" value={businessPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setBusinessPhone(event.target.value)} /><S.SectionHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SectionHint></Store.Field>
         <Store.Field $wide>장소 소개<Store.Textarea value={description} maxLength={1000} disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} /><S.SectionHint>{description.length}/1000</S.SectionHint></Store.Field>
       </S.Section>
       <S.Section><S.SectionLegend>주소와 위치</S.SectionLegend><S.SectionHint>주소를 입력하고 지도에서 실제 가게 위치를 클릭해 확정하세요.</S.SectionHint>
         <Store.Field $wide>도로명 주소<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setRoadAddress(event.target.value)} /></Store.Field>
         <Store.Field $wide>지번 주소<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setJibunAddress(event.target.value)} /></Store.Field>
         <Store.Field>우편번호<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => setPostalCode(event.target.value)} /></Store.Field>
-        <Store.Field>신청자 연락처<Store.Input type="tel" value={applicantPhone} maxLength={30} disabled={!editable || activeAction !== null} onChange={(event) => setApplicantPhone(event.target.value)} /></Store.Field>
+        <Store.Field>신청자 연락처<Store.Input type="tel" inputMode="tel" value={applicantPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setApplicantPhone(event.target.value)} /><S.SectionHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SectionHint></Store.Field>
         <Store.Field $wide><S.LocationMap markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapClick={editable && activeAction === null ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} /><S.CoordinateText>{hasValidCoordinate ? `선택 위치: ${numericLatitude.toFixed(6)}, ${numericLongitude.toFixed(6)}` : '지도에서 위치를 클릭해 좌표를 선택하세요.'}</S.CoordinateText></Store.Field>
         <Store.Field>위도<Store.Input inputMode="decimal" value={latitude} placeholder="예: 37.566500" disabled={!editable || activeAction !== null} onChange={(event) => setLatitude(event.target.value)} /></Store.Field>
         <Store.Field>경도<Store.Input inputMode="decimal" value={longitude} placeholder="예: 126.978000" disabled={!editable || activeAction !== null} onChange={(event) => setLongitude(event.target.value)} /></Store.Field>

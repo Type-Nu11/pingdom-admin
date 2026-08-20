@@ -550,6 +550,72 @@ export const Empty = styled.div`
   line-height: 1.5;
 `
 
+export const EmptyStoreState = styled.section`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 22px 24px;
+  border: 1px solid ${colors.primarySoft};
+  border-radius: 8px;
+  background: ${colors.primaryTint};
+
+  @media (max-width: 680px) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+`
+
+export const EmptyStoreIcon = styled.span`
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: ${colors.surface};
+  color: ${colors.primary};
+  font-family: 'Material Symbols Outlined';
+  font-size: 21px;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+`
+
+export const EmptyStoreTitle = styled.h2`
+  margin: 0;
+  color: ${colors.strongText};
+  font-size: 16px;
+  font-weight: 700;
+`
+
+export const EmptyStoreDescription = styled.p`
+  margin: 6px 0 0;
+  color: ${colors.muted};
+  font-size: 13px;
+  line-height: 1.55;
+`
+
+export const EmptyStoreAction = styled.button`
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid ${colors.primary};
+  border-radius: 6px;
+  background: ${colors.primary};
+  color: ${colors.primaryText};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover { background: ${colors.primaryHover}; border-color: ${colors.primaryHover}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+
+  @media (max-width: 680px) {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+`
+
 export const Skeleton = styled.div<{ $height?: number }>`
   height: ${({ $height = 20 }) => $height}px;
   border-radius: 4px;

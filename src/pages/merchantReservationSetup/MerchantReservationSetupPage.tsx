@@ -75,13 +75,20 @@ function AvailabilityEditor({
   onToggleActive: (availability: MerchantAvailability, active: boolean) => Promise<MerchantAvailability | null>
   onCreated: (availabilityId: number) => void
 }) {
-  const [productId, setProductId] = useState(availability?.productId ?? products[0]?.id ?? 0)
+  const activeProducts = products.filter((product) => product.status === 'ACTIVE')
+  const [productId, setProductId] = useState(availability?.productId ?? activeProducts[0]?.id ?? 0)
   const [startsAt, setStartsAt] = useState(availability ? toDateTimeInput(availability.startsAt) : '')
   const [endsAt, setEndsAt] = useState(availability ? toDateTimeInput(availability.endsAt) : '')
   const [totalCapacity, setTotalCapacity] = useState(String(availability?.totalCapacity ?? 1))
   const [formError, setFormError] = useState('')
   const isBusy = activeAction !== null
   const selectedProduct = products.find((product) => product.id === productId)
+  const isPreservingInactiveProduct = Boolean(
+    availability && selectedProduct?.status !== 'ACTIVE' && availability.productId === selectedProduct?.id,
+  )
+  const productOptions = isPreservingInactiveProduct && selectedProduct
+    ? [selectedProduct, ...activeProducts]
+    : activeProducts
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -95,10 +102,12 @@ function AvailabilityEditor({
     if (!Number.isInteger(capacity) || capacity < 1) { setFormError('총 예약 가능 인원은 1명 이상이어야 합니다.'); return }
 
     setFormError('')
-    const request = {
+    const request: MerchantAvailabilityUpsertRequest = {
       placeId,
-      productId: selectedProduct.id,
-      productType: selectedProduct.productType,
+      ...(isPreservingInactiveProduct ? {} : {
+        productId: selectedProduct.id,
+        productType: selectedProduct.productType,
+      }),
       startsAt,
       endsAt,
       totalCapacity: capacity,
@@ -107,7 +116,7 @@ function AvailabilityEditor({
     if (next) onCreated(next.id)
   }
 
-  return <S.Editor><S.Form onSubmit={submit}><S.Field $wide>예약 상품<S.Select value={productId} disabled={isBusy || products.length === 0} onChange={(event) => setProductId(Number(event.target.value))}>{products.length === 0 ? <option value="">등록된 예약 상품 없음</option> : products.map((product) => <option key={product.id} value={product.id}>{product.name} · {PRODUCT_TYPE_LABEL[product.productType]}</option>)}</S.Select></S.Field><S.Field>시작 일시<S.Input type="datetime-local" value={startsAt} disabled={isBusy} onChange={(event) => setStartsAt(event.target.value)} /></S.Field><S.Field>종료 일시<S.Input type="datetime-local" value={endsAt} disabled={isBusy} onChange={(event) => setEndsAt(event.target.value)} /></S.Field><S.Field>총 예약 가능 인원<S.Input type="number" min="1" value={totalCapacity} disabled={isBusy} onChange={(event) => setTotalCapacity(event.target.value)} /></S.Field>{availability ? <S.Field>현재 잔여 인원<S.Input value={`${availability.remainingCapacity}명`} disabled /></S.Field> : null}{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions>{availability ? <S.ActionButton type="button" disabled={isBusy} $variant={availability.status === 'ACTIVE' ? 'danger' : 'secondary'} onClick={() => void onToggleActive(availability, availability.status !== 'ACTIVE')}>{activeAction === 'activate-availability' || activeAction === 'deactivate-availability' ? '처리 중' : availability.status === 'ACTIVE' ? '비활성화' : '활성화'}</S.ActionButton> : null}<S.ActionButton type="submit" $variant="primary" disabled={isBusy || products.length === 0}>{activeAction === 'create-availability' || activeAction === 'update-availability' ? '저장 중' : availability ? '시간 저장' : '시간 등록'}</S.ActionButton></S.FormActions></S.Form></S.Editor>
+  return <S.Editor><S.Form onSubmit={submit}><S.Field $wide>예약 상품<S.Select value={productId} disabled={isBusy || productOptions.length === 0} onChange={(event) => setProductId(Number(event.target.value))}>{productOptions.length === 0 ? <option value="">활성 예약 상품 없음</option> : productOptions.map((product) => <option key={product.id} value={product.id} disabled={product.status !== 'ACTIVE'}>{product.name} · {PRODUCT_TYPE_LABEL[product.productType]}{product.status !== 'ACTIVE' ? ' (비활성)' : ''}</option>)}</S.Select></S.Field><S.Field>시작 일시<S.Input type="datetime-local" value={startsAt} disabled={isBusy} onChange={(event) => setStartsAt(event.target.value)} /></S.Field><S.Field>종료 일시<S.Input type="datetime-local" value={endsAt} disabled={isBusy} onChange={(event) => setEndsAt(event.target.value)} /></S.Field><S.Field>총 예약 가능 인원<S.Input type="number" min="1" value={totalCapacity} disabled={isBusy} onChange={(event) => setTotalCapacity(event.target.value)} /></S.Field>{availability ? <S.Field>현재 잔여 인원<S.Input value={`${availability.remainingCapacity}명`} disabled /></S.Field> : null}{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions>{availability ? <S.ActionButton type="button" disabled={isBusy} $variant={availability.status === 'ACTIVE' ? 'danger' : 'secondary'} onClick={() => void onToggleActive(availability, availability.status !== 'ACTIVE')}>{activeAction === 'activate-availability' || activeAction === 'deactivate-availability' ? '처리 중' : availability.status === 'ACTIVE' ? '비활성화' : '활성화'}</S.ActionButton> : null}<S.ActionButton type="submit" $variant="primary" disabled={isBusy || !selectedProduct}>{activeAction === 'create-availability' || activeAction === 'update-availability' ? '저장 중' : availability ? '시간 저장' : '시간 등록'}</S.ActionButton></S.FormActions></S.Form></S.Editor>
 }
 
 function MerchantReservationSetupPage() {

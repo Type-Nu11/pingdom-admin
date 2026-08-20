@@ -6,7 +6,11 @@ import type {
   MerchantBrandPageResponse,
   MerchantBrandRequest,
   MerchantBrand,
+  MerchantCoupon,
+  MerchantCouponRedeemRequest,
   MerchantOfferPageResponse,
+  MerchantOffer,
+  MerchantOfferCreateRequest,
   MerchantOperatingNotice,
   MerchantOperatingNoticeCancelRequest,
   MerchantOperatingNoticeListResponse,
@@ -193,10 +197,47 @@ export async function updateMerchantBrand(brandId: number, request: MerchantBran
   return data
 }
 
-export async function getMerchantOffers() {
+export async function getMerchantOffers(params: { page?: number; limit?: number } = {}) {
   const { data } = await customAxios.get<MerchantOfferPageResponse>(
     `${MERCHANT_OWNER_PATH}/offers`,
-    { params: { page: 1, limit: 20 } }
+    { params: { page: 1, limit: 20, ...params } }
+  )
+  return data
+}
+
+export async function getMerchantOffer(offerId: number) {
+  const { data } = await customAxios.get<MerchantOffer>(
+    `${MERCHANT_OWNER_PATH}/offers/${offerId}`,
+  )
+  return data
+}
+
+export async function createMerchantOffer(request: MerchantOfferCreateRequest) {
+  const { data } = await customAxios.post<MerchantOffer>(
+    `${MERCHANT_OWNER_PATH}/offers`,
+    request,
+  )
+  return data
+}
+
+export async function publishMerchantOffer(offerId: number) {
+  const { data } = await customAxios.post<MerchantOffer>(
+    `${MERCHANT_OWNER_PATH}/offers/${offerId}/publish`,
+  )
+  return data
+}
+
+export async function closeMerchantOffer(offerId: number) {
+  const { data } = await customAxios.post<MerchantOffer>(
+    `${MERCHANT_OWNER_PATH}/offers/${offerId}/close`,
+  )
+  return data
+}
+
+export async function redeemMerchantCoupon(request: MerchantCouponRedeemRequest) {
+  const { data } = await customAxios.post<MerchantCoupon>(
+    `${MERCHANT_OWNER_PATH}/offers/coupons/redeem`,
+    request,
   )
   return data
 }

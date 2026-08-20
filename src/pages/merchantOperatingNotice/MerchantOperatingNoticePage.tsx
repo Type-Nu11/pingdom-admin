@@ -131,8 +131,8 @@ function NoticeEditor({
         </S.Select>
       </S.Field>
       <S.Field $wide>공지 내용
-        <S.Textarea value={message} maxLength={1000} disabled={!editable || isBusy} placeholder="예: 오늘 시설 점검으로 오후 3시까지 임시 휴업합니다." onChange={(event) => { setMessage(event.target.value); setFormError('') }} />
-        <S.FieldHint>{message.length}/1000</S.FieldHint>
+        <S.Textarea value={message} maxLength={500} disabled={!editable || isBusy} placeholder="예: 오늘 시설 점검으로 오후 3시까지 임시 휴업합니다." onChange={(event) => { setMessage(event.target.value); setFormError('') }} />
+        <S.FieldHint>{message.length}/500</S.FieldHint>
       </S.Field>
       {notice ? <S.ScheduleText>노출 기간: {formatDateTime(notice.startsAt)} - {formatDateTime(notice.expiresAt)}</S.ScheduleText> : <>
         <S.Field>노출 시작 일시 *

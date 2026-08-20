@@ -178,13 +178,27 @@ export function useMerchantReservationSetup() {
     '예약 상품을 등록하지 못했습니다.',
   ), [runAction])
 
-  const setProductActive = useCallback((product: MerchantReservableProduct, active: boolean) => runAction(
-    active ? 'activate-product' : 'deactivate-product',
-    () => active ? activateMerchantReservableProduct(product.id) : deactivateMerchantReservableProduct(product.id),
-    (next) => setProducts((current) => replaceById(current, next)),
-    active ? '예약 상품을 활성화했습니다.' : '예약 상품을 비활성화했습니다.',
-    active ? '예약 상품을 활성화하지 못했습니다.' : '예약 상품을 비활성화하지 못했습니다.',
-  ), [runAction])
+  const setProductActive = useCallback((product: MerchantReservableProduct, active: boolean) => {
+    const activeAvailabilityCount = availabilities.filter(
+      (availability) => availability.productId === product.id && availability.status === 'ACTIVE',
+    ).length
+
+    if (!active && activeAvailabilityCount > 0) {
+      setActionErrorMessage(
+        `연결된 예약 가능 시간 ${activeAvailabilityCount}개를 먼저 비활성화한 뒤 상품을 비활성화해주세요.`,
+      )
+      setSuccessMessage('')
+      return Promise.resolve(null)
+    }
+
+    return runAction(
+      active ? 'activate-product' : 'deactivate-product',
+      () => active ? activateMerchantReservableProduct(product.id) : deactivateMerchantReservableProduct(product.id),
+      (next) => setProducts((current) => replaceById(current, next)),
+      active ? '예약 상품을 활성화했습니다.' : '예약 상품을 비활성화했습니다.',
+      active ? '예약 상품을 활성화하지 못했습니다.' : '예약 상품을 비활성화하지 못했습니다.',
+    )
+  }, [availabilities, runAction])
 
   const createAvailability = useCallback((request: MerchantAvailabilityUpsertRequest) => runAction(
     'create-availability',

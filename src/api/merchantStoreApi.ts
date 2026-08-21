@@ -35,6 +35,9 @@ import type {
   MerchantReservableProductCreateRequest,
   MerchantReservation,
   MerchantReservationPageResponse,
+  MerchantPlaceReverificationPageResponse,
+  MerchantPlaceReverificationRequest,
+  MerchantPlaceReverificationResponseRequest,
 } from '../types/merchantStore.types'
 
 const MERCHANT_OWNER_PATH = '/merchant-owner'
@@ -336,6 +339,25 @@ export async function confirmMerchantReservation(reservationId: number) {
 export async function cancelMerchantReservation(reservationId: number) {
   const { data } = await customAxios.post<MerchantReservation>(
     `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/cancel`,
+  )
+  return data
+}
+
+export async function getMerchantPlaceReverificationRequests(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantPlaceReverificationPageResponse>(
+    `${MERCHANT_OWNER_PATH}/place-information-reverification-requests`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function respondMerchantPlaceReverificationRequest(
+  requestId: number,
+  request: MerchantPlaceReverificationResponseRequest,
+) {
+  const { data } = await customAxios.post<MerchantPlaceReverificationRequest>(
+    `${MERCHANT_OWNER_PATH}/place-information-reverification-requests/${requestId}/responses`,
+    request,
   )
   return data
 }

@@ -223,10 +223,10 @@ export function useMerchantPlaceClaims() {
     return runAction(
       'reorder',
       () => reorderMerchantPlaceClaimAttachments(claim.id, attachmentIds),
-      () => setAttachments((items) => attachmentIds.map((id, index) => {
-        const item = items.find((attachment) => attachment.id === id)
-        return item ? { ...item, displayOrder: index } : null
-      }).filter((item): item is MerchantPlaceClaimAttachment => item !== null)),
+      () => setAttachments((items) => items.map((attachment) => {
+        const displayOrder = attachmentIds.indexOf(attachment.id)
+        return displayOrder === -1 ? attachment : { ...attachment, displayOrder }
+      }).sort((a, b) => a.displayOrder - b.displayOrder)),
       '증빙 파일 순서를 변경했습니다.',
       '증빙 파일 순서를 변경하지 못했습니다.',
     )

@@ -219,7 +219,7 @@ export interface MerchantReservation {
   id: number
   touristUserId: number
   availabilityId: number
-  productId: number
+  productId: number | null
   productType: MerchantReservableProductType
   quantity: number
   status: MerchantReservationStatus

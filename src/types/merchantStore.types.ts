@@ -33,6 +33,12 @@ export type MerchantPlaceDayOfWeek =
   | 'FRIDAY'
   | 'SATURDAY'
   | 'SUNDAY'
+export type MerchantPlaceClaimType = 'INITIAL' | 'OWNERSHIP_TRANSFER'
+export type MerchantPlaceClaimStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED'
+export type MerchantPlaceClaimDocumentType =
+  | 'BUSINESS_LICENSE'
+  | 'RESIDENT_REGISTRATION'
+  | 'REPRESENTATIVE_IMAGE'
 
 export interface MerchantOwnerProfile {
   userId: number
@@ -270,6 +276,41 @@ export interface MerchantPlaceReverificationPageResponse {
 
 export interface MerchantPlaceReverificationResponseRequest {
   responseNote: string
+}
+
+export interface MerchantPlaceClaim {
+  id: number
+  placeId: number
+  claimType: MerchantPlaceClaimType
+  status: MerchantPlaceClaimStatus
+  reason: string
+  reviewReason: string | null
+  reviewedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MerchantPlaceClaimPageResponse {
+  claims: MerchantPlaceClaim[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface MerchantPlaceClaimCreateRequest {
+  placeId: number
+  reason: string
+}
+
+export interface MerchantPlaceClaimAttachment {
+  id: number
+  documentType: MerchantPlaceClaimDocumentType
+  contentType: string
+  fileSize: number
+  displayOrder: number
+  createdAt: string
 }
 
 export interface MerchantOperatingNotice {

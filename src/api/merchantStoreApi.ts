@@ -38,6 +38,11 @@ import type {
   MerchantPlaceReverificationPageResponse,
   MerchantPlaceReverificationRequest,
   MerchantPlaceReverificationResponseRequest,
+  MerchantPlaceClaim,
+  MerchantPlaceClaimAttachment,
+  MerchantPlaceClaimCreateRequest,
+  MerchantPlaceClaimDocumentType,
+  MerchantPlaceClaimPageResponse,
 } from '../types/merchantStore.types'
 
 const MERCHANT_OWNER_PATH = '/merchant-owner'
@@ -360,6 +365,77 @@ export async function respondMerchantPlaceReverificationRequest(
     request,
   )
   return data
+}
+
+export async function getMerchantPlaceClaims(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantPlaceClaimPageResponse>(
+    `${MERCHANT_OWNER_PATH}/place-claims`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function getMerchantPlaceClaim(claimId: number) {
+  const { data } = await customAxios.get<MerchantPlaceClaim>(
+    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}`,
+  )
+  return data
+}
+
+export async function createMerchantPlaceClaim(request: MerchantPlaceClaimCreateRequest) {
+  const { data } = await customAxios.post<MerchantPlaceClaim>(
+    `${MERCHANT_OWNER_PATH}/place-claims`,
+    request,
+  )
+  return data
+}
+
+export async function cancelMerchantPlaceClaim(claimId: number) {
+  const { data } = await customAxios.post<MerchantPlaceClaim>(
+    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/cancel`,
+  )
+  return data
+}
+
+export async function getMerchantPlaceClaimAttachments(claimId: number) {
+  const { data } = await customAxios.get<MerchantPlaceClaimAttachment[]>(
+    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments`,
+  )
+  return data
+}
+
+export async function uploadMerchantPlaceClaimAttachment(
+  claimId: number,
+  documentType: MerchantPlaceClaimDocumentType,
+  file: File,
+) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data } = await customAxios.post<MerchantPlaceClaimAttachment>(
+    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments`,
+    formData,
+    { params: { documentType } },
+  )
+  return data
+}
+
+export async function reorderMerchantPlaceClaimAttachments(
+  claimId: number,
+  attachmentIds: number[],
+) {
+  const params = new URLSearchParams()
+  attachmentIds.forEach((attachmentId) => params.append('attachmentIds', String(attachmentId)))
+  await customAxios.post<void>(
+    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments/reorder`,
+    undefined,
+    { params },
+  )
+}
+
+export async function deleteMerchantPlaceClaimAttachment(claimId: number, attachmentId: number) {
+  await customAxios.delete<void>(
+    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments/${attachmentId}`,
+  )
 }
 
 export async function getMerchantOperatingNotices(placeId: number) {

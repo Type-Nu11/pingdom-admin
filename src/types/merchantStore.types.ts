@@ -6,6 +6,7 @@ export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
+export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELED'
 export type MerchantOperatingNoticeType =
   | 'TEMPORARY_CLOSURE'
   | 'HOURS_CHANGE'
@@ -212,6 +213,29 @@ export interface MerchantAvailabilityUpsertRequest {
   startsAt: string
   endsAt: string
   totalCapacity?: number
+}
+
+export interface MerchantReservation {
+  id: number
+  touristUserId: number
+  availabilityId: number
+  productId: number
+  productType: MerchantReservableProductType
+  quantity: number
+  status: MerchantReservationStatus
+  createdAt: string
+  confirmedAt: string | null
+  canceledAt: string | null
+  updatedAt: string
+}
+
+export interface MerchantReservationPageResponse {
+  reservations: MerchantReservation[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
 }
 
 export interface MerchantOperatingNotice {

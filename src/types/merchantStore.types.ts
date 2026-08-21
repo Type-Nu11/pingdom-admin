@@ -7,6 +7,12 @@ export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
 export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELED'
+export type MerchantPlaceReverificationStatus =
+  | 'REQUESTED'
+  | 'RESPONDED'
+  | 'COMPLETED'
+  | 'CANCELED'
+  | 'EXPIRED'
 export type MerchantOperatingNoticeType =
   | 'TEMPORARY_CLOSURE'
   | 'HOURS_CHANGE'
@@ -236,6 +242,34 @@ export interface MerchantReservationPageResponse {
   totalElements: number
   totalPages: number
   hasNext: boolean
+}
+
+export interface MerchantPlaceReverificationRequest {
+  requestId: number
+  placeId: number
+  merchantOwnerUserId: number
+  status: MerchantPlaceReverificationStatus
+  reason: string
+  requestedAt: string
+  dueAt: string
+  lastRemindedAt: string | null
+  reminderCount: number
+  respondedAt: string | null
+  responseNote: string | null
+  completedAt: string | null
+}
+
+export interface MerchantPlaceReverificationPageResponse {
+  requests: MerchantPlaceReverificationRequest[]
+  page: number
+  limit: number
+  totalCount: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface MerchantPlaceReverificationResponseRequest {
+  responseNote: string
 }
 
 export interface MerchantOperatingNotice {

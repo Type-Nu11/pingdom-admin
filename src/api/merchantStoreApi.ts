@@ -33,6 +33,8 @@ import type {
   MerchantAvailabilityUpsertRequest,
   MerchantReservableProduct,
   MerchantReservableProductCreateRequest,
+  MerchantReservation,
+  MerchantReservationPageResponse,
 } from '../types/merchantStore.types'
 
 const MERCHANT_OWNER_PATH = '/merchant-owner'
@@ -312,6 +314,28 @@ export async function activateMerchantAvailability(availabilityId: number) {
 export async function deactivateMerchantAvailability(availabilityId: number) {
   const { data } = await customAxios.post<MerchantAvailability>(
     `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/deactivate`,
+  )
+  return data
+}
+
+export async function getMerchantReservations(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantReservationPageResponse>(
+    `${MERCHANT_OWNER_PATH}/reservations`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function confirmMerchantReservation(reservationId: number) {
+  const { data } = await customAxios.post<MerchantReservation>(
+    `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/confirm`,
+  )
+  return data
+}
+
+export async function cancelMerchantReservation(reservationId: number) {
+  const { data } = await customAxios.post<MerchantReservation>(
+    `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/cancel`,
   )
   return data
 }

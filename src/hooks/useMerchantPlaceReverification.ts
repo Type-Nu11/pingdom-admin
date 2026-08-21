@@ -111,6 +111,14 @@ export function useMerchantPlaceReverification() {
       const next = await respondMerchantPlaceReverificationRequest(request.requestId, { responseNote: responseNote.trim() })
       if (!mountedRef.current) return null
       setRequests((items) => replaceRequest(items, next))
+      if (next.status !== 'RESPONDED') {
+        setActionErrorMessage(
+          next.status === 'EXPIRED'
+            ? '응답 기한이 지나 재확인 요청이 만료되었습니다.'
+            : '현재 상태에서는 응답을 제출할 수 없습니다.',
+        )
+        return null
+      }
       setSuccessMessage('재확인 응답을 제출했습니다.')
       return next
     } catch (error) {

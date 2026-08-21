@@ -195,7 +195,13 @@ export function useMerchantPlaceClaims() {
     return runAction(
       'upload',
       () => uploadMerchantPlaceClaimAttachment(claim.id, documentType, file),
-      (next) => setAttachments((items) => [...items, next].sort((a, b) => a.displayOrder - b.displayOrder)),
+      (next) => setAttachments((items) => [
+        ...items.filter((attachment) => (
+          next.documentType === 'REPRESENTATIVE_IMAGE'
+            || attachment.documentType !== next.documentType
+        )),
+        next,
+      ].sort((a, b) => a.displayOrder - b.displayOrder)),
       '증빙 파일을 추가했습니다.',
       '증빙 파일을 추가하지 못했습니다.',
     )

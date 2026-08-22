@@ -59,6 +59,7 @@ export function useAdminMerchantPlaceApplications() {
   const [successMessage, setSuccessMessage] = useState('')
   const reviewRef = useRef(false)
   const pageRef = useRef(1)
+  const detailRequestRef = useRef(0)
 
   const message = useCallback((error: unknown, fallback: string) => {
     if (!isApiError<AdminMerchantPlaceApplicationErrorResponse>(error)) return fallback
@@ -88,6 +89,8 @@ export function useAdminMerchantPlaceApplications() {
   }, [message])
 
   const fetchDetail = useCallback(async (applicationId: number) => {
+    const requestId = detailRequestRef.current + 1
+    detailRequestRef.current = requestId
     setIsDetailLoading(true)
     setDetailErrorMessage('')
     setAttachmentErrorMessage('')
@@ -97,6 +100,8 @@ export function useAdminMerchantPlaceApplications() {
         api.getAdminMerchantPlaceApplicationAttachments(applicationId),
       ])
       if (applicationResult.status === 'rejected') throw applicationResult.reason
+      if (requestId !== detailRequestRef.current) return null
+
       setDetail(applicationResult.value)
       setAttachments(
         attachmentResult.status === 'fulfilled'
@@ -109,13 +114,15 @@ export function useAdminMerchantPlaceApplications() {
       }
       return applicationResult.value
     } catch (error) {
+      if (requestId !== detailRequestRef.current) return null
+
       setDetail(null)
       setAttachments([])
       setDetailErrorMessage(message(error, '장소 신청 상세를 불러오지 못했습니다.'))
       logDebugError('관리자 Merchant 장소 신청 상세 조회 실패', error)
       return null
     } finally {
-      setIsDetailLoading(false)
+      if (requestId === detailRequestRef.current) setIsDetailLoading(false)
     }
   }, [message])
 

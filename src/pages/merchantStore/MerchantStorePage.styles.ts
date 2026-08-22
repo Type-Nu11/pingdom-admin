@@ -310,6 +310,112 @@ export const MetricContent = styled.div`
   strong { color: ${colors.strongText}; font-size: 24px; font-weight: 700; line-height: 1.2; }
 `
 
+export const PerformanceSection = styled.section`
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid ${colors.borderSoft};
+`
+
+export const PerformanceHeading = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+  }
+`
+
+export const PerformanceScope = styled.span`
+  flex-shrink: 0;
+  color: ${colors.muted};
+  font-size: 13px;
+  line-height: 1.5;
+`
+
+export const PerformanceGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+
+  @media (max-width: 760px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const PerformanceMetric = styled.article`
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 20px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.surface};
+
+  span {
+    color: ${colors.muted};
+    font-size: 13px;
+  }
+
+  strong {
+    margin-top: 7px;
+    color: ${colors.strongText};
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  small {
+    margin-top: 4px;
+    color: ${colors.muted};
+    font-size: 12px;
+  }
+`
+
+export const PerformanceError = styled.div`
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 16px 20px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.surface};
+  color: ${colors.muted};
+  font-size: 14px;
+
+  @media (max-width: 560px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
+
+export const PerformanceRetry = styled.button`
+  min-height: 34px;
+  flex-shrink: 0;
+  padding: 0 10px;
+  border: 1px solid ${colors.primarySoft};
+  border-radius: 5px;
+  background: ${colors.surface};
+  color: ${colors.primary};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { background: ${colors.primaryTint}; border-color: ${colors.primary}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
 export const Workspace = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.22fr) minmax(320px, 0.78fr);

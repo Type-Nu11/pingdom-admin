@@ -58,6 +58,17 @@ export interface MerchantOwnerProfile {
   placeIds: number[]
 }
 
+export interface MerchantPerformance {
+  placeCount: number
+  exposureCount: number
+  clickCount: number
+  bookmarkCount: number
+  reservationCount: number
+  confirmedReservationCount: number
+  clickThroughRate: number
+  reservationConversionRate: number
+}
+
 export interface MerchantPlaceInformation {
   placeId: number
   description: string | null

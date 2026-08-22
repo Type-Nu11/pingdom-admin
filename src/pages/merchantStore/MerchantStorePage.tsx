@@ -41,6 +41,16 @@ function formatDate(value: string) {
     .replace(/\s/g, '.')
 }
 
+function formatCount(value: number) {
+  return new Intl.NumberFormat('ko-KR').format(value)
+}
+
+function formatRate(value: number) {
+  if (!Number.isFinite(value)) return '-'
+
+  return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 }).format(value)}%`
+}
+
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
@@ -229,6 +239,36 @@ function MerchantStorePage() {
                   <S.Metric><S.MetricIcon aria-hidden="true">local_offer</S.MetricIcon><S.MetricContent><span>공개 중인 혜택</span><strong>{activeOfferCount}개</strong></S.MetricContent></S.Metric>
                   <S.Metric><S.MetricIcon aria-hidden="true">calendar_month</S.MetricIcon><S.MetricContent><span>예약 가능한 상품</span><strong>{activeProductCount}개</strong></S.MetricContent></S.Metric>
                 </S.Metrics>
+
+                <S.PerformanceSection aria-labelledby="merchant-performance-title">
+                  <S.PerformanceHeading>
+                    <div>
+                      <S.SectionTitle id="merchant-performance-title">성과 요약</S.SectionTitle>
+                      <S.SectionDescription>연결된 전체 장소의 탐색 노출과 예약 전환 성과입니다.</S.SectionDescription>
+                    </div>
+                    {store.performance ? <S.PerformanceScope>{formatCount(store.performance.placeCount)}개 장소 기준</S.PerformanceScope> : null}
+                  </S.PerformanceHeading>
+
+                  {store.isLoadingPerformance ? (
+                    <S.PerformanceGrid aria-label="성과 요약을 불러오는 중">
+                      {Array.from({ length: 6 }, (_, index) => <S.Skeleton key={index} $height={96} />)}
+                    </S.PerformanceGrid>
+                  ) : store.performance ? (
+                    <S.PerformanceGrid>
+                      <S.PerformanceMetric><span>추천 노출</span><strong>{formatCount(store.performance.exposureCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>추천 카드 클릭</span><strong>{formatCount(store.performance.clickCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>장소 북마크</span><strong>{formatCount(store.performance.bookmarkCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>예약</span><strong>{formatCount(store.performance.reservationCount)}</strong><small>확정 {formatCount(store.performance.confirmedReservationCount)}</small></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>클릭률</span><strong>{formatRate(store.performance.clickThroughRate)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>예약 전환율</span><strong>{formatRate(store.performance.reservationConversionRate)}</strong></S.PerformanceMetric>
+                    </S.PerformanceGrid>
+                  ) : (
+                    <S.PerformanceError role="alert">
+                      <span>{store.performanceErrorMessage || '성과 요약을 불러오지 못했습니다.'}</span>
+                      <S.PerformanceRetry type="button" onClick={() => void store.fetchPerformance()}>다시 시도</S.PerformanceRetry>
+                    </S.PerformanceError>
+                  )}
+                </S.PerformanceSection>
 
                 {store.sectionErrorMessage ? <div style={{ marginTop: 16 }}><S.Notice $tone="error" role="alert"><S.NoticeIcon aria-hidden="true">error_outline</S.NoticeIcon>{store.sectionErrorMessage}</S.Notice></div> : null}
                 {store.successMessage ? <div style={{ marginTop: 16 }}><S.Notice $tone="success" role="status"><S.NoticeIcon aria-hidden="true">check_circle</S.NoticeIcon>{store.successMessage}</S.Notice></div> : null}

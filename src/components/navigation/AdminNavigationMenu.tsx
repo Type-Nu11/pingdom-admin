@@ -27,6 +27,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
       { label: 'Merchant 검증', icon: 'domain_verification', path: '/merchant-verifications' },
       { label: '방문자 검증', icon: 'person_check', path: '/visitor-verifications' },
       { label: '장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
+      { label: '장소 등록 심사', icon: 'add_location_alt', path: '/place-registration-applications' },
       { label: '장소 Claim 심사', icon: 'store', path: '/merchant-place-claims' },
       { label: 'Scout 운영', icon: 'explore', path: '/scouts' },
     ],

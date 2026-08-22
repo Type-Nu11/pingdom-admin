@@ -51,6 +51,9 @@ const MerchantPlaceClaimPage = lazy(
 const MerchantPlaceApplicationReviewPage = lazy(
   () => import('../../pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'),
 )
+const PlaceRegistrationReviewPage = lazy(
+  () => import('../../pages/placeRegistrationReview/PlaceRegistrationReviewPage'),
+)
 const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
 const NotificationOperationsPage = lazy(
   () => import('../../pages/notificationOperations/NotificationOperationsPage'),
@@ -173,6 +176,10 @@ export function Router() {
             <Route
               path="/merchant-place-applications"
               element={<MerchantPlaceApplicationReviewPage />}
+            />
+            <Route
+              path="/place-registration-applications"
+              element={<PlaceRegistrationReviewPage />}
             />
             <Route path="/trust-score" element={<TrustScorePage />} />
             <Route

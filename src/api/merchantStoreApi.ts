@@ -29,6 +29,7 @@ import type {
   MerchantOwnerProfile,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
+  MerchantPerformance,
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
   MerchantReservableProduct,
@@ -49,6 +50,11 @@ const MERCHANT_OWNER_PATH = '/merchant-owner'
 
 export async function getMerchantOwnerProfile() {
   const { data } = await customAxios.get<MerchantOwnerProfile>(`${MERCHANT_OWNER_PATH}/me`)
+  return data
+}
+
+export async function getMerchantPerformance() {
+  const { data } = await customAxios.get<MerchantPerformance>(`${MERCHANT_OWNER_PATH}/performance`)
   return data
 }
 

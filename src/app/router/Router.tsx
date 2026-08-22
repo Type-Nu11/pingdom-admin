@@ -99,6 +99,7 @@ const PlaceEventPage = lazy(() => import('../../pages/placeEvent/PlaceEventPage'
 const AdManagementPage = lazy(
   () => import('../../pages/adManagement/AdManagementPage'),
 )
+const DataQualityPage = lazy(() => import('../../pages/dataQuality/DataQualityPage'))
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
@@ -199,6 +200,7 @@ export function Router() {
             />
             <Route path="/operations/history" element={<OperationHistoryPage />} />
             <Route path="/operations/ads" element={<AdManagementPage />} />
+            <Route path="/data-quality" element={<DataQualityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

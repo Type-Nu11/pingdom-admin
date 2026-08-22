@@ -48,6 +48,9 @@ const UserRolePage = lazy(() => import('../../pages/userRole/UserRolePage'))
 const MerchantPlaceClaimPage = lazy(
   () => import('../../pages/merchantPlaceClaim/MerchantPlaceClaimPage'),
 )
+const MerchantPlaceApplicationReviewPage = lazy(
+  () => import('../../pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'),
+)
 const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
 const NotificationOperationsPage = lazy(
   () => import('../../pages/notificationOperations/NotificationOperationsPage'),
@@ -166,6 +169,10 @@ export function Router() {
               element={<RecommendationMetricsPage />}
             />
             <Route path="/merchant-owners" element={<MerchantOwnerPage />} />
+            <Route
+              path="/merchant-place-applications"
+              element={<MerchantPlaceApplicationReviewPage />}
+            />
             <Route path="/trust-score" element={<TrustScorePage />} />
             <Route
               path="/merchant-verifications"

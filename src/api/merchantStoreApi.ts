@@ -411,10 +411,10 @@ export async function uploadMerchantPlaceClaimAttachment(
 ) {
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('documentType', documentType)
   const { data } = await customAxios.post<MerchantPlaceClaimAttachment>(
     `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments`,
     formData,
-    { params: { documentType } },
   )
   return data
 }

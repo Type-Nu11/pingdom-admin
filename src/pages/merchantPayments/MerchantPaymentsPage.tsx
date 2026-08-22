@@ -41,7 +41,9 @@ function formatDateTime(value: string | null) {
   return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-function formatAmountMinor(amountMinor: number, currency: string) {
+function formatAmountMinor(amountMinor: number | null, currency: string | null) {
+  if (amountMinor === null || !currency) return '-'
+
   return `${new Intl.NumberFormat('ko-KR').format(amountMinor)} ${currency}`
 }
 
@@ -125,7 +127,7 @@ function MerchantPaymentsPage() {
                 {payments.payments.length === 0 ? <S.Empty>조회할 결제 내역이 없습니다.</S.Empty> : <S.CampaignList>{payments.payments.map((payment) => {
                   const status = PAYMENT_STATUS[payment.status]
                   const isRefunding = payments.refundingPaymentId === payment.id
-                  return <S.CampaignItem as="article" key={payment.id} $selected={false}><S.CampaignTop><S.CampaignTitle title={`결제 #${payment.id}`}>결제 #{payment.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>예약 #{payment.reservationId} · {formatAmountMinor(payment.amountMinor, payment.currency)}</S.CampaignMeta><S.CampaignMeta title={payment.providerPaymentId}>결제 수단 {payment.provider} · 승인 번호 {payment.providerPaymentId}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(payment.createdAt)} · 결제 {formatDateTime(payment.paidAt)}{payment.refundedAt ? ` · 환불 ${formatDateTime(payment.refundedAt)}` : ''}</S.CampaignMeta>{payment.failureCode ? <S.CampaignMeta>실패 코드 {payment.failureCode}</S.CampaignMeta> : null}{payment.status === 'PAID' ? <S.FormActions><S.ActionButton type="button" $variant="danger" disabled={isRefunding || payments.refundingPaymentId !== null} onClick={() => setRefundTarget(payment)}>전액 환불</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
+                  return <S.CampaignItem as="article" key={payment.id} $selected={false}><S.CampaignTop><S.CampaignTitle title={`결제 #${payment.id}`}>결제 #{payment.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>예약 #{payment.reservationId} · {formatAmountMinor(payment.amountMinor, payment.currency)}</S.CampaignMeta><S.CampaignMeta title={payment.providerPaymentId ?? undefined}>결제 수단 {payment.provider} · 승인 번호 {payment.providerPaymentId ?? '-'}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(payment.createdAt)} · 결제 {formatDateTime(payment.paidAt)}{payment.refundedAt ? ` · 환불 ${formatDateTime(payment.refundedAt)}` : ''}</S.CampaignMeta>{payment.failureCode ? <S.CampaignMeta>실패 코드 {payment.failureCode}</S.CampaignMeta> : null}{payment.status === 'PAID' ? <S.FormActions><S.ActionButton type="button" $variant="danger" disabled={isRefunding || payments.refundingPaymentId !== null} onClick={() => setRefundTarget(payment)}>전액 환불</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
                 })}</S.CampaignList>}
                 {payments.paymentPageInfo.totalPages > 1 ? <S.Pagination><S.PaginationButton type="button" disabled={payments.isLoadingPayments || payments.paymentPageInfo.page <= 1} onClick={() => void payments.fetchPayments(payments.paymentPageInfo.page - 1)}>이전</S.PaginationButton><S.PageText>{payments.paymentPageInfo.page} / {payments.paymentPageInfo.totalPages}</S.PageText><S.PaginationButton type="button" disabled={payments.isLoadingPayments || !payments.paymentPageInfo.hasNext} onClick={() => void payments.fetchPayments(payments.paymentPageInfo.page + 1)}>다음</S.PaginationButton></S.Pagination> : null}
               </>}

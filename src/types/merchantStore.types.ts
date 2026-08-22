@@ -273,9 +273,9 @@ export interface MerchantPayment {
   id: number
   reservationId: number
   provider: string
-  providerPaymentId: string
-  amountMinor: number
-  currency: string
+  providerPaymentId: string | null
+  amountMinor: number | null
+  currency: string | null
   status: MerchantPaymentStatus
   failureCode: string | null
   createdAt: string

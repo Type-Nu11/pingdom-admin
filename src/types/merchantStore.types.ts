@@ -7,6 +7,14 @@ export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
 export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELED'
+export type MerchantPaymentStatus =
+  | 'PROCESSING'
+  | 'PAID'
+  | 'REFUND_PROCESSING'
+  | 'FAILED'
+  | 'REFUNDED'
+export type MerchantSettlementEntryType = 'PAYMENT' | 'REFUND'
+export type MerchantSettlementStatus = 'PENDING' | 'SETTLED' | 'REVERSED'
 export type MerchantPlaceReverificationStatus =
   | 'REQUESTED'
   | 'RESPONDED'
@@ -254,6 +262,51 @@ export interface MerchantReservation {
 
 export interface MerchantReservationPageResponse {
   reservations: MerchantReservation[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface MerchantPayment {
+  id: number
+  reservationId: number
+  provider: string
+  providerPaymentId: string | null
+  amountMinor: number | null
+  currency: string | null
+  status: MerchantPaymentStatus
+  failureCode: string | null
+  createdAt: string
+  paidAt: string | null
+  refundedAt: string | null
+}
+
+export interface MerchantPaymentPageResponse {
+  payments: MerchantPayment[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface MerchantSettlementLedgerEntry {
+  id: number
+  paymentTransactionId: number
+  entryType: MerchantSettlementEntryType
+  grossAmountMinor: number
+  feeAmountMinor: number
+  netAmountMinor: number
+  currency: string
+  status: MerchantSettlementStatus
+  createdAt: string
+  settledAt: string | null
+}
+
+export interface MerchantSettlementLedgerPageResponse {
+  entries: MerchantSettlementLedgerEntry[]
   page: number
   limit: number
   totalElements: number

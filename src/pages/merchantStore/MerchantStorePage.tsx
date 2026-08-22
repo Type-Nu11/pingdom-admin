@@ -228,6 +228,7 @@ function MerchantStorePage() {
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/offers')}>혜택 관리</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/reservations/setup')}>예약 설정</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/reservations')}>예약 운영</S.QuickLink>
+                <S.QuickLink type="button" onClick={() => navigate('/merchant/payments')}>결제·정산</S.QuickLink>
                 <S.QuickLink type="button" onClick={() => navigate('/merchant/place-reverification')}>정보 재확인</S.QuickLink>
               </S.QuickLinks>
             </S.StoreSummary>

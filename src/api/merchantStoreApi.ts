@@ -30,6 +30,9 @@ import type {
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
   MerchantPerformance,
+  MerchantPayment,
+  MerchantPaymentPageResponse,
+  MerchantSettlementLedgerPageResponse,
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
   MerchantReservableProduct,
@@ -55,6 +58,29 @@ export async function getMerchantOwnerProfile() {
 
 export async function getMerchantPerformance() {
   const { data } = await customAxios.get<MerchantPerformance>(`${MERCHANT_OWNER_PATH}/performance`)
+  return data
+}
+
+export async function getMerchantPayments(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantPaymentPageResponse>(
+    `${MERCHANT_OWNER_PATH}/payments`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function getMerchantSettlementLedger(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantSettlementLedgerPageResponse>(
+    `${MERCHANT_OWNER_PATH}/payments/settlements`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function refundMerchantPayment(paymentId: number) {
+  const { data } = await customAxios.post<MerchantPayment>(
+    `${MERCHANT_OWNER_PATH}/payments/${paymentId}/refund`,
+  )
   return data
 }
 

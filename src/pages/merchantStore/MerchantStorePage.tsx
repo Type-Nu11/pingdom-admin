@@ -282,6 +282,7 @@ function MerchantStorePage() {
                 </div>
                 <S.EmptyStoreActions>
                   <S.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</S.EmptyStoreAction>
+                  <S.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-claims')}>장소 Claim 신청</S.EmptyStoreAction>
                   <S.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</S.EmptyStoreSecondaryAction>
                 </S.EmptyStoreActions>
               </S.EmptyStoreState>

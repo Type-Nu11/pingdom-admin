@@ -4,6 +4,7 @@ import {
   getMerchantOffers,
   getMerchantOperatingNotices,
   getMerchantOwnerProfile,
+  getMerchantPerformance,
   getMerchantPlaceInformation,
   getMerchantReservableProducts,
   updateMerchantPlaceInformation,
@@ -15,6 +16,7 @@ import type {
   MerchantOffer,
   MerchantOperatingNotice,
   MerchantOwnerProfile,
+  MerchantPerformance,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
   MerchantReservableProduct,
@@ -49,6 +51,7 @@ export function useMerchantStore() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<MerchantStoreLoadState>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
+  const [performance, setPerformance] = useState<MerchantPerformance | null>(null)
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
   const [placeInformation, setPlaceInformation] = useState<MerchantPlaceInformation | null>(null)
   const [campaigns, setCampaigns] = useState<MerchantCampaign[]>([])
@@ -57,6 +60,8 @@ export function useMerchantStore() {
   const [reservableProducts, setReservableProducts] = useState<MerchantReservableProduct[]>([])
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
+  const [performanceErrorMessage, setPerformanceErrorMessage] = useState('')
+  const [isLoadingPerformance, setIsLoadingPerformance] = useState(false)
   const [isSavingInformation, setIsSavingInformation] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const mountedRef = useRef(true)
@@ -70,6 +75,30 @@ export function useMerchantStore() {
     },
     [clearAuth]
   )
+
+  const fetchPerformance = useCallback(async () => {
+    setIsLoadingPerformance(true)
+    setPerformanceErrorMessage('')
+
+    try {
+      const nextPerformance = await getMerchantPerformance()
+      if (!mountedRef.current) return
+
+      setPerformance(nextPerformance)
+    } catch (error) {
+      if (!mountedRef.current) return
+
+      clearUnauthorizedSession(error)
+      setPerformanceErrorMessage(
+        getMerchantStoreErrorMessage(error, '성과 요약을 불러오지 못했습니다.')
+      )
+      logDebugError('상점주 성과 요약 조회 실패', error)
+    } finally {
+      if (mountedRef.current) {
+        setIsLoadingPerformance(false)
+      }
+    }
+  }, [clearUnauthorizedSession])
 
   const fetchStore = useCallback(async () => {
     setStatus((current) => (current === 'ready' ? 'ready' : 'loading'))
@@ -85,6 +114,7 @@ export function useMerchantStore() {
         current && nextProfile.placeIds.includes(current) ? current : (nextProfile.placeIds[0] ?? null)
       )
       setStatus('ready')
+      void fetchPerformance()
     } catch (error) {
       if (!mountedRef.current) return
 
@@ -93,7 +123,7 @@ export function useMerchantStore() {
       setErrorMessage(getMerchantStoreErrorMessage(error, '내 가게 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 프로필 조회 실패', error)
     }
-  }, [clearUnauthorizedSession])
+  }, [clearUnauthorizedSession, fetchPerformance])
 
   const fetchPlaceData = useCallback(
     async (placeId: number) => {
@@ -210,6 +240,7 @@ export function useMerchantStore() {
   return {
     status,
     profile,
+    performance,
     selectedPlaceId,
     placeInformation,
     campaigns,
@@ -218,10 +249,13 @@ export function useMerchantStore() {
     reservableProducts,
     errorMessage,
     sectionErrorMessage,
+    performanceErrorMessage,
+    isLoadingPerformance,
     successMessage,
     isSavingInformation,
     selectPlace: setSelectedPlaceId,
     fetchStore,
+    fetchPerformance,
     fetchPlaceData,
     saveInformation,
   }

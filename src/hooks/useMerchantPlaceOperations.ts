@@ -5,6 +5,7 @@ import {
   getMerchantPlaceDetail,
   getMerchantPlaceMedia,
   getMerchantPlaceOperating,
+  updateMerchantPlaceMediaOrder,
   updateMerchantPlaceOperatingSchedule,
   updateMerchantPlaceOperatingStatus,
   updateMerchantRepresentativeMedia,
@@ -28,6 +29,7 @@ type OperationAction =
   | 'status'
   | 'schedule'
   | 'representative'
+  | 'reorder-media'
   | 'delete-media'
   | null
 
@@ -218,6 +220,53 @@ export function useMerchantPlaceOperations() {
     )
   }, [runAction, selectedPlaceId])
 
+  const moveMedia = useCallback(async (mediaId: number, direction: 'previous' | 'next') => {
+    if (!selectedPlaceId || !media || actionRef.current) return false
+
+    const ordered = [...media.media].sort((left, right) => left.displayOrder - right.displayOrder)
+    const currentIndex = ordered.findIndex((item) => item.id === mediaId)
+    const targetIndex = direction === 'previous' ? currentIndex - 1 : currentIndex + 1
+    const current = ordered[currentIndex]
+    const target = ordered[targetIndex]
+    if (!current || !target) return false
+
+    actionRef.current = 'reorder-media'
+    setActiveAction('reorder-media')
+    setActionErrorMessage('')
+    setSuccessMessage('')
+
+    try {
+      const [moved, displaced] = await Promise.all([
+        updateMerchantPlaceMediaOrder(selectedPlaceId, current.id, { displayOrder: target.displayOrder }),
+        updateMerchantPlaceMediaOrder(selectedPlaceId, target.id, { displayOrder: current.displayOrder }),
+      ])
+      if (!mountedRef.current) return false
+
+      setMedia((currentMedia) => currentMedia
+        ? sortMedia({
+          ...currentMedia,
+          media: currentMedia.media.map((item) => {
+            if (item.id === moved.id) return moved
+            if (item.id === displaced.id) return displaced
+            return item
+          }),
+        })
+        : currentMedia)
+      setSuccessMessage('탐색 미디어 순서를 변경했습니다.')
+      return true
+    } catch (error) {
+      if (mountedRef.current) {
+        setActionErrorMessage(getErrorMessage(error, '탐색 미디어 순서를 변경하지 못했습니다.'))
+        logDebugError('상점주 탐색 미디어 순서 변경 실패', error)
+        void fetchPlaceOperations(selectedPlaceId)
+      }
+      return false
+    } finally {
+      actionRef.current = null
+      if (mountedRef.current) setActiveAction(null)
+    }
+  }, [fetchPlaceOperations, getErrorMessage, media, selectedPlaceId])
+
   const deleteMedia = useCallback((mediaId: number) => {
     if (!selectedPlaceId) return Promise.resolve(false)
     return runAction(
@@ -251,6 +300,7 @@ export function useMerchantPlaceOperations() {
     updateOperatingStatus,
     updateOperatingSchedule,
     updateRepresentativeMedia,
+    moveMedia,
     deleteMedia,
   }
 }

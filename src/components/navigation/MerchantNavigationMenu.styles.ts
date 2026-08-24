@@ -1,121 +1,122 @@
 import styled, { css } from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
-const colors = adminColors
-
-export const Navigation = styled.nav<{ $expanded: boolean }>`
-  min-height: 0;
-
-  @media (max-width: 920px) {
-    position: relative;
-    width: 100%;
-
-    ${({ $expanded }) => !$expanded && css`
-      ${GroupList} {
-        display: none;
-      }
-    `}
-  }
-`
-
-export const MobileToggle = styled.button`
-  display: none;
-
-  @media (max-width: 920px) {
-    min-height: 42px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 4px;
-    border: 0;
-    background: transparent;
-    color: ${colors.text};
-    font: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-`
-
-export const GroupList = styled.div`
+export const Navigation = styled.div`
   display: grid;
-  gap: 22px;
+  gap: 18px;
+  padding: 0 14px 6px;
 
-  @media (max-width: 920px) {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + 8px);
-    left: 0;
-    width: min(320px, calc(100vw - 32px));
-    max-height: min(640px, calc(100vh - 88px));
-    overflow: auto;
-    padding: 18px;
-    border: 1px solid ${colors.border};
-    border-radius: 8px;
-    background: ${colors.surface};
-    box-shadow: 0 12px 28px ${colors.shadow};
+  @media (max-width: 900px) {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 0;
   }
 `
 
 export const Group = styled.section`
   display: grid;
-  gap: 7px;
+  gap: 6px;
+
+  @media (max-width: 900px) {
+    flex-shrink: 0;
+  }
 `
 
 export const GroupTitle = styled.h2`
   margin: 0;
   padding: 0 10px;
-  color: ${colors.softText};
+  color: ${adminColors.muted};
   font-size: 11px;
-  font-weight: 700;
-  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: 0;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
 `
 
 export const ItemList = styled.div`
   display: grid;
   gap: 2px;
-`
 
-export const ItemButton = styled.button<{ $active: boolean }>`
-  width: 100%;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px;
-  border: 0;
-  border-right: 3px solid transparent;
-  border-radius: 6px 0 0 6px;
-  background: transparent;
-  color: ${colors.muted};
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover {
-    background: ${colors.primaryTint};
-    color: ${colors.primary};
+  @media (max-width: 900px) {
+    display: flex;
+    gap: 2px;
   }
-
-  &:focus-visible {
-    outline: 2px solid ${colors.primary};
-    outline-offset: 2px;
-  }
-
-  ${({ $active }) => $active && css`
-    border-right-color: ${colors.primary};
-    background: ${colors.primaryTint};
-    color: ${colors.primary};
-    font-weight: 700;
-  `}
 `
 
 export const MaterialIcon = styled.span`
-  width: 20px;
-  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
   font-family: 'Material Symbols Outlined';
-  font-size: 19px;
-  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 400;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+`
+
+export const ItemButton = styled.button<{ $active?: boolean }>`
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: ${adminColors.muted};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+
+  &:hover {
+    background: ${adminColors.primaryTint};
+    color: ${adminColors.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${adminColors.primary};
+    outline-offset: 2px;
+  }
+
+  ${({ $active }) =>
+    $active && css`
+      background: ${adminColors.primaryTint};
+      color: ${adminColors.primary};
+      font-weight: 700;
+
+      ${MaterialIcon} {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      }
+    `}
+
+  @media (max-width: 900px) {
+    width: auto;
+    min-height: 40px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+`
+
+export const StoreButton = styled(ItemButton)`
+  min-height: 48px;
+  margin-bottom: 2px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 14px;
+
+  @media (max-width: 900px) {
+    min-height: 40px;
+    margin-bottom: 0;
+  }
 `

@@ -6,7 +6,7 @@ import {
   Routes,
   useLocation,
 } from 'react-router-dom'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
+import { ADMIN_MAIN_SCROLL_AREA_ID, MERCHANT_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import {
   MerchantOnboardingRoute,
   MerchantProtectedRoute,
@@ -117,6 +117,7 @@ function ScrollToTopOnRouteChange() {
 
   useLayoutEffect(() => {
     const mainScrollArea = document.getElementById(ADMIN_MAIN_SCROLL_AREA_ID)
+      ?? document.getElementById(MERCHANT_MAIN_SCROLL_AREA_ID)
 
     if (mainScrollArea) {
       mainScrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' })

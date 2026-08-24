@@ -1,10 +1,22 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { MerchantNavigationMenu } from '../../components/navigation/MerchantNavigationMenu'
+import { MERCHANT_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAuth } from '../../hooks/useAuth'
 import * as S from './MerchantLayout.styles'
 
+const getSectionTitle = (pathname: string) => {
+  if (pathname.startsWith('/merchant/place-')) return '장소 관리'
+  if (pathname.startsWith('/merchant/campaigns') || pathname.startsWith('/merchant/offers')) return '콘텐츠 관리'
+  if (pathname.startsWith('/merchant/reservations')) return '예약 관리'
+  if (pathname.startsWith('/merchant/payments')) return '결제 · 정산'
+  if (pathname.startsWith('/merchant/verified-boost')) return 'Verified Boost'
+
+  return '내 가게'
+}
+
 export function MerchantLayout() {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const { logout, user } = useAuth()
   const merchantIdentifier = user?.username || user?.name || '상점주'
 
@@ -19,7 +31,6 @@ export function MerchantLayout() {
         <S.SideHeader>
           <S.BrandLockup>
             <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
-            <S.BrandLabel>Merchant</S.BrandLabel>
           </S.BrandLockup>
         </S.SideHeader>
         <S.SideMenu>
@@ -39,7 +50,11 @@ export function MerchantLayout() {
           </S.LogoutButton>
         </S.SideFooter>
       </S.SideNav>
-      <S.MainArea className="merchant-layout-content">
+      <S.MainArea id={MERCHANT_MAIN_SCROLL_AREA_ID} className="merchant-layout-content">
+        <S.TopBar>
+          <S.TopTitle>{getSectionTitle(pathname)}</S.TopTitle>
+          <S.TopContext>상점주 센터</S.TopContext>
+        </S.TopBar>
         <Outlet />
       </S.MainArea>
     </S.AppShell>

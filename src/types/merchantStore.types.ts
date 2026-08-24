@@ -47,6 +47,8 @@ export type MerchantPlaceClaimDocumentType =
   | 'BUSINESS_LICENSE'
   | 'RESIDENT_REGISTRATION'
   | 'REPRESENTATIVE_IMAGE'
+export type MerchantVerifiedBoostExecutionStatus = 'ACTIVE' | 'STOPPED' | 'EXPIRED'
+export type MerchantVerifiedBoostProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE'
 
 export interface MerchantOwnerProfile {
   userId: number
@@ -375,6 +377,67 @@ export interface MerchantPlaceClaimAttachment {
   fileSize: number
   displayOrder: number
   createdAt: string
+}
+
+export interface MerchantVerifiedBoostSelection {
+  id: number
+  productId: number
+  placeId: number
+  selectedAt: string
+}
+
+export interface MerchantVerifiedBoostSelectionCreateRequest {
+  productId: number
+  placeId: number
+  idempotencyKey: string
+}
+
+export interface MerchantVerifiedBoostSelectionPageResponse {
+  selections: MerchantVerifiedBoostSelection[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface MerchantVerifiedBoostProduct {
+  productId: number
+  name: string
+  description: string
+  priceAmount: number
+  currency: string
+  durationDays: number
+  status: MerchantVerifiedBoostProductStatus
+}
+
+export interface MerchantVerifiedBoostProductPageResponse {
+  products: MerchantVerifiedBoostProduct[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface MerchantVerifiedBoostExecution {
+  id: number
+  selectionId: number
+  productId: number
+  placeId: number
+  status: MerchantVerifiedBoostExecutionStatus
+  startedAt: string
+  endsAt: string
+  stoppedAt: string | null
+}
+
+export interface MerchantVerifiedBoostExecutionPageResponse {
+  executions: MerchantVerifiedBoostExecution[]
+  page: number
+  limit: number
+  totalCount: number
+  totalPages: number
+  hasNext: boolean
 }
 
 export interface MerchantOperatingNotice {

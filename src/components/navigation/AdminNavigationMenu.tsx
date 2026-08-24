@@ -17,43 +17,51 @@ const PLACE_MANAGEMENT_CHILDREN: NavigationItem[] = [
   { label: '기간형 이벤트', icon: 'event', path: '/places/events' },
   { label: '중복 장소 후보', icon: 'difference', path: '/places/duplicate-candidates' },
   { label: '장소 병합 · 복구', icon: 'merge', path: '/places/duplicates' },
-  { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
 ]
 
 const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
-    title: '장소 · 검증',
+    title: '검토함',
     items: [
-      { label: 'Merchant 검증', icon: 'domain_verification', path: '/merchant-verifications' },
-      { label: '방문자 검증', icon: 'person_check', path: '/visitor-verifications' },
-      { label: '장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
-      { label: '장소 등록 심사', icon: 'add_location_alt', path: '/place-registration-applications' },
-      { label: '장소 Claim 심사', icon: 'store', path: '/merchant-place-claims' },
-      { label: 'Scout 운영', icon: 'explore', path: '/scouts' },
+      { label: '상점주 신청', icon: 'storefront', path: '/merchant-owners' },
+      { label: '상점주 본인·사업자 검증', icon: 'domain_verification', path: '/merchant-verifications' },
+      { label: '장소 운영 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
+      { label: '신규 장소 등록 심사', icon: 'add_location_alt', path: '/place-registration-applications' },
+      { label: '기존 장소 운영 신청 심사', icon: 'store', path: '/merchant-place-claims' },
+      { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
+      { label: '방문자 제보·정정 심사', icon: 'person_check', path: '/visitor-verifications' },
     ],
   },
   {
-    title: '신고 · 추천',
+    title: '장소 운영',
+    items: [],
+  },
+  {
+    title: '사용자 · 안전',
     items: [
-      { label: '게시글 관리', icon: 'description', path: '/main' },
       { label: '신고 사용자', icon: 'report', path: '/reports/reported-users' },
       { label: '신고 이의제기', icon: 'gavel', path: '/reports/appeals' },
       { label: '사용자 밴', icon: 'block', path: '/bans' },
-      { label: '추천 성과 · 정책', icon: 'monitoring', path: '/recommendations/metrics' },
+      { label: '사용자 역할', icon: 'manage_accounts', path: '/users/roles' },
     ],
   },
   {
-    title: '운영 · 시스템',
+    title: '성장 운영',
     items: [
-      { label: 'Merchant Owner', icon: 'storefront', path: '/merchant-owners' },
-      { label: 'Trust Score', icon: 'verified_user', path: '/trust-score' },
-      { label: '인증 부스트 상품', icon: 'rocket_launch', path: '/verified-boost-products' },
-      { label: '사용자 역할', icon: 'manage_accounts', path: '/users/roles' },
+      { label: '탐색 후보 운영', icon: 'explore', path: '/scouts' },
+      { label: '신뢰 점수', icon: 'verified_user', path: '/trust-score' },
+      { label: '인증 부스트', icon: 'rocket_launch', path: '/verified-boost-products' },
+      { label: '추천 성과 · 정책', icon: 'monitoring', path: '/recommendations/metrics' },
       { label: '광고 관리', icon: 'campaign', path: '/operations/ads' },
+    ],
+  },
+  {
+    title: '시스템',
+    items: [
       { label: '데이터 품질', icon: 'rule', path: '/data-quality' },
-      { label: '알림 · Outbox', icon: 'notifications_active', path: '/operations/notifications' },
+      { label: '알림 발송 현황', icon: 'notifications_active', path: '/operations/notifications' },
       { label: '운영 이력', icon: 'history', path: '/operations/history' },
-      { label: 'S3 고아 객체', icon: 'cloud_off', path: '/s3-orphans' },
+      { label: '미연결 파일', icon: 'cloud_off', path: '/s3-orphans' },
     ],
   },
 ]
@@ -64,15 +72,25 @@ const isCurrentPath = (pathname: string, path: string) =>
 const isPlaceManagementPath = (pathname: string) =>
   pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
 
+const getActiveGroup = (pathname: string) => {
+  if (isPlaceManagementPath(pathname)) return '장소 운영'
+
+  return NAVIGATION_GROUPS.find((group) =>
+    group.items.some((item) => isCurrentPath(pathname, item.path)),
+  )?.title
+}
+
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeItemRef = useRef<HTMLButtonElement>(null)
   const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(() => isPlaceManagementPath(pathname))
+  const activeGroup = getActiveGroup(pathname)
+  const [openGroup, setOpenGroup] = useState(() => activeGroup ?? '검토함')
 
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [isPlaceManagementOpen, pathname])
+  }, [isPlaceManagementOpen, openGroup, pathname])
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
@@ -89,12 +107,25 @@ export function AdminNavigationMenu() {
         <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
         <span>대시보드</span>
       </S.DashboardButton>
-      {NAVIGATION_GROUPS.map((group) => (
-        <S.Group key={group.title}>
-          <S.GroupTitle>{group.title}</S.GroupTitle>
-          <S.ItemList>
-            {group.title === '장소 · 검증' ? (
-              <>
+      {NAVIGATION_GROUPS.map((group) => {
+        const isGroupOpen = activeGroup === group.title || openGroup === group.title
+
+        return (
+          <S.Group key={group.title}>
+            <S.GroupTitle
+              type="button"
+              aria-expanded={isGroupOpen}
+              aria-controls={`admin-navigation-group-${group.title}`}
+              onClick={() => setOpenGroup((current) => current === group.title ? '' : group.title)}
+            >
+              <span>{group.title}</span>
+              <S.MaterialIcon aria-hidden="true">
+                {isGroupOpen ? 'expand_less' : 'expand_more'}
+              </S.MaterialIcon>
+            </S.GroupTitle>
+            <S.ItemList id={`admin-navigation-group-${group.title}`} $collapsed={!isGroupOpen}>
+              {group.title === '장소 운영' ? (
+                <>
                 <S.PlaceToolbar $active={placeManagementActive}>
                   <S.PlaceToolbarLink
                     type="button"
@@ -103,6 +134,7 @@ export function AdminNavigationMenu() {
                     ref={pathname === '/places' ? activeItemRef : undefined}
                     onClick={() => {
                       setIsPlaceManagementOpen(true)
+                      setOpenGroup('장소 운영')
                       navigate('/places')
                     }}
                   >
@@ -133,7 +165,10 @@ export function AdminNavigationMenu() {
                           type="button"
                           $active={active}
                           aria-current={active ? 'page' : undefined}
-                          onClick={() => navigate(item.path)}
+                          onClick={() => {
+                            setOpenGroup('장소 운영')
+                            navigate(item.path)
+                          }}
                         >
                           <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>
                           <span>{item.label}</span>
@@ -142,28 +177,32 @@ export function AdminNavigationMenu() {
                     })}
                   </S.ChildList>
                 ) : null}
-              </>
-            ) : null}
-            {group.items.map((item) => {
-              const active = isCurrentPath(pathname, item.path)
+                </>
+              ) : null}
+              {group.items.map((item) => {
+                const active = isCurrentPath(pathname, item.path)
 
-              return (
-                <S.ItemButton
+                return (
+                  <S.ItemButton
                   key={item.path}
                   ref={active ? activeItemRef : undefined}
                   type="button"
                   $active={active}
                   aria-current={active ? 'page' : undefined}
-                  onClick={() => navigate(item.path)}
-                >
-                  <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>
-                  <span>{item.label}</span>
-                </S.ItemButton>
-              )
-            })}
-          </S.ItemList>
-        </S.Group>
-      ))}
+                  onClick={() => {
+                    setOpenGroup(group.title)
+                    navigate(item.path)
+                  }}
+                  >
+                    <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>
+                    <span>{item.label}</span>
+                  </S.ItemButton>
+                )
+              })}
+            </S.ItemList>
+          </S.Group>
+        )
+      })}
     </S.Navigation>
   )
 }

@@ -14,7 +14,7 @@ export const Page = styled.main`
   background: ${colors.background};
 
   .merchant-layout-content & {
-    min-height: 100%;
+    min-height: calc(100vh - 64px);
     background: transparent;
   }
 `
@@ -115,13 +115,13 @@ export const Content = styled.div`
   }
 
   .merchant-layout-content & {
-    width: min(100% - 80px, 1280px);
+    width: min(calc(100% - 64px), 1100px);
     margin: 0 auto;
-    padding: 44px 0 72px;
+    padding: 36px 0 48px;
 
     @media (max-width: 720px) {
-      width: min(100% - 40px, 1280px);
-      padding: 32px 0 48px;
+      width: calc(100% - 32px);
+      padding: 28px 0 36px;
     }
   }
 `
@@ -138,6 +138,18 @@ export const PageIntro = styled.section`
     flex-direction: column;
     gap: 20px;
   }
+
+  .merchant-layout-content & {
+    align-items: flex-end;
+    margin-bottom: 34px;
+
+    @media (max-width: 640px) {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+  }
 `
 
 export const Eyebrow = styled.p`
@@ -145,6 +157,10 @@ export const Eyebrow = styled.p`
   color: ${colors.primary};
   font-size: 13px;
   font-weight: 700;
+
+  .merchant-layout-content & {
+    display: none;
+  }
 `
 
 export const PageTitle = styled.h1`
@@ -154,6 +170,11 @@ export const PageTitle = styled.h1`
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: 0;
+
+  .merchant-layout-content & {
+    margin-bottom: 6px;
+    font-size: 24px;
+  }
 `
 
 export const PageDescription = styled.p`
@@ -161,6 +182,12 @@ export const PageDescription = styled.p`
   color: ${colors.muted};
   font-size: 15px;
   line-height: 1.55;
+
+  .merchant-layout-content & {
+    margin-top: 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
 `
 
 export const PlaceSelect = styled.select`

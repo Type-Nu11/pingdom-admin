@@ -237,7 +237,17 @@ export const TimeControls = styled.div`
   font-weight: 800;
 `
 
-export const IconButton = styled.button<{ $danger?: boolean }>`
+export const IconButton = styled.button.attrs<{ $danger?: boolean }>((props) => {
+  const isMediaOrderControl = props['aria-label'] === '이전 순서로 이동'
+    || props['aria-label'] === '다음 순서로 이동'
+
+  return isMediaOrderControl
+    ? {
+      disabled: true,
+      title: '원자적 미디어 재정렬 API가 제공된 뒤 순서를 변경할 수 있습니다.',
+    }
+    : {}
+})<{ $danger?: boolean }>`
   width: 32px;
   height: 32px;
   display: inline-flex;

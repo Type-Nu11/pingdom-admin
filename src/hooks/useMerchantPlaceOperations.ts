@@ -218,6 +218,13 @@ export function useMerchantPlaceOperations() {
     )
   }, [runAction, selectedPlaceId])
 
+  const moveMedia = useCallback(async (_mediaId: number, _direction: 'previous' | 'next') => {
+    void _mediaId
+    void _direction
+    setActionErrorMessage('미디어 순서 변경은 원자적 재정렬 API가 제공된 뒤 이용할 수 있습니다.')
+    return false
+  }, [])
+
   const deleteMedia = useCallback((mediaId: number) => {
     if (!selectedPlaceId) return Promise.resolve(false)
     return runAction(
@@ -251,6 +258,7 @@ export function useMerchantPlaceOperations() {
     updateOperatingStatus,
     updateOperatingSchedule,
     updateRepresentativeMedia,
+    moveMedia,
     deleteMedia,
   }
 }

@@ -236,11 +236,21 @@ export function useMerchantVerifiedBoost() {
     setSuccessMessage('')
 
     try {
-      await startMerchantVerifiedBoostExecution(selection.id)
+      const nextExecution = await startMerchantVerifiedBoostExecution(selection.id)
       if (!mountedRef.current) return false
 
-      setSuccessMessage(`장소 #${selection.placeId}의 Verified Boost 집행을 시작했습니다.`)
+      setExecutions((items) => [
+        nextExecution,
+        ...items.filter((item) => item.id !== nextExecution.id),
+      ].slice(0, PAGE_LIMIT))
       void fetchExecutions(1)
+
+      if (nextExecution.status !== 'ACTIVE') {
+        setActionErrorMessage('이 선택의 집행은 이미 종료되었거나 중단되었습니다. 새 상품 선택이 필요합니다.')
+        return false
+      }
+
+      setSuccessMessage(`장소 #${selection.placeId}의 Verified Boost가 현재 집행 중입니다.`)
       return true
     } catch (error) {
       if (mountedRef.current) {

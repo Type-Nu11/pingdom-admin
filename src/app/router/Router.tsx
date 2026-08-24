@@ -12,6 +12,7 @@ import {
   MerchantProtectedRoute,
   ProtectedRoute,
 } from './ProtectedRoute'
+import { MerchantLayout } from './MerchantLayout'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
@@ -138,19 +139,21 @@ export function Router() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<MerchantProtectedRoute />}>
-            <Route path="/merchant" element={<MerchantStorePage />} />
-            <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
-            <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
-            <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
-            <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
-            <Route path="/merchant/offers" element={<MerchantOfferPage />} />
-            <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
-            <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />
-            <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
-            <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
-            <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
-            <Route path="/merchant/place-claims" element={<MerchantPlaceClaimRequestPage />} />
-            <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
+            <Route element={<MerchantLayout />}>
+              <Route path="/merchant" element={<MerchantStorePage />} />
+              <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
+              <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
+              <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
+              <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
+              <Route path="/merchant/offers" element={<MerchantOfferPage />} />
+              <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
+              <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />
+              <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
+              <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
+              <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
+              <Route path="/merchant/place-claims" element={<MerchantPlaceClaimRequestPage />} />
+              <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
+            </Route>
           </Route>
           <Route element={<MerchantOnboardingRoute />}>
             <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />

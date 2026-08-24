@@ -12,6 +12,11 @@ export const Page = styled.main`
   min-height: 100vh;
   padding: 0;
   background: ${colors.background};
+
+  .merchant-layout-content & {
+    min-height: 100%;
+    background: transparent;
+  }
 `
 
 export const Header = styled.header`
@@ -27,6 +32,10 @@ export const Header = styled.header`
   @media (max-width: 720px) {
     min-height: 64px;
     padding: 0 20px;
+  }
+
+  .merchant-layout-content & {
+    display: none;
   }
 `
 
@@ -103,6 +112,17 @@ export const Content = styled.div`
   @media (max-width: 720px) {
     width: min(100% - 40px, 1180px);
     padding: 32px 0 48px;
+  }
+
+  .merchant-layout-content & {
+    width: min(100% - 80px, 1280px);
+    margin: 0 auto;
+    padding: 44px 0 72px;
+
+    @media (max-width: 720px) {
+      width: min(100% - 40px, 1280px);
+      padding: 32px 0 48px;
+    }
   }
 `
 

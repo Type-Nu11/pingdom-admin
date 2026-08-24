@@ -52,7 +52,8 @@ export interface AdminMerchantPlaceApplication extends Omit<AdminMerchantPlaceAp
   completedAt: string | null
   canceledAt: string | null
   createdAt: string | null
-  submissionVersion: number | null
+  version: number
+  submissionVersion: number
   attachments: AdminMerchantPlaceApplicationAttachment[]
 }
 
@@ -66,6 +67,7 @@ export interface AdminMerchantPlaceApplicationPage {
 }
 
 export interface MerchantPlaceApplicationReviewRequest {
+  reviewedVersion: number
   reason: string
 }
 

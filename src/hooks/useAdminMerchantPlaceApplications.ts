@@ -161,8 +161,8 @@ export function useAdminMerchantPlaceApplications() {
     setSuccessMessage('')
     try {
       const reviewed = approved
-        ? await api.approveAdminMerchantPlaceApplication(detail.id, { reason })
-        : await api.rejectAdminMerchantPlaceApplication(detail.id, { reason })
+        ? await api.approveAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
+        : await api.rejectAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
       setDetail(reviewed)
       setAttachments(reviewed.attachments)
       setItems((current) => current.map((item) => item.id === reviewed.id ? asListItem(reviewed) : item))

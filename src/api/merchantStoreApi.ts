@@ -47,6 +47,12 @@ import type {
   MerchantPlaceClaimCreateRequest,
   MerchantPlaceClaimDocumentType,
   MerchantPlaceClaimPageResponse,
+  MerchantVerifiedBoostExecution,
+  MerchantVerifiedBoostExecutionPageResponse,
+  MerchantVerifiedBoostProductPageResponse,
+  MerchantVerifiedBoostSelectionPageResponse,
+  MerchantVerifiedBoostSelection,
+  MerchantVerifiedBoostSelectionCreateRequest,
 } from '../types/merchantStore.types'
 
 const MERCHANT_OWNER_PATH = '/merchant-owner'
@@ -425,6 +431,55 @@ export async function createMerchantPlaceClaim(request: MerchantPlaceClaimCreate
 export async function cancelMerchantPlaceClaim(claimId: number) {
   const { data } = await customAxios.post<MerchantPlaceClaim>(
     `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/cancel`,
+  )
+  return data
+}
+
+export async function getMerchantVerifiedBoostSelections(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantVerifiedBoostSelectionPageResponse>(
+    `${MERCHANT_OWNER_PATH}/verified-boost-selections`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function getMerchantVerifiedBoostProducts(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantVerifiedBoostProductPageResponse>(
+    `${MERCHANT_OWNER_PATH}/verified-boost-products`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function createMerchantVerifiedBoostSelection(
+  request: MerchantVerifiedBoostSelectionCreateRequest,
+) {
+  const { data } = await customAxios.post<MerchantVerifiedBoostSelection>(
+    `${MERCHANT_OWNER_PATH}/verified-boost-selections`,
+    request,
+  )
+  return data
+}
+
+export async function getMerchantVerifiedBoostExecutions(page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantVerifiedBoostExecutionPageResponse>(
+    `${MERCHANT_OWNER_PATH}/verified-boost-executions`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function startMerchantVerifiedBoostExecution(selectionId: number) {
+  const { data } = await customAxios.post<MerchantVerifiedBoostExecution>(
+    `${MERCHANT_OWNER_PATH}/verified-boost-executions`,
+    { selectionId },
+  )
+  return data
+}
+
+export async function stopMerchantVerifiedBoostExecution(executionId: number) {
+  const { data } = await customAxios.post<MerchantVerifiedBoostExecution>(
+    `${MERCHANT_OWNER_PATH}/verified-boost-executions/${executionId}/stop`,
   )
   return data
 }

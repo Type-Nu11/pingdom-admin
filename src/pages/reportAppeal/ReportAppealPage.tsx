@@ -98,8 +98,8 @@ function ReportAppealPage() {
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
-              <div><Shared.Eyebrow>게시글 관리 &gt; 신고 이의제기</Shared.Eyebrow><Shared.PageTitle>신고 이의제기 검토</Shared.PageTitle><Shared.PageDescription>신고 처리에 대한 사용자 이의제기를 검토하고 승인 또는 반려합니다.</Shared.PageDescription></div>
-              <Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/reports/reported-users')}>신고 사용자 조회</Shared.HeaderButton><Shared.HeaderButton type="button" onClick={() => navigate('/main')}>게시글 관리</Shared.HeaderButton></Shared.HeaderActions>
+              <div><Shared.Eyebrow>사용자 · 안전 &gt; 신고 이의제기</Shared.Eyebrow><Shared.PageTitle>신고 이의제기 검토</Shared.PageTitle><Shared.PageDescription>신고 처리에 대한 사용자 이의제기를 검토하고 승인 또는 반려합니다.</Shared.PageDescription></div>
+              <Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/reports/reported-users')}>신고 사용자 조회</Shared.HeaderButton><Shared.HeaderButton type="button" onClick={() => navigate('/bans')}>사용자 밴</Shared.HeaderButton></Shared.HeaderActions>
             </Shared.PageHeader>
             {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
             {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}

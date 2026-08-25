@@ -173,7 +173,9 @@ function SortDropdown({
         onKeyDown={handleKeyDown}
       >
         <span>{selectedOption.label}</span>
-        <S.DropdownIcon aria-hidden="true">expand_more</S.DropdownIcon>
+        <S.DropdownChevron aria-hidden="true" $open={isOpen}>
+          expand_more
+        </S.DropdownChevron>
       </S.DropdownTrigger>
 
       {isOpen ? (

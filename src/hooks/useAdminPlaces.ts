@@ -21,7 +21,6 @@ import type {
   AdminPlaceDeleteErrorResponse,
   AdminPlaceDetail,
   AdminPlaceDetailErrorResponse,
-  AdminPlaceDetailRequest,
   AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceItem,
   AdminPlaceGeocodingUpdateRequest,
@@ -281,7 +280,7 @@ export function useAdminPlaces({
   }, [])
 
   const fetchAdminPlaceDetail = useCallback(
-    async (placeId: number, request: AdminPlaceDetailRequest = {}) => {
+    async (placeId: number) => {
       const requestId = latestDetailRequestIdRef.current + 1
       latestDetailRequestIdRef.current = requestId
 
@@ -290,7 +289,7 @@ export function useAdminPlaces({
       setDetailErrorMessage('')
 
       try {
-        const data = await getAdminPlace(placeId, request)
+        const data = await getAdminPlace(placeId)
 
         if (requestId === latestDetailRequestIdRef.current) {
           setPlaceDetail(data)

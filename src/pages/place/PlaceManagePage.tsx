@@ -174,7 +174,6 @@ function PlaceManagePage() {
         label: place.name,
         category: place.category,
         categoryName: place.categoryName,
-        level: place.level ?? place.placeGrowth?.level,
       })),
     [places]
   )
@@ -187,28 +186,6 @@ function PlaceManagePage() {
   )
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
-
-  const handleOpenPostDetail = useCallback(
-    (postId: number) => {
-      navigate('/main', {
-        state: {
-          openPostId: postId,
-        },
-      })
-    },
-    [navigate]
-  )
-
-  const handleOpenPlacePosts = useCallback(
-    (placeName: string) => {
-      navigate('/main', {
-        state: {
-          postSearchKeyword: placeName,
-        },
-      })
-    },
-    [navigate]
-  )
 
   const clearPendingPlaceSearch = useCallback(() => {
     if (!searchTimeoutRef.current) {
@@ -762,8 +739,6 @@ function PlaceManagePage() {
                 onOpenTouristInfo={handleOpenTouristInfo}
                 onOpenOperatingNotices={handleOpenOperatingNotices}
                 onOpenDataCorrection={handleOpenDataCorrection}
-                onOpenPost={handleOpenPostDetail}
-                onOpenPlacePosts={handleOpenPlacePosts}
               />
             }
           />

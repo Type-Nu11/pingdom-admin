@@ -14,7 +14,6 @@ import * as S from '../../pages/place/PlaceManagePage.styles'
 const SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },
   { value: 'OLDEST', label: '오래된순' },
-  { value: 'LEVEL_DESC', label: '레벨 높은순' },
 ]
 
 const CATEGORY_OPTIONS: AdminPlaceCategory[] = [
@@ -265,7 +264,6 @@ export function PlaceListPanel({
                   </S.PlaceMeta>
                   <S.PlaceMetaLine aria-label={`${displayName} 장소 지표`}>
                     <span>등록자 {getRegistrantLabel(place)}</span>
-                    <span>Lv.{formatOptionalNumber(place.placeGrowth?.level)}</span>
                     <span>사진 {formatOptionalNumber(place.placeGrowth?.photoCount)}장</span>
                   </S.PlaceMetaLine>
                 </S.PlaceInfo>

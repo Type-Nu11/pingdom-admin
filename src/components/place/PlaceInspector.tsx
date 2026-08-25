@@ -11,7 +11,6 @@ import type { PlaceOperation } from './PlaceOperationPanel'
 import type { PlaceDataCorrectionAction } from './PlaceDataCorrectionDialog'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
-const POST_PREVIEW_LIMIT = 3
 const OPERATING_STATUS_LABELS: Record<AdminPlaceOperatingStatus, string> = {
   OPERATING: '운영 중',
   TEMPORARILY_CLOSED: '임시 휴업',
@@ -49,8 +48,6 @@ interface PlaceInspectorProps {
   onOpenTouristInfo: () => void
   onOpenOperatingNotices: () => void
   onOpenDataCorrection: () => void
-  onOpenPost: (postId: number) => void
-  onOpenPlacePosts: (placeName: string) => void
 }
 
 function hasValidCoordinate(place: AdminPlaceItem) {
@@ -66,31 +63,6 @@ function formatCoordinate(place: AdminPlaceItem) {
   return hasValidCoordinate(place)
     ? `${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`
     : '좌표 정보 없음'
-}
-
-function formatOptionalNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '-'
-}
-
-function getGrowthProgress(place: AdminPlaceDetail) {
-  const progress = place.placeGrowth?.progressPercent
-  return typeof progress === 'number' && Number.isFinite(progress)
-    ? Math.min(Math.max(Math.round(progress), 0), 100)
-    : null
-}
-
-function formatDateTime(value: string) {
-  if (!value) {
-    return '작성일 정보 없음'
-  }
-
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat('ko-KR', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(date)
 }
 
 function formatCheckedAt(value?: string | null) {
@@ -130,15 +102,9 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
       onOpenTouristInfo,
       onOpenOperatingNotices,
       onOpenDataCorrection,
-      onOpenPost,
-      onOpenPlacePosts,
     },
     ref
   ) {
-    const growthProgress = placeDetail ? getGrowthProgress(placeDetail) : null
-    const growthProgressLabel = growthProgress === null ? '-' : `${growthProgress}%`
-    const previewPosts = placeDetail?.posts.slice(0, POST_PREVIEW_LIMIT) ?? []
-
     return (
       <S.PlaceDetailPanel ref={ref} $open={selectedPlace !== null}>
         {selectedPlace ? (
@@ -368,104 +334,6 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                     </S.OperatingSummary>
                   </S.DetailSection>
 
-                  <S.DetailSection>
-                    <S.DetailSectionTitle>장소 성장</S.DetailSectionTitle>
-                    <S.PlaceMetaLine>
-                      <span>Lv.{formatOptionalNumber(placeDetail.placeGrowth?.level)}</span>
-                      <span>
-                        사진 {formatOptionalNumber(placeDetail.placeGrowth?.photoCount)}장
-                      </span>
-                    </S.PlaceMetaLine>
-                    <S.DetailGrowthProgress>
-                      <S.DetailGrowthProgressHeader>
-                        <span>다음 레벨까지</span>
-                        <strong>{growthProgressLabel}</strong>
-                      </S.DetailGrowthProgressHeader>
-                      <S.DetailGrowthTrack
-                        role="progressbar"
-                        aria-label="다음 레벨 진행률"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={growthProgress ?? undefined}
-                        aria-valuetext={growthProgressLabel}
-                      >
-                        <S.DetailGrowthBar $progress={growthProgress ?? 0} />
-                      </S.DetailGrowthTrack>
-                    </S.DetailGrowthProgress>
-                  </S.DetailSection>
-
-                  <S.DetailSection>
-                    <S.DetailSectionTitle>
-                      연결 게시글 {placeDetail.postCount.toLocaleString()}개
-                    </S.DetailSectionTitle>
-                    {previewPosts.length > 0 ? (
-                      <>
-                        <S.DetailPostList>
-                          {previewPosts.map((post) => (
-                            <S.DetailPostItem
-                              key={post.id}
-                              type="button"
-                              onClick={() => onOpenPost(post.id)}
-                            >
-                              <S.DetailPostImage>
-                                {post.imageUrl ? (
-                                  <img
-                                    src={post.imageUrl}
-                                    alt={`${post.title || `게시글 ${post.id}`} 이미지`}
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
-                                ) : (
-                                  <S.DetailPostFallback>
-                                    <S.MaterialIcon aria-hidden="true">image</S.MaterialIcon>
-                                  </S.DetailPostFallback>
-                                )}
-                              </S.DetailPostImage>
-                              <S.DetailPostText>
-                                <S.DetailPostTitleRow>
-                                  <S.DetailPostTitle
-                                    title={post.title || `게시글 #${post.id}`}
-                                  >
-                                    {post.title || `게시글 #${post.id}`}
-                                  </S.DetailPostTitle>
-                                </S.DetailPostTitleRow>
-                                <p title={post.description || '설명 없음'}>
-                                  {post.description || '설명 없음'}
-                                </p>
-                                {post.visibilityStatus === 'HIDDEN' ? (
-                                  <S.DetailPostVisibilityReason>
-                                    <S.DetailPostVisibilityBadge>숨김</S.DetailPostVisibilityBadge>
-                                    <span>
-                                      숨김 사유:{' '}
-                                      {post.hiddenReason === 'ADMIN_HIDDEN'
-                                        ? '관리자 숨김'
-                                        : '숨김 처리됨'}
-                                    </span>
-                                  </S.DetailPostVisibilityReason>
-                                ) : null}
-                                <S.DetailPostMeta>
-                                  {post.username || `사용자 ID: ${post.userId}`} · 좋아요{' '}
-                                  {post.likeCount.toLocaleString()} ·{' '}
-                                  {formatDateTime(post.createdAt)}
-                                </S.DetailPostMeta>
-                              </S.DetailPostText>
-                            </S.DetailPostItem>
-                          ))}
-                        </S.DetailPostList>
-                        {placeDetail.postCount > POST_PREVIEW_LIMIT ? (
-                          <S.DetailPostListAction
-                            type="button"
-                            onClick={() => onOpenPlacePosts(placeDetail.name)}
-                          >
-                            <span>연결 게시글 전체 보기</span>
-                            <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
-                          </S.DetailPostListAction>
-                        ) : null}
-                      </>
-                    ) : (
-                      <S.DetailStatus>연결된 게시글이 없습니다.</S.DetailStatus>
-                    )}
-                  </S.DetailSection>
                 </>
               ) : (
                 <S.DetailStatus>장소를 선택하면 상세 정보가 표시됩니다.</S.DetailStatus>

@@ -85,9 +85,7 @@ export function PlaceDangerZoneDialog({
           {place.name} · {place.address || '주소 정보 없음'}
         </S.DeleteConfirmMeta>
         <S.DeleteConfirmWarning>
-          {place.postCount > 0
-            ? `연결된 게시글 ${place.postCount.toLocaleString()}개도 함께 삭제됩니다. 삭제 전에 연결 게시글을 확인해 주세요.`
-            : '연결된 게시글은 없지만 삭제 후 복구가 어려울 수 있습니다.'}
+          삭제된 장소는 관리자 화면에서 다시 복구할 수 없습니다.
         </S.DeleteConfirmWarning>
         <S.DeleteConfirmDescription>
           연결된 이벤트·체크인·Scout 현장 제보가 있으면 서버가 삭제를 차단합니다.

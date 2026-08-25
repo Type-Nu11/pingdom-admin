@@ -1,6 +1,6 @@
 import type { AuthErrorResponse } from './auth.types'
 
-export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST' | 'LEVEL_DESC'
+export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST'
 export type AdminPlaceCategory =
   | '음식점'
   | '음악'
@@ -11,14 +11,12 @@ export type AdminPlaceCategory =
   | '카페'
   | '문화재'
   | '기타'
-export type AdminPlacePostSortParam = 'LATEST' | 'OLDEST' | 'MOST_LIKED'
 export type AdminPlaceGeocodingSource = 'KAKAO' | 'USER_PIN' | 'ADMIN' | 'LEGACY'
 export type AdminPlaceOperatingStatus =
   | 'OPERATING'
   | 'TEMPORARILY_CLOSED'
   | 'PERMANENTLY_CLOSED'
 export type AdminPlaceDiscoveryStatus = 'VISIBLE' | 'HIDDEN'
-export type AdminPlacePostVisibilityStatus = 'VISIBLE' | 'HIDDEN'
 export type AdminPlaceDayOfWeek =
   | 'MONDAY'
   | 'TUESDAY'
@@ -40,10 +38,6 @@ export type AdminPlaceTouristCategory =
 
 export interface PlaceGrowthSnapshot {
   photoCount?: number
-  level?: number
-  currentLevelMinPhotoCount?: number
-  nextLevelMinPhotoCount?: number
-  progressPercent?: number
 }
 
 export interface AdminPlaceOperatingTimeRange {
@@ -79,26 +73,11 @@ export interface AdminPlaceItem {
   userId: number
   category?: string | null
   categoryName?: string | null
-  level?: number
   englishName?: string | null
   touristSummary?: string | null
   touristCategories?: AdminPlaceTouristCategory[]
   registrant?: string
   placeGrowth?: PlaceGrowthSnapshot
-}
-
-export interface AdminPlacePostItem {
-  id: number
-  imageUrl: string
-  thumbnailUrl?: string | null
-  title: string
-  description: string
-  userId: number
-  username: string
-  createdAt: string
-  likeCount: number
-  visibilityStatus?: AdminPlacePostVisibilityStatus
-  hiddenReason?: string | null
 }
 
 export interface AdminPlaceDetail {
@@ -121,14 +100,10 @@ export interface AdminPlaceDetail {
   username: string
   category?: string | null
   categoryName?: string | null
-  level?: number
   englishName?: string | null
   touristSummary?: string | null
   touristCategories?: AdminPlaceTouristCategory[]
-  sortParam: AdminPlacePostSortParam
-  postCount: number
   placeGrowth?: PlaceGrowthSnapshot
-  posts: AdminPlacePostItem[]
 }
 
 export interface AdminPlaceKakaoPlaceIdUpdateRequest {
@@ -312,11 +287,6 @@ export interface AdminPlaceListResponse {
 export type AdminPlaceListErrorResponse = AuthErrorResponse<
   'INVALID_TOKEN' | 'ACCESS_DENIED' | 'PLACE_NOT_FOUND'
 >
-
-export interface AdminPlaceDetailRequest {
-  sortParam?: AdminPlacePostSortParam
-  keyword?: string
-}
 
 export type AdminPlaceDetailErrorResponse = AuthErrorResponse<
   'INVALID_TOKEN' | 'ACCESS_DENIED' | 'PLACE_NOT_FOUND'

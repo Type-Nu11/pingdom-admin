@@ -1,7 +1,6 @@
 import customAxios from './customAxios'
 import type {
   AdminPlaceDetail,
-  AdminPlaceDetailRequest,
   AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceDiscoveryStatusUpdateResponse,
   AdminPlaceCoordinatesUpdateRequest,
@@ -50,18 +49,9 @@ export async function getAdminPlaces({
   return data
 }
 
-export async function getAdminPlace(
-  placeId: number,
-  { sortParam = 'LATEST', keyword = '' }: AdminPlaceDetailRequest = {}
-) {
+export async function getAdminPlace(placeId: number) {
   const { data } = await customAxios.get<AdminPlaceDetail>(
-    `${ADMIN_PLACES_API_PATH}/${placeId}`,
-    {
-      params: {
-        sortParam,
-        keyword,
-      },
-    }
+    `${ADMIN_PLACES_API_PATH}/${placeId}`
   )
 
   return data

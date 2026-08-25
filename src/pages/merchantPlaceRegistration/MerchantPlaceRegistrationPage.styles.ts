@@ -475,8 +475,49 @@ export const TagButton = styled.button<{ $selected: boolean }>`
   &:disabled { cursor: not-allowed; opacity: 0.55; }
 `
 
-export const LocationMap = styled(KakaoMap)`
-  height: clamp(340px, 46vh, 440px);
+export const LocationMap = styled(KakaoMap)<{ $active: boolean }>`
+  height: 100%;
+  min-height: 0;
+`
+
+export const MapViewport = styled.div<{ $active: boolean }>`
+  position: relative;
+  height: ${({ $active }) => ($active ? 'clamp(360px, 46vh, 440px)' : '220px')};
+  overflow: hidden;
+  border-radius: 7px;
+  transition: height 180ms ease;
+
+  ${LocationMap} { min-height: 0; }
+`
+
+export const MapIdleOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: ${colors.muted};
+  pointer-events: auto;
+
+  span {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid ${colors.border};
+    border-radius: 6px;
+    background: ${colors.surface};
+    color: ${colors.primary};
+    font-family: 'Material Symbols Outlined';
+    font-size: 19px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+
+  strong { font-size: 12px; font-weight: 700; }
 `
 
 export const CoordinateText = styled.p`
@@ -507,14 +548,15 @@ export const FormSections = styled.div`
   min-width: 0;
 `
 
-export const MapPanel = styled.aside`
-  position: sticky;
+export const MapPanel = styled.aside<{ $active: boolean }>`
+  position: ${({ $active }) => ($active ? 'sticky' : 'static')};
   top: 84px;
   min-width: 0;
   padding: 18px;
   border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.surfaceLow};
+  background: ${({ $active }) => ($active ? colors.surface : colors.surfaceLow)};
+  transition: background 180ms ease;
 
   @media (max-width: 980px) {
     position: static;
@@ -585,20 +627,24 @@ export const CoordinateFields = styled.div`
 export const ScheduleList = styled.div`
   display: flex;
   flex-direction: column;
-  border-top: 1px solid ${colors.borderSoft};
+  gap: 8px;
 `
 
 export const ScheduleRow = styled.div`
   display: grid;
-  grid-template-columns: 50px minmax(184px, 1fr) minmax(104px, 0.7fr) minmax(104px, 0.7fr);
+  grid-template-columns: 38px minmax(168px, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  min-height: 58px;
-  border-bottom: 1px solid ${colors.borderSoft};
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid ${colors.border};
+  border-radius: 7px;
+  background: ${colors.surface};
 
-  @media (max-width: 640px) {
-    grid-template-columns: 42px 1fr 1fr;
-    padding: 10px 0;
+  @media (max-width: 700px) {
+    grid-template-columns: 38px 1fr;
+    gap: 10px;
+    padding: 10px;
 
     > :last-child { grid-column: 2 / -1; }
   }
@@ -615,10 +661,10 @@ export const DayStatus = styled.div`
 `
 
 export const DayStatusButton = styled.button<{ $selected: boolean }>`
-  min-height: 30px;
+  min-height: 32px;
   padding: 0 8px;
   border: 1px solid ${({ $selected }) => ($selected ? colors.primarySoft : colors.border)};
-  border-radius: 5px;
+  border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
   color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
   font: inherit;
@@ -627,6 +673,20 @@ export const DayStatusButton = styled.button<{ $selected: boolean }>`
   cursor: pointer;
 
   &:disabled { cursor: not-allowed; opacity: 0.55; }
+`
+
+export const ScheduleTimeControls = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: end;
+  color: ${colors.muted};
+  font-size: 12px;
+  font-weight: 700;
+
+  @media (max-width: 700px) {
+    justify-self: start;
+  }
 `
 
 export const ReadonlyBlock = styled.div`

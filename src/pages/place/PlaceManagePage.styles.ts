@@ -970,31 +970,6 @@ export const PanelActionGroup = styled.div`
   gap: 8px;
 `
 
-export const CategorySelect = styled.select`
-  height: 40px;
-  min-width: 0;
-  padding: 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  outline: 1px solid transparent;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:focus-visible {
-    border-color: ${neutral.primary};
-    outline-color: ${neutral.primary};
-    box-shadow: 0 0 0 3px ${neutral.primaryTint};
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-`
-
 export const PanelCount = styled.p`
   min-height: 23px;
   margin: 0;
@@ -1361,13 +1336,20 @@ export const PlaceThumb = styled.div`
   justify-content: center;
   border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.primaryTint};
+  background: ${neutral.surface};
   color: ${neutral.primary};
 
   @media (max-width: 520px) {
     width: 40px;
     height: 40px;
   }
+`
+
+export const PlaceCategoryIconImage = styled.img`
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
 `
 
 export const PlaceInfo = styled.div`

@@ -6,8 +6,8 @@ import type {
   AdminPlaceListSortParam,
 } from '../../types/adminPlace.types'
 import {
-  getPlaceCategoryIconName,
   getPlaceCategoryLabel,
+  getPlaceCategoryListIconImageUrl,
 } from '../../utils/placeCategory'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
@@ -26,6 +26,11 @@ const CATEGORY_OPTIONS: AdminPlaceCategory[] = [
   '카페',
   '문화재',
   '기타',
+]
+
+const CATEGORY_FILTER_OPTIONS = [
+  { value: '', label: '전체 카테고리' },
+  ...CATEGORY_OPTIONS.map((value) => ({ value, label: value })),
 ]
 
 interface PlaceListPanelProps {
@@ -156,19 +161,14 @@ export function PlaceListPanel({
             width="100%"
             onChange={onSortChange}
           />
-          <S.CategorySelect
+          <SortDropdown
+            ariaLabel="장소 카테고리 필터"
             value={category}
-            aria-label="장소 카테고리 필터"
+            options={CATEGORY_FILTER_OPTIONS}
             disabled={isLoading}
-            onChange={(event) => onCategoryChange(event.target.value)}
-          >
-            <option value="">전체 카테고리</option>
-            {CATEGORY_OPTIONS.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </S.CategorySelect>
+            width="100%"
+            onChange={onCategoryChange}
+          />
           <S.IconFilterButton
             type="button"
             aria-label={isLoading ? '장소 목록을 불러오는 중입니다' : '장소 목록 새로고침'}
@@ -240,9 +240,11 @@ export function PlaceListPanel({
                 onClick={() => onSelectPlace(place)}
               >
                 <S.PlaceThumb>
-                  <S.MaterialIcon aria-hidden="true">
-                    {getPlaceCategoryIconName(place)}
-                  </S.MaterialIcon>
+                  <S.PlaceCategoryIconImage
+                    src={getPlaceCategoryListIconImageUrl(place)}
+                    alt=""
+                    aria-hidden="true"
+                  />
                 </S.PlaceThumb>
                 <S.PlaceInfo>
                   <S.PlaceTitleRow>

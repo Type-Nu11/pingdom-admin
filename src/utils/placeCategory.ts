@@ -28,6 +28,18 @@ const MARKER_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
   other: new URL('../assets/placeMarkers/category/기타.svg', import.meta.url).href,
 }
 
+const LIST_ICON_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
+  restaurant: new URL('../assets/placeMarkers/icon/음식점.svg', import.meta.url).href,
+  music: new URL('../assets/placeMarkers/icon/음악.svg', import.meta.url).href,
+  popup: new URL('../assets/placeMarkers/icon/팝업.svg', import.meta.url).href,
+  fashion: new URL('../assets/placeMarkers/icon/패션.svg', import.meta.url).href,
+  beauty: new URL('../assets/placeMarkers/icon/뷰티.svg', import.meta.url).href,
+  exhibition: new URL('../assets/placeMarkers/icon/전시.svg', import.meta.url).href,
+  cafe: new URL('../assets/placeMarkers/icon/카페.svg', import.meta.url).href,
+  'cultural-heritage': new URL('../assets/placeMarkers/icon/문화재.svg', import.meta.url).href,
+  other: new URL('../assets/placeMarkers/icon/기타.svg', import.meta.url).href,
+}
+
 const FLAME_MARKER_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
   restaurant: new URL('../assets/placeMarkers/category/음식점-불꽃.svg', import.meta.url).href,
   music: new URL('../assets/placeMarkers/category/음악-불꽃.svg', import.meta.url).href,
@@ -47,14 +59,14 @@ const CATEGORY_METADATA_BY_KEY: Record<
 > = {
   RESTAURANT: { kind: 'restaurant', label: '음식점', iconName: 'restaurant' },
   음식점: { kind: 'restaurant', label: '음식점', iconName: 'restaurant' },
-  MUSIC: { kind: 'music', label: '음악', iconName: 'music_note' },
-  음악: { kind: 'music', label: '음악', iconName: 'music_note' },
-  POP_UP: { kind: 'popup', label: '팝업', iconName: 'storefront' },
-  팝업: { kind: 'popup', label: '팝업', iconName: 'storefront' },
+  MUSIC: { kind: 'music', label: '음악', iconName: 'headphones' },
+  음악: { kind: 'music', label: '음악', iconName: 'headphones' },
+  POP_UP: { kind: 'popup', label: '팝업', iconName: 'redeem' },
+  팝업: { kind: 'popup', label: '팝업', iconName: 'redeem' },
   FASHION: { kind: 'fashion', label: '패션', iconName: 'checkroom' },
   패션: { kind: 'fashion', label: '패션', iconName: 'checkroom' },
-  BEAUTY: { kind: 'beauty', label: '뷰티', iconName: 'face_3' },
-  뷰티: { kind: 'beauty', label: '뷰티', iconName: 'face_3' },
+  BEAUTY: { kind: 'beauty', label: '뷰티', iconName: 'palette' },
+  뷰티: { kind: 'beauty', label: '뷰티', iconName: 'palette' },
   EXHIBITION: { kind: 'exhibition', label: '전시', iconName: 'museum' },
   전시: { kind: 'exhibition', label: '전시', iconName: 'museum' },
   CAFE: { kind: 'cafe', label: '카페', iconName: 'local_cafe' },
@@ -97,6 +109,10 @@ export function getPlaceCategoryIconName(place: PlaceCategorySource) {
 
 export function getPlaceCategoryMarkerImageUrl(place: PlaceCategorySource) {
   return MARKER_IMAGE_URL_BY_KIND[getPlaceCategoryKind(place)]
+}
+
+export function getPlaceCategoryListIconImageUrl(place: PlaceCategorySource) {
+  return LIST_ICON_IMAGE_URL_BY_KIND[getPlaceCategoryKind(place)]
 }
 
 export function getPlaceCategoryFlameMarkerImageUrl(place: PlaceCategorySource) {

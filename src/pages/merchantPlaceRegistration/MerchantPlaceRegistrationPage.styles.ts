@@ -262,11 +262,13 @@ export const PlaceSearchField = styled.div<{ $wide?: boolean }>`
 `
 
 export const PlaceSearchLabel = styled.label`
-  display: block;
-  margin-bottom: 8px;
-  color: ${colors.text};
-  font-size: 13px;
-  font-weight: 700;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 `
 
 export const PlaceSearchControl = styled.div`
@@ -516,36 +518,6 @@ export const MapViewport = styled.div<{ $active: boolean }>`
   transition: height 180ms ease;
 
   ${LocationMap} { min-height: 0; }
-`
-
-export const MapIdleOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.72);
-  color: ${colors.muted};
-  pointer-events: auto;
-
-  span {
-    width: 34px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid ${colors.border};
-    border-radius: 6px;
-    background: ${colors.surface};
-    color: ${colors.primary};
-    font-family: 'Material Symbols Outlined';
-    font-size: 19px;
-    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
-  }
-
-  strong { font-size: 12px; font-weight: 700; }
 `
 
 export const CoordinateText = styled.p`

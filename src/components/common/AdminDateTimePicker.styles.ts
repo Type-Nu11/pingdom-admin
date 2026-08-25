@@ -27,20 +27,20 @@ export const Icon = styled.span`
 
 export const Trigger = styled.button`
   width: 100%;
-  min-height: 40px;
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: 6px;
   outline: 0;
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
 
@@ -86,7 +86,7 @@ export const Popover = styled.div`
   box-sizing: border-box;
   padding: 14px;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
   box-shadow: 0 18px 42px ${neutral.shadow};
 `
@@ -106,14 +106,14 @@ export const CalendarTitle = styled.strong`
 `
 
 export const IconButton = styled.button`
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -156,7 +156,7 @@ export const DayButton = styled.button<{
   border: 1px solid
     ${({ $selected, $today }) =>
       $selected ? neutral.primary : $today ? neutral.primarySoft : 'transparent'};
-  border-radius: 7px;
+  border-radius: 6px;
   background: ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
   color: ${({ $selected, $outside }) =>
     $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
@@ -188,7 +188,7 @@ export const SecondaryButton = styled.button`
   min-height: 34px;
   padding: 0 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 7px;
+  border-radius: 6px;
   background: ${neutral.surface};
   color: ${neutral.muted};
   font: inherit;
@@ -230,7 +230,7 @@ export const TimeMenu = styled.div`
   box-sizing: border-box;
   padding: 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border-radius: 8px;
   background: ${neutral.surface};
   box-shadow: 0 14px 32px ${neutral.shadow};
 `
@@ -271,7 +271,7 @@ export const TimeOptions = styled.div`
   overflow-y: auto;
   padding: 2px;
   border: 1px solid ${neutral.borderSoft};
-  border-radius: 7px;
+  border-radius: 6px;
   background: ${neutral.surfaceLow};
   scrollbar-width: thin;
   scrollbar-color: ${neutral.border} transparent;
@@ -281,7 +281,7 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
   min-height: 28px;
   padding: 0;
   border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
-  border-radius: 6px;
+  border-radius: 5px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
   font: inherit;

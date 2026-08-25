@@ -192,16 +192,19 @@ export const PageDescription = styled.p`
 
 export const PlaceSelect = styled.select`
   min-width: 180px;
-  height: 40px;
-  padding: 0 34px 0 12px;
+  height: 42px;
+  padding: 0 38px 0 12px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  background: ${colors.surface};
+  appearance: none;
+  background: ${colors.surface} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%236B6B73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
   color: ${colors.text};
   font: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+
+  &:focus { border-color: ${colors.primary}; box-shadow: 0 0 0 3px ${colors.primaryTint}; outline: 0; }
 `
 
 export const StoreSummary = styled.section`

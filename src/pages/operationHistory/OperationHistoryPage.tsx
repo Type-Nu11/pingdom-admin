@@ -17,6 +17,7 @@ import type {
 import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
+import * as History from './OperationHistoryPage.styles'
 
 type Tab = 'audit' | 'privacy'
 
@@ -25,6 +26,27 @@ const PRIVACY_ACTION_LABELS: Record<PrivacyProcessingAction, string> = {
   WITHDRAWAL_REQUESTED: '탈퇴 요청',
   ANONYMIZED: '익명화',
   DELETED: '삭제',
+}
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  USER_BAN_APPLIED: '사용자 밴 처리',
+  USER_BAN_RELEASED: '사용자 밴 해제',
+  PLACE_CREATED: '장소 등록',
+  PLACE_UPDATED: '장소 정보 수정',
+  PLACE_DELETED: '장소 삭제',
+  PLACE_MERGED: '장소 병합',
+  PLACE_STATUS_CHANGED: '장소 상태 변경',
+  MERCHANT_VERIFICATION_APPROVED: '상점주 검증 승인',
+  MERCHANT_VERIFICATION_REJECTED: '상점주 검증 반려',
+}
+
+const AUDIT_TARGET_TYPE_LABELS: Record<string, string> = {
+  USER: '사용자',
+  PLACE: '장소',
+  MERCHANT: '상점주',
+  MERCHANT_OWNER: '상점주',
+  REVIEW: '리뷰',
+  EVENT: '이벤트',
 }
 
 function formatDate(value?: string | null) {
@@ -36,6 +58,28 @@ function formatDate(value?: string | null) {
         dateStyle: 'medium',
         timeStyle: 'short',
       }).format(date)
+}
+
+function formatAuditDate(value?: string | null) {
+  if (!value) return '정보 없음'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hour = String(date.getHours()).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}.${month}.${day} ${hour}:${minute}`
+}
+
+function formatAuditAction(action: string) {
+  return AUDIT_ACTION_LABELS[action] ?? '기타 관리자 작업'
+}
+
+function formatAuditTargetType(targetType: string) {
+  return AUDIT_TARGET_TYPE_LABELS[targetType] ?? '기타 대상'
 }
 
 function parseUserId(value: string) {
@@ -57,6 +101,7 @@ function OperationHistoryPage() {
   const [selectedAudit, setSelectedAudit] = useState<AdminAuditLogItem | null>(null)
   const [selectedPrivacy, setSelectedPrivacy] =
     useState<PrivacyProcessingHistoryItem | null>(null)
+  const [isAuditAdvancedFilterOpen, setIsAuditAdvancedFilterOpen] = useState(false)
   const [formError, setFormError] = useState('')
   const [auditActorId, setAuditActorId] = useState('')
   const [auditAction, setAuditAction] = useState('')
@@ -298,7 +343,7 @@ function OperationHistoryPage() {
                     <div>
                       <Shared.PanelTitle>감사 로그 필터</Shared.PanelTitle>
                       <Shared.PanelDescription>
-                        관리자, 작업, 대상, 기간을 조합해 조회합니다.
+                        작업 관리자와 기간을 기준으로 빠르게 조회합니다.
                       </Shared.PanelDescription>
                     </div>
                   </Shared.PanelHeader>
@@ -322,22 +367,6 @@ function OperationHistoryPage() {
                         />
                       </S.Field>
                       <S.Field>
-                        대상 유형
-                        <S.Input
-                          value={targetType}
-                          placeholder="예: USER"
-                          onChange={(event) => setTargetType(event.target.value)}
-                        />
-                      </S.Field>
-                      <S.Field>
-                        대상 ID
-                        <S.Input
-                          value={targetId}
-                          placeholder="전체"
-                          onChange={(event) => setTargetId(event.target.value)}
-                        />
-                      </S.Field>
-                      <S.Field>
                         시작 시각
                         <AdminDateTimePicker
                           ariaLabel="감사 로그 조회 시작 시각"
@@ -353,14 +382,43 @@ function OperationHistoryPage() {
                           onChange={setAuditTo}
                         />
                       </S.Field>
-                      <S.InlineActions>
+                      <History.AuditFilterDisclosure>
+                        <Shared.HeaderButton
+                          type="button"
+                          aria-expanded={isAuditAdvancedFilterOpen}
+                          onClick={() => setIsAuditAdvancedFilterOpen((open) => !open)}
+                        >
+                          상세 필터 {isAuditAdvancedFilterOpen ? '접기' : '펼치기'}
+                        </Shared.HeaderButton>
+                      </History.AuditFilterDisclosure>
+                      {isAuditAdvancedFilterOpen ? (
+                        <History.AuditAdvancedFilters>
+                          <S.Field>
+                            대상 유형
+                            <S.Input
+                              value={targetType}
+                              placeholder="예: USER"
+                              onChange={(event) => setTargetType(event.target.value)}
+                            />
+                          </S.Field>
+                          <S.Field>
+                            대상 ID
+                            <S.Input
+                              value={targetId}
+                              placeholder="전체"
+                              onChange={(event) => setTargetId(event.target.value)}
+                            />
+                          </S.Field>
+                        </History.AuditAdvancedFilters>
+                      ) : null}
+                      <History.AuditFilterActions>
                         <Shared.SecondaryButton type="button" onClick={resetAudit}>
                           초기화
                         </Shared.SecondaryButton>
                         <Shared.PrimaryButton type="submit" disabled={isLoading}>
                           조회
                         </Shared.PrimaryButton>
-                      </S.InlineActions>
+                      </History.AuditFilterActions>
                     </S.FormGrid>
                   </S.FormBody>
                 </Shared.Panel>
@@ -380,46 +438,50 @@ function OperationHistoryPage() {
                       ) : !hook.audit?.auditLogs.length ? (
                         <Shared.EmptyState><strong>조건에 맞는 감사 로그가 없습니다.</strong></Shared.EmptyState>
                       ) : (
-                        <S.CardList>
+                        <History.AuditList>
                           {hook.audit.auditLogs.map((item) => (
-                            <S.RecordButton
+                            <History.AuditRowButton
                               key={item.auditLogId}
                               type="button"
                               $selected={selectedAudit?.auditLogId === item.auditLogId}
                               onClick={() => setSelectedAudit(item)}
                             >
-                              <S.RecordHeader>
-                                <S.RecordTitle>{item.action}</S.RecordTitle>
-                                <S.StatusBadge>{item.targetType}</S.StatusBadge>
-                              </S.RecordHeader>
-                              <S.RecordMeta>
-                                {item.actorUsername} · 관리자 #{item.actorUserId} · {formatDate(item.createdAt)}
-                              </S.RecordMeta>
-                              <S.RecordDescription>
-                                대상 {item.targetType} #{item.targetId} · {item.reason || '사유 없음'}
-                              </S.RecordDescription>
-                            </S.RecordButton>
+                              <History.AuditActionCell>
+                                <History.AuditActionTitle>{formatAuditAction(item.action)}</History.AuditActionTitle>
+                                <History.AuditTargetText>
+                                  <History.AuditTypeTag title={item.targetType}>{formatAuditTargetType(item.targetType)}</History.AuditTypeTag>
+                                  <span>#{item.targetId}</span>
+                                </History.AuditTargetText>
+                              </History.AuditActionCell>
+                              <History.AuditActorCell>
+                                <strong>{item.actorUsername || `관리자 #${item.actorUserId}`}</strong>
+                                <span>관리자 #{item.actorUserId}</span>
+                              </History.AuditActorCell>
+                              <History.AuditTime>{formatAuditDate(item.createdAt)}</History.AuditTime>
+                            </History.AuditRowButton>
                           ))}
-                        </S.CardList>
+                        </History.AuditList>
                       )}
                     </Shared.ScrollArea>
-                    <S.Pagination>
-                      <Shared.SecondaryButton
-                        type="button"
-                        disabled={!hook.audit || hook.audit.page <= 1 || isLoading}
-                        onClick={() => moveAudit((hook.audit?.page ?? 1) - 1)}
-                      >
-                        이전
-                      </Shared.SecondaryButton>
-                      <span>{Math.max(hook.audit?.page ?? 1, 1)} / {Math.max(hook.audit?.totalPages ?? 1, 1)}</span>
-                      <Shared.SecondaryButton
-                        type="button"
-                        disabled={!hook.audit?.hasNext || isLoading}
-                        onClick={() => moveAudit((hook.audit?.page ?? 1) + 1)}
-                      >
-                        다음
-                      </Shared.SecondaryButton>
-                    </S.Pagination>
+                    {(hook.audit?.totalPages ?? 0) > 1 ? (
+                      <S.Pagination>
+                        <Shared.SecondaryButton
+                          type="button"
+                          disabled={!hook.audit || hook.audit.page <= 1 || isLoading}
+                          onClick={() => moveAudit((hook.audit?.page ?? 1) - 1)}
+                        >
+                          이전
+                        </Shared.SecondaryButton>
+                        <span>{Math.max(hook.audit?.page ?? 1, 1)} / {Math.max(hook.audit?.totalPages ?? 1, 1)}</span>
+                        <Shared.SecondaryButton
+                          type="button"
+                          disabled={!hook.audit?.hasNext || isLoading}
+                          onClick={() => moveAudit((hook.audit?.page ?? 1) + 1)}
+                        >
+                          다음
+                        </Shared.SecondaryButton>
+                      </S.Pagination>
+                    ) : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>감사 로그 상세</Shared.PanelTitle></Shared.PanelHeader>
@@ -428,22 +490,28 @@ function OperationHistoryPage() {
                         <Shared.EmptyState><strong>확인할 감사 로그를 선택해주세요.</strong></Shared.EmptyState>
                       ) : (
                         <>
-                          <S.RecordHeader>
+                          <History.AuditDetailHeader>
                             <div>
-                              <S.RecordTitle>{selectedAudit.action}</S.RecordTitle>
-                              <S.RecordMeta>감사 로그 #{selectedAudit.auditLogId}</S.RecordMeta>
+                              <History.AuditActionTitle>{formatAuditAction(selectedAudit.action)}</History.AuditActionTitle>
+                              <History.AuditDetailMeta>감사 로그 #{selectedAudit.auditLogId} · {formatAuditDate(selectedAudit.createdAt)}</History.AuditDetailMeta>
                             </div>
-                            <S.StatusBadge>{selectedAudit.targetType}</S.StatusBadge>
-                          </S.RecordHeader>
+                            <History.AuditTypeTag title={selectedAudit.targetType}>{formatAuditTargetType(selectedAudit.targetType)}</History.AuditTypeTag>
+                          </History.AuditDetailHeader>
                           <S.DetailGrid>
                             <S.DetailItem><dt>작업 관리자</dt><dd>{selectedAudit.actorUsername} (#{selectedAudit.actorUserId})</dd></S.DetailItem>
-                            <S.DetailItem><dt>대상</dt><dd>{selectedAudit.targetType} #{selectedAudit.targetId}</dd></S.DetailItem>
+                            <S.DetailItem><dt>대상</dt><dd>{formatAuditTargetType(selectedAudit.targetType)} #{selectedAudit.targetId}</dd></S.DetailItem>
                             <S.DetailItem><dt>요청 ID</dt><dd>{selectedAudit.requestId || '없음'}</dd></S.DetailItem>
-                            <S.DetailItem><dt>처리 시각</dt><dd>{formatDate(selectedAudit.createdAt)}</dd></S.DetailItem>
+                            <S.DetailItem><dt>작업 코드</dt><dd>{selectedAudit.action}</dd></S.DetailItem>
                           </S.DetailGrid>
                           <S.Section><S.SectionTitle>작업 사유</S.SectionTitle><S.RecordDescription>{selectedAudit.reason || '기록된 사유가 없습니다.'}</S.RecordDescription></S.Section>
-                          <S.Section><S.SectionTitle>작업 전 상태</S.SectionTitle><S.RecordDescription>{selectedAudit.beforeState || '기록 없음'}</S.RecordDescription></S.Section>
-                          <S.Section><S.SectionTitle>작업 후 상태</S.SectionTitle><S.RecordDescription>{selectedAudit.afterState || '기록 없음'}</S.RecordDescription></S.Section>
+                          <History.AuditStateDetails>
+                            <summary>작업 전 상태 보기</summary>
+                            <History.AuditStateContent>{selectedAudit.beforeState || '기록 없음'}</History.AuditStateContent>
+                          </History.AuditStateDetails>
+                          <History.AuditStateDetails>
+                            <summary>작업 후 상태 보기</summary>
+                            <History.AuditStateContent>{selectedAudit.afterState || '기록 없음'}</History.AuditStateContent>
+                          </History.AuditStateDetails>
                         </>
                       )}
                     </Shared.CompareBody>
@@ -477,7 +545,7 @@ function OperationHistoryPage() {
                     <Shared.ScrollArea>
                       {isLoading && !hook.privacy ? <Shared.EmptyState><strong>개인정보 처리 이력을 불러오는 중입니다.</strong></Shared.EmptyState> : !hook.privacy?.histories.length ? <Shared.EmptyState><strong>조건에 맞는 개인정보 처리 이력이 없습니다.</strong></Shared.EmptyState> : <S.CardList>{hook.privacy.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>}
                     </Shared.ScrollArea>
-                    <S.Pagination><Shared.SecondaryButton type="button" disabled={!hook.privacy || hook.privacy.page <= 1 || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) - 1)}>이전</Shared.SecondaryButton><span>{Math.max(hook.privacy?.page ?? 1, 1)} / {Math.max(hook.privacy?.totalPages ?? 1, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.privacy?.hasNext || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) + 1)}>다음</Shared.SecondaryButton></S.Pagination>
+                    {(hook.privacy?.totalPages ?? 0) > 1 ? <S.Pagination><Shared.SecondaryButton type="button" disabled={!hook.privacy || hook.privacy.page <= 1 || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) - 1)}>이전</Shared.SecondaryButton><span>{Math.max(hook.privacy?.page ?? 1, 1)} / {Math.max(hook.privacy?.totalPages ?? 1, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.privacy?.hasNext || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) + 1)}>다음</Shared.SecondaryButton></S.Pagination> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>개인정보 처리 상세</Shared.PanelTitle></Shared.PanelHeader>

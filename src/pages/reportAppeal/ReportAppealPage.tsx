@@ -131,7 +131,7 @@ function ReportAppealPage() {
                     ))}</Form.CardList>
                   )}
                 </Shared.ScrollArea>
-                <Form.Pagination><Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination>
+                {totalPages > 1 ? <Form.Pagination><Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination> : null}
               </Shared.Panel>
               <Shared.Panel>
                 <Shared.PanelHeader><div><Shared.PanelTitle>이의제기 상세</Shared.PanelTitle><Shared.PanelDescription>원 신고와 처리 이력을 함께 확인합니다.</Shared.PanelDescription></div></Shared.PanelHeader>

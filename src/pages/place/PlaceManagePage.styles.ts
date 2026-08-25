@@ -616,30 +616,33 @@ export const DetailSection = styled.section`
 `
 
 export const DetailSectionTitle = styled.h4`
-  margin: 0 0 10px;
+  margin: 0;
   color: ${neutral.strongText};
   font-size: 14px;
   font-weight: 800;
+  line-height: 1.4;
 `
 
 export const DetailSectionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  margin-bottom: 12px;
 
   ${DetailSectionTitle} {
-    margin-bottom: 10px;
+    padding-top: 6px;
   }
 `
 
 export const DetailInlineButton = styled.button`
-  min-height: 30px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 0 8px;
+  flex-shrink: 0;
+  padding: 0 10px;
   border: 1px solid ${neutral.border};
   border-radius: 7px;
   background: ${neutral.surface};
@@ -678,16 +681,20 @@ export const OperatingSummary = styled.div`
 `
 
 export const OperatingSummaryRow = styled.div`
-  min-height: 62px;
+  min-height: 66px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 14px;
+  padding: 12px 14px;
   border-top: 1px solid ${neutral.border};
 
   &:first-child {
     border-top: 0;
+  }
+
+  > ${DetailInlineButton} {
+    align-self: center;
   }
 `
 
@@ -718,8 +725,12 @@ export const OperatingSummaryAction = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 10px;
   flex-shrink: 0;
+
+  ${DetailInlineButton} {
+    min-width: 68px;
+  }
 `
 
 export const OperatingStatusBadge = styled.span<{
@@ -968,31 +979,6 @@ export const PanelActionGroup = styled.div`
   grid-template-columns: minmax(0, 1fr) minmax(118px, 0.9fr) 40px;
   align-items: center;
   gap: 8px;
-`
-
-export const CategorySelect = styled.select`
-  height: 40px;
-  min-width: 0;
-  padding: 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  outline: 1px solid transparent;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:focus-visible {
-    border-color: ${neutral.primary};
-    outline-color: ${neutral.primary};
-    box-shadow: 0 0 0 3px ${neutral.primaryTint};
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
 `
 
 export const PanelCount = styled.p`
@@ -1361,13 +1347,20 @@ export const PlaceThumb = styled.div`
   justify-content: center;
   border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
-  background: ${neutral.primaryTint};
+  background: ${neutral.surface};
   color: ${neutral.primary};
 
   @media (max-width: 520px) {
     width: 40px;
     height: 40px;
   }
+`
+
+export const PlaceCategoryIconImage = styled.img`
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
 `
 
 export const PlaceInfo = styled.div`

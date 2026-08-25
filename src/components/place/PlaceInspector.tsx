@@ -4,7 +4,6 @@ import type {
   AdminPlaceDiscoveryStatus,
   AdminPlaceItem,
   AdminPlaceOperatingStatus,
-  AdminPlaceTouristCategory,
 } from '../../types/adminPlace.types'
 import { getPlaceCategoryLabel } from '../../utils/placeCategory'
 import type { PlaceOperation } from './PlaceOperationPanel'
@@ -20,18 +19,6 @@ const DISCOVERY_STATUS_LABELS: Record<AdminPlaceDiscoveryStatus, string> = {
   VISIBLE: '탐색 노출',
   HIDDEN: '탐색 숨김',
 }
-const TOURIST_CATEGORY_LABELS: Record<AdminPlaceTouristCategory, string> = {
-  K_POP: 'K-POP',
-  BEAUTY: '뷰티',
-  FASHION: '패션',
-  CAFE: '카페',
-  FOOD: '음식',
-  POP_UP: '팝업',
-  EXHIBITION: '전시',
-  NIGHTLIFE: '나이트라이프',
-  OTHER: '기타',
-}
-
 interface PlaceInspectorProps {
   selectedPlace: AdminPlaceItem | null
   placeDetail: AdminPlaceDetail | null
@@ -192,13 +179,13 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
 
                   <S.DetailSection>
                     <S.DetailSectionHeader>
-                      <S.DetailSectionTitle>관광 정보</S.DetailSectionTitle>
+                      <S.DetailSectionTitle>방문객 안내 정보</S.DetailSectionTitle>
                       <S.DetailInlineButton
                         type="button"
                         disabled={updatingPlaceIds['tourist-info'] !== null}
                         onClick={onOpenTouristInfo}
                       >
-                        관광 정보 수정
+                        안내 정보 수정
                       </S.DetailInlineButton>
                     </S.DetailSectionHeader>
                     <S.DetailMetaList>
@@ -208,18 +195,8 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                           <strong>{placeDetail.englishName || '등록 정보 없음'}</strong>
                         </S.DetailMetaRow>
                         <S.DetailMetaRow>
-                          <span>관광 요약</span>
+                          <span>방문객 안내</span>
                           <strong>{placeDetail.touristSummary || '등록 정보 없음'}</strong>
-                        </S.DetailMetaRow>
-                        <S.DetailMetaRow>
-                          <span>관광 카테고리</span>
-                          <strong>
-                            {(placeDetail.touristCategories?.length ?? 0) > 0
-                              ? placeDetail.touristCategories
-                                  ?.map((category) => TOURIST_CATEGORY_LABELS[category])
-                                  .join(', ')
-                              : '등록 정보 없음'}
-                          </strong>
                         </S.DetailMetaRow>
                       </S.DetailMetaGroup>
                     </S.DetailMetaList>

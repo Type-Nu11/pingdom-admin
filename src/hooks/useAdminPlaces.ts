@@ -588,7 +588,7 @@ export function useAdminPlaces({
               }
             : current
         )
-        showActionSuccessMessage(data.message || '장소 관광 정보를 저장했습니다.')
+        showActionSuccessMessage(data.message || '장소 방문객 안내 정보를 저장했습니다.')
 
         return true
       } catch (error) {
@@ -604,7 +604,7 @@ export function useAdminPlaces({
           clearAuth()
         }
 
-        logDebugError('관리자 장소 관광 정보 수정 실패', error)
+        logDebugError('관리자 장소 방문객 안내 정보 수정 실패', error)
 
         return false
       } finally {

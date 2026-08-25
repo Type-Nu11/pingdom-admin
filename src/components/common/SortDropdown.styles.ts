@@ -70,18 +70,39 @@ export const DropdownIcon = styled.span`
     'opsz' 20;
 `
 
+export const DropdownChevron = styled(DropdownIcon)<{ $open: boolean }>`
+  transition: transform 160ms ease;
+  transform: rotate(${({ $open }) => ($open ? '180deg' : '0deg')});
+`
+
 export const DropdownMenu = styled.div`
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
   z-index: 20;
-  width: 100%;
-  overflow: hidden;
+  width: max(100%, 168px);
+  max-height: min(320px, calc(100vh - 180px));
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 4px;
   border: 1px solid ${adminColors.border};
   border-radius: 8px;
   background: ${adminColors.surface};
   box-shadow: 0 14px 34px ${adminColors.shadow};
+
+  scrollbar-width: thin;
+  scrollbar-color: ${adminColors.primarySoft} transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: ${adminColors.primarySoft};
+    background-clip: padding-box;
+  }
 `
 
 export const DropdownOption = styled.button<{

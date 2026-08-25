@@ -109,14 +109,14 @@ export function PlaceDangerZoneDialog({
           <S.SecondaryButton
             ref={cancelButtonRef}
             type="button"
-            disabled={isDeleting || confirmationId !== String(place.id)}
+            disabled={isDeleting}
             onClick={handleClose}
           >
             취소
           </S.SecondaryButton>
           <S.DangerButton
             type="button"
-            disabled={isDeleting}
+            disabled={isDeleting || confirmationId !== String(place.id)}
             onClick={() => void handleDelete()}
           >
             {deletingPlaceId === place.id ? '삭제 중' : '삭제하기'}

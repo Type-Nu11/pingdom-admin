@@ -33,6 +33,56 @@ type KakaoMapOverlay = {
   setMap: (map: KakaoMapInstance | null) => void
 }
 
+export interface KakaoPlaceSearchResult {
+  id: string
+  place_name: string
+  category_name: string
+  category_group_code: string
+  category_group_name: string
+  phone: string
+  address_name: string
+  road_address_name: string
+  x: string
+  y: string
+  place_url: string
+}
+
+export interface KakaoAddressSearchResult {
+  address_name: string
+  x: string
+  y: string
+  address: {
+    address_name: string
+  } | null
+  road_address: {
+    address_name: string
+    zone_no: string
+  } | null
+}
+
+type KakaoMapServiceStatus = 'OK' | 'ZERO_RESULT' | 'ERROR'
+
+type KakaoMapServices = {
+  Status: {
+    OK: KakaoMapServiceStatus
+    ZERO_RESULT: KakaoMapServiceStatus
+    ERROR: KakaoMapServiceStatus
+  }
+  Places: new () => {
+    keywordSearch: (
+      keyword: string,
+      callback: (results: KakaoPlaceSearchResult[], status: KakaoMapServiceStatus) => void,
+      options?: { size?: number },
+    ) => void
+  }
+  Geocoder: new () => {
+    addressSearch: (
+      address: string,
+      callback: (results: KakaoAddressSearchResult[], status: KakaoMapServiceStatus) => void,
+    ) => void
+  }
+}
+
 type KakaoMaps = {
   load: (callback: () => void) => void
   LatLng: new (latitude: number, longitude: number) => unknown
@@ -57,6 +107,7 @@ type KakaoMaps = {
   event: {
     addListener: (target: unknown, eventName: string, handler: (...args: unknown[]) => void) => void
   }
+  services?: KakaoMapServices
 }
 
 type KakaoMapClickEvent = {
@@ -102,6 +153,7 @@ interface KakaoMapProps {
   fitBoundsKey?: string
   onMarkerClick?: (markerId: number) => void
   onMapClick?: (coordinate: { latitude: number; longitude: number }) => void
+  onMapReady?: () => void
 }
 
 type MarkerClickRef = MutableRefObject<KakaoMapProps['onMarkerClick']>
@@ -166,7 +218,7 @@ function loadKakaoMapScript(appKey: string) {
 
     const script = document.createElement('script')
     script.id = KAKAO_MAP_SCRIPT_ID
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false`
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false&libraries=services`
     script.async = true
     script.addEventListener('load', handleLoad, { once: true })
     script.addEventListener('error', handleError, { once: true })
@@ -190,6 +242,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
     markers = [],
     onMarkerClick,
     onMapClick,
+    onMapReady,
   },
   ref
 ) {
@@ -198,6 +251,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   const markerOverlayRefs = useRef<KakaoMapOverlay[]>([])
   const onMarkerClickRef = useRef<KakaoMapProps['onMarkerClick']>(onMarkerClick)
   const onMapClickRef = useRef<KakaoMapProps['onMapClick']>(onMapClick)
+  const onMapReadyRef = useRef<KakaoMapProps['onMapReady']>(onMapReady)
   const lastFitBoundsKeyRef = useRef('')
   const wheelZoomTimerRef = useRef<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -302,6 +356,16 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
   useEffect(() => {
     onMapClickRef.current = onMapClick
   }, [onMapClick])
+
+  useEffect(() => {
+    onMapReadyRef.current = onMapReady
+  }, [onMapReady])
+
+  useEffect(() => {
+    if (isMapReady) {
+      onMapReadyRef.current?.()
+    }
+  }, [isMapReady])
 
   useEffect(() => {
     let isMounted = true

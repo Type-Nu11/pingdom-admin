@@ -51,10 +51,6 @@ function formatRate(value: number) {
   return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 }).format(value)}%`
 }
 
-function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 function StoreInformationForm({
   initialValues,
   isSaving,
@@ -189,7 +185,11 @@ function MerchantStorePage() {
           <div>
             <S.Eyebrow>Merchant Portal</S.Eyebrow>
             <S.PageTitle>내 가게 관리</S.PageTitle>
-            <S.PageDescription>방문자에게 보여줄 정보와 운영 중인 혜택을 관리합니다.</S.PageDescription>
+            <S.PageDescription>
+              {store.selectedPlaceId
+                ? '방문자에게 보여줄 정보와 운영 중인 혜택을 관리합니다.'
+                : '연결된 장소가 없습니다. 장소를 신청하면 이곳에서 가게를 관리할 수 있습니다.'}
+            </S.PageDescription>
           </div>
           {store.profile && store.profile.placeIds.length > 1 ? (
             <S.PlaceSelect
@@ -209,33 +209,21 @@ function MerchantStorePage() {
           </S.LoadingSummary>
         ) : (
           <>
-            <S.StoreSummary>
-              <div>
-                <S.SummaryTitleRow>
-                  <S.StoreName>{store.profile.businessName}</S.StoreName>
-                  {ownerStatus ? <S.StatusBadge $tone={ownerStatus.tone}>{ownerStatus.label}</S.StatusBadge> : null}
-                </S.SummaryTitleRow>
-                <S.StoreMeta>
-                  {store.selectedPlaceId ? `연결 장소 #${store.selectedPlaceId}` : '연결된 장소가 없습니다.'}
-                  {store.profile.contactEmail ? ` · ${store.profile.contactEmail}` : ''}
-                </S.StoreMeta>
-              </div>
-              <S.QuickLinks aria-label="가게 관리 바로가기">
-                <S.QuickLink type="button" onClick={() => scrollToSection('merchant-store-information')}>기본 정보</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/place-operations')}>운영 정보</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/campaigns')}>이벤트 관리</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/operating-notices')}>운영 공지</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/offers')}>혜택 관리</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/reservations/setup')}>예약 설정</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/reservations')}>예약 운영</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/payments')}>결제·정산</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/verified-boost')}>Verified Boost</S.QuickLink>
-                <S.QuickLink type="button" onClick={() => navigate('/merchant/place-reverification')}>정보 재확인</S.QuickLink>
-              </S.QuickLinks>
-            </S.StoreSummary>
-
             {store.selectedPlaceId ? (
               <>
+                <S.StoreSummary>
+                  <div>
+                    <S.SummaryTitleRow>
+                      <S.StoreName>{store.profile.businessName}</S.StoreName>
+                      {ownerStatus ? <S.StatusBadge $tone={ownerStatus.tone}>{ownerStatus.label}</S.StatusBadge> : null}
+                    </S.SummaryTitleRow>
+                    <S.StoreMeta>
+                      연결 장소 #{store.selectedPlaceId}
+                      {store.profile.contactEmail ? ` · ${store.profile.contactEmail}` : ''}
+                    </S.StoreMeta>
+                  </div>
+                </S.StoreSummary>
+
                 <S.Metrics aria-label="가게 운영 현황">
                   <S.Metric><S.MetricIcon aria-hidden="true">campaign</S.MetricIcon><S.MetricContent><span>공개 중인 이벤트</span><strong>{activeCampaignCount}개</strong></S.MetricContent></S.Metric>
                   <S.Metric><S.MetricIcon aria-hidden="true">local_offer</S.MetricIcon><S.MetricContent><span>공개 중인 혜택</span><strong>{activeOfferCount}개</strong></S.MetricContent></S.Metric>
@@ -319,12 +307,11 @@ function MerchantStorePage() {
               <S.EmptyStoreState>
                 <S.EmptyStoreIcon aria-hidden="true">add_business</S.EmptyStoreIcon>
                 <div>
-                  <S.EmptyStoreTitle>관리할 장소를 연결해주세요.</S.EmptyStoreTitle>
-                  <S.EmptyStoreDescription>PingDom에 이미 등록된 장소를 검색해 운영 권한을 신청할 수 있습니다. 심사와 연결이 완료되면 이 화면에서 가게 정보를 관리합니다.</S.EmptyStoreDescription>
+                  <S.EmptyStoreTitle>연결된 장소가 없습니다.</S.EmptyStoreTitle>
+                  <S.EmptyStoreDescription>이미 등록된 장소는 운영 권한을 신청하고, 아직 등록되지 않은 장소는 새로 등록하세요.</S.EmptyStoreDescription>
                 </div>
                 <S.EmptyStoreActions>
                   <S.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</S.EmptyStoreAction>
-                  <S.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-claims')}>장소 Claim 신청</S.EmptyStoreAction>
                   <S.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</S.EmptyStoreSecondaryAction>
                 </S.EmptyStoreActions>
               </S.EmptyStoreState>

@@ -371,6 +371,19 @@ export const TopActionButton = styled.button`
     color: ${neutral.primary};
   }
 
+  &:disabled {
+    border-color: ${neutral.border};
+    background: ${neutral.surfaceLow};
+    color: ${neutral.softText};
+    cursor: not-allowed;
+  }
+
+  &:disabled:hover {
+    border-color: ${neutral.border};
+    background: ${neutral.surfaceLow};
+    color: ${neutral.softText};
+  }
+
   ${MaterialIcon} {
     font-size: 18px;
   }

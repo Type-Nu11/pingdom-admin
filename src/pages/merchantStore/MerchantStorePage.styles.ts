@@ -12,6 +12,11 @@ export const Page = styled.main`
   min-height: 100vh;
   padding: 0;
   background: ${colors.background};
+
+  .merchant-layout-content & {
+    min-height: calc(100vh - 64px);
+    background: transparent;
+  }
 `
 
 export const Header = styled.header`
@@ -27,6 +32,10 @@ export const Header = styled.header`
   @media (max-width: 720px) {
     min-height: 64px;
     padding: 0 20px;
+  }
+
+  .merchant-layout-content & {
+    display: none;
   }
 `
 
@@ -104,6 +113,17 @@ export const Content = styled.div`
     width: min(100% - 40px, 1180px);
     padding: 32px 0 48px;
   }
+
+  .merchant-layout-content & {
+    width: min(calc(100% - 64px), 1100px);
+    margin: 0 auto;
+    padding: 36px 0 48px;
+
+    @media (max-width: 720px) {
+      width: calc(100% - 32px);
+      padding: 28px 0 36px;
+    }
+  }
 `
 
 export const PageIntro = styled.section`
@@ -118,6 +138,18 @@ export const PageIntro = styled.section`
     flex-direction: column;
     gap: 20px;
   }
+
+  .merchant-layout-content & {
+    align-items: flex-end;
+    margin-bottom: 34px;
+
+    @media (max-width: 640px) {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+  }
 `
 
 export const Eyebrow = styled.p`
@@ -125,6 +157,10 @@ export const Eyebrow = styled.p`
   color: ${colors.primary};
   font-size: 13px;
   font-weight: 700;
+
+  .merchant-layout-content & {
+    display: none;
+  }
 `
 
 export const PageTitle = styled.h1`
@@ -134,6 +170,11 @@ export const PageTitle = styled.h1`
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: 0;
+
+  .merchant-layout-content & {
+    margin-bottom: 6px;
+    font-size: 24px;
+  }
 `
 
 export const PageDescription = styled.p`
@@ -141,34 +182,38 @@ export const PageDescription = styled.p`
   color: ${colors.muted};
   font-size: 15px;
   line-height: 1.55;
+
+  .merchant-layout-content & {
+    margin-top: 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
 `
 
 export const PlaceSelect = styled.select`
   min-width: 180px;
-  height: 40px;
-  padding: 0 34px 0 12px;
+  height: 42px;
+  padding: 0 38px 0 12px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  background: ${colors.surface};
+  appearance: none;
+  background: ${colors.surface} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%236B6B73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
   color: ${colors.text};
   font: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+
+  &:focus { border-color: ${colors.primary}; box-shadow: 0 0 0 3px ${colors.primaryTint}; outline: 0; }
 `
 
 export const StoreSummary = styled.section`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
-  padding: 28px 30px;
+  padding: 24px;
   border: 1px solid ${colors.border};
-  border-top: 3px solid ${colors.primary};
   border-radius: 8px;
   background: ${colors.surface};
 
   @media (max-width: 720px) {
-    grid-template-columns: 1fr;
     padding: 24px 20px;
   }
 `
@@ -658,17 +703,16 @@ export const Empty = styled.div`
 
 export const EmptyStoreState = styled.section`
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
-  margin-top: 16px;
-  padding: 22px 24px;
-  border: 1px solid ${colors.primarySoft};
+  padding: 24px;
+  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.primaryTint};
+  background: ${colors.surface};
 
   @media (max-width: 680px) {
-    grid-template-columns: auto minmax(0, 1fr);
+    align-items: flex-start;
   }
 `
 
@@ -704,6 +748,7 @@ export const EmptyStoreActions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  grid-column: 2;
 
   @media (max-width: 680px) {
     grid-column: 1 / -1;
@@ -727,9 +772,6 @@ export const EmptyStoreAction = styled.button`
   &:hover { background: ${colors.primaryHover}; border-color: ${colors.primaryHover}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
-  @media (max-width: 680px) {
-    flex: 1;
-  }
 `
 
 export const EmptyStoreSecondaryAction = styled(EmptyStoreAction)`

@@ -693,9 +693,14 @@ function PlaceManagePage() {
               type="button"
               disabled={!placeDetail || isDetailLoading || isDeletingSelectedPlace}
               onClick={handleOpenDeleteConfirm}
+              title={
+                placeDetail
+                  ? '선택한 장소를 삭제합니다.'
+                  : '장소를 선택한 뒤 삭제할 수 있습니다.'
+              }
             >
               <S.MaterialIcon aria-hidden="true">warning</S.MaterialIcon>
-              삭제 Danger Zone
+              장소 삭제
             </S.TopActionButton>
             <AdminNotificationButton />
           </S.TopActions>

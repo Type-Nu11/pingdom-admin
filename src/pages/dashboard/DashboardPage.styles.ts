@@ -299,7 +299,7 @@ export const IconButton = styled.button`
 `
 
 export const PageContent = styled.main`
-  width: min(calc(100% - 64px), 1100px);
+  width: min(calc(100% - 64px), 1280px);
   min-height: calc(100vh - 64px);
   margin: 0 auto;
   padding: 36px 0 48px;
@@ -400,14 +400,26 @@ export const SectionDescription = styled.p`
 
 export const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 
-  @media (max-width: 960px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const DashboardBottomGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 24px;
+  margin-top: 40px;
+
+  > ${Section},
+  > ${Section} + ${Section} {
+    margin-top: 0;
   }
 
-  @media (max-width: 560px) {
+  @media (max-width: 880px) {
     grid-template-columns: 1fr;
   }
 `
@@ -884,6 +896,13 @@ export const SummaryValue = styled.strong<{ $muted?: boolean }>`
   line-height: 1;
 `
 
+export const SummarySupportingText = styled.span`
+  margin-top: 10px;
+  color: ${neutral.softText};
+  font-size: 13px;
+  line-height: 1.4;
+`
+
 export const OperationalMetricGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -974,6 +993,61 @@ export const OperationalMetricValue = styled.strong<{ $muted?: boolean }>`
   font-size: 17px;
   font-weight: 700;
   line-height: 1;
+`
+
+export const QuickActionPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid ${neutral.border};
+  border-radius: 10px;
+  background: ${neutral.surface};
+`
+
+export const QuickActionButton = styled.button`
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 1px solid ${neutral.borderSoft};
+  background: transparent;
+  color: ${neutral.text};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child { border-bottom: 0; }
+
+  &:hover {
+    background: ${neutral.primaryTint};
+    color: ${neutral.primary};
+  }
+
+  &:focus-visible {
+    position: relative;
+    z-index: 1;
+    outline: 3px solid ${neutral.primarySoft};
+    outline-offset: -3px;
+  }
+
+  ${MaterialIcon}:last-child {
+    color: ${neutral.softText};
+    font-size: 16px;
+  }
+`
+
+export const QuickActionIcon = styled(MaterialIcon)`
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: ${neutral.primaryTint};
+  color: ${neutral.primary};
+  font-size: 16px;
 `
 
 export const Skeleton = styled.span`

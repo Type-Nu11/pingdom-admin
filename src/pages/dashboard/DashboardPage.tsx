@@ -21,8 +21,6 @@ interface DashboardMetric {
 }
 
 type DashboardOperationalMetricKey =
-  | 'todayPlaceRegistrationCount'
-  | 'last7DaysPlaceRegistrationCount'
   | 'duplicatePlaceGroupCount'
   | 'expiringBannedUserCount'
   | 'missingLocationPlaceCount'
@@ -55,6 +53,10 @@ interface DashboardActivityGroup {
   rows: DashboardActivityRow[]
 }
 
+function formatActivityCount(count: number) {
+  return count >= 10 ? '10+' : count.toLocaleString()
+}
+
 const SERVICE_METRICS: DashboardMetric[] = [
   {
     key: 'placeCount',
@@ -75,22 +77,6 @@ const SERVICE_METRICS: DashboardMetric[] = [
 ]
 
 const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
-  {
-    key: 'todayPlaceRegistrationCount',
-    label: '오늘 등록 장소',
-    unit: '개',
-    icon: 'add_location_alt',
-    route: '/places',
-    tone: 'neutral',
-  },
-  {
-    key: 'last7DaysPlaceRegistrationCount',
-    label: '최근 7일 장소 등록',
-    unit: '개',
-    icon: 'location_on',
-    route: '/places',
-    tone: 'neutral',
-  },
   {
     key: 'duplicatePlaceGroupCount',
     label: '중복 장소 후보',
@@ -115,6 +101,13 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
     route: '/places',
     tone: 'action',
   },
+]
+
+const QUICK_ACTIONS = [
+  { label: '상점주 신청 심사', icon: 'storefront', route: '/merchant-owners' },
+  { label: '신규 장소 등록 심사', icon: 'add_location_alt', route: '/place-registration-applications' },
+  { label: '기존 장소 운영 신청 심사', icon: 'store', route: '/merchant-place-claims' },
+  { label: '장소 정보 검증', icon: 'fact_check', route: '/places/information-verification' },
 ]
 
 function DashboardPage() {
@@ -159,10 +152,6 @@ function DashboardPage() {
     }
 
     switch (key) {
-      case 'todayPlaceRegistrationCount':
-        return metrics.today.placeRegistrationCount
-      case 'last7DaysPlaceRegistrationCount':
-        return metrics.last7Days.placeRegistrationCount
       case 'duplicatePlaceGroupCount':
         return metrics.duplicatePlaceGroupCount
       case 'expiringBannedUserCount':
@@ -357,7 +346,7 @@ function DashboardPage() {
                 onClick={() => setActiveActivityTab(group.key)}
               >
                 {group.title}
-                <S.ActivityTabCount>{group.rows.length}</S.ActivityTabCount>
+                <S.ActivityTabCount>{formatActivityCount(group.rows.length)}</S.ActivityTabCount>
               </S.ActivityTab>
             ))}
           </S.ActivityTabs>
@@ -474,9 +463,27 @@ function DashboardPage() {
         {value === null ? (
           <S.Skeleton aria-label="불러오는 중" />
         ) : (
-          <S.SummaryValue $muted={isZeroValue}>{value}{metric.unit}</S.SummaryValue>
+          <>
+            <S.SummaryValue $muted={isZeroValue}>{value}{metric.unit}</S.SummaryValue>
+            {metric.key === 'placeCount' ? renderPlaceRegistrationSummary() : null}
+          </>
         )}
       </S.SummaryCard>
+    )
+  }
+
+  function renderPlaceRegistrationSummary() {
+    const todayCount = summary?.operationalMetrics?.today.placeRegistrationCount
+    const last7DaysCount = summary?.operationalMetrics?.last7Days.placeRegistrationCount
+
+    if (todayCount === undefined || last7DaysCount === undefined) {
+      return <S.SummarySupportingText>등록 추이를 확인할 수 없습니다.</S.SummarySupportingText>
+    }
+
+    return (
+      <S.SummarySupportingText>
+        오늘 {todayCount.toLocaleString()}개 등록 · 최근 7일 {last7DaysCount.toLocaleString()}개 등록
+      </S.SummarySupportingText>
     )
   }
 
@@ -563,13 +570,9 @@ function DashboardPage() {
 
           <S.Section aria-labelledby="dashboard-operational-metrics-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-operational-metrics-title">
-                추가 운영 현황
-              </S.SectionTitle>
+              <S.SectionTitle id="dashboard-operational-metrics-title">우선 확인</S.SectionTitle>
               <S.SectionDescription>
-                {summary?.operationalMetrics?.collectedAt
-                  ? `집계 기준: ${formatActivityDate(summary.operationalMetrics.collectedAt) ?? '시각 미상'}`
-                  : '서버 운영 지표'}
+                조치가 필요한 운영 항목
               </S.SectionDescription>
             </S.SectionHeader>
             {visibleOperationalMetrics.length > 0 ? (
@@ -578,26 +581,44 @@ function DashboardPage() {
               </S.OperationalMetricGrid>
             ) : (
               <S.OperationalEmptyState>
-                현재 확인이 필요한 추가 운영 지표가 없습니다.
+                현재 처리할 항목이 없습니다.
               </S.OperationalEmptyState>
             )}
           </S.Section>
 
-          <S.Section aria-labelledby="dashboard-recent-activities-title">
-            <S.SectionHeader>
-              <S.SectionTitle id="dashboard-recent-activities-title">최근 활동</S.SectionTitle>
-              <S.SectionDescription>장소와 사용자 제재의 최신 내역</S.SectionDescription>
-            </S.SectionHeader>
-            <S.OperationsPanel>
-              {recentActivitiesStatus === 'loading' && recentActivities ? (
-                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
-              ) : null}
-              {recentActivitiesStatus === 'error' && recentActivities
-                ? renderSectionError('최근 활동을 새로 불러오지 못했습니다.')
-                : null}
-              {renderActivityGroups()}
-            </S.OperationsPanel>
-          </S.Section>
+          <S.DashboardBottomGrid>
+            <S.Section aria-labelledby="dashboard-recent-activities-title">
+              <S.SectionHeader>
+                <S.SectionTitle id="dashboard-recent-activities-title">최근 활동</S.SectionTitle>
+                <S.SectionDescription>장소와 사용자 제재의 최신 내역</S.SectionDescription>
+              </S.SectionHeader>
+              <S.OperationsPanel>
+                {recentActivitiesStatus === 'loading' && recentActivities ? (
+                  <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
+                ) : null}
+                {recentActivitiesStatus === 'error' && recentActivities
+                  ? renderSectionError('최근 활동을 새로 불러오지 못했습니다.')
+                  : null}
+                {renderActivityGroups()}
+              </S.OperationsPanel>
+            </S.Section>
+
+            <S.Section aria-labelledby="dashboard-quick-actions-title">
+              <S.SectionHeader>
+                <S.SectionTitle id="dashboard-quick-actions-title">빠른 이동</S.SectionTitle>
+                <S.SectionDescription>주요 심사 화면</S.SectionDescription>
+              </S.SectionHeader>
+              <S.QuickActionPanel>
+                {QUICK_ACTIONS.map((action) => (
+                  <S.QuickActionButton key={action.route} type="button" onClick={() => navigate(action.route)}>
+                    <S.QuickActionIcon aria-hidden="true">{action.icon}</S.QuickActionIcon>
+                    <span>{action.label}</span>
+                    <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+                  </S.QuickActionButton>
+                ))}
+              </S.QuickActionPanel>
+            </S.Section>
+          </S.DashboardBottomGrid>
         </S.PageContent>
       </S.MainArea>
     </S.AppShell>

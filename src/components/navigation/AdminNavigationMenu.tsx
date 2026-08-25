@@ -21,6 +21,10 @@ const PLACE_MANAGEMENT_CHILDREN: NavigationItem[] = [
 
 const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
+    title: '장소 운영',
+    items: [],
+  },
+  {
     title: '검토함',
     items: [
       { label: '상점주 신청', icon: 'storefront', path: '/merchant-owners' },
@@ -31,10 +35,6 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
       { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
       { label: '방문자 제보·정정 심사', icon: 'person_check', path: '/visitor-verifications' },
     ],
-  },
-  {
-    title: '장소 운영',
-    items: [],
   },
   {
     title: '사용자 · 안전',
@@ -72,25 +72,16 @@ const isCurrentPath = (pathname: string, path: string) =>
 const isPlaceManagementPath = (pathname: string) =>
   pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
 
-const getActiveGroup = (pathname: string) => {
-  if (isPlaceManagementPath(pathname)) return '장소 운영'
-
-  return NAVIGATION_GROUPS.find((group) =>
-    group.items.some((item) => isCurrentPath(pathname, item.path)),
-  )?.title
-}
-
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeItemRef = useRef<HTMLButtonElement>(null)
-  const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(() => isPlaceManagementPath(pathname))
-  const activeGroup = getActiveGroup(pathname)
-  const [openGroup, setOpenGroup] = useState(() => activeGroup ?? '검토함')
+  const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(true)
+  const [openGroups, setOpenGroups] = useState(() => new Set(NAVIGATION_GROUPS.map((group) => group.title)))
 
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [isPlaceManagementOpen, openGroup, pathname])
+  }, [isPlaceManagementOpen, openGroups, pathname])
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
@@ -108,7 +99,7 @@ export function AdminNavigationMenu() {
         <span>대시보드</span>
       </S.DashboardButton>
       {NAVIGATION_GROUPS.map((group) => {
-        const isGroupOpen = activeGroup === group.title || openGroup === group.title
+        const isGroupOpen = openGroups.has(group.title)
 
         return (
           <S.Group key={group.title}>
@@ -116,7 +107,12 @@ export function AdminNavigationMenu() {
               type="button"
               aria-expanded={isGroupOpen}
               aria-controls={`admin-navigation-group-${group.title}`}
-              onClick={() => setOpenGroup((current) => current === group.title ? '' : group.title)}
+              onClick={() => setOpenGroups((current) => {
+                const next = new Set(current)
+                if (next.has(group.title)) next.delete(group.title)
+                else next.add(group.title)
+                return next
+              })}
             >
               <span>{group.title}</span>
               <S.MaterialIcon aria-hidden="true">
@@ -134,7 +130,6 @@ export function AdminNavigationMenu() {
                     ref={pathname === '/places' ? activeItemRef : undefined}
                     onClick={() => {
                       setIsPlaceManagementOpen(true)
-                      setOpenGroup('장소 운영')
                       navigate('/places')
                     }}
                   >
@@ -166,7 +161,6 @@ export function AdminNavigationMenu() {
                           $active={active}
                           aria-current={active ? 'page' : undefined}
                           onClick={() => {
-                            setOpenGroup('장소 운영')
                             navigate(item.path)
                           }}
                         >
@@ -190,7 +184,6 @@ export function AdminNavigationMenu() {
                   $active={active}
                   aria-current={active ? 'page' : undefined}
                   onClick={() => {
-                    setOpenGroup(group.title)
                     navigate(item.path)
                   }}
                   >

@@ -210,7 +210,7 @@ export const TagButton = styled.button<{ $selected: boolean }>`
   min-height: 34px;
   padding: 0 10px;
   border: 1px solid ${({ $selected }) => ($selected ? colors.primarySoft : colors.border)};
-  border-radius: 999px;
+  border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
   color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
   font: inherit;
@@ -302,7 +302,7 @@ export const MapStatus = styled.span<{ $hasLocation: boolean }>`
   align-items: center;
   padding: 0 8px;
   border: 1px solid ${({ $hasLocation }) => ($hasLocation ? '#9bd7a9' : colors.primarySoft)};
-  border-radius: 999px;
+  border-radius: 6px;
   background: ${({ $hasLocation }) => ($hasLocation ? colors.successTint : colors.primaryTint)};
   color: ${({ $hasLocation }) => ($hasLocation ? colors.successText : colors.primary)};
   font-size: 11px;

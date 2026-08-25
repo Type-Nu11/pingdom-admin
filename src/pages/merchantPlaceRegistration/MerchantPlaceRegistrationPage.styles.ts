@@ -58,9 +58,10 @@ export const ApplicationList = styled.div`
 
 export const ApplicationItem = styled.button<{ $selected: boolean }>`
   width: 100%;
+  box-sizing: border-box;
   min-width: 0;
   display: block;
-  padding: 16px 0;
+  padding: 16px 12px;
   border: 0;
   border-bottom: 1px solid ${colors.borderSoft};
   border-left: 3px solid transparent;
@@ -70,8 +71,6 @@ export const ApplicationItem = styled.button<{ $selected: boolean }>`
   cursor: pointer;
 
   ${({ $selected }) => $selected && css`
-    margin-left: -12px;
-    padding-left: 9px;
     border-left-color: ${colors.primary};
     background: ${colors.primaryTint};
   `}
@@ -263,11 +262,13 @@ export const PlaceSearchField = styled.div<{ $wide?: boolean }>`
 `
 
 export const PlaceSearchLabel = styled.label`
-  display: block;
-  margin-bottom: 8px;
-  color: ${colors.text};
-  font-size: 13px;
-  font-weight: 700;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 `
 
 export const PlaceSearchControl = styled.div`

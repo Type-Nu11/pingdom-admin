@@ -1,7 +1,5 @@
 export interface AdminDashboardSummary {
   placeCount: number
-  postCount: number
-  pendingReportCount: number
   bannedUserCount: number
   operationalMetrics?: AdminDashboardOperationalMetrics
 }
@@ -13,7 +11,6 @@ export interface AdminDashboardMetricWindow {
   startedAt: string
   endedAt: string
   placeRegistrationCount: number
-  postRegistrationCount: number
 }
 
 export interface AdminDashboardOperationalMetrics {
@@ -35,31 +32,6 @@ export interface AdminDashboardRecentPlaceItem {
   createdAt?: string | null
 }
 
-export interface AdminDashboardRecentPostItem {
-  postId: number
-  title: string
-  userId: number
-  username: string
-  placeId: number | null
-  placeName: string | null
-  createdAt: string
-}
-
-export type AdminDashboardReportStatus =
-  | 'PENDING'
-  | 'ACCEPTED'
-  | 'DECLINED'
-  | 'RESTORED'
-
-export interface AdminDashboardRecentReportItem {
-  reportId: number
-  reportedImageId: number
-  title: string
-  status: AdminDashboardReportStatus
-  processedAt: string
-  createdAt: string
-}
-
 export type AdminDashboardSanctionAction = 'APPLIED' | 'RELEASED' | 'EXPIRED'
 export type AdminDashboardBanType = 'PERMANENT' | 'TEMPORARY'
 
@@ -75,23 +47,7 @@ export interface AdminDashboardRecentUserSanctionItem {
 
 export interface AdminDashboardRecentActivitiesResponse {
   places: AdminDashboardRecentPlaceItem[]
-  posts: AdminDashboardRecentPostItem[]
-  reports: AdminDashboardRecentReportItem[]
   userSanctions: AdminDashboardRecentUserSanctionItem[]
-}
-
-export interface AdminDashboardPendingItem {
-  type: string
-  targetId: number
-  reportId?: number | null
-  postId?: number | null
-  title: string
-  status: string
-  createdAt: string
-}
-
-export interface AdminDashboardPendingItemsResponse {
-  items: AdminDashboardPendingItem[]
 }
 
 export type AdminDashboardLoadStatus =

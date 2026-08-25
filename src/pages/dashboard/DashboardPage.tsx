@@ -9,8 +9,6 @@ import * as S from './DashboardPage.styles'
 
 type DashboardMetricKey =
   | 'placeCount'
-  | 'postCount'
-  | 'pendingReportCount'
   | 'bannedUserCount'
 
 interface DashboardMetric {
@@ -22,17 +20,9 @@ interface DashboardMetric {
   tone: 'neutral' | 'action'
 }
 
-interface DashboardMetricNavigationState {
-  openPostId?: number
-  reportId?: number
-  reviewStatus?: 'ALL' | 'PENDING' | 'PROCESSED'
-}
-
 type DashboardOperationalMetricKey =
   | 'todayPlaceRegistrationCount'
-  | 'todayPostRegistrationCount'
   | 'last7DaysPlaceRegistrationCount'
-  | 'last7DaysPostRegistrationCount'
   | 'duplicatePlaceGroupCount'
   | 'expiringBannedUserCount'
   | 'missingLocationPlaceCount'
@@ -46,7 +36,7 @@ interface DashboardOperationalMetric {
   tone: 'neutral' | 'action'
 }
 
-type DashboardActivityTabKey = 'places' | 'posts' | 'reports' | 'userSanctions'
+type DashboardActivityTabKey = 'places' | 'userSanctions'
 
 interface DashboardActivityRow {
   id: string
@@ -75,31 +65,12 @@ const SERVICE_METRICS: DashboardMetric[] = [
     tone: 'neutral',
   },
   {
-    key: 'postCount',
-    label: '전체 게시글',
-    icon: 'description',
-    unit: '개',
-    route: '/main',
-    tone: 'neutral',
-  },
-  {
     key: 'bannedUserCount',
     label: '현재 밴 사용자',
     icon: 'block',
     unit: '명',
     route: '/bans',
     tone: 'neutral',
-  },
-]
-
-const ACTION_METRICS: DashboardMetric[] = [
-  {
-    key: 'pendingReportCount',
-    label: '처리 대기 신고',
-    icon: 'flag',
-    unit: '건',
-    route: '/main',
-    tone: 'action',
   },
 ]
 
@@ -113,27 +84,11 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
     tone: 'neutral',
   },
   {
-    key: 'todayPostRegistrationCount',
-    label: '오늘 등록 게시글',
-    unit: '개',
-    icon: 'post_add',
-    route: '/main',
-    tone: 'neutral',
-  },
-  {
     key: 'last7DaysPlaceRegistrationCount',
     label: '최근 7일 장소 등록',
     unit: '개',
     icon: 'location_on',
     route: '/places',
-    tone: 'neutral',
-  },
-  {
-    key: 'last7DaysPostRegistrationCount',
-    label: '최근 7일 게시글 등록',
-    unit: '개',
-    icon: 'description',
-    route: '/main',
     tone: 'neutral',
   },
   {
@@ -168,10 +123,8 @@ function DashboardPage() {
   const {
     summary,
     recentActivities,
-    pendingItems,
     status,
     recentActivitiesStatus,
-    pendingItemsStatus,
     isLoading,
     lastUpdatedAt,
     fetchSummary,
@@ -179,7 +132,6 @@ function DashboardPage() {
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
-  const pendingItemCount = summary?.pendingReportCount ?? pendingItems.length
   const visibleOperationalMetrics = summary?.operationalMetrics
     ? OPERATIONAL_METRICS.filter((metric) => getOperationalMetricValue(metric.key) !== 0)
     : OPERATIONAL_METRICS
@@ -209,12 +161,8 @@ function DashboardPage() {
     switch (key) {
       case 'todayPlaceRegistrationCount':
         return metrics.today.placeRegistrationCount
-      case 'todayPostRegistrationCount':
-        return metrics.today.postRegistrationCount
       case 'last7DaysPlaceRegistrationCount':
         return metrics.last7Days.placeRegistrationCount
-      case 'last7DaysPostRegistrationCount':
-        return metrics.last7Days.postRegistrationCount
       case 'duplicatePlaceGroupCount':
         return metrics.duplicatePlaceGroupCount
       case 'expiringBannedUserCount':
@@ -297,17 +245,6 @@ function DashboardPage() {
     return `${date.getMonth() + 1}월 ${date.getDate()}일 ${time}`
   }
 
-  function getReportStatusLabel(reportStatus: string) {
-    const labels: Record<string, string> = {
-      PENDING: '처리 대기',
-      ACCEPTED: '수락됨',
-      DECLINED: '거절됨',
-      RESTORED: '복구됨',
-    }
-
-    return labels[reportStatus] ?? reportStatus
-  }
-
   function getSanctionActionLabel(action: string) {
     const labels: Record<string, string> = {
       APPLIED: '밴 처리',
@@ -316,15 +253,6 @@ function DashboardPage() {
     }
 
     return labels[action] ?? action
-  }
-
-  function getPendingTypeLabel(type: string) {
-    const labels: Record<string, string> = {
-      POST_REPORT: '게시글 신고',
-      REPORT: '신고',
-    }
-
-    return labels[type] ?? type
   }
 
   function renderSectionError(message: string) {
@@ -384,37 +312,6 @@ function DashboardPage() {
         }),
       },
       {
-        key: 'posts',
-        title: '게시글',
-        rows: recentActivities.posts.map((post) => ({
-          id: `post-${post.postId}`,
-          title: post.title,
-          detail: `${post.username} · ${post.placeName ?? '장소 정보 없음'}`,
-          timestamp: post.createdAt,
-        })),
-      },
-      {
-        key: 'reports',
-        title: '신고',
-        rows: recentActivities.reports.map((report) => ({
-          id: `report-${report.reportId}`,
-          title: report.title,
-          detail: `신고 ID ${report.reportId}`,
-          timestamp: report.createdAt,
-          badge: {
-            label: getReportStatusLabel(report.status),
-            tone:
-              report.status === 'ACCEPTED'
-                ? 'success'
-                : report.status === 'PENDING'
-                  ? 'warning'
-                  : report.status === 'DECLINED'
-                    ? 'error'
-                    : 'neutral',
-          },
-        })),
-      },
-      {
         key: 'userSanctions',
         title: '제재',
         rows: recentActivities.userSanctions.map((sanction) => ({
@@ -441,12 +338,6 @@ function DashboardPage() {
     const activityPanelId = 'dashboard-activity-panel'
     const activityNavigation = {
       places: { route: '/places', label: '장소 관리에서 보기' },
-      posts: { route: '/main', label: '게시글 관리에서 보기' },
-      reports: {
-        route: '/main',
-        label: '신고 내역 보기',
-        state: { reviewStatus: 'PROCESSED' as const },
-      },
       userSanctions: { route: '/bans', label: '사용자 밴에서 보기' },
     }[selectedGroup.key]
 
@@ -472,7 +363,7 @@ function DashboardPage() {
           </S.ActivityTabs>
           <S.ActivityViewAllButton
             type="button"
-            onClick={() => navigate(activityNavigation.route, activityNavigation.state ? { state: activityNavigation.state } : undefined)}
+            onClick={() => navigate(activityNavigation.route)}
           >
             {activityNavigation.label}
             <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
@@ -526,67 +417,6 @@ function DashboardPage() {
     )
   }
 
-  function renderPendingItems() {
-    if (pendingItemsStatus === 'error') {
-      return (
-        <>
-          {renderSectionError('처리 필요 항목을 불러오지 못했습니다.')}
-          {pendingItems.length > 0 ? renderPendingList() : null}
-        </>
-      )
-    }
-
-    if (pendingItemsStatus === 'loading' && pendingItems.length === 0) {
-      return (
-        <S.ActivitySkeletonList aria-label="처리 필요 항목 불러오는 중">
-          {[1, 2, 3].map((item) => (
-            <S.ActivitySkeleton key={item} />
-          ))}
-        </S.ActivitySkeletonList>
-      )
-    }
-
-    if (pendingItems.length === 0) {
-      return <S.EmptyState>현재 처리할 항목이 없습니다.</S.EmptyState>
-    }
-
-    return renderPendingList()
-  }
-
-  function renderPendingList() {
-    return (
-      <S.PendingList>
-        {pendingItems.map((item) => (
-          <S.PendingItem
-            key={`${item.type}-${item.targetId}`}
-            type="button"
-            onClick={() => {
-              const state: DashboardMetricNavigationState = {
-                reviewStatus: 'PENDING',
-                ...(typeof item.postId === 'number' ? { openPostId: item.postId } : {}),
-                ...(typeof item.reportId === 'number' ? { reportId: item.reportId } : {}),
-              }
-
-              navigate('/main', { state })
-            }}
-            aria-label={`${item.title}, ${getPendingTypeLabel(item.type)} 상세 검토로 이동`}
-          >
-            <S.PendingItemMain>
-              <strong title={item.title}>{item.title}</strong>
-              <span title={`${getPendingTypeLabel(item.type)} · ${getReportStatusLabel(item.status)}`}>
-                {getPendingTypeLabel(item.type)} · {getReportStatusLabel(item.status)}
-              </span>
-            </S.PendingItemMain>
-            <S.PendingItemMeta>
-              <span>{formatActivityDate(item.createdAt) ?? '접수일 미상'}</span>
-              <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
-            </S.PendingItemMeta>
-          </S.PendingItem>
-        ))}
-      </S.PendingList>
-    )
-  }
-
   function renderOperationalMetricCard(metric: DashboardOperationalMetric) {
     const value = getOperationalMetricValue(metric.key)
     const isZeroValue = value === 0
@@ -630,14 +460,7 @@ function DashboardPage() {
         key={metric.key}
         type="button"
         $tone={tone}
-        onClick={() => {
-          const state: DashboardMetricNavigationState | undefined =
-            metric.key === 'pendingReportCount'
-              ? { reviewStatus: 'PENDING' }
-              : undefined
-
-          navigate(metric.route, state ? { state } : undefined)
-        }}
+        onClick={() => navigate(metric.route)}
         aria-label={`${metric.label} ${value ?? '불러오는 중'} 관리 화면으로 이동`}
         aria-busy={isLoading}
       >
@@ -734,31 +557,8 @@ function DashboardPage() {
               <S.SectionDescription>현재 운영 수치</S.SectionDescription>
             </S.SectionHeader>
             <S.SummaryGrid>
-              {[...SERVICE_METRICS, ...ACTION_METRICS].map(renderMetricCard)}
+              {SERVICE_METRICS.map(renderMetricCard)}
             </S.SummaryGrid>
-          </S.Section>
-
-          <S.Section aria-labelledby="dashboard-pending-items-section-title">
-            <S.SectionHeader>
-              <S.SectionTitle id="dashboard-pending-items-section-title">
-                처리 필요 항목
-              </S.SectionTitle>
-              <S.SectionDescription>지금 확인이 필요한 운영 작업</S.SectionDescription>
-            </S.SectionHeader>
-            <S.OperationsPanel aria-labelledby="dashboard-pending-items-title" $tone="action">
-              <S.OperationsPanelHeader>
-                <S.OperationsPanelTitle id="dashboard-pending-items-title">
-                  신고 검토 목록
-                  {summary || pendingItemsStatus !== 'loading' || pendingItems.length > 0 ? (
-                    <S.PanelCount>{pendingItemCount.toLocaleString()}건</S.PanelCount>
-                  ) : null}
-                </S.OperationsPanelTitle>
-                {pendingItemsStatus === 'loading' && pendingItems.length > 0 ? (
-                  <S.PanelUpdatingText>업데이트 중</S.PanelUpdatingText>
-                ) : null}
-              </S.OperationsPanelHeader>
-              {renderPendingItems()}
-            </S.OperationsPanel>
           </S.Section>
 
           <S.Section aria-labelledby="dashboard-operational-metrics-title">
@@ -786,7 +586,7 @@ function DashboardPage() {
           <S.Section aria-labelledby="dashboard-recent-activities-title">
             <S.SectionHeader>
               <S.SectionTitle id="dashboard-recent-activities-title">최근 활동</S.SectionTitle>
-              <S.SectionDescription>장소·게시글·신고·제재의 최신 내역</S.SectionDescription>
+              <S.SectionDescription>장소와 사용자 제재의 최신 내역</S.SectionDescription>
             </S.SectionHeader>
             <S.OperationsPanel>
               {recentActivitiesStatus === 'loading' && recentActivities ? (

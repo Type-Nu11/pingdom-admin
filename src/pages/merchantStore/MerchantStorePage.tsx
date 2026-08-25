@@ -158,7 +158,7 @@ function MerchantStorePage() {
         <S.Content>
           <S.PageIntro>
             <div>
-              <S.Eyebrow>Merchant Portal</S.Eyebrow>
+
               <S.PageTitle>내 가게 관리</S.PageTitle>
             </div>
           </S.PageIntro>
@@ -183,13 +183,9 @@ function MerchantStorePage() {
       <S.Content>
         <S.PageIntro>
           <div>
-            <S.Eyebrow>Merchant Portal</S.Eyebrow>
+
             <S.PageTitle>내 가게 관리</S.PageTitle>
-            <S.PageDescription>
-              {store.selectedPlaceId
-                ? '방문자에게 보여줄 정보와 운영 중인 혜택을 관리합니다.'
-                : '연결된 장소가 없습니다. 장소를 신청하면 이곳에서 가게를 관리할 수 있습니다.'}
-            </S.PageDescription>
+            <S.PageDescription>가게 정보와 운영 현황을 관리합니다.</S.PageDescription>
           </div>
           {store.profile && store.profile.placeIds.length > 1 ? (
             <S.PlaceSelect

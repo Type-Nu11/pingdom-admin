@@ -55,9 +55,10 @@ export const ApplicationList = styled.div`
 
 export const ApplicationItem = styled.button<{ $selected: boolean }>`
   width: 100%;
+  box-sizing: border-box;
   min-width: 0;
   display: block;
-  padding: 16px 0;
+  padding: 16px 12px;
   border: 0;
   border-bottom: 1px solid ${colors.borderSoft};
   border-left: 3px solid transparent;
@@ -67,8 +68,6 @@ export const ApplicationItem = styled.button<{ $selected: boolean }>`
   cursor: pointer;
 
   ${({ $selected }) => $selected && css`
-    margin-left: -12px;
-    padding-left: 9px;
     border-left-color: ${colors.primary};
     background: ${colors.primaryTint};
   `}

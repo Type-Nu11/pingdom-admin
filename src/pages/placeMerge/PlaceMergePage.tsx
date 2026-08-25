@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAdminPlace } from '../../api/adminPlaceApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
 import { useAuth } from '../../hooks/useAuth'
-import type { AdminPlaceDetail } from '../../types/adminPlace.types'
 import type {
   AdminPlaceDuplicateCandidateItem,
   AdminPlaceDuplicateGroupItem,
@@ -69,15 +67,9 @@ function getRegistrantLabel(registrant: string, userId: number) {
   return registrant.trim() || `ID ${userId}`
 }
 
-function getPostCount(placeId: number, impacts: Record<number, AdminPlaceDetail>) {
-  return impacts[placeId]?.postCount
-}
-
 function PlaceComparisonCard({
   place,
   variant,
-  postCount,
-  impactLoading,
 }: {
   place: {
     id: number
@@ -91,8 +83,6 @@ function PlaceComparisonCard({
     photoCount: number
   }
   variant: 'target' | 'source'
-  postCount?: number
-  impactLoading: boolean
 }) {
   return (
     <S.PlaceCard $variant={variant}>
@@ -128,10 +118,6 @@ function PlaceComparisonCard({
           <dd>{formatNumber(place.photoCount)}장</dd>
         </S.MetaRow>
         <S.MetaRow>
-          <dt>연결 게시글</dt>
-          <dd>{impactLoading ? '확인 중' : `${formatNumber(postCount)}개`}</dd>
-        </S.MetaRow>
-        <S.MetaRow>
           <dt>좌표</dt>
           <dd>{`${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`}</dd>
         </S.MetaRow>
@@ -151,10 +137,6 @@ function PlaceMergePage() {
     useState<AdminPlaceDuplicateGroupItem | null>(null)
   const [selectedSourceId, setSelectedSourceId] = useState<number | null>(null)
   const [confirmation, setConfirmation] = useState<ConfirmationState>(null)
-  const [impacts, setImpacts] = useState<Record<number, AdminPlaceDetail>>({})
-  const [isImpactLoading, setIsImpactLoading] = useState(false)
-  const [impactErrorMessage, setImpactErrorMessage] = useState('')
-  const latestImpactRequestIdRef = useRef(0)
   const {
     duplicateGroups,
     duplicateTotalCount,
@@ -211,67 +193,20 @@ function PlaceMergePage() {
       ) ?? null,
     [duplicateDetail, selectedSourceId]
   )
-  const targetPostCount = targetPlace
-    ? getPostCount(targetPlace.id, impacts)
-    : undefined
-  const sourcePostCount = selectedSource
-    ? getPostCount(selectedSource.id, impacts)
-    : undefined
-  const hasImpactData = Boolean(
-    targetPlace &&
-      selectedSource &&
-      impacts[targetPlace.id] &&
-      impacts[selectedSource.id]
-  )
   const canMerge = Boolean(
     targetPlace &&
       selectedSource &&
-      selectedSource.id !== targetPlace.id &&
-      hasImpactData &&
-      !impactErrorMessage
+      selectedSource.id !== targetPlace.id
   )
 
   const handleSelectGroup = useCallback(
     (group: AdminPlaceDuplicateGroupItem) => {
       setSelectedGroup(group)
       setSelectedSourceId(null)
-      setImpacts({})
-      setImpactErrorMessage('')
       clearDuplicateDetail()
     },
     [clearDuplicateDetail]
   )
-
-  const loadPlaceImpacts = useCallback(async (placeIds: number[]) => {
-    const requestId = latestImpactRequestIdRef.current + 1
-    latestImpactRequestIdRef.current = requestId
-    setIsImpactLoading(true)
-    setImpactErrorMessage('')
-
-    try {
-      const entries = await Promise.all(
-        placeIds.map(async (placeId) => {
-          const detail = await getAdminPlace(placeId)
-
-          return [placeId, detail] as const
-        })
-      )
-
-      if (requestId === latestImpactRequestIdRef.current) {
-        setImpacts(Object.fromEntries(entries))
-      }
-    } catch {
-      if (requestId === latestImpactRequestIdRef.current) {
-        setImpactErrorMessage(
-          '연결 게시글 영향 범위를 확인하지 못했습니다. 병합 전 다시 시도해주세요.'
-        )
-      }
-    } finally {
-      if (requestId === latestImpactRequestIdRef.current) {
-        setIsImpactLoading(false)
-      }
-    }
-  }, [])
 
   useEffect(() => {
     if (!activeGroup || duplicateDetail?.id === activeGroup.representativePlaceId) {
@@ -280,18 +215,6 @@ function PlaceMergePage() {
 
     void fetchDuplicateDetail(activeGroup.representativePlaceId)
   }, [activeGroup, duplicateDetail?.id, fetchDuplicateDetail])
-
-  useEffect(() => {
-    if (!targetPlace) {
-      return
-    }
-
-    const ids = [targetPlace.id, selectedSourceId].filter(
-      (placeId): placeId is number => typeof placeId === 'number'
-    )
-
-    void loadPlaceImpacts(ids)
-  }, [loadPlaceImpacts, selectedSourceId, targetPlace])
 
   useEffect(() => {
     function closeConfirmationOnEscape(event: KeyboardEvent) {
@@ -560,15 +483,11 @@ function PlaceMergePage() {
                         <PlaceComparisonCard
                           place={targetPlace}
                           variant="target"
-                          postCount={targetPostCount}
-                          impactLoading={isImpactLoading}
                         />
                         {selectedSource ? (
                           <PlaceComparisonCard
                             place={selectedSource}
                             variant="source"
-                            postCount={sourcePostCount}
-                            impactLoading={isImpactLoading}
                           />
                         ) : (
                           <S.PlaceCard $variant="source">
@@ -580,9 +499,6 @@ function PlaceMergePage() {
                         )}
                       </S.ComparisonGrid>
 
-                      {impactErrorMessage ? (
-                        <S.Notice $variant="error">{impactErrorMessage}</S.Notice>
-                      ) : null}
 
                       <S.CandidateSection>
                         <S.SectionTitle>
@@ -628,7 +544,7 @@ function PlaceMergePage() {
                         </S.ActionHint>
                         <S.PrimaryButton
                           type="button"
-                          disabled={!canMerge || activeAction !== null || isImpactLoading}
+                          disabled={!canMerge || activeAction !== null}
                           onClick={() => setConfirmation({ type: 'merge' })}
                         >
                           <Shell.MaterialIcon aria-hidden="true">merge_type</Shell.MaterialIcon>
@@ -765,14 +681,6 @@ function PlaceMergePage() {
                       <dd title={selectedSource.name}>
                         #{selectedSource.id} · {getPlaceName(selectedSource.name, selectedSource.address)}
                       </dd>
-                    </S.ModalSummaryItem>
-                    <S.ModalSummaryItem>
-                      <dt>유지 장소 게시글</dt>
-                      <dd>{formatNumber(targetPostCount)}개</dd>
-                    </S.ModalSummaryItem>
-                    <S.ModalSummaryItem>
-                      <dt>후보 장소 게시글</dt>
-                      <dd>{formatNumber(sourcePostCount)}개</dd>
                     </S.ModalSummaryItem>
                   </S.ModalSummary>
                 </>

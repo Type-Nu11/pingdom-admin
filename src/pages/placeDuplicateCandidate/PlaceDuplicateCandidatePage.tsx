@@ -88,10 +88,6 @@ function PlaceDetailCard({
           <dd>{place.username || `사용자 ID ${place.userId}`}</dd>
         </S.MetaRow>
         <S.MetaRow>
-          <dt>게시글</dt>
-          <dd>{place.postCount.toLocaleString()}개</dd>
-        </S.MetaRow>
-        <S.MetaRow>
           <dt>좌표</dt>
           <dd>{`${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`}</dd>
         </S.MetaRow>
@@ -498,11 +494,11 @@ function PlaceDuplicateCandidatePage() {
               {dialogState === 'merge' ? (
                 <>
                   <S.ModalWarning>
-                    병합 후 유지 장소 #{targetPlaceId}. 다른 장소의 연결 게시글과 참조 데이터가 이동하며 병합 이력이 생성됩니다.
+                    병합 후 유지 장소 #{targetPlaceId}. 다른 장소의 연결 데이터가 이동하며 병합 이력이 생성됩니다.
                   </S.ModalWarning>
                   <Shell.OperatingCheckLabel>
                     <input type="checkbox" checked={hasConfirmedMerge} disabled={activeAction !== null} onChange={(event) => { setHasConfirmedMerge(event.target.checked); setFormError('') }} />
-                    <span>두 장소의 게시글 수와 유지 대상을 확인했습니다.</span>
+                    <span>두 장소의 기본 정보와 유지 대상을 확인했습니다.</span>
                   </Shell.OperatingCheckLabel>
                 </>
               ) : (

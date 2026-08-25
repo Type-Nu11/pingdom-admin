@@ -202,7 +202,7 @@ export const TopBar = styled.header`
   background: ${colors.surface};
 `
 
-export const TopTitle = styled.h1`
+export const TopTitle = styled.p`
   margin: 0;
   color: ${colors.strongText};
   font-size: 18px;

@@ -23,21 +23,34 @@ export const Group = styled.section`
   }
 `
 
-export const GroupTitle = styled.h3`
+export const GroupTitle = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 0;
   padding: 0 10px;
+  border: 0;
+  background: transparent;
   color: ${adminColors.muted};
+  font-family: inherit;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    color: ${adminColors.primary};
+  }
 
   @media (max-width: 900px) {
     display: none;
   }
 `
 
-export const ItemList = styled.div`
-  display: grid;
+export const ItemList = styled.div<{ $collapsed?: boolean }>`
+  display: ${({ $collapsed }) => ($collapsed ? 'none' : 'grid')};
   gap: 2px;
 
   @media (max-width: 900px) {

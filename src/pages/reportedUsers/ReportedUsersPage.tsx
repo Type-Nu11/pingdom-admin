@@ -85,11 +85,11 @@ function ReportedUsersPage() {
           <Shared.PageStack>
             <Shared.PageHeader>
               <div>
-                <Shared.Eyebrow>게시글 관리 &gt; 신고 사용자</Shared.Eyebrow>
+                <Shared.Eyebrow>사용자 · 안전 &gt; 신고 사용자</Shared.Eyebrow>
                 <Shared.PageTitle>신고 사용자 조회</Shared.PageTitle>
                 <Shared.PageDescription>처리 대기 중인 신고를 대상 사용자 단위 정보와 함께 조회합니다.</Shared.PageDescription>
               </div>
-              <Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/reports/appeals')}>이의제기 검토</Shared.HeaderButton><Shared.HeaderButton type="button" onClick={() => navigate('/main')}>게시글 관리</Shared.HeaderButton></Shared.HeaderActions>
+              <Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/reports/appeals')}>이의제기 검토</Shared.HeaderButton><Shared.HeaderButton type="button" onClick={() => navigate('/bans')}>사용자 밴</Shared.HeaderButton></Shared.HeaderActions>
             </Shared.PageHeader>
 
             <Form.SearchBar onSubmit={search}>

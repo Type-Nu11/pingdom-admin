@@ -184,9 +184,19 @@ export const SectionHint = styled.p`
   line-height: 1.5;
 `
 
-export const CategorySelect = styled.select`
+export const CategoryDropdown = styled.div`
+  position: relative;
+  width: 100%;
+  z-index: 4;
+`
+
+export const CategoryTrigger = styled.button`
   width: 100%;
   height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 0 12px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
@@ -194,13 +204,60 @@ export const CategorySelect = styled.select`
   color: ${colors.text};
   font: inherit;
   font-size: 14px;
-  outline: 0;
+  text-align: left;
+  cursor: pointer;
 
-  &:focus { border-color: ${colors.primary}; box-shadow: 0 0 0 3px ${colors.primaryTint}; }
+  > span:last-child {
+    color: ${colors.muted};
+    font-family: 'Material Symbols Outlined';
+    font-size: 20px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+
+  &[aria-expanded='true'] { border-color: ${colors.primary}; box-shadow: 0 0 0 3px ${colors.primaryTint}; }
+  &:hover:not(:disabled) { border-color: ${colors.primarySoft}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { cursor: not-allowed; background: ${colors.surfaceLow}; color: ${colors.softText}; }
 `
 
+export const CategoryMenu = styled.div`
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 242px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.surface};
+  box-shadow: 0 14px 30px ${colors.shadow};
+`
+
+export const CategoryOption = styled.button<{ $selected: boolean }>`
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid ${({ $selected }) => ($selected ? colors.primarySoft : 'transparent')};
+  border-radius: 6px;
+  background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
+  color: ${({ $selected }) => ($selected ? colors.primary : colors.text)};
+  font: inherit;
+  font-size: 13px;
+  font-weight: ${({ $selected }) => ($selected ? 700 : 600)};
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible { outline: 0; background: ${colors.primaryTint}; color: ${colors.primary}; }
+`
+
 export const PlaceSearchField = styled.div<{ $wide?: boolean }>`
+  position: relative;
+  z-index: 5;
   grid-column: 1 / -1;
   min-width: 0;
 `
@@ -251,19 +308,35 @@ export const PlaceSearchHint = styled.p<{ $error?: boolean }>`
 `
 
 export const PlaceSearchResults = styled.div`
+  position: absolute;
+  z-index: 12;
+  top: 70px;
+  left: 0;
+  right: 0;
   max-height: 276px;
-  margin-top: 8px;
   overflow-y: auto;
   border: 1px solid ${colors.border};
-  border-radius: 6px;
+  border-radius: 8px;
   background: ${colors.surface};
+  box-shadow: 0 14px 30px ${colors.shadow};
+`
+
+export const PlaceSearchResultsTitle = styled.strong`
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid ${colors.borderSoft};
+  color: ${colors.strongText};
+  font-size: 12px;
+  font-weight: 700;
 `
 
 export const PlaceSearchResult = styled.button`
   width: 100%;
   display: grid;
-  gap: 3px;
-  padding: 12px;
+  gap: 5px;
+  padding: 12px 14px;
   border: 0;
   border-bottom: 1px solid ${colors.borderSoft};
   background: ${colors.surface};
@@ -275,14 +348,53 @@ export const PlaceSearchResult = styled.button`
   &:hover { background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
 
-  strong { font-size: 13px; font-weight: 700; }
-  span { color: ${colors.muted}; font-size: 11px; }
-  small { overflow: hidden; color: ${colors.muted}; font-size: 12px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+  &:hover strong { color: ${colors.primary}; }
+`
+
+export const PlaceSearchResultTop = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  strong { min-width: 0; overflow: hidden; color: ${colors.text}; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  span { flex: 0 0 auto; color: ${colors.primary}; font-size: 11px; font-weight: 700; }
+`
+
+export const PlaceSearchResultCategory = styled.span`
+  overflow: hidden;
+  color: ${colors.muted};
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const PlaceSearchResultAddress = styled.small`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: ${colors.muted};
+  font-size: 12px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  span {
+    flex: 0 0 auto;
+    color: ${colors.softText};
+    font-family: 'Material Symbols Outlined';
+    font-size: 15px;
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 16;
+  }
 `
 
 export const SelectedPlaceSummary = styled.div`
   display: grid;
-  gap: 4px;
+  gap: 8px;
   margin-top: 10px;
   padding: 12px;
   border-left: 3px solid ${colors.primary};
@@ -292,6 +404,53 @@ export const SelectedPlaceSummary = styled.div`
   strong { font-size: 12px; font-weight: 700; }
   span { font-size: 13px; line-height: 1.45; }
   small { color: ${colors.muted}; font-size: 12px; line-height: 1.4; }
+`
+
+export const SelectedPlaceNameField = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: ${colors.text};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const SelectedPlaceAddress = styled.div`
+  display: grid;
+  gap: 3px;
+`
+
+export const ContactField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+`
+
+export const ContactFieldLabel = styled.label`
+  color: ${colors.text};
+  font-size: 13px;
+  font-weight: 700;
+`
+
+export const SameContactCheck = styled.label`
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: ${colors.muted};
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: ${colors.primary};
+  }
+
+  input:disabled { cursor: not-allowed; }
 `
 
 export const TagList = styled.div`
@@ -431,7 +590,7 @@ export const ScheduleList = styled.div`
 
 export const ScheduleRow = styled.div`
   display: grid;
-  grid-template-columns: 50px minmax(184px, 1fr) minmax(80px, 0.7fr) minmax(80px, 0.7fr);
+  grid-template-columns: 50px minmax(184px, 1fr) minmax(104px, 0.7fr) minmax(104px, 0.7fr);
   align-items: center;
   gap: 10px;
   min-height: 58px;
@@ -468,21 +627,6 @@ export const DayStatusButton = styled.button<{ $selected: boolean }>`
   cursor: pointer;
 
   &:disabled { cursor: not-allowed; opacity: 0.55; }
-`
-
-export const TimeInput = styled.input`
-  width: 100%;
-  height: 36px;
-  padding: 0 8px;
-  border: 1px solid ${colors.border};
-  border-radius: 5px;
-  background: ${colors.surface};
-  color: ${colors.text};
-  font: inherit;
-  font-size: 12px;
-
-  &:focus { border-color: ${colors.primary}; outline: 2px solid ${colors.primaryTint}; outline-offset: 0; }
-  &:disabled { cursor: not-allowed; background: ${colors.surfaceLow}; color: ${colors.softText}; }
 `
 
 export const ReadonlyBlock = styled.div`

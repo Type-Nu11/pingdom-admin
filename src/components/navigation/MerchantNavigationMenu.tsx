@@ -51,10 +51,16 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
 const isCurrentPath = (pathname: string, path: string) =>
   path === '/merchant' ? pathname === path : pathname === path || pathname.startsWith(`${path}/`)
 
+const getActiveNavigationPath = (pathname: string) =>
+  NAVIGATION_GROUPS.flatMap((group) => group.items)
+    .filter((item) => isCurrentPath(pathname, item.path))
+    .sort((first, second) => second.path.length - first.path.length)[0]?.path
+
 export function MerchantNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeItemRef = useRef<HTMLButtonElement>(null)
+  const activeNavigationPath = getActiveNavigationPath(pathname)
 
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' })
@@ -79,7 +85,7 @@ export function MerchantNavigationMenu() {
           <S.GroupTitle>{group.title}</S.GroupTitle>
           <S.ItemList>
             {group.items.map((item) => {
-              const active = isCurrentPath(pathname, item.path)
+              const active = activeNavigationPath === item.path
 
               return (
                 <S.ItemButton

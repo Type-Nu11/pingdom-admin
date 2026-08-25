@@ -82,12 +82,11 @@ function MerchantPaymentsPage() {
       <Store.Content>
         <Store.PageIntro>
           <div>
-            <Store.Eyebrow>Merchant Portal</Store.Eyebrow>
+
             <Store.PageTitle>결제·정산</Store.PageTitle>
             <Store.PageDescription>소유 장소에서 발생한 결제와 정산 상태를 확인합니다.</Store.PageDescription>
           </div>
           <S.HeaderActions>
-            <S.HeaderButton type="button" onClick={() => navigate('/merchant')}>내 가게 관리</S.HeaderButton>
             <S.HeaderButton
               type="button"
               disabled={activeTab === 'payments' ? payments.isLoadingPayments : payments.isLoadingSettlements}

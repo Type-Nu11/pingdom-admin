@@ -1544,7 +1544,7 @@ function UserBanPage() {
                 <span>
                   기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
                   <br />
-                  밴 처리 후에도 기존 게시글은 유지됩니다.
+                  밴 처리 후에도 기존 리뷰와 장소 정보는 별도 검토 대상입니다.
                 </span>
               </U.ActionInfoText>
               <U.FilterActions>

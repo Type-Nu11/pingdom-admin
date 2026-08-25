@@ -49,27 +49,6 @@ function getNotificationNavigation(notification: AdminNotificationItem) {
     return { path: '/bans' }
   }
 
-  if (
-    notification.type === 'ADMIN_REPORT_RECEIVED' ||
-    notification.type === 'ADMIN_REPORT_PROCESSED'
-  ) {
-    return {
-      path: '/main',
-      state: {
-        reportId: hasValidId ? parsedId : undefined,
-        reviewStatus:
-          notification.type === 'ADMIN_REPORT_RECEIVED' ? 'PENDING' : 'PROCESSED',
-      },
-    }
-  }
-
-  if (
-    tokenType === 'post' &&
-    hasValidId
-  ) {
-    return { path: '/main', state: { openPostId: parsedId } }
-  }
-
   if (tokenType === 'place' && hasValidId) {
     return { path: '/places' }
   }

@@ -1,4 +1,3 @@
-import { getAdminDashboardSummary } from './adminDashboardApi'
 import { getAdminMerchantOwners } from './adminMerchantOwnerApi'
 import { getAdminMerchantPlaceClaims } from './adminMerchantPlaceClaimApi'
 import { getAdminMerchantVerifications } from './adminMerchantVerificationApi'
@@ -46,17 +45,6 @@ function item(
 }
 
 const checks: PendingWorkCheck[] = [
-  async () => {
-    const summary = await getAdminDashboardSummary()
-    return [item(
-      'pending-post-reports',
-      '게시글 신고 검수',
-      '처리되지 않은 게시글 신고',
-      summary.pendingReportCount,
-      '/main',
-      { reviewStatus: 'PENDING' },
-    )]
-  },
   async () => {
     const response = await getAdminPlaceDuplicateGroups()
     return [item(

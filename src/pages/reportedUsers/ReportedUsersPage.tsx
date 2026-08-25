@@ -151,7 +151,7 @@ function ReportedUsersPage() {
                         <Form.DetailItem><dt>신고 이미지</dt><dd>이미지 ID {reportedUserDetail.reportedImageId}</dd></Form.DetailItem>
                         <Form.DetailItem><dt>신고 ID</dt><dd>{reportedUserDetail.reportId}</dd></Form.DetailItem>
                       </Form.DetailGrid>
-                      <Shared.DetailNotice><Shell.MaterialIcon aria-hidden="true">info</Shell.MaterialIcon><div><strong>조회 전용 화면입니다.</strong>신고 수락·거절은 관련 게시글과 제재 영향을 확인할 수 있는 검수 흐름에서 처리합니다.</div></Shared.DetailNotice>
+                      <Shared.DetailNotice><Shell.MaterialIcon aria-hidden="true">info</Shell.MaterialIcon><div><strong>조회 전용 화면입니다.</strong>신고 수락·거절은 관련 제재와 운영 영향을 확인할 수 있는 검수 흐름에서 처리합니다.</div></Shared.DetailNotice>
                     </>
                   ) : null}
                 </Shared.CompareBody>

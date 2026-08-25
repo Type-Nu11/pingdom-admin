@@ -134,7 +134,7 @@ function ReportAppealPage() {
                 <Form.Pagination><Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination>
               </Shared.Panel>
               <Shared.Panel>
-                <Shared.PanelHeader><div><Shared.PanelTitle>이의제기 상세</Shared.PanelTitle><Shared.PanelDescription>원 신고와 게시글 식별자를 함께 확인합니다.</Shared.PanelDescription></div></Shared.PanelHeader>
+                <Shared.PanelHeader><div><Shared.PanelTitle>이의제기 상세</Shared.PanelTitle><Shared.PanelDescription>원 신고와 처리 이력을 함께 확인합니다.</Shared.PanelDescription></div></Shared.PanelHeader>
                 <Shared.CompareBody>
                   {!selectedAppeal ? <Shared.EmptyState><strong>검토할 이의제기를 선택해주세요.</strong></Shared.EmptyState> : (
                     <>
@@ -144,12 +144,10 @@ function ReportAppealPage() {
                         <Form.DetailItem><dt>이의제기 사용자</dt><dd>{selectedAppeal.appellantUsername || '이름 없음'} (ID {selectedAppeal.appellantUserId})</dd></Form.DetailItem>
                         <Form.DetailItem><dt>제재 대상 사용자</dt><dd>ID {selectedAppeal.targetUserId}</dd></Form.DetailItem>
                         <Form.DetailItem><dt>원 신고</dt><dd>신고 #{selectedAppeal.reportId}</dd></Form.DetailItem>
-                        <Form.DetailItem><dt>관련 게시글</dt><dd>게시글 #{selectedAppeal.postId}</dd></Form.DetailItem>
                         <Form.DetailItem><dt>처리 관리자</dt><dd>{selectedAppeal.adminUserId ? `ID ${selectedAppeal.adminUserId}` : '미처리'}</dd></Form.DetailItem>
                         <Form.DetailItem><dt>처리 사유</dt><dd>{selectedAppeal.adminReason || '아직 입력되지 않음'}</dd></Form.DetailItem>
                       </Form.DetailGrid>
                       <Form.InlineActions>
-                        <Shared.SecondaryButton type="button" onClick={() => navigate('/main', { state: { openPostId: selectedAppeal.postId } })}>관련 게시글 확인</Shared.SecondaryButton>
                         {selectedAppeal.status === 'SUBMITTED' ? <><Shared.SecondaryButton type="button" disabled={processingAppealId !== null} onClick={() => openAction('reject')}>반려</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={processingAppealId !== null} onClick={() => openAction('approve')}>승인</Shared.PrimaryButton></> : null}
                       </Form.InlineActions>
                     </>

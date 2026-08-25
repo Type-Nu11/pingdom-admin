@@ -125,11 +125,13 @@ function ReportedUsersPage() {
                     </Form.CardList>
                   )}
                 </Shared.ScrollArea>
-                <Form.Pagination>
-                  <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => movePage(page - 1)}>이전</Shared.SecondaryButton>
-                  <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
-                  <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => movePage(page + 1)}>다음</Shared.SecondaryButton>
-                </Form.Pagination>
+                {totalPages > 1 ? (
+                  <Form.Pagination>
+                    <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => movePage(page - 1)}>이전</Shared.SecondaryButton>
+                    <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
+                    <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => movePage(page + 1)}>다음</Shared.SecondaryButton>
+                  </Form.Pagination>
+                ) : null}
               </Shared.Panel>
 
               <Shared.Panel>

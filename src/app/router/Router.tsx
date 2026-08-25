@@ -17,7 +17,6 @@ import { RouteLoadingFallback } from './RouteLoadingFallback'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
 const DashboardPage = lazy(() => import('../../pages/dashboard/DashboardPage'))
-const MainPage = lazy(() => import('../../pages/main/MainPage'))
 const NotFoundPage = lazy(() => import('../../pages/notFound/NotFoundPage'))
 const PlaceManagePage = lazy(() => import('../../pages/place/PlaceManagePage'))
 const PlaceMergePage = lazy(() => import('../../pages/placeMerge/PlaceMergePage'))
@@ -161,7 +160,6 @@ export function Router() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/main" element={<MainPage />} />
             <Route path="/places" element={<PlaceManagePage />} />
             <Route path="/places/events" element={<PlaceEventPage />} />
             <Route path="/places/duplicates" element={<PlaceMergePage />} />

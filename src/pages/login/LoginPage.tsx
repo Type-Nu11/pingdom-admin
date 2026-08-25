@@ -32,7 +32,7 @@ function LoginPage() {
   const passwordInputRef = useRef<HTMLInputElement>(null)
   const isMerchantSession = isAuthenticated && user?.role === 'MERCHANT_OWNER'
   const isMerchantApplicantSession = isAuthenticated && user?.role === 'USER'
-  const activeMode = isMerchantSession ? 'merchant' : selectedMode
+  const activeMode = selectedMode
   const {
     username,
     setUsername,
@@ -68,7 +68,7 @@ function LoginPage() {
   }, [clearAuth, isAdminSession, isAuthReady, isAuthenticated, isMerchantApplicantSession, isMerchantSession, navigate, user?.role])
 
   const selectMode = (mode: LoginMode) => {
-    if (isMerchantSession && mode === 'admin') {
+    if (isAuthenticated) {
       clearAuth()
     }
 

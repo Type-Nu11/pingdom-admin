@@ -420,6 +420,35 @@ export const SelectedPlaceAddress = styled.div`
   gap: 3px;
 `
 
+export const ManualEntryPrompt = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 20px;
+  color: ${colors.muted};
+  font-size: 12px;
+  line-height: 1.5;
+`
+
+export const ManualEntryButton = styled.button`
+  min-height: 34px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background: ${colors.surface};
+  color: ${colors.primary};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: ${colors.primarySoft}; background: ${colors.primaryTint}; }
+  &:disabled { cursor: not-allowed; color: ${colors.softText}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
 export const ContactField = styled.div`
   display: flex;
   flex-direction: column;

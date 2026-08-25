@@ -383,12 +383,12 @@ function RegistrationForm({
           <S.MapHeading>
             <div>
               <S.MapTitle>장소 위치</S.MapTitle>
-              <S.MapDescription>선택한 장소의 위치를 확인하고 조정할 수 있습니다.</S.MapDescription>
+              <S.MapDescription>{isLocationEntryActive ? '지도를 클릭하면 핀 위치를 조정할 수 있습니다.' : '장소 검색 또는 직접 입력 후 위치를 선택하세요.'}</S.MapDescription>
             </div>
             <S.MapStatus $hasLocation={isLocationEntryActive && hasValidCoordinate}>{isLocationEntryActive && hasValidCoordinate ? '위치 선택됨' : '장소 선택 필요'}</S.MapStatus>
           </S.MapHeading>
-          <S.MapViewport $active={isLocationEntryActive}><S.LocationMap $active={isLocationEntryActive} ref={mapRef} markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapReady={() => setIsMapReady(true)} onMapClick={editable && activeAction === null && isLocationEntryActive ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { selectedKakaoPlaceIdRef.current = null; setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} /></S.MapViewport>
-          {isLocationEntryActive && hasValidCoordinate ? <S.CoordinateText>선택 위치: {numericLatitude.toFixed(6)}, {numericLongitude.toFixed(6)}</S.CoordinateText> : null}
+          <S.MapViewport $active={isLocationEntryActive}><S.LocationMap $active={isLocationEntryActive} ref={mapRef} markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapReady={() => setIsMapReady(true)} onMapClick={editable && activeAction === null && isLocationEntryActive ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { selectedKakaoPlaceIdRef.current = null; setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} />{!isLocationEntryActive ? <S.MapIdleOverlay><span aria-hidden="true">search</span><strong>장소 검색 또는 직접 입력 후 위치 선택</strong></S.MapIdleOverlay> : null}</S.MapViewport>
+          <S.CoordinateText>{isLocationEntryActive && hasValidCoordinate ? `선택 위치: ${numericLatitude.toFixed(6)}, ${numericLongitude.toFixed(6)}` : isLocationEntryActive ? '지도를 클릭해 핀 위치를 선택하세요.' : '장소를 먼저 검색하거나 직접 입력하세요.'}</S.CoordinateText>
           {isLocationEntryActive ? <S.CoordinateDetails>
             <summary>좌표 직접 입력</summary>
             <S.CoordinateFields>

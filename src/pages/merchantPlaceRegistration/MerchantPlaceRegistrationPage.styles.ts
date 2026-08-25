@@ -520,6 +520,36 @@ export const MapViewport = styled.div<{ $active: boolean }>`
   ${LocationMap} { min-height: 0; }
 `
 
+export const MapIdleOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: ${colors.muted};
+  pointer-events: auto;
+
+  span {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid ${colors.border};
+    border-radius: 6px;
+    background: ${colors.surface};
+    color: ${colors.primary};
+    font-family: 'Material Symbols Outlined';
+    font-size: 19px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+
+  strong { font-size: 12px; font-weight: 700; }
+`
+
 export const CoordinateText = styled.p`
   margin: 10px 0 0;
   color: ${colors.muted};

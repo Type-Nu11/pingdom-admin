@@ -205,17 +205,12 @@ export const PlaceSelect = styled.select`
 `
 
 export const StoreSummary = styled.section`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
-  padding: 28px 30px;
+  padding: 24px;
   border: 1px solid ${colors.border};
-  border-top: 3px solid ${colors.primary};
   border-radius: 8px;
   background: ${colors.surface};
 
   @media (max-width: 720px) {
-    grid-template-columns: 1fr;
     padding: 24px 20px;
   }
 `
@@ -705,17 +700,16 @@ export const Empty = styled.div`
 
 export const EmptyStoreState = styled.section`
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
-  margin-top: 16px;
-  padding: 22px 24px;
-  border: 1px solid ${colors.primarySoft};
+  padding: 24px;
+  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.primaryTint};
+  background: ${colors.surface};
 
   @media (max-width: 680px) {
-    grid-template-columns: auto minmax(0, 1fr);
+    align-items: flex-start;
   }
 `
 
@@ -751,6 +745,7 @@ export const EmptyStoreActions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  grid-column: 2;
 
   @media (max-width: 680px) {
     grid-column: 1 / -1;
@@ -774,9 +769,6 @@ export const EmptyStoreAction = styled.button`
   &:hover { background: ${colors.primaryHover}; border-color: ${colors.primaryHover}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
-  @media (max-width: 680px) {
-    flex: 1;
-  }
 `
 
 export const EmptyStoreSecondaryAction = styled(EmptyStoreAction)`

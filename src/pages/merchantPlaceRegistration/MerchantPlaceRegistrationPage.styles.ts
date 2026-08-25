@@ -200,6 +200,100 @@ export const CategorySelect = styled.select`
   &:disabled { cursor: not-allowed; background: ${colors.surfaceLow}; color: ${colors.softText}; }
 `
 
+export const PlaceSearchField = styled.div<{ $wide?: boolean }>`
+  grid-column: 1 / -1;
+  min-width: 0;
+`
+
+export const PlaceSearchLabel = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  color: ${colors.text};
+  font-size: 13px;
+  font-weight: 700;
+`
+
+export const PlaceSearchControl = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 8px;
+`
+
+export const PlaceSearchButton = styled.button`
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid ${colors.primary};
+  border-radius: 6px;
+  background: ${colors.primary};
+  color: ${colors.primaryText};
+  cursor: pointer;
+
+  span {
+    font-family: 'Material Symbols Outlined';
+    font-size: 20px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+
+  &:hover:not(:disabled) { background: ${colors.primaryHover}; }
+  &:disabled { cursor: not-allowed; border-color: ${colors.disabled}; background: ${colors.disabled}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
+export const PlaceSearchHint = styled.p<{ $error?: boolean }>`
+  margin: 8px 0 0;
+  color: ${({ $error }) => ($error ? colors.error : colors.muted)};
+  font-size: 12px;
+  line-height: 1.45;
+`
+
+export const PlaceSearchResults = styled.div`
+  max-height: 276px;
+  margin-top: 8px;
+  overflow-y: auto;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background: ${colors.surface};
+`
+
+export const PlaceSearchResult = styled.button`
+  width: 100%;
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border: 0;
+  border-bottom: 1px solid ${colors.borderSoft};
+  background: ${colors.surface};
+  color: ${colors.text};
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child { border-bottom: 0; }
+  &:hover { background: ${colors.primaryTint}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
+
+  strong { font-size: 13px; font-weight: 700; }
+  span { color: ${colors.muted}; font-size: 11px; }
+  small { overflow: hidden; color: ${colors.muted}; font-size: 12px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+`
+
+export const SelectedPlaceSummary = styled.div`
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 12px;
+  border-left: 3px solid ${colors.primary};
+  background: ${colors.primaryTint};
+  color: ${colors.text};
+
+  strong { font-size: 12px; font-weight: 700; }
+  span { font-size: 13px; line-height: 1.45; }
+  small { color: ${colors.muted}; font-size: 12px; line-height: 1.4; }
+`
+
 export const TagList = styled.div`
   display: flex;
   flex-wrap: wrap;

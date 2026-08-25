@@ -1,5 +1,6 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { KakaoMapHandle, KakaoPlaceSearchResult } from '../../components/map/KakaoMap'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantPlaceRegistrations } from '../../hooks/useMerchantPlaceRegistrations'
 import type {
@@ -34,6 +35,13 @@ const CATEGORIES: Array<{ value: MerchantPlaceCategory; label: string }> = [
   { value: 'CAFE', label: '카페' }, { value: 'CULTURAL_HERITAGE', label: '문화재' },
   { value: 'OTHER', label: '기타' },
 ]
+
+const KAKAO_CATEGORY_MAP: Partial<Record<string, MerchantPlaceCategory>> = {
+  FD6: 'RESTAURANT',
+  CE7: 'CAFE',
+  CT1: 'EXHIBITION',
+  AT4: 'CULTURAL_HERITAGE',
+}
 
 const TAGS: Array<{ value: MerchantPlaceTag; label: string }> = [
   { value: 'ENGLISH_SERVICE_AVAILABLE', label: '영어 서비스' },
@@ -146,6 +154,13 @@ function RegistrationForm({
   const [tags, setTags] = useState<MerchantPlaceTag[]>(registration?.tags ?? [])
   const [schedule, setSchedule] = useState<ScheduleDraft[]>(parseSchedule(registration?.operatingScheduleJson ?? null))
   const [formError, setFormError] = useState('')
+  const [placeSearchQuery, setPlaceSearchQuery] = useState('')
+  const [placeSearchResults, setPlaceSearchResults] = useState<KakaoPlaceSearchResult[]>([])
+  const [placeSearchMessage, setPlaceSearchMessage] = useState('')
+  const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false)
+  const [isMapReady, setIsMapReady] = useState(false)
+  const mapRef = useRef<KakaoMapHandle | null>(null)
+  const selectedKakaoPlaceIdRef = useRef<string | null>(null)
 
   const numericLatitude = Number(latitude)
   const numericLongitude = Number(longitude)
@@ -154,6 +169,12 @@ function RegistrationForm({
     && numericLatitude >= -90 && numericLatitude <= 90 && numericLongitude >= -180 && numericLongitude <= 180
   const marker = hasValidCoordinate ? [{ id: 1, latitude: numericLatitude, longitude: numericLongitude, label: placeName || '새 장소 위치', category, categoryName: CATEGORIES.find((item) => item.value === category)?.label }] : []
 
+  useEffect(() => {
+    if (isMapReady && hasValidCoordinate) {
+      mapRef.current?.moveTo(numericLatitude, numericLongitude)
+    }
+  }, [hasValidCoordinate, isMapReady, numericLatitude, numericLongitude])
+
   const updateSchedule = (day: MerchantOperatingDayOfWeek, changes: Partial<ScheduleDraft>) => {
     setSchedule((current) => current.map((item) => item.dayOfWeek === day ? { ...item, ...changes } : item))
   }
@@ -161,6 +182,87 @@ function RegistrationForm({
   const toggleTag = (tag: MerchantPlaceTag) => {
     setTags((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])
   }
+
+  const searchPlaces = useCallback(() => {
+    const keyword = placeSearchQuery.trim()
+    const services = window.kakao?.maps.services
+
+    if (!keyword) {
+      setPlaceSearchResults([])
+      setPlaceSearchMessage('장소명, 건물명 또는 주소를 입력해주세요.')
+      return
+    }
+
+    if (!services) {
+      setPlaceSearchMessage('장소 검색 기능을 준비하고 있습니다. 잠시 후 다시 시도해주세요.')
+      return
+    }
+
+    setIsPlaceSearchLoading(true)
+    setPlaceSearchMessage('')
+
+    new services.Places().keywordSearch(keyword, (results, status) => {
+      setIsPlaceSearchLoading(false)
+
+      if (status === services.Status.OK) {
+        setPlaceSearchResults(results)
+        return
+      }
+
+      setPlaceSearchResults([])
+      setPlaceSearchMessage(status === services.Status.ZERO_RESULT ? '검색 결과가 없습니다.' : '장소를 검색하지 못했습니다. 다시 시도해주세요.')
+    }, { size: 8 })
+  }, [placeSearchQuery])
+
+  const selectPlaceSearchResult = useCallback((place: KakaoPlaceSearchResult) => {
+    const services = window.kakao?.maps.services
+    const latitude = Number(place.y)
+    const longitude = Number(place.x)
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      setPlaceSearchMessage('선택한 장소의 좌표를 확인하지 못했습니다.')
+      return
+    }
+
+    selectedKakaoPlaceIdRef.current = place.id
+    setPlaceName(place.place_name)
+    setRoadAddress(place.road_address_name)
+    setJibunAddress(place.address_name)
+    setLatitude(latitude.toFixed(6))
+    setLongitude(longitude.toFixed(6))
+    setPostalCode('')
+    setPlaceSearchResults([])
+    setPlaceSearchQuery(place.place_name)
+    setPlaceSearchMessage('')
+    setFormError('')
+
+    const mappedCategory = KAKAO_CATEGORY_MAP[place.category_group_code]
+    if (mappedCategory) {
+      setCategory(mappedCategory)
+    }
+
+    const address = place.road_address_name || place.address_name
+    if (!services || !address) {
+      setPlaceSearchMessage('주소 정보를 확인하지 못했습니다. 다른 장소를 선택해주세요.')
+      return
+    }
+
+    new services.Geocoder().addressSearch(address, (results, status) => {
+      if (selectedKakaoPlaceIdRef.current !== place.id) {
+        return
+      }
+
+      if (status !== services.Status.OK || results.length === 0) {
+        setPlaceSearchMessage('우편번호를 확인하지 못했습니다. 다른 장소를 선택해주세요.')
+        return
+      }
+
+      const [resolvedAddress] = results
+      setRoadAddress(resolvedAddress.road_address?.address_name || place.road_address_name)
+      setJibunAddress(resolvedAddress.address?.address_name || place.address_name)
+      setPostalCode(resolvedAddress.road_address?.zone_no || '')
+    })
+  }, [])
 
   const buildRequest = (): MerchantPlaceRegistrationRequest | null => {
     if (!placeName.trim() || !roadAddress.trim() || !jibunAddress.trim() || !postalCode.trim() || !description.trim() || !businessPhone.trim() || !applicantPhone.trim()) {
@@ -219,11 +321,9 @@ function RegistrationForm({
         <Store.Field>사업장 연락처<Store.Input type="tel" inputMode="tel" value={businessPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setBusinessPhone(event.target.value)} /><S.SectionHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SectionHint></Store.Field>
         <Store.Field $wide>장소 소개<Store.Textarea value={description} maxLength={1000} disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} /><S.SectionHint>{description.length}/1000</S.SectionHint></Store.Field>
           </S.Section>
-          <S.Section><S.SectionLegend>주소와 위치</S.SectionLegend><S.SectionHint>주소를 입력한 뒤, 오른쪽 지도에서 실제 가게 위치를 클릭해 확정하세요.</S.SectionHint>
-        <Store.Field $wide>도로명 주소<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setRoadAddress(event.target.value)} /></Store.Field>
-        <Store.Field $wide>지번 주소<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setJibunAddress(event.target.value)} /></Store.Field>
-        <Store.Field>우편번호<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => setPostalCode(event.target.value)} /></Store.Field>
-        <Store.Field>신청자 연락처<Store.Input type="tel" inputMode="tel" value={applicantPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setApplicantPhone(event.target.value)} /><S.SectionHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SectionHint></Store.Field>
+          <S.Section><S.SectionLegend>주소와 위치</S.SectionLegend><S.SectionHint>장소명, 건물명 또는 주소를 검색해 위치 정보를 자동으로 입력하세요.</S.SectionHint>
+        <S.PlaceSearchField $wide><S.PlaceSearchLabel htmlFor="merchant-place-search">장소 검색</S.PlaceSearchLabel><S.PlaceSearchControl><Store.Input id="merchant-place-search" value={placeSearchQuery} placeholder="예: 성수 카페, 롯데월드, 서울시청" disabled={!editable || activeAction !== null || !isMapReady} onChange={(event) => { setPlaceSearchQuery(event.target.value); setPlaceSearchMessage('') }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} /><S.PlaceSearchButton type="button" aria-label="장소 검색" title="장소 검색" disabled={!editable || activeAction !== null || !isMapReady || isPlaceSearchLoading} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton></S.PlaceSearchControl>{isPlaceSearchLoading ? <S.PlaceSearchHint>장소를 검색하는 중입니다.</S.PlaceSearchHint> : null}{placeSearchMessage ? <S.PlaceSearchHint $error>{placeSearchMessage}</S.PlaceSearchHint> : null}{placeSearchResults.length > 0 ? <S.PlaceSearchResults>{placeSearchResults.map((place) => <S.PlaceSearchResult type="button" key={place.id} onClick={() => selectPlaceSearchResult(place)}><strong>{place.place_name}</strong><span>{place.category_name || '카테고리 정보 없음'}</span><small>{place.road_address_name || place.address_name}</small></S.PlaceSearchResult>)}</S.PlaceSearchResults> : null}{roadAddress || jibunAddress ? <S.SelectedPlaceSummary><strong>선택한 장소</strong><span>{roadAddress || jibunAddress}</span>{jibunAddress && roadAddress ? <small>{jibunAddress}</small> : null}</S.SelectedPlaceSummary> : null}</S.PlaceSearchField>
+        <Store.Field $wide>신청자 연락처<Store.Input type="tel" inputMode="tel" value={applicantPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setApplicantPhone(event.target.value)} /><S.SectionHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SectionHint></Store.Field>
           </S.Section>
           <S.Section><S.SectionLegend>영업시간과 특징</S.SectionLegend><S.SectionHint>영업일마다 영업, 휴무, 24시간 중 하나를 선택하세요.</S.SectionHint>
         <Store.Field $wide><S.ScheduleList>{schedule.map((day) => <S.ScheduleRow key={day.dayOfWeek}><S.DayName>{DAYS.find((item) => item.value === day.dayOfWeek)?.label}</S.DayName><S.DayStatus>{([['OPEN', '영업'], ['CLOSED', '휴무'], ['OPEN_24_HOURS', '24시간']] as const).map(([value, label]) => <S.DayStatusButton type="button" key={value} $selected={day.status === value} disabled={!editable || activeAction !== null} onClick={() => updateSchedule(day.dayOfWeek, { status: value })}>{label}</S.DayStatusButton>)}</S.DayStatus><S.TimeInput type="time" value={day.opensAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(event) => updateSchedule(day.dayOfWeek, { opensAt: event.target.value })} /><S.TimeInput type="time" value={day.closesAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(event) => updateSchedule(day.dayOfWeek, { closesAt: event.target.value })} /></S.ScheduleRow>)}</S.ScheduleList></Store.Field>
@@ -239,7 +339,7 @@ function RegistrationForm({
             </div>
             <S.MapStatus $hasLocation={hasValidCoordinate}>{hasValidCoordinate ? '위치 선택됨' : '위치 선택 필요'}</S.MapStatus>
           </S.MapHeading>
-          <S.LocationMap markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapClick={editable && activeAction === null ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} />
+          <S.LocationMap ref={mapRef} markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapReady={() => setIsMapReady(true)} onMapClick={editable && activeAction === null ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { selectedKakaoPlaceIdRef.current = null; setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} />
           <S.CoordinateText>{hasValidCoordinate ? `선택 위치: ${numericLatitude.toFixed(6)}, ${numericLongitude.toFixed(6)}` : '지도를 클릭해 핀 위치를 선택하세요.'}</S.CoordinateText>
           <S.CoordinateDetails>
             <summary>좌표 직접 입력</summary>

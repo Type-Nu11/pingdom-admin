@@ -5,14 +5,12 @@ import { adminColors } from '../../styles/theme'
 const colors = adminColors
 
 export const Layout = styled.div`
-  display: grid;
-  grid-template-columns: minmax(250px, 0.78fr) minmax(0, 1.22fr);
-  gap: 24px;
-
-  @media (max-width: 900px) { grid-template-columns: 1fr; }
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 `
 
-export const Panel = styled.section`
+const surfacePanel = css`
   min-width: 0;
   padding: 26px 28px;
   border: 1px solid ${colors.border};
@@ -20,6 +18,14 @@ export const Panel = styled.section`
   background: ${colors.surface};
 
   @media (max-width: 640px) { padding: 22px 20px; }
+`
+
+export const HistoryPanel = styled.section`
+  ${surfacePanel}
+`
+
+export const RegistrationPanel = styled.section`
+  ${surfacePanel}
 `
 
 export const PanelHeading = styled.div`
@@ -148,7 +154,9 @@ export const NewApplicationButton = styled.button`
 `
 
 export const Section = styled.fieldset`
-  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   min-width: 0;
   margin: 0;
   padding: 20px 0;
@@ -159,6 +167,7 @@ export const Section = styled.fieldset`
 `
 
 export const SectionLegend = styled.legend`
+  grid-column: 1 / -1;
   width: 100%;
   margin: 0 0 14px;
   padding: 0;
@@ -168,6 +177,7 @@ export const SectionLegend = styled.legend`
 `
 
 export const SectionHint = styled.p`
+  grid-column: 1 / -1;
   margin: -7px 0 14px;
   color: ${colors.muted};
   font-size: 12px;
@@ -213,8 +223,7 @@ export const TagButton = styled.button<{ $selected: boolean }>`
 `
 
 export const LocationMap = styled(KakaoMap)`
-  height: 300px;
-  margin-top: 12px;
+  height: clamp(340px, 46vh, 440px);
 `
 
 export const CoordinateText = styled.p`
@@ -222,6 +231,102 @@ export const CoordinateText = styled.p`
   color: ${colors.muted};
   font-size: 12px;
   line-height: 1.5;
+`
+
+export const RegistrationForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+`
+
+export const FormWorkspace = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+  align-items: start;
+  gap: 28px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const FormSections = styled.div`
+  min-width: 0;
+`
+
+export const MapPanel = styled.aside`
+  position: sticky;
+  top: 84px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.surfaceLow};
+
+  @media (max-width: 980px) {
+    position: static;
+    order: -1;
+  }
+
+  @media (max-width: 640px) {
+    padding: 14px;
+  }
+`
+
+export const MapHeading = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+`
+
+export const MapTitle = styled.h3`
+  margin: 0;
+  color: ${colors.strongText};
+  font-size: 15px;
+  font-weight: 700;
+`
+
+export const MapDescription = styled.p`
+  margin: 5px 0 0;
+  color: ${colors.muted};
+  font-size: 12px;
+  line-height: 1.45;
+`
+
+export const MapStatus = styled.span<{ $hasLocation: boolean }>`
+  min-height: 24px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid ${({ $hasLocation }) => ($hasLocation ? '#9bd7a9' : colors.primarySoft)};
+  border-radius: 999px;
+  background: ${({ $hasLocation }) => ($hasLocation ? colors.successTint : colors.primaryTint)};
+  color: ${({ $hasLocation }) => ($hasLocation ? colors.successText : colors.primary)};
+  font-size: 11px;
+  font-weight: 700;
+`
+
+export const CoordinateDetails = styled.details`
+  margin-top: 14px;
+  border-top: 1px solid ${colors.borderSoft};
+
+  summary {
+    padding: 13px 0 0;
+    color: ${colors.muted};
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+`
+
+export const CoordinateFields = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 12px;
 `
 
 export const ScheduleList = styled.div`

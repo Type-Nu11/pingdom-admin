@@ -3,12 +3,19 @@ import type {
   AdminMerchantPlaceApplication,
   AdminMerchantPlaceApplicationAttachment,
   AdminMerchantPlaceApplicationPage,
+  MerchantPlaceApplicationStatus,
   MerchantPlaceApplicationReviewRequest,
 } from '../types/adminMerchantPlaceApplication.types'
 
 const PATH = '/admin/merchant-place-applications'
 
-export async function getAdminMerchantPlaceApplications(params: { page?: number; limit?: number }) {
+export interface AdminMerchantPlaceApplicationListParams {
+  status?: MerchantPlaceApplicationStatus
+  page?: number
+  limit?: number
+}
+
+export async function getAdminMerchantPlaceApplications(params: AdminMerchantPlaceApplicationListParams) {
   const { data } = await customAxios.get<AdminMerchantPlaceApplicationPage>(PATH, { params })
   return data
 }

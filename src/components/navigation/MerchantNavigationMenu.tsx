@@ -25,7 +25,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '장소 신청',
     items: [
-      { label: '기존 장소 신청', icon: 'add_location_alt', path: '/merchant/place-application' },
+      { label: '기존 장소 운영 권한 신청', icon: 'add_location_alt', path: '/merchant/place-application' },
       { label: '신규 장소 등록', icon: 'location_on', path: '/merchant/place-registration' },
       { label: '장소 권한·소유권 신청', icon: 'assignment_turned_in', path: '/merchant/place-claims' },
     ],

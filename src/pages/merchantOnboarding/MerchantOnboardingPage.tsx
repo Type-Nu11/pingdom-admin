@@ -21,14 +21,14 @@ type StatusTone = 'active' | 'pending' | 'danger' | 'neutral'
 
 const OWNER_STATUS: Record<MerchantOwnerApplicationStatus, { label: string; tone: StatusTone }> = {
   ACTIVE: { label: '승인 완료', tone: 'active' },
-  PENDING: { label: '심사 중', tone: 'pending' },
+  PENDING: { label: '심사 대기', tone: 'pending' },
   REJECTED: { label: '반려', tone: 'danger' },
   REVOKED: { label: '권한 회수', tone: 'danger' },
 }
 
 const VERIFICATION_STATUS: Record<MerchantVerificationStatus, { label: string; tone: StatusTone }> = {
   APPROVED: { label: '승인', tone: 'active' },
-  PENDING: { label: '심사 중', tone: 'pending' },
+  PENDING: { label: '심사 대기', tone: 'pending' },
   REJECTED: { label: '반려', tone: 'danger' },
 }
 
@@ -209,7 +209,7 @@ function MerchantOnboardingPage() {
       {onboarding.errorMessage ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{onboarding.errorMessage}</Store.Notice> : null}
       {onboarding.successMessage ? <Store.Notice $tone="success" role="status"><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{onboarding.successMessage}</Store.Notice> : null}
       <S.Panel>
-        <S.PanelHeading><div><S.PanelTitle>{panelTitle}</S.PanelTitle><S.PanelDescription>{panelDescription}</S.PanelDescription></div>{stage === 'review' ? <S.StatusBadge $tone="pending">심사 중</S.StatusBadge> : isProfileReapplying || isVerificationReapplying ? <S.StatusBadge $tone="danger">보완 필요</S.StatusBadge> : null}</S.PanelHeading>
+        <S.PanelHeading><div><S.PanelTitle>{panelTitle}</S.PanelTitle><S.PanelDescription>{panelDescription}</S.PanelDescription></div>{stage === 'review' ? <S.StatusBadge $tone="pending">심사 대기</S.StatusBadge> : isProfileReapplying || isVerificationReapplying ? <S.StatusBadge $tone="danger">보완 필요</S.StatusBadge> : null}</S.PanelHeading>
         {stage === 'profile' ? <><S.IntroNotice><strong>검증이 필요한 이유</strong><span>검증된 상점주만 장소 운영, 예약, 혜택, 정산 기능을 사용할 수 있습니다.</span></S.IntroNotice>{onboarding.profileErrorMessage ? <S.FormNotice><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{onboarding.profileErrorMessage}</Store.Notice></S.FormNotice> : null}<ProfileForm profile={null} isSaving={onboarding.isSavingProfile} isReapplying={false} onSave={onboarding.saveProfile} /></> : null}
         {stage === 'profile-reapply' && profile ? <><S.ReviewReason><strong>{profile.status === 'REVOKED' ? '권한 회수 안내' : '재신청 안내'}</strong>제출 정보를 확인하고 필요한 내용을 수정한 뒤 다시 신청해주세요.</S.ReviewReason>{onboarding.profileErrorMessage ? <S.FormNotice><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{onboarding.profileErrorMessage}</Store.Notice></S.FormNotice> : null}<ProfileForm key={profile.updatedAt} profile={profile} isSaving={onboarding.isSavingProfile} isReapplying onSave={onboarding.saveProfile} /></> : null}
         {stage === 'verification' && profile ? <><S.ReadonlySummary><strong>{profile.businessName}</strong><span>{profile.contactEmail} · {profile.contactPhone}</span></S.ReadonlySummary>{onboarding.verificationErrorMessage ? <S.FormNotice><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{onboarding.verificationErrorMessage}</Store.Notice></S.FormNotice> : null}<VerificationForm verification={null} isSaving={onboarding.isSavingVerification} isReapplying={false} onSave={onboarding.saveVerification} /></> : null}

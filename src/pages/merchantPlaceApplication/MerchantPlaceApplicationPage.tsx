@@ -13,12 +13,12 @@ import * as S from './MerchantPlaceApplicationPage.styles'
 
 const STATUS: Record<MerchantPlaceApplicationStatus, { label: string; tone: 'draft' | 'pending' | 'active' | 'danger' | 'neutral' }> = {
   DRAFT: { label: '작성 중', tone: 'draft' },
-  PENDING: { label: '심사 중', tone: 'pending' },
-  APPROVED: { label: '승인됨', tone: 'active' },
+  PENDING: { label: '심사 대기', tone: 'pending' },
+  APPROVED: { label: '승인', tone: 'active' },
   REJECTED: { label: '반려', tone: 'danger' },
   REGISTERED: { label: '등록 완료', tone: 'active' },
-  COMPLETED: { label: '연결 완료', tone: 'active' },
-  CANCELED: { label: '취소됨', tone: 'neutral' },
+  COMPLETED: { label: '승인 완료', tone: 'active' },
+  CANCELED: { label: '취소', tone: 'neutral' },
 }
 
 const E164_PHONE_PATTERN = /^\+[1-9]\d{7,14}$/
@@ -137,7 +137,7 @@ function ApplicationForm({
     <Store.Form onSubmit={save}>
       {application && !editable ? <S.ReadonlyBlock>
         <strong>{STATUS[application.status].label}</strong><br />
-        {hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : application.status === 'PENDING' ? '심사 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
+        {hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : application.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
         {application.reviewReason ? <><br />검토 의견: {application.reviewReason}</> : null}
       </S.ReadonlyBlock> : null}
       <Store.Field>

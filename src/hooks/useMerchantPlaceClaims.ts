@@ -60,7 +60,7 @@ export function useMerchantPlaceClaims() {
       fallbackMessage,
       codeMessages: {
         ACCESS_DENIED: '상점주 권한이 필요합니다.',
-        MERCHANT_PLACE_CLAIM_NOT_FOUND: '장소 Claim 요청을 찾을 수 없습니다.',
+      MERCHANT_PLACE_CLAIM_NOT_FOUND: '장소 권한·소유권 신청을 찾을 수 없습니다.',
         INVALID_MERCHANT_PLACE_CLAIM_STATUS: '현재 상태에서는 이 작업을 할 수 없습니다.',
       },
     })
@@ -87,7 +87,7 @@ export function useMerchantPlaceClaims() {
       setStatus('ready')
     } catch (error) {
       if (!mountedRef.current || requestId !== listRequestRef.current) return
-      const nextMessage = getErrorMessage(error, '장소 Claim 내역을 불러오지 못했습니다.')
+      const nextMessage = getErrorMessage(error, '장소 권한·소유권 신청 내역을 불러오지 못했습니다.')
       if (initial) {
         setStatus('error')
         setErrorMessage(nextMessage)
@@ -116,7 +116,7 @@ export function useMerchantPlaceClaims() {
       setClaims((items) => replaceClaim(items, claim))
     } catch (error) {
       if (!mountedRef.current || requestId !== detailRequestRef.current) return
-      setActionErrorMessage(getErrorMessage(error, '장소 Claim 상세를 불러오지 못했습니다.'))
+      setActionErrorMessage(getErrorMessage(error, '장소 권한·소유권 신청 상세를 불러오지 못했습니다.'))
       logDebugError('상점주 장소 Claim 상세 조회 실패', error)
     } finally {
       if (mountedRef.current && requestId === detailRequestRef.current) setIsDetailLoading(false)
@@ -168,8 +168,8 @@ export function useMerchantPlaceClaims() {
       if (pageInfo.page === 1) setClaims((items) => replaceClaim(items, next))
       setPageInfo((current) => ({ ...current, totalElements: current.totalElements + 1 }))
     },
-    '장소 Claim 요청을 등록했습니다. 증빙 파일을 추가한 뒤 심사 결과를 확인해주세요.',
-    '장소 Claim 요청을 등록하지 못했습니다.',
+    '장소 권한·소유권 신청을 등록했습니다. 증빙 파일을 추가한 뒤 심사 결과를 확인해주세요.',
+    '장소 권한·소유권 신청을 등록하지 못했습니다.',
   ), [pageInfo.page, runAction])
 
   const cancelClaim = useCallback((claim: MerchantPlaceClaim) => {
@@ -181,8 +181,8 @@ export function useMerchantPlaceClaims() {
         setSelectedClaim(next)
         setClaims((items) => replaceClaim(items, next))
       },
-      '장소 Claim 요청을 취소했습니다.',
-      '장소 Claim 요청을 취소하지 못했습니다.',
+      '장소 권한·소유권 신청을 취소했습니다.',
+      '장소 권한·소유권 신청을 취소하지 못했습니다.',
     )
   }, [runAction])
 

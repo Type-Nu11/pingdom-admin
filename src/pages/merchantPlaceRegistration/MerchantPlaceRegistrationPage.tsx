@@ -19,12 +19,12 @@ import * as S from './MerchantPlaceRegistrationPage.styles'
 
 const STATUS: Record<MerchantPlaceRegistrationStatus, { label: string; tone: 'draft' | 'pending' | 'active' | 'danger' | 'neutral' }> = {
   DRAFT: { label: '작성 중', tone: 'draft' },
-  PENDING: { label: '심사 중', tone: 'pending' },
-  APPROVED: { label: '승인됨', tone: 'active' },
+  PENDING: { label: '심사 대기', tone: 'pending' },
+  APPROVED: { label: '승인', tone: 'active' },
   REJECTED: { label: '반려', tone: 'danger' },
   REGISTERED: { label: '등록 완료', tone: 'active' },
-  COMPLETED: { label: '연결 완료', tone: 'active' },
-  CANCELED: { label: '취소됨', tone: 'neutral' },
+  COMPLETED: { label: '승인 완료', tone: 'active' },
+  CANCELED: { label: '취소', tone: 'neutral' },
 }
 
 const E164_PHONE_PATTERN = /^\+[1-9]\d{7,14}$/
@@ -357,7 +357,7 @@ function RegistrationForm({
 
   return (
     <S.RegistrationForm onSubmit={save}>
-      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '관리자 승인이 완료됐습니다. 최종 장소 등록을 요청해주세요.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
+      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '관리자 승인이 완료됐습니다. 최종 장소 등록을 요청해주세요.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
       <S.FormWorkspace>
         <S.FormSections>
           <S.Section><S.SectionLegend>장소 검색</S.SectionLegend><S.SectionHint>장소명, 건물명 또는 주소를 검색해 등록할 장소를 선택하세요.</S.SectionHint>

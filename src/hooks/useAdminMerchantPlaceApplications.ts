@@ -22,23 +22,6 @@ const CATEGORY_MESSAGES = {
   server: '서버 오류가 발생했습니다.',
 } as const
 
-function asListItem(application: AdminMerchantPlaceApplication): AdminMerchantPlaceApplicationListItem {
-  return {
-    id: application.id,
-    applicantUserId: application.applicantUserId,
-    applicationType: application.applicationType,
-    status: application.status,
-    legalName: application.legalName,
-    businessName: application.businessName,
-    maskedBusinessRegistrationNumber: null,
-    merchantDisplayName: application.merchantDisplayName,
-    placeName: application.placeName,
-    existingPlaceId: application.existingPlaceId,
-    submittedAt: application.submittedAt,
-    updatedAt: application.updatedAt,
-  }
-}
-
 export function useAdminMerchantPlaceApplications() {
   const { clearAuth } = useAuth()
   const [items, setItems] = useState<AdminMerchantPlaceApplicationListItem[]>([])
@@ -71,7 +54,7 @@ export function useAdminMerchantPlaceApplications() {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const data = await api.getAdminMerchantPlaceApplications({ page: nextPage, limit: 20 })
+      const data = await api.getAdminMerchantPlaceApplications({ status: 'PENDING', page: nextPage, limit: 20 })
       setItems(data.items)
       setPage(data.page)
       setTotal(data.total)
@@ -165,7 +148,7 @@ export function useAdminMerchantPlaceApplications() {
         : await api.rejectAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
       setDetail(reviewed)
       setAttachments(reviewed.attachments)
-      setItems((current) => current.map((item) => item.id === reviewed.id ? asListItem(reviewed) : item))
+      await fetchApplications(1)
       setSuccessMessage(approved ? '장소 신청을 승인했습니다.' : '장소 신청을 반려했습니다.')
       return reviewed
     } catch (error) {
@@ -177,7 +160,7 @@ export function useAdminMerchantPlaceApplications() {
       reviewRef.current = false
       setIsReviewing(false)
     }
-  }, [detail, fetchDetail, message])
+  }, [detail, fetchApplications, fetchDetail, message])
 
   useEffect(() => { void fetchApplications(1) }, [fetchApplications])
 

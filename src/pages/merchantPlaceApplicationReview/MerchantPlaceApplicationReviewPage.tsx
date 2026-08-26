@@ -16,7 +16,6 @@ import * as Form from '../placeVerification/PlaceVerificationPage.styles'
 import * as S from './MerchantPlaceApplicationReviewPage.styles'
 
 const TYPE_LABELS: Record<MerchantPlaceApplicationType, string> = {
-  LEGACY: '기존 장소 운영 권한 신청',
   NEW_PLACE: '신규 장소 등록 신청',
   EXISTING_PLACE_CLAIM: '기존 장소 권한·소유권 신청',
 }
@@ -87,7 +86,10 @@ function MerchantPlaceApplicationReviewPage() {
       setFormError('심사 사유를 입력해주세요.')
       return
     }
-    if (await hook.review(decision === 'approve', trimmedReason)) setDecision(null)
+    if (await hook.review(decision === 'approve', trimmedReason)) {
+      setDecision(null)
+      setSelectedId(null)
+    }
   }
 
   return (
@@ -106,8 +108,8 @@ function MerchantPlaceApplicationReviewPage() {
           {hook.successMessage ? <Shared.Notice $variant="success">{hook.successMessage}</Shared.Notice> : null}
           <Shared.Workspace>
             <Shared.Panel>
-              <Shared.PanelHeader><div><Shared.PanelTitle>장소 신청 목록</Shared.PanelTitle><Shared.PanelDescription>신청을 선택해 사업자 정보와 증빙을 검토합니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.total.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
-              <Shared.ScrollArea>{hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>장소 신청 목록을 불러오는 중입니다.</strong></Shared.EmptyState> : hook.items.length === 0 ? <Shared.EmptyState><strong>등록된 장소 신청이 없습니다.</strong></Shared.EmptyState> : <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList>}</Shared.ScrollArea>
+              <Shared.PanelHeader><div><Shared.PanelTitle>심사 대기 신청</Shared.PanelTitle><Shared.PanelDescription>심사 대기 중인 신청을 선택해 사업자 정보와 증빙을 검토합니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.total.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
+              <Shared.ScrollArea>{hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>심사 대기 신청을 불러오는 중입니다.</strong></Shared.EmptyState> : hook.items.length === 0 ? <Shared.EmptyState><strong>심사 대기 중인 장소 신청이 없습니다.</strong></Shared.EmptyState> : <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList>}</Shared.ScrollArea>
               {hook.totalPages > 1 ? <Form.Pagination><Shared.SecondaryButton type="button" disabled={hook.page <= 1 || hook.isLoading} onClick={() => { setSelectedId(null); void hook.fetchApplications(hook.page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(hook.page, 1)} / {Math.max(hook.totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.hasNext || hook.isLoading} onClick={() => { setSelectedId(null); void hook.fetchApplications(hook.page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination> : null}
             </Shared.Panel>
             <Shared.Panel>

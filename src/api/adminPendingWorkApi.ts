@@ -1,6 +1,3 @@
-import { getAdminMerchantOwners } from "./adminMerchantOwnerApi";
-import { getAdminMerchantPlaceClaims } from "./adminMerchantPlaceClaimApi";
-import { getAdminMerchantVerifications } from "./adminMerchantVerificationApi";
 import {
   getAdminPlaceDuplicateGroups,
   getAdminPlaceDuplicateReviewCandidates,
@@ -105,39 +102,6 @@ const checks: PendingWorkCheck[] = [
     ];
   },
   async () => {
-    const response = await getAdminMerchantOwners({
-      status: "PENDING",
-      page: 1,
-      limit: 1,
-    });
-    return [
-      item(
-        "merchant-owner-applications",
-        "상점주 신청",
-        "승인 대기 중인 상점주 프로필",
-        response.totalCount,
-        "/merchant-owners",
-      ),
-    ];
-  },
-  async () => {
-    const response = await getAdminMerchantVerifications({
-      identityStatus: "PENDING",
-      businessStatus: "PENDING",
-      page: 1,
-      limit: 1,
-    });
-    return [
-      item(
-        "merchant-verifications",
-        "Merchant 검증",
-        "신원·사업자 검증이 모두 대기 중인 신청",
-        response.totalElements,
-        "/merchant-verifications",
-      ),
-    ];
-  },
-  async () => {
     const [reports, corrections] = await Promise.all([
       getAdminVisitorVerificationReports({
         status: "SUBMITTED",
@@ -186,22 +150,6 @@ const checks: PendingWorkCheck[] = [
         "심사 대기 중인 Scout 현장 제보",
         reports.totalElements,
         "/scouts?tab=reports",
-      ),
-    ];
-  },
-  async () => {
-    const response = await getAdminMerchantPlaceClaims({
-      status: "PENDING",
-      page: 1,
-      limit: 1,
-    });
-    return [
-      item(
-        "merchant-place-claims",
-        "장소 Claim 심사",
-        "심사 대기 중인 장소 Claim 요청",
-        response.totalElements,
-        "/merchant-place-claims",
       ),
     ];
   },

@@ -1,4 +1,9 @@
 import type { AuthErrorResponse } from './auth.types'
+import type {
+  MerchantPlaceCategory,
+  MerchantPlaceRegistrationOperatingDay,
+  MerchantPlaceTag,
+} from './merchantPlaceRegistration.types'
 
 export type MerchantPlaceApplicationType = 'NEW_PLACE' | 'EXISTING_PLACE_CLAIM'
 export type MerchantPlaceApplicationStatus =
@@ -22,6 +27,38 @@ export interface MerchantPlaceApplicationAttachment {
   displayOrder: number
 }
 
+export interface MerchantPlaceApplicationNewPlace {
+  placeName: string
+  category: MerchantPlaceCategory
+  latitude: number
+  longitude: number
+  roadAddress: string
+  jibunAddress: string
+  postalCode: string
+  description: string
+  businessContactPhone: string
+  applicantContactPhone: string
+  tags: MerchantPlaceTag[]
+  timezone: string | null
+  operatingDays: MerchantPlaceRegistrationOperatingDay[] | null
+}
+
+export interface MerchantPlaceApplicationNewPlaceRequest {
+  placeName: string
+  category: MerchantPlaceCategory
+  latitude: number
+  longitude: number
+  roadAddress: string
+  jibunAddress: string
+  postalCode: string
+  description: string
+  businessContactPhone: string
+  applicantContactPhone: string
+  tags?: MerchantPlaceTag[]
+  timezone?: string
+  operatingDays?: MerchantPlaceRegistrationOperatingDay[]
+}
+
 export interface MerchantPlaceApplication {
   id: number
   applicantUserId: number
@@ -33,6 +70,7 @@ export interface MerchantPlaceApplication {
   merchantContactEmail: string
   merchantDescription: string | null
   merchantContactPhone: string
+  newPlace: MerchantPlaceApplicationNewPlace | null
   placeName: string | null
   existingPlaceId: number | null
   claimReason: string | null
@@ -48,8 +86,7 @@ export interface MerchantPlaceApplication {
   attachments: MerchantPlaceApplicationAttachment[]
 }
 
-export interface MerchantPlaceApplicationRequest {
-  applicationType: 'EXISTING_PLACE_CLAIM'
+interface MerchantPlaceApplicationBaseRequest {
   legalName: string
   businessName: string
   businessRegistrationNumber: string
@@ -57,10 +94,25 @@ export interface MerchantPlaceApplicationRequest {
   merchantDescription?: string | null
   merchantContactEmail: string
   merchantContactPhone: string
+}
+
+export interface MerchantExistingPlaceApplicationRequest extends MerchantPlaceApplicationBaseRequest {
+  applicationType: 'EXISTING_PLACE_CLAIM'
   existingPlaceId: number
   claimReason: string
-  attachments?: never[]
+  newPlace?: never
 }
+
+export interface MerchantNewPlaceApplicationRequest extends MerchantPlaceApplicationBaseRequest {
+  applicationType: 'NEW_PLACE'
+  newPlace: MerchantPlaceApplicationNewPlaceRequest
+  existingPlaceId?: never
+  claimReason?: never
+}
+
+export type MerchantPlaceApplicationRequest =
+  | MerchantExistingPlaceApplicationRequest
+  | MerchantNewPlaceApplicationRequest
 
 export interface MerchantPlaceApplicationPageResponse {
   items: MerchantPlaceApplication[]

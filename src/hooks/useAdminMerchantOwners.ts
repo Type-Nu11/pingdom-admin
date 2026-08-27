@@ -23,7 +23,7 @@ import type {
 import { logDebugError } from "../utils/debugLogger";
 import { useAuth } from "./useAuth";
 
-const LIMIT = 20;
+const LIMIT = 10;
 export type MerchantOwnerAction =
   | "revoke"
   | "places"

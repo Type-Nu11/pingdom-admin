@@ -54,7 +54,7 @@ export function useAdminMerchantPlaceApplications() {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const data = await api.getAdminMerchantPlaceApplications({ status: 'PENDING', page: nextPage, limit: 20 })
+      const data = await api.getAdminMerchantPlaceApplications({ status: 'PENDING', page: nextPage, limit: 10 })
       setItems(data.items)
       setPage(data.page)
       setTotal(data.total)

@@ -141,7 +141,7 @@ function OperationHistoryPage() {
       from: auditFrom || undefined,
       to: auditTo || undefined,
       page,
-      limit: 20,
+      limit: 10,
     }
   }
 
@@ -163,7 +163,7 @@ function OperationHistoryPage() {
       from: privacyFrom || undefined,
       to: privacyTo || undefined,
       page,
-      limit: 20,
+      limit: 10,
     }
   }
 

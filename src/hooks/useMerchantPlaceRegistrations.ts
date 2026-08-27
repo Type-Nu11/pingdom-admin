@@ -1,49 +1,114 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  cancelMerchantPlaceRegistration,
-  completeMerchantPlaceRegistration,
-  createMerchantPlaceRegistration,
-  getMerchantPlaceRegistration,
-  getMerchantPlaceRegistrations,
-  reopenMerchantPlaceRegistration,
-  submitMerchantPlaceRegistration,
-  updateMerchantPlaceRegistration,
-} from '../api/merchantPlaceRegistrationApi'
+  cancelMerchantPlaceApplication,
+  createMerchantPlaceApplication,
+  deleteMerchantPlaceApplicationAttachment,
+  getMerchantPlaceApplication,
+  getMerchantPlaceApplications,
+  reopenMerchantPlaceApplication,
+  reorderMerchantPlaceApplicationAttachments,
+  submitMerchantPlaceApplication,
+  updateMerchantPlaceApplication,
+  uploadMerchantPlaceApplicationAttachment,
+} from '../api/merchantPlaceApplicationApi'
 import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantOwnerProfile } from '../types/merchantStore.types'
 import type {
+  MerchantPlaceApplication,
+  MerchantPlaceApplicationAttachment,
+  MerchantPlaceApplicationErrorResponse,
+  MerchantNewPlaceApplicationRequest,
+} from '../types/merchantPlaceApplication.types'
+import type {
   MerchantPlaceRegistration,
-  MerchantPlaceRegistrationErrorResponse,
   MerchantPlaceRegistrationRequest,
 } from '../types/merchantPlaceRegistration.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
-type Action = 'save' | 'submit' | 'reopen' | 'complete' | 'cancel' | 'detail' | null
+type Action = 'save' | 'submit' | 'reopen' | 'cancel' | 'detail' | 'upload' | 'delete' | 'reorder' | null
 
 function getErrorMessage(error: unknown, fallbackMessage: string) {
-  if (!isApiError<MerchantPlaceRegistrationErrorResponse>(error)) return fallbackMessage
-
+  if (!isApiError<MerchantPlaceApplicationErrorResponse>(error)) return fallbackMessage
   return getAuthErrorMessage(error, {
     fallbackMessage,
     codeMessages: {
       ACCESS_DENIED: '상점주 권한이 필요합니다.',
       INVALID_TOKEN: '로그인이 만료되었습니다. 다시 로그인해주세요.',
-      PLACE_REGISTRATION_APPROVAL_REQUIRED: '승인된 등록 신청을 통해서만 장소를 등록할 수 있습니다.',
     },
   })
 }
 
-function replaceRegistration(
-  current: MerchantPlaceRegistration[],
-  next: MerchantPlaceRegistration,
-) {
+function toRegistration(application: MerchantPlaceApplication): MerchantPlaceRegistration | null {
+  if (application.applicationType !== 'NEW_PLACE' || !application.newPlace) return null
+  const place = application.newPlace
+  return {
+    id: application.id,
+    applicantUserId: application.applicantUserId,
+    status: application.status,
+    placeName: place.placeName,
+    category: place.category,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    roadAddress: place.roadAddress,
+    jibunAddress: place.jibunAddress,
+    postalCode: place.postalCode,
+    description: place.description,
+    businessContactPhone: place.businessContactPhone,
+    applicantContactPhone: place.applicantContactPhone,
+    legalName: application.legalName,
+    businessName: application.businessName,
+    merchantDisplayName: application.merchantDisplayName,
+    merchantContactEmail: application.merchantContactEmail,
+    merchantContactPhone: application.merchantContactPhone,
+    reviewReason: application.reviewReason,
+    registeredPlaceId: application.placeId,
+    submittedAt: application.submittedAt,
+    reviewedAt: application.reviewedAt,
+    registeredAt: application.completedAt,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
+    submissionVersion: application.submissionVersion,
+    submissionContentHash: null,
+    canceledAt: application.canceledAt,
+    tags: place.tags,
+    attachments: application.attachments,
+    timezone: place.timezone,
+    operatingScheduleJson: JSON.stringify(place.operatingDays ?? []),
+  }
+}
+
+function replaceRegistration(current: MerchantPlaceRegistration[], next: MerchantPlaceRegistration) {
   const index = current.findIndex((registration) => registration.id === next.id)
   if (index === -1) return [next, ...current]
   return current.map((registration) => (registration.id === next.id ? next : registration))
+}
+
+function toRequest(request: MerchantPlaceRegistrationRequest): MerchantNewPlaceApplicationRequest {
+  const {
+    legalName,
+    businessName,
+    businessRegistrationNumber,
+    merchantDisplayName,
+    merchantContactEmail,
+    merchantContactPhone,
+    merchantDescription,
+    ...newPlace
+  } = request
+  return {
+    applicationType: 'NEW_PLACE',
+    legalName,
+    businessName,
+    businessRegistrationNumber,
+    merchantDisplayName,
+    merchantContactEmail,
+    merchantContactPhone,
+    merchantDescription,
+    newPlace,
+  }
 }
 
 export function useMerchantPlaceRegistrations() {
@@ -62,19 +127,28 @@ export function useMerchantPlaceRegistrations() {
     if (isApiError(error) && error.category === 'unauthorized') clearAuth()
   }, [clearAuth])
 
+  const applyApplication = useCallback((application: MerchantPlaceApplication) => {
+    const registration = toRegistration(application)
+    if (registration) setRegistrations((current) => replaceRegistration(current, registration))
+    return registration
+  }, [])
+
   const fetchRegistrations = useCallback(async () => {
     setStatus((current) => (current === 'ready' ? 'ready' : 'loading'))
     setErrorMessage('')
-    const [profileResult, registrationsResult] = await Promise.allSettled([
+    const [profileResult, applicationsResult] = await Promise.allSettled([
       getMerchantOwnerProfile(),
-      getMerchantPlaceRegistrations(),
+      getMerchantPlaceApplications({ page: 1, limit: 100 }),
     ])
-
     if (!mountedRef.current) return
     if (profileResult.status === 'fulfilled') setProfile(profileResult.value)
-    if (registrationsResult.status === 'fulfilled') setRegistrations(registrationsResult.value.applications)
-
-    const failures = [profileResult, registrationsResult].filter(
+    if (applicationsResult.status === 'fulfilled') {
+      setRegistrations(applicationsResult.value.items.flatMap((application) => {
+        const registration = toRegistration(application)
+        return registration ? [registration] : []
+      }))
+    }
+    const failures = [profileResult, applicationsResult].filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
     if (failures.length === 2) {
@@ -83,7 +157,6 @@ export function useMerchantPlaceRegistrations() {
       setErrorMessage('신규 장소 등록 신청 정보를 불러오지 못했습니다.')
       return
     }
-
     setStatus('ready')
     if (failures.length > 0) {
       failures.forEach((result) => logDebugError('신규 장소 등록 신청 일부 조회 실패', result.reason))
@@ -130,68 +203,79 @@ export function useMerchantPlaceRegistrations() {
 
   const selectRegistration = useCallback((applicationId: number) => runAction(
     'detail',
-    () => getMerchantPlaceRegistration(applicationId),
-    (next) => setRegistrations((current) => replaceRegistration(current, next)),
+    () => getMerchantPlaceApplication(applicationId),
+    applyApplication,
     '',
     '신청 상세를 불러오지 못했습니다.',
-  ), [runAction])
+  ), [applyApplication, runAction])
 
   const saveRegistration = useCallback((applicationId: number | null, request: MerchantPlaceRegistrationRequest) => runAction(
     'save',
-    () => applicationId ? updateMerchantPlaceRegistration(applicationId, request) : createMerchantPlaceRegistration(request),
-    (next) => setRegistrations((current) => replaceRegistration(current, next)),
+    () => applicationId
+      ? updateMerchantPlaceApplication(applicationId, toRequest(request))
+      : createMerchantPlaceApplication(toRequest(request)),
+    applyApplication,
     applicationId ? '신규 장소 신청서를 저장했습니다.' : '신규 장소 신청서를 만들었습니다.',
     '신규 장소 신청서를 저장하지 못했습니다.',
-  ), [runAction])
+  ).then((application) => application ? toRegistration(application) : null), [applyApplication, runAction])
 
   const submitRegistration = useCallback((applicationId: number) => runAction(
     'submit',
-    () => submitMerchantPlaceRegistration(applicationId),
-    (next) => setRegistrations((current) => replaceRegistration(current, next)),
+    () => submitMerchantPlaceApplication(applicationId),
+    applyApplication,
     '신규 장소 등록 신청을 제출했습니다.',
     '신규 장소 등록 신청을 제출하지 못했습니다.',
-  ), [runAction])
+  ).then((application) => application ? toRegistration(application) : null), [applyApplication, runAction])
 
   const reopenRegistration = useCallback((applicationId: number) => runAction(
     'reopen',
-    () => reopenMerchantPlaceRegistration(applicationId),
-    (next) => setRegistrations((current) => replaceRegistration(current, next)),
+    () => reopenMerchantPlaceApplication(applicationId),
+    applyApplication,
     '신청서를 다시 열었습니다. 내용을 보완한 뒤 제출해주세요.',
     '신청서를 다시 열지 못했습니다.',
-  ), [runAction])
-
-  const completeRegistration = useCallback(async (applicationId: number) => {
-    const nextRegistration = await runAction(
-      'complete',
-      () => completeMerchantPlaceRegistration(applicationId),
-      (next) => setRegistrations((current) => replaceRegistration(current, next)),
-      '승인된 장소 등록을 완료했습니다. 가게 연결 상태를 확인해주세요.',
-      '장소 등록을 완료하지 못했습니다.',
-    )
-
-    if (!nextRegistration) return null
-
-    try {
-      const nextProfile = await getMerchantOwnerProfile()
-      if (mountedRef.current) setProfile(nextProfile)
-    } catch (error) {
-      logDebugError('장소 등록 완료 후 상점주 프로필 조회 실패', error)
-    }
-
-    return nextRegistration
-  }, [runAction])
+  ).then((application) => application ? toRegistration(application) : null), [applyApplication, runAction])
 
   const cancelRegistration = useCallback((applicationId: number) => runAction(
     'cancel',
-    () => cancelMerchantPlaceRegistration(applicationId),
-    (next) => setRegistrations((current) => replaceRegistration(current, next)),
+    () => cancelMerchantPlaceApplication(applicationId),
+    applyApplication,
     '신규 장소 등록 신청을 취소했습니다.',
     '신규 장소 등록 신청을 취소하지 못했습니다.',
-  ), [runAction])
+  ).then((application) => application ? toRegistration(application) : null), [applyApplication, runAction])
+
+  const refreshAttachments = useCallback(async (applicationId: number, attachmentAction: () => Promise<unknown>) => {
+    await attachmentAction()
+    const application = await getMerchantPlaceApplication(applicationId)
+    applyApplication(application)
+  }, [applyApplication])
+
+  const uploadAttachment = useCallback((applicationId: number, documentType: MerchantPlaceApplicationAttachment['documentType'], file: File) => runAction(
+    'upload',
+    () => refreshAttachments(applicationId, () => uploadMerchantPlaceApplicationAttachment(applicationId, documentType, file)),
+    () => undefined,
+    '증빙 파일을 추가했습니다.',
+    '증빙 파일을 추가하지 못했습니다.',
+  ), [refreshAttachments, runAction])
+
+  const deleteAttachment = useCallback((applicationId: number, attachmentId: number) => runAction(
+    'delete',
+    () => refreshAttachments(applicationId, () => deleteMerchantPlaceApplicationAttachment(applicationId, attachmentId)),
+    () => undefined,
+    '증빙 파일을 삭제했습니다.',
+    '증빙 파일을 삭제하지 못했습니다.',
+  ), [refreshAttachments, runAction])
+
+  const reorderAttachments = useCallback((applicationId: number, attachmentIds: number[]) => runAction(
+    'reorder',
+    () => refreshAttachments(applicationId, () => reorderMerchantPlaceApplicationAttachments(applicationId, attachmentIds)),
+    () => undefined,
+    '대표 이미지 순서를 변경했습니다.',
+    '대표 이미지 순서를 변경하지 못했습니다.',
+  ), [refreshAttachments, runAction])
 
   return {
     status, profile, registrations, errorMessage, actionErrorMessage, successMessage, activeAction,
     fetchRegistrations, selectRegistration, saveRegistration, submitRegistration,
-    reopenRegistration, completeRegistration, cancelRegistration,
+    reopenRegistration, cancelRegistration, uploadAttachment, deleteAttachment, reorderAttachments,
   }
 }

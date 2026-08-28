@@ -82,3 +82,64 @@ export const Reason = styled.p`
   line-height: 1.55;
   white-space: pre-wrap;
 `
+
+export const FilterBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid ${colors.borderSoft};
+  border-radius: 10px;
+  background: ${colors.surface};
+`
+
+export const FilterTabs = styled.div`
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: ${colors.surfaceLow};
+`
+
+export const FilterTab = styled.button<{ $active: boolean }>`
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
+  color: ${({ $active }) => ($active ? colors.primaryText : colors.muted)};
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: ${({ $active }) => ($active ? colors.primaryText : colors.primary)};
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+`
+
+export const FilterField = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: ${colors.muted};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const FilterSelect = styled.select`
+  min-height: 34px;
+  padding: 0 30px 0 10px;
+  border: 1px solid ${colors.border};
+  border-radius: 7px;
+  background: ${colors.surface};
+  color: ${colors.strongText};
+  font-size: 12px;
+  font-weight: 700;
+`

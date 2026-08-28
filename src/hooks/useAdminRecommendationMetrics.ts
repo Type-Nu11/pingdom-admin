@@ -16,7 +16,7 @@ import type {
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
-const LIMIT = 20
+const LIMIT = 10
 const CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
   forbidden: '관리자 권한이 필요합니다.',

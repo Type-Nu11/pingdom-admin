@@ -9,6 +9,7 @@ import type {
   MerchantOperatingDayStatus,
   MerchantPlaceCategory,
   MerchantPlaceRegistration,
+  MerchantPlaceRegistrationAttachment,
   MerchantPlaceRegistrationOperatingDay,
   MerchantPlaceRegistrationRequest,
   MerchantPlaceRegistrationStatus,
@@ -127,8 +128,10 @@ function RegistrationForm({
   onSave,
   onSubmit,
   onReopen,
-  onComplete,
   onCancel,
+  onUpload,
+  onDelete,
+  onReorder,
 }: {
   registration: MerchantPlaceRegistration | null
   profile: ReturnType<typeof useMerchantPlaceRegistrations>['profile']
@@ -136,8 +139,10 @@ function RegistrationForm({
   onSave: (applicationId: number | null, request: MerchantPlaceRegistrationRequest) => Promise<MerchantPlaceRegistration | null>
   onSubmit: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
   onReopen: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
-  onComplete: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
   onCancel: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
+  onUpload: (applicationId: number, documentType: MerchantPlaceRegistrationAttachment['documentType'], file: File) => Promise<unknown>
+  onDelete: (applicationId: number, attachmentId: number) => Promise<unknown>
+  onReorder: (applicationId: number, attachmentIds: number[]) => Promise<unknown>
 }) {
   const hasExistingAttachments = (registration?.attachments.length ?? 0) > 0
   const editable = canEdit(registration) && !hasExistingAttachments
@@ -152,6 +157,12 @@ function RegistrationForm({
   const [description, setDescription] = useState(registration?.description ?? profile?.description ?? '')
   const [businessPhone, setBusinessPhone] = useState(registration?.businessContactPhone ?? profile?.contactPhone ?? '')
   const [applicantPhone, setApplicantPhone] = useState(profile?.contactPhone ?? '')
+  const [legalName, setLegalName] = useState(registration?.legalName ?? '')
+  const [businessName, setBusinessName] = useState(registration?.businessName ?? profile?.businessName ?? '')
+  const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
+  const [merchantDisplayName, setMerchantDisplayName] = useState(registration?.merchantDisplayName ?? profile?.displayName ?? '')
+  const [merchantContactEmail, setMerchantContactEmail] = useState(registration?.merchantContactEmail ?? profile?.contactEmail ?? '')
+  const [merchantContactPhone, setMerchantContactPhone] = useState(registration?.merchantContactPhone ?? profile?.contactPhone ?? '')
   const [isApplicantPhoneSame, setIsApplicantPhoneSame] = useState(false)
   const [tags, setTags] = useState<MerchantPlaceTag[]>(registration?.tags ?? [])
   const [schedule, setSchedule] = useState<ScheduleDraft[]>(parseSchedule(registration?.operatingScheduleJson ?? null))
@@ -163,6 +174,9 @@ function RegistrationForm({
   const [isMapReady, setIsMapReady] = useState(false)
   const [isManualPlaceEntry, setIsManualPlaceEntry] = useState(false)
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false)
+  const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceRegistrationAttachment['documentType']>('BUSINESS_REGISTRATION')
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null)
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
   const placeSearchRequestIdRef = useRef(0)
@@ -310,7 +324,7 @@ function RegistrationForm({
   }, [])
 
   const buildRequest = (): MerchantPlaceRegistrationRequest | null => {
-    if (!placeName.trim() || !roadAddress.trim() || !jibunAddress.trim() || !postalCode.trim() || !description.trim() || !businessPhone.trim() || !applicantPhone.trim()) {
+    if (!legalName.trim() || !businessName.trim() || !businessRegistrationNumber.trim() || !merchantDisplayName.trim() || !merchantContactEmail.trim() || !merchantContactPhone.trim() || !placeName.trim() || !roadAddress.trim() || !jibunAddress.trim() || !postalCode.trim() || !description.trim() || !businessPhone.trim() || !applicantPhone.trim()) {
       setFormError('필수 항목을 모두 입력해주세요.')
       return null
     }
@@ -324,7 +338,12 @@ function RegistrationForm({
     }
     const normalizedBusinessPhone = normalizeE164Phone(businessPhone)
     const normalizedApplicantPhone = normalizeE164Phone(applicantPhone)
-    if (!E164_PHONE_PATTERN.test(normalizedBusinessPhone) || !E164_PHONE_PATTERN.test(normalizedApplicantPhone)) {
+    const normalizedMerchantContactPhone = normalizeE164Phone(merchantContactPhone)
+    if (!merchantContactEmail.includes('@')) {
+      setFormError('상점주 연락 이메일 형식을 확인해주세요.')
+      return null
+    }
+    if (!E164_PHONE_PATTERN.test(normalizedBusinessPhone) || !E164_PHONE_PATTERN.test(normalizedApplicantPhone) || !E164_PHONE_PATTERN.test(normalizedMerchantContactPhone)) {
       setFormError('연락처는 국가번호를 포함한 국제 형식으로 입력해주세요. 예: +821012345678')
       return null
     }
@@ -335,6 +354,8 @@ function RegistrationForm({
       ...(day.status === 'OPEN' ? { opensAt: toTime(day.opensAt), closesAt: toTime(day.closesAt), breakTimes: [] } : {}),
     }))
     return {
+      legalName: legalName.trim(), businessName: businessName.trim(), businessRegistrationNumber: businessRegistrationNumber.trim(),
+      merchantDisplayName: merchantDisplayName.trim(), merchantDescription: null, merchantContactEmail: merchantContactEmail.trim(), merchantContactPhone: normalizedMerchantContactPhone,
       placeName: placeName.trim(), category, latitude: numericLatitude, longitude: numericLongitude,
       roadAddress: roadAddress.trim(), jibunAddress: jibunAddress.trim(), postalCode: postalCode.trim(),
       description: description.trim(), businessContactPhone: normalizedBusinessPhone, applicantContactPhone: normalizedApplicantPhone,
@@ -349,17 +370,46 @@ function RegistrationForm({
   }
 
   const submit = async () => {
-    const request = buildRequest()
-    if (!request) return
-    const saved = await onSave(registration?.id ?? null, request)
-    if (saved) await onSubmit(saved.id)
+    if (registration && canSubmitExistingAttachments) await onSubmit(registration.id)
+  }
+
+  const uploadAttachment = async () => {
+    if (!registration || !attachmentFile) {
+      setFormError('임시 저장 후 업로드할 파일을 선택해주세요.')
+      return
+    }
+    const uploaded = await onUpload(registration.id, attachmentDocumentType, attachmentFile)
+    if (!uploaded) return
+    setAttachmentFile(null)
+    if (attachmentInputRef.current) attachmentInputRef.current.value = ''
+  }
+
+  const moveRepresentativeImage = async (attachmentId: number, direction: -1 | 1) => {
+    if (!registration) return
+    const images = registration.attachments
+      .filter((attachment) => attachment.documentType === 'REPRESENTATIVE_IMAGE')
+      .sort((first, second) => first.displayOrder - second.displayOrder)
+    const currentIndex = images.findIndex((attachment) => attachment.id === attachmentId)
+    const targetIndex = currentIndex + direction
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= images.length) return
+    const reordered = [...images]
+    ;[reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]]
+    await onReorder(registration.id, reordered.map((attachment) => attachment.id))
   }
 
   return (
     <S.RegistrationForm onSubmit={save}>
-      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '관리자 승인이 완료됐습니다. 최종 장소 등록을 요청해주세요.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
+      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '증빙 파일이 첨부된 신청서는 심사 내용의 일관성을 위해 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '승인이 완료되어 장소 생성과 상점주 연결이 자동으로 처리되었습니다.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
       <S.FormWorkspace>
         <S.FormSections>
+          <S.Section><S.SectionLegend>사업자·상점주 정보</S.SectionLegend><S.SectionHint>심사와 승인 후 상점주 권한 연결에 사용하는 정보입니다.</S.SectionHint>
+        <Store.Field>법적 성명<Store.Input value={legalName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setLegalName(event.target.value)} /></Store.Field>
+        <Store.Field>사업자명<Store.Input value={businessName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessName(event.target.value)} /></Store.Field>
+        <Store.Field>사업자등록번호<Store.Input value={businessRegistrationNumber} inputMode="numeric" maxLength={30} placeholder={registration ? '수정·재신청 시 다시 입력하세요.' : '사업자등록번호를 입력하세요.'} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessRegistrationNumber(event.target.value)} /></Store.Field>
+        <Store.Field>상점주 노출명<Store.Input value={merchantDisplayName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantDisplayName(event.target.value)} /></Store.Field>
+        <Store.Field>상점주 연락 이메일<Store.Input type="email" value={merchantContactEmail} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactEmail(event.target.value)} /></Store.Field>
+        <Store.Field>상점주 연락처<Store.Input type="tel" inputMode="tel" value={merchantContactPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactPhone(event.target.value)} /><S.SectionHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SectionHint></Store.Field>
+          </S.Section>
           <S.Section><S.SectionLegend>장소 검색</S.SectionLegend><S.SectionHint>장소명, 건물명 또는 주소를 검색해 등록할 장소를 선택하세요.</S.SectionHint>
         <S.PlaceSearchField $wide><S.PlaceSearchLabel htmlFor="merchant-place-search">장소명, 건물명 또는 주소 검색</S.PlaceSearchLabel><S.PlaceSearchControl><Store.Input id="merchant-place-search" value={placeSearchQuery} placeholder="예: 성수 카페, 롯데월드, 서울시청" disabled={!editable || activeAction !== null || !isMapReady} onChange={(event) => { const nextQuery = event.target.value; setPlaceSearchQuery(nextQuery); setPlaceSearchMessage(''); if (!nextQuery.trim()) { placeSearchRequestIdRef.current += 1; setIsPlaceSearchLoading(false); setPlaceSearchResults([]) } }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} /><S.PlaceSearchButton type="button" aria-label="장소 검색" title="장소 검색" disabled={!editable || activeAction !== null || !isMapReady || isPlaceSearchLoading} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton></S.PlaceSearchControl>{isPlaceSearchLoading ? <S.PlaceSearchHint>장소를 검색하는 중입니다.</S.PlaceSearchHint> : null}{placeSearchMessage ? <S.PlaceSearchHint $error>{placeSearchMessage}</S.PlaceSearchHint> : null}{placeSearchResults.length > 0 ? <S.PlaceSearchResults role="listbox" aria-label="연관 장소"><S.PlaceSearchResultsTitle>연관 장소</S.PlaceSearchResultsTitle>{placeSearchResults.map((place) => <S.PlaceSearchResult type="button" role="option" key={place.id} aria-label={`${place.place_name}, ${place.road_address_name || place.address_name}`} onClick={() => selectPlaceSearchResult(place)}><S.PlaceSearchResultTop><strong>{place.place_name}</strong>{place.category_group_name ? <span>{place.category_group_name}</span> : null}</S.PlaceSearchResultTop>{place.category_name ? <S.PlaceSearchResultCategory>{place.category_name}</S.PlaceSearchResultCategory> : null}<S.PlaceSearchResultAddress><span aria-hidden="true">location_on</span>{place.road_address_name || place.address_name}</S.PlaceSearchResultAddress></S.PlaceSearchResult>)}</S.PlaceSearchResults> : null}{hasSelectedPlace ? <S.SelectedPlaceSummary><strong>선택한 장소</strong><S.SelectedPlaceNameField htmlFor="merchant-place-name">장소명<Store.Input id="merchant-place-name" value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setPlaceName(event.target.value)} /></S.SelectedPlaceNameField><S.SelectedPlaceAddress><span>{roadAddress || jibunAddress}</span>{jibunAddress && roadAddress ? <small>{jibunAddress}</small> : null}{postalCode ? <small>우편번호 {postalCode}</small> : null}</S.SelectedPlaceAddress></S.SelectedPlaceSummary> : null}</S.PlaceSearchField>
           </S.Section>
@@ -370,14 +420,14 @@ function RegistrationForm({
         <Store.Field $wide>장소 소개<Store.Textarea value={description} maxLength={1000} disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} /><S.SectionHint>{description.length}/1000</S.SectionHint></Store.Field>
           </S.Section>
           <S.Section><S.SectionLegend>연락처</S.SectionLegend><S.SectionHint>사업장 연락처는 방문자에게 표시되고, 신청자 연락처는 심사와 보완 요청에만 사용됩니다.</S.SectionHint>
-        <Store.Field>사업장 연락처<Store.Input id="merchant-business-phone" type="tel" inputMode="tel" value={businessPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => updateBusinessPhone(event.target.value)} /><S.SectionHint>방문자에게 표시될 가게 대표 연락처입니다.</S.SectionHint></Store.Field>
-        <S.ContactField><S.ContactFieldLabel htmlFor="merchant-applicant-phone">신청자 연락처</S.ContactFieldLabel><Store.Input id="merchant-applicant-phone" type="tel" inputMode="tel" value={applicantPhone} maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null || isApplicantPhoneSame} onChange={(event) => setApplicantPhone(event.target.value)} /><S.SameContactCheck><input type="checkbox" checked={isApplicantPhoneSame} disabled={!editable || activeAction !== null} onChange={(event) => toggleApplicantPhoneSame(event.target.checked)} />사업장 연락처와 동일</S.SameContactCheck><S.SectionHint>심사와 보완 요청을 위한 연락처이며 방문자에게 공개되지 않습니다.</S.SectionHint></S.ContactField>
+        <Store.Field>사업장 연락처<Store.Input id="merchant-business-phone" type="tel" inputMode="tel" value={businessPhone} maxLength={20} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => updateBusinessPhone(event.target.value)} /><S.SectionHint>방문자에게 표시될 가게 대표 연락처입니다.</S.SectionHint></Store.Field>
+        <S.ContactField><S.ContactFieldLabel htmlFor="merchant-applicant-phone">신청자 연락처</S.ContactFieldLabel><Store.Input id="merchant-applicant-phone" type="tel" inputMode="tel" value={applicantPhone} maxLength={20} placeholder="+821012345678" disabled={!editable || activeAction !== null || isApplicantPhoneSame} onChange={(event) => setApplicantPhone(event.target.value)} /><S.SameContactCheck><input type="checkbox" checked={isApplicantPhoneSame} disabled={!editable || activeAction !== null} onChange={(event) => toggleApplicantPhoneSame(event.target.checked)} />사업장 연락처와 동일</S.SameContactCheck><S.SectionHint>심사와 보완 요청을 위한 연락처이며 방문자에게 공개되지 않습니다.</S.SectionHint></S.ContactField>
           </S.Section>
           <S.Section><S.SectionLegend>영업시간과 특징</S.SectionLegend><S.SectionHint>영업일마다 영업, 휴무, 24시간 중 하나를 선택하세요.</S.SectionHint>
         <Store.Field $wide><S.ScheduleList>{schedule.map((day) => <S.ScheduleRow key={day.dayOfWeek}><S.DayName>{DAYS.find((item) => item.value === day.dayOfWeek)?.label}</S.DayName><S.DayStatus>{([['OPEN', '영업'], ['CLOSED', '휴무'], ['OPEN_24_HOURS', '24시간']] as const).map(([value, label]) => <S.DayStatusButton type="button" key={value} $selected={day.status === value} disabled={!editable || activeAction !== null} onClick={() => updateSchedule(day.dayOfWeek, { status: value })}>{label}</S.DayStatusButton>)}</S.DayStatus><S.ScheduleTimeControls><AdminTimePicker ariaLabel={`${DAYS.find((item) => item.value === day.dayOfWeek)?.label}요일 영업 시작 시간`} value={day.opensAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(value) => updateSchedule(day.dayOfWeek, { opensAt: value })} /><span aria-hidden="true">-</span><AdminTimePicker ariaLabel={`${DAYS.find((item) => item.value === day.dayOfWeek)?.label}요일 영업 종료 시간`} value={day.closesAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(value) => updateSchedule(day.dayOfWeek, { closesAt: value })} /></S.ScheduleTimeControls></S.ScheduleRow>)}</S.ScheduleList></Store.Field>
         <Store.Field $wide><S.TagList>{TAGS.map((tag) => <S.TagButton type="button" key={tag.value} $selected={tags.includes(tag.value)} disabled={!editable || activeAction !== null} onClick={() => toggleTag(tag.value)}>{tag.label}</S.TagButton>)}</S.TagList></Store.Field>
           </S.Section>
-          <S.Section><S.SectionLegend>증빙 파일</S.SectionLegend><S.AttachmentNotice>{hasExistingAttachments ? '기존 증빙 서류는 보존됩니다. 첨부 파일 수정 기능은 별도 업로드 계약과 함께 제공됩니다.' : '증빙 서류 업로드 기능이 준비되기 전에는 신청서를 임시 저장만 할 수 있습니다.'}{registration?.attachments.length ? <ul>{registration.attachments.map((attachment) => <li key={attachment.id}>{attachment.originalFilename} · {attachment.documentType}</li>)}</ul> : null}</S.AttachmentNotice></S.Section>
+          <S.Section><S.SectionLegend>증빙 파일</S.SectionLegend><S.AttachmentNotice><strong>증빙 파일</strong><br />임시 저장한 신청서에 사업자등록증, 신분증, 대표 이미지를 업로드할 수 있습니다. 첨부 후에는 내용 수정 없이 심사 요청만 할 수 있습니다.{registration?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceRegistrationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}{registration?.attachments.length ? <ul>{registration.attachments.map((attachment) => <li key={attachment.id}>{attachment.originalFilename} · {attachment.documentType}{registration.status === 'DRAFT' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(registration.id, attachment.id)}>삭제</S.SecondaryButton>{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton></> : null}</> : null}</li>)}</ul> : null}</S.AttachmentNotice></S.Section>
         </S.FormSections>
         <S.MapPanel $active={isLocationEntryActive}>
           <S.MapHeading>
@@ -401,9 +451,8 @@ function RegistrationForm({
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>
         {registration?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(registration.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
-        {registration?.status === 'APPROVED' ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('승인된 신청서를 실제 장소로 등록할까요?')) void onComplete(registration.id) }}>{activeAction === 'complete' ? '등록 중' : '장소 등록 완료'}</Store.SaveButton> : null}
         {registration && (registration.status === 'DRAFT' || registration.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('이 신규 장소 등록 신청을 취소할까요?')) void onCancel(registration.id) }}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
-        {editable ? <><S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton><Store.SaveButton type="button" disabled title="증빙 서류 업로드 기능이 준비된 뒤 심사 요청할 수 있습니다.">첨부 업로드 준비 중</Store.SaveButton></> : null}
+        {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
         {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void submit()}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
     </S.RegistrationForm>
@@ -430,7 +479,7 @@ function MerchantPlaceRegistrationPage() {
     {registration.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.actionErrorMessage}</Store.Notice> : null}
     {registration.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{registration.successMessage}</Store.Notice> : null}
     {isConnectedPlace ? <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}><Store.SaveButton type="button" onClick={() => navigate('/merchant')}>연결된 가게 관리</Store.SaveButton></div> : null}
-    <S.Layout><S.RegistrationPanel><S.PanelHeading><div><S.PanelTitle>{selectedRegistration ? '등록 신청 상세' : '장소 정보 입력'}</S.PanelTitle><S.PanelDescription>{selectedRegistration ? `신청 번호 #${selectedRegistration.id} · 마지막 수정 ${formatDate(selectedRegistration.updatedAt)}` : '기본 정보, 위치, 영업시간을 입력한 뒤 심사를 요청하세요.'}</S.PanelDescription></div>{selectedRegistration ? <S.StatusBadge $tone={STATUS[selectedRegistration.status].tone}>{STATUS[selectedRegistration.status].label}</S.StatusBadge> : null}</S.PanelHeading><RegistrationForm key={selectedRegistration?.id ?? 'new'} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={registration.submitRegistration} onReopen={registration.reopenRegistration} onComplete={registration.completeRegistration} onCancel={registration.cancelRegistration} /></S.RegistrationPanel>{registration.registrations.length > 0 ? <S.HistoryPanel><S.PanelHeading><div><S.PanelTitle>등록 신청 내역</S.PanelTitle><S.PanelDescription>작성 중이거나 처리된 신청서를 선택해 확인할 수 있습니다.</S.PanelDescription></div></S.PanelHeading><S.ApplicationList>{registration.registrations.map((item) => <S.ApplicationItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => { setSelectedId(item.id); void registration.selectRegistration(item.id) }}><S.ApplicationTop><S.ApplicationName>{item.placeName}</S.ApplicationName><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{CATEGORIES.find((categoryItem) => categoryItem.value === item.category)?.label ?? item.category} · {formatDate(item.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList><S.NewApplicationButton type="button" onClick={() => setSelectedId(null)}>새 장소 등록 신청</S.NewApplicationButton></S.HistoryPanel> : null}</S.Layout>
+    <S.Layout><S.RegistrationPanel><S.PanelHeading><div><S.PanelTitle>{selectedRegistration ? '등록 신청 상세' : '장소 정보 입력'}</S.PanelTitle><S.PanelDescription>{selectedRegistration ? `신청 번호 #${selectedRegistration.id} · 마지막 수정 ${formatDate(selectedRegistration.updatedAt)}` : '기본 정보, 위치, 영업시간을 입력한 뒤 심사를 요청하세요.'}</S.PanelDescription></div>{selectedRegistration ? <S.StatusBadge $tone={STATUS[selectedRegistration.status].tone}>{STATUS[selectedRegistration.status].label}</S.StatusBadge> : null}</S.PanelHeading><RegistrationForm key={selectedRegistration?.id ?? 'new'} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={registration.submitRegistration} onReopen={registration.reopenRegistration} onCancel={registration.cancelRegistration} onUpload={registration.uploadAttachment} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} /></S.RegistrationPanel>{registration.registrations.length > 0 ? <S.HistoryPanel><S.PanelHeading><div><S.PanelTitle>등록 신청 내역</S.PanelTitle><S.PanelDescription>작성 중이거나 처리된 신청서를 선택해 확인할 수 있습니다.</S.PanelDescription></div></S.PanelHeading><S.ApplicationList>{registration.registrations.map((item) => <S.ApplicationItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => { setSelectedId(item.id); void registration.selectRegistration(item.id) }}><S.ApplicationTop><S.ApplicationName>{item.placeName}</S.ApplicationName><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{CATEGORIES.find((categoryItem) => categoryItem.value === item.category)?.label ?? item.category} · {formatDate(item.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList><S.NewApplicationButton type="button" onClick={() => setSelectedId(null)}>새 장소 등록 신청</S.NewApplicationButton></S.HistoryPanel> : null}</S.Layout>
   </Store.Content></Store.Page>
 }
 

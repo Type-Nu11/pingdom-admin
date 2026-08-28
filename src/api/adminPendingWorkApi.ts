@@ -13,6 +13,7 @@ import {
   getAdminVisitorVerificationCorrections,
   getAdminVisitorVerificationReports,
 } from "./adminVisitorVerificationApi";
+import { getAdminMerchantPlaceApplications } from "./adminMerchantPlaceApplicationApi";
 
 export interface AdminPendingWorkItem {
   key: string;
@@ -98,6 +99,22 @@ const checks: PendingWorkCheck[] = [
         "검토 대기 중인 신고 이의제기",
         response.totalCount,
         "/reports/appeals",
+      ),
+    ];
+  },
+  async () => {
+    const response = await getAdminMerchantPlaceApplications({
+      status: "PENDING",
+      page: 1,
+      limit: 1,
+    });
+    return [
+      item(
+        "merchant-place-applications",
+        "상점주 장소 신청 심사",
+        "심사 대기 중인 신규 장소 등록·장소 권한 신청",
+        response.total,
+        "/merchant-place-applications",
       ),
     ];
   },

@@ -8,12 +8,24 @@ import type {
 
 const APPLICATIONS_PATH = '/users/me/merchant-place-applications'
 
-export async function getMerchantPlaceApplications() {
+export async function getMerchantPlaceApplications(params: { page?: number; limit?: number } = {}) {
   const { data } = await customAxios.get<MerchantPlaceApplicationPageResponse>(
     APPLICATIONS_PATH,
-    { params: { page: 1, limit: 20 } },
+    { params: { page: 1, limit: 20, ...params } },
   )
   return data
+}
+
+export async function getAllMerchantPlaceApplications() {
+  const applications: MerchantPlaceApplication[] = []
+  let page = 1
+
+  while (true) {
+    const response = await getMerchantPlaceApplications({ page, limit: 100 })
+    applications.push(...response.items)
+    if (!response.hasNext) return applications
+    page = response.page + 1
+  }
 }
 
 export async function getMerchantPlaceApplication(applicationId: number) {
@@ -58,6 +70,40 @@ export async function cancelMerchantPlaceApplication(applicationId: number) {
     `${APPLICATIONS_PATH}/${applicationId}/cancel`,
   )
   return data
+}
+
+export async function getMerchantPlaceApplicationAttachments(applicationId: number) {
+  const { data } = await customAxios.get<MerchantPlaceApplication['attachments']>(
+    `${APPLICATIONS_PATH}/${applicationId}/attachments`,
+  )
+  return data
+}
+
+export async function uploadMerchantPlaceApplicationAttachment(
+  applicationId: number,
+  documentType: MerchantPlaceApplication['attachments'][number]['documentType'],
+  file: File,
+) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data } = await customAxios.post<MerchantPlaceApplication['attachments'][number]>(
+    `${APPLICATIONS_PATH}/${applicationId}/attachments`,
+    formData,
+    { params: { documentType } },
+  )
+  return data
+}
+
+export async function deleteMerchantPlaceApplicationAttachment(applicationId: number, attachmentId: number) {
+  await customAxios.delete<void>(`${APPLICATIONS_PATH}/${applicationId}/attachments/${attachmentId}`)
+}
+
+export async function reorderMerchantPlaceApplicationAttachments(applicationId: number, attachmentIds: number[]) {
+  await customAxios.post<void>(
+    `${APPLICATIONS_PATH}/${applicationId}/attachments/reorder`,
+    undefined,
+    { params: { attachmentIds }, paramsSerializer: { indexes: null } },
+  )
 }
 
 export async function getMerchantPlaceSuggestions(keyword: string) {

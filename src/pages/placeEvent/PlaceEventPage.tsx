@@ -144,7 +144,7 @@ function PlaceEventPage() {
     setFormError('')
     void hook.fetchEvents({
       page: 1,
-      limit: 20,
+      limit: 10,
       keyword: keyword.trim() || undefined,
       placeId: numericPlaceId,
       eventType: eventType || undefined,
@@ -160,7 +160,7 @@ function PlaceEventPage() {
     setPublicationStatus('')
     setScheduleStatus('')
     setFormError('')
-    void hook.fetchEvents({ page: 1, limit: 20 })
+    void hook.fetchEvents({ page: 1, limit: 10 })
   }
 
   const buildRequest = (): AdminPlaceEventRequest | null => {

@@ -105,7 +105,7 @@ function AdManagementPage() {
     hook.clearSelectedAd()
     void hook.fetchAds({
       page: 1,
-      limit: 20,
+      limit: 10,
       keyword: keyword.trim() || undefined,
       displayStatus: displayStatus || undefined,
       startedFrom: startedFrom || undefined,
@@ -120,7 +120,7 @@ function AdManagementPage() {
     setStartedTo('')
     setFormError('')
     hook.clearSelectedAd()
-    void hook.fetchAds({ page: 1, limit: 20 })
+    void hook.fetchAds({ page: 1, limit: 10 })
   }
 
   const createRequest = (): AdminAdCreateRequest | null => {

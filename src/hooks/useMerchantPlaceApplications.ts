@@ -2,11 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   cancelMerchantPlaceApplication,
   createMerchantPlaceApplication,
-  getMerchantPlaceApplications,
+  deleteMerchantPlaceApplicationAttachment,
+  getAllMerchantPlaceApplications,
+  getMerchantPlaceApplication,
   getMerchantPlaceSuggestions,
   reopenMerchantPlaceApplication,
+  reorderMerchantPlaceApplicationAttachments,
   submitMerchantPlaceApplication,
   updateMerchantPlaceApplication,
+  uploadMerchantPlaceApplicationAttachment,
 } from '../api/merchantPlaceApplicationApi'
 import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
 import { getAuthErrorMessage } from '../api/authError'
@@ -22,7 +26,7 @@ import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
-type Action = 'save' | 'submit' | 'reopen' | 'cancel' | null
+type Action = 'save' | 'submit' | 'reopen' | 'cancel' | 'upload' | 'delete' | 'reorder' | null
 
 function errorMessage(error: unknown, fallbackMessage: string) {
   if (!isApiError<MerchantPlaceApplicationErrorResponse>(error)) return fallbackMessage
@@ -73,13 +77,13 @@ export function useMerchantPlaceApplications() {
 
     const [profileResult, applicationsResult] = await Promise.allSettled([
       getMerchantOwnerProfile(),
-      getMerchantPlaceApplications(),
+      getAllMerchantPlaceApplications(),
     ])
 
     if (!mountedRef.current) return
 
     if (profileResult.status === 'fulfilled') setProfile(profileResult.value)
-    if (applicationsResult.status === 'fulfilled') setApplications(applicationsResult.value.items)
+    if (applicationsResult.status === 'fulfilled') setApplications(applicationsResult.value)
 
     const failures = [profileResult, applicationsResult].filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
@@ -200,6 +204,37 @@ export function useMerchantPlaceApplications() {
     '운영 장소 신청을 취소하지 못했습니다.',
   ), [runAction])
 
+  const refreshAttachments = useCallback(async (applicationId: number, attachmentAction: () => Promise<unknown>) => {
+    await attachmentAction()
+    const application = await getMerchantPlaceApplication(applicationId)
+    setApplications((current) => replaceApplication(current, application))
+    return application
+  }, [])
+
+  const uploadAttachment = useCallback((applicationId: number, documentType: MerchantPlaceApplication['attachments'][number]['documentType'], file: File) => runAction(
+    'upload',
+    () => refreshAttachments(applicationId, () => uploadMerchantPlaceApplicationAttachment(applicationId, documentType, file)),
+    () => undefined,
+    '증빙 파일을 추가했습니다.',
+    '증빙 파일을 추가하지 못했습니다.',
+  ), [refreshAttachments, runAction])
+
+  const deleteAttachment = useCallback((applicationId: number, attachmentId: number) => runAction(
+    'delete',
+    () => refreshAttachments(applicationId, () => deleteMerchantPlaceApplicationAttachment(applicationId, attachmentId)),
+    () => undefined,
+    '증빙 파일을 삭제했습니다.',
+    '증빙 파일을 삭제하지 못했습니다.',
+  ), [refreshAttachments, runAction])
+
+  const reorderAttachments = useCallback((applicationId: number, attachmentIds: number[]) => runAction(
+    'reorder',
+    () => refreshAttachments(applicationId, () => reorderMerchantPlaceApplicationAttachments(applicationId, attachmentIds)),
+    () => undefined,
+    '대표 이미지 순서를 변경했습니다.',
+    '대표 이미지 순서를 변경하지 못했습니다.',
+  ), [refreshAttachments, runAction])
+
   return {
     status,
     profile,
@@ -216,5 +251,8 @@ export function useMerchantPlaceApplications() {
     submitApplication,
     reopenApplication,
     cancelApplication,
+    uploadAttachment,
+    deleteAttachment,
+    reorderAttachments,
   }
 }

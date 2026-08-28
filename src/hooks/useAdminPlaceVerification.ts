@@ -30,6 +30,8 @@ export type PlaceVerificationAction =
   | 'complete-reverification'
   | 'remind-reverification'
 
+const REVERIFICATION_PAGE_LIMIT = 10
+
 const CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
   forbidden: '관리자 권한이 필요합니다.',
@@ -60,6 +62,9 @@ export function useAdminPlaceVerification() {
   const [reverificationRequests, setReverificationRequests] =
     useState<PlaceInformationReverificationRequest[]>([])
   const [reverificationTotalCount, setReverificationTotalCount] = useState(0)
+  const [reverificationPage, setReverificationPage] = useState(1)
+  const [reverificationTotalPages, setReverificationTotalPages] = useState(0)
+  const [reverificationHasNext, setReverificationHasNext] = useState(false)
   const [isEvidenceLoading, setIsEvidenceLoading] = useState(false)
   const [isReverificationLoading, setIsReverificationLoading] = useState(false)
   const [activeAction, setActiveAction] = useState<PlaceVerificationAction | null>(null)
@@ -98,7 +103,7 @@ export function useAdminPlaceVerification() {
   )
 
   const fetchReverificationRequests = useCallback(
-    async (nextPlaceId: number) => {
+    async (nextPlaceId: number, nextPage = 1) => {
       const requestId = latestReverificationRequestIdRef.current + 1
       latestReverificationRequestIdRef.current = requestId
       setPlaceId(nextPlaceId)
@@ -106,18 +111,24 @@ export function useAdminPlaceVerification() {
       setReverificationErrorMessage('')
       try {
         const data = await getAdminPlaceInformationReverificationRequests(nextPlaceId, {
-          page: 1,
-          limit: 100,
+          page: nextPage,
+          limit: REVERIFICATION_PAGE_LIMIT,
         })
         if (requestId === latestReverificationRequestIdRef.current) {
           setReverificationRequests(data.requests)
           setReverificationTotalCount(data.totalCount)
+          setReverificationPage(data.page)
+          setReverificationTotalPages(data.totalPages)
+          setReverificationHasNext(data.hasNext)
         }
         return true
       } catch (error) {
         if (requestId === latestReverificationRequestIdRef.current) {
           setReverificationRequests([])
           setReverificationTotalCount(0)
+          setReverificationPage(1)
+          setReverificationTotalPages(0)
+          setReverificationHasNext(false)
           setReverificationErrorMessage(
             getErrorMessage(error, '장소 정보 재확인 요청을 불러오지 못했습니다.')
           )
@@ -246,6 +257,9 @@ export function useAdminPlaceVerification() {
     evidences,
     reverificationRequests,
     reverificationTotalCount,
+    reverificationPage,
+    reverificationTotalPages,
+    reverificationHasNext,
     isEvidenceLoading,
     isReverificationLoading,
     activeAction,

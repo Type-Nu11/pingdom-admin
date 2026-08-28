@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantPlaceApplications } from '../../hooks/useMerchantPlaceApplications'
@@ -90,6 +90,7 @@ function ApplicationForm({
   const [formError, setFormError] = useState('')
   const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceApplicationAttachment['documentType']>('BUSINESS_REGISTRATION')
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     const timer = window.setTimeout(() => onSearch(keyword), 250)
@@ -147,8 +148,10 @@ function ApplicationForm({
       setFormError('임시 저장 후 업로드할 파일을 선택해주세요.')
       return
     }
-    await onUpload(application.id, attachmentDocumentType, attachmentFile)
+    const uploaded = await onUpload(application.id, attachmentDocumentType, attachmentFile)
+    if (!uploaded) return
     setAttachmentFile(null)
+    if (attachmentInputRef.current) attachmentInputRef.current.value = ''
   }
 
   const moveRepresentativeImage = async (attachmentId: number, direction: -1 | 1) => {
@@ -217,7 +220,7 @@ function ApplicationForm({
       </Store.Field>
       <S.AttachmentNotice>
         <strong>증빙 파일</strong><br />임시 저장한 신청서에 사업자등록증, 신분증, 대표 이미지를 업로드할 수 있습니다. 첨부 후에는 내용 수정 없이 심사 요청만 할 수 있습니다.
-        {application?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceApplicationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}
+        {application?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceApplicationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}
         {application?.attachments.length ? <S.AttachmentList>{application.attachments.map((attachment) => <li key={attachment.id}><strong>{attachment.originalFilename}</strong> · {attachment.documentType}{application.status === 'DRAFT' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(application.id, attachment.id)}>삭제</S.SecondaryButton>{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton></> : null}</> : null}</li>)}</S.AttachmentList> : null}
       </S.AttachmentNotice>
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}

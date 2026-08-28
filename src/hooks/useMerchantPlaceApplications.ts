@@ -3,8 +3,8 @@ import {
   cancelMerchantPlaceApplication,
   createMerchantPlaceApplication,
   deleteMerchantPlaceApplicationAttachment,
+  getAllMerchantPlaceApplications,
   getMerchantPlaceApplication,
-  getMerchantPlaceApplications,
   getMerchantPlaceSuggestions,
   reopenMerchantPlaceApplication,
   reorderMerchantPlaceApplicationAttachments,
@@ -77,13 +77,13 @@ export function useMerchantPlaceApplications() {
 
     const [profileResult, applicationsResult] = await Promise.allSettled([
       getMerchantOwnerProfile(),
-      getMerchantPlaceApplications({ page: 1, limit: 100 }),
+      getAllMerchantPlaceApplications(),
     ])
 
     if (!mountedRef.current) return
 
     if (profileResult.status === 'fulfilled') setProfile(profileResult.value)
-    if (applicationsResult.status === 'fulfilled') setApplications(applicationsResult.value.items)
+    if (applicationsResult.status === 'fulfilled') setApplications(applicationsResult.value)
 
     const failures = [profileResult, applicationsResult].filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
@@ -208,6 +208,7 @@ export function useMerchantPlaceApplications() {
     await attachmentAction()
     const application = await getMerchantPlaceApplication(applicationId)
     setApplications((current) => replaceApplication(current, application))
+    return application
   }, [])
 
   const uploadAttachment = useCallback((applicationId: number, documentType: MerchantPlaceApplication['attachments'][number]['documentType'], file: File) => runAction(

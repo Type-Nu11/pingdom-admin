@@ -16,6 +16,18 @@ export async function getMerchantPlaceApplications(params: { page?: number; limi
   return data
 }
 
+export async function getAllMerchantPlaceApplications() {
+  const applications: MerchantPlaceApplication[] = []
+  let page = 1
+
+  while (true) {
+    const response = await getMerchantPlaceApplications({ page, limit: 100 })
+    applications.push(...response.items)
+    if (!response.hasNext) return applications
+    page = response.page + 1
+  }
+}
+
 export async function getMerchantPlaceApplication(applicationId: number) {
   const { data } = await customAxios.get<MerchantPlaceApplication>(
     `${APPLICATIONS_PATH}/${applicationId}`,

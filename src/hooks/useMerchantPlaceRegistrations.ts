@@ -3,8 +3,8 @@ import {
   cancelMerchantPlaceApplication,
   createMerchantPlaceApplication,
   deleteMerchantPlaceApplicationAttachment,
+  getAllMerchantPlaceApplications,
   getMerchantPlaceApplication,
-  getMerchantPlaceApplications,
   reopenMerchantPlaceApplication,
   reorderMerchantPlaceApplicationAttachments,
   submitMerchantPlaceApplication,
@@ -138,12 +138,12 @@ export function useMerchantPlaceRegistrations() {
     setErrorMessage('')
     const [profileResult, applicationsResult] = await Promise.allSettled([
       getMerchantOwnerProfile(),
-      getMerchantPlaceApplications({ page: 1, limit: 100 }),
+      getAllMerchantPlaceApplications(),
     ])
     if (!mountedRef.current) return
     if (profileResult.status === 'fulfilled') setProfile(profileResult.value)
     if (applicationsResult.status === 'fulfilled') {
-      setRegistrations(applicationsResult.value.items.flatMap((application) => {
+      setRegistrations(applicationsResult.value.flatMap((application) => {
         const registration = toRegistration(application)
         return registration ? [registration] : []
       }))
@@ -247,6 +247,7 @@ export function useMerchantPlaceRegistrations() {
     await attachmentAction()
     const application = await getMerchantPlaceApplication(applicationId)
     applyApplication(application)
+    return application
   }, [applyApplication])
 
   const uploadAttachment = useCallback((applicationId: number, documentType: MerchantPlaceApplicationAttachment['documentType'], file: File) => runAction(

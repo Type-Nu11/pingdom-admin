@@ -176,6 +176,7 @@ function RegistrationForm({
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false)
   const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceRegistrationAttachment['documentType']>('BUSINESS_REGISTRATION')
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null)
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
   const placeSearchRequestIdRef = useRef(0)
@@ -369,10 +370,7 @@ function RegistrationForm({
   }
 
   const submit = async () => {
-    const request = buildRequest()
-    if (!request) return
-    const saved = await onSave(registration?.id ?? null, request)
-    if (saved) await onSubmit(saved.id)
+    if (registration && canSubmitExistingAttachments) await onSubmit(registration.id)
   }
 
   const uploadAttachment = async () => {
@@ -380,8 +378,10 @@ function RegistrationForm({
       setFormError('임시 저장 후 업로드할 파일을 선택해주세요.')
       return
     }
-    await onUpload(registration.id, attachmentDocumentType, attachmentFile)
+    const uploaded = await onUpload(registration.id, attachmentDocumentType, attachmentFile)
+    if (!uploaded) return
     setAttachmentFile(null)
+    if (attachmentInputRef.current) attachmentInputRef.current.value = ''
   }
 
   const moveRepresentativeImage = async (attachmentId: number, direction: -1 | 1) => {
@@ -427,7 +427,7 @@ function RegistrationForm({
         <Store.Field $wide><S.ScheduleList>{schedule.map((day) => <S.ScheduleRow key={day.dayOfWeek}><S.DayName>{DAYS.find((item) => item.value === day.dayOfWeek)?.label}</S.DayName><S.DayStatus>{([['OPEN', '영업'], ['CLOSED', '휴무'], ['OPEN_24_HOURS', '24시간']] as const).map(([value, label]) => <S.DayStatusButton type="button" key={value} $selected={day.status === value} disabled={!editable || activeAction !== null} onClick={() => updateSchedule(day.dayOfWeek, { status: value })}>{label}</S.DayStatusButton>)}</S.DayStatus><S.ScheduleTimeControls><AdminTimePicker ariaLabel={`${DAYS.find((item) => item.value === day.dayOfWeek)?.label}요일 영업 시작 시간`} value={day.opensAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(value) => updateSchedule(day.dayOfWeek, { opensAt: value })} /><span aria-hidden="true">-</span><AdminTimePicker ariaLabel={`${DAYS.find((item) => item.value === day.dayOfWeek)?.label}요일 영업 종료 시간`} value={day.closesAt} disabled={day.status !== 'OPEN' || !editable || activeAction !== null} onChange={(value) => updateSchedule(day.dayOfWeek, { closesAt: value })} /></S.ScheduleTimeControls></S.ScheduleRow>)}</S.ScheduleList></Store.Field>
         <Store.Field $wide><S.TagList>{TAGS.map((tag) => <S.TagButton type="button" key={tag.value} $selected={tags.includes(tag.value)} disabled={!editable || activeAction !== null} onClick={() => toggleTag(tag.value)}>{tag.label}</S.TagButton>)}</S.TagList></Store.Field>
           </S.Section>
-          <S.Section><S.SectionLegend>증빙 파일</S.SectionLegend><S.AttachmentNotice><strong>증빙 파일</strong><br />임시 저장한 신청서에 사업자등록증, 신분증, 대표 이미지를 업로드할 수 있습니다. 첨부 후에는 내용 수정 없이 심사 요청만 할 수 있습니다.{registration?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceRegistrationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}{registration?.attachments.length ? <ul>{registration.attachments.map((attachment) => <li key={attachment.id}>{attachment.originalFilename} · {attachment.documentType}{registration.status === 'DRAFT' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(registration.id, attachment.id)}>삭제</S.SecondaryButton>{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton></> : null}</> : null}</li>)}</ul> : null}</S.AttachmentNotice></S.Section>
+          <S.Section><S.SectionLegend>증빙 파일</S.SectionLegend><S.AttachmentNotice><strong>증빙 파일</strong><br />임시 저장한 신청서에 사업자등록증, 신분증, 대표 이미지를 업로드할 수 있습니다. 첨부 후에는 내용 수정 없이 심사 요청만 할 수 있습니다.{registration?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceRegistrationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}{registration?.attachments.length ? <ul>{registration.attachments.map((attachment) => <li key={attachment.id}>{attachment.originalFilename} · {attachment.documentType}{registration.status === 'DRAFT' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(registration.id, attachment.id)}>삭제</S.SecondaryButton>{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton></> : null}</> : null}</li>)}</ul> : null}</S.AttachmentNotice></S.Section>
         </S.FormSections>
         <S.MapPanel $active={isLocationEntryActive}>
           <S.MapHeading>

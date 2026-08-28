@@ -25,7 +25,6 @@ const STATUS_LABELS: Record<MerchantPlaceApplicationStatus, string> = {
   PENDING: '심사 대기',
   APPROVED: '승인',
   REJECTED: '반려',
-  REGISTERED: '등록 완료',
   COMPLETED: '승인 완료',
   CANCELED: '취소',
 }
@@ -37,7 +36,7 @@ const DOCUMENT_LABELS: Record<MerchantPlaceApplicationDocumentType, string> = {
 }
 
 function statusTone(status: MerchantPlaceApplicationStatus) {
-  if (status === 'APPROVED' || status === 'REGISTERED' || status === 'COMPLETED') return 'success' as const
+  if (status === 'APPROVED' || status === 'COMPLETED') return 'success' as const
   if (status === 'REJECTED' || status === 'CANCELED') return 'danger' as const
   return 'warning' as const
 }

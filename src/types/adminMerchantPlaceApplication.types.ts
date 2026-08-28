@@ -7,7 +7,6 @@ export type MerchantPlaceApplicationStatus =
   | 'PENDING'
   | 'APPROVED'
   | 'REJECTED'
-  | 'REGISTERED'
   | 'COMPLETED'
   | 'CANCELED'
 export type MerchantPlaceApplicationDocumentType =

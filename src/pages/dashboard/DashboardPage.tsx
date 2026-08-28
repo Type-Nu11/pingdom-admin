@@ -104,9 +104,7 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
 ]
 
 const QUICK_ACTIONS = [
-  { label: '상점주 신청 심사', icon: 'storefront', route: '/merchant-owners' },
-  { label: '신규 장소 등록 심사', icon: 'add_location_alt', route: '/place-registration-applications' },
-  { label: '기존 장소 운영 신청 심사', icon: 'store', route: '/merchant-place-claims' },
+  { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', route: '/merchant-place-applications' },
   { label: '장소 정보 검증', icon: 'fact_check', route: '/places/information-verification' },
 ]
 

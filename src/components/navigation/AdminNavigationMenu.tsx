@@ -27,11 +27,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '검토함',
     items: [
-      { label: '상점주 신청', icon: 'storefront', path: '/merchant-owners' },
-      { label: '상점주 본인·사업자 검증', icon: 'domain_verification', path: '/merchant-verifications' },
-      { label: '장소 운영 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
-      { label: '신규 장소 등록 심사', icon: 'add_location_alt', path: '/place-registration-applications' },
-      { label: '기존 장소 운영 신청 심사', icon: 'store', path: '/merchant-place-claims' },
+      { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
       { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
       { label: '방문자 제보·정정 심사', icon: 'person_check', path: '/visitor-verifications' },
     ],
@@ -48,6 +44,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '성장 운영',
     items: [
+      { label: '상점주 관리', icon: 'storefront', path: '/merchant-owners' },
       { label: '탐색 후보 운영', icon: 'explore', path: '/scouts' },
       { label: '신뢰 점수', icon: 'verified_user', path: '/trust-score' },
       { label: '인증 부스트', icon: 'rocket_launch', path: '/verified-boost-products' },

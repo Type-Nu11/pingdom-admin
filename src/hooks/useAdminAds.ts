@@ -13,7 +13,7 @@ import { useAuth } from './useAuth'
 
 const DEFAULT_QUERY: Required<Pick<AdminAdListParams, 'page' | 'limit'>> = {
   page: 1,
-  limit: 20,
+  limit: 10,
 }
 
 const CATEGORY_MESSAGES = {

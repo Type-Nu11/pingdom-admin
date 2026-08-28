@@ -7,6 +7,8 @@ import type {
   AdminMerchantPlaceApplicationAttachment,
   AdminMerchantPlaceApplicationErrorResponse,
   AdminMerchantPlaceApplicationListItem,
+  MerchantPlaceApplicationStatus,
+  MerchantPlaceApplicationType,
 } from '../types/adminMerchantPlaceApplication.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -22,22 +24,15 @@ const CATEGORY_MESSAGES = {
   server: '서버 오류가 발생했습니다.',
 } as const
 
-function asListItem(application: AdminMerchantPlaceApplication): AdminMerchantPlaceApplicationListItem {
-  return {
-    id: application.id,
-    applicantUserId: application.applicantUserId,
-    applicationType: application.applicationType,
-    status: application.status,
-    legalName: application.legalName,
-    businessName: application.businessName,
-    maskedBusinessRegistrationNumber: null,
-    merchantDisplayName: application.merchantDisplayName,
-    placeName: application.placeName,
-    existingPlaceId: application.existingPlaceId,
-    submittedAt: application.submittedAt,
-    updatedAt: application.updatedAt,
-  }
-}
+export type ApplicationReviewView = 'pending' | 'history'
+export type ApplicationTypeFilter = MerchantPlaceApplicationType | 'ALL'
+
+const HISTORY_STATUSES: MerchantPlaceApplicationStatus[] = [
+  'APPROVED',
+  'COMPLETED',
+  'REJECTED',
+  'CANCELED',
+]
 
 export function useAdminMerchantPlaceApplications() {
   const { clearAuth } = useAuth()
@@ -48,6 +43,8 @@ export function useAdminMerchantPlaceApplications() {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [hasNext, setHasNext] = useState(false)
+  const [view, setView] = useState<ApplicationReviewView>('pending')
+  const [applicationType, setApplicationType] = useState<ApplicationTypeFilter>('ALL')
   const [isLoading, setIsLoading] = useState(false)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<number | null>(null)
@@ -59,6 +56,9 @@ export function useAdminMerchantPlaceApplications() {
   const [successMessage, setSuccessMessage] = useState('')
   const reviewRef = useRef(false)
   const pageRef = useRef(1)
+  const viewRef = useRef<ApplicationReviewView>('pending')
+  const applicationTypeRef = useRef<ApplicationTypeFilter>('ALL')
+  const listRequestRef = useRef(0)
   const detailRequestRef = useRef(0)
 
   const message = useCallback((error: unknown, fallback: string) => {
@@ -67,26 +67,63 @@ export function useAdminMerchantPlaceApplications() {
     return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES })
   }, [clearAuth])
 
-  const fetchApplications = useCallback(async (nextPage = pageRef.current) => {
+  const fetchApplications = useCallback(async (
+    nextPage = pageRef.current,
+    nextView = viewRef.current,
+    nextApplicationType = applicationTypeRef.current,
+  ) => {
+    const requestId = listRequestRef.current + 1
+    listRequestRef.current = requestId
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const data = await api.getAdminMerchantPlaceApplications({ page: nextPage, limit: 20 })
+      const data = await api.getAdminMerchantPlaceApplications({
+        status: nextView === 'pending' ? 'PENDING' : HISTORY_STATUSES,
+        applicationType: nextApplicationType === 'ALL' ? undefined : nextApplicationType,
+        page: nextPage,
+        limit: 10,
+      })
+      if (requestId !== listRequestRef.current) return false
       setItems(data.items)
       setPage(data.page)
       setTotal(data.total)
       setTotalPages(data.totalPages)
       setHasNext(data.hasNext)
+      setView(nextView)
+      setApplicationType(nextApplicationType)
       pageRef.current = data.page
       return true
     } catch (error) {
+      if (requestId !== listRequestRef.current) return false
       setErrorMessage(message(error, '장소 신청 목록을 불러오지 못했습니다.'))
       logDebugError('관리자 Merchant 장소 신청 목록 조회 실패', error)
       return false
     } finally {
-      setIsLoading(false)
+      if (requestId === listRequestRef.current) setIsLoading(false)
     }
   }, [message])
+
+  const changeView = useCallback((nextView: ApplicationReviewView) => {
+    viewRef.current = nextView
+    pageRef.current = 1
+    setView(nextView)
+    setItems([])
+    setTotal(0)
+    setTotalPages(0)
+    setHasNext(false)
+    void fetchApplications(1, nextView, applicationTypeRef.current)
+  }, [fetchApplications])
+
+  const changeApplicationType = useCallback((nextApplicationType: ApplicationTypeFilter) => {
+    applicationTypeRef.current = nextApplicationType
+    pageRef.current = 1
+    setApplicationType(nextApplicationType)
+    setItems([])
+    setTotal(0)
+    setTotalPages(0)
+    setHasNext(false)
+    void fetchApplications(1, viewRef.current, nextApplicationType)
+  }, [fetchApplications])
 
   const fetchDetail = useCallback(async (applicationId: number) => {
     const requestId = detailRequestRef.current + 1
@@ -165,7 +202,7 @@ export function useAdminMerchantPlaceApplications() {
         : await api.rejectAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
       setDetail(reviewed)
       setAttachments(reviewed.attachments)
-      setItems((current) => current.map((item) => item.id === reviewed.id ? asListItem(reviewed) : item))
+      await fetchApplications(1)
       setSuccessMessage(approved ? '장소 신청을 승인했습니다.' : '장소 신청을 반려했습니다.')
       return reviewed
     } catch (error) {
@@ -177,7 +214,7 @@ export function useAdminMerchantPlaceApplications() {
       reviewRef.current = false
       setIsReviewing(false)
     }
-  }, [detail, fetchDetail, message])
+  }, [detail, fetchApplications, fetchDetail, message])
 
   useEffect(() => { void fetchApplications(1) }, [fetchApplications])
 
@@ -189,6 +226,8 @@ export function useAdminMerchantPlaceApplications() {
     total,
     totalPages,
     hasNext,
+    view,
+    applicationType,
     isLoading,
     isDetailLoading,
     downloadingAttachmentId,
@@ -199,6 +238,8 @@ export function useAdminMerchantPlaceApplications() {
     actionErrorMessage,
     successMessage,
     fetchApplications,
+    changeView,
+    changeApplicationType,
     fetchDetail,
     downloadAttachment,
     review,

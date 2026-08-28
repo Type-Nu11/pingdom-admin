@@ -20,7 +20,7 @@ import type {
 } from '../types/adminReport.types'
 
 const DEFAULT_ADMIN_REPORTED_USER_PAGE = 1
-const DEFAULT_ADMIN_REPORTED_USER_LIMIT = 20
+const DEFAULT_ADMIN_REPORTED_USER_LIMIT = 10
 const ADMIN_REPORT_ERROR_MESSAGE = '신고 목록을 불러오는 중 오류가 발생했습니다.'
 const ADMIN_REPORT_ACTION_ERROR_MESSAGE = '신고 처리 중 오류가 발생했습니다.'
 const ADMIN_REPORT_CATEGORY_MESSAGES = {

@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  approveAdminMerchantOwner,
   getAdminMerchantOwner,
   getAdminMerchantOwnerPlaces,
   getAdminMerchantOwners,
-  rejectAdminMerchantOwner,
   replaceAdminMerchantOwnerPlaces,
   revokeAdminMerchantOwner,
   updateAdminMerchantOwnerOnboarding,
   updateAdminMerchantOwnerPlaceQuality,
 } from "../api/adminMerchantOwnerApi";
-import { getAdminMerchantVerification } from "../api/adminMerchantVerificationApi";
 import { getAuthErrorMessage } from "../api/authError";
 import { isApiError } from "../api/customAxios";
 import type {
@@ -23,17 +20,11 @@ import type {
   AdminMerchantOwnerReviewRequest,
   MerchantOwnerStatus,
 } from "../types/adminMerchantOwner.types";
-import type {
-  AdminMerchantVerificationDetail,
-  AdminMerchantVerificationErrorResponse,
-} from "../types/adminMerchantVerification.types";
 import { logDebugError } from "../utils/debugLogger";
 import { useAuth } from "./useAuth";
 
-const LIMIT = 20;
+const LIMIT = 10;
 export type MerchantOwnerAction =
-  | "approve"
-  | "reject"
   | "revoke"
   | "places"
   | "onboarding"
@@ -64,37 +55,14 @@ function shouldClearAuth(error: unknown) {
   );
 }
 
-function isVerificationNotFound(error: unknown) {
-  return (
-    isApiError<AdminMerchantVerificationErrorResponse>(error) &&
-    error.category === "not-found"
-  );
-}
-
-function getVerificationErrorMessage(error: unknown) {
-  if (!isApiError<AdminMerchantVerificationErrorResponse>(error)) {
-    return "Merchant 검증 상태를 불러오지 못했습니다.";
-  }
-  return getAuthErrorMessage(error, {
-    fallbackMessage: "Merchant 검증 상태를 불러오지 못했습니다.",
-    categoryMessages: CATEGORY_MESSAGES,
-  });
-}
-
 export function useAdminMerchantOwners() {
   const { clearAuth } = useAuth();
-  const [status, setStatus] = useState<MerchantOwnerStatus | "">("PENDING");
+  const [status, setStatus] = useState<MerchantOwnerStatus | "">("ACTIVE");
   const [profiles, setProfiles] = useState<AdminMerchantOwnerProfile[]>([]);
   const [profile, setProfile] = useState<AdminMerchantOwnerProfile | null>(
     null,
   );
   const [places, setPlaces] = useState<AdminMerchantOwnerPlace[]>([]);
-  const [verification, setVerification] =
-    useState<AdminMerchantVerificationDetail | null>(null);
-  const [verificationLoadStatus, setVerificationLoadStatus] = useState<
-    "idle" | "loading" | "success" | "missing" | "error"
-  >("idle");
-  const [verificationErrorMessage, setVerificationErrorMessage] = useState("");
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -147,7 +115,7 @@ export function useAdminMerchantOwners() {
           setErrorMessage(
             getErrorMessage(
               error,
-              "상점주 신청 목록을 불러오지 못했습니다.",
+              "상점주 목록을 불러오지 못했습니다.",
             ),
           );
           if (shouldClearAuth(error)) clearAuth();
@@ -167,52 +135,20 @@ export function useAdminMerchantOwners() {
       setIsDetailLoading(true);
       setDetailErrorMessage("");
       setActionErrorMessage("");
-      setVerification(null);
-      setVerificationLoadStatus("loading");
-      setVerificationErrorMessage("");
       try {
-        const verificationRequest = getAdminMerchantVerification(userId)
-          .then((data) => ({ kind: "success" as const, data }))
-          .catch((error: unknown) => ({
-            kind: isVerificationNotFound(error)
-              ? ("missing" as const)
-              : ("error" as const),
-            error,
-          }));
-        const [nextProfile, nextPlaces, verificationResult] = await Promise.all(
-          [
-            getAdminMerchantOwner(userId),
-            getAdminMerchantOwnerPlaces(userId),
-            verificationRequest,
-          ],
-        );
+        const [nextProfile, nextPlaces] = await Promise.all([
+          getAdminMerchantOwner(userId),
+          getAdminMerchantOwnerPlaces(userId),
+        ]);
         if (requestId === detailRef.current) {
           setProfile(nextProfile);
           setPlaces(nextPlaces);
-          if (verificationResult.kind === "success") {
-            setVerification(verificationResult.data);
-            setVerificationLoadStatus("success");
-          } else if (verificationResult.kind === "missing") {
-            setVerificationLoadStatus("missing");
-          } else {
-            setVerificationLoadStatus("error");
-            setVerificationErrorMessage(
-              getVerificationErrorMessage(verificationResult.error),
-            );
-            if (shouldClearAuth(verificationResult.error)) clearAuth();
-            logDebugError(
-              "관리자 Merchant 검증 상태 조회 실패",
-              verificationResult.error,
-            );
-          }
         }
         return nextProfile;
       } catch (error) {
         if (requestId === detailRef.current) {
           setProfile(null);
           setPlaces([]);
-          setVerification(null);
-          setVerificationLoadStatus("idle");
           setDetailErrorMessage(
             getErrorMessage(
               error,
@@ -266,26 +202,12 @@ export function useAdminMerchantOwners() {
   );
 
   const review = useCallback(
-    (
-      action: Extract<MerchantOwnerAction, "approve" | "reject" | "revoke">,
-      userId: number,
-      request: AdminMerchantOwnerReviewRequest,
-    ) => {
-      const functions = {
-        approve: approveAdminMerchantOwner,
-        reject: rejectAdminMerchantOwner,
-        revoke: revokeAdminMerchantOwner,
-      };
-      const messages = {
-        approve: "상점주 신청을 승인했습니다.",
-        reject: "상점주 신청을 거절했습니다.",
-        revoke: "상점주 권한을 회수했습니다.",
-      };
+    (userId: number, request: AdminMerchantOwnerReviewRequest) => {
       return runAction(
-        action,
+        "revoke",
         userId,
-        () => functions[action](userId, request),
-        messages[action],
+        () => revokeAdminMerchantOwner(userId, request),
+        "상점주 권한을 회수했습니다.",
       );
     },
     [runAction],
@@ -328,20 +250,11 @@ export function useAdminMerchantOwners() {
     ++detailRef.current;
     setProfile(null);
     setPlaces([]);
-    setVerification(null);
-    setVerificationLoadStatus("idle");
-    setVerificationErrorMessage("");
     setDetailErrorMessage("");
   }, []);
 
-  const isApprovalEligible =
-    verificationLoadStatus === "success" &&
-    verification?.identityStatus === "APPROVED" &&
-    verification.businessStatus === "APPROVED" &&
-    verification.businessName === profile?.businessName;
-
   useEffect(() => {
-    void fetchProfiles("PENDING", 1);
+    void fetchProfiles("ACTIVE", 1);
   }, [fetchProfiles]);
 
   return {
@@ -349,10 +262,6 @@ export function useAdminMerchantOwners() {
     profiles,
     profile,
     places,
-    verification,
-    verificationLoadStatus,
-    verificationErrorMessage,
-    isApprovalEligible,
     page,
     totalCount,
     totalPages,

@@ -1,6 +1,6 @@
 import type { AuthErrorResponse } from './auth.types'
 
-export type MerchantPlaceApplicationType = 'LEGACY' | 'NEW_PLACE' | 'EXISTING_PLACE_CLAIM'
+export type MerchantPlaceApplicationType = 'NEW_PLACE' | 'EXISTING_PLACE_CLAIM'
 export type MerchantPlaceApplicationStatus =
   | 'DRAFT'
   | 'PENDING'

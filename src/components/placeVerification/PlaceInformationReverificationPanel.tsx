@@ -31,6 +31,9 @@ export function PlaceInformationReverificationPanel({
   const {
     reverificationRequests,
     reverificationTotalCount,
+    reverificationPage,
+    reverificationTotalPages,
+    reverificationHasNext,
     isReverificationLoading,
     activeAction,
     reverificationErrorMessage,
@@ -98,7 +101,7 @@ export function PlaceInformationReverificationPanel({
               <Shared.PanelDescription>업주 응답 기한과 후속 조치를 관리합니다.</Shared.PanelDescription>
             </div>
             <Shared.HeaderActions>
-              <Shared.SecondaryButton type="button" disabled={isReverificationLoading || activeAction !== null} onClick={() => void fetchReverificationRequests(loadedPlaceId)}>새로고침</Shared.SecondaryButton>
+              <Shared.SecondaryButton type="button" disabled={isReverificationLoading || activeAction !== null} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage)}>새로고침</Shared.SecondaryButton>
               <Shared.PrimaryButton type="button" disabled={activeAction !== null} onClick={openCreate}>재확인 요청</Shared.PrimaryButton>
             </Shared.HeaderActions>
           </Shared.PanelHeader>
@@ -140,7 +143,11 @@ export function PlaceInformationReverificationPanel({
               </S.CardList>
             )}
           </Shared.CompareBody>
-          <S.Pagination>전체 {reverificationTotalCount.toLocaleString()}건 · 최신 100건 표시</S.Pagination>
+          <S.Pagination aria-label="재확인 요청 페이지네이션">
+            <Shared.SecondaryButton type="button" disabled={isReverificationLoading || reverificationPage <= 1} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage - 1)}>이전</Shared.SecondaryButton>
+            <span>전체 {reverificationTotalCount.toLocaleString()}건 · {Math.max(reverificationPage, 1)} / {Math.max(reverificationTotalPages, 1)}</span>
+            <Shared.SecondaryButton type="button" disabled={isReverificationLoading || !reverificationHasNext} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage + 1)}>다음</Shared.SecondaryButton>
+          </S.Pagination>
         </Shared.Panel>
       )}
 

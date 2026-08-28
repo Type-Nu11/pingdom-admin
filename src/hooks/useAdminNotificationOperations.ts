@@ -82,7 +82,7 @@ export function useAdminNotificationOperations() {
       setErrorMessage("");
       try {
         if (tab === "inbox") {
-          const d = await getAdminNotifications({ page, limit: 20 });
+          const d = await getAdminNotifications({ page, limit: 10 });
           setNotifications(d.notifications);
           setPages((p) => ({ ...p, inbox: d.page }));
           setTotals((p) => ({ ...p, inbox: d.totalCount }));
@@ -95,7 +95,7 @@ export function useAdminNotificationOperations() {
           const d = await getAdminNotificationDeliveries({
             status: s || undefined,
             page,
-            limit: 20,
+            limit: 10,
           });
           setDeliveries(d.deliveries);
           setDeliveryStatus(s);
@@ -108,7 +108,7 @@ export function useAdminNotificationOperations() {
           const d = await getAdminOutboxEvents({
             status: s || undefined,
             page,
-            limit: 20,
+            limit: 10,
           });
           setEvents(d.events);
           setOutboxStatus(s);

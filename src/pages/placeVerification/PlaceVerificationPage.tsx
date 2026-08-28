@@ -39,7 +39,7 @@ function PlaceVerificationPage() {
   useEffect(() => {
     if (!initialPlaceId) return
     if (initialTab === 'reverification') {
-      void verificationHook.fetchReverificationRequests(initialPlaceId)
+      void verificationHook.fetchReverificationRequests(initialPlaceId, 1)
     } else {
       void verificationHook.fetchEvidence(initialPlaceId)
     }
@@ -60,7 +60,7 @@ function PlaceVerificationPage() {
     setSearchParams(nextParams)
     if (!loadedPlaceId) return
     if (tab === 'evidence') void verificationHook.fetchEvidence(loadedPlaceId)
-    else void verificationHook.fetchReverificationRequests(loadedPlaceId)
+    else void verificationHook.fetchReverificationRequests(loadedPlaceId, 1)
   }
 
   const handlePlaceSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -74,7 +74,7 @@ function PlaceVerificationPage() {
     setLoadedPlaceId(nextPlaceId)
     setSearchParams({ tab: activeTab, placeId: String(nextPlaceId) })
     if (activeTab === 'evidence') void verificationHook.fetchEvidence(nextPlaceId)
-    else void verificationHook.fetchReverificationRequests(nextPlaceId)
+    else void verificationHook.fetchReverificationRequests(nextPlaceId, 1)
   }
 
   return (
@@ -103,7 +103,7 @@ function PlaceVerificationPage() {
             <Shell.IconButton type="button" aria-label="현재 작업 새로고침" onClick={() => {
               if (activeTab === 'reports') void reportHook.fetchReports(reportHook.status, reportHook.page)
               else if (loadedPlaceId && activeTab === 'evidence') void verificationHook.fetchEvidence(loadedPlaceId)
-              else if (loadedPlaceId) void verificationHook.fetchReverificationRequests(loadedPlaceId)
+              else if (loadedPlaceId) void verificationHook.fetchReverificationRequests(loadedPlaceId, verificationHook.reverificationPage)
             }}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>

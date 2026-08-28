@@ -34,9 +34,6 @@ const RecommendationMetricsPage = lazy(
 )
 const MerchantOwnerPage = lazy(() => import('../../pages/merchantOwner/MerchantOwnerPage'))
 const TrustScorePage = lazy(() => import('../../pages/trustScore/TrustScorePage'))
-const MerchantVerificationPage = lazy(
-  () => import('../../pages/merchantVerification/MerchantVerificationPage'),
-)
 const VisitorVerificationPage = lazy(
   () => import('../../pages/visitorVerification/VisitorVerificationPage'),
 )
@@ -45,14 +42,8 @@ const VerifiedBoostProductPage = lazy(
   () => import('../../pages/verifiedBoostProduct/VerifiedBoostProductPage'),
 )
 const UserRolePage = lazy(() => import('../../pages/userRole/UserRolePage'))
-const MerchantPlaceClaimPage = lazy(
-  () => import('../../pages/merchantPlaceClaim/MerchantPlaceClaimPage'),
-)
 const MerchantPlaceApplicationReviewPage = lazy(
   () => import('../../pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'),
-)
-const PlaceRegistrationReviewPage = lazy(
-  () => import('../../pages/placeRegistrationReview/PlaceRegistrationReviewPage'),
 )
 const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
 const NotificationOperationsPage = lazy(
@@ -94,9 +85,6 @@ const MerchantPlaceReverificationPage = lazy(
 )
 const MerchantPlaceOperationsPage = lazy(
   () => import('../../pages/merchantPlaceOperations/MerchantPlaceOperationsPage'),
-)
-const MerchantPlaceClaimRequestPage = lazy(
-  () => import('../../pages/merchantPlaceClaimRequest/MerchantPlaceClaimRequestPage'),
 )
 const MerchantVerifiedBoostPage = lazy(
   () => import('../../pages/merchantVerifiedBoost/MerchantVerifiedBoostPage'),
@@ -151,7 +139,7 @@ export function Router() {
               <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
               <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
               <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
-              <Route path="/merchant/place-claims" element={<MerchantPlaceClaimRequestPage />} />
+              <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
               <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
             </Route>
           </Route>
@@ -185,12 +173,12 @@ export function Router() {
             />
             <Route
               path="/place-registration-applications"
-              element={<PlaceRegistrationReviewPage />}
+              element={<Navigate to="/merchant-place-applications" replace />}
             />
             <Route path="/trust-score" element={<TrustScorePage />} />
             <Route
               path="/merchant-verifications"
-              element={<MerchantVerificationPage />}
+              element={<Navigate to="/merchant-place-applications" replace />}
             />
             <Route
               path="/visitor-verifications"
@@ -204,7 +192,7 @@ export function Router() {
             <Route path="/users/roles" element={<UserRolePage />} />
             <Route
               path="/merchant-place-claims"
-              element={<MerchantPlaceClaimPage />}
+              element={<Navigate to="/merchant-place-applications" replace />}
             />
             <Route path="/s3-orphans" element={<S3OrphanPage />} />
             <Route

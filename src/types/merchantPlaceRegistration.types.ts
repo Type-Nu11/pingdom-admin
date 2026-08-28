@@ -63,12 +63,9 @@ export interface MerchantPlaceRegistrationAttachment {
   id: number
   fileId: string
   documentType: 'BUSINESS_REGISTRATION' | 'IDENTITY_DOCUMENT' | 'REPRESENTATIVE_IMAGE'
-  storageKey: string
   originalFilename: string
   contentType: string
   fileSize: number
-  fileHash: string
-  uploadedByUserId: number
   uploadedAt: string
   retentionExpiresAt: string | null
   displayOrder: number
@@ -87,6 +84,12 @@ export interface MerchantPlaceRegistration {
   postalCode: string
   description: string
   businessContactPhone: string
+  applicantContactPhone: string
+  legalName: string
+  businessName: string
+  merchantDisplayName: string
+  merchantContactEmail: string
+  merchantContactPhone: string
   reviewReason: string | null
   registeredPlaceId: number | null
   submittedAt: string | null
@@ -104,6 +107,13 @@ export interface MerchantPlaceRegistration {
 }
 
 export interface MerchantPlaceRegistrationRequest {
+  legalName: string
+  businessName: string
+  businessRegistrationNumber: string
+  merchantDisplayName: string
+  merchantContactEmail: string
+  merchantContactPhone: string
+  merchantDescription?: string | null
   placeName: string
   category: MerchantPlaceCategory
   latitude: number

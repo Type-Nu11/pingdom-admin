@@ -28,7 +28,7 @@ import type {
 } from '../types/adminUserBan.types'
 
 const DEFAULT_ADMIN_BANNED_USER_PAGE = 1
-const DEFAULT_ADMIN_BANNED_USER_LIMIT = 20
+const DEFAULT_ADMIN_BANNED_USER_LIMIT = 10
 const DEFAULT_ADMIN_BANNED_USER_SORT_BY: NonNullable<
   AdminBannedUserListRequest['sortBy']
 > = 'BANNED_AT'

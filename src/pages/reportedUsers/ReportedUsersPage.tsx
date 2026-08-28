@@ -9,7 +9,7 @@ import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as Form from '../placeVerification/PlaceVerificationPage.styles'
 
-const PAGE_LIMIT = 20
+const PAGE_LIMIT = 10
 
 function ReportedUsersPage() {
   const navigate = useNavigate()

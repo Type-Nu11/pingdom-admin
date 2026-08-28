@@ -17,7 +17,7 @@ import type {
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
-const PAGE_LIMIT = 20
+const PAGE_LIMIT = 10
 
 const CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',

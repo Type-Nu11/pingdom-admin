@@ -16,9 +16,8 @@ import * as Form from '../placeVerification/PlaceVerificationPage.styles'
 import * as S from './MerchantPlaceApplicationReviewPage.styles'
 
 const TYPE_LABELS: Record<MerchantPlaceApplicationType, string> = {
-  LEGACY: '기존 신청',
-  NEW_PLACE: '신규 장소 등록',
-  EXISTING_PLACE_CLAIM: '기존 장소 Claim',
+  NEW_PLACE: '신규 장소 등록 신청',
+  EXISTING_PLACE_CLAIM: '기존 장소 권한·소유권 신청',
 }
 
 const STATUS_LABELS: Record<MerchantPlaceApplicationStatus, string> = {
@@ -27,7 +26,7 @@ const STATUS_LABELS: Record<MerchantPlaceApplicationStatus, string> = {
   APPROVED: '승인',
   REJECTED: '반려',
   REGISTERED: '등록 완료',
-  COMPLETED: '완료',
+  COMPLETED: '승인 완료',
   CANCELED: '취소',
 }
 
@@ -65,6 +64,17 @@ function MerchantPlaceApplicationReviewPage() {
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState('')
   const admin = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
+  const isHistoryView = hook.view === 'history'
+  const listTitle = isHistoryView ? '처리 이력' : '심사 대기 신청'
+  const listDescription = isHistoryView
+    ? '승인·완료·반려·취소된 장소 신청을 확인합니다.'
+    : '심사 대기 중인 신청을 선택해 사업자 정보와 증빙을 검토합니다.'
+  const emptyMessage = isHistoryView
+    ? '처리된 장소 신청 이력이 없습니다.'
+    : '심사 대기 중인 장소 신청이 없습니다.'
+  const loadingMessage = isHistoryView
+    ? '처리 이력을 불러오는 중입니다.'
+    : '심사 대기 신청을 불러오는 중입니다.'
 
   const selectApplication = (applicationId: number) => {
     setSelectedId(applicationId)
@@ -87,7 +97,10 @@ function MerchantPlaceApplicationReviewPage() {
       setFormError('심사 사유를 입력해주세요.')
       return
     }
-    if (await hook.review(decision === 'approve', trimmedReason)) setDecision(null)
+    if (await hook.review(decision === 'approve', trimmedReason)) {
+      setDecision(null)
+      setSelectedId(null)
+    }
   }
 
   return (
@@ -100,14 +113,59 @@ function MerchantPlaceApplicationReviewPage() {
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>장소 신청 심사</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchApplications(hook.page)}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton></Shell.TopActions></Shell.TopBar>
         <Shared.Content><Shared.PageStack>
-          <Shared.PageHeader><div><Shared.Eyebrow>상점주 운영 &gt; 장소 신청</Shared.Eyebrow><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.PageDescription>신규 장소 등록과 기존 장소 운영 신청을 한 곳에서 확인하고 승인 또는 반려합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 운영</Shared.HeaderButton><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-place-claims')}>기존 장소 운영 신청 심사</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
+          <Shared.PageHeader><div><Shared.Eyebrow>검토함 &gt; 상점주 장소 신청 심사</Shared.Eyebrow><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.PageDescription>신규 장소 등록과 기존 장소 권한·소유권 신청을 한 곳에서 검토하고 승인 또는 반려합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
           {hook.actionErrorMessage ? <Shared.Notice $variant="error">{hook.actionErrorMessage}</Shared.Notice> : null}
           {hook.successMessage ? <Shared.Notice $variant="success">{hook.successMessage}</Shared.Notice> : null}
+          <S.FilterBar>
+            <S.FilterTabs role="tablist" aria-label="장소 신청 상태">
+              <S.FilterTab
+                type="button"
+                role="tab"
+                aria-selected={hook.view === 'pending'}
+                $active={hook.view === 'pending'}
+                disabled={hook.isLoading || hook.isReviewing}
+                onClick={() => {
+                  setSelectedId(null)
+                  setDecision(null)
+                  hook.changeView('pending')
+                }}
+              >심사 대기</S.FilterTab>
+              <S.FilterTab
+                type="button"
+                role="tab"
+                aria-selected={hook.view === 'history'}
+                $active={hook.view === 'history'}
+                disabled={hook.isLoading || hook.isReviewing}
+                onClick={() => {
+                  setSelectedId(null)
+                  setDecision(null)
+                  hook.changeView('history')
+                }}
+              >처리 이력</S.FilterTab>
+            </S.FilterTabs>
+            <S.FilterField>
+              신청 유형
+              <S.FilterSelect
+                aria-label="신청 유형 필터"
+                value={hook.applicationType}
+                disabled={hook.isLoading || hook.isReviewing}
+                onChange={(event) => {
+                  setSelectedId(null)
+                  setDecision(null)
+                  hook.changeApplicationType(event.target.value as typeof hook.applicationType)
+                }}
+              >
+                <option value="ALL">전체</option>
+                <option value="NEW_PLACE">신규 장소 등록</option>
+                <option value="EXISTING_PLACE_CLAIM">기존 장소 권한·소유권</option>
+              </S.FilterSelect>
+            </S.FilterField>
+          </S.FilterBar>
           <Shared.Workspace>
             <Shared.Panel>
-              <Shared.PanelHeader><div><Shared.PanelTitle>장소 신청 목록</Shared.PanelTitle><Shared.PanelDescription>신청을 선택해 사업자 정보와 증빙을 검토합니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.total.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
-              <Shared.ScrollArea>{hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>장소 신청 목록을 불러오는 중입니다.</strong></Shared.EmptyState> : hook.items.length === 0 ? <Shared.EmptyState><strong>등록된 장소 신청이 없습니다.</strong></Shared.EmptyState> : <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList>}</Shared.ScrollArea>
+              <Shared.PanelHeader><div><Shared.PanelTitle>{listTitle}</Shared.PanelTitle><Shared.PanelDescription>{listDescription}</Shared.PanelDescription></div><Shared.PanelCount>{hook.total.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
+              <Shared.ScrollArea>{hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : hook.items.length === 0 ? <Shared.EmptyState><strong>{emptyMessage}</strong></Shared.EmptyState> : <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList>}</Shared.ScrollArea>
               {hook.totalPages > 1 ? <Form.Pagination><Shared.SecondaryButton type="button" disabled={hook.page <= 1 || hook.isLoading} onClick={() => { setSelectedId(null); void hook.fetchApplications(hook.page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(hook.page, 1)} / {Math.max(hook.totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.hasNext || hook.isLoading} onClick={() => { setSelectedId(null); void hook.fetchApplications(hook.page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination> : null}
             </Shared.Panel>
             <Shared.Panel>

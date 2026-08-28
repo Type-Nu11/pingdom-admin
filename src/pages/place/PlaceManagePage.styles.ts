@@ -45,6 +45,7 @@ export const SideNav = styled.nav`
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   border-right: 1px solid ${neutral.border};
   background: ${neutral.surface};
 
@@ -58,6 +59,7 @@ export const SideNav = styled.nav`
 `
 
 export const SideHeader = styled.div`
+  flex: 0 0 auto;
   min-height: 104px;
   display: flex;
   align-items: center;
@@ -86,6 +88,7 @@ export const SideMenu = styled.div`
   min-height: 0;
   flex-direction: column;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 18px 0;
 
   @media (max-width: 900px) {
@@ -180,6 +183,7 @@ export const MenuStatusText = styled.span`
 `
 
 export const SideFooter = styled.div`
+  flex: 0 0 auto;
   padding: 18px 24px 24px;
   border-top: 1px solid ${neutral.border};
 

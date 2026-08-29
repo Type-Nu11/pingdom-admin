@@ -1,4 +1,5 @@
 import type { AuthErrorResponse } from './auth.types'
+import type { MerchantPlaceApplicationNewPlace } from './merchantPlaceApplication.types'
 
 export type MerchantPlaceApplicationType = 'NEW_PLACE' | 'EXISTING_PLACE_CLAIM'
 export type MerchantPlaceApplicationStatus =
@@ -6,7 +7,6 @@ export type MerchantPlaceApplicationStatus =
   | 'PENDING'
   | 'APPROVED'
   | 'REJECTED'
-  | 'REGISTERED'
   | 'COMPLETED'
   | 'CANCELED'
 export type MerchantPlaceApplicationDocumentType =
@@ -45,6 +45,7 @@ export interface AdminMerchantPlaceApplication extends Omit<AdminMerchantPlaceAp
   merchantContactEmail: string | null
   merchantDescription: string | null
   merchantContactPhone: string | null
+  newPlace: MerchantPlaceApplicationNewPlace | null
   claimReason: string | null
   reviewReason: string | null
   placeId: number | null

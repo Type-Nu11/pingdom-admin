@@ -133,13 +133,26 @@ export const FilterField = styled.label`
   font-weight: 700;
 `
 
-export const FilterSelect = styled.select`
-  min-height: 34px;
-  padding: 0 30px 0 10px;
-  border: 1px solid ${colors.border};
-  border-radius: 7px;
-  background: ${colors.surface};
-  color: ${colors.strongText};
-  font-size: 12px;
-  font-weight: 700;
+export const DangerButton = styled.button`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid ${colors.error};
+  border-radius: 8px;
+  background: ${colors.error};
+  color: ${colors.primaryText};
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.94);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
 `

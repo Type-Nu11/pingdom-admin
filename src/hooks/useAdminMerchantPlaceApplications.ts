@@ -128,6 +128,8 @@ export function useAdminMerchantPlaceApplications() {
   const fetchDetail = useCallback(async (applicationId: number) => {
     const requestId = detailRequestRef.current + 1
     detailRequestRef.current = requestId
+    setDetail(null)
+    setAttachments([])
     setIsDetailLoading(true)
     setDetailErrorMessage('')
     setAttachmentErrorMessage('')

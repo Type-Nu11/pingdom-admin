@@ -93,7 +93,7 @@ export const Title = styled.h1`
   color: ${adminColors.strongText};
   font-size: ${typography.title1.bold.fontSize}px;
   font-weight: ${typography.title1.bold.fontWeight};
-  letter-spacing: -0.07em;
+  letter-spacing: 0;
   line-height: ${typography.title1.bold.lineHeight};
 `
 
@@ -331,7 +331,7 @@ export const SuccessTitle = styled.h1`
   color: ${adminColors.strongText};
   font-size: ${typography.title2.bold.fontSize}px;
   font-weight: ${typography.title2.bold.fontWeight};
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   line-height: ${typography.title2.bold.lineHeight};
 `
 

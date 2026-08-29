@@ -139,7 +139,7 @@ export const RecordButton = styled.button<{ $selected?: boolean }>`
   width: 100%;
   min-width: 0;
   padding: 14px;
-  border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
+  border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
   box-shadow: ${({ $selected }) =>
@@ -152,8 +152,7 @@ export const RecordButton = styled.button<{ $selected?: boolean }>`
     background 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${({ $selected }) =>
-      $selected ? neutral.primary : neutral.borderDark};
+    border-color: ${({ $selected }) => ($selected ? neutral.border : neutral.borderDark)};
     background: ${({ $selected }) =>
       $selected ? neutral.primaryTint : neutral.surfaceLow};
   }
@@ -192,6 +191,15 @@ export const RecordDescription = styled.p`
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
+`
+
+export const RecordSummary = styled(RecordDescription)`
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 38px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
 `
 
 export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger' }>`

@@ -17,7 +17,6 @@ const STATUS: Record<MerchantPlaceApplicationStatus, { label: string; tone: 'dra
   PENDING: { label: '심사 대기', tone: 'pending' },
   APPROVED: { label: '승인', tone: 'active' },
   REJECTED: { label: '반려', tone: 'danger' },
-  REGISTERED: { label: '등록 완료', tone: 'active' },
   COMPLETED: { label: '승인 완료', tone: 'active' },
   CANCELED: { label: '취소', tone: 'neutral' },
 }

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  createMerchantPlaceMedia,
   deleteMerchantPlaceMedia,
   getMerchantOwnerProfile,
   getMerchantPlaceDetail,
   getMerchantPlaceMedia,
   getMerchantPlaceOperating,
+  requestMerchantPlaceMediaUploadUrl,
   updateMerchantPlaceOperatingSchedule,
   updateMerchantPlaceOperatingStatus,
   updateMerchantRepresentativeMedia,
@@ -28,8 +30,11 @@ type OperationAction =
   | 'status'
   | 'schedule'
   | 'representative'
+  | 'upload-media'
   | 'delete-media'
   | null
+
+const MAX_MEDIA_FILE_SIZE = 10 * 1024 * 1024
 
 function sortMedia(response: MerchantPlaceMediaResponse) {
   return {
@@ -218,6 +223,49 @@ export function useMerchantPlaceOperations() {
     )
   }, [runAction, selectedPlaceId])
 
+  const uploadMedia = useCallback((file: File) => {
+    if (!selectedPlaceId) return Promise.resolve(null)
+
+    if (!file.type.startsWith('image/')) {
+      setActionErrorMessage('이미지 파일만 업로드할 수 있습니다.')
+      return Promise.resolve(null)
+    }
+
+    if (file.size === 0 || file.size > MAX_MEDIA_FILE_SIZE) {
+      setActionErrorMessage('이미지는 10MB 이하의 파일만 업로드할 수 있습니다.')
+      return Promise.resolve(null)
+    }
+
+    return runAction(
+      'upload-media',
+      async () => {
+        const upload = await requestMerchantPlaceMediaUploadUrl(selectedPlaceId, {
+          fileName: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        })
+        const uploadResult = await fetch(upload.uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        })
+
+        if (!uploadResult.ok) {
+          throw new Error(`탐색 미디어 파일 업로드 실패: ${uploadResult.status}`)
+        }
+
+        await createMerchantPlaceMedia(selectedPlaceId, {
+          s3Key: upload.s3Key,
+        })
+
+        return getMerchantPlaceMedia(selectedPlaceId)
+      },
+      (next) => setMedia(sortMedia(next)),
+      '탐색 미디어를 등록했습니다.',
+      '탐색 미디어를 업로드하지 못했습니다.',
+    )
+  }, [runAction, selectedPlaceId])
+
   const moveMedia = useCallback(async (_mediaId: number, _direction: 'previous' | 'next') => {
     void _mediaId
     void _direction
@@ -258,6 +306,7 @@ export function useMerchantPlaceOperations() {
     updateOperatingStatus,
     updateOperatingSchedule,
     updateRepresentativeMedia,
+    uploadMedia,
     moveMedia,
     deleteMedia,
   }

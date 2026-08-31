@@ -573,6 +573,11 @@ export interface MerchantPlaceMediaUploadResponse {
   expiresAt: string
 }
 
+export interface MerchantPlaceMediaCreateRequest {
+  s3Key: string
+  displayOrder?: number | null
+}
+
 export interface MerchantPlaceMediaOrderUpdateRequest {
   displayOrder: number
 }

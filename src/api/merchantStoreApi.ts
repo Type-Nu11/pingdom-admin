@@ -22,6 +22,9 @@ import type {
   MerchantPlaceMediaResponse,
   MerchantPlaceMediaUploadRequest,
   MerchantPlaceMediaUploadResponse,
+  MerchantPlaceReviewDeletionRequestCreateRequest,
+  MerchantPlaceReviewDeletionRequestResponse,
+  MerchantPlaceReviewPageResponse,
   MerchantPlaceOperating,
   MerchantPlaceOperatingScheduleResponse,
   MerchantPlaceOperatingScheduleUpdateRequest,
@@ -184,6 +187,26 @@ export async function updateMerchantRepresentativeMedia(placeId: number, mediaId
 
 export async function deleteMerchantPlaceMedia(placeId: number, mediaId: number) {
   await customAxios.delete<void>(`${MERCHANT_OWNER_PATH}/places/${placeId}/media/${mediaId}`)
+}
+
+export async function getMerchantPlaceReviews(placeId: number, page = 1, limit = 20) {
+  const { data } = await customAxios.get<MerchantPlaceReviewPageResponse>(
+    `/places/${placeId}/reviews`,
+    { params: { page, limit } },
+  )
+  return data
+}
+
+export async function createMerchantPlaceReviewDeletionRequest(
+  placeId: number,
+  reviewId: number,
+  request: MerchantPlaceReviewDeletionRequestCreateRequest,
+) {
+  const { data } = await customAxios.post<MerchantPlaceReviewDeletionRequestResponse>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/reviews/${reviewId}/deletion-requests`,
+    request,
+  )
+  return data
 }
 
 export async function getMerchantCampaigns(params: { page?: number; limit?: number } = {}) {

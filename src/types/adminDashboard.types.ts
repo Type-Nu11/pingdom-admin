@@ -50,6 +50,26 @@ export interface AdminDashboardRecentActivitiesResponse {
   userSanctions: AdminDashboardRecentUserSanctionItem[]
 }
 
+export type AdminDashboardPendingItemType =
+  | 'POST_REPORT'
+  | 'MERCHANT_PLACE_APPLICATION'
+
+export interface AdminDashboardPendingItem {
+  type: AdminDashboardPendingItemType
+  targetId: number
+  reportId: number
+  postId?: number | null
+  title: string
+  status: string
+  createdAt: string
+  navigationPath?: string | null
+}
+
+export interface AdminDashboardPendingItemsResponse {
+  items: AdminDashboardPendingItem[]
+  totalCount: number
+}
+
 export type AdminDashboardLoadStatus =
   | 'unavailable'
   | 'loading'

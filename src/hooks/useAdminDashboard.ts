@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  getAdminDashboardPendingItems,
   getAdminDashboardRecentActivities,
   getAdminDashboardSummary,
 } from '../api/adminDashboardApi'
@@ -7,6 +8,7 @@ import { isApiError } from '../api/customAxios'
 import type { AuthErrorResponse } from '../types/auth.types'
 import type {
   AdminDashboardLoadStatus,
+  AdminDashboardPendingItemsResponse,
   AdminDashboardRecentActivitiesResponse,
   AdminDashboardSummary,
 } from '../types/adminDashboard.types'
@@ -42,6 +44,10 @@ function hasRecentActivityData(activities: AdminDashboardRecentActivitiesRespons
   return Object.values(activities).some((items) => items.length > 0)
 }
 
+function hasPendingItemData(pendingItems: AdminDashboardPendingItemsResponse) {
+  return pendingItems.items.length > 0
+}
+
 function shouldClearAuth(error: unknown) {
   return (
     isApiError<AuthErrorResponse>(error) &&
@@ -56,8 +62,12 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   const [summary, setSummary] = useState<AdminDashboardSummary | null>(null)
   const [recentActivities, setRecentActivities] =
     useState<AdminDashboardRecentActivitiesResponse | null>(null)
+  const [pendingItems, setPendingItems] =
+    useState<AdminDashboardPendingItemsResponse | null>(null)
   const [status, setStatus] = useState<AdminDashboardLoadStatus>('loading')
   const [recentActivitiesStatus, setRecentActivitiesStatus] =
+    useState<AdminDashboardLoadStatus>('loading')
+  const [pendingItemsStatus, setPendingItemsStatus] =
     useState<AdminDashboardLoadStatus>('loading')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null)
@@ -69,8 +79,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       requestIdRef.current += 1
       setSummary(null)
       setRecentActivities(null)
+      setPendingItems(null)
       setStatus('unavailable')
       setRecentActivitiesStatus('unavailable')
+      setPendingItemsStatus('unavailable')
       setIsRefreshing(false)
       setLastUpdatedAt(null)
 
@@ -87,10 +99,12 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
     setIsRefreshing(true)
     setStatus('loading')
     setRecentActivitiesStatus('loading')
+    setPendingItemsStatus('loading')
 
     const results = await Promise.allSettled([
       getAdminDashboardSummary(),
       getAdminDashboardRecentActivities(),
+      getAdminDashboardPendingItems(),
     ])
 
     if (requestId !== requestIdRef.current) {
@@ -132,6 +146,22 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       }
     }
 
+    const pendingItemsResult = results[2]
+    if (pendingItemsResult.status === 'fulfilled') {
+      setPendingItems(pendingItemsResult.value)
+      setPendingItemsStatus(
+        hasPendingItemData(pendingItemsResult.value) ? 'success' : 'empty'
+      )
+      hasSuccessfulResponse = true
+    } else {
+      logDebugError('관리자 대시보드 심사 대기 항목 조회 실패', pendingItemsResult.reason)
+      setPendingItemsStatus('error')
+
+      if (shouldClearAuth(pendingItemsResult.reason)) {
+        clearAuth()
+      }
+    }
+
     if (hasSuccessfulResponse) {
       setLastUpdatedAt(Date.now())
     }
@@ -146,8 +176,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       const resetTimer = window.setTimeout(() => {
         setSummary(null)
         setRecentActivities(null)
+        setPendingItems(null)
         setStatus('unavailable')
         setRecentActivitiesStatus('unavailable')
+        setPendingItemsStatus('unavailable')
         setIsRefreshing(false)
         setLastUpdatedAt(null)
       }, 0)
@@ -203,8 +235,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   return {
     summary,
     recentActivities,
+    pendingItems,
     status,
     recentActivitiesStatus,
+    pendingItemsStatus,
     isLoading: isRefreshing,
     lastUpdatedAt,
     fetchSummary,

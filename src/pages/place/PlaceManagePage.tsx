@@ -24,7 +24,9 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceOperatingNotices } from '../../hooks/useAdminPlaceOperatingNotices'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
+import { getPlaceCategoryLabel } from '../../utils/placeCategory'
 import type {
+  AdminPlaceBasicInformationUpdateRequest,
   AdminPlaceCategory,
   AdminPlaceCoordinatesUpdateRequest,
   AdminPlaceDetail,
@@ -118,6 +120,7 @@ function PlaceManagePage() {
     clearPlaceDetail,
     clearUpdateErrorMessage,
     deletePlace,
+    updatePlaceBasicInformation,
     updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
@@ -158,7 +161,9 @@ function PlaceManagePage() {
       ? placeOperation.action
       : null
   const activeDataCorrectionAction: PlaceDataCorrectionAction | null =
-    updatingPlaceIds.geocoding !== null
+    updatingPlaceIds['basic-information'] !== null
+      ? 'basic-information'
+      : updatingPlaceIds.geocoding !== null
       ? 'geocoding'
       : updatingPlaceIds.coordinates !== null
         ? 'coordinates'
@@ -529,6 +534,7 @@ function PlaceManagePage() {
     clearUpdateErrorMessage('geocoding')
     clearUpdateErrorMessage('coordinates')
     clearUpdateErrorMessage('kakao-place-id')
+    clearUpdateErrorMessage('basic-information')
     setDataCorrectionPlace(placeDetail)
   }
 
@@ -556,6 +562,31 @@ function PlaceManagePage() {
       return isSuccess
     },
     [dataCorrectionPlace, updatePlaceCoordinates]
+  )
+
+  const handleUpdateBasicInformation = useCallback(
+    async (payload: AdminPlaceBasicInformationUpdateRequest) => {
+      if (!dataCorrectionPlace) {
+        return false
+      }
+
+      const isSuccess = await updatePlaceBasicInformation(dataCorrectionPlace.id, payload)
+      if (isSuccess) {
+        setSelectedPlace((current) =>
+          current?.id === dataCorrectionPlace.id
+            ? {
+                ...current,
+                name: payload.name,
+                category: payload.category,
+                categoryName: getPlaceCategoryLabel({ category: payload.category }),
+              }
+            : current
+        )
+      }
+
+      return isSuccess
+    },
+    [dataCorrectionPlace, updatePlaceBasicInformation]
   )
 
   const handleUpdateGeocoding = useCallback(
@@ -795,12 +826,14 @@ function PlaceManagePage() {
           place={dataCorrectionPlace}
           updatingAction={activeDataCorrectionAction}
           errorMessages={{
+            'basic-information': updateErrorMessages['basic-information'],
             geocoding: updateErrorMessages.geocoding,
             coordinates: updateErrorMessages.coordinates,
             'kakao-place-id': updateErrorMessages['kakao-place-id'],
           }}
           onClearError={clearUpdateErrorMessage}
           onClose={handleCloseDataCorrection}
+          onUpdateBasicInformation={handleUpdateBasicInformation}
           onUpdateKakaoPlaceId={(payload) =>
             updatePlaceKakaoPlaceId(dataCorrectionPlace.id, payload)
           }

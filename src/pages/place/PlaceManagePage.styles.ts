@@ -563,6 +563,16 @@ export const DetailMetaList = styled.div`
   gap: 10px;
 `
 
+export const DetailRepresentativeImage = styled.img`
+  width: 100%;
+  height: 176px;
+  display: block;
+  margin: 0 0 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  object-fit: cover;
+`
+
 export const DetailMetaGroup = styled.section`
   padding: 12px;
   border: 1px solid ${neutral.borderSoft};

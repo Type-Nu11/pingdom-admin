@@ -3,6 +3,7 @@ import {
   deleteAdminPlace,
   getAdminPlace,
   getAdminPlaces,
+  updateAdminPlaceBasicInformation,
   updateAdminPlaceCoordinates,
   updateAdminPlaceDiscoveryStatus,
   updateAdminPlaceGeocoding,
@@ -14,9 +15,11 @@ import {
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
+import { getPlaceCategoryLabel } from '../utils/placeCategory'
 import { useAuth } from './useAuth'
 import type {
   AdminPlaceCategory,
+  AdminPlaceBasicInformationUpdateRequest,
   AdminPlaceCoordinatesUpdateRequest,
   AdminPlaceDeleteErrorResponse,
   AdminPlaceDetail,
@@ -69,6 +72,7 @@ type AdminPlaceApiErrorResponse =
   | AdminPlaceUpdateErrorResponse
 
 type PlaceUpdateAction =
+  | 'basic-information'
   | 'operating-status'
   | 'operating-schedule'
   | 'discovery-status'
@@ -80,6 +84,7 @@ type PlaceUpdateAction =
 type PlaceUpdateState<T> = Record<PlaceUpdateAction, T>
 
 const EMPTY_PLACE_UPDATE_IDS: PlaceUpdateState<number | null> = {
+  'basic-information': null,
   'operating-status': null,
   'operating-schedule': null,
   'discovery-status': null,
@@ -90,6 +95,7 @@ const EMPTY_PLACE_UPDATE_IDS: PlaceUpdateState<number | null> = {
 }
 
 const EMPTY_PLACE_UPDATE_ERRORS: PlaceUpdateState<string> = {
+  'basic-information': '',
   'operating-status': '',
   'operating-schedule': '',
   'discovery-status': '',
@@ -376,6 +382,61 @@ export function useAdminPlaces({
       places.length,
       showActionSuccessMessage,
     ]
+  )
+
+  const updatePlaceBasicInformation = useCallback(
+    async (placeId: number, payload: AdminPlaceBasicInformationUpdateRequest) => {
+      const action: PlaceUpdateAction = 'basic-information'
+      if (updatingPlaceIdsRef.current[action] !== null) {
+        return false
+      }
+
+      updatingPlaceIdsRef.current[action] = placeId
+      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
+      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
+      clearActionSuccessMessage()
+
+      try {
+        const data = await updateAdminPlaceBasicInformation(placeId, payload)
+        const basicInformationPatch = {
+          name: data.name,
+          category: data.category,
+          categoryName: getPlaceCategoryLabel({ category: data.category }),
+        }
+
+        setPlaces((current) =>
+          current.map((place) =>
+            place.id === placeId ? { ...place, ...basicInformationPatch } : place
+          )
+        )
+        setPlaceDetail((current) =>
+          current?.id === placeId ? { ...current, ...basicInformationPatch } : current
+        )
+        showActionSuccessMessage(data.message || '장소 기본 정보를 저장했습니다.')
+
+        return true
+      } catch (error) {
+        setUpdateErrorMessages((current) => ({
+          ...current,
+          [action]: getAdminPlaceErrorMessage(
+            error,
+            '장소 기본 정보를 수정하지 못했습니다.'
+          ),
+        }))
+
+        if (shouldClearAuth(error)) {
+          clearAuth()
+        }
+
+        logDebugError('관리자 장소 기본 정보 수정 실패', error)
+
+        return false
+      } finally {
+        updatingPlaceIdsRef.current[action] = null
+        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
+      }
+    },
+    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
   )
 
   const updatePlaceOperatingStatus = useCallback(
@@ -804,6 +865,7 @@ export function useAdminPlaces({
     clearPlaceDetail,
     clearUpdateErrorMessage,
     deletePlace,
+    updatePlaceBasicInformation,
     updatePlaceDiscoveryStatus,
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,

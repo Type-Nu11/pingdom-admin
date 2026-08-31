@@ -1,5 +1,7 @@
 import customAxios from './customAxios'
 import type {
+  AdminPlaceBasicInformationUpdateRequest,
+  AdminPlaceBasicInformationUpdateResponse,
   AdminPlaceDetail,
   AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceDiscoveryStatusUpdateResponse,
@@ -59,6 +61,18 @@ export async function getAdminPlace(placeId: number) {
 
 export async function deleteAdminPlace(placeId: number) {
   await customAxios.delete<void>(`${ADMIN_PLACES_API_PATH}/${placeId}/delete`)
+}
+
+export async function updateAdminPlaceBasicInformation(
+  placeId: number,
+  payload: AdminPlaceBasicInformationUpdateRequest
+) {
+  const { data } = await customAxios.patch<AdminPlaceBasicInformationUpdateResponse>(
+    `${ADMIN_PLACES_API_PATH}/${placeId}/basic-information`,
+    payload
+  )
+
+  return data
 }
 
 export async function updateAdminPlaceOperatingStatus(

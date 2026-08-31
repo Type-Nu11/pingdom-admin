@@ -133,6 +133,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                     <S.DetailInlineButton
                       type="button"
                       disabled={
+                        updatingPlaceIds['basic-information'] !== null ||
                         updatingPlaceIds.geocoding !== null ||
                         updatingPlaceIds.coordinates !== null ||
                         updatingPlaceIds['kakao-place-id'] !== null
@@ -142,6 +143,12 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       정보 보정
                     </S.DetailInlineButton>
                   </S.DetailSectionHeader>
+                  {placeDetail.imageUrl ? (
+                    <S.DetailRepresentativeImage
+                      src={placeDetail.imageUrl}
+                      alt={`${placeDetail.name} 대표 이미지`}
+                    />
+                  ) : null}
                   <S.DetailMetaList>
                     <S.DetailMetaGroup>
                       <S.DetailMetaRow>

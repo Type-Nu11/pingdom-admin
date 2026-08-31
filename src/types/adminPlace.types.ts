@@ -11,6 +11,16 @@ export type AdminPlaceCategory =
   | '카페'
   | '문화재'
   | '기타'
+export type AdminPlaceStandardCategory =
+  | 'MUSIC'
+  | 'RESTAURANT'
+  | 'POP_UP'
+  | 'FASHION'
+  | 'BEAUTY'
+  | 'EXHIBITION'
+  | 'CAFE'
+  | 'CULTURAL_HERITAGE'
+  | 'OTHER'
 export type AdminPlaceGeocodingSource = 'KAKAO' | 'USER_PIN' | 'ADMIN' | 'LEGACY'
 export type AdminPlaceOperatingStatus =
   | 'OPERATING'
@@ -103,7 +113,22 @@ export interface AdminPlaceDetail {
   englishName?: string | null
   touristSummary?: string | null
   touristCategories?: AdminPlaceTouristCategory[]
+  imageUrl?: string | null
   placeGrowth?: PlaceGrowthSnapshot
+}
+
+export interface AdminPlaceBasicInformationUpdateRequest {
+  name: string
+  category: AdminPlaceStandardCategory
+  reason: string
+}
+
+export interface AdminPlaceBasicInformationUpdateResponse {
+  placeId: number
+  name: string
+  category: AdminPlaceStandardCategory
+  modifiedAt: string
+  message: string
 }
 
 export interface AdminPlaceKakaoPlaceIdUpdateRequest {

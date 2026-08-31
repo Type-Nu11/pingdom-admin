@@ -17,6 +17,7 @@ export interface AdminMerchantOwnerProfile {
   onboardingCompletedAt: string | null
   reviewedBy: number | null
   reviewedAt: string | null
+  reviewReason: string | null
   createdAt: string
   updatedAt: string
   placeIds: number[]

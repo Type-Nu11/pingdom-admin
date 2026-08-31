@@ -115,14 +115,22 @@ export const RequestButton = styled.button`
   }
 `
 
-export const RequestedBadge = styled.span`
+export const RequestedBadge = styled.span<{ $status: 'PENDING' | 'APPROVED' | 'REJECTED' }>`
   min-height: 28px;
   display: inline-flex;
   align-items: center;
   padding: 0 9px;
   border-radius: 14px;
-  background: ${colors.warningTint};
-  color: ${colors.warningText};
+  background: ${({ $status }) => {
+    if ($status === 'APPROVED') return colors.successTint
+    if ($status === 'REJECTED') return colors.errorTint
+    return colors.warningTint
+  }};
+  color: ${({ $status }) => {
+    if ($status === 'APPROVED') return colors.successText
+    if ($status === 'REJECTED') return colors.error
+    return colors.warningText
+  }};
   font-size: 11px;
   font-weight: 700;
 `

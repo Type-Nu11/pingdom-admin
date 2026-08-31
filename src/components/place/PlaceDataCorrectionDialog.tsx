@@ -89,13 +89,13 @@ const CATEGORY_CODE_BY_LABEL: Record<string, AdminPlaceStandardCategory> = {
   기타: 'OTHER',
 }
 
-function getStandardCategory(value?: string | null): AdminPlaceStandardCategory {
+function getStandardCategory(value?: string | null): AdminPlaceStandardCategory | '' {
   const normalizedValue = value?.trim().replace(/[\s-]+/g, '_').toUpperCase()
   const matchingOption = BASIC_INFORMATION_CATEGORY_OPTIONS.find(
     (option) => option.value === normalizedValue
   )
 
-  return matchingOption?.value ?? CATEGORY_CODE_BY_LABEL[value?.trim() ?? ''] ?? 'OTHER'
+  return matchingOption?.value ?? CATEGORY_CODE_BY_LABEL[value?.trim() ?? ''] ?? ''
 }
 
 function isCoordinateInRange(value: string, min: number, max: number) {
@@ -125,7 +125,7 @@ export function PlaceDataCorrectionDialog({
 }: PlaceDataCorrectionDialogProps) {
   const [mode, setMode] = useState<PlaceDataCorrectionAction>('basic-information')
   const [name, setName] = useState(place.name)
-  const [category, setCategory] = useState<AdminPlaceStandardCategory>(() =>
+  const [category, setCategory] = useState<AdminPlaceStandardCategory | ''>(() =>
     getStandardCategory(place.category ?? place.categoryName)
   )
   const [kakaoPlaceId, setKakaoPlaceId] = useState(place.kakaoPlaceId ?? '')
@@ -220,6 +220,10 @@ export function PlaceDataCorrectionDialog({
     }
     if (nextReason.length > 500) {
       setFormError('보정 사유는 500자 이하여야 합니다.')
+      return
+    }
+    if (!category) {
+      setFormError('표준 카테고리를 선택해주세요.')
       return
     }
     if (nextName === place.name && category === currentCategory) {
@@ -430,6 +434,9 @@ export function PlaceDataCorrectionDialog({
                     clearMessages()
                   }}
                 >
+                  <option value="" disabled>
+                    카테고리를 선택해주세요.
+                  </option>
                   {BASIC_INFORMATION_CATEGORY_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}

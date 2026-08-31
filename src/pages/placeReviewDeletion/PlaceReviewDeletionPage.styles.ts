@@ -1,0 +1,51 @@
+import styled from 'styled-components'
+import { adminColors } from '../../styles/theme'
+
+const neutral = adminColors
+
+export const RequestSummary = styled.p`
+  margin: 10px 0 0;
+  color: ${neutral.text};
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+`
+
+export const ImageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+`
+
+export const ImageLink = styled.a`
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 1px solid ${neutral.border};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+
+  &:focus-visible {
+    outline: 2px solid ${neutral.primary};
+    outline-offset: 2px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+`
+
+export const ReviewNote = styled.div`
+  margin-top: 10px;
+  padding: 11px 12px;
+  border: 1px solid ${neutral.borderSoft};
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.text};
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+`

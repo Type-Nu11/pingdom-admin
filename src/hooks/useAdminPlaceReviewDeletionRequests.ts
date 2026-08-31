@@ -76,13 +76,16 @@ export function useAdminPlaceReviewDeletionRequests() {
         page: nextPage,
         limit: LIMIT,
       })
-      if (requestId === listRequestRef.current) {
-        setItems(data.deletionRequests)
-        setPage(data.page)
-        setTotalElements(data.totalElements)
-        setTotalPages(data.totalPages)
-        setHasNext(data.hasNext)
-      }
+      if (requestId !== listRequestRef.current) return false
+
+      const resolvedPage = Math.min(nextPage, Math.max(data.totalPages, 1))
+      if (resolvedPage !== nextPage) return fetchItems(nextStatus, resolvedPage)
+
+      setItems(data.deletionRequests)
+      setPage(data.page)
+      setTotalElements(data.totalElements)
+      setTotalPages(data.totalPages)
+      setHasNext(data.hasNext)
       return true
     } catch (error) {
       if (requestId === listRequestRef.current) {

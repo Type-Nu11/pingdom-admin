@@ -68,7 +68,6 @@ function MerchantOwnerPage() {
   const openDialog = (next: Dialog) => {
     if (!next || !hook.profile) return
     setReason(''); setFormError('')
-    if (next.type === 'review' && next.action === 'approve') setPlaceIds(hook.profile.placeIds.join(', '))
     if (next.type === 'places') setPlaceIds(hook.profile.placeIds.join(', '))
     if (next.type === 'onboarding') {
       setOnboardingStatus(hook.profile.onboardingStatus); setCompletionRate(String(hook.profile.onboardingCompletionRate)); setCompletedAt(hook.profile.onboardingCompletedAt?.slice(0, 16) ?? '')
@@ -85,9 +84,7 @@ function MerchantOwnerPage() {
     const trimmedReason = reason.trim()
     if (!trimmedReason) { setFormError('처리 사유를 입력해주세요.'); return }
     if (dialog.type === 'review') {
-      const ids = dialog.action === 'approve' ? parsePlaceIds(placeIds) : []
-      if (ids === null) { setFormError('장소 ID는 쉼표로 구분한 1 이상의 정수로 입력해주세요.'); return }
-      const request = { reason: trimmedReason, ...(dialog.action === 'approve' ? { placeIds: ids } : {}) }
+      const request = { reason: trimmedReason }
       const result = dialog.action === 'approve'
         ? await hook.approve(userId, request)
         : dialog.action === 'reject'
@@ -137,7 +134,6 @@ function MerchantOwnerPage() {
       </Shell.MainArea>
 
       {dialog && hook.profile ? <Shared.ModalOverlay role="presentation" onMouseDown={() => hook.activeAction === null && setDialog(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-owner-dialog-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-owner-dialog-title">{dialog.type === 'review' ? dialog.action === 'approve' ? '상점주 신청 승인' : dialog.action === 'reject' ? '상점주 신청 반려' : '상점주 권한 회수' : dialog.type === 'places' ? '연결 장소 변경' : dialog.type === 'onboarding' ? '온보딩 변경' : `장소 #${dialog.place.placeId} 운영 품질`}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><S.FormGrid>
-        {dialog.type === 'review' && dialog.action === 'approve' ? <S.WideField>승인 후 연결할 장소 ID (선택)<S.Input value={placeIds} placeholder="101, 102, 103" disabled={hook.activeAction !== null} onChange={(event) => { setPlaceIds(event.target.value); setFormError('') }} /><small>쉼표로 구분합니다. 비워두면 승인 후 기존 장소 권한 신청 또는 신규 장소 등록을 진행할 수 있습니다.</small></S.WideField> : null}
         {dialog.type === 'places' ? <S.WideField>연결 장소 ID<S.Input value={placeIds} placeholder="101, 102, 103" disabled={hook.activeAction !== null} onChange={(event) => { setPlaceIds(event.target.value); setFormError('') }} /><small>쉼표로 구분하며, 비우면 연결 장소가 없는 상태입니다.</small></S.WideField> : null}
         {dialog.type === 'onboarding' ? <><S.Field>온보딩 상태<AdminSelect aria-label="온보딩 상태" value={onboardingStatus} disabled={hook.activeAction !== null} width="100%" onChange={(event) => setOnboardingStatus(event.target.value as MerchantOnboardingStatus)}>{Object.entries(ONBOARDING_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field><S.Field>완료율<S.Input inputMode="numeric" value={completionRate} disabled={hook.activeAction !== null} onChange={(event) => setCompletionRate(event.target.value)} /></S.Field><S.WideField>완료 시각<AdminDateTimePicker ariaLabel="온보딩 완료 시각" value={completedAt} disabled={hook.activeAction !== null} onChange={setCompletedAt} /></S.WideField></> : null}
         {dialog.type === 'quality' ? <><S.WideField>품질 상태<AdminSelect aria-label="운영 품질 상태" value={qualityStatus} disabled={hook.activeAction !== null} width="100%" onChange={(event) => setQualityStatus(event.target.value as MerchantOperationalQualityStatus)}>{Object.entries(QUALITY_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.WideField><S.Field>예약 응답률<S.Input inputMode="numeric" value={responseRate} disabled={hook.activeAction !== null} onChange={(event) => setResponseRate(event.target.value)} /></S.Field><S.Field>예약 취소율<S.Input inputMode="numeric" value={cancellationRate} disabled={hook.activeAction !== null} onChange={(event) => setCancellationRate(event.target.value)} /></S.Field><S.Field>노쇼율<S.Input inputMode="numeric" value={noShowRate} disabled={hook.activeAction !== null} onChange={(event) => setNoShowRate(event.target.value)} /></S.Field><S.Field>평가 시각<AdminDateTimePicker ariaLabel="운영 품질 평가 시각" value={evaluatedAt} disabled={hook.activeAction !== null} onChange={setEvaluatedAt} /></S.Field></> : null}

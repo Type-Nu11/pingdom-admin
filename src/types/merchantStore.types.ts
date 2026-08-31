@@ -577,4 +577,37 @@ export interface MerchantPlaceMediaOrderUpdateRequest {
   displayOrder: number
 }
 
+export interface MerchantPlaceReview {
+  reviewId: number
+  placeId: number
+  userId: number
+  recommendReason: string | null
+  content: string | null
+  imageUrls: string[]
+  createdAt: string
+}
+
+export interface MerchantPlaceReviewPageResponse {
+  content: MerchantPlaceReview[]
+  number: number
+  size: number
+  totalElements: number
+  totalPages: number
+  first: boolean
+  last: boolean
+}
+
+export interface MerchantPlaceReviewDeletionRequestCreateRequest {
+  requestReason: string
+}
+
+export interface MerchantPlaceReviewDeletionRequestResponse {
+  deletionRequestId: number
+  reviewId: number
+  placeId: number
+  reviewVisibilityStatus: string
+  status: string
+  requestedAt: string
+}
+
 export type MerchantStoreErrorResponse = AuthErrorResponse<string>

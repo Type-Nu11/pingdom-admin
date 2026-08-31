@@ -585,16 +585,20 @@ export interface MerchantPlaceReview {
   content: string | null
   imageUrls: string[]
   createdAt: string
+  visibilityStatus: MerchantPlaceReviewVisibilityStatus
+  deletionRequest: MerchantPlaceReviewDeletionRequestStatusResponse | null
 }
 
+export type MerchantPlaceReviewVisibilityStatus = 'VISIBLE' | 'HIDDEN' | 'DELETED'
+export type MerchantPlaceReviewDeletionRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
 export interface MerchantPlaceReviewPageResponse {
-  content: MerchantPlaceReview[]
-  number: number
-  size: number
+  reviews: MerchantPlaceReview[]
+  page: number
+  limit: number
   totalElements: number
   totalPages: number
-  first: boolean
-  last: boolean
+  hasNext: boolean
 }
 
 export interface MerchantPlaceReviewDeletionRequestCreateRequest {
@@ -608,6 +612,14 @@ export interface MerchantPlaceReviewDeletionRequestResponse {
   reviewVisibilityStatus: string
   status: string
   requestedAt: string
+}
+
+export interface MerchantPlaceReviewDeletionRequestStatusResponse {
+  deletionRequestId: number
+  status: MerchantPlaceReviewDeletionRequestStatus
+  requestedAt: string
+  reviewedAt: string | null
+  reviewNote: string | null
 }
 
 export type MerchantStoreErrorResponse = AuthErrorResponse<string>

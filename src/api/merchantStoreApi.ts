@@ -191,7 +191,7 @@ export async function deleteMerchantPlaceMedia(placeId: number, mediaId: number)
 
 export async function getMerchantPlaceReviews(placeId: number, page = 1, limit = 20) {
   const { data } = await customAxios.get<MerchantPlaceReviewPageResponse>(
-    `/places/${placeId}/reviews`,
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/reviews`,
     { params: { page, limit } },
   )
   return data

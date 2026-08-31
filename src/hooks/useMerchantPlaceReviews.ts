@@ -11,7 +11,6 @@ import type {
   MerchantOwnerProfile,
   MerchantPlaceDetail,
   MerchantPlaceReview,
-  MerchantPlaceReviewDeletionRequestResponse,
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
@@ -29,7 +28,6 @@ export function useMerchantPlaceReviews() {
   const [place, setPlace] = useState<MerchantPlaceDetail | null>(null)
   const [reviews, setReviews] = useState<MerchantPlaceReview[]>([])
   const [pageInfo, setPageInfo] = useState({ page: 1, totalElements: 0, totalPages: 0, hasNext: false })
-  const [requestedByReviewId, setRequestedByReviewId] = useState<Record<number, MerchantPlaceReviewDeletionRequestResponse>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
@@ -84,12 +82,12 @@ export function useMerchantPlaceReviews() {
       return false
     }
 
-    setReviews(reviewsResult.value.content)
+    setReviews(reviewsResult.value.reviews)
     setPageInfo({
-      page: reviewsResult.value.number,
+      page: reviewsResult.value.page,
       totalElements: reviewsResult.value.totalElements,
       totalPages: reviewsResult.value.totalPages,
-      hasNext: !reviewsResult.value.last,
+      hasNext: reviewsResult.value.hasNext,
     })
     if (placeResult.status === 'fulfilled') setPlace(placeResult.value)
     if (placeResult.status === 'rejected') {
@@ -110,7 +108,6 @@ export function useMerchantPlaceReviews() {
       const firstPlaceId = nextProfile.placeIds[0] ?? null
       setProfile(nextProfile)
       setSelectedPlaceId(firstPlaceId)
-      setRequestedByReviewId({})
       if (!firstPlaceId) {
         setStatus('ready')
         return
@@ -135,13 +132,12 @@ export function useMerchantPlaceReviews() {
     setSelectedPlaceId(placeId)
     setPlace(null)
     setReviews([])
-    setRequestedByReviewId({})
     void fetchReviews(placeId, 1)
   }, [fetchReviews, profile?.placeIds, selectedPlaceId])
 
   const requestDeletion = useCallback(async (review: MerchantPlaceReview, requestReason: string) => {
     if (!selectedPlaceId || review.placeId !== selectedPlaceId || actionRef.current !== null) return null
-    if (requestedByReviewId[review.reviewId]) return null
+    if (review.deletionRequest?.status === 'PENDING' || review.deletionRequest?.status === 'APPROVED') return null
 
     actionRef.current = review.reviewId
     setActiveReviewId(review.reviewId)
@@ -150,8 +146,8 @@ export function useMerchantPlaceReviews() {
     try {
       const result = await createMerchantPlaceReviewDeletionRequest(selectedPlaceId, review.reviewId, { requestReason })
       if (!mountedRef.current) return null
-      setRequestedByReviewId((current) => ({ ...current, [review.reviewId]: result }))
-      setSuccessMessage('리뷰 삭제 요청을 제출했습니다. 관리자 심사 후 처리됩니다.')
+      await fetchReviews(selectedPlaceId, pageInfo.page)
+      if (mountedRef.current) setSuccessMessage('리뷰 삭제 요청을 제출했습니다. 리뷰는 즉시 숨김 처리되며 최종 삭제는 관리자 심사 후 결정됩니다.')
       return result
     } catch (error) {
       if (mountedRef.current) {
@@ -163,7 +159,7 @@ export function useMerchantPlaceReviews() {
       actionRef.current = null
       if (mountedRef.current) setActiveReviewId(null)
     }
-  }, [getErrorMessage, requestedByReviewId, selectedPlaceId])
+  }, [fetchReviews, getErrorMessage, pageInfo.page, selectedPlaceId])
 
   return {
     status,
@@ -172,7 +168,6 @@ export function useMerchantPlaceReviews() {
     place,
     reviews,
     pageInfo,
-    requestedByReviewId,
     isLoading,
     errorMessage,
     sectionErrorMessage,

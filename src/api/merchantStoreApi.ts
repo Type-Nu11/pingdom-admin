@@ -18,6 +18,7 @@ import type {
   MerchantOperatingNoticeUpdateRequest,
   MerchantPlaceDetail,
   MerchantPlaceMediaItem,
+  MerchantPlaceMediaCreateRequest,
   MerchantPlaceMediaOrderUpdateRequest,
   MerchantPlaceMediaResponse,
   MerchantPlaceMediaUploadRequest,
@@ -160,6 +161,17 @@ export async function requestMerchantPlaceMediaUploadUrl(
 ) {
   const { data } = await customAxios.post<MerchantPlaceMediaUploadResponse>(
     `${MERCHANT_OWNER_PATH}/places/${placeId}/media/upload-url`,
+    request
+  )
+  return data
+}
+
+export async function createMerchantPlaceMedia(
+  placeId: number,
+  request: MerchantPlaceMediaCreateRequest
+) {
+  const { data } = await customAxios.post<MerchantPlaceMediaItem>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/media`,
     request
   )
   return data

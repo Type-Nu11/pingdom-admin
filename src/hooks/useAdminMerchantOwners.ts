@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  approveAdminMerchantOwner,
   getAdminMerchantOwner,
   getAdminMerchantOwnerPlaces,
   getAdminMerchantOwners,
+  rejectAdminMerchantOwner,
   replaceAdminMerchantOwnerPlaces,
   revokeAdminMerchantOwner,
   updateAdminMerchantOwnerOnboarding,
@@ -25,6 +27,8 @@ import { useAuth } from "./useAuth";
 
 const LIMIT = 10;
 export type MerchantOwnerAction =
+  | "approve"
+  | "reject"
   | "revoke"
   | "places"
   | "onboarding"
@@ -57,7 +61,7 @@ function shouldClearAuth(error: unknown) {
 
 export function useAdminMerchantOwners() {
   const { clearAuth } = useAuth();
-  const [status, setStatus] = useState<MerchantOwnerStatus | "">("ACTIVE");
+  const [status, setStatus] = useState<MerchantOwnerStatus | "">("PENDING");
   const [profiles, setProfiles] = useState<AdminMerchantOwnerProfile[]>([]);
   const [profile, setProfile] = useState<AdminMerchantOwnerProfile | null>(
     null,
@@ -201,7 +205,29 @@ export function useAdminMerchantOwners() {
     [clearAuth, fetchDetail, fetchProfiles],
   );
 
-  const review = useCallback(
+  const approve = useCallback(
+    (userId: number, request: AdminMerchantOwnerReviewRequest) => {
+      return runAction(
+        "approve",
+        userId,
+        () => approveAdminMerchantOwner(userId, request),
+        "상점주 신청을 승인했습니다.",
+      );
+    },
+    [runAction],
+  );
+  const reject = useCallback(
+    (userId: number, request: AdminMerchantOwnerReviewRequest) => {
+      return runAction(
+        "reject",
+        userId,
+        () => rejectAdminMerchantOwner(userId, request),
+        "상점주 신청을 반려했습니다.",
+      );
+    },
+    [runAction],
+  );
+  const revoke = useCallback(
     (userId: number, request: AdminMerchantOwnerReviewRequest) => {
       return runAction(
         "revoke",
@@ -254,7 +280,7 @@ export function useAdminMerchantOwners() {
   }, []);
 
   useEffect(() => {
-    void fetchProfiles("ACTIVE", 1);
+    void fetchProfiles("PENDING", 1);
   }, [fetchProfiles]);
 
   return {
@@ -276,7 +302,9 @@ export function useAdminMerchantOwners() {
     fetchProfiles,
     fetchDetail,
     clearDetail,
-    review,
+    approve,
+    reject,
+    revoke,
     replacePlaces,
     updateOnboarding,
     updateQuality,

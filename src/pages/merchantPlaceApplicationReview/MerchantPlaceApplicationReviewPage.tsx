@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
@@ -93,14 +93,30 @@ function formatOperatingDays(days: MerchantPlaceApplicationNewPlace['operatingDa
   }).join('\n')
 }
 
+function getApplicationIdFromNavigationState(state: unknown) {
+  if (!state || typeof state !== 'object' || !('applicationId' in state)) {
+    return null
+  }
+
+  const applicationId = state.applicationId
+
+  return typeof applicationId === 'number' && Number.isSafeInteger(applicationId) && applicationId > 0
+    ? applicationId
+    : null
+}
+
 function MerchantPlaceApplicationReviewPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, user } = useAuth()
   const hook = useAdminMerchantPlaceApplications()
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const applicationIdFromNavigation = getApplicationIdFromNavigationState(location.state)
+  const [selectedId, setSelectedId] = useState<number | null>(applicationIdFromNavigation)
   const [decision, setDecision] = useState<'approve' | 'reject' | null>(null)
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState('')
+  const openedApplicationIdRef = useRef<number | null>(null)
+  const fetchApplicationDetail = hook.fetchDetail
   const admin = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const isHistoryView = hook.view === 'history'
   const listTitle = isHistoryView ? '처리 이력' : '심사 대기 신청'
@@ -113,8 +129,20 @@ function MerchantPlaceApplicationReviewPage() {
     setDecision(null)
     setReason('')
     setFormError('')
-    void hook.fetchDetail(applicationId)
+    void fetchApplicationDetail(applicationId)
   }
+
+  useEffect(() => {
+    if (
+      !applicationIdFromNavigation ||
+      openedApplicationIdRef.current === applicationIdFromNavigation
+    ) {
+      return
+    }
+
+    openedApplicationIdRef.current = applicationIdFromNavigation
+    void fetchApplicationDetail(applicationIdFromNavigation)
+  }, [applicationIdFromNavigation, fetchApplicationDetail])
 
   const openReview = (nextDecision: 'approve' | 'reject') => {
     setDecision(nextDecision)

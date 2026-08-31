@@ -3,6 +3,7 @@ import {
   getAdminDashboardRecentActivities,
   getAdminDashboardSummary,
 } from '../api/adminDashboardApi'
+import { getAdminMerchantPlaceApplications } from '../api/adminMerchantPlaceApplicationApi'
 import { isApiError } from '../api/customAxios'
 import type { AuthErrorResponse } from '../types/auth.types'
 import type {
@@ -10,6 +11,7 @@ import type {
   AdminDashboardRecentActivitiesResponse,
   AdminDashboardSummary,
 } from '../types/adminDashboard.types'
+import type { AdminMerchantPlaceApplicationListItem } from '../types/adminMerchantPlaceApplication.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
@@ -42,6 +44,12 @@ function hasRecentActivityData(activities: AdminDashboardRecentActivitiesRespons
   return Object.values(activities).some((items) => items.length > 0)
 }
 
+function hasPendingMerchantPlaceApplicationData(
+  applications: AdminMerchantPlaceApplicationListItem[],
+) {
+  return applications.length > 0
+}
+
 function shouldClearAuth(error: unknown) {
   return (
     isApiError<AuthErrorResponse>(error) &&
@@ -56,8 +64,12 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   const [summary, setSummary] = useState<AdminDashboardSummary | null>(null)
   const [recentActivities, setRecentActivities] =
     useState<AdminDashboardRecentActivitiesResponse | null>(null)
+  const [pendingMerchantPlaceApplications, setPendingMerchantPlaceApplications] =
+    useState<AdminMerchantPlaceApplicationListItem[] | null>(null)
   const [status, setStatus] = useState<AdminDashboardLoadStatus>('loading')
   const [recentActivitiesStatus, setRecentActivitiesStatus] =
+    useState<AdminDashboardLoadStatus>('loading')
+  const [pendingItemsStatus, setPendingItemsStatus] =
     useState<AdminDashboardLoadStatus>('loading')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null)
@@ -69,8 +81,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       requestIdRef.current += 1
       setSummary(null)
       setRecentActivities(null)
+      setPendingMerchantPlaceApplications(null)
       setStatus('unavailable')
       setRecentActivitiesStatus('unavailable')
+      setPendingItemsStatus('unavailable')
       setIsRefreshing(false)
       setLastUpdatedAt(null)
 
@@ -87,10 +101,12 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
     setIsRefreshing(true)
     setStatus('loading')
     setRecentActivitiesStatus('loading')
+    setPendingItemsStatus('loading')
 
     const results = await Promise.allSettled([
       getAdminDashboardSummary(),
       getAdminDashboardRecentActivities(),
+      getAdminMerchantPlaceApplications({ status: 'PENDING', page: 1, limit: 10 }),
     ])
 
     if (requestId !== requestIdRef.current) {
@@ -132,6 +148,26 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       }
     }
 
+    const pendingMerchantPlaceApplicationsResult = results[2]
+    if (pendingMerchantPlaceApplicationsResult.status === 'fulfilled') {
+      const applications = pendingMerchantPlaceApplicationsResult.value.items
+      setPendingMerchantPlaceApplications(applications)
+      setPendingItemsStatus(
+        hasPendingMerchantPlaceApplicationData(applications) ? 'success' : 'empty'
+      )
+      hasSuccessfulResponse = true
+    } else {
+      logDebugError(
+        '관리자 대시보드 상점주 장소 신청 심사 대기 목록 조회 실패',
+        pendingMerchantPlaceApplicationsResult.reason,
+      )
+      setPendingItemsStatus('error')
+
+      if (shouldClearAuth(pendingMerchantPlaceApplicationsResult.reason)) {
+        clearAuth()
+      }
+    }
+
     if (hasSuccessfulResponse) {
       setLastUpdatedAt(Date.now())
     }
@@ -146,8 +182,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       const resetTimer = window.setTimeout(() => {
         setSummary(null)
         setRecentActivities(null)
+        setPendingMerchantPlaceApplications(null)
         setStatus('unavailable')
         setRecentActivitiesStatus('unavailable')
+        setPendingItemsStatus('unavailable')
         setIsRefreshing(false)
         setLastUpdatedAt(null)
       }, 0)
@@ -203,8 +241,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   return {
     summary,
     recentActivities,
+    pendingMerchantPlaceApplications,
     status,
     recentActivitiesStatus,
+    pendingItemsStatus,
     isLoading: isRefreshing,
     lastUpdatedAt,
     fetchSummary,

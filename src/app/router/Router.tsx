@@ -45,6 +45,9 @@ const UserRolePage = lazy(() => import('../../pages/userRole/UserRolePage'))
 const MerchantPlaceApplicationReviewPage = lazy(
   () => import('../../pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'),
 )
+const PlaceReviewDeletionPage = lazy(
+  () => import('../../pages/placeReviewDeletion/PlaceReviewDeletionPage'),
+)
 const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
 const NotificationOperationsPage = lazy(
   () => import('../../pages/notificationOperations/NotificationOperationsPage'),
@@ -171,6 +174,7 @@ export function Router() {
               path="/merchant-place-applications"
               element={<MerchantPlaceApplicationReviewPage />}
             />
+            <Route path="/review-deletion-requests" element={<PlaceReviewDeletionPage />} />
             <Route
               path="/place-registration-applications"
               element={<Navigate to="/merchant-place-applications" replace />}

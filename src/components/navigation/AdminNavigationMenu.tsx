@@ -28,6 +28,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     title: '검토함',
     items: [
       { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
+      { label: '리뷰 삭제 요청', icon: 'rate_review', path: '/review-deletion-requests' },
       { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
       { label: '방문자 제보·정정 심사', icon: 'person_check', path: '/visitor-verifications' },
     ],

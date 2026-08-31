@@ -89,6 +89,9 @@ const MerchantPlaceReverificationPage = lazy(
 const MerchantPlaceOperationsPage = lazy(
   () => import('../../pages/merchantPlaceOperations/MerchantPlaceOperationsPage'),
 )
+const MerchantPlaceReviewPage = lazy(
+  () => import('../../pages/merchantPlaceReview/MerchantPlaceReviewPage'),
+)
 const MerchantVerifiedBoostPage = lazy(
   () => import('../../pages/merchantVerifiedBoost/MerchantVerifiedBoostPage'),
 )
@@ -142,6 +145,7 @@ export function Router() {
               <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
               <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
               <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
+              <Route path="/merchant/reviews" element={<MerchantPlaceReviewPage />} />
               <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
               <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
             </Route>

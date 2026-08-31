@@ -18,6 +18,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     title: '장소 운영',
     items: [
       { label: '장소 운영 정보', icon: 'store', path: '/merchant/place-operations' },
+      { label: '리뷰 관리', icon: 'rate_review', path: '/merchant/reviews' },
       { label: '운영 공지', icon: 'campaign', path: '/merchant/operating-notices' },
       { label: '정보 재확인', icon: 'fact_check', path: '/merchant/place-reverification' },
     ],

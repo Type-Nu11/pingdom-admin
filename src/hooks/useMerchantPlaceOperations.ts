@@ -9,6 +9,7 @@ import {
   requestMerchantPlaceMediaUploadUrl,
   updateMerchantPlaceOperatingSchedule,
   updateMerchantPlaceOperatingStatus,
+  updateMerchantPlaceMediaOrder,
   updateMerchantRepresentativeMedia,
 } from '../api/merchantStoreApi'
 import { getAuthErrorMessage } from '../api/authError'
@@ -31,6 +32,7 @@ type OperationAction =
   | 'schedule'
   | 'representative'
   | 'upload-media'
+  | 'move-media'
   | 'delete-media'
   | null
 
@@ -266,12 +268,29 @@ export function useMerchantPlaceOperations() {
     )
   }, [runAction, selectedPlaceId])
 
-  const moveMedia = useCallback(async (_mediaId: number, _direction: 'previous' | 'next') => {
-    void _mediaId
-    void _direction
-    setActionErrorMessage('미디어 순서 변경은 원자적 재정렬 API가 제공된 뒤 이용할 수 있습니다.')
-    return false
-  }, [])
+  const moveMedia = useCallback((mediaId: number, direction: 'previous' | 'next') => {
+    if (!selectedPlaceId || !media) return Promise.resolve(null)
+
+    const orderedMedia = [...media.media].sort((left, right) => left.displayOrder - right.displayOrder)
+    const currentIndex = orderedMedia.findIndex((item) => item.id === mediaId)
+    const targetIndex = direction === 'previous' ? currentIndex - 1 : currentIndex + 1
+    const targetMedia = orderedMedia[targetIndex]
+
+    if (currentIndex < 0 || !targetMedia) return Promise.resolve(null)
+
+    return runAction(
+      'move-media',
+      async () => {
+        await updateMerchantPlaceMediaOrder(selectedPlaceId, mediaId, {
+          displayOrder: targetMedia.displayOrder,
+        })
+        return getMerchantPlaceMedia(selectedPlaceId)
+      },
+      (next) => setMedia(sortMedia(next)),
+      '탐색 미디어 순서를 변경했습니다.',
+      '탐색 미디어 순서를 변경하지 못했습니다.',
+    )
+  }, [media, runAction, selectedPlaceId])
 
   const deleteMedia = useCallback((mediaId: number) => {
     if (!selectedPlaceId) return Promise.resolve(false)

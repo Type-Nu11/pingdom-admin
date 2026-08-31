@@ -49,3 +49,27 @@ export const ReviewNote = styled.div`
   line-height: 1.55;
   white-space: pre-wrap;
 `
+
+export const DangerButton = styled.button`
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid ${neutral.error};
+  border-radius: 8px;
+  background: ${neutral.error};
+  color: ${neutral.primaryText};
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.94);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`

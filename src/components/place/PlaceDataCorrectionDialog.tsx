@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type {
+  AdminPlaceBasicInformationUpdateRequest,
   AdminPlaceCoordinatesUpdateRequest,
   AdminPlaceDetail,
   AdminPlaceGeocodingUpdateRequest,
   AdminPlaceKakaoPlaceIdUpdateRequest,
+  AdminPlaceStandardCategory,
 } from '../../types/adminPlace.types'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
 export type PlaceDataCorrectionAction =
+  | 'basic-information'
   | 'geocoding'
   | 'coordinates'
   | 'kakao-place-id'
@@ -18,6 +21,9 @@ interface PlaceDataCorrectionDialogProps {
   errorMessages: Record<PlaceDataCorrectionAction, string>
   onClearError: (action: PlaceDataCorrectionAction) => void
   onClose: () => void
+  onUpdateBasicInformation: (
+    payload: AdminPlaceBasicInformationUpdateRequest
+  ) => Promise<boolean>
   onUpdateKakaoPlaceId: (
     payload: AdminPlaceKakaoPlaceIdUpdateRequest
   ) => Promise<boolean>
@@ -35,6 +41,11 @@ const MODES: Array<{
   description: string
 }> = [
   {
+    value: 'basic-information',
+    label: '기본 정보',
+    description: '장소명과 표준 카테고리를 함께 보정합니다.',
+  },
+  {
     value: 'geocoding',
     label: '주소·좌표',
     description: '대표 주소와 정규화 주소, 좌표를 함께 보정합니다.',
@@ -50,6 +61,42 @@ const MODES: Array<{
     description: 'Kakao 장소 연결을 변경하거나 해제합니다.',
   },
 ]
+
+const BASIC_INFORMATION_CATEGORY_OPTIONS: Array<{
+  value: AdminPlaceStandardCategory
+  label: string
+}> = [
+  { value: 'RESTAURANT', label: '음식점' },
+  { value: 'MUSIC', label: '음악' },
+  { value: 'POP_UP', label: '팝업' },
+  { value: 'FASHION', label: '패션' },
+  { value: 'BEAUTY', label: '뷰티' },
+  { value: 'EXHIBITION', label: '전시' },
+  { value: 'CAFE', label: '카페' },
+  { value: 'CULTURAL_HERITAGE', label: '문화재' },
+  { value: 'OTHER', label: '기타' },
+]
+
+const CATEGORY_CODE_BY_LABEL: Record<string, AdminPlaceStandardCategory> = {
+  음식점: 'RESTAURANT',
+  음악: 'MUSIC',
+  팝업: 'POP_UP',
+  패션: 'FASHION',
+  뷰티: 'BEAUTY',
+  전시: 'EXHIBITION',
+  카페: 'CAFE',
+  문화재: 'CULTURAL_HERITAGE',
+  기타: 'OTHER',
+}
+
+function getStandardCategory(value?: string | null): AdminPlaceStandardCategory {
+  const normalizedValue = value?.trim().replace(/[\s-]+/g, '_').toUpperCase()
+  const matchingOption = BASIC_INFORMATION_CATEGORY_OPTIONS.find(
+    (option) => option.value === normalizedValue
+  )
+
+  return matchingOption?.value ?? CATEGORY_CODE_BY_LABEL[value?.trim() ?? ''] ?? 'OTHER'
+}
 
 function isCoordinateInRange(value: string, min: number, max: number) {
   const numberValue = Number(value)
@@ -71,11 +118,16 @@ export function PlaceDataCorrectionDialog({
   errorMessages,
   onClearError,
   onClose,
+  onUpdateBasicInformation,
   onUpdateKakaoPlaceId,
   onUpdateCoordinates,
   onUpdateGeocoding,
 }: PlaceDataCorrectionDialogProps) {
-  const [mode, setMode] = useState<PlaceDataCorrectionAction>('geocoding')
+  const [mode, setMode] = useState<PlaceDataCorrectionAction>('basic-information')
+  const [name, setName] = useState(place.name)
+  const [category, setCategory] = useState<AdminPlaceStandardCategory>(() =>
+    getStandardCategory(place.category ?? place.categoryName)
+  )
   const [kakaoPlaceId, setKakaoPlaceId] = useState(place.kakaoPlaceId ?? '')
   const [address, setAddress] = useState(place.address ?? '')
   const [roadAddress, setRoadAddress] = useState(place.roadAddress ?? '')
@@ -145,6 +197,43 @@ export function PlaceDataCorrectionDialog({
     }
 
     if (await onUpdateKakaoPlaceId({ kakaoPlaceId: nextKakaoPlaceId })) {
+      onClose()
+    }
+  }
+
+  const handleBasicInformationSubmit = async () => {
+    const nextName = name.trim()
+    const nextReason = reason.trim()
+    const currentCategory = getStandardCategory(place.category ?? place.categoryName)
+
+    if (!nextName) {
+      setFormError('장소명을 입력해주세요.')
+      return
+    }
+    if (nextName.length > 100) {
+      setFormError('장소명은 100자 이하여야 합니다.')
+      return
+    }
+    if (!nextReason) {
+      setFormError('기본 정보 보정 사유를 입력해주세요.')
+      return
+    }
+    if (nextReason.length > 500) {
+      setFormError('보정 사유는 500자 이하여야 합니다.')
+      return
+    }
+    if (nextName === place.name && category === currentCategory) {
+      setFormError('현재 장소명 또는 카테고리와 다른 값을 입력해주세요.')
+      return
+    }
+
+    if (
+      await onUpdateBasicInformation({
+        name: nextName,
+        category,
+        reason: nextReason,
+      })
+    ) {
       onClose()
     }
   }
@@ -251,7 +340,9 @@ export function PlaceDataCorrectionDialog({
     setFormError('')
     onClearError(mode)
 
-    if (mode === 'kakao-place-id') {
+    if (mode === 'basic-information') {
+      await handleBasicInformationSubmit()
+    } else if (mode === 'kakao-place-id') {
       await handleKakaoPlaceIdSubmit()
     } else if (mode === 'coordinates') {
       await handleCoordinatesSubmit()
@@ -291,11 +382,11 @@ export function PlaceDataCorrectionDialog({
 
         <S.OperatingDialogBody>
           <S.OperatingDialogDescription>
-            장소 식별자와 주소·좌표 중 필요한 범위만 선택해 보정합니다. 좌표 변경은
-            저장 즉시 목록과 지도 마커에도 반영됩니다.
+            장소 기본 정보와 식별자, 주소·좌표 중 필요한 범위만 선택해 보정합니다.
+            변경 결과는 저장 즉시 목록과 지도 마커에 반영됩니다.
           </S.OperatingDialogDescription>
 
-          <S.OperatingActionTabs $columns={3} role="tablist" aria-label="정보 보정 방식">
+          <S.OperatingActionTabs $columns={4} role="tablist" aria-label="정보 보정 방식">
             {MODES.map((option) => (
               <S.OperatingActionTab
                 key={option.value}
@@ -314,7 +405,54 @@ export function PlaceDataCorrectionDialog({
             {MODES.find((option) => option.value === mode)?.description}
           </S.OperatingInfoNotice>
 
-          {mode === 'kakao-place-id' ? (
+          {mode === 'basic-information' ? (
+            <>
+              <S.OperatingFormField>
+                <span>장소명 *</span>
+                <S.OperatingTextInput
+                  value={name}
+                  maxLength={100}
+                  disabled={isSubmitting}
+                  onChange={(event) => {
+                    setName(event.target.value)
+                    clearMessages()
+                  }}
+                />
+                <small>{name.length}/100</small>
+              </S.OperatingFormField>
+              <S.OperatingFormField>
+                <span>표준 카테고리 *</span>
+                <S.OperatingSelect
+                  value={category}
+                  disabled={isSubmitting}
+                  onChange={(event) => {
+                    setCategory(event.target.value as AdminPlaceStandardCategory)
+                    clearMessages()
+                  }}
+                >
+                  {BASIC_INFORMATION_CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </S.OperatingSelect>
+              </S.OperatingFormField>
+              <S.OperatingFormField>
+                <span>보정 사유 *</span>
+                <S.OperatingTextArea
+                  value={reason}
+                  maxLength={500}
+                  placeholder="정보 출처와 보정 이유를 입력해주세요."
+                  disabled={isSubmitting}
+                  onChange={(event) => {
+                    setReason(event.target.value)
+                    clearMessages()
+                  }}
+                />
+                <small>{reason.length}/500</small>
+              </S.OperatingFormField>
+            </>
+          ) : mode === 'kakao-place-id' ? (
             <>
               <S.OperatingComparisonGrid>
                 <S.OperatingComparisonItem>

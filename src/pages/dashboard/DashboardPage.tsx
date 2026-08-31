@@ -114,8 +114,10 @@ function DashboardPage() {
   const {
     summary,
     recentActivities,
+    pendingItems,
     status,
     recentActivitiesStatus,
+    pendingItemsStatus,
     isLoading,
     lastUpdatedAt,
     fetchSummary,
@@ -126,6 +128,9 @@ function DashboardPage() {
   const visibleOperationalMetrics = summary?.operationalMetrics
     ? OPERATIONAL_METRICS.filter((metric) => getOperationalMetricValue(metric.key) !== 0)
     : OPERATIONAL_METRICS
+  const pendingMerchantPlaceApplications = pendingItems?.items.filter(
+    (item) => item.type === 'MERCHANT_PLACE_APPLICATION'
+  ) ?? []
 
   function getMetricValue(key: DashboardMetricKey) {
     if (summary && (status === 'success' || status === 'empty' || status === 'loading' || status === 'error')) {
@@ -404,6 +409,47 @@ function DashboardPage() {
     )
   }
 
+  function renderPendingReviewQueue() {
+    if (!pendingItems) {
+      if (pendingItemsStatus === 'loading') {
+        return <S.OperationalEmptyState>심사 대기 항목을 불러오는 중입니다.</S.OperationalEmptyState>
+      }
+
+      if (pendingItemsStatus === 'error') {
+        return renderSectionError('심사 대기 항목을 불러오지 못했습니다.')
+      }
+
+      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
+    }
+
+    if (pendingMerchantPlaceApplications.length === 0) {
+      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
+    }
+
+    return (
+      <S.PendingList>
+        {pendingMerchantPlaceApplications.map((item) => (
+          <S.PendingItem
+            key={`${item.type}-${item.targetId}`}
+            type="button"
+            onClick={() => navigate('/merchant-place-applications')}
+          >
+            <S.PendingItemMain>
+              <strong title={item.title || `장소 신청 #${item.targetId}`}>
+                {item.title || `장소 신청 #${item.targetId}`}
+              </strong>
+              <span>{formatActivityDate(item.createdAt) ?? '접수 시각 정보 없음'}</span>
+            </S.PendingItemMain>
+            <S.PendingItemMeta>
+              심사하기
+              <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+            </S.PendingItemMeta>
+          </S.PendingItem>
+        ))}
+      </S.PendingList>
+    )
+  }
+
   function renderOperationalMetricCard(metric: DashboardOperationalMetric) {
     const value = getOperationalMetricValue(metric.key)
     const isZeroValue = value === 0
@@ -582,6 +628,26 @@ function DashboardPage() {
                 현재 처리할 항목이 없습니다.
               </S.OperationalEmptyState>
             )}
+          </S.Section>
+
+          <S.Section aria-labelledby="dashboard-pending-review-title">
+            <S.SectionHeader>
+              <S.SectionTitle id="dashboard-pending-review-title">심사 대기</S.SectionTitle>
+              <S.SectionDescription>
+                {pendingItemsStatus === 'success'
+                  ? `상점주 장소 신청 ${pendingMerchantPlaceApplications.length.toLocaleString()}건`
+                  : '처리 대기 중인 상점주 장소 신청'}
+              </S.SectionDescription>
+            </S.SectionHeader>
+            <S.OperationsPanel>
+              {pendingItemsStatus === 'loading' && pendingItems ? (
+                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
+              ) : null}
+              {pendingItemsStatus === 'error' && pendingItems
+                ? renderSectionError('심사 대기 항목을 새로 불러오지 못했습니다.')
+                : null}
+              {renderPendingReviewQueue()}
+            </S.OperationsPanel>
           </S.Section>
 
           <S.DashboardBottomGrid>

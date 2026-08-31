@@ -274,15 +274,16 @@ export function useMerchantPlaceOperations() {
     const orderedMedia = [...media.media].sort((left, right) => left.displayOrder - right.displayOrder)
     const currentIndex = orderedMedia.findIndex((item) => item.id === mediaId)
     const targetIndex = direction === 'previous' ? currentIndex - 1 : currentIndex + 1
-    const targetMedia = orderedMedia[targetIndex]
 
-    if (currentIndex < 0 || !targetMedia) return Promise.resolve(null)
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= orderedMedia.length) {
+      return Promise.resolve(null)
+    }
 
     return runAction(
       'move-media',
       async () => {
         await updateMerchantPlaceMediaOrder(selectedPlaceId, mediaId, {
-          displayOrder: targetMedia.displayOrder,
+          displayOrder: targetIndex,
         })
         return getMerchantPlaceMedia(selectedPlaceId)
       },

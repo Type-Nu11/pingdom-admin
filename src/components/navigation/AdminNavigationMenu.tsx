@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './AdminNavigationMenu.styles'
 
@@ -73,13 +73,8 @@ const isPlaceManagementPath = (pathname: string) =>
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const activeItemRef = useRef<HTMLButtonElement>(null)
   const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(true)
   const [openGroups, setOpenGroups] = useState(() => new Set(NAVIGATION_GROUPS.map((group) => group.title)))
-
-  useEffect(() => {
-    activeItemRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [isPlaceManagementOpen, openGroups, pathname])
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
@@ -90,7 +85,6 @@ export function AdminNavigationMenu() {
         type="button"
         $active={dashboardActive}
         aria-current={dashboardActive ? 'page' : undefined}
-        ref={dashboardActive ? activeItemRef : undefined}
         onClick={() => navigate('/dashboard')}
       >
         <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
@@ -125,7 +119,6 @@ export function AdminNavigationMenu() {
                     type="button"
                     $active={pathname === '/places'}
                     aria-current={pathname === '/places' ? 'page' : undefined}
-                    ref={pathname === '/places' ? activeItemRef : undefined}
                     onClick={() => {
                       setIsPlaceManagementOpen(true)
                       navigate('/places')
@@ -154,7 +147,6 @@ export function AdminNavigationMenu() {
                       return (
                         <S.ChildButton
                           key={item.path}
-                          ref={active ? activeItemRef : undefined}
                           type="button"
                           $active={active}
                           aria-current={active ? 'page' : undefined}
@@ -177,7 +169,6 @@ export function AdminNavigationMenu() {
                 return (
                   <S.ItemButton
                   key={item.path}
-                  ref={active ? activeItemRef : undefined}
                   type="button"
                   $active={active}
                   aria-current={active ? 'page' : undefined}

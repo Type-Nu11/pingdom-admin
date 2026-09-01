@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
+import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantOperatingNotices } from '../../hooks/useMerchantOperatingNotices'
 import type {
@@ -116,19 +117,19 @@ function NoticeEditor({
     {notice && !editable ? <S.ReadonlyNotice>{notice.status === 'EXPIRED' ? '만료된 공지는 조회만 할 수 있습니다.' : '취소된 공지는 조회만 할 수 있습니다.'}</S.ReadonlyNotice> : null}
     <S.Form onSubmit={submit}>
       <S.Field>연결 장소
-        <S.Select value={selectedPlaceId ?? ''} disabled>
+        <AdminSelect aria-label="운영 공지 연결 장소" width="100%" value={selectedPlaceId ?? ''} disabled>
           {placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}
-        </S.Select>
+        </AdminSelect>
       </S.Field>
       <S.Field>공지 유형
-        <S.Select value={noticeType} disabled={Boolean(notice) || !editable || isBusy} onChange={(event) => setNoticeType(event.target.value as MerchantOperatingNoticeType)}>
+        <AdminSelect aria-label="운영 공지 유형" width="100%" value={noticeType} disabled={Boolean(notice) || !editable || isBusy} onChange={(event) => setNoticeType(event.target.value as MerchantOperatingNoticeType)}>
           {Object.entries(NOTICE_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </S.Select>
+        </AdminSelect>
       </S.Field>
       <S.Field>중요도
-        <S.Select value={severity} disabled={!editable || isBusy} onChange={(event) => setSeverity(event.target.value as MerchantOperatingNoticeSeverity)}>
+        <AdminSelect aria-label="운영 공지 중요도" width="100%" value={severity} disabled={!editable || isBusy} onChange={(event) => setSeverity(event.target.value as MerchantOperatingNoticeSeverity)}>
           {Object.entries(SEVERITIES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </S.Select>
+        </AdminSelect>
       </S.Field>
       <S.Field $wide>공지 내용
         <S.Textarea value={message} maxLength={500} disabled={!editable || isBusy} placeholder="예: 오늘 시설 점검으로 오후 3시까지 임시 휴업합니다." onChange={(event) => { setMessage(event.target.value); setFormError('') }} />

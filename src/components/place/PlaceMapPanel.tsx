@@ -10,7 +10,6 @@ interface PlaceMapPanelProps {
   fitBoundsKey: string
   selectedPlaceId: number | null
   isListCollapsed: boolean
-  isInspectorOpen: boolean
   onMarkerSelect: (placeId: number) => void
   onOpenList: () => void
   inspector: ReactNode
@@ -24,7 +23,6 @@ export function PlaceMapPanel({
   fitBoundsKey,
   selectedPlaceId,
   isListCollapsed,
-  isInspectorOpen,
   onMarkerSelect,
   onOpenList,
   inspector,
@@ -65,14 +63,12 @@ export function PlaceMapPanel({
           <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
         </S.MapControlButton>
       </S.MapControlGroup>
-      {!isInspectorOpen ? (
-        <S.MapInfo $offsetForListToggle={isListCollapsed}>
-          <S.MapInfoDot />
-          <S.MapInfoText>
-            <strong>{displayCount.toLocaleString()}개 장소 표시</strong>
-          </S.MapInfoText>
-        </S.MapInfo>
-      ) : null}
+      <S.MapInfo>
+        <S.MapInfoDot />
+        <S.MapInfoText>
+          <strong>{displayCount.toLocaleString()}개 장소 표시</strong>
+        </S.MapInfoText>
+      </S.MapInfo>
     </S.MapPanel>
   )
 }

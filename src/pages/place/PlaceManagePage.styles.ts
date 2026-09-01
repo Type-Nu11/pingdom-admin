@@ -3,6 +3,7 @@ import KakaoMap from '../../components/map/KakaoMap'
 import { adminColors } from '../../styles/theme'
 
 const neutral = adminColors
+const mapControlHoverBackground = '#FFF0F4'
 
 const controlStyle = css`
   min-height: 44px;
@@ -1752,29 +1753,22 @@ export const MapControlGroup = styled.div`
   }
 `
 
-export const MapListToggleButton = styled.button`
+export const MapListToggleButton = styled(PanelCollapseButton)`
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 7;
+  width: auto;
   min-height: 40px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 0 12px 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.softOverlay};
-  color: ${neutral.text};
   font-size: 13px;
   font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 8px 22px ${neutral.shadow};
 
-  &:hover {
-    border-color: ${neutral.primarySoft};
-    background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+  &&:hover:not(:disabled) {
+    background: ${mapControlHoverBackground};
   }
 
   ${MaterialIcon} {
@@ -1782,30 +1776,19 @@ export const MapListToggleButton = styled.button`
   }
 `
 
-export const MapControlButton = styled.button`
+export const MapControlButton = styled(PanelCollapseButton)`
   width: 40px;
   height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.softOverlay};
-  color: ${neutral.text};
-  cursor: pointer;
-  box-shadow: 0 8px 22px ${neutral.shadow};
 
-  &:hover {
-    border-color: ${neutral.primarySoft};
-    background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+  &&:hover:not(:disabled) {
+    background: ${mapControlHoverBackground};
   }
 `
 
-export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
+export const MapInfo = styled.div`
   position: absolute;
-  top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '62px' : '16px')};
-  left: 20px;
+  top: 16px;
+  right: 20px;
   z-index: 6;
   display: inline-flex;
   align-items: center;
@@ -1815,15 +1798,15 @@ export const MapInfo = styled.div<{ $offsetForListToggle?: boolean }>`
   padding: 7px 10px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
-  background: ${neutral.softOverlay};
+  background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 11px;
   font-weight: 700;
   box-shadow: 0 8px 22px ${neutral.shadow};
 
   @media (max-width: 720px) {
-    top: ${({ $offsetForListToggle }) => ($offsetForListToggle ? '56px' : '12px')};
-    left: 12px;
+    top: 12px;
+    right: 12px;
     max-width: min(340px, calc(100% - 24px));
   }
 `

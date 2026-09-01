@@ -94,8 +94,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
   ) {
     const representativeImageUrl =
       placeDetail?.imageUrl ??
-      placeDetail?.posts?.find((post) => post.imageUrl || post.thumbnailUrl)
-        ?.imageUrl ??
+      placeDetail?.posts?.find((post) => post.imageUrl)?.imageUrl ??
       placeDetail?.posts?.find((post) => post.thumbnailUrl)?.thumbnailUrl
 
     return (

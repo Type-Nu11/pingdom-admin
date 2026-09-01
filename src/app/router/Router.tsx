@@ -106,9 +106,16 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
 }
 
 function ScrollToTopOnRouteChange() {
-  const { pathname } = useLocation()
+  const { pathname, state } = useLocation()
+  const shouldPreserveScrollPosition = Boolean(
+    (state as { preserveScrollPosition?: boolean } | null)?.preserveScrollPosition,
+  )
 
   useLayoutEffect(() => {
+    if (shouldPreserveScrollPosition) {
+      return
+    }
+
     const mainScrollArea = document.getElementById(ADMIN_MAIN_SCROLL_AREA_ID)
       ?? document.getElementById(MERCHANT_MAIN_SCROLL_AREA_ID)
 
@@ -118,7 +125,7 @@ function ScrollToTopOnRouteChange() {
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  }, [pathname])
+  }, [pathname, shouldPreserveScrollPosition])
 
   return null
 }

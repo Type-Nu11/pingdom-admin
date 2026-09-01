@@ -209,9 +209,8 @@ export const PlaceSelect = styled.select`
 
 export const StoreSummary = styled.section`
   padding: 24px;
-  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
 
   @media (max-width: 720px) {
     padding: 24px 20px;
@@ -325,9 +324,8 @@ export const Metric = styled.article`
   align-items: center;
   gap: 14px;
   padding: 20px;
-  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
 `
 
 export const MetricIcon = styled.span`
@@ -400,9 +398,8 @@ export const PerformanceMetric = styled.article`
   flex-direction: column;
   justify-content: center;
   padding: 18px 20px;
-  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
 
   span {
     color: ${colors.muted};
@@ -432,9 +429,8 @@ export const PerformanceError = styled.div`
   gap: 16px;
   margin-top: 16px;
   padding: 16px 20px;
-  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
   color: ${colors.muted};
   font-size: 14px;
 
@@ -707,9 +703,8 @@ export const EmptyStoreState = styled.section`
   align-items: center;
   gap: 16px;
   padding: 24px;
-  border: 1px solid ${colors.border};
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
 
   @media (max-width: 680px) {
     align-items: flex-start;

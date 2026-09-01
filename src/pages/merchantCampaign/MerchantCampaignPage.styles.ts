@@ -38,9 +38,9 @@ export const Workspace = styled.div`
 
 export const Panel = styled.section`
   min-width: 0;
-  border: 1px solid ${colors.border};
+  border: 0;
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
 `
 
 export const PanelHeader = styled.div`
@@ -236,9 +236,8 @@ export const Editor = styled.div`
 export const ReadonlyNotice = styled.div`
   margin-bottom: 18px;
   padding: 12px 14px;
-  border: 1px solid ${colors.border};
   border-radius: 6px;
-  background: ${colors.surfaceLow};
+  background: ${colors.surface};
   color: ${colors.muted};
   font-size: 13px;
   line-height: 1.5;

@@ -93,12 +93,14 @@ function ReportedUsersPage() {
             </Shared.PageHeader>
 
             <Form.SearchBar onSubmit={search}>
-              <Form.Field>통합 검색
-                <Form.Input type="search" value={keywordInput} placeholder="신고자 이름, 신고 사유, 신고 대상 사용자 ID" onChange={(event) => setKeywordInput(event.target.value)} />
-                <small>공백 검색은 전체 목록으로 처리됩니다.</small>
-              </Form.Field>
-              {activeKeyword ? <Shared.SecondaryButton type="button" disabled={isLoading} onClick={resetSearch}>초기화</Shared.SecondaryButton> : null}
-              <Shared.PrimaryButton type="submit" disabled={isLoading}>검색</Shared.PrimaryButton>
+              <Form.InlineSearchControls>
+                <Form.Field>통합 검색
+                  <Form.Input type="search" value={keywordInput} placeholder="신고자 이름, 신고 사유, 신고 대상 사용자 ID" onChange={(event) => setKeywordInput(event.target.value)} />
+                  <small>공백 검색은 전체 목록으로 처리됩니다.</small>
+                </Form.Field>
+                {activeKeyword ? <Shared.SecondaryButton type="button" disabled={isLoading} onClick={resetSearch}>초기화</Shared.SecondaryButton> : null}
+                <Shared.PrimaryButton type="submit" disabled={isLoading}>검색</Shared.PrimaryButton>
+              </Form.InlineSearchControls>
             </Form.SearchBar>
 
             {isError ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}

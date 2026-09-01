@@ -148,21 +148,23 @@ function UserRolePage() {
               </Shared.HeaderActions>
             </Shared.PageHeader>
             <S.SearchBar as="form" onSubmit={search}>
-              <S.Field>
-                관리자 사용자 ID
-                <S.Input
-                  value={userIdInput}
-                  inputMode="numeric"
-                  placeholder="예: 42"
-                  onChange={(event) => {
-                    setUserIdInput(event.target.value);
-                    setFormError("");
-                  }}
-                />
-              </S.Field>
-              <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>
-                {hook.isLoading ? "조회 중" : "역할 조회"}
-              </Shared.PrimaryButton>
+              <S.InlineSearchControls>
+                <S.Field>
+                  관리자 사용자 ID
+                  <S.Input
+                    value={userIdInput}
+                    inputMode="numeric"
+                    placeholder="예: 42"
+                    onChange={(event) => {
+                      setUserIdInput(event.target.value);
+                      setFormError("");
+                    }}
+                  />
+                </S.Field>
+                <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>
+                  {hook.isLoading ? "조회 중" : "역할 조회"}
+                </Shared.PrimaryButton>
+              </S.InlineSearchControls>
             </S.SearchBar>
             {formError ? (
               <Shared.Notice $variant="error">{formError}</Shared.Notice>

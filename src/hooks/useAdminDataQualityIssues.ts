@@ -5,6 +5,7 @@ import { isApiError } from '../api/customAxios'
 import type {
   AdminDataQualityErrorResponse,
   AdminDataQualityIssue,
+  AdminDataQualityIssueListResponse,
 } from '../types/adminDataQuality.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -17,6 +18,28 @@ const CATEGORY_MESSAGES = {
   timeout: '응답이 지연되고 있습니다.',
   server: '서버 오류가 발생했습니다.',
 } as const
+
+function normalizeIssueResponse(data: AdminDataQualityIssueListResponse) {
+  if (Array.isArray(data)) {
+    return {
+      issues: data,
+      page: 1,
+      limit: Math.max(data.length, 1),
+      total: data.length,
+      totalPages: 1,
+      hasNext: false,
+    }
+  }
+
+  return {
+    issues: data.items,
+    page: data.page,
+    limit: data.limit,
+    total: data.total,
+    totalPages: data.totalPages,
+    hasNext: data.hasNext,
+  }
+}
 
 export function useAdminDataQualityIssues() {
   const { clearAuth } = useAuth()
@@ -41,13 +64,13 @@ export function useAdminDataQualityIssues() {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const data = await getAdminDataQualityIssues(nextPage)
-      setIssues(data.items)
-      setPage(data.page)
-      setLimit(data.limit)
-      setTotal(data.total)
-      setTotalPages(data.totalPages)
-      setHasNext(data.hasNext)
+      const response = normalizeIssueResponse(await getAdminDataQualityIssues(nextPage))
+      setIssues(response.issues)
+      setPage(response.page)
+      setLimit(response.limit)
+      setTotal(response.total)
+      setTotalPages(response.totalPages)
+      setHasNext(response.hasNext)
       return true
     } catch (error) {
       setErrorMessage(message(error, '데이터 품질 이슈를 불러오지 못했습니다.'))

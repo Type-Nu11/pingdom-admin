@@ -22,4 +22,8 @@ export interface AdminDataQualityIssuePageResponse {
   hasNext: boolean
 }
 
+export type AdminDataQualityIssueListResponse =
+  | AdminDataQualityIssue[]
+  | AdminDataQualityIssuePageResponse
+
 export type AdminDataQualityErrorResponse = AuthErrorResponse<string>

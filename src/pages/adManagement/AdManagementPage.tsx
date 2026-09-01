@@ -201,12 +201,13 @@ function AdManagementPage() {
             </Shared.PageHeader>
 
             <S.SearchBar onSubmit={submitSearch}>
-              <S.Field>검색어<S.Input value={keyword} disabled={isBusy} placeholder="광고 제목 검색" onChange={(event) => setKeyword(event.target.value)} /></S.Field>
-              <S.Field>노출 상태<AdminSelect aria-label="노출 상태" width="100%" value={displayStatus} disabled={isBusy} onChange={(event) => setDisplayStatus(event.target.value as AdminAdDisplayStatus | '')}><option value="">전체</option>{Object.entries(STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
-              <S.Field>노출 시작<AdminDateTimePicker ariaLabel="광고 노출 시작 필터" value={startedFrom} disabled={isBusy} onChange={(value) => { setStartedFrom(value); setFormError('') }} /></S.Field>
-              <S.Field>노출 종료<AdminDateTimePicker ariaLabel="광고 노출 종료 필터" value={startedTo} disabled={isBusy} onChange={(value) => { setStartedTo(value); setFormError('') }} /></S.Field>
-              <Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton>
-              <Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton>
+              <S.FilterGrid>
+                <S.Field>검색어<S.Input value={keyword} disabled={isBusy} placeholder="광고 제목 검색" onChange={(event) => setKeyword(event.target.value)} /></S.Field>
+                <S.Field>노출 상태<AdminSelect aria-label="노출 상태" width="100%" value={displayStatus} disabled={isBusy} onChange={(event) => setDisplayStatus(event.target.value as AdminAdDisplayStatus | '')}><option value="">전체</option>{Object.entries(STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
+                <S.Field>노출 시작<AdminDateTimePicker ariaLabel="광고 노출 시작 필터" value={startedFrom} disabled={isBusy} onChange={(value) => { setStartedFrom(value); setFormError('') }} /></S.Field>
+                <S.Field>노출 종료<AdminDateTimePicker ariaLabel="광고 노출 종료 필터" value={startedTo} disabled={isBusy} onChange={(value) => { setStartedTo(value); setFormError('') }} /></S.Field>
+                <S.FilterActions><Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton></S.FilterActions>
+              </S.FilterGrid>
             </S.SearchBar>
 
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}

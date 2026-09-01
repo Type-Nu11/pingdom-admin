@@ -21,6 +21,8 @@ import * as History from './OperationHistoryPage.styles'
 
 type Tab = 'audit' | 'privacy'
 
+const MAX_VISIBLE_PAGE_NUMBER_COUNT = 5
+
 const PRIVACY_ACTION_LABELS: Record<PrivacyProcessingAction, string> = {
   EXPORT_REQUESTED: '내보내기 요청',
   WITHDRAWAL_REQUESTED: '탈퇴 요청',
@@ -90,6 +92,19 @@ function parseUserId(value: string) {
 
 function validatePeriod(from: string, to: string) {
   return !from || !to || from <= to
+}
+
+function getVisiblePageNumbers(currentPage: number, totalPages: number) {
+  const safeTotalPages = Math.max(totalPages, 1)
+  const visiblePageCount = Math.min(MAX_VISIBLE_PAGE_NUMBER_COUNT, safeTotalPages)
+  const sidePageCount = Math.floor(visiblePageCount / 2)
+  let startPage = Math.max(1, currentPage - sidePageCount)
+  let endPage = Math.min(safeTotalPages, startPage + visiblePageCount - 1)
+
+  startPage = Math.max(1, endPage - visiblePageCount + 1)
+  endPage = Math.min(safeTotalPages, startPage + visiblePageCount - 1)
+
+  return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index)
 }
 
 function OperationHistoryPage() {
@@ -230,6 +245,14 @@ function OperationHistoryPage() {
     if (tab === 'audit') moveAudit(hook.audit?.page ?? 1)
     else movePrivacy(hook.privacy?.page ?? 1)
   }
+  const auditPageNumbers = getVisiblePageNumbers(
+    hook.audit?.page ?? 1,
+    hook.audit?.totalPages ?? 1,
+  )
+  const privacyPageNumbers = getVisiblePageNumbers(
+    hook.privacy?.page ?? 1,
+    hook.privacy?.totalPages ?? 1,
+  )
 
   return (
     <Shell.AppShell>
@@ -472,7 +495,18 @@ function OperationHistoryPage() {
                         >
                           이전
                         </Shared.SecondaryButton>
-                        <span>{Math.max(hook.audit?.page ?? 1, 1)} / {Math.max(hook.audit?.totalPages ?? 1, 1)}</span>
+                        {auditPageNumbers.map((pageNumber) => (
+                          <History.PaginationPageButton
+                            key={pageNumber}
+                            type="button"
+                            $active={hook.audit?.page === pageNumber}
+                            aria-current={hook.audit?.page === pageNumber ? 'page' : undefined}
+                            disabled={isLoading}
+                            onClick={() => moveAudit(pageNumber)}
+                          >
+                            {pageNumber}
+                          </History.PaginationPageButton>
+                        ))}
                         <Shared.SecondaryButton
                           type="button"
                           disabled={!hook.audit?.hasNext || isLoading}
@@ -545,7 +579,7 @@ function OperationHistoryPage() {
                     <Shared.ScrollArea>
                       {isLoading && !hook.privacy ? <Shared.EmptyState><strong>개인정보 처리 이력을 불러오는 중입니다.</strong></Shared.EmptyState> : !hook.privacy?.histories.length ? <Shared.EmptyState><strong>조건에 맞는 개인정보 처리 이력이 없습니다.</strong></Shared.EmptyState> : <S.CardList>{hook.privacy.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>}
                     </Shared.ScrollArea>
-                    {(hook.privacy?.totalPages ?? 0) > 1 ? <S.Pagination><Shared.SecondaryButton type="button" disabled={!hook.privacy || hook.privacy.page <= 1 || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) - 1)}>이전</Shared.SecondaryButton><span>{Math.max(hook.privacy?.page ?? 1, 1)} / {Math.max(hook.privacy?.totalPages ?? 1, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.privacy?.hasNext || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) + 1)}>다음</Shared.SecondaryButton></S.Pagination> : null}
+                    {(hook.privacy?.totalPages ?? 0) > 1 ? <S.Pagination><Shared.SecondaryButton type="button" disabled={!hook.privacy || hook.privacy.page <= 1 || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) - 1)}>이전</Shared.SecondaryButton>{privacyPageNumbers.map((pageNumber) => <History.PaginationPageButton key={pageNumber} type="button" $active={hook.privacy?.page === pageNumber} aria-current={hook.privacy?.page === pageNumber ? 'page' : undefined} disabled={isLoading} onClick={() => movePrivacy(pageNumber)}>{pageNumber}</History.PaginationPageButton>)}<Shared.SecondaryButton type="button" disabled={!hook.privacy?.hasNext || isLoading} onClick={() => movePrivacy((hook.privacy?.page ?? 1) + 1)}>다음</Shared.SecondaryButton></S.Pagination> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>개인정보 처리 상세</Shared.PanelTitle></Shared.PanelHeader>

@@ -752,7 +752,6 @@ function PlaceManagePage() {
             fitBoundsKey={placeMapFitBoundsKey}
             selectedPlaceId={selectedPlace?.id ?? null}
             isListCollapsed={isPlacePanelCollapsed}
-            isInspectorOpen={isPlaceDetailOpen}
             onMarkerSelect={handleSelectMapMarker}
             onOpenList={() => setIsPlacePanelCollapsed(false)}
             inspector={

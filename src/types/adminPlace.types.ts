@@ -50,6 +50,12 @@ export interface PlaceGrowthSnapshot {
   photoCount?: number
 }
 
+export interface AdminPlaceImagePost {
+  id: number
+  imageUrl?: string | null
+  thumbnailUrl?: string | null
+}
+
 export interface AdminPlaceOperatingTimeRange {
   opensAt: string
   closesAt: string
@@ -114,6 +120,7 @@ export interface AdminPlaceDetail {
   touristSummary?: string | null
   touristCategories?: AdminPlaceTouristCategory[]
   imageUrl?: string | null
+  posts?: AdminPlaceImagePost[]
   placeGrowth?: PlaceGrowthSnapshot
 }
 

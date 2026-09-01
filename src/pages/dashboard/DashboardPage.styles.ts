@@ -826,12 +826,12 @@ export const ActivitySkeleton = styled.span`
 `
 
 export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
-  min-height: 100px;
+  min-height: 88px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid ${neutral.border};
   border-radius: 10px;
   background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
@@ -858,7 +858,7 @@ export const SummaryCardTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 `
 
 export const SummaryIcon = styled.div<{ $tone?: 'neutral' | 'action' }>`
@@ -889,7 +889,7 @@ export const SummaryLabel = styled.span`
 `
 
 export const SummaryValue = styled.strong<{ $muted?: boolean }>`
-  margin-top: 6px;
+  margin-top: 4px;
   color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
   font-size: 24px;
   font-weight: 700;
@@ -897,7 +897,7 @@ export const SummaryValue = styled.strong<{ $muted?: boolean }>`
 `
 
 export const SummarySupportingText = styled.span`
-  margin-top: 10px;
+  margin-top: 6px;
   color: ${neutral.softText};
   font-size: 13px;
   line-height: 1.4;

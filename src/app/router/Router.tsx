@@ -33,6 +33,9 @@ const RecommendationMetricsPage = lazy(
   () => import('../../pages/recommendationMetrics/RecommendationMetricsPage'),
 )
 const MerchantOwnerPage = lazy(() => import('../../pages/merchantOwner/MerchantOwnerPage'))
+const AdminReservationReviewPage = lazy(
+  () => import('../../pages/adminReservationReview/AdminReservationReviewPage'),
+)
 const TrustScorePage = lazy(() => import('../../pages/trustScore/TrustScorePage'))
 const VisitorVerificationPage = lazy(
   () => import('../../pages/visitorVerification/VisitorVerificationPage'),
@@ -181,6 +184,7 @@ export function Router() {
               element={<RecommendationMetricsPage />}
             />
             <Route path="/merchant-owners" element={<MerchantOwnerPage />} />
+            <Route path="/reservations/review" element={<AdminReservationReviewPage />} />
             <Route
               path="/merchant-place-applications"
               element={<MerchantPlaceApplicationReviewPage />}

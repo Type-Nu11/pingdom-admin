@@ -15,7 +15,7 @@ export const AttachmentRow = styled.article`
   justify-content: space-between;
   gap: 14px;
   padding: 12px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.surfaceLow};
 
@@ -74,7 +74,7 @@ export const AttachmentButton = styled.button`
 export const Reason = styled.p`
   margin: 12px 0 0;
   padding: 12px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.surfaceLow};
   color: ${colors.text};
@@ -139,7 +139,7 @@ export const DangerButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  border: 1px solid ${colors.error};
+  border: 0;
   border-radius: 8px;
   background: ${colors.error};
   color: ${colors.primaryText};

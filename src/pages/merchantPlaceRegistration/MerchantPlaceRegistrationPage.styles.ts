@@ -111,20 +111,20 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
   display: inline-flex;
   align-items: center;
   padding: 0 8px;
-  border: 1px solid;
+  border: 0;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
 
   ${({ $tone }) => $tone === 'active'
-    ? css`border-color: #9bd7a9; background: ${colors.successTint}; color: ${colors.successText};`
+    ? css`background: ${colors.successTint}; color: ${colors.successText};`
     : $tone === 'pending'
-      ? css`border-color: #f0c970; background: ${colors.warningTint}; color: ${colors.warningText};`
+      ? css`background: ${colors.warningTint}; color: ${colors.warningText};`
       : $tone === 'danger'
-        ? css`border-color: ${colors.primarySoft}; background: ${colors.primaryTint}; color: ${colors.primary};`
+        ? css`background: ${colors.primaryTint}; color: ${colors.primary};`
         : $tone === 'draft'
-          ? css`border-color: #d9c9ff; background: #f5f1ff; color: #7150af;`
-          : css`border-color: ${colors.border}; background: ${colors.surfaceLow}; color: ${colors.muted};`}
+          ? css`background: #f5f1ff; color: #7150af;`
+          : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
 `
 
 export const Empty = styled.p`
@@ -240,7 +240,7 @@ export const CategoryMenu = styled.div`
 export const CategoryOption = styled.button<{ $selected: boolean }>`
   min-height: 36px;
   padding: 0 10px;
-  border: 1px solid ${({ $selected }) => ($selected ? colors.primarySoft : 'transparent')};
+  border: 1px solid transparent;
   border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? colors.primary : colors.text)};
@@ -492,7 +492,7 @@ export const TagList = styled.div`
 export const TagButton = styled.button<{ $selected: boolean }>`
   min-height: 34px;
   padding: 0 10px;
-  border: 1px solid ${({ $selected }) => ($selected ? colors.primarySoft : colors.border)};
+  border: 1px solid ${({ $selected }) => ($selected ? 'transparent' : colors.border)};
   border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
   color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
@@ -626,7 +626,7 @@ export const MapStatus = styled.span<{ $hasLocation: boolean }>`
   display: inline-flex;
   align-items: center;
   padding: 0 8px;
-  border: 1px solid ${({ $hasLocation }) => ($hasLocation ? '#9bd7a9' : colors.primarySoft)};
+  border: 0;
   border-radius: 6px;
   background: ${({ $hasLocation }) => ($hasLocation ? colors.successTint : colors.primaryTint)};
   color: ${({ $hasLocation }) => ($hasLocation ? colors.successText : colors.primary)};
@@ -694,7 +694,7 @@ export const DayStatus = styled.div`
 export const DayStatusButton = styled.button<{ $selected: boolean }>`
   min-height: 32px;
   padding: 0 8px;
-  border: 1px solid ${({ $selected }) => ($selected ? colors.primarySoft : colors.border)};
+  border: 1px solid ${({ $selected }) => ($selected ? 'transparent' : colors.border)};
   border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
   color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
@@ -734,7 +734,7 @@ export const ReadonlyBlock = styled.div`
 
 export const AttachmentNotice = styled.div`
   padding: 12px 14px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 6px;
   background: ${colors.surfaceLow};
   color: ${colors.muted};

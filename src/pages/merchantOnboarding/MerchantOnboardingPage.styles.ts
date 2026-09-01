@@ -35,7 +35,7 @@ export const ProgressStep = styled.li<{ $active?: boolean; $complete?: boolean }
   ${({ $active, $complete }) =>
     ($active || $complete) &&
     css`
-      border-color: ${$complete ? '#9bd7a9' : colors.primarySoft};
+      border-color: transparent;
       background: ${$complete ? colors.successTint : colors.primaryTint};
     `}
 `
@@ -101,7 +101,7 @@ export const IntroNotice = styled.div`
   gap: 4px;
   margin: 0 0 20px;
   padding: 14px 16px;
-  border: 1px solid ${colors.primarySoft};
+  border: 0;
   border-radius: 7px;
   background: ${colors.primaryTint};
 
@@ -123,7 +123,7 @@ export const ReadonlySummary = styled.div`
   gap: 4px;
   margin: 0 0 20px;
   padding: 14px 16px;
-  border: 1px solid ${colors.border};
+  border: 0;
   border-radius: 7px;
   background: ${colors.surfaceLow};
 
@@ -146,19 +146,19 @@ export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'danger' 
   display: inline-flex;
   align-items: center;
   padding: 0 9px;
-  border: 1px solid;
+  border: 0;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
 
   ${({ $tone }) =>
     $tone === 'active'
-      ? css`border-color: #9bd7a9; background: ${colors.successTint}; color: ${colors.successText};`
+      ? css`background: ${colors.successTint}; color: ${colors.successText};`
       : $tone === 'pending'
-        ? css`border-color: #f0c970; background: ${colors.warningTint}; color: ${colors.warningText};`
+        ? css`background: ${colors.warningTint}; color: ${colors.warningText};`
         : $tone === 'danger'
-          ? css`border-color: ${colors.primarySoft}; background: ${colors.primaryTint}; color: ${colors.primary};`
-          : css`border-color: ${colors.border}; background: ${colors.surfaceLow}; color: ${colors.muted};`}
+          ? css`background: ${colors.primaryTint}; color: ${colors.primary};`
+          : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
 `
 
 export const StatusRows = styled.div`

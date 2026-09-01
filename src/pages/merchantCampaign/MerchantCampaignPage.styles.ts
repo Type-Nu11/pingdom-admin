@@ -164,7 +164,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'published' | 'closed'
   align-items: center;
   min-height: 22px;
   padding: 0 7px;
-  border: 1px solid ${({ $tone }) => ($tone === 'published' ? '#9bd7a9' : $tone === 'closed' ? '#f0c970' : colors.primarySoft)};
+  border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'published' ? colors.successTint : $tone === 'closed' ? colors.warningTint : colors.primaryTint)};
   color: ${({ $tone }) => ($tone === 'published' ? colors.successText : $tone === 'closed' ? colors.warningText : colors.primary)};

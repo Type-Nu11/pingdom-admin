@@ -237,7 +237,7 @@ export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'inactive
   display: inline-flex;
   align-items: center;
   padding: 0 8px;
-  border: 1px solid;
+  border: 0;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
@@ -600,7 +600,7 @@ export const Notice = styled.div<{ $tone: 'error' | 'success' }>`
   align-items: flex-start;
   gap: 8px;
   padding: 12px 14px;
-  border: 1px solid ${({ $tone }) => ($tone === 'error' ? '#f2b8be' : '#b4e1c0')};
+  border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'error' ? colors.errorTint : colors.successTint)};
   color: ${({ $tone }) => ($tone === 'error' ? colors.error : colors.successText)};

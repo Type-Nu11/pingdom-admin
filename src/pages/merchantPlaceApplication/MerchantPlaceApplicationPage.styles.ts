@@ -108,20 +108,20 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
   display: inline-flex;
   align-items: center;
   padding: 0 8px;
-  border: 1px solid;
+  border: 0;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
 
   ${({ $tone }) => $tone === 'active'
-    ? css`border-color: #9bd7a9; background: ${colors.successTint}; color: ${colors.successText};`
+    ? css`background: ${colors.successTint}; color: ${colors.successText};`
     : $tone === 'pending'
-      ? css`border-color: #f0c970; background: ${colors.warningTint}; color: ${colors.warningText};`
+      ? css`background: ${colors.warningTint}; color: ${colors.warningText};`
       : $tone === 'danger'
-        ? css`border-color: ${colors.primarySoft}; background: ${colors.primaryTint}; color: ${colors.primary};`
+        ? css`background: ${colors.primaryTint}; color: ${colors.primary};`
         : $tone === 'draft'
-          ? css`border-color: #d9c9ff; background: #f5f1ff; color: #7150af;`
-          : css`border-color: ${colors.border}; background: ${colors.surfaceLow}; color: ${colors.muted};`}
+          ? css`background: #f5f1ff; color: #7150af;`
+          : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
 `
 
 export const Empty = styled.p`
@@ -199,7 +199,7 @@ export const SelectedPlace = styled.div`
   gap: 10px;
   margin-top: 12px;
   padding: 13px 14px;
-  border: 1px solid ${colors.primarySoft};
+  border: 0;
   border-radius: 6px;
   background: ${colors.primaryTint};
 
@@ -256,7 +256,7 @@ export const DangerButton = styled(SecondaryButton)`
 export const AttachmentNotice = styled.div`
   grid-column: 1 / -1;
   padding: 12px 14px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 6px;
   background: ${colors.surfaceLow};
   color: ${colors.muted};

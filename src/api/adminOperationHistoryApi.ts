@@ -8,7 +8,7 @@ import customAxios from './customAxios'
 
 export async function getAdminAuditLogs(request: AdminAuditLogRequest = {}) {
   const { data } = await customAxios.get<AdminAuditLogResponse>('/admin/audit-logs', {
-    params: { ...request, page: request.page ?? 1, limit: request.limit ?? 20 },
+    params: { ...request, page: request.page ?? 1, limit: request.limit ?? 10 },
   })
   return data
 }
@@ -18,7 +18,7 @@ export async function getPrivacyProcessingHistories(
 ) {
   const { data } = await customAxios.get<PrivacyProcessingHistoryResponse>(
     '/admin/privacy-processing-histories',
-    { params: { ...request, page: request.page ?? 1, limit: request.limit ?? 20 } },
+    { params: { ...request, page: request.page ?? 1, limit: request.limit ?? 10 } },
   )
   return data
 }

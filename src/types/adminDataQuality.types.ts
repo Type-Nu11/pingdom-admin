@@ -13,4 +13,13 @@ export interface AdminDataQualityIssue {
   detectedAt: string
 }
 
+export interface AdminDataQualityIssuePageResponse {
+  items: AdminDataQualityIssue[]
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNext: boolean
+}
+
 export type AdminDataQualityErrorResponse = AuthErrorResponse<string>

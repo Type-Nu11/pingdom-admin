@@ -2,6 +2,7 @@ import { AdminNavigationMenu } from "../../components/navigation/AdminNavigation
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
+import { AdminPagination } from "../../components/common/AdminPagination";
 import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminS3Orphans } from "../../hooks/useAdminS3Orphans";
 import { useAuth } from "../../hooks/useAuth";
@@ -225,7 +226,7 @@ function S3OrphanPage() {
                 <div>
                   <Shared.PanelTitle>삭제 후보</Shared.PanelTitle>
                   <Shared.PanelDescription>
-                    현재 페이지에서 최대 100개까지 선택할 수 있습니다.
+                    현재 페이지에서 최대 5개까지 선택할 수 있습니다.
                   </Shared.PanelDescription>
                 </div>
                 <Shared.HeaderActions>
@@ -279,29 +280,14 @@ function S3OrphanPage() {
                 )}
               </Shared.CompareBody>
               {report && report.totalPages > 1 ? (
-                <S.Pagination>
-                  <Shared.SecondaryButton
-                    type="button"
-                    disabled={report.page <= 1 || h.isLoading}
-                    onClick={() =>
-                      void h.fetchReport(report.reportId, report.page - 1)
-                    }
-                  >
-                    이전
-                  </Shared.SecondaryButton>
-                  <span>
-                    {report.page} / {Math.max(report.totalPages, 1)}
-                  </span>
-                  <Shared.SecondaryButton
-                    type="button"
-                    disabled={!report.hasNext || h.isLoading}
-                    onClick={() =>
-                      void h.fetchReport(report.reportId, report.page + 1)
-                    }
-                  >
-                    다음
-                  </Shared.SecondaryButton>
-                </S.Pagination>
+                <AdminPagination
+                  ariaLabel="삭제 후보 페이지네이션"
+                  page={report.page}
+                  totalPages={report.totalPages}
+                  hasNext={report.hasNext}
+                  disabled={h.isLoading}
+                  onPageChange={(page) => void h.fetchReport(report.reportId, page)}
+                />
               ) : null}
             </Shared.Panel>
             {h.result && h.result.failedKeys.length ? (

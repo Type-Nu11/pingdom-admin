@@ -39,18 +39,10 @@ export const TabButton = styled.button<{ $active?: boolean }>`
 `
 
 export const SearchBar = styled.form`
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
   padding: 12px 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
-
-  @media (max-width: 620px) {
-    align-items: stretch;
-    flex-direction: column;
-  }
 `
 
 export const Field = styled.label`
@@ -93,6 +85,58 @@ const inputStyles = css`
 
 export const Input = styled.input`
   ${inputStyles}
+`
+
+export const SearchInputRow = styled.div`
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+
+  > ${Input} {
+    flex: 1;
+  }
+
+  > button {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 460px) {
+    flex-direction: column;
+
+    > button {
+      width: 100%;
+    }
+  }
+`
+
+export const FilterGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+
+  @media (max-width: 1080px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 620px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const FilterActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+
+  @media (max-width: 620px) {
+    width: 100%;
+
+    > button {
+      flex: 1;
+    }
+  }
 `
 
 export const Select = styled.select`

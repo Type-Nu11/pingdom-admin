@@ -5,6 +5,7 @@ import { isApiError } from '../api/customAxios'
 import type {
   AdminDataQualityErrorResponse,
   AdminDataQualityIssue,
+  AdminDataQualityIssueListResponse,
 } from '../types/adminDataQuality.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -18,9 +19,36 @@ const CATEGORY_MESSAGES = {
   server: '서버 오류가 발생했습니다.',
 } as const
 
+function normalizeIssueResponse(data: AdminDataQualityIssueListResponse) {
+  if (Array.isArray(data)) {
+    return {
+      issues: data,
+      page: 1,
+      limit: Math.max(data.length, 1),
+      total: data.length,
+      totalPages: 1,
+      hasNext: false,
+    }
+  }
+
+  return {
+    issues: data.items,
+    page: data.page,
+    limit: data.limit,
+    total: data.total,
+    totalPages: data.totalPages,
+    hasNext: data.hasNext,
+  }
+}
+
 export function useAdminDataQualityIssues() {
   const { clearAuth } = useAuth()
   const [issues, setIssues] = useState<AdminDataQualityIssue[]>([])
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(20)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -32,12 +60,17 @@ export function useAdminDataQualityIssues() {
     return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES })
   }, [clearAuth])
 
-  const fetchIssues = useCallback(async () => {
+  const fetchIssues = useCallback(async (nextPage = 1) => {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const data = await getAdminDataQualityIssues()
-      setIssues(data)
+      const response = normalizeIssueResponse(await getAdminDataQualityIssues(nextPage))
+      setIssues(response.issues)
+      setPage(response.page)
+      setLimit(response.limit)
+      setTotal(response.total)
+      setTotalPages(response.totalPages)
+      setHasNext(response.hasNext)
       return true
     } catch (error) {
       setErrorMessage(message(error, '데이터 품질 이슈를 불러오지 못했습니다.'))
@@ -50,5 +83,5 @@ export function useAdminDataQualityIssues() {
 
   useEffect(() => { void fetchIssues() }, [fetchIssues])
 
-  return { issues, isLoading, errorMessage, fetchIssues }
+  return { issues, page, limit, total, totalPages, hasNext, isLoading, errorMessage, fetchIssues }
 }

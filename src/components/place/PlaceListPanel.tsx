@@ -62,10 +62,6 @@ interface PlaceListPanelProps {
   onPageChange: (page: number) => void
 }
 
-function formatOptionalNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString() : '-'
-}
-
 function getDisplayName(place: AdminPlaceItem) {
   const name = place.name?.trim()
   return !name || name === place.address?.trim() ? '이름 없는 장소' : name
@@ -266,7 +262,6 @@ export function PlaceListPanel({
                   </S.PlaceMeta>
                   <S.PlaceMetaLine aria-label={`${displayName} 장소 지표`}>
                     <span>등록자 {getRegistrantLabel(place)}</span>
-                    <span>사진 {formatOptionalNumber(place.placeGrowth?.photoCount)}장</span>
                   </S.PlaceMetaLine>
                 </S.PlaceInfo>
               </S.PlaceItem>

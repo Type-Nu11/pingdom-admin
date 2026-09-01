@@ -92,6 +92,11 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
     },
     ref
   ) {
+    const representativeImageUrl =
+      placeDetail?.imageUrl ??
+      placeDetail?.posts?.find((post) => post.imageUrl)?.imageUrl ??
+      placeDetail?.posts?.find((post) => post.thumbnailUrl)?.thumbnailUrl
+
     return (
       <S.PlaceDetailPanel ref={ref} $open={selectedPlace !== null}>
         {selectedPlace ? (
@@ -143,9 +148,9 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       정보 보정
                     </S.DetailInlineButton>
                   </S.DetailSectionHeader>
-                  {placeDetail.imageUrl ? (
+                  {representativeImageUrl ? (
                     <S.DetailRepresentativeImage
-                      src={placeDetail.imageUrl}
+                      src={representativeImageUrl}
                       alt={`${placeDetail.name} 대표 이미지`}
                     />
                   ) : null}

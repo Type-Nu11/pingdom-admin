@@ -112,7 +112,7 @@ export function RecommendationPolicyPanel() {
         <div><strong>현재 서버에는 정책 조회 GET API가 없습니다.</strong>변경 시 서버가 지원하는 모든 추천 버전을 빠짐없이 입력해야 하며, 성공 응답 이후부터 적용된 정책을 화면에 유지합니다.</div>
       </Shared.DetailNotice>
       <Shared.Panel>
-        <Shared.PanelHeader><div><Shared.PanelTitle>추천 버전 트래픽 정책</Shared.PanelTitle><Shared.PanelDescription>전체 정책을 한 번에 교체합니다. 합계는 정확히 100%여야 합니다.</Shared.PanelDescription></div><Shared.PanelCount>합계 {total}%</Shared.PanelCount></Shared.PanelHeader>
+        <Shared.PanelHeader><div><Shared.PanelTitle>추천 버전 트래픽 정책</Shared.PanelTitle><Shared.PanelDescription>전체 정책을 한 번에 교체합니다. 합계는 정확히 100%여야 합니다.</Shared.PanelDescription></div><Shared.HeaderActions><Shared.PanelCount>합계 {total}%</Shared.PanelCount><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setPolicies((current) => [...current, { key: policyKey++, recommendationVersion: '', trafficPercentage: '0', enabled: true, fallbackVersion: '' }])}>버전 추가</Shared.SecondaryButton></Shared.HeaderActions></Shared.PanelHeader>
         <S.FormBody>
           <S.CardList>
             {policies.map((policy) => (
@@ -125,7 +125,6 @@ export function RecommendationPolicyPanel() {
               </S.PolicyRow>
             ))}
           </S.CardList>
-          <S.InlineActions><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setPolicies((current) => [...current, { key: policyKey++, recommendationVersion: '', trafficPercentage: '0', enabled: true, fallbackVersion: '' }])}>버전 추가</Shared.SecondaryButton></S.InlineActions>
           <S.Section><S.Field>변경 사유 *<S.TextArea value={reason} maxLength={500} disabled={hook.activeAction !== null} onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></S.Field></S.Section>
           {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}
           <S.InlineActions><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={openTrafficConfirm}>변경 내용 확인</Shared.PrimaryButton></S.InlineActions>

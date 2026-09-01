@@ -130,10 +130,12 @@ function PlaceVerificationPage() {
             {activeTab !== 'reports' ? (
               <S.SearchBar onSubmit={handlePlaceSearch}>
                 <S.Field>장소 ID
-                  <S.Input inputMode="numeric" value={placeIdInput} placeholder="예: 123" onChange={(event) => { setPlaceIdInput(event.target.value); setSearchError('') }} />
+                  <S.SearchInputRow>
+                    <S.Input inputMode="numeric" value={placeIdInput} placeholder="예: 123" onChange={(event) => { setPlaceIdInput(event.target.value); setSearchError('') }} />
+                    <Shared.PrimaryButton type="submit" disabled={verificationHook.activeAction !== null}>장소 조회</Shared.PrimaryButton>
+                  </S.SearchInputRow>
                   <small>장소 관리 화면에서 확인한 ID를 입력하세요.</small>
                 </S.Field>
-                <Shared.PrimaryButton type="submit" disabled={verificationHook.activeAction !== null}>장소 조회</Shared.PrimaryButton>
               </S.SearchBar>
             ) : null}
             {searchError ? <Shared.Notice $variant="error">{searchError}</Shared.Notice> : null}

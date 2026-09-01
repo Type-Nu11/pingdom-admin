@@ -39,18 +39,10 @@ export const TabButton = styled.button<{ $active?: boolean }>`
 `
 
 export const SearchBar = styled.form`
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
   padding: 12px 14px;
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
-
-  @media (max-width: 620px) {
-    align-items: stretch;
-    flex-direction: column;
-  }
 `
 
 export const Field = styled.label`
@@ -93,6 +85,28 @@ const inputStyles = css`
 
 export const Input = styled.input`
   ${inputStyles}
+`
+
+export const SearchInputRow = styled.div`
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+
+  > ${Input} {
+    flex: 1;
+  }
+
+  > button {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 460px) {
+    flex-direction: column;
+
+    > button {
+      width: 100%;
+    }
+  }
 `
 
 export const Select = styled.select`

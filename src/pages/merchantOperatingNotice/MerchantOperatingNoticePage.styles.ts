@@ -108,25 +108,25 @@ export const CreateButton = styled.button`
 export const FilterBar = styled.div`
   display: flex;
   gap: 6px;
-  padding: 16px 24px;
+  padding: 12px 16px;
   overflow-x: auto;
   border-bottom: 1px solid ${colors.borderSoft};
 `
 
 export const FilterButton = styled.button<{ $selected: boolean }>`
-  height: 32px;
+  height: 36px;
   flex: 0 0 auto;
-  padding: 0 11px;
-  border: 1px solid ${({ $selected }) => ($selected ? colors.primary : colors.border)};
-  border-radius: 16px;
-  background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primary}; }
+  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primary}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -183,9 +183,10 @@ export const StatusBadge = styled.span<{ $tone: 'scheduled' | 'active' | 'expire
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
-  padding: 0 8px;
-  border-radius: 12px;
+  min-height: 22px;
+  padding: 0 7px;
+  border: 1px solid ${({ $tone }) => ($tone === 'active' ? '#9bd7a9' : $tone === 'expired' ? '#f0c970' : $tone === 'canceled' ? colors.primarySoft : colors.primarySoft)};
+  border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'active' ? colors.successTint : $tone === 'expired' ? colors.warningTint : $tone === 'canceled' ? colors.errorTint : colors.primaryTint)};
   color: ${({ $tone }) => ($tone === 'active' ? colors.successText : $tone === 'expired' ? colors.warningText : $tone === 'canceled' ? colors.error : colors.primary)};
   font-size: 11px;

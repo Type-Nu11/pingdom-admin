@@ -112,7 +112,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
   align-items: center;
   padding: 0 8px;
   border: 1px solid;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
 
@@ -683,6 +683,7 @@ export const ScheduleRow = styled.div`
 export const DayName = styled.strong`
   color: ${colors.text};
   font-size: 13px;
+  font-weight: 600;
 `
 
 export const DayStatus = styled.div`

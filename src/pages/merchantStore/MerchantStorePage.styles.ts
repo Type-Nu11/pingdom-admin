@@ -234,12 +234,12 @@ export const StoreName = styled.h2`
 `
 
 export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'inactive' }>`
-  min-height: 26px;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
-  padding: 0 9px;
+  padding: 0 8px;
   border: 1px solid;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
 

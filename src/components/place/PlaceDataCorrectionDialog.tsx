@@ -7,6 +7,7 @@ import type {
   AdminPlaceKakaoPlaceIdUpdateRequest,
   AdminPlaceStandardCategory,
 } from '../../types/adminPlace.types'
+import { AdminSelect } from '../common/AdminStatusSelect'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
 export type PlaceDataCorrectionAction =
@@ -426,7 +427,9 @@ export function PlaceDataCorrectionDialog({
               </S.OperatingFormField>
               <S.OperatingFormField>
                 <span>표준 카테고리 *</span>
-                <S.OperatingSelect
+                <AdminSelect
+                  aria-label="표준 카테고리"
+                  width="100%"
                   value={category}
                   disabled={isSubmitting}
                   onChange={(event) => {
@@ -442,7 +445,7 @@ export function PlaceDataCorrectionDialog({
                       {option.label}
                     </option>
                   ))}
-                </S.OperatingSelect>
+                </AdminSelect>
               </S.OperatingFormField>
               <S.OperatingFormField>
                 <span>보정 사유 *</span>

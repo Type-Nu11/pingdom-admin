@@ -3,6 +3,7 @@ import { adminColors } from '../../styles/theme'
 
 export const DropdownRoot = styled.div<{ $width?: string }>`
   position: relative;
+  min-width: 0;
   width: ${({ $width }) => $width ?? '104px'};
   flex-shrink: 0;
 
@@ -32,6 +33,13 @@ export const DropdownTrigger = styled.button`
     color 160ms ease,
     outline-color 160ms ease,
     box-shadow 160ms ease;
+
+  > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   &:hover:not(:disabled) {
     border-color: ${adminColors.primarySoft};

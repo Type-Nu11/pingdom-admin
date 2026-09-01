@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
+import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { useAuth } from '../../hooks/useAuth'
 import {
   MERCHANT_CAMPAIGN_PAGE_LIMIT,
@@ -123,15 +125,15 @@ function CampaignEditor({
     {campaign && !editable ? <S.ReadonlyNotice>{campaign.status === 'PUBLISHED' ? '공개 중인 이벤트는 종료만 할 수 있습니다.' : '종료된 이벤트는 조회만 할 수 있습니다.'}</S.ReadonlyNotice> : null}
     <S.Form onSubmit={save}>
       <S.Field>연결 장소
-        <S.Select value={placeId} disabled={!editable || isBusy} onChange={(event) => setPlaceId(Number(event.target.value))}>
+        <AdminSelect aria-label="이벤트 연결 장소" width="100%" value={placeId} disabled={!editable || isBusy} onChange={(event) => setPlaceId(Number(event.target.value))}>
           {profilePlaceIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}
-        </S.Select>
+        </AdminSelect>
       </S.Field>
       <S.Field>브랜드
         <S.BrandField>
-          <S.Select value={effectiveBrandId} disabled={!editable || isBusy || brands.length === 0} onChange={(event) => setBrandId(Number(event.target.value))}>
+          <AdminSelect aria-label="이벤트 브랜드" width="100%" value={effectiveBrandId} disabled={!editable || isBusy || brands.length === 0} onChange={(event) => setBrandId(Number(event.target.value))}>
             {brands.length === 0 ? <option value="">등록된 브랜드 없음</option> : brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
-          </S.Select>
+          </AdminSelect>
           <S.BrandButton type="button" disabled={!editable || isBusy} onClick={() => onOpenBrand(null)}>브랜드 추가</S.BrandButton>
           <S.BrandButton type="button" disabled={!editable || isBusy || !selectedBrand} onClick={() => selectedBrand && onOpenBrand(selectedBrand)}>수정</S.BrandButton>
         </S.BrandField>
@@ -144,10 +146,10 @@ function CampaignEditor({
         <S.FieldHint>{description.length}/3000</S.FieldHint>
       </S.Field>
       <S.Field>시작 일시
-        <S.Input type="datetime-local" value={startsAt} disabled={!editable || isBusy} onChange={(event) => setStartsAt(event.target.value)} />
+        <AdminDateTimePicker ariaLabel="이벤트 시작 일시" value={startsAt} disabled={!editable || isBusy} onChange={setStartsAt} />
       </S.Field>
       <S.Field>종료 일시
-        <S.Input type="datetime-local" value={endsAt} disabled={!editable || isBusy} onChange={(event) => setEndsAt(event.target.value)} />
+        <AdminDateTimePicker ariaLabel="이벤트 종료 일시" value={endsAt} disabled={!editable || isBusy} onChange={setEndsAt} />
       </S.Field>
       {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}
       <S.FormActions>

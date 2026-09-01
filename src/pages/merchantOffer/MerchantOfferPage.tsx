@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
+import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { useAuth } from '../../hooks/useAuth'
 import { MERCHANT_OFFER_PAGE_LIMIT, useMerchantOffers } from '../../hooks/useMerchantOffers'
 import type {
@@ -138,16 +140,16 @@ function OfferEditor({
   }
 
   return <S.Editor><S.Form onSubmit={create}>
-    <S.Field>연결 장소<S.Select value={placeId} disabled={isBusy || placeIds.length === 0} onChange={(event) => setPlaceId(Number(event.target.value))}>{placeIds.length === 0 ? <option value="">연결된 장소 없음</option> : placeIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}</S.Select></S.Field>
+    <S.Field>연결 장소<AdminSelect aria-label="혜택 연결 장소" width="100%" value={placeId} disabled={isBusy || placeIds.length === 0} onChange={(event) => setPlaceId(Number(event.target.value))}>{placeIds.length === 0 ? <option value="">연결된 장소 없음</option> : placeIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}</AdminSelect></S.Field>
     <S.Field>쿠폰 유효기간<S.Input type="number" min="1" max="365" value={couponValidityDays} disabled={isBusy} onChange={(event) => setCouponValidityDays(event.target.value)} /><S.FieldHint>쿠폰 발급일 기준 1~365일</S.FieldHint></S.Field>
     <S.Field $wide>혜택 제목<S.Input value={title} maxLength={100} disabled={isBusy} onChange={(event) => setTitle(event.target.value)} /></S.Field>
     <S.Field $wide>혜택 설명<S.Textarea value={description} maxLength={1000} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} /><S.FieldHint>{description.length}/1000</S.FieldHint></S.Field>
     <S.Field $wide>제공 혜택<S.Textarea value={benefitDescription} maxLength={500} disabled={isBusy} onChange={(event) => setBenefitDescription(event.target.value)} /><S.FieldHint>{benefitDescription.length}/500</S.FieldHint></S.Field>
-    <S.Field>시작 일시<S.Input type="datetime-local" value={startsAt} disabled={isBusy} onChange={(event) => setStartsAt(event.target.value)} /></S.Field>
-    <S.Field>종료 일시<S.Input type="datetime-local" value={endsAt} disabled={isBusy} onChange={(event) => setEndsAt(event.target.value)} /></S.Field>
-    <S.Field>발급 대상<S.Select value={eligibilityPolicy} disabled={isBusy} onChange={(event) => setEligibilityPolicy(event.target.value as MerchantOffer['eligibilityPolicy'])}><option value="ACTIVE_TRAVEL_SCHEDULE">활성 여행 일정 사용자</option><option value="PUBLIC">누구나 발급 가능</option></S.Select></S.Field>
-    <S.Field>만료 정책<S.Select value={expiryPolicy} disabled={isBusy} onChange={(event) => setExpiryPolicy(event.target.value as MerchantOffer['expiryPolicy'])}><option value="ISSUE_PLUS_DAYS_CAPPED_BY_OFFER_END">유효기간 또는 혜택 종료일</option><option value="ISSUE_PLUS_DAYS">유효기간까지</option><option value="OFFER_END">혜택 종료일까지</option></S.Select></S.Field>
-    <S.Field>재고 정책<S.Select value={inventoryPolicy} disabled={isBusy} onChange={(event) => setInventoryPolicy(event.target.value as MerchantOffer['inventoryPolicy'])}><option value="LIMITED">한정 수량</option><option value="UNLIMITED">제한 없음</option></S.Select></S.Field>
+    <S.Field>시작 일시<AdminDateTimePicker ariaLabel="혜택 시작 일시" value={startsAt} disabled={isBusy} onChange={setStartsAt} /></S.Field>
+    <S.Field>종료 일시<AdminDateTimePicker ariaLabel="혜택 종료 일시" value={endsAt} disabled={isBusy} onChange={setEndsAt} /></S.Field>
+    <S.Field>발급 대상<AdminSelect aria-label="혜택 발급 대상" width="100%" value={eligibilityPolicy} disabled={isBusy} onChange={(event) => setEligibilityPolicy(event.target.value as MerchantOffer['eligibilityPolicy'])}><option value="ACTIVE_TRAVEL_SCHEDULE">활성 여행 일정 사용자</option><option value="PUBLIC">누구나 발급 가능</option></AdminSelect></S.Field>
+    <S.Field>만료 정책<AdminSelect aria-label="혜택 만료 정책" width="100%" value={expiryPolicy} disabled={isBusy} onChange={(event) => setExpiryPolicy(event.target.value as MerchantOffer['expiryPolicy'])}><option value="ISSUE_PLUS_DAYS_CAPPED_BY_OFFER_END">유효기간 또는 혜택 종료일</option><option value="ISSUE_PLUS_DAYS">유효기간까지</option><option value="OFFER_END">혜택 종료일까지</option></AdminSelect></S.Field>
+    <S.Field>재고 정책<AdminSelect aria-label="혜택 재고 정책" width="100%" value={inventoryPolicy} disabled={isBusy} onChange={(event) => setInventoryPolicy(event.target.value as MerchantOffer['inventoryPolicy'])}><option value="LIMITED">한정 수량</option><option value="UNLIMITED">제한 없음</option></AdminSelect></S.Field>
     {inventoryPolicy === 'LIMITED' ? <S.Field>발급 수량<S.Input type="number" min="1" max="100000" value={totalQuantity} disabled={isBusy} onChange={(event) => setTotalQuantity(event.target.value)} /></S.Field> : <S.Field>발급 수량<S.Input value="제한 없음" disabled /></S.Field>}
     {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}
     <S.FormActions><S.ActionButton type="submit" $variant="primary" disabled={isBusy || placeIds.length === 0}>{activeAction === 'create' ? '등록 중' : '초안 등록'}</S.ActionButton></S.FormActions>

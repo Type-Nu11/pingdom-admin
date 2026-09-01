@@ -109,6 +109,55 @@ export const SearchInputRow = styled.div`
   }
 `
 
+export const InlineSearchControls = styled.div`
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  > ${Field} {
+    flex: 1 1 260px;
+  }
+
+  > button {
+    flex: 0 0 auto;
+  }
+
+  @media (max-width: 460px) {
+    > ${Field},
+    > button {
+      width: 100%;
+    }
+  }
+`
+
+export const SearchFilterGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 920px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 620px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const SearchFilterActions = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  @media (max-width: 620px) {
+    > button {
+      flex: 1;
+    }
+  }
+`
+
 export const FilterGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr)) auto;

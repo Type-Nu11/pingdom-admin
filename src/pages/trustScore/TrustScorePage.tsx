@@ -495,33 +495,35 @@ function TrustScorePage() {
                     searchAnomalies(1);
                   }}
                 >
-                  <S.Field>
-                    신고자 ID 필터
-                    <S.Input
-                      inputMode="numeric"
-                      value={anomalyReporterId}
-                      placeholder="전체"
-                      onChange={(event) =>
-                        setAnomalyReporterId(event.target.value)
-                      }
-                    />
-                  </S.Field>
-                  <S.CheckField>
-                    <input
-                      type="checkbox"
-                      checked={unresolvedOnly}
-                      onChange={(event) =>
-                        setUnresolvedOnly(event.target.checked)
-                      }
-                    />
-                    미해결만
-                  </S.CheckField>
-                  <Shared.PrimaryButton
-                    type="submit"
-                    disabled={hook.isAnomaliesLoading}
-                  >
-                    조회
-                  </Shared.PrimaryButton>
+                  <S.InlineSearchControls>
+                    <S.Field>
+                      신고자 ID 필터
+                      <S.Input
+                        inputMode="numeric"
+                        value={anomalyReporterId}
+                        placeholder="전체"
+                        onChange={(event) =>
+                          setAnomalyReporterId(event.target.value)
+                        }
+                      />
+                    </S.Field>
+                    <S.CheckField>
+                      <input
+                        type="checkbox"
+                        checked={unresolvedOnly}
+                        onChange={(event) =>
+                          setUnresolvedOnly(event.target.checked)
+                        }
+                      />
+                      미해결만
+                    </S.CheckField>
+                    <Shared.PrimaryButton
+                      type="submit"
+                      disabled={hook.isAnomaliesLoading}
+                    >
+                      조회
+                    </Shared.PrimaryButton>
+                  </S.InlineSearchControls>
                 </S.SearchBar>
                 {formError ? (
                   <Shared.Notice $variant="error">{formError}</Shared.Notice>

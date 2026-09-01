@@ -163,12 +163,10 @@ export const FormError = styled.p`
 `
 
 export const ScheduleSection = styled.section`
-  padding: 14px;
-  border: 1px solid ${colors.borderSoft};
-  border-radius: 8px;
-  background: ${colors.surfaceLow};
+  padding: 16px;
+  border-top: 1px solid ${colors.borderSoft};
 
-  & + & { margin-top: 14px; }
+  &:first-child { padding-top: 0; border-top: 0; }
 `
 
 export const ScheduleSectionHeader = styled.div`
@@ -185,30 +183,29 @@ export const ScheduleSectionHeader = styled.div`
 export const WeekList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  border-top: 1px solid ${colors.borderSoft};
 `
 
 export const WeekRow = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 10px;
-  border: 1px solid ${colors.border};
-  border-radius: 7px;
-  background: ${colors.surface};
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px 0;
+  border-bottom: 1px solid ${colors.borderSoft};
 
   > div:last-child { min-width: 0; flex: 1; }
-  @media (max-width: 620px) { flex-direction: column; }
+  @media (max-width: 620px) { grid-template-columns: 1fr; gap: 8px; }
 `
 
 export const CheckLabel = styled.label`
-  width: 122px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
   color: ${colors.text};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 
   input { width: 16px; height: 16px; margin: 0; accent-color: ${colors.primary}; }
@@ -218,13 +215,13 @@ export const CheckLabel = styled.label`
 export const HourList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 `
 
 export const HourRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
 `
 

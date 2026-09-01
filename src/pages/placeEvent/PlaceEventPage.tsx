@@ -293,13 +293,14 @@ function PlaceEventPage() {
             </Shared.PageHeader>
 
             <S.SearchBar onSubmit={submitSearch}>
-              <S.Field>검색어<S.Input value={keyword} placeholder="이벤트명 또는 장소명" disabled={isBusy} onChange={(event) => setKeyword(event.target.value)} /></S.Field>
-              <S.Field>장소 ID<S.Input inputMode="numeric" value={placeId} placeholder="전체" disabled={isBusy} onChange={(event) => setPlaceId(event.target.value)} /></S.Field>
-              <S.Field>이벤트 유형<AdminSelect aria-label="이벤트 유형" width="100%" value={eventType} disabled={isBusy} onChange={(event) => setEventType(event.target.value as AdminPlaceEventType | '')}><option value="">전체</option>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
-              <S.Field>공개 상태<AdminSelect aria-label="공개 상태" width="100%" value={publicationStatus} disabled={isBusy} onChange={(event) => setPublicationStatus(event.target.value as AdminPlaceEventPublicationStatus | '')}><option value="">전체</option>{Object.entries(PUBLICATION_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
-              <S.Field>일정 상태<AdminSelect aria-label="일정 상태" width="100%" value={scheduleStatus} disabled={isBusy} onChange={(event) => setScheduleStatus(event.target.value as AdminPlaceEventScheduleStatus | '')}><option value="">전체</option>{Object.entries(SCHEDULE_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
-              <Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton>
-              <Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton>
+              <S.SearchFilterGrid>
+                <S.Field>검색어<S.Input value={keyword} placeholder="이벤트명 또는 장소명" disabled={isBusy} onChange={(event) => setKeyword(event.target.value)} /></S.Field>
+                <S.Field>장소 ID<S.Input inputMode="numeric" value={placeId} placeholder="전체" disabled={isBusy} onChange={(event) => setPlaceId(event.target.value)} /></S.Field>
+                <S.Field>이벤트 유형<AdminSelect aria-label="이벤트 유형" width="100%" value={eventType} disabled={isBusy} onChange={(event) => setEventType(event.target.value as AdminPlaceEventType | '')}><option value="">전체</option>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
+                <S.Field>공개 상태<AdminSelect aria-label="공개 상태" width="100%" value={publicationStatus} disabled={isBusy} onChange={(event) => setPublicationStatus(event.target.value as AdminPlaceEventPublicationStatus | '')}><option value="">전체</option>{Object.entries(PUBLICATION_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
+                <S.Field>일정 상태<AdminSelect aria-label="일정 상태" width="100%" value={scheduleStatus} disabled={isBusy} onChange={(event) => setScheduleStatus(event.target.value as AdminPlaceEventScheduleStatus | '')}><option value="">전체</option>{Object.entries(SCHEDULE_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
+                <S.SearchFilterActions><Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton></S.SearchFilterActions>
+              </S.SearchFilterGrid>
             </S.SearchBar>
 
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}

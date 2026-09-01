@@ -270,7 +270,7 @@ export const TimeOptions = styled.div`
   gap: 2px;
   overflow-y: auto;
   padding: 2px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 6px;
   background: ${neutral.surfaceLow};
   scrollbar-width: thin;
@@ -280,7 +280,7 @@ export const TimeOptions = styled.div`
 export const TimeOption = styled.button<{ $selected?: boolean }>`
   min-height: 28px;
   padding: 0;
-  border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
+  border: 1px solid transparent;
   border-radius: 5px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
@@ -292,7 +292,7 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primarySoft};
+    border-color: transparent;
     outline: 0;
     background: ${neutral.primaryTint};
     color: ${neutral.primary};

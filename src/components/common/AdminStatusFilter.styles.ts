@@ -36,7 +36,7 @@ export const FilterIcon = styled.span`
   flex: 0 0 30px;
   place-items: center;
   border-radius: 8px;
-  border: 1px solid ${adminColors.primarySoft};
+  border: 0;
   background: ${adminColors.primaryTint};
   color: ${adminColors.primary};
   font-family: 'Material Symbols Outlined';

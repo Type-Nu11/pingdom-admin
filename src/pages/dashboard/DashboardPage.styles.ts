@@ -171,7 +171,7 @@ export const AdminProfile = styled.div`
   gap: 10px;
   margin-bottom: 12px;
   padding: 10px 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
@@ -188,7 +188,7 @@ export const AdminProfileIcon = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid ${neutral.primarySoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
@@ -768,7 +768,7 @@ export const DataStatus = styled.div<{ $tone?: 'error' | 'neutral' }>`
   gap: 8px;
   margin-bottom: 10px;
   padding: 10px;
-  border: 1px solid ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.border)};
+  border: 0;
   border-radius: 8px;
   background: ${({ $tone }) => ($tone === 'error' ? neutral.errorTint : neutral.surfaceLow)};
   color: ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.muted)};
@@ -923,7 +923,7 @@ export const OperationalEmptyState = styled.p`
   align-items: center;
   margin: 0;
   padding: 0 14px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
@@ -1069,7 +1069,7 @@ export const StatusPanel = styled.div<{ $tone?: 'neutral' | 'error' | 'success' 
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border: 1px solid ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.border)};
+  border: ${({ $tone }) => ($tone === 'error' ? 0 : `1px solid ${neutral.border}`)};
   border-radius: 8px;
   background: ${({ $tone }) => ($tone === 'error' ? neutral.errorTint : neutral.surface)};
   color: ${({ $tone }) => ($tone === 'error' ? neutral.error : neutral.muted)};

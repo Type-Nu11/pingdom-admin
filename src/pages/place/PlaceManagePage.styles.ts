@@ -199,7 +199,7 @@ export const AdminProfile = styled.div`
   gap: 10px;
   margin-bottom: 12px;
   padding: 10px 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 `
@@ -211,7 +211,7 @@ export const AdminProfileIcon = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid ${neutral.primarySoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
@@ -518,7 +518,7 @@ export const DetailBody = styled.div`
 
 export const DetailStatus = styled.div`
   padding: 14px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
@@ -530,7 +530,7 @@ export const DetailStatus = styled.div`
 export const DetailNotice = styled.p`
   margin: 0 0 14px;
   padding: 12px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -545,7 +545,7 @@ export const DetailErrorState = styled.div`
   align-items: flex-start;
   gap: 12px;
   padding: 14px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -576,7 +576,7 @@ export const DetailRepresentativeImage = styled.img`
 
 export const DetailMetaGroup = styled.section`
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 `
@@ -756,15 +756,7 @@ export const OperatingStatusBadge = styled.span<{
   align-items: center;
   justify-content: center;
   padding: 0 8px;
-  border: 1px solid
-    ${({ $tone }) =>
-      $tone === 'danger'
-        ? neutral.error
-        : $tone === 'notice'
-          ? neutral.warning
-          : $tone === 'muted'
-            ? neutral.primarySoft
-            : neutral.success};
+  border: 0;
   border-radius: 6px;
   background: ${({ $tone }) =>
     $tone === 'danger'
@@ -885,7 +877,7 @@ export const OperatingExceptionItem = styled.div`
 export const OperatingEmptyState = styled.p`
   margin: 10px 0 0;
   padding: 10px 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 7px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
@@ -1111,7 +1103,7 @@ export const ListInlineNotice = styled.div`
   gap: 12px;
   margin: 0 16px 10px;
   padding: 8px 10px 8px 12px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -1414,7 +1406,7 @@ export const PlaceCategoryBadge = styled.span`
   align-items: center;
   flex-shrink: 0;
   padding: 3px 7px;
-  border: 1px solid ${neutral.primarySoft};
+  border: 0;
   border-radius: 6px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
@@ -1430,7 +1422,7 @@ export const PlaceDiscoveryStatusBadge = styled.span`
   align-items: center;
   flex-shrink: 0;
   padding: 3px 7px;
-  border: 1px solid ${neutral.primarySoft};
+  border: 0;
   border-radius: 6px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
@@ -1514,7 +1506,7 @@ export const EmptyState = styled.div`
   gap: 12px;
   margin: 16px;
   padding: 16px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
@@ -2243,7 +2235,7 @@ export const OperatingResultNotice = styled.div`
   flex-direction: column;
   gap: 4px;
   padding: 11px 12px;
-  border: 1px solid ${neutral.primarySoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.primaryTint};
   color: ${neutral.text};
@@ -2289,7 +2281,7 @@ export const OperatingTextArea = styled.textarea`
 export const OperatingDangerNotice = styled.p`
   margin: 0;
   padding: 11px 12px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -2313,7 +2305,7 @@ export const OperatingInfoNotice = styled.p`
 export const OperatingFormNotice = styled.p`
   margin: 0;
   padding: 11px 12px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -2324,7 +2316,7 @@ export const OperatingFormNotice = styled.p`
 
 export const OperatingEditorSection = styled.section`
   padding: 14px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 `
@@ -2601,7 +2593,7 @@ export const OperatingDialogActions = styled.footer`
 export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
   min-height: 40px;
   padding: 0 18px;
-  border: 1px solid ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  border: 0;
   border-radius: 8px;
   background: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
   color: ${neutral.primaryText};
@@ -2710,7 +2702,7 @@ export const ReportNotice = styled.div`
   display: flex;
   gap: 12px;
   padding: 14px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -2840,7 +2832,7 @@ export const DangerOutlineButton = styled.button`
 export const DangerButton = styled.button`
   min-height: 40px;
   padding: 0 18px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.error};
   color: ${neutral.primaryText};
@@ -2864,7 +2856,7 @@ export const ActionToast = styled.div`
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid ${neutral.success};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.successSurface};
   box-shadow: 0 16px 40px ${neutral.shadow};
@@ -2910,7 +2902,7 @@ export const DeleteConfirmIcon = styled.div`
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
@@ -2958,7 +2950,7 @@ export const DeleteConfirmMeta = styled.p`
 export const DeleteConfirmWarning = styled.p`
   margin: 12px 0 0;
   padding: 12px;
-  border: 1px solid ${neutral.warning};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.warningTint};
   color: ${neutral.warningText};
@@ -2986,7 +2978,7 @@ export const DeleteConfirmInput = styled.input`
 export const DeleteConfirmNotice = styled.p`
   margin: 12px 0 0;
   padding: 12px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};

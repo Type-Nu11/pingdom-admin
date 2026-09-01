@@ -16,7 +16,7 @@ export const AuditAdvancedFilters = styled.div`
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   padding: 14px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
@@ -112,7 +112,7 @@ export const AuditTypeTag = styled.span`
   flex-shrink: 0;
   padding: 1px 7px;
   overflow: hidden;
-  border: 1px solid ${neutral.primarySoft};
+  border: 0;
   border-radius: 6px;
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
@@ -219,7 +219,7 @@ export const AuditStateContent = styled.pre`
   margin: 0 0 14px;
   padding: 12px;
   overflow: auto;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.text};

@@ -217,7 +217,8 @@ export const WideField = styled(Field)`
 export const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  overflow: hidden;
+  border-top: 1px solid ${neutral.borderSoft};
 `
 
 export const RecordCard = styled.article<{ $selected?: boolean }>`
@@ -225,15 +226,16 @@ export const RecordCard = styled.article<{ $selected?: boolean }>`
   padding: 14px;
   border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
   border-radius: 8px;
-  background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
+  background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surfaceLow)};
 `
 
 export const RecordButton = styled.button<{ $selected?: boolean }>`
   width: 100%;
   min-width: 0;
   padding: 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border: 0;
+  border-bottom: 1px solid ${neutral.borderSoft};
+  border-radius: 0;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
   box-shadow: ${({ $selected }) =>
     $selected ? `inset 3px 0 0 ${neutral.primary}` : 'none'};
@@ -245,14 +247,17 @@ export const RecordButton = styled.button<{ $selected?: boolean }>`
     background 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${({ $selected }) => ($selected ? neutral.border : neutral.borderDark)};
     background: ${({ $selected }) =>
-      $selected ? neutral.primaryTint : neutral.surfaceLow};
+      $selected ? neutral.primaryTint : neutral.surfaceContainer};
   }
 
   &:focus-visible {
     outline: 2px solid ${neutral.primary};
-    outline-offset: 2px;
+    outline-offset: -2px;
+  }
+
+  &:last-child {
+    border-bottom: 0;
   }
 `
 
@@ -346,9 +351,8 @@ export const DetailGrid = styled.dl`
 export const DetailItem = styled.div`
   min-width: 0;
   padding: 11px;
-  border: 1px solid ${neutral.borderSoft};
-  border-radius: 8px;
-  background: ${neutral.surfaceLow};
+  border-radius: 6px;
+  background: ${neutral.surfaceContainer};
 
   dt {
     color: ${neutral.muted};

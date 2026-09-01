@@ -109,6 +109,36 @@ export const SearchInputRow = styled.div`
   }
 `
 
+export const FilterGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+
+  @media (max-width: 1080px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 620px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const FilterActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+
+  @media (max-width: 620px) {
+    width: 100%;
+
+    > button {
+      flex: 1;
+    }
+  }
+`
+
 export const Select = styled.select`
   ${inputStyles}
 `

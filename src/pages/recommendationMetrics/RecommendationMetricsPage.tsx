@@ -160,11 +160,13 @@ function RecommendationMetricsPage() {
 
           {tab === 'metrics' ? <>
             <S.SearchBar onSubmit={submitMetrics}>
-              <S.Field>장소 키워드<S.Input value={keyword} placeholder="장소명 또는 주소" onChange={(event) => setKeyword(event.target.value)} /></S.Field>
-              <S.Field>추천 버전<S.Input value={version} placeholder="place-rec-v1" onChange={(event) => setVersion(event.target.value)} /></S.Field>
-              <S.Field>최근 N일<S.Input inputMode="numeric" value={days} placeholder="전체" onChange={(event) => setDays(event.target.value)} /></S.Field>
-              <S.Field>정렬<AdminSelect aria-label="추천 지표 정렬" value={sortBy} width="100%" onChange={(event) => setSortBy(event.target.value as RecommendationMetricSortBy)}>{SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</AdminSelect></S.Field>
-              <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>조회</Shared.PrimaryButton>
+              <S.FilterGrid>
+                <S.Field>장소 키워드<S.Input value={keyword} placeholder="장소명 또는 주소" onChange={(event) => setKeyword(event.target.value)} /></S.Field>
+                <S.Field>추천 버전<S.Input value={version} placeholder="place-rec-v1" onChange={(event) => setVersion(event.target.value)} /></S.Field>
+                <S.Field>최근 N일<S.Input inputMode="numeric" value={days} placeholder="전체" onChange={(event) => setDays(event.target.value)} /></S.Field>
+                <S.Field>정렬<AdminSelect aria-label="추천 지표 정렬" value={sortBy} width="100%" onChange={(event) => setSortBy(event.target.value as RecommendationMetricSortBy)}>{SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</AdminSelect></S.Field>
+                <S.FilterActions><Shared.PrimaryButton type="submit" disabled={hook.isLoading}>조회</Shared.PrimaryButton></S.FilterActions>
+              </S.FilterGrid>
             </S.SearchBar>
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}
             {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
@@ -177,18 +179,20 @@ function RecommendationMetricsPage() {
 
           {tab === 'compare' ? <>
             <S.SearchBar onSubmit={submitCompare}>
-              <S.Field>기준 버전 *<S.Input value={baselineVersion} placeholder="place-rec-v1" onChange={(event) => setBaselineVersion(event.target.value)} /></S.Field>
-              <S.Field>비교 버전 *<S.Input value={targetVersion} placeholder="place-rec-v2" onChange={(event) => setTargetVersion(event.target.value)} /></S.Field>
-              <S.Field>장소 키워드<S.Input value={compareKeyword} placeholder="전체 장소" onChange={(event) => setCompareKeyword(event.target.value)} /></S.Field>
-              <S.Field>최근 N일<S.Input inputMode="numeric" value={compareDays} placeholder="전체" onChange={(event) => setCompareDays(event.target.value)} /></S.Field>
-              <Shared.PrimaryButton type="submit" disabled={hook.isComparisonLoading}>비교</Shared.PrimaryButton>
+              <S.FilterGrid>
+                <S.Field>기준 버전 *<S.Input value={baselineVersion} placeholder="place-rec-v1" onChange={(event) => setBaselineVersion(event.target.value)} /></S.Field>
+                <S.Field>비교 버전 *<S.Input value={targetVersion} placeholder="place-rec-v2" onChange={(event) => setTargetVersion(event.target.value)} /></S.Field>
+                <S.Field>장소 키워드<S.Input value={compareKeyword} placeholder="전체 장소" onChange={(event) => setCompareKeyword(event.target.value)} /></S.Field>
+                <S.Field>최근 N일<S.Input inputMode="numeric" value={compareDays} placeholder="전체" onChange={(event) => setCompareDays(event.target.value)} /></S.Field>
+                <S.FilterActions><Shared.PrimaryButton type="submit" disabled={hook.isComparisonLoading}>비교</Shared.PrimaryButton></S.FilterActions>
+              </S.FilterGrid>
             </S.SearchBar>
             {formError || hook.comparisonErrorMessage ? <Shared.Notice $variant="error">{formError || hook.comparisonErrorMessage}</Shared.Notice> : null}
             {hook.isComparisonLoading ? <Shared.EmptyStateCard><strong>버전 성과를 비교하는 중입니다.</strong></Shared.EmptyStateCard> : hook.comparison ? <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>{hook.comparison.baselineVersion} ↔ {hook.comparison.targetVersion}</Shared.PanelTitle><Shared.PanelDescription>{hook.comparison.keyword || '전체 장소'} · {hook.comparison.days ? `최근 ${hook.comparison.days}일` : '전체 기간'}</Shared.PanelDescription></div></Shared.PanelHeader><S.FormBody><S.SectionTitle>기준 버전</S.SectionTitle><SummaryCards summary={hook.comparison.baseline} /><S.Section><S.SectionTitle>비교 버전</S.SectionTitle><SummaryCards summary={hook.comparison.target} /></S.Section><S.Section><S.SectionTitle>차이 (비교 - 기준)</S.SectionTitle><SummaryCards summary={hook.comparison.delta} delta /></S.Section></S.FormBody></Shared.Panel> : <Shared.EmptyStateCard><strong>비교할 두 추천 버전을 입력해주세요.</strong></Shared.EmptyStateCard>}
           </> : null}
 
           {tab === 'explanation' ? <>
-            <S.SearchBar onSubmit={submitExplanation}><S.Field>추천 requestId *<S.Input value={requestId} placeholder="9f7263d5-65f1-4834-9ca3-86ad2fc4e7d0" onChange={(event) => setRequestId(event.target.value)} /><small>추천 응답에 기록된 requestId를 그대로 입력하세요.</small></S.Field><Shared.PrimaryButton type="submit" disabled={hook.isExplanationLoading}>설명 조회</Shared.PrimaryButton></S.SearchBar>
+            <S.SearchBar onSubmit={submitExplanation}><S.Field>추천 requestId *<S.SearchInputRow><S.Input value={requestId} placeholder="9f7263d5-65f1-4834-9ca3-86ad2fc4e7d0" onChange={(event) => setRequestId(event.target.value)} /><Shared.PrimaryButton type="submit" disabled={hook.isExplanationLoading}>설명 조회</Shared.PrimaryButton></S.SearchInputRow><small>추천 응답에 기록된 requestId를 그대로 입력하세요.</small></S.Field></S.SearchBar>
             {formError || hook.explanationErrorMessage ? <Shared.Notice $variant="error">{formError || hook.explanationErrorMessage}</Shared.Notice> : null}
             {hook.isExplanationLoading ? <Shared.EmptyStateCard><strong>추천 설명을 불러오는 중입니다.</strong></Shared.EmptyStateCard> : hook.explanation ? <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>추천 요청 {hook.explanation.requestId}</Shared.PanelTitle><Shared.PanelDescription>노출 순위와 최종 점수 구성 요소입니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.explanation.items.length.toLocaleString()}개 후보</Shared.PanelCount></Shared.PanelHeader><Shared.CompareBody><S.CardList>{hook.explanation.items.map((item) => <S.RecordCard key={`${item.ranking}-${item.placeId}`}><S.RecordHeader><div><S.RecordTitle>{item.ranking}위 · {item.placeName}</S.RecordTitle><S.RecordMeta>장소 #{item.placeId} · 사용자 #{item.userId} · {item.recommendationVersion}</S.RecordMeta></div><S.StatusBadge $tone={item.recommendationStage === 'STABLE' ? 'success' : 'warning'}>{item.recommendationStage === 'STABLE' ? '안정' : '실험'}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>후보 소스</dt><dd>{item.source}</dd></S.DetailItem><S.DetailItem><dt>거리</dt><dd>{item.distanceMeters.toLocaleString()}m</dd></S.DetailItem><S.DetailItem><dt>최종 점수</dt><dd>{item.finalScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>개인화 / 지역</dt><dd>{item.personalScore.toFixed(4)} / {item.geoScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>품질 / 참여</dt><dd>{item.qualityScore.toFixed(4)} / {item.engagementScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>전환 / 탐색</dt><dd>{item.conversionScore.toFixed(4)} / {item.explorationScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>신뢰 / 맥락</dt><dd>{item.trustScore.toFixed(4)} / {item.contextScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>혜택 / 가용 / 부스트</dt><dd>{item.benefitScore.toFixed(4)} / {item.availabilityScore.toFixed(4)} / {item.boostScore.toFixed(4)}</dd></S.DetailItem></S.DetailGrid></S.RecordCard>)}</S.CardList></Shared.CompareBody></Shared.Panel> : <Shared.EmptyStateCard><strong>추천 requestId로 설명 로그를 조회해주세요.</strong></Shared.EmptyStateCard>}
           </> : null}

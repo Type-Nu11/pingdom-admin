@@ -306,22 +306,24 @@ function TrustScorePage() {
                 <S.SearchBar onSubmit={searchReporter}>
                   <S.Field>
                     신고자 사용자 ID
-                    <S.Input
-                      inputMode="numeric"
-                      value={reporterId}
-                      placeholder="예: 12"
-                      onChange={(event) => {
-                        setReporterId(event.target.value);
-                        setFormError("");
-                      }}
-                    />
+                    <S.SearchInputRow>
+                      <S.Input
+                        inputMode="numeric"
+                        value={reporterId}
+                        placeholder="예: 12"
+                        onChange={(event) => {
+                          setReporterId(event.target.value);
+                          setFormError("");
+                        }}
+                      />
+                      <Shared.PrimaryButton
+                        type="submit"
+                        disabled={hook.isReporterLoading}
+                      >
+                        조회
+                      </Shared.PrimaryButton>
+                    </S.SearchInputRow>
                   </S.Field>
-                  <Shared.PrimaryButton
-                    type="submit"
-                    disabled={hook.isReporterLoading}
-                  >
-                    조회
-                  </Shared.PrimaryButton>
                 </S.SearchBar>
                 {formError ? (
                   <Shared.Notice $variant="error">{formError}</Shared.Notice>

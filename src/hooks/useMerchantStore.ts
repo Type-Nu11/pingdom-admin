@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getMerchantCampaigns,
   getMerchantAvailabilities,
@@ -72,6 +73,7 @@ export function useMerchantStore() {
   const [isLoadingPerformance, setIsLoadingPerformance] = useState(false)
   const [isSavingInformation, setIsSavingInformation] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const mountedRef = useRef(true)
   const saveInFlightRef = useRef(false)
 

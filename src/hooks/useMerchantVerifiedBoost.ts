@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   createMerchantVerifiedBoostSelection,
   getMerchantOwnerProfile,
@@ -62,7 +63,9 @@ export function useMerchantVerifiedBoost() {
   const [productErrorMessage, setProductErrorMessage] = useState('')
   const [profileErrorMessage, setProfileErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<BoostAction>(null)
   const [activeTargetId, setActiveTargetId] = useState<number | null>(null)
   const mountedRef = useRef(true)

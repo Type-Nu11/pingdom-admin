@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   cancelMerchantOperatingNotice,
   createMerchantOperatingNotice,
@@ -38,7 +39,9 @@ export function useMerchantOperatingNotices() {
   const [isListLoading, setIsListLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<NoticeAction>(null)
   const mountedRef = useRef(true)
   const actionRef = useRef<NoticeAction>(null)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getMerchantPayments,
   getMerchantSettlementLedger,
@@ -47,7 +48,9 @@ export function useMerchantPayments() {
   const [paymentErrorMessage, setPaymentErrorMessage] = useState('')
   const [settlementErrorMessage, setSettlementErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [refundingPaymentId, setRefundingPaymentId] = useState<number | null>(null)
   const mountedRef = useRef(true)
   const paymentRequestRef = useRef(0)

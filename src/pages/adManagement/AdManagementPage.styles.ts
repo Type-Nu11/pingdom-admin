@@ -55,7 +55,7 @@ export const DangerButton = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 0 14px;
-  border: 1px solid ${adminColors.error};
+  border: 0;
   border-radius: 8px;
   background: ${adminColors.errorTint};
   color: ${adminColors.error};

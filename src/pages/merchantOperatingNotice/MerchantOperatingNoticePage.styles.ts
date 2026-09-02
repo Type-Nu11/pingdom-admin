@@ -32,7 +32,7 @@ export const NoticeSummary = styled.div<{ $operating: boolean | null }>`
   gap: 10px;
   margin-bottom: 16px;
   padding: 13px 16px;
-  border: 1px solid ${({ $operating }) => ($operating === false ? colors.warningTint : colors.primaryTint)};
+  border: 0;
   border-radius: 8px;
   background: ${({ $operating }) => ($operating === false ? colors.warningTint : colors.primaryTint)};
   color: ${colors.text};
@@ -185,7 +185,7 @@ export const StatusBadge = styled.span<{ $tone: 'scheduled' | 'active' | 'expire
   align-items: center;
   min-height: 22px;
   padding: 0 7px;
-  border: 1px solid ${({ $tone }) => ($tone === 'active' ? '#9bd7a9' : $tone === 'expired' ? '#f0c970' : $tone === 'canceled' ? colors.primarySoft : colors.primarySoft)};
+  border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'active' ? colors.successTint : $tone === 'expired' ? colors.warningTint : $tone === 'canceled' ? colors.errorTint : colors.primaryTint)};
   color: ${({ $tone }) => ($tone === 'active' ? colors.successText : $tone === 'expired' ? colors.warningText : $tone === 'canceled' ? colors.error : colors.primary)};
@@ -224,7 +224,7 @@ export const Editor = styled.div`
 export const ReadonlyNotice = styled.div`
   margin-bottom: 18px;
   padding: 12px 14px;
-  border: 1px solid ${colors.warningTint};
+  border: 0;
   border-radius: 6px;
   background: ${colors.warningTint};
   color: ${colors.warningText};

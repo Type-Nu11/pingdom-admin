@@ -6,7 +6,7 @@ const colors = adminColors
 export const Reason = styled.p`
   margin: 12px 0 0;
   padding: 12px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.surfaceLow};
   color: ${colors.text};
@@ -27,7 +27,7 @@ export const Tag = styled.span`
   display: inline-flex;
   align-items: center;
   padding: 2px 9px;
-  border: 1px solid ${colors.primarySoft};
+  border: 0;
   border-radius: 6px;
   background: ${colors.primaryTint};
   color: ${colors.primary};
@@ -47,7 +47,7 @@ export const AttachmentRow = styled.article`
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.surfaceLow};
 
@@ -79,7 +79,7 @@ export const ScheduleRow = styled.div`
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.surfaceLow};
   color: ${colors.text};

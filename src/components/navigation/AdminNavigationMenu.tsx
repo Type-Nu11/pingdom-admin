@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './AdminNavigationMenu.styles'
 
@@ -28,6 +28,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     title: '검토함',
     items: [
       { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
+      { label: '예약 심사', icon: 'event_available', path: '/reservations/review' },
       { label: '리뷰 삭제 요청', icon: 'rate_review', path: '/review-deletion-requests' },
       { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
       { label: '방문자 제보·정정 심사', icon: 'person_check', path: '/visitor-verifications' },
@@ -70,24 +71,43 @@ const isCurrentPath = (pathname: string, path: string) =>
 const isPlaceManagementPath = (pathname: string) =>
   pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
 
+let savedSideMenuScrollTop = 0
+
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const navigationRef = useRef<HTMLDivElement | null>(null)
   const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(true)
   const [openGroups, setOpenGroups] = useState(() => new Set(NAVIGATION_GROUPS.map((group) => group.title)))
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
-  const navigateFromMenu = (path: string) =>
-    navigate(path, { state: { preserveScrollPosition: true } })
+
+  useLayoutEffect(() => {
+    const sideMenu = navigationRef.current?.parentElement
+    if (!sideMenu) return
+
+    sideMenu.scrollTop = savedSideMenuScrollTop
+
+    const saveScrollPosition = () => {
+      savedSideMenuScrollTop = sideMenu.scrollTop
+    }
+
+    sideMenu.addEventListener('scroll', saveScrollPosition, { passive: true })
+
+    return () => {
+      saveScrollPosition()
+      sideMenu.removeEventListener('scroll', saveScrollPosition)
+    }
+  }, [])
 
   return (
-    <S.Navigation aria-label="세부 관리자 메뉴">
+    <S.Navigation ref={navigationRef} aria-label="세부 관리자 메뉴">
       <S.DashboardButton
         type="button"
         $active={dashboardActive}
         aria-current={dashboardActive ? 'page' : undefined}
-        onClick={() => navigateFromMenu('/dashboard')}
+        onClick={() => navigate('/dashboard')}
       >
         <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
         <span>대시보드</span>
@@ -123,7 +143,7 @@ export function AdminNavigationMenu() {
                     aria-current={pathname === '/places' ? 'page' : undefined}
                     onClick={() => {
                       setIsPlaceManagementOpen(true)
-                      navigateFromMenu('/places')
+                      navigate('/places')
                     }}
                   >
                     <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
@@ -153,7 +173,7 @@ export function AdminNavigationMenu() {
                           $active={active}
                           aria-current={active ? 'page' : undefined}
                           onClick={() => {
-                            navigateFromMenu(item.path)
+                            navigate(item.path)
                           }}
                         >
                           <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>
@@ -175,7 +195,7 @@ export function AdminNavigationMenu() {
                   $active={active}
                   aria-current={active ? 'page' : undefined}
                   onClick={() => {
-                    navigateFromMenu(item.path)
+                    navigate(item.path)
                   }}
                   >
                     <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>

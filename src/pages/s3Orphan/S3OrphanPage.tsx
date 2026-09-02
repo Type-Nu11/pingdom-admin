@@ -35,6 +35,13 @@ function S3OrphanPage() {
     (typeof user?.id === "number" ? `ID ${user.id}` : "관리자 계정");
   const report = h.report;
   const selectedKeys = selectionReportId === report?.reportId ? selected : [];
+  const moveReportPage = (page: number) => {
+    if (!report || page === report.page) return;
+
+    setSelected([]);
+    setSelectionReportId("");
+    void h.fetchReport(report.reportId, page);
+  };
   const dry = () => {
     const n = Number(limit);
     if (!prefix.trim() || !Number.isInteger(n) || n < 1 || n > 10000) {
@@ -286,7 +293,7 @@ function S3OrphanPage() {
                   totalPages={report.totalPages}
                   hasNext={report.hasNext}
                   disabled={h.isLoading}
-                  onPageChange={(page) => void h.fetchReport(report.reportId, page)}
+                  onPageChange={moveReportPage}
                 />
               ) : null}
             </Shared.Panel>

@@ -108,9 +108,7 @@ export const HeaderButton = styled.button`
 export const Notice = styled.p<{ $variant?: 'error' | 'success' }>`
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid
-    ${({ $variant }) =>
-      $variant === 'success' ? neutral.success : neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${({ $variant }) =>
     $variant === 'success' ? neutral.successTint : neutral.errorTint};
@@ -193,7 +191,7 @@ export const GroupButton = styled.button<{ $selected?: boolean }>`
   gap: 8px;
   padding: 13px;
   border: 1px solid
-    ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
+    ${({ $selected }) => ($selected ? 'transparent' : neutral.border)};
   border-radius: 8px;
   background: ${({ $selected }) =>
     $selected ? neutral.primaryTint : neutral.surface};
@@ -206,7 +204,7 @@ export const GroupButton = styled.button<{ $selected?: boolean }>`
     box-shadow 160ms ease;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
+    border-color: transparent;
     background: ${neutral.primaryTint};
   }
 
@@ -262,7 +260,7 @@ export const DetailNotice = styled.div`
   display: flex;
   gap: 10px;
   padding: 12px;
-  border: 1px solid ${neutral.warning};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.warningTint};
   color: ${neutral.warningText};
@@ -290,9 +288,7 @@ export const ComparisonGrid = styled.div`
 export const PlaceCard = styled.article<{ $variant: 'target' | 'source' }>`
   min-width: 0;
   padding: 14px;
-  border: 1px solid
-    ${({ $variant }) =>
-      $variant === 'target' ? neutral.primarySoft : neutral.border};
+  border: 0;
   border-radius: 8px;
   background: ${({ $variant }) =>
     $variant === 'target' ? neutral.primaryTint : neutral.surfaceLow};
@@ -332,7 +328,7 @@ export const StatusTag = styled.span<{ $variant?: 'target' | 'source' | 'warning
       $variant === 'target'
         ? neutral.primarySoft
         : $variant === 'warning'
-          ? neutral.warning
+          ? 'transparent'
           : neutral.borderDark};
   border-radius: 999px;
   background: ${({ $variant }) =>

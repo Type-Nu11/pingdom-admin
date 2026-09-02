@@ -33,6 +33,9 @@ const RecommendationMetricsPage = lazy(
   () => import('../../pages/recommendationMetrics/RecommendationMetricsPage'),
 )
 const MerchantOwnerPage = lazy(() => import('../../pages/merchantOwner/MerchantOwnerPage'))
+const AdminReservationReviewPage = lazy(
+  () => import('../../pages/adminReservationReview/AdminReservationReviewPage'),
+)
 const TrustScorePage = lazy(() => import('../../pages/trustScore/TrustScorePage'))
 const VisitorVerificationPage = lazy(
   () => import('../../pages/visitorVerification/VisitorVerificationPage'),
@@ -105,27 +108,44 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
 }
 
+const scrollPositionByPathname = new Map<string, number>()
+
 function ScrollToTopOnRouteChange() {
-  const { pathname, state } = useLocation()
-  const shouldPreserveScrollPosition = Boolean(
-    (state as { preserveScrollPosition?: boolean } | null)?.preserveScrollPosition,
-  )
+  const { pathname } = useLocation()
 
   useLayoutEffect(() => {
-    if (shouldPreserveScrollPosition) {
-      return
-    }
-
     const mainScrollArea = document.getElementById(ADMIN_MAIN_SCROLL_AREA_ID)
       ?? document.getElementById(MERCHANT_MAIN_SCROLL_AREA_ID)
+    const savedScrollTop = scrollPositionByPathname.get(pathname) ?? 0
 
     if (mainScrollArea) {
-      mainScrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-      return
+      mainScrollArea.scrollTo({ top: savedScrollTop, left: 0, behavior: 'auto' })
+
+      const saveScrollPosition = () => {
+        scrollPositionByPathname.set(pathname, mainScrollArea.scrollTop)
+      }
+
+      mainScrollArea.addEventListener('scroll', saveScrollPosition, { passive: true })
+
+      return () => {
+        saveScrollPosition()
+        mainScrollArea.removeEventListener('scroll', saveScrollPosition)
+      }
     }
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  }, [pathname, shouldPreserveScrollPosition])
+    window.scrollTo({ top: savedScrollTop, left: 0, behavior: 'auto' })
+
+    const saveWindowScrollPosition = () => {
+      scrollPositionByPathname.set(pathname, window.scrollY)
+    }
+
+    window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
+
+    return () => {
+      saveWindowScrollPosition()
+      window.removeEventListener('scroll', saveWindowScrollPosition)
+    }
+  }, [pathname])
 
   return null
 }
@@ -181,6 +201,7 @@ export function Router() {
               element={<RecommendationMetricsPage />}
             />
             <Route path="/merchant-owners" element={<MerchantOwnerPage />} />
+            <Route path="/reservations/review" element={<AdminReservationReviewPage />} />
             <Route
               path="/merchant-place-applications"
               element={<MerchantPlaceApplicationReviewPage />}

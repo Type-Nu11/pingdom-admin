@@ -38,9 +38,9 @@ export const Workspace = styled.div`
 
 export const Panel = styled.section`
   min-width: 0;
-  border: 1px solid ${colors.border};
+  border: 0;
   border-radius: 8px;
-  background: ${colors.surface};
+  background: ${colors.surfaceContainer};
 `
 
 export const PanelHeader = styled.div`
@@ -164,7 +164,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'published' | 'closed'
   align-items: center;
   min-height: 22px;
   padding: 0 7px;
-  border: 1px solid ${({ $tone }) => ($tone === 'published' ? '#9bd7a9' : $tone === 'closed' ? '#f0c970' : colors.primarySoft)};
+  border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'published' ? colors.successTint : $tone === 'closed' ? colors.warningTint : colors.primaryTint)};
   color: ${({ $tone }) => ($tone === 'published' ? colors.successText : $tone === 'closed' ? colors.warningText : colors.primary)};
@@ -236,9 +236,8 @@ export const Editor = styled.div`
 export const ReadonlyNotice = styled.div`
   margin-bottom: 18px;
   padding: 12px 14px;
-  border: 1px solid ${colors.border};
   border-radius: 6px;
-  background: ${colors.surfaceLow};
+  background: ${colors.surface};
   color: ${colors.muted};
   font-size: 13px;
   line-height: 1.5;

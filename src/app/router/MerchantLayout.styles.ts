@@ -105,7 +105,7 @@ export const MerchantProfile = styled.div`
   gap: 10px;
   margin-bottom: 12px;
   padding: 10px 12px;
-  border: 1px solid ${colors.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.surfaceLow};
 
@@ -122,7 +122,7 @@ export const MerchantProfileIcon = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid ${colors.primarySoft};
+  border: 0;
   border-radius: 8px;
   background: ${colors.primaryTint};
   color: ${colors.primary};

@@ -31,7 +31,7 @@ export const StateSummary = styled.div<{ $operating: boolean | null }>`
   gap: 10px;
   margin-bottom: 16px;
   padding: 13px 16px;
-  border: 1px solid ${({ $operating }) => ($operating === false ? colors.warningTint : colors.primaryTint)};
+  border: 0;
   border-radius: 8px;
   background: ${({ $operating }) => ($operating === false ? colors.warningTint : colors.primaryTint)};
   color: ${colors.text};
@@ -107,7 +107,7 @@ export const StatusOption = styled.label<{ $selected: boolean; $danger?: boolean
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   padding: 13px 14px;
-  border: 1px solid ${({ $selected, $danger }) => ($selected ? ($danger ? colors.error : colors.primary) : colors.border)};
+  border: 1px solid ${({ $selected }) => ($selected ? 'transparent' : colors.border)};
   border-radius: 7px;
   background: ${({ $selected, $danger }) => ($selected ? ($danger ? colors.errorTint : colors.primaryTint) : colors.surface)};
   cursor: pointer;
@@ -120,7 +120,7 @@ export const StatusOption = styled.label<{ $selected: boolean; $danger?: boolean
 export const DangerNotice = styled.p`
   margin: 14px 0 0;
   padding: 11px 12px;
-  border: 1px solid ${colors.errorTint};
+  border: 0;
   border-radius: 6px;
   background: ${colors.errorTint};
   color: ${colors.error};
@@ -140,7 +140,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   min-width: 100px;
   height: 42px;
   padding: 0 14px;
-  border: 1px solid ${({ $variant }) => ($variant === 'primary' ? colors.primary : $variant === 'danger' ? colors.error : colors.border)};
+  border: ${({ $variant }) => ($variant === 'primary' || $variant === 'danger' ? 0 : `1px solid ${colors.border}`)};
   border-radius: 6px;
   background: ${({ $variant }) => ($variant === 'primary' ? colors.primary : $variant === 'danger' ? colors.error : colors.surface)};
   color: ${({ $variant }) => ($variant === 'primary' || $variant === 'danger' ? colors.primaryText : colors.text)};

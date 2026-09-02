@@ -41,7 +41,7 @@ export const ImageLink = styled.a`
 export const ReviewNote = styled.div`
   margin-top: 10px;
   padding: 11px 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
@@ -56,7 +56,7 @@ export const DangerButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  border: 1px solid ${neutral.error};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.error};
   color: ${neutral.primaryText};

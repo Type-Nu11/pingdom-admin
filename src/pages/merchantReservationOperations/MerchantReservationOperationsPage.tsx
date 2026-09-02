@@ -19,6 +19,7 @@ const PRODUCT_TYPE_LABEL: Record<MerchantReservableProductType, string> = {
 const STATUS: Record<MerchantReservationStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   PENDING: { label: '관리자 심사 대기', tone: 'draft' },
   CONFIRMED: { label: '관리자 승인', tone: 'published' },
+  REJECTED: { label: '관리자 반려', tone: 'closed' },
   CANCELED: { label: '취소', tone: 'closed' },
 }
 

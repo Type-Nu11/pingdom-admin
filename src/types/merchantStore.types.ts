@@ -6,7 +6,7 @@ export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
-export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELED'
+export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELED'
 export type MerchantPaymentStatus =
   | 'PROCESSING'
   | 'PAID'

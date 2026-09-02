@@ -33,8 +33,8 @@ function formatDate(value?: string | null) {
 }
 
 function formatSchedule(reservation: AdminReservation) {
-  if (!reservation.startsAt && !reservation.endsAt) return '예약 시간 정보 없음'
-  return `${formatDate(reservation.startsAt)} - ${formatDate(reservation.endsAt)}`
+  if (!reservation.reservationStartsAt && !reservation.reservationEndsAt) return '예약 시간 정보 없음'
+  return `${formatDate(reservation.reservationStartsAt)} - ${formatDate(reservation.reservationEndsAt)}`
 }
 
 function formatPerson(name: string | null, id: number | null) {
@@ -55,7 +55,6 @@ function AdminReservationReviewPage() {
   const hook = useAdminReservations()
   const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null)
   const [status, setStatus] = useState<AdminReservationStatus | ''>('PENDING')
-  const [keyword, setKeyword] = useState('')
   const [placeId, setPlaceId] = useState('')
   const [filterError, setFilterError] = useState('')
   const [dialog, setDialog] = useState<Dialog>(null)
@@ -72,17 +71,16 @@ function AdminReservationReviewPage() {
     setFilterError('')
     setSelectedReservationId(null)
     hook.clearDetail()
-    void hook.fetchReservations({ status, keyword, placeId: nextPlaceId, page })
+    void hook.fetchReservations({ status, placeId: nextPlaceId, page })
   }
 
   const resetFilters = () => {
     setStatus('PENDING')
-    setKeyword('')
     setPlaceId('')
     setFilterError('')
     setSelectedReservationId(null)
     hook.clearDetail()
-    void hook.fetchReservations({ status: 'PENDING', keyword: '', placeId: undefined, page: 1 })
+    void hook.fetchReservations({ status: 'PENDING', placeId: undefined, page: 1 })
   }
 
   const selectReservation = (reservationId: number) => {
@@ -187,15 +185,6 @@ function AdminReservationReviewPage() {
                     onChange={(event) => { setPlaceId(event.target.value); setFilterError('') }}
                   />
                 </S.Field>
-                <S.Field>
-                  통합 검색
-                  <S.Input
-                    value={keyword}
-                    placeholder="예약 ID, 장소명, 예약자"
-                    disabled={hook.isLoading || hook.activeAction !== null}
-                    onChange={(event) => setKeyword(event.target.value)}
-                  />
-                </S.Field>
                 <S.SearchFilterActions>
                   <Shared.SecondaryButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={resetFilters}>초기화</Shared.SecondaryButton>
                   <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.activeAction !== null}>조회</Shared.PrimaryButton>
@@ -235,7 +224,7 @@ function AdminReservationReviewPage() {
                               <S.StatusBadge $tone={itemStatus.tone}>{itemStatus.label}</S.StatusBadge>
                             </S.RecordHeader>
                             <S.RecordMeta>예약 #{item.id} · {formatPerson(item.touristUsername, item.touristUserId)}</S.RecordMeta>
-                            <S.RecordSummary>{item.productName || item.productType || '예약 상품 정보 없음'} · {formatSchedule(item)}</S.RecordSummary>
+                            <S.RecordSummary>{item.productName || '예약 상품 정보 없음'} · {formatSchedule(item)}</S.RecordSummary>
                           </S.RecordButton>
                         )
                       })}
@@ -283,8 +272,8 @@ function AdminReservationReviewPage() {
                       <S.DetailGrid>
                         <S.DetailItem><dt>예약자</dt><dd>{formatPerson(hook.reservation.touristUsername, hook.reservation.touristUserId)}</dd></S.DetailItem>
                         <S.DetailItem><dt>장소</dt><dd>{hook.reservation.placeName || '정보 없음'} · #{hook.reservation.placeId}</dd></S.DetailItem>
-                        <S.DetailItem><dt>상점주</dt><dd>{formatPerson(hook.reservation.merchantBusinessName, hook.reservation.merchantOwnerUserId)}</dd></S.DetailItem>
-                        <S.DetailItem><dt>예약 상품</dt><dd>{hook.reservation.productName || hook.reservation.productType || '정보 없음'}</dd></S.DetailItem>
+                        <S.DetailItem><dt>상점주</dt><dd>{formatPerson(hook.reservation.merchantOwnerUsername, hook.reservation.merchantOwnerUserId)}</dd></S.DetailItem>
+                        <S.DetailItem><dt>예약 상품</dt><dd>{hook.reservation.productName || '정보 없음'}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 시간</dt><dd>{formatSchedule(hook.reservation)}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 수량</dt><dd>{hook.reservation.quantity.toLocaleString()}명</dd></S.DetailItem>
                         <S.DetailItem><dt>검토 관리자</dt><dd>{hook.reservation.reviewedBy === null ? '미처리' : `관리자 #${hook.reservation.reviewedBy}`}</dd></S.DetailItem>

@@ -22,7 +22,6 @@ export type AdminReservationAction = 'confirm' | 'reject'
 
 type ReservationQueryState = Required<Pick<AdminReservationQuery, 'page'>> & {
   status: AdminReservationStatus | ''
-  keyword: string
   placeId: number | undefined
 }
 
@@ -55,11 +54,7 @@ function shouldClearAuth(error: unknown) {
 }
 
 function normalizeQuery(query: ReservationQueryState): ReservationQueryState {
-  return {
-    ...query,
-    keyword: query.keyword.trim(),
-    page: Math.max(query.page, 1),
-  }
+  return { ...query, page: Math.max(query.page, 1) }
 }
 
 export function useAdminReservations() {
@@ -68,7 +63,6 @@ export function useAdminReservations() {
   const [reservation, setReservation] = useState<AdminReservation | null>(null)
   const [query, setQuery] = useState<ReservationQueryState>({
     status: 'PENDING',
-    keyword: '',
     placeId: undefined,
     page: 1,
   })
@@ -97,14 +91,13 @@ export function useAdminReservations() {
     try {
       const data = await getAdminReservations({
         status: normalizedQuery.status || undefined,
-        keyword: normalizedQuery.keyword || undefined,
         placeId: normalizedQuery.placeId,
         page: normalizedQuery.page,
         limit: LIMIT,
       })
       if (requestId === listRef.current) {
         setReservations(data.reservations)
-        setTotalCount(data.totalCount ?? data.totalElements ?? 0)
+        setTotalCount(data.totalElements)
         setTotalPages(data.totalPages)
         setHasNext(data.hasNext)
       }
@@ -166,7 +159,7 @@ export function useAdminReservations() {
     try {
       const data = action === 'confirm'
         ? await confirmAdminReservation(reservationId, request)
-        : await rejectAdminReservation(reservationId, request ?? {})
+        : await rejectAdminReservation(reservationId, request ?? { reason: '' })
       setSuccessMessage(action === 'confirm' ? '예약을 승인했습니다.' : '예약을 반려했습니다.')
       await Promise.all([
         fetchReservations(queryRef.current),
@@ -188,7 +181,7 @@ export function useAdminReservations() {
   }, [clearAuth, fetchDetail, fetchReservations])
 
   useEffect(() => {
-    void fetchReservations({ status: 'PENDING', keyword: '', placeId: undefined, page: 1 })
+    void fetchReservations({ status: 'PENDING', placeId: undefined, page: 1 })
   }, [fetchReservations])
 
   return {

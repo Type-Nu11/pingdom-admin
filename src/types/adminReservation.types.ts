@@ -9,14 +9,13 @@ export interface AdminReservation {
   placeId: number
   placeName: string | null
   merchantOwnerUserId: number | null
-  merchantBusinessName: string | null
+  merchantOwnerUsername: string | null
   availabilityId: number
   productId: number | null
   productName: string | null
-  productType: string | null
   quantity: number
-  startsAt: string | null
-  endsAt: string | null
+  reservationStartsAt: string | null
+  reservationEndsAt: string | null
   status: AdminReservationStatus
   createdAt: string
   confirmedAt: string | null
@@ -25,29 +24,35 @@ export interface AdminReservation {
   reviewedBy: number | null
   reviewedAt: string | null
   reviewReason: string | null
-  updatedAt: string
+  statusHistory: AdminReservationStatusHistory[]
+}
+
+export interface AdminReservationStatusHistory {
+  id: number
+  status: AdminReservationStatus
+  changedBy: number | null
+  reason: string | null
+  changedAt: string | null
 }
 
 export interface AdminReservationPageResponse {
   reservations: AdminReservation[]
   page: number
   limit: number
-  totalCount?: number
-  totalElements?: number
+  totalElements: number
   totalPages: number
   hasNext: boolean
 }
 
 export interface AdminReservationQuery {
   status?: AdminReservationStatus
-  keyword?: string
   placeId?: number
   page?: number
   limit?: number
 }
 
 export interface AdminReservationReviewRequest {
-  reason?: string
+  reason: string
 }
 
 export type AdminReservationErrorResponse = AuthErrorResponse<string>

@@ -1,29 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getMerchantCampaigns,
+  getMerchantAvailabilities,
   getMerchantOffers,
   getMerchantOperatingNotices,
   getMerchantOwnerProfile,
   getMerchantPerformance,
   getMerchantPlaceInformation,
-  getMerchantReservableProducts,
   updateMerchantPlaceInformation,
 } from '../api/merchantStoreApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantCampaign,
+  MerchantAvailability,
   MerchantOffer,
   MerchantOperatingNotice,
   MerchantOwnerProfile,
   MerchantPerformance,
   MerchantPlaceInformation,
   MerchantPlaceInformationUpdateRequest,
-  MerchantReservableProduct,
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
+import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 
 type MerchantStoreLoadState = 'loading' | 'ready' | 'error'
 
@@ -59,12 +60,12 @@ export function useMerchantStore() {
   const [status, setStatus] = useState<MerchantStoreLoadState>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
   const [performance, setPerformance] = useState<MerchantPerformance | null>(null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  const { selectedPlaceId, selectPlace, syncPlaces } = useMerchantPlaceSelection()
   const [placeInformation, setPlaceInformation] = useState<MerchantPlaceInformation | null>(null)
   const [campaigns, setCampaigns] = useState<MerchantCampaign[]>([])
   const [offers, setOffers] = useState<MerchantOffer[]>([])
   const [operatingNotices, setOperatingNotices] = useState<MerchantOperatingNotice[]>([])
-  const [reservableProducts, setReservableProducts] = useState<MerchantReservableProduct[]>([])
+  const [reservationAvailabilities, setReservationAvailabilities] = useState<MerchantAvailability[]>([])
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [performanceErrorMessage, setPerformanceErrorMessage] = useState('')
@@ -117,9 +118,7 @@ export function useMerchantStore() {
       if (!mountedRef.current) return
 
       setProfile(nextProfile)
-      setSelectedPlaceId((current) =>
-        current && nextProfile.placeIds.includes(current) ? current : (nextProfile.placeIds[0] ?? null)
-      )
+      syncPlaces(nextProfile.placeIds)
       setStatus('ready')
       void fetchPerformance()
     } catch (error) {
@@ -130,7 +129,7 @@ export function useMerchantStore() {
       setErrorMessage(getMerchantStoreErrorMessage(error, '내 가게 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 프로필 조회 실패', error)
     }
-  }, [clearUnauthorizedSession, fetchPerformance])
+  }, [clearUnauthorizedSession, fetchPerformance, syncPlaces])
 
   const fetchPlaceData = useCallback(
     async (placeId: number) => {
@@ -138,20 +137,20 @@ export function useMerchantStore() {
       setCampaigns([])
       setOffers([])
       setOperatingNotices([])
-      setReservableProducts([])
+      setReservationAvailabilities([])
       setSectionErrorMessage('')
 
-      const [informationResult, campaignsResult, offersResult, productsResult, noticesResult] = await Promise.allSettled([
+      const [informationResult, campaignsResult, offersResult, availabilitiesResult, noticesResult] = await Promise.allSettled([
         getMerchantPlaceInformation(placeId),
         getMerchantCampaigns(),
         getMerchantOffers(),
-        getMerchantReservableProducts(),
+        getMerchantAvailabilities(),
         getMerchantOperatingNotices(placeId),
       ])
 
       if (!mountedRef.current) return
 
-      const failures = [informationResult, campaignsResult, offersResult, productsResult, noticesResult].filter(
+      const failures = [informationResult, campaignsResult, offersResult, availabilitiesResult, noticesResult].filter(
         (result): result is PromiseRejectedResult =>
           result.status === 'rejected' && !isMissingPlaceInformation(result.reason)
       )
@@ -165,8 +164,8 @@ export function useMerchantStore() {
       if (offersResult.status === 'fulfilled') {
         setOffers(offersResult.value.offers.filter((offer) => offer.placeId === placeId))
       }
-      if (productsResult.status === 'fulfilled') {
-        setReservableProducts(productsResult.value.filter((product) => product.placeId === placeId))
+      if (availabilitiesResult.status === 'fulfilled') {
+        setReservationAvailabilities(availabilitiesResult.value.filter((availability) => availability.placeId === placeId))
       }
       if (noticesResult.status === 'fulfilled') {
         setOperatingNotices(noticesResult.value.notices)
@@ -254,14 +253,14 @@ export function useMerchantStore() {
     campaigns,
     offers,
     operatingNotices,
-    reservableProducts,
+    reservationAvailabilities,
     errorMessage,
     sectionErrorMessage,
     performanceErrorMessage,
     isLoadingPerformance,
     successMessage,
     isSavingInformation,
-    selectPlace: setSelectedPlaceId,
+    selectPlace,
     fetchStore,
     fetchPerformance,
     fetchPlaceData,

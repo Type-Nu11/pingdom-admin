@@ -52,16 +52,15 @@ export const AttachmentButton = styled.button`
   align-items: center;
   gap: 5px;
   padding: 0 10px;
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
-  background: ${colors.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${colors.surfaceLow};
   color: ${colors.primary};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${colors.primarySoft};
     background: ${colors.primaryTint};
   }
 

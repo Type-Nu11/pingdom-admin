@@ -220,16 +220,16 @@ export const LogoutButton = styled.button`
   align-items: center;
   gap: 12px;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 
-  &:hover { border-color: ${neutral.primary}; color: ${neutral.primary}; }
+  &:hover { background: ${neutral.primaryTint}; color: ${neutral.primary}; }
 
   @media (max-width: 900px) {
     width: auto;
@@ -790,9 +790,9 @@ export const InlineRetryButton = styled.button`
   margin-left: auto;
   flex-shrink: 0;
   padding: 0 8px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 12px;
@@ -800,7 +800,7 @@ export const InlineRetryButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primary};
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 `
@@ -1090,16 +1090,16 @@ export const RetryButton = styled.button`
   margin-left: auto;
   flex-shrink: 0;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 
-  &:hover { border-color: ${neutral.primary}; color: ${neutral.primary}; }
+  &:hover { background: ${neutral.primaryTint}; color: ${neutral.primary}; }
 `
 
 export const RefreshButton = styled.button<{ $isLoading?: boolean }>`

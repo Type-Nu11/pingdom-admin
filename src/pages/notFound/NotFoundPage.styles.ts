@@ -118,7 +118,7 @@ export const BackButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  border: 1px solid ${neutral.primary};
+  border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primary};
   color: ${neutral.primaryText};
@@ -128,7 +128,6 @@ export const BackButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primaryHover};
     background: ${neutral.primaryHover};
   }
 
@@ -144,15 +143,14 @@ export const NavLink = styled(Link)`
   justify-content: center;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 700;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }

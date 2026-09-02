@@ -209,11 +209,10 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 7px;
   padding: 0 12px;
-  border: 1px solid
-    ${({ $active }) => ($active ? neutral.primary : neutral.border)};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.pill};
   background: ${({ $active }) =>
-    $active ? neutral.primaryTint : neutral.surface};
+    $active ? neutral.primaryTint : neutral.surfaceLow};
   color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
   font: inherit;
   font-size: 14px;
@@ -221,7 +220,6 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     color: ${neutral.primary};
   }
 
@@ -348,16 +346,15 @@ const inputControlStyle = css`
   min-width: 0;
   width: 100%;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.md};
   outline: 1px solid transparent;
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 14px;
 
   &:focus {
-    border-color: ${neutral.primary};
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
@@ -466,12 +463,10 @@ export const DatePickerDayButton = styled.button<{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid
-    ${({ $selected, $today }) =>
-      $selected ? neutral.primary : $today ? neutral.primarySoft : 'transparent'};
-  border-radius: 7px;
-  background: ${({ $selected }) =>
-    $selected ? neutral.primary : 'transparent'};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${({ $selected, $today }) =>
+    $selected ? neutral.primary : $today ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected, $outside }) =>
     $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
   font: inherit;
@@ -479,7 +474,6 @@ export const DatePickerDayButton = styled.button<{
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${({ $selected }) =>
       $selected ? neutral.primaryHover : neutral.primaryTint};
     color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primary)};
@@ -521,9 +515,9 @@ export const DatePickerTimeButton = styled.button`
   justify-content: space-between;
   gap: 8px;
   padding: 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 12px;
@@ -547,7 +541,6 @@ export const DatePickerTimeButton = styled.button`
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primary};
     outline: none;
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
   }
@@ -620,9 +613,8 @@ export const DatePickerTimeOptions = styled.div`
 
 export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
   min-height: 28px;
-  border: 1px solid
-    ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
-  border-radius: 6px;
+  border: 0;
+  border-radius: ${radius.sm};
   background: ${({ $selected }) =>
     $selected ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected }) =>
@@ -634,7 +626,6 @@ export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primarySoft};
     outline: none;
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
@@ -939,7 +930,7 @@ const buttonStyle = css`
 
 export const PrimaryButton = styled.button`
   ${buttonStyle}
-  border: 1px solid ${neutral.primary};
+  border: 0;
   background: ${neutral.primary};
   color: ${neutral.primaryText};
 
@@ -950,12 +941,11 @@ export const PrimaryButton = styled.button`
 
 export const SecondaryButton = styled.button`
   ${buttonStyle}
-  border: 1px solid ${neutral.border};
-  background: ${neutral.surface};
+  border: 0;
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -969,14 +959,13 @@ export const IconActionButton = styled.button`
   justify-content: center;
   flex: 0 0 auto;
   padding: 0;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }

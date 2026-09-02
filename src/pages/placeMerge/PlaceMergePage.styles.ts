@@ -85,16 +85,15 @@ export const HeaderButton = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 0 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -190,21 +189,18 @@ export const GroupButton = styled.button<{ $selected?: boolean }>`
   flex-direction: column;
   gap: 8px;
   padding: 13px;
-  border: 1px solid
-    ${({ $selected }) => ($selected ? 'transparent' : neutral.border)};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.md};
   background: ${({ $selected }) =>
-    $selected ? neutral.primaryTint : neutral.surface};
+    $selected ? neutral.primaryTint : neutral.surfaceLow};
   color: ${neutral.text};
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
     background 160ms ease,
     box-shadow 160ms ease;
 
   &:hover {
-    border-color: transparent;
     background: ${neutral.primaryTint};
   }
 
@@ -216,7 +212,7 @@ export const GroupButton = styled.button<{ $selected?: boolean }>`
   ${({ $selected }) =>
     $selected &&
     css`
-      box-shadow: 0 0 0 3px ${neutral.primaryTint};
+      box-shadow: 0 0 0 2px ${neutral.primary};
     `}
 `
 
@@ -402,19 +398,23 @@ export const CandidateButton = styled.button<{ $selected?: boolean }>`
   gap: 12px;
   align-items: center;
   padding: 11px 12px;
-  border: 1px solid
-    ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.md};
   background: ${({ $selected }) =>
-    $selected ? neutral.primaryTint : neutral.surface};
+    $selected ? neutral.primaryTint : neutral.surfaceLow};
   color: ${neutral.text};
   text-align: left;
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
   }
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      box-shadow: 0 0 0 2px ${neutral.primary};
+    `}
 `
 
 export const CandidateName = styled.span`
@@ -474,7 +474,7 @@ export const PrimaryButton = styled.button`
   gap: 7px;
   flex-shrink: 0;
   padding: 0 16px;
-  border: 1px solid ${neutral.primary};
+  border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primary};
   color: ${neutral.primaryText};
@@ -499,16 +499,15 @@ export const SecondaryButton = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 0 14px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }

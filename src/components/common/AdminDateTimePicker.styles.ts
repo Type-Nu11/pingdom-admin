@@ -33,10 +33,10 @@ export const Trigger = styled.button`
   justify-content: space-between;
   gap: 8px;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
+  border: 0;
+  border-radius: ${radius.md};
   outline: 0;
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 14px;
@@ -56,7 +56,7 @@ export const Trigger = styled.button`
   }
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
 
     ${Icon} {
       color: ${neutral.primary};
@@ -64,7 +64,6 @@ export const Trigger = styled.button`
   }
 
   &:focus-visible {
-    border-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
 
     ${Icon} {
@@ -74,7 +73,7 @@ export const Trigger = styled.button`
 
   &:disabled {
     cursor: default;
-    background: ${neutral.surfaceLow};
+    background: ${neutral.surfaceContainer};
     color: ${neutral.softText};
   }
 `
@@ -153,11 +152,10 @@ export const DayButton = styled.button<{
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid
-    ${({ $selected, $today }) =>
-      $selected ? neutral.primary : $today ? neutral.primarySoft : 'transparent'};
-  border-radius: 6px;
-  background: ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${({ $selected, $today }) =>
+    $selected ? neutral.primary : $today ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected, $outside }) =>
     $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
   font: inherit;
@@ -166,7 +164,6 @@ export const DayButton = styled.button<{
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primarySoft};
     outline: 0;
     background: ${({ $selected }) =>
       $selected ? neutral.primaryHover : neutral.primaryTint};
@@ -187,9 +184,9 @@ export const Footer = styled.div`
 export const SecondaryButton = styled.button`
   min-height: 34px;
   padding: 0 10px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font: inherit;
   font-size: 12px;
@@ -198,7 +195,6 @@ export const SecondaryButton = styled.button`
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primarySoft};
     outline: 0;
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
@@ -206,13 +202,11 @@ export const SecondaryButton = styled.button`
 `
 
 export const PrimaryButton = styled(SecondaryButton)`
-  border-color: ${neutral.primary};
   background: ${neutral.primary};
   color: ${neutral.primaryText};
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primaryHover};
     background: ${neutral.primaryHover};
     color: ${neutral.primaryText};
   }
@@ -280,8 +274,8 @@ export const TimeOptions = styled.div`
 export const TimeOption = styled.button<{ $selected?: boolean }>`
   min-height: 28px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 5px;
+  border: 0;
+  border-radius: ${radius.sm};
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
   font: inherit;
@@ -292,7 +286,6 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
 
   &:hover,
   &:focus-visible {
-    border-color: transparent;
     outline: 0;
     background: ${neutral.primaryTint};
     color: ${neutral.primary};

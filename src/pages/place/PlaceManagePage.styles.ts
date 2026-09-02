@@ -257,19 +257,16 @@ export const LogoutButton = styled.button`
   justify-content: flex-start;
   gap: 12px;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
+  transition: background 160ms ease, color 160ms ease;
 
   &:hover {
-    border-color: ${neutral.primary};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -362,29 +359,26 @@ export const TopActionButton = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 0 11px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 
   &:disabled {
-    border-color: ${neutral.border};
     background: ${neutral.surfaceLow};
     color: ${neutral.softText};
     cursor: not-allowed;
   }
 
   &:disabled:hover {
-    border-color: ${neutral.border};
     background: ${neutral.surfaceLow};
     color: ${neutral.softText};
   }
@@ -658,9 +652,9 @@ export const DetailInlineButton = styled.button`
   gap: 4px;
   flex-shrink: 0;
   padding: 0 10px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.primaryTint};
   color: ${neutral.primary};
   font: inherit;
   font-size: 12px;
@@ -673,8 +667,7 @@ export const DetailInlineButton = styled.button`
   }
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
-    background: ${neutral.primaryTint};
+    background: ${neutral.primarySoft};
   }
 
   &:focus-visible {
@@ -905,16 +898,15 @@ export const DetailActionButton = styled.button`
   gap: 6px;
   flex: 1;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -926,12 +918,10 @@ export const DetailActionButton = styled.button`
 `
 
 export const DetailDeleteButton = styled(DetailActionButton)`
-  border-color: ${neutral.error};
   background: ${neutral.errorTint};
   color: ${neutral.error};
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.error};
     background: ${neutral.error};
     color: ${neutral.primaryText};
   }
@@ -963,19 +953,15 @@ export const PanelCollapseButton = styled.button`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.primaryTint};
   color: ${neutral.primary};
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
+  transition: background 160ms ease, color 160ms ease;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
-    background: ${neutral.primaryTint};
+    background: ${neutral.primarySoft};
     color: ${neutral.primary};
   }
 `
@@ -1056,9 +1042,9 @@ export const SearchClearButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surfaceHighest};
+  background: ${neutral.surfaceHigh};
   color: ${neutral.muted};
   cursor: pointer;
   transform: translateY(-50%);
@@ -1073,7 +1059,6 @@ export const SearchClearButton = styled.button`
   }
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -1203,18 +1188,16 @@ export const IconFilterButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   cursor: pointer;
   transition:
     background 160ms ease,
-    border-color 160ms ease,
     opacity 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primaryHover};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -1517,16 +1500,15 @@ export const EmptyState = styled.div`
 export const RetryButton = styled.button`
   min-height: 36px;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primary};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -1555,18 +1537,14 @@ export const PageButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    color 160ms ease,
-    border-color 160ms ease;
+  transition: background 160ms ease, color 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -2510,9 +2488,9 @@ export const OperatingIconButton = styled.button`
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   cursor: pointer;
 
@@ -2521,7 +2499,6 @@ export const OperatingIconButton = styled.button`
   }
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.error};
     background: ${neutral.errorTint};
     color: ${neutral.error};
   }
@@ -2800,9 +2777,9 @@ export const ModalFooter = styled.footer`
 export const SecondaryButton = styled.button`
   min-height: 40px;
   padding: 0 18px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
   font-weight: 700;

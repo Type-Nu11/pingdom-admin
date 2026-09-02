@@ -163,18 +163,18 @@ export const PaginationPageButton = styled.button<{ $active?: boolean }>`
   min-width: 32px;
   min-height: 32px;
   padding: 0 8px;
-  border: 1px solid ${({ $active }) => ($active ? neutral.primary : neutral.border)};
+  border: 0;
   border-radius: ${radius.pill};
-  background: ${({ $active }) => ($active ? neutral.primary : neutral.surface)};
-  color: ${({ $active }) => ($active ? '#fff' : neutral.text)};
+  background: ${({ $active }) => ($active ? neutral.primary : neutral.surfaceLow)};
+  color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primary};
-    color: ${({ $active }) => ($active ? '#fff' : neutral.primary)};
+    background: ${({ $active }) => ($active ? neutral.primary : neutral.primaryTint)};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primary)};
   }
 
   &:disabled {

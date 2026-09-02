@@ -236,23 +236,27 @@ export const PasswordToggleButton = styled.button`
 
 export const ErrorMessage = styled.p`
   margin: 0;
-  padding: 11px 12px;
+  padding: 12px 14px;
   border: 1px solid ${adminColors.error};
   border-radius: 10px;
   background: ${adminColors.errorTint};
   color: ${adminColors.error};
   font-size: 14px;
-  line-height: 1.3;
+  line-height: 1.4;
 `
 
 export const ErrorMessageSlot = styled.div`
-  min-height: 42px;
-  margin-top: 12px;
+  margin-top: 18px;
+
+  &:empty {
+    display: none;
+  }
 `
 
 export const SubmitButton = styled.button`
   width: 100%;
   min-height: 52px;
+  margin-top: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

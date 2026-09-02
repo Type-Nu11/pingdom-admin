@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -33,14 +33,14 @@ export const Trigger = styled.button`
   justify-content: space-between;
   gap: 8px;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
+  border: 0;
+  border-radius: ${radius.md};
   outline: 0;
-  background: ${neutral.surface};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 
@@ -56,7 +56,7 @@ export const Trigger = styled.button`
   }
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
+    background: ${neutral.primaryTint};
 
     ${Icon} {
       color: ${neutral.primary};
@@ -64,7 +64,6 @@ export const Trigger = styled.button`
   }
 
   &:focus-visible {
-    border-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
 
     ${Icon} {
@@ -74,7 +73,7 @@ export const Trigger = styled.button`
 
   &:disabled {
     cursor: default;
-    background: ${neutral.surfaceLow};
+    background: ${neutral.surfaceContainer};
     color: ${neutral.softText};
   }
 `
@@ -102,7 +101,7 @@ export const CalendarHeader = styled.div`
 export const CalendarTitle = styled.strong`
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const IconButton = styled.button`
@@ -113,7 +112,7 @@ export const IconButton = styled.button`
   justify-content: center;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -131,7 +130,7 @@ export const Weekdays = styled.div`
   grid-template-columns: repeat(7, minmax(0, 1fr));
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
 `
@@ -153,11 +152,10 @@ export const DayButton = styled.button<{
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid
-    ${({ $selected, $today }) =>
-      $selected ? neutral.primary : $today ? neutral.primarySoft : 'transparent'};
-  border-radius: 6px;
-  background: ${({ $selected }) => ($selected ? neutral.primary : 'transparent')};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${({ $selected, $today }) =>
+    $selected ? neutral.primary : $today ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected, $outside }) =>
     $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
   font: inherit;
@@ -166,7 +164,6 @@ export const DayButton = styled.button<{
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primarySoft};
     outline: 0;
     background: ${({ $selected }) =>
       $selected ? neutral.primaryHover : neutral.primaryTint};
@@ -187,18 +184,17 @@ export const Footer = styled.div`
 export const SecondaryButton = styled.button`
   min-height: 34px;
   padding: 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primarySoft};
     outline: 0;
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
@@ -206,13 +202,11 @@ export const SecondaryButton = styled.button`
 `
 
 export const PrimaryButton = styled(SecondaryButton)`
-  border-color: ${neutral.primary};
   background: ${neutral.primary};
   color: ${neutral.primaryText};
 
   &:hover,
   &:focus-visible {
-    border-color: ${neutral.primaryHover};
     background: ${neutral.primaryHover};
     color: ${neutral.primaryText};
   }
@@ -240,7 +234,7 @@ export const TimeMenuTitle = styled.strong`
   margin-bottom: 8px;
   color: ${neutral.strongText};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const TimeColumns = styled.div`
@@ -258,7 +252,7 @@ export const TimeColumnLabel = styled.span`
   display: block;
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
 `
@@ -280,8 +274,8 @@ export const TimeOptions = styled.div`
 export const TimeOption = styled.button<{ $selected?: boolean }>`
   min-height: 28px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 5px;
+  border: 0;
+  border-radius: ${radius.sm};
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
   font: inherit;
@@ -292,7 +286,6 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
 
   &:hover,
   &:focus-visible {
-    border-color: transparent;
     outline: 0;
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
@@ -303,5 +296,5 @@ export const TimeSeparator = styled.span`
   align-self: center;
   color: ${neutral.primary};
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
 `

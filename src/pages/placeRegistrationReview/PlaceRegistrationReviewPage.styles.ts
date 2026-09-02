@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -11,7 +11,7 @@ export const Reason = styled.p`
   background: ${colors.surfaceLow};
   color: ${colors.text};
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.3;
   white-space: pre-wrap;
 `
 
@@ -28,10 +28,10 @@ export const Tag = styled.span`
   align-items: center;
   padding: 2px 9px;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${colors.primaryTint};
   color: ${colors.primary};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 `
 
@@ -55,15 +55,15 @@ export const AttachmentRow = styled.article`
     overflow: hidden;
     color: ${colors.strongText};
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   span {
     color: ${colors.muted};
-    font-size: 11px;
-    line-height: 1.45;
+    font-size: 12px;
+    line-height: 1.3;
   }
 `
 
@@ -87,13 +87,13 @@ export const ScheduleRow = styled.div`
 
   strong {
     color: ${colors.strongText};
-    font-weight: 800;
+    font-weight: 700;
   }
 `
 
 export const MetaNotice = styled.p`
   margin: 10px 0 0;
   color: ${colors.muted};
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.3;
 `

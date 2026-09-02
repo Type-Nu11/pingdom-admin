@@ -1,10 +1,10 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 export const BannerPreview = styled.figure`
   overflow: hidden;
   margin: 16px 0 0;
-  border: 1px solid ${adminColors.border};
+  border: 0;
   border-radius: 8px;
   background: ${adminColors.surfaceLow};
 `
@@ -22,7 +22,7 @@ export const BannerFallback = styled.div`
   place-items: center;
   padding: 20px;
   color: ${adminColors.muted};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   text-align: center;
 `
@@ -35,12 +35,12 @@ export const BannerCaption = styled.figcaption`
   padding: 10px 12px;
   border-top: 1px solid ${adminColors.border};
   color: ${adminColors.muted};
-  font-size: 11px;
+  font-size: 12px;
 `
 
 export const ExternalLink = styled.a`
   color: ${adminColors.primary};
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
 
   &:hover {
@@ -56,11 +56,11 @@ export const DangerButton = styled.button`
   gap: 6px;
   padding: 0 14px;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${adminColors.errorTint};
   color: ${adminColors.error};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {

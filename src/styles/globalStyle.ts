@@ -1,5 +1,5 @@
 import { createGlobalStyle } from 'styled-components'
-import { adminColors } from './theme'
+import { adminColors, typography } from './theme'
 
 // 앱 전체에 적용되는 기본 스타일입니다.
 export const GlobalStyle = createGlobalStyle`
@@ -24,6 +24,9 @@ export const GlobalStyle = createGlobalStyle`
       BlinkMacSystemFont,
       'Segoe UI',
       sans-serif;
+    line-height: ${typography.label.regular.lineHeight};
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   button,

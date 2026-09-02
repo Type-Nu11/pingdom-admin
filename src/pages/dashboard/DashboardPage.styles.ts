@@ -1,5 +1,5 @@
 import styled, { css, keyframes } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 const loadingShimmer = keyframes`
@@ -220,16 +220,16 @@ export const LogoutButton = styled.button`
   align-items: center;
   gap: 12px;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
-  &:hover { border-color: ${neutral.primary}; color: ${neutral.primary}; }
+  &:hover { background: ${neutral.primaryTint}; color: ${neutral.primary}; }
 
   @media (max-width: 900px) {
     width: auto;
@@ -285,7 +285,7 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -340,7 +340,7 @@ export const PageDescription = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const UpdateMeta = styled.p`
@@ -352,7 +352,7 @@ export const UpdateMeta = styled.p`
   flex-shrink: 0;
   margin: 0;
   color: ${neutral.softText};
-  font-size: 13px;
+  font-size: 14px;
 
   @media (max-width: 640px) {
     min-width: 0;
@@ -362,7 +362,7 @@ export const UpdateMeta = styled.p`
 
 export const RefreshingText = styled.span`
   color: ${neutral.primary};
-  font-weight: 600;
+  font-weight: 500;
 `
 
 export const Section = styled.section`
@@ -395,7 +395,7 @@ export const SectionTitle = styled.h2`
 export const SectionDescription = styled.p`
   margin: 0;
   color: ${neutral.softText};
-  font-size: 13px;
+  font-size: 14px;
 `
 
 export const SummaryGrid = styled.div`
@@ -435,9 +435,9 @@ export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action' }>`
   display: flex;
   flex-direction: column;
   padding: 18px;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  border: 0;
+  border-radius: ${radius.lg};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
 `
 
 export const OperationsPanelHeader = styled.div`
@@ -454,7 +454,7 @@ export const OperationsPanelTitle = styled.h3`
   gap: 6px;
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
 `
 
@@ -467,7 +467,7 @@ export const PanelCount = styled.span`
 export const PanelUpdatingText = styled.span`
   color: ${neutral.primary};
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 `
 
 export const ActivityTabs = styled.div`
@@ -486,7 +486,7 @@ export const ActivityPanelMeta = styled.div`
   margin: -2px 0 8px;
   color: ${neutral.primary};
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   text-align: right;
 `
 
@@ -516,7 +516,7 @@ export const ActivityViewAllButton = styled.button`
   color: ${neutral.muted};
   font: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
 
@@ -546,10 +546,10 @@ export const ActivityTab = styled.button<{ $active?: boolean }>`
   border-bottom: 2px solid ${({ $active }) => ($active ? neutral.primary : 'transparent')};
   border-radius: 0;
   background: transparent;
-  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
+  color: ${({ $active }) => ($active ? neutral.text : neutral.muted)};
   font: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -565,7 +565,7 @@ export const ActivityTab = styled.button<{ $active?: boolean }>`
 
 export const ActivityTabCount = styled.span`
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 `
 
@@ -620,8 +620,8 @@ export const ActivityItemMain = styled.div`
 
   strong {
     color: ${neutral.text};
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   span {
@@ -633,7 +633,7 @@ export const ActivityItemMain = styled.div`
 export const ActivityItemDate = styled.time`
   flex-shrink: 0;
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 `
 
@@ -651,7 +651,7 @@ export const ActivityBadge = styled.span<{
 }>`
   flex-shrink: 0;
   padding: 3px 6px;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${({ $tone }) => {
     if ($tone === 'success') return neutral.successTint
     if ($tone === 'warning') return neutral.warningTint
@@ -664,9 +664,9 @@ export const ActivityBadge = styled.span<{
     if ($tone === 'error') return neutral.error
     return neutral.primary
   }};
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
 `
 
 export const PendingList = styled.div`
@@ -727,8 +727,8 @@ export const PendingItemMain = styled.span`
 
   strong {
     color: ${neutral.text};
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   span {
@@ -743,7 +743,7 @@ export const PendingItemMeta = styled.span`
   gap: 6px;
   flex-shrink: 0;
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
 
   ${PendingItem}:hover & {
     color: ${neutral.primary};
@@ -758,7 +758,7 @@ export const EmptyState = styled.p`
   margin: 0;
   padding: 14px 8px;
   color: ${neutral.softText};
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
 `
 
@@ -782,7 +782,7 @@ export const DataStatusText = styled.span`
   min-width: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.3;
 `
 
 export const InlineRetryButton = styled.button`
@@ -790,17 +790,17 @@ export const InlineRetryButton = styled.button`
   margin-left: auto;
   flex-shrink: 0;
   padding: 0 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primary};
+    background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
 `
@@ -832,18 +832,17 @@ export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
   align-items: flex-start;
   gap: 0;
   padding: 12px 14px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 10px;
-  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
   color: ${neutral.text};
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 
   &:hover {
-    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
-    background: ${neutral.surface};
+    background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
   }
 
   &:focus-visible {
@@ -899,8 +898,8 @@ export const SummaryValue = styled.strong<{ $muted?: boolean }>`
 export const SummarySupportingText = styled.span`
   margin-top: 6px;
   color: ${neutral.softText};
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.3;
 `
 
 export const OperationalMetricGrid = styled.div`
@@ -927,7 +926,7 @@ export const OperationalEmptyState = styled.p`
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
-  font-size: 13px;
+  font-size: 14px;
 `
 
 export const OperationalMetricCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
@@ -937,18 +936,17 @@ export const OperationalMetricCard = styled.button<{ $tone?: 'neutral' | 'action
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 9px;
-  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
   color: ${neutral.text};
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: background 160ms ease, box-shadow 160ms ease;
 
   &:hover {
-    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
-    background: ${neutral.surfaceLow};
+    background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
   }
 
   &:focus-visible {
@@ -982,7 +980,7 @@ export const OperationalMetricContent = styled.span`
 export const OperationalMetricLabel = styled.span`
   overflow: hidden;
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -990,7 +988,7 @@ export const OperationalMetricLabel = styled.span`
 
 export const OperationalMetricValue = styled.strong<{ $muted?: boolean }>`
   color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1;
 `
@@ -999,9 +997,9 @@ export const QuickActionPanel = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.lg};
+  background: ${neutral.surfaceLow};
 `
 
 export const QuickActionButton = styled.button`
@@ -1016,8 +1014,8 @@ export const QuickActionButton = styled.button`
   background: transparent;
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 
@@ -1082,7 +1080,7 @@ export const StatusText = styled.div`
   gap: 4px;
 
   strong { color: ${neutral.strongText}; font-size: 14px; font-weight: 700; }
-  span { color: ${neutral.muted}; font-size: 13px; line-height: 1.5; }
+  span { color: ${neutral.muted}; font-size: 14px; line-height: 1.3; }
 `
 
 export const RetryButton = styled.button`
@@ -1090,16 +1088,16 @@ export const RetryButton = styled.button`
   margin-left: auto;
   flex-shrink: 0;
   padding: 0 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 
-  &:hover { border-color: ${neutral.primary}; color: ${neutral.primary}; }
+  &:hover { background: ${neutral.primaryTint}; color: ${neutral.primary}; }
 `
 
 export const RefreshButton = styled.button<{ $isLoading?: boolean }>`
@@ -1111,7 +1109,7 @@ export const RefreshButton = styled.button<{ $isLoading?: boolean }>`
   justify-content: center;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   font: inherit;

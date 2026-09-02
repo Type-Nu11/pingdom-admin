@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, typography } from '../../styles/theme'
+import { adminColors, typography, radius } from '../../styles/theme'
 
 export const MaterialIcon = styled.span`
   width: 1em;
@@ -192,7 +192,7 @@ export const Input = styled.input<{ $hasEndAction?: boolean }>`
   outline: 0;
   background: ${adminColors.surfaceHighest};
   color: ${adminColors.text};
-  font-size: 15px;
+  font-size: 16px;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -241,8 +241,8 @@ export const ErrorMessage = styled.p`
   border-radius: 10px;
   background: ${adminColors.errorTint};
   color: ${adminColors.error};
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.3;
 `
 
 export const ErrorMessageSlot = styled.div`
@@ -258,7 +258,7 @@ export const SubmitButton = styled.button`
   justify-content: center;
   gap: 8px;
   border: 0;
-  border-radius: 12px;
+  border-radius: ${radius.pill};
   background: ${adminColors.primary};
   color: ${adminColors.primaryText};
   font-size: ${typography.label.bold.fontSize}px;

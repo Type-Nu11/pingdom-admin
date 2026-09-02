@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 export const Pagination = styled.nav`
   display: flex;
@@ -19,18 +19,16 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  background: ${adminColors.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${adminColors.surfaceLow};
   color: ${adminColors.text};
   cursor: pointer;
   transition:
-    border-color 160ms ease,
     background 160ms ease,
     color 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${adminColors.primarySoft};
     background: ${adminColors.primaryTint};
     color: ${adminColors.primary};
   }
@@ -73,21 +71,19 @@ export const PageButton = styled.button<{ $active?: boolean }>`
   min-width: 36px;
   height: 36px;
   padding: 0 8px;
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  background: ${adminColors.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${adminColors.surfaceLow};
   color: ${adminColors.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
     background 160ms ease,
     color 160ms ease;
 
   &:hover:not(:disabled) {
-    border-color: ${adminColors.primarySoft};
     background: ${adminColors.primaryTint};
     color: ${adminColors.primary};
   }
@@ -105,14 +101,12 @@ export const PageButton = styled.button<{ $active?: boolean }>`
   ${({ $active }) =>
     $active &&
     css`
-      border-color: ${adminColors.primary};
       background: ${adminColors.primary};
-      color: #fff;
+      color: ${adminColors.primaryText};
 
       &:hover:not(:disabled) {
-        border-color: ${adminColors.primary};
         background: ${adminColors.primary};
-        color: #fff;
+        color: ${adminColors.primaryText};
       }
     `}
 `

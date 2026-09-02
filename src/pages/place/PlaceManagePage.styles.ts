@@ -683,7 +683,7 @@ export const DetailInlineButton = styled.button`
 
 export const OperatingSummary = styled.div`
   overflow: hidden;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 `
@@ -2163,7 +2163,7 @@ export const OperatingCoordinateComparison = styled.div`
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
@@ -2271,7 +2271,7 @@ export const OperatingDangerNotice = styled.p`
 export const OperatingInfoNotice = styled.p`
   margin: 0;
   padding: 11px 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
@@ -2914,7 +2914,7 @@ export const DeleteConfirmDescription = styled.p`
 export const DeleteConfirmMeta = styled.p`
   margin: 14px 0 0;
   padding: 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};

@@ -21,7 +21,7 @@ export const ImageLink = styled.a`
   display: block;
   overflow: hidden;
   aspect-ratio: 1;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 

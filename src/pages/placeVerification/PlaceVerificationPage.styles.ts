@@ -224,9 +224,15 @@ export const CardList = styled.div`
 export const RecordCard = styled.article<{ $selected?: boolean }>`
   min-width: 0;
   padding: 14px;
-  border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
+  border: 0;
   border-radius: 8px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surfaceLow)};
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      box-shadow: 0 0 0 2px ${neutral.primary};
+    `}
 `
 
 export const RecordButton = styled.button<{ $selected?: boolean }>`
@@ -441,7 +447,7 @@ export const MetricGrid = styled.div`
 export const MetricCard = styled.div`
   min-width: 0;
   padding: 13px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
@@ -523,7 +529,7 @@ export const PolicyRow = styled.div`
   gap: 10px;
   align-items: end;
   padding: 13px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 

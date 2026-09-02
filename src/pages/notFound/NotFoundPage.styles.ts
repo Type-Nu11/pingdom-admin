@@ -76,7 +76,7 @@ export const Description = styled.p`
 export const RequestPath = styled.p`
   margin: 22px 0 0;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};

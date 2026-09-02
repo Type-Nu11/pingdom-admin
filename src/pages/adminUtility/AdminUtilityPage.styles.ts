@@ -260,7 +260,7 @@ export const AdvancedFilterPanel = styled.div`
   gap: 10px;
   align-items: end;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
@@ -281,7 +281,7 @@ export const DetailFilterPanel = styled.div`
   align-items: end;
   min-width: 0;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
@@ -603,7 +603,7 @@ export const DatePickerTimeOptions = styled.div`
   gap: 2px;
   overflow-y: auto;
   padding: 2px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 7px;
   background: ${neutral.surfaceLow};
 
@@ -1150,7 +1150,7 @@ export const ActionPanel = styled.form`
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 `
@@ -1464,7 +1464,7 @@ export const ConfirmMeta = styled.div`
   gap: 6px;
   margin-top: 14px;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.text};

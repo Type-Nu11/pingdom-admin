@@ -695,7 +695,7 @@ export const ModalSummary = styled.dl`
 export const ModalSummaryItem = styled.div`
   min-width: 0;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 

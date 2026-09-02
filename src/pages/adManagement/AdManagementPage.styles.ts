@@ -4,7 +4,7 @@ import { adminColors, radius } from '../../styles/theme'
 export const BannerPreview = styled.figure`
   overflow: hidden;
   margin: 16px 0 0;
-  border: 1px solid ${adminColors.border};
+  border: 0;
   border-radius: 8px;
   background: ${adminColors.surfaceLow};
 `

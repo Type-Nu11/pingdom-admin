@@ -832,18 +832,17 @@ export const SummaryCard = styled.button<{ $tone?: 'neutral' | 'action' }>`
   align-items: flex-start;
   gap: 0;
   padding: 12px 14px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 10px;
-  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
   color: ${neutral.text};
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 
   &:hover {
-    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
-    background: ${neutral.surface};
+    background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
   }
 
   &:focus-visible {
@@ -937,18 +936,17 @@ export const OperationalMetricCard = styled.button<{ $tone?: 'neutral' | 'action
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid ${neutral.border};
+  border: 0;
   border-radius: 9px;
-  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
   color: ${neutral.text};
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: background 160ms ease, box-shadow 160ms ease;
 
   &:hover {
-    border-color: ${({ $tone }) => ($tone === 'action' ? neutral.warning : neutral.primary)};
-    background: ${neutral.surfaceLow};
+    background: ${({ $tone }) => ($tone === 'action' ? neutral.warningTint : neutral.primaryTint)};
   }
 
   &:focus-visible {

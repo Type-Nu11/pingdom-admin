@@ -33,7 +33,9 @@ export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
   return axios.isAxiosError(error)
 }
 
-const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_BASE_URL
+const API_BASE_URL = import.meta.env.DEV
+  ? '/api'
+  : import.meta.env.VITE_PUBLIC_API_BASE_URL
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
 let tokenRefreshRequest: Promise<RefreshTokenResponse> | null = null
 

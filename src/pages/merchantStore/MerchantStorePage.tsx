@@ -5,12 +5,11 @@ import { useMerchantStore } from '../../hooks/useMerchantStore'
 import type {
   MerchantOfferStatus,
   MerchantOwnerProfileStatus,
-  ReservableProductStatus,
 } from '../../types/merchantStore.types'
 import * as S from './MerchantStorePage.styles'
 
 const OWNER_STATUS: Record<MerchantOwnerProfileStatus, { label: string; tone: 'active' | 'pending' | 'inactive' }> = {
-  ACTIVE: { label: '운영 가능', tone: 'active' },
+  ACTIVE: { label: '상점주 계정 활성', tone: 'active' },
   PENDING: { label: '승인 대기', tone: 'pending' },
   REJECTED: { label: '승인 거절', tone: 'inactive' },
   REVOKED: { label: '운영 중지', tone: 'inactive' },
@@ -20,11 +19,6 @@ const OFFER_STATUS: Record<MerchantOfferStatus, string> = {
   DRAFT: '초안',
   PUBLISHED: '공개 중',
   CLOSED: '종료',
-}
-
-const PRODUCT_STATUS: Record<ReservableProductStatus, string> = {
-  ACTIVE: '예약 가능',
-  INACTIVE: '비활성',
 }
 
 function formatDate(value: string) {
@@ -39,6 +33,14 @@ function formatDate(value: string) {
     .format(date)
     .replace(/\./g, '')
     .replace(/\s/g, '.')
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  const pad = (number: number) => String(number).padStart(2, '0')
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function formatCount(value: number) {
@@ -140,7 +142,7 @@ function MerchantStorePage() {
   const ownerStatus = store.profile ? OWNER_STATUS[store.profile.status] : null
   const activeCampaignCount = store.campaigns.filter((campaign) => campaign.status === 'PUBLISHED').length
   const activeOfferCount = store.offers.filter((offer) => offer.status === 'PUBLISHED').length
-  const activeProductCount = store.reservableProducts.filter((product) => product.status === 'ACTIVE').length
+  const activeAvailabilityCount = store.reservationAvailabilities.filter((availability) => availability.status === 'ACTIVE').length
   const visibleNoticeCount = store.operatingNotices.filter((notice) => notice.visibleNow).length
 
   const handleLogout = () => {
@@ -210,11 +212,11 @@ function MerchantStorePage() {
                 <S.StoreSummary>
                   <div>
                     <S.SummaryTitleRow>
-                      <S.StoreName>{store.profile.businessName}</S.StoreName>
+                      <S.StoreName>사업자 상호: {store.profile.businessName}</S.StoreName>
                       {ownerStatus ? <S.StatusBadge $tone={ownerStatus.tone}>{ownerStatus.label}</S.StatusBadge> : null}
                     </S.SummaryTitleRow>
                     <S.StoreMeta>
-                      연결 장소 #{store.selectedPlaceId}
+                      연결 장소: {store.profile.displayName} (#{store.selectedPlaceId})
                       {store.profile.contactEmail ? ` · ${store.profile.contactEmail}` : ''}
                     </S.StoreMeta>
                   </div>
@@ -223,7 +225,7 @@ function MerchantStorePage() {
                 <S.Metrics aria-label="가게 운영 현황">
                   <S.Metric><S.MetricIcon aria-hidden="true">campaign</S.MetricIcon><S.MetricContent><span>공개 중인 이벤트</span><strong>{activeCampaignCount}개</strong></S.MetricContent></S.Metric>
                   <S.Metric><S.MetricIcon aria-hidden="true">local_offer</S.MetricIcon><S.MetricContent><span>공개 중인 혜택</span><strong>{activeOfferCount}개</strong></S.MetricContent></S.Metric>
-                  <S.Metric><S.MetricIcon aria-hidden="true">calendar_month</S.MetricIcon><S.MetricContent><span>예약 가능한 상품</span><strong>{activeProductCount}개</strong></S.MetricContent></S.Metric>
+                  <S.Metric><S.MetricIcon aria-hidden="true">calendar_month</S.MetricIcon><S.MetricContent><span>예약 가능한 시간</span><strong>{activeAvailabilityCount}개</strong></S.MetricContent></S.Metric>
                 </S.Metrics>
 
                 <S.PerformanceSection aria-labelledby="merchant-performance-title">
@@ -284,8 +286,8 @@ function MerchantStorePage() {
                     </S.Section>
 
                     <S.Section>
-                      <S.SectionHeading><div><S.SectionTitle>예약 상품</S.SectionTitle><S.SectionDescription>현재 고객이 예약할 수 있는 상품입니다.</S.SectionDescription></div></S.SectionHeading>
-                      {store.reservableProducts.length === 0 ? <S.Empty>등록된 예약 상품이 없습니다.</S.Empty> : <S.ResourceList>{store.reservableProducts.slice(0, 4).map((product) => <S.ResourceRow key={product.id}><S.ResourceTop><S.ResourceTitle title={product.name}>{product.name}</S.ResourceTitle><S.ResourceBadge $active={product.status === 'ACTIVE'}>{PRODUCT_STATUS[product.status]}</S.ResourceBadge></S.ResourceTop><S.ResourceMeta>{product.productType === 'GENERAL' ? '일반 예약' : product.productType === 'TICKET' ? '티켓' : '클래스'}</S.ResourceMeta></S.ResourceRow>)}</S.ResourceList>}
+                      <S.SectionHeading><div><S.SectionTitle>예약 시간</S.SectionTitle><S.SectionDescription>고객이 선택할 수 있는 예약 시간과 잔여 인원입니다.</S.SectionDescription></div></S.SectionHeading>
+                      {store.reservationAvailabilities.length === 0 ? <S.Empty>등록된 예약 시간이 없습니다.</S.Empty> : <S.ResourceList>{store.reservationAvailabilities.slice(0, 4).map((availability) => <S.ResourceRow key={availability.id}><S.ResourceTop><S.ResourceTitle title={`${formatDateTime(availability.startsAt)} - ${formatDateTime(availability.endsAt)}`}>{formatDateTime(availability.startsAt)} - {formatDateTime(availability.endsAt)}</S.ResourceTitle><S.ResourceBadge $active={availability.status === 'ACTIVE'}>{availability.status === 'ACTIVE' ? '예약 가능' : '비활성'}</S.ResourceBadge></S.ResourceTop><S.ResourceMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.ResourceMeta></S.ResourceRow>)}</S.ResourceList>}
                     </S.Section>
 
                     <S.Section>

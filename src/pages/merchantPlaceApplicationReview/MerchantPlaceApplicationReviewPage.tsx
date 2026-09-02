@@ -103,14 +103,21 @@ function formatLocalTime(value: unknown) {
   return '시간 미입력'
 }
 
-function formatOperatingDays(days: MerchantPlaceApplicationNewPlace['operatingDays']) {
-  if (!days?.length) return '등록된 영업 시간 정보가 없습니다.'
-  return days.map((day) => {
-    const label = DAY_LABELS[day.dayOfWeek] ?? day.dayOfWeek
-    if (day.status === 'CLOSED') return `${label} 휴무`
-    if (day.status === 'OPEN_24_HOURS') return `${label} 24시간 운영`
-    return `${label} ${formatLocalTime(day.opensAt)}-${formatLocalTime(day.closesAt)}`
-  }).join('\n')
+function formatOperatingDay(day: NonNullable<MerchantPlaceApplicationNewPlace['operatingDays']>[number]) {
+  if (day.status === 'CLOSED') return '휴무'
+  if (day.status === 'OPEN_24_HOURS') return '24시간 운영'
+  return `${formatLocalTime(day.opensAt)} - ${formatLocalTime(day.closesAt)}`
+}
+
+function OperatingHours({ days }: { days: MerchantPlaceApplicationNewPlace['operatingDays'] }) {
+  if (!days?.length) return <Form.RecordDescription>등록된 영업 시간 정보가 없습니다.</Form.RecordDescription>
+
+  return <S.OperatingHoursList>
+    {days.map((day) => <S.OperatingHoursItem key={day.dayOfWeek}>
+      <span>{DAY_LABELS[day.dayOfWeek] ?? day.dayOfWeek}</span>
+      <strong>{formatOperatingDay(day)}</strong>
+    </S.OperatingHoursItem>)}
+  </S.OperatingHoursList>
 }
 
 function getApplicationIdFromNavigationState(state: unknown) {
@@ -251,7 +258,7 @@ function ApplicationDetail({ application, attachments, attachmentErrorMessage, d
     <Form.RecordHeader><div><Form.RecordTitle>{application.placeName || newPlace?.placeName || application.businessName || `장소 신청 #${application.id}`}</Form.RecordTitle><Form.RecordMeta>{TYPE_LABELS[application.applicationType]} · 신청자 #{application.applicantUserId}</Form.RecordMeta></div><Form.StatusBadge $tone={statusTone(application.status)}>{STATUS_LABELS[application.status]}</Form.StatusBadge></Form.RecordHeader>
     <Form.Section><Form.SectionTitle>신청자 정보</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>사업자명</dt><dd>{application.businessName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>법적 이름</dt><dd>{application.legalName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>상점 표시명</dt><dd>{application.merchantDisplayName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>상점 연락처</dt><dd>{application.merchantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>이메일</dt><dd>{application.merchantContactEmail || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>접수 시각</dt><dd>{formatDate(application.submittedAt ?? application.createdAt)}</dd></Form.DetailItem><Form.DetailItem><dt>검토 시각</dt><dd>{formatDate(application.reviewedAt)}</dd></Form.DetailItem><Form.DetailItem><dt>승인 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid></Form.Section>
     {application.merchantDescription ? <Form.Section><Form.SectionTitle>상점 소개</Form.SectionTitle><S.Reason>{application.merchantDescription}</S.Reason></Form.Section> : null}
-    {application.applicationType === 'NEW_PLACE' ? <Form.Section><Form.SectionTitle>신규 장소 정보</Form.SectionTitle>{newPlace ? <><Form.DetailGrid><Form.DetailItem><dt>장소명</dt><dd>{newPlace.placeName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>카테고리</dt><dd>{CATEGORY_LABELS[newPlace.category] ?? newPlace.category}</dd></Form.DetailItem><Form.DetailItem><dt>도로명 주소</dt><dd>{newPlace.roadAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>지번 주소</dt><dd>{newPlace.jibunAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>우편번호</dt><dd>{newPlace.postalCode || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>좌표</dt><dd>{formatCoordinates(newPlace.latitude, newPlace.longitude)}</dd></Form.DetailItem><Form.DetailItem><dt>사업장 연락처</dt><dd>{newPlace.businessContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>신청자 연락처</dt><dd>{newPlace.applicantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>시간대</dt><dd>{newPlace.timezone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>태그</dt><dd>{tags.length ? tags.map((tag) => TAG_LABELS[tag] ?? tag).join(' · ') : '등록 정보 없음'}</dd></Form.DetailItem></Form.DetailGrid>{newPlace.description ? <Form.Section><Form.SectionTitle>장소 소개</Form.SectionTitle><S.Reason>{newPlace.description}</S.Reason></Form.Section> : null}<Form.Section><Form.SectionTitle>영업 시간</Form.SectionTitle><S.Reason>{formatOperatingDays(newPlace.operatingDays)}</S.Reason></Form.Section></> : <Form.RecordDescription>이 신청의 신규 장소 정보는 서버 응답에 없습니다.</Form.RecordDescription>}</Form.Section> : null}
+    {application.applicationType === 'NEW_PLACE' ? <Form.Section><Form.SectionTitle>신규 장소 정보</Form.SectionTitle>{newPlace ? <><Form.DetailGrid><Form.DetailItem><dt>장소명</dt><dd>{newPlace.placeName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>카테고리</dt><dd>{CATEGORY_LABELS[newPlace.category] ?? newPlace.category}</dd></Form.DetailItem><Form.DetailItem><dt>도로명 주소</dt><dd>{newPlace.roadAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>지번 주소</dt><dd>{newPlace.jibunAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>우편번호</dt><dd>{newPlace.postalCode || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>좌표</dt><dd>{formatCoordinates(newPlace.latitude, newPlace.longitude)}</dd></Form.DetailItem><Form.DetailItem><dt>사업장 연락처</dt><dd>{newPlace.businessContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>신청자 연락처</dt><dd>{newPlace.applicantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>시간대</dt><dd>{newPlace.timezone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>태그</dt><dd>{tags.length ? tags.map((tag) => TAG_LABELS[tag] ?? tag).join(' · ') : '등록 정보 없음'}</dd></Form.DetailItem></Form.DetailGrid>{newPlace.description ? <Form.Section><Form.SectionTitle>장소 소개</Form.SectionTitle><S.Reason>{newPlace.description}</S.Reason></Form.Section> : null}<Form.Section><Form.SectionTitle>영업 시간</Form.SectionTitle><OperatingHours days={newPlace.operatingDays} /></Form.Section></> : <Form.RecordDescription>이 신청의 신규 장소 정보는 서버 응답에 없습니다.</Form.RecordDescription>}</Form.Section> : null}
     {application.applicationType === 'EXISTING_PLACE_CLAIM' ? <Form.Section><Form.SectionTitle>기존 장소 운영 신청</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>대상 장소</dt><dd>{application.existingPlaceId ? `장소 #${application.existingPlaceId}` : '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>심사 완료 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid>{application.claimReason ? <S.Reason>{application.claimReason}</S.Reason> : <Form.RecordDescription>등록된 신청 사유가 없습니다.</Form.RecordDescription>}</Form.Section> : null}
     <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
     {application.reviewReason ? <Form.Section><Form.SectionTitle>심사 사유</Form.SectionTitle><S.Reason>{application.reviewReason}</S.Reason></Form.Section> : null}

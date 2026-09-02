@@ -50,6 +50,7 @@ export const AttachmentButton = styled.button`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 0 10px;
   border: 0;
@@ -59,6 +60,14 @@ export const AttachmentButton = styled.button`
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  line-height: 1;
+
+  > span {
+    display: block;
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
 
   &:hover:not(:disabled) {
     background: ${colors.primaryTint};
@@ -67,6 +76,38 @@ export const AttachmentButton = styled.button`
   &:disabled {
     cursor: default;
     opacity: 0.55;
+  }
+`
+
+export const OperatingHoursList = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 12px;
+`
+
+export const OperatingHoursItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: ${colors.surfaceLow};
+
+  span {
+    flex: 0 0 16px;
+    color: ${colors.muted};
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    color: ${colors.strongText};
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
   }
 `
 

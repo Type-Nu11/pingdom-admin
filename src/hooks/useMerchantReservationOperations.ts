@@ -129,7 +129,7 @@ export function useMerchantReservationOperations() {
   }, [fetchReservations])
 
   const cancelReservation = useCallback(async (reservation: MerchantReservation) => {
-    if (reservation.status !== 'PENDING' || actionRef.current !== null) return null
+    if (reservation.status !== 'CONFIRMED' || actionRef.current !== null) return null
     actionRef.current = reservation.id
     setActiveReservationId(reservation.id)
     setActiveAction('cancel')

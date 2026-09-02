@@ -42,6 +42,13 @@ function getMerchantStoreErrorMessage(error: unknown, fallbackMessage: string) {
   })
 }
 
+function isMissingPlaceInformation(error: unknown) {
+  return (
+    isApiError<MerchantStoreErrorResponse>(error) &&
+    error.response?.data?.code === 'PLACE_INFORMATION_NOT_FOUND'
+  )
+}
+
 function emptyOptionalValue(value: string) {
   const trimmed = value.trim()
   return trimmed || null
@@ -145,7 +152,8 @@ export function useMerchantStore() {
       if (!mountedRef.current) return
 
       const failures = [informationResult, campaignsResult, offersResult, productsResult, noticesResult].filter(
-        (result): result is PromiseRejectedResult => result.status === 'rejected'
+        (result): result is PromiseRejectedResult =>
+          result.status === 'rejected' && !isMissingPlaceInformation(result.reason)
       )
 
       if (informationResult.status === 'fulfilled') {

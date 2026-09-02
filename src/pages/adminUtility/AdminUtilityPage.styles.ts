@@ -816,7 +816,7 @@ export const SectionHeader = styled.header`
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 60px;
+  min-height: 64px;
   padding: 14px 16px;
   border-bottom: 1px solid ${neutral.border};
 `

@@ -1,10 +1,10 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 export const Panel = styled.section`
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  background: ${adminColors.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${adminColors.surfaceLow};
 `
 
 export const Row = styled.div`
@@ -53,16 +53,16 @@ export const Heading = styled.div`
 export const Title = styled.span`
   margin: 0;
   color: ${adminColors.strongText};
-  font-size: 13px;
-  font-weight: 750;
-  line-height: 1.35;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const Description = styled.p`
   margin: 0;
   color: ${adminColors.muted};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
 `
 
 export const Controls = styled.div`

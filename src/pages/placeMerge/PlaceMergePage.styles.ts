@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -43,15 +43,15 @@ export const Eyebrow = styled.p`
   margin: 0 0 6px;
   color: ${neutral.primary};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const PageTitle = styled.h1`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 24px;
-  font-weight: 800;
-  line-height: 1.25;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const PageDescription = styled.p`
@@ -59,7 +59,7 @@ export const PageDescription = styled.p`
   margin: 10px 0 0;
   color: ${neutral.muted};
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.3;
 `
 
 export const HeaderActions = styled.div`
@@ -85,16 +85,15 @@ export const HeaderButton = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 0 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -114,9 +113,9 @@ export const Notice = styled.p<{ $variant?: 'error' | 'success' }>`
     $variant === 'success' ? neutral.successTint : neutral.errorTint};
   color: ${({ $variant }) =>
     $variant === 'success' ? neutral.successText : neutral.error};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const Workspace = styled.div`
@@ -135,9 +134,9 @@ export const Panel = styled.section`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const PanelHeader = styled.header`
@@ -154,21 +153,21 @@ export const PanelTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const PanelDescription = styled.p`
   margin: 4px 0 0;
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
 `
 
 export const PanelCount = styled.span`
   flex-shrink: 0;
   color: ${neutral.primary};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
 `
 
 export const ScrollArea = styled.div`
@@ -190,21 +189,18 @@ export const GroupButton = styled.button<{ $selected?: boolean }>`
   flex-direction: column;
   gap: 8px;
   padding: 13px;
-  border: 1px solid
-    ${({ $selected }) => ($selected ? 'transparent' : neutral.border)};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.md};
   background: ${({ $selected }) =>
-    $selected ? neutral.primaryTint : neutral.surface};
+    $selected ? neutral.primaryTint : neutral.surfaceLow};
   color: ${neutral.text};
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
     background 160ms ease,
     box-shadow 160ms ease;
 
   &:hover {
-    border-color: transparent;
     background: ${neutral.primaryTint};
   }
 
@@ -216,7 +212,7 @@ export const GroupButton = styled.button<{ $selected?: boolean }>`
   ${({ $selected }) =>
     $selected &&
     css`
-      box-shadow: 0 0 0 3px ${neutral.primaryTint};
+      box-shadow: 0 0 0 2px ${neutral.primary};
     `}
 `
 
@@ -229,14 +225,14 @@ export const GroupTopLine = styled.span`
 
 export const GroupLabel = styled.strong`
   color: ${neutral.strongText};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
 `
 
 export const GroupCount = styled.span`
   color: ${neutral.primary};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   white-space: nowrap;
 `
 
@@ -244,7 +240,7 @@ export const GroupReasons = styled.span`
   overflow: hidden;
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -265,12 +261,12 @@ export const DetailNotice = styled.div`
   background: ${neutral.warningTint};
   color: ${neutral.warningText};
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.3;
 
   strong {
     display: block;
     margin-bottom: 2px;
-    font-weight: 800;
+    font-weight: 700;
   }
 `
 
@@ -305,8 +301,8 @@ export const PlaceCardHeader = styled.div`
 export const PlaceCardLabel = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
 `
 
 export const PlaceCardTitle = styled.h3`
@@ -314,8 +310,8 @@ export const PlaceCardTitle = styled.h3`
   margin: 4px 0 0;
   color: ${neutral.strongText};
   font-size: 16px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-weight: 700;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -330,7 +326,7 @@ export const StatusTag = styled.span<{ $variant?: 'target' | 'source' | 'warning
         : $variant === 'warning'
           ? 'transparent'
           : neutral.borderDark};
-  border-radius: 999px;
+  border-radius: ${radius.pill};
   background: ${({ $variant }) =>
     $variant === 'target'
       ? neutral.surface
@@ -343,8 +339,8 @@ export const StatusTag = styled.span<{ $variant?: 'target' | 'source' | 'warning
       : $variant === 'warning'
         ? neutral.warningText
         : neutral.muted};
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 `
 
@@ -363,7 +359,7 @@ export const MetaRow = styled.div`
 
   dt {
     color: ${neutral.softText};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
 
@@ -372,7 +368,7 @@ export const MetaRow = styled.div`
     margin: 0;
     color: ${neutral.text};
     font-size: 12px;
-    line-height: 1.4;
+    line-height: 1.3;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -386,7 +382,7 @@ export const SectionTitle = styled.h3`
   margin: 0 0 9px;
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const CandidateList = styled.div`
@@ -402,27 +398,31 @@ export const CandidateButton = styled.button<{ $selected?: boolean }>`
   gap: 12px;
   align-items: center;
   padding: 11px 12px;
-  border: 1px solid
-    ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.md};
   background: ${({ $selected }) =>
-    $selected ? neutral.primaryTint : neutral.surface};
+    $selected ? neutral.primaryTint : neutral.surfaceLow};
   color: ${neutral.text};
   text-align: left;
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
   }
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      box-shadow: 0 0 0 2px ${neutral.primary};
+    `}
 `
 
 export const CandidateName = styled.span`
   display: block;
   overflow: hidden;
   color: ${neutral.strongText};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -432,14 +432,14 @@ export const CandidateMeta = styled.span`
   overflow: hidden;
   margin-top: 3px;
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
 
 export const CandidateDistance = styled.span`
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
 `
@@ -463,7 +463,7 @@ export const ActionHint = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
 `
 
 export const PrimaryButton = styled.button`
@@ -474,12 +474,12 @@ export const PrimaryButton = styled.button`
   gap: 7px;
   flex-shrink: 0;
   padding: 0 16px;
-  border: 1px solid ${neutral.primary};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.pill};
   background: ${neutral.primary};
   color: ${neutral.primaryText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -499,16 +499,15 @@ export const SecondaryButton = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 0 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }
@@ -538,15 +537,15 @@ export const EmptyState = styled.div`
   p {
     margin: 0;
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.3;
   }
 `
 
 export const EmptyStateCard = styled(EmptyState)`
   min-height: 220px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const EmptyStateActions = styled.div`
@@ -561,9 +560,9 @@ export const SelectionPrompt = styled(EmptyStateCard)`
 `
 
 export const HistoryPanel = styled.section`
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const HistoryList = styled.div`
@@ -588,15 +587,15 @@ export const HistoryItem = styled.article`
 export const HistoryTitle = styled.strong`
   display: block;
   color: ${neutral.strongText};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
 `
 
 export const HistoryMeta = styled.p`
   margin: 5px 0 0;
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const HistoryActions = styled.div`
@@ -643,7 +642,7 @@ export const ModalTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const ModalCloseButton = styled.button`
@@ -654,7 +653,7 @@ export const ModalCloseButton = styled.button`
   justify-content: center;
   flex-shrink: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -679,7 +678,7 @@ export const ModalWarning = styled.div`
   background: ${neutral.warningTint};
   color: ${neutral.warningText};
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.3;
 `
 
 export const ModalSummary = styled.dl`
@@ -696,13 +695,13 @@ export const ModalSummary = styled.dl`
 export const ModalSummaryItem = styled.div`
   min-width: 0;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
   dt {
     color: ${neutral.muted};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
 
@@ -711,7 +710,7 @@ export const ModalSummaryItem = styled.div`
     margin: 4px 0 0;
     color: ${neutral.strongText};
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
   }

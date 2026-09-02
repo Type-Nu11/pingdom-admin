@@ -396,17 +396,17 @@ const UnreadCount = styled.span`
   position: absolute;
   top: 1px;
   right: 0;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 5px;
   border: 2px solid ${adminColors.surface};
   border-radius: 999px;
   background: ${adminColors.primary};
   color: ${adminColors.primaryText};
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
 `
@@ -449,7 +449,7 @@ const NotificationPanelHeading = styled.div`
 
   strong {
     color: ${adminColors.strongText};
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
   }
 `
@@ -457,7 +457,7 @@ const NotificationPanelHeading = styled.div`
 const NotificationPanelCount = styled.span`
   color: ${adminColors.primary};
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 `
 
@@ -476,7 +476,7 @@ const MarkAllButton = styled.button`
   color: ${adminColors.primary};
   font: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -535,7 +535,7 @@ const NotificationSectionHeader = styled.div`
 
   span {
     color: ${adminColors.primary};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
 `
@@ -586,12 +586,12 @@ const PendingWorkText = styled.span`
 
   strong {
     color: ${adminColors.strongText};
-    font-size: 13px;
+    font-size: 14px;
   }
 
   span {
     color: ${adminColors.muted};
-    font-size: 11px;
+    font-size: 12px;
   }
 `
 
@@ -605,7 +605,7 @@ const PendingWorkCount = styled.span`
   border-radius: 999px;
   background: ${adminColors.primaryTint};
   color: ${adminColors.primary};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 `
 
@@ -654,7 +654,7 @@ const NotificationTitle = styled.strong`
   min-width: 0;
   overflow: hidden;
   color: ${adminColors.strongText};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -674,7 +674,7 @@ const NotificationBody = styled.span`
   overflow: hidden;
   color: ${adminColors.muted};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -683,7 +683,7 @@ const NotificationDate = styled.time`
   display: block;
   margin-top: 7px;
   color: ${adminColors.softText};
-  font-size: 11px;
+  font-size: 12px;
 `
 
 const NotificationState = styled.div`
@@ -705,13 +705,13 @@ const NotificationState = styled.div`
 
   strong {
     color: ${adminColors.strongText};
-    font-size: 13px;
+    font-size: 14px;
   }
 
   span {
     max-width: 260px;
     font-size: 12px;
-    line-height: 1.45;
+    line-height: 1.3;
   }
 `
 
@@ -725,7 +725,7 @@ const RetryButton = styled.button`
   color: ${adminColors.primary};
   font: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -739,7 +739,7 @@ const UpdatingText = styled.p`
   margin: 0;
   padding: 8px 16px 10px;
   color: ${adminColors.softText};
-  font-size: 11px;
+  font-size: 12px;
   text-align: right;
 `
 
@@ -752,11 +752,11 @@ const InlineError = styled.div`
   border-bottom: 1px solid ${adminColors.borderSoft};
   background: ${adminColors.errorTint};
   color: ${adminColors.error};
-  font-size: 11px;
+  font-size: 12px;
 
   span {
     min-width: 0;
-    line-height: 1.4;
+    line-height: 1.3;
   }
 
   ${RetryButton} {

@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 export const DropdownRoot = styled.div<{ $width?: string }>`
   position: relative;
@@ -20,12 +20,12 @@ export const DropdownTrigger = styled.button`
   justify-content: space-between;
   gap: 6px;
   padding: 0 10px 0 12px;
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.md};
   outline: 1px solid transparent;
-  background: ${adminColors.surface};
+  background: ${adminColors.surfaceLow};
   color: ${adminColors.text};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -42,13 +42,11 @@ export const DropdownTrigger = styled.button`
   }
 
   &:hover:not(:disabled) {
-    border-color: ${adminColors.primarySoft};
     background: ${adminColors.primaryTint};
     color: ${adminColors.primary};
   }
 
   &:focus-visible {
-    border-color: ${adminColors.primary};
     outline-color: ${adminColors.primary};
     box-shadow: 0 0 0 3px ${adminColors.primaryTint};
   }
@@ -128,8 +126,8 @@ export const DropdownOption = styled.button<{
   border-radius: 7px;
   background: transparent;
   color: ${adminColors.text};
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
   transition:
@@ -153,6 +151,6 @@ export const DropdownOption = styled.button<{
     css`
       background: ${adminColors.primaryTint};
       color: ${adminColors.primary};
-      font-weight: 800;
+      font-weight: 700;
     `}
 `

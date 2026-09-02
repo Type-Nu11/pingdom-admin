@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -81,9 +81,9 @@ export const AuditActionCell = styled.span`
 export const AuditActionTitle = styled.strong`
   overflow: hidden;
   color: ${neutral.strongText};
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -94,7 +94,7 @@ export const AuditTargetText = styled.span`
   align-items: center;
   gap: 6px;
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.3;
 
   > span:last-child {
@@ -113,11 +113,11 @@ export const AuditTypeTag = styled.span`
   padding: 1px 7px;
   overflow: hidden;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -144,7 +144,7 @@ export const AuditActorCell = styled.span`
 
   span {
     color: ${neutral.softText};
-    font-size: 10px;
+    font-size: 12px;
   }
 
   @media (max-width: 680px) {
@@ -154,7 +154,7 @@ export const AuditActorCell = styled.span`
 
 export const AuditTime = styled.time`
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 `
@@ -163,18 +163,18 @@ export const PaginationPageButton = styled.button<{ $active?: boolean }>`
   min-width: 32px;
   min-height: 32px;
   padding: 0 8px;
-  border: 1px solid ${({ $active }) => ($active ? neutral.primary : neutral.border)};
-  border-radius: 6px;
-  background: ${({ $active }) => ($active ? neutral.primary : neutral.surface)};
-  color: ${({ $active }) => ($active ? '#fff' : neutral.text)};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${({ $active }) => ($active ? neutral.primary : neutral.surfaceLow)};
+  color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${neutral.primary};
-    color: ${({ $active }) => ($active ? '#fff' : neutral.primary)};
+    background: ${({ $active }) => ($active ? neutral.primary : neutral.primaryTint)};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primary)};
   }
 
   &:disabled {
@@ -193,8 +193,8 @@ export const AuditDetailHeader = styled.div`
 export const AuditDetailMeta = styled.p`
   margin: 5px 0 0;
   color: ${neutral.muted};
-  font-size: 11px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.3;
 `
 
 export const AuditStateDetails = styled.details`
@@ -206,8 +206,8 @@ export const AuditStateDetails = styled.details`
     align-items: center;
     min-height: 46px;
     color: ${neutral.text};
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
   }
 
@@ -224,8 +224,8 @@ export const AuditStateContent = styled.pre`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  line-height: 1.55;
+  font-size: 12px;
+  line-height: 1.3;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 `

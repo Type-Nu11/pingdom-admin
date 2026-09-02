@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -35,7 +35,7 @@ export const IconBadge = styled.span`
   justify-content: center;
   margin-bottom: 16px;
   border: 1px solid ${neutral.primarySoft};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
   font-family: 'Material Symbols Outlined';
@@ -51,53 +51,53 @@ export const IconBadge = styled.span`
 export const StatusCode = styled.p`
   margin: 0 0 8px;
   color: ${neutral.primary};
-  font-size: 36px;
-  font-weight: 800;
-  line-height: 1.1;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const Title = styled.h1`
   margin: 0 0 12px;
   color: ${neutral.strongText};
   font-size: 24px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const Description = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 14px;
-  font-weight: 600;
-  line-height: 1.6;
+  font-weight: 500;
+  line-height: 1.3;
   word-break: keep-all;
 `
 
 export const RequestPath = styled.p`
   margin: 22px 0 0;
   padding: 12px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
   text-align: left;
 
   span {
     display: block;
     margin-bottom: 4px;
     color: ${neutral.softText};
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
   }
 
   strong {
     display: block;
     overflow-wrap: anywhere;
     color: ${neutral.text};
-    font-size: 13px;
+    font-size: 14px;
   }
 `
 
@@ -118,17 +118,16 @@ export const BackButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  border: 1px solid ${neutral.primary};
-  border-radius: 8px;
+  border: 0;
+  border-radius: ${radius.pill};
   background: ${neutral.primary};
   color: ${neutral.primaryText};
   font-family: inherit;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    border-color: ${neutral.primaryHover};
     background: ${neutral.primaryHover};
   }
 
@@ -144,15 +143,14 @@ export const NavLink = styled(Link)`
   justify-content: center;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 
   &:hover {
-    border-color: ${neutral.primarySoft};
     background: ${neutral.primaryTint};
     color: ${neutral.primary};
   }

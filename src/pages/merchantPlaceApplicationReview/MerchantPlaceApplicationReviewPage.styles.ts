@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -32,7 +32,7 @@ export const AttachmentRow = styled.article`
     overflow: hidden;
     color: ${colors.strongText};
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -40,8 +40,8 @@ export const AttachmentRow = styled.article`
   span {
     margin-top: 4px;
     color: ${colors.muted};
-    font-size: 11px;
-    line-height: 1.45;
+    font-size: 12px;
+    line-height: 1.3;
   }
 `
 
@@ -52,16 +52,15 @@ export const AttachmentButton = styled.button`
   align-items: center;
   gap: 5px;
   padding: 0 10px;
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
-  background: ${colors.surface};
+  border: 0;
+  border-radius: ${radius.pill};
+  background: ${colors.surfaceLow};
   color: ${colors.primary};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: ${colors.primarySoft};
     background: ${colors.primaryTint};
   }
 
@@ -79,7 +78,7 @@ export const Reason = styled.p`
   background: ${colors.surfaceLow};
   color: ${colors.text};
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.3;
   white-space: pre-wrap;
 `
 
@@ -90,9 +89,9 @@ export const FilterBar = styled.div`
   gap: 16px;
   flex-wrap: wrap;
   padding: 14px 16px;
-  border: 1px solid ${colors.borderSoft};
-  border-radius: 10px;
-  background: ${colors.surface};
+  border: 0;
+  border-radius: ${radius.lg};
+  background: ${colors.surfaceLow};
 `
 
 export const FilterTabs = styled.div`
@@ -111,7 +110,7 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
   color: ${({ $active }) => ($active ? colors.primaryText : colors.muted)};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -140,11 +139,11 @@ export const DangerButton = styled.button`
   justify-content: center;
   padding: 0 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${colors.error};
   color: ${colors.primaryText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {

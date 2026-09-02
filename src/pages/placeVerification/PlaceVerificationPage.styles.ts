@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -10,9 +10,9 @@ export const TabList = styled.div`
   overflow-x: auto;
   gap: 6px;
   padding: 5px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const TabButton = styled.button<{ $active?: boolean }>`
@@ -26,8 +26,8 @@ export const TabButton = styled.button<{ $active?: boolean }>`
   border-radius: 7px;
   background: transparent;
   color: ${neutral.muted};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
 
   ${({ $active }) =>
@@ -58,7 +58,7 @@ export const Field = styled.label`
   small {
     color: ${neutral.muted};
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.3;
   }
 `
 
@@ -71,7 +71,7 @@ const inputStyles = css`
   background: ${neutral.surface};
   color: ${neutral.strongText};
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
 
   &:focus {
     border-color: ${neutral.primary};
@@ -197,7 +197,7 @@ export const TextArea = styled.textarea`
   min-height: 96px;
   padding: 11px 12px;
   resize: vertical;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const FormGrid = styled.div`
@@ -224,9 +224,15 @@ export const CardList = styled.div`
 export const RecordCard = styled.article<{ $selected?: boolean }>`
   min-width: 0;
   padding: 14px;
-  border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
+  border: 0;
   border-radius: 8px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surfaceLow)};
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      box-shadow: 0 0 0 2px ${neutral.primary};
+    `}
 `
 
 export const RecordButton = styled.button<{ $selected?: boolean }>`
@@ -272,22 +278,22 @@ export const RecordTitle = styled.strong`
   display: block;
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
-  line-height: 1.45;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const RecordMeta = styled.p`
   margin: 5px 0 0;
   color: ${neutral.muted};
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.3;
 `
 
 export const RecordDescription = styled.p`
   margin: 11px 0 0;
   color: ${neutral.text};
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.3;
   white-space: pre-wrap;
 `
 
@@ -315,7 +321,7 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
           : $tone === 'warning'
             ? neutral.warning
             : neutral.primarySoft};
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${({ $tone }) =>
     $tone === 'success'
       ? neutral.successTint
@@ -332,7 +338,7 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
         : $tone === 'warning'
           ? neutral.warningText
             : neutral.primary};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
 `
@@ -356,7 +362,7 @@ export const DetailItem = styled.div`
 
   dt {
     color: ${neutral.muted};
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
   }
 
@@ -365,7 +371,7 @@ export const DetailItem = styled.div`
     margin: 4px 0 0;
     color: ${neutral.strongText};
     font-size: 12px;
-    line-height: 1.45;
+    line-height: 1.3;
   }
 `
 
@@ -387,7 +393,7 @@ export const SectionTitle = styled.h3`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const InlineActions = styled.div`
@@ -441,14 +447,14 @@ export const MetricGrid = styled.div`
 export const MetricCard = styled.div`
   min-width: 0;
   padding: 13px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 
   span {
     display: block;
     color: ${neutral.muted};
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
   }
 
@@ -457,7 +463,7 @@ export const MetricCard = styled.div`
     margin-top: 5px;
     color: ${neutral.strongText};
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 700;
   }
 `
 
@@ -482,9 +488,9 @@ export const Table = styled.table`
 
   th {
     background: ${neutral.surfaceLow};
-    color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 800;
+    color: ${neutral.neutralText};
+    font-size: 12px;
+    font-weight: 700;
   }
 
   th:first-child,
@@ -513,7 +519,7 @@ export const TableMeta = styled.span`
   max-width: 260px;
   margin-top: 3px;
   color: ${neutral.muted};
-  font-size: 10px;
+  font-size: 12px;
   text-overflow: ellipsis;
 `
 
@@ -523,7 +529,7 @@ export const PolicyRow = styled.div`
   gap: 10px;
   align-items: end;
   padding: 13px;
-  border: 1px solid ${neutral.borderSoft};
+  border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
 

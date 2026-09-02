@@ -14,6 +14,7 @@ import type {
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
+import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
@@ -24,7 +25,7 @@ export function useMerchantPlaceReviews() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [place, setPlace] = useState<MerchantPlaceDetail | null>(null)
   const [reviews, setReviews] = useState<MerchantPlaceReview[]>([])
   const [pageInfo, setPageInfo] = useState({ page: 1, totalElements: 0, totalPages: 0, hasNext: false })
@@ -105,21 +106,20 @@ export function useMerchantPlaceReviews() {
     try {
       const nextProfile = await getMerchantOwnerProfile()
       if (!mountedRef.current) return
-      const firstPlaceId = nextProfile.placeIds[0] ?? null
       setProfile(nextProfile)
-      setSelectedPlaceId(firstPlaceId)
-      if (!firstPlaceId) {
+      const initialPlaceId = syncPlaces(nextProfile.placeIds)
+      if (!initialPlaceId) {
         setStatus('ready')
         return
       }
-      await fetchReviews(firstPlaceId, 1, true)
+      await fetchReviews(initialPlaceId, 1, true)
     } catch (error) {
       if (!mountedRef.current) return
       setStatus('error')
       setErrorMessage(getErrorMessage(error, '리뷰 관리 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 리뷰 관리 초기 조회 실패', error)
     }
-  }, [fetchReviews, getErrorMessage])
+  }, [fetchReviews, getErrorMessage, syncPlaces])
 
   useEffect(() => {
     mountedRef.current = true
@@ -129,11 +129,11 @@ export function useMerchantPlaceReviews() {
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
-    setSelectedPlaceId(placeId)
+    selectSharedPlace(placeId)
     setPlace(null)
     setReviews([])
     void fetchReviews(placeId, 1)
-  }, [fetchReviews, profile?.placeIds, selectedPlaceId])
+  }, [fetchReviews, profile?.placeIds, selectSharedPlace, selectedPlaceId])
 
   const requestDeletion = useCallback(async (review: MerchantPlaceReview, requestReason: string) => {
     if (!selectedPlaceId || review.placeId !== selectedPlaceId || actionRef.current !== null) return null

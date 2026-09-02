@@ -6,7 +6,7 @@ export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
-export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELED'
+export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELED'
 export type MerchantPaymentStatus =
   | 'PROCESSING'
   | 'PAID'
@@ -230,7 +230,7 @@ export interface MerchantReservableProductCreateRequest {
 export interface MerchantAvailability {
   id: number
   placeId: number
-  productId: number
+  productId: number | null
   productType: MerchantReservableProductType
   startsAt: string
   endsAt: string
@@ -258,7 +258,12 @@ export interface MerchantReservation {
   status: MerchantReservationStatus
   createdAt: string
   confirmedAt: string | null
+  reviewedBy: number | null
+  reviewedAt: string | null
+  reviewReason: string | null
+  rejectedAt: string | null
   canceledAt: string | null
+  canceledBy: number | null
   updatedAt: string
 }
 

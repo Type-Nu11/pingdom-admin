@@ -24,6 +24,7 @@ import type {
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
+import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
@@ -49,7 +50,7 @@ export function useMerchantPlaceOperations() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [place, setPlace] = useState<MerchantPlaceDetail | null>(null)
   const [operating, setOperating] = useState<MerchantPlaceOperating | null>(null)
   const [media, setMedia] = useState<MerchantPlaceMediaResponse | null>(null)
@@ -119,14 +120,13 @@ export function useMerchantPlaceOperations() {
       if (!mountedRef.current) return
 
       setProfile(nextProfile)
-      const firstPlaceId = nextProfile.placeIds[0] ?? null
-      setSelectedPlaceId(firstPlaceId)
-      if (!firstPlaceId) {
+      const initialPlaceId = syncPlaces(nextProfile.placeIds)
+      if (!initialPlaceId) {
         setStatus('ready')
         return
       }
 
-      const loaded = await fetchPlaceOperations(firstPlaceId)
+      const loaded = await fetchPlaceOperations(initialPlaceId)
       if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
     } catch (error) {
       if (!mountedRef.current) return
@@ -134,7 +134,7 @@ export function useMerchantPlaceOperations() {
       setErrorMessage(getErrorMessage(error, '장소 운영 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 장소 운영 초기 조회 실패', error)
     }
-  }, [fetchPlaceOperations, getErrorMessage])
+  }, [fetchPlaceOperations, getErrorMessage, syncPlaces])
 
   useEffect(() => {
     mountedRef.current = true
@@ -144,12 +144,12 @@ export function useMerchantPlaceOperations() {
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
-    setSelectedPlaceId(placeId)
+    selectSharedPlace(placeId)
     setPlace(null)
     setOperating(null)
     setMedia(null)
     void fetchPlaceOperations(placeId)
-  }, [fetchPlaceOperations, profile?.placeIds, selectedPlaceId])
+  }, [fetchPlaceOperations, profile?.placeIds, selectSharedPlace, selectedPlaceId])
 
   const runAction = useCallback(async <T,>(
     action: Exclude<OperationAction, null>,

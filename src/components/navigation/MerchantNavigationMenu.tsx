@@ -41,8 +41,9 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '예약 · 정산',
     items: [
-      { label: '예약 설정', icon: 'calendar_add_on', path: '/merchant/reservations/setup' },
-      { label: '예약 운영', icon: 'calendar_month', path: '/merchant/reservations' },
+      { label: '예약 상품', icon: 'inventory_2', path: '/merchant/reservations/products' },
+      { label: '예약 가능 시간', icon: 'calendar_add_on', path: '/merchant/reservations/setup' },
+      { label: '예약 신청 조회', icon: 'calendar_month', path: '/merchant/reservations' },
       { label: '결제 · 정산', icon: 'payments', path: '/merchant/payments' },
     ],
   },

@@ -17,6 +17,7 @@ import type {
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
+import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
@@ -31,7 +32,7 @@ export function useMerchantOperatingNotices() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [notices, setNotices] = useState<MerchantOperatingNotice[]>([])
   const [currentlyOperating, setCurrentlyOperating] = useState<boolean | null>(null)
   const [isListLoading, setIsListLoading] = useState(false)
@@ -90,16 +91,15 @@ export function useMerchantOperatingNotices() {
       if (!mountedRef.current) return
 
       setProfile(nextProfile)
-      const firstPlaceId = nextProfile.placeIds[0] ?? null
-      setSelectedPlaceId(firstPlaceId)
-      if (!firstPlaceId) {
+      const initialPlaceId = syncPlaces(nextProfile.placeIds)
+      if (!initialPlaceId) {
         setCurrentlyOperating(null)
         setNotices([])
         setStatus('ready')
         return
       }
 
-      const loaded = await fetchNotices(firstPlaceId)
+      const loaded = await fetchNotices(initialPlaceId)
       if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
     } catch (error) {
       if (!mountedRef.current) return
@@ -107,7 +107,7 @@ export function useMerchantOperatingNotices() {
       setErrorMessage(getErrorMessage(error, '운영 공지 관리 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 운영 공지 초기 조회 실패', error)
     }
-  }, [fetchNotices, getErrorMessage])
+  }, [fetchNotices, getErrorMessage, syncPlaces])
 
   useEffect(() => {
     mountedRef.current = true
@@ -117,11 +117,11 @@ export function useMerchantOperatingNotices() {
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
-    setSelectedPlaceId(placeId)
+    selectSharedPlace(placeId)
     setNotices([])
     setCurrentlyOperating(null)
     void fetchNotices(placeId)
-  }, [fetchNotices, profile?.placeIds, selectedPlaceId])
+  }, [fetchNotices, profile?.placeIds, selectSharedPlace, selectedPlaceId])
 
   const runAction = useCallback(async <T,>(
     action: Exclude<NoticeAction, null>,

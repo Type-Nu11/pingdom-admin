@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   cancelMerchantReservation,
-  confirmMerchantReservation,
   getMerchantAvailabilities,
   getMerchantReservations,
   getMerchantReservableProducts,
@@ -19,7 +18,7 @@ import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
-type ReservationAction = 'confirm' | 'cancel' | null
+type ReservationAction = 'cancel' | null
 
 const PAGE_LIMIT = 20
 
@@ -129,32 +128,24 @@ export function useMerchantReservationOperations() {
     return () => { mountedRef.current = false }
   }, [fetchReservations])
 
-  const runAction = useCallback(async (
-    reservation: MerchantReservation,
-    action: Exclude<ReservationAction, null>,
-  ) => {
-    if (reservation.status !== 'PENDING' || actionRef.current !== null) return null
+  const cancelReservation = useCallback(async (reservation: MerchantReservation) => {
+    if (reservation.status !== 'CONFIRMED' || actionRef.current !== null) return null
     actionRef.current = reservation.id
     setActiveReservationId(reservation.id)
-    setActiveAction(action)
+    setActiveAction('cancel')
     setActionErrorMessage('')
     setSuccessMessage('')
 
     try {
-      const next = action === 'confirm'
-        ? await confirmMerchantReservation(reservation.id)
-        : await cancelMerchantReservation(reservation.id)
+      const next = await cancelMerchantReservation(reservation.id)
       if (!mountedRef.current) return null
       setReservations((items) => replaceReservation(items, next))
-      setSuccessMessage(action === 'confirm' ? '예약을 확정했습니다.' : '예약을 취소했습니다.')
+      setSuccessMessage('예약을 취소했습니다.')
       return next
     } catch (error) {
       if (mountedRef.current) {
-        setActionErrorMessage(getErrorMessage(
-          error,
-          action === 'confirm' ? '예약 확정에 실패했습니다.' : '예약 취소에 실패했습니다.',
-        ))
-        logDebugError(`상점주 예약 ${action} 실패`, error)
+        setActionErrorMessage(getErrorMessage(error, '예약 취소에 실패했습니다.'))
+        logDebugError('상점주 예약 취소 실패', error)
       }
       return null
     } finally {
@@ -180,7 +171,6 @@ export function useMerchantReservationOperations() {
     activeReservationId,
     activeAction,
     fetchReservations,
-    confirmReservation: (reservation: MerchantReservation) => runAction(reservation, 'confirm'),
-    cancelReservation: (reservation: MerchantReservation) => runAction(reservation, 'cancel'),
+    cancelReservation,
   }
 }

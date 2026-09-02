@@ -80,6 +80,9 @@ const MerchantOfferPage = lazy(
 const MerchantReservationSetupPage = lazy(
   () => import('../../pages/merchantReservationSetup/MerchantReservationSetupPage'),
 )
+const MerchantReservationProductsPage = lazy(
+  () => import('../../pages/merchantReservationProducts/MerchantReservationProductsPage'),
+)
 const MerchantReservationOperationsPage = lazy(
   () => import('../../pages/merchantReservationOperations/MerchantReservationOperationsPage'),
 )
@@ -99,9 +102,6 @@ const MerchantVerifiedBoostPage = lazy(
   () => import('../../pages/merchantVerifiedBoost/MerchantVerifiedBoostPage'),
 )
 const PlaceEventPage = lazy(() => import('../../pages/placeEvent/PlaceEventPage'))
-const AdManagementPage = lazy(
-  () => import('../../pages/adManagement/AdManagementPage'),
-)
 const DataQualityPage = lazy(() => import('../../pages/dataQuality/DataQualityPage'))
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
@@ -167,6 +167,7 @@ export function Router() {
               <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
               <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
               <Route path="/merchant/offers" element={<MerchantOfferPage />} />
+              <Route path="/merchant/reservations/products" element={<MerchantReservationProductsPage />} />
               <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
               <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />
               <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
@@ -236,7 +237,6 @@ export function Router() {
               element={<NotificationOperationsPage />}
             />
             <Route path="/operations/history" element={<OperationHistoryPage />} />
-            <Route path="/operations/ads" element={<AdManagementPage />} />
             <Route path="/data-quality" element={<DataQualityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

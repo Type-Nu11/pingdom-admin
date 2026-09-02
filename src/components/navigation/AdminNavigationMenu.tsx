@@ -51,7 +51,6 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
       { label: '신뢰 점수', icon: 'verified_user', path: '/trust-score' },
       { label: '인증 부스트', icon: 'rocket_launch', path: '/verified-boost-products' },
       { label: '추천 성과 · 정책', icon: 'monitoring', path: '/recommendations/metrics' },
-      { label: '광고 관리', icon: 'campaign', path: '/operations/ads' },
     ],
   },
   {

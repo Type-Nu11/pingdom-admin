@@ -18,6 +18,7 @@ import type {
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
+import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
 
 export const MERCHANT_OFFER_PAGE_LIMIT = 20
@@ -47,7 +48,7 @@ export function useMerchantOffers() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [offers, setOffers] = useState<MerchantOffer[]>([])
   const [selectedOffer, setSelectedOffer] = useState<MerchantOffer | null>(null)
   const [isListLoading, setIsListLoading] = useState(false)
@@ -113,7 +114,7 @@ export function useMerchantOffers() {
     if (!mountedRef.current) return
     if (profileResult.status === 'fulfilled') {
       setProfile(profileResult.value)
-      setSelectedPlaceId(profileResult.value.placeIds[0] ?? null)
+      syncPlaces(profileResult.value.placeIds)
     }
     if (offerResult.status === 'fulfilled') setOffers(offerResult.value)
 
@@ -131,7 +132,7 @@ export function useMerchantOffers() {
 
     setStatus('ready')
     setIsListLoading(false)
-  }, [clearAuth])
+  }, [clearAuth, syncPlaces])
 
   useEffect(() => {
     mountedRef.current = true
@@ -165,11 +166,11 @@ export function useMerchantOffers() {
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
-    setSelectedPlaceId(placeId)
+    selectSharedPlace(placeId)
     detailRequestRef.current += 1
     setSelectedOffer(null)
     setDetailErrorMessage('')
-  }, [profile?.placeIds, selectedPlaceId])
+  }, [profile?.placeIds, selectSharedPlace, selectedPlaceId])
 
   const clearSelectedOffer = useCallback(() => {
     detailRequestRef.current += 1

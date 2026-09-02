@@ -407,13 +407,6 @@ export async function getMerchantReservations(page = 1, limit = 20) {
   return data
 }
 
-export async function confirmMerchantReservation(reservationId: number) {
-  const { data } = await customAxios.post<MerchantReservation>(
-    `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/confirm`,
-  )
-  return data
-}
-
 export async function cancelMerchantReservation(reservationId: number) {
   const { data } = await customAxios.post<MerchantReservation>(
     `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/cancel`,

@@ -91,9 +91,17 @@ Usage
 npm run dev
 기본 개발 서버는 Vite 설정에 따라 5173 포트를 사용합니다.
 Configuration
-설정에 필요한 환경 변수는 .env 파일에 구성합니다.
-VITE_API_BASE_URL=
+설정에 필요한 환경 변수는 `.env` 파일에 구성합니다. 로컬 개발에서는 Axios가
+`/api` same-origin 경로를 사용하므로 프록시 대상만 지정합니다. Production build는
+HTTPS `VITE_PUBLIC_API_BASE_URL`을 사용합니다.
+
+```dotenv
+VITE_PUBLIC_API_BASE_URL=https://api.example.com
+VITE_PROXY_TARGET=http://localhost:8080
 VITE_KAKAO_MAP_APP_KEY=
+```
+
+원격 개발 API를 사용할 때는 `VITE_PROXY_TARGET`만 해당 주소로 변경합니다.
 실제 인증정보, API Key, 비밀 값 및 운영 환경 정보는 저장소에 커밋하지 않습니다.
 Verification
 저장소 변경사항은 다음 방법으로 검증합니다.

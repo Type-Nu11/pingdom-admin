@@ -109,6 +109,7 @@ function AdminReservationReviewPage() {
   }
 
   const selectedStatus = hook.reservation ? STATUS[hook.reservation.status] : null
+  const statusHistory = hook.reservation?.statusHistory ?? []
 
   return (
     <Shell.AppShell>
@@ -280,6 +281,33 @@ function AdminReservationReviewPage() {
                         <S.DetailItem><dt>검토 일시</dt><dd>{formatDate(hook.reservation.reviewedAt)}</dd></S.DetailItem>
                       </S.DetailGrid>
                       {hook.reservation.reviewReason ? <S.RecordDescription>처리 사유: {hook.reservation.reviewReason}</S.RecordDescription> : null}
+                      <S.Section>
+                        <S.SectionHeader>
+                          <S.SectionTitle>상태 변경 이력</S.SectionTitle>
+                        </S.SectionHeader>
+                        {statusHistory.length === 0 ? (
+                          <Shared.EmptyState><strong>기록된 상태 변경 이력이 없습니다.</strong></Shared.EmptyState>
+                        ) : (
+                          <S.CardList>
+                            {statusHistory.map((history) => {
+                              const historyStatus = STATUS[history.status]
+
+                              return (
+                                <S.RecordCard key={history.id}>
+                                  <S.RecordHeader>
+                                    <S.RecordTitle>상태 변경</S.RecordTitle>
+                                    <S.StatusBadge $tone={historyStatus.tone}>{historyStatus.label}</S.StatusBadge>
+                                  </S.RecordHeader>
+                                  <S.RecordMeta>
+                                    {formatDate(history.changedAt)} · {history.changedBy === null ? '처리자 정보 없음' : `처리자 #${history.changedBy}`}
+                                  </S.RecordMeta>
+                                  {history.reason ? <S.RecordDescription>사유: {history.reason}</S.RecordDescription> : null}
+                                </S.RecordCard>
+                              )
+                            })}
+                          </S.CardList>
+                        )}
+                      </S.Section>
                       {hook.reservation.status === 'PENDING' ? (
                         <S.InlineActions>
                           <Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog('reject')}>반려</Shared.SecondaryButton>

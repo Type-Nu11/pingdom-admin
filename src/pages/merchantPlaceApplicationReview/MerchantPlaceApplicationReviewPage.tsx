@@ -78,9 +78,29 @@ function formatCoordinates(latitude: number, longitude: number) {
   return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
 }
 
-function formatLocalTime(value?: { hour: number; minute: number }) {
-  if (!value) return '시간 미입력'
-  return `${String(value.hour).padStart(2, '0')}:${String(value.minute).padStart(2, '0')}`
+function formatLocalTime(value: unknown) {
+  if (value == null) return '시간 미입력'
+
+  const pad = (number: number) => String(number).padStart(2, '0')
+
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{1,2}):(\d{2})/)
+    return match ? `${pad(Number(match[1]))}:${match[2]}` : '시간 미입력'
+  }
+
+  if (Array.isArray(value)) {
+    const [hour, minute] = value
+    if (typeof hour !== 'number' || typeof minute !== 'number') return '시간 미입력'
+    return `${pad(hour)}:${pad(minute)}`
+  }
+
+  if (typeof value === 'object') {
+    const { hour, minute } = value as { hour?: unknown; minute?: unknown }
+    if (typeof hour !== 'number' || typeof minute !== 'number') return '시간 미입력'
+    return `${pad(hour)}:${pad(minute)}`
+  }
+
+  return '시간 미입력'
 }
 
 function formatOperatingDays(days: MerchantPlaceApplicationNewPlace['operatingDays']) {

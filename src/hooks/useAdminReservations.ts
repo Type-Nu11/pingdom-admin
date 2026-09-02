@@ -57,6 +57,15 @@ function normalizeQuery(query: ReservationQueryState): ReservationQueryState {
   return { ...query, page: Math.max(query.page, 1) }
 }
 
+function toReservationQueryParams(query: ReservationQueryState): AdminReservationQuery {
+  return {
+    status: query.status || undefined,
+    placeId: query.placeId,
+    page: query.page,
+    limit: LIMIT,
+  }
+}
+
 export function useAdminReservations() {
   const { clearAuth } = useAuth()
   const [reservations, setReservations] = useState<AdminReservation[]>([])
@@ -89,13 +98,20 @@ export function useAdminReservations() {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const data = await getAdminReservations({
-        status: normalizedQuery.status || undefined,
-        placeId: normalizedQuery.placeId,
-        page: normalizedQuery.page,
-        limit: LIMIT,
-      })
+      let data = await getAdminReservations(toReservationQueryParams(normalizedQuery))
+      let resolvedQuery = normalizedQuery
+
+      if (data.totalPages > 0 && normalizedQuery.page > data.totalPages) {
+        resolvedQuery = { ...normalizedQuery, page: data.totalPages }
+
+        if (data.reservations.length === 0) {
+          data = await getAdminReservations(toReservationQueryParams(resolvedQuery))
+        }
+      }
+
       if (requestId === listRef.current) {
+        queryRef.current = resolvedQuery
+        setQuery(resolvedQuery)
         setReservations(data.reservations)
         setTotalCount(data.totalElements)
         setTotalPages(data.totalPages)

@@ -237,14 +237,15 @@ export const RecordCard = styled.article<{ $selected?: boolean }>`
 
 export const RecordButton = styled.button<{ $selected?: boolean }>`
   width: 100%;
+  box-sizing: border-box;
   min-width: 0;
-  padding: 14px;
+  display: block;
+  padding: 16px 18px;
   border: 0;
   border-bottom: 1px solid ${neutral.borderSoft};
+  border-left: 3px solid transparent;
   border-radius: 0;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
-  box-shadow: ${({ $selected }) =>
-    $selected ? `inset 3px 0 0 ${neutral.primary}` : 'none'};
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -252,10 +253,11 @@ export const RecordButton = styled.button<{ $selected?: boolean }>`
     border-color 160ms ease,
     background 160ms ease;
 
-  &:hover:not(:disabled) {
-    background: ${({ $selected }) =>
-      $selected ? neutral.primaryTint : neutral.surfaceContainer};
-  }
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      border-left-color: ${neutral.primary};
+    `}
 
   &:focus-visible {
     outline: 2px solid ${neutral.primary};

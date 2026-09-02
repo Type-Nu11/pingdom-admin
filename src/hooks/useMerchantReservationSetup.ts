@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   activateMerchantAvailability,
-  activateMerchantReservableProduct,
   createMerchantAvailability,
-  createMerchantReservableProduct,
   deactivateMerchantAvailability,
-  deactivateMerchantReservableProduct,
   getMerchantAvailabilities,
   getMerchantOwnerProfile,
   getMerchantReservableProducts,
@@ -18,17 +15,14 @@ import type {
   MerchantAvailabilityUpsertRequest,
   MerchantOwnerProfile,
   MerchantReservableProduct,
-  MerchantReservableProductCreateRequest,
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
+import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type ReservationSetupAction =
-  | 'create-product'
-  | 'activate-product'
-  | 'deactivate-product'
   | 'create-availability'
   | 'update-availability'
   | 'activate-availability'
@@ -48,7 +42,7 @@ export function useMerchantReservationSetup() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [products, setProducts] = useState<MerchantReservableProduct[]>([])
   const [availabilities, setAvailabilities] = useState<MerchantAvailability[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -103,7 +97,7 @@ export function useMerchantReservationSetup() {
     }
 
     setIsLoading(false)
-    return productResult.status === 'fulfilled' && availabilityResult.status === 'fulfilled'
+    return availabilityResult.status === 'fulfilled'
   }, [clearAuth])
 
   const fetchInitialData = useCallback(async () => {
@@ -113,8 +107,7 @@ export function useMerchantReservationSetup() {
       const nextProfile = await getMerchantOwnerProfile()
       if (!mountedRef.current) return
       setProfile(nextProfile)
-      setSelectedPlaceId(nextProfile.placeIds[0] ?? null)
-      if (nextProfile.placeIds.length === 0) {
+      if (!syncPlaces(nextProfile.placeIds)) {
         setStatus('ready')
         return
       }
@@ -126,7 +119,7 @@ export function useMerchantReservationSetup() {
       setErrorMessage(getErrorMessage(error, '예약 운영 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 예약 운영 초기 조회 실패', error)
     }
-  }, [fetchReservationSetup, getErrorMessage])
+  }, [fetchReservationSetup, getErrorMessage, syncPlaces])
 
   useEffect(() => {
     mountedRef.current = true
@@ -136,8 +129,8 @@ export function useMerchantReservationSetup() {
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
-    setSelectedPlaceId(placeId)
-  }, [profile?.placeIds, selectedPlaceId])
+    selectSharedPlace(placeId)
+  }, [profile?.placeIds, selectSharedPlace, selectedPlaceId])
 
   const runAction = useCallback(async <T,>(
     action: Exclude<ReservationSetupAction, null>,
@@ -169,36 +162,6 @@ export function useMerchantReservationSetup() {
       if (mountedRef.current) setActiveAction(null)
     }
   }, [getErrorMessage])
-
-  const createProduct = useCallback((request: MerchantReservableProductCreateRequest) => runAction(
-    'create-product',
-    () => createMerchantReservableProduct(request),
-    (next) => setProducts((current) => replaceById(current, next)),
-    '예약 상품을 등록했습니다.',
-    '예약 상품을 등록하지 못했습니다.',
-  ), [runAction])
-
-  const setProductActive = useCallback((product: MerchantReservableProduct, active: boolean) => {
-    const activeAvailabilityCount = availabilities.filter(
-      (availability) => availability.productId === product.id && availability.status === 'ACTIVE',
-    ).length
-
-    if (!active && activeAvailabilityCount > 0) {
-      setActionErrorMessage(
-        `연결된 예약 가능 시간 ${activeAvailabilityCount}개를 먼저 비활성화한 뒤 상품을 비활성화해주세요.`,
-      )
-      setSuccessMessage('')
-      return Promise.resolve(null)
-    }
-
-    return runAction(
-      active ? 'activate-product' : 'deactivate-product',
-      () => active ? activateMerchantReservableProduct(product.id) : deactivateMerchantReservableProduct(product.id),
-      (next) => setProducts((current) => replaceById(current, next)),
-      active ? '예약 상품을 활성화했습니다.' : '예약 상품을 비활성화했습니다.',
-      active ? '예약 상품을 활성화하지 못했습니다.' : '예약 상품을 비활성화하지 못했습니다.',
-    )
-  }, [availabilities, runAction])
 
   const createAvailability = useCallback((request: MerchantAvailabilityUpsertRequest) => runAction(
     'create-availability',
@@ -239,8 +202,6 @@ export function useMerchantReservationSetup() {
     selectPlace,
     fetchInitialData,
     fetchReservationSetup,
-    createProduct,
-    setProductActive,
     createAvailability,
     saveAvailability,
     setAvailabilityActive,

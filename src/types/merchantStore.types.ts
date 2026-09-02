@@ -230,7 +230,7 @@ export interface MerchantReservableProductCreateRequest {
 export interface MerchantAvailability {
   id: number
   placeId: number
-  productId: number
+  productId: number | null
   productType: MerchantReservableProductType
   startsAt: string
   endsAt: string

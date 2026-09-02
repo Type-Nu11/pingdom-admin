@@ -258,7 +258,12 @@ export interface MerchantReservation {
   status: MerchantReservationStatus
   createdAt: string
   confirmedAt: string | null
+  reviewedBy: number | null
+  reviewedAt: string | null
+  reviewReason: string | null
+  rejectedAt: string | null
   canceledAt: string | null
+  canceledBy: number | null
   updatedAt: string
 }
 

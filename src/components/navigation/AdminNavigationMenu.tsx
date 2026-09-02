@@ -79,8 +79,6 @@ export function AdminNavigationMenu() {
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
-  const navigateFromMenu = (path: string) =>
-    navigate(path, { state: { preserveScrollPosition: true } })
 
   return (
     <S.Navigation aria-label="세부 관리자 메뉴">
@@ -88,7 +86,7 @@ export function AdminNavigationMenu() {
         type="button"
         $active={dashboardActive}
         aria-current={dashboardActive ? 'page' : undefined}
-        onClick={() => navigateFromMenu('/dashboard')}
+        onClick={() => navigate('/dashboard')}
       >
         <S.MaterialIcon aria-hidden="true">dashboard</S.MaterialIcon>
         <span>대시보드</span>
@@ -124,7 +122,7 @@ export function AdminNavigationMenu() {
                     aria-current={pathname === '/places' ? 'page' : undefined}
                     onClick={() => {
                       setIsPlaceManagementOpen(true)
-                      navigateFromMenu('/places')
+                      navigate('/places')
                     }}
                   >
                     <S.MaterialIcon aria-hidden="true">location_on</S.MaterialIcon>
@@ -154,7 +152,7 @@ export function AdminNavigationMenu() {
                           $active={active}
                           aria-current={active ? 'page' : undefined}
                           onClick={() => {
-                            navigateFromMenu(item.path)
+                            navigate(item.path)
                           }}
                         >
                           <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>
@@ -176,7 +174,7 @@ export function AdminNavigationMenu() {
                   $active={active}
                   aria-current={active ? 'page' : undefined}
                   onClick={() => {
-                    navigateFromMenu(item.path)
+                    navigate(item.path)
                   }}
                   >
                     <S.MaterialIcon aria-hidden="true">{item.icon}</S.MaterialIcon>

@@ -98,9 +98,9 @@ export const SummaryBar = styled.section`
   gap: 20px;
   min-height: 72px;
   padding: 12px 18px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const SummaryBarTitle = styled.strong`
@@ -159,9 +159,9 @@ export const FilterPanel = styled.section`
   flex-direction: column;
   gap: 14px;
   padding: 16px 18px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const FilterTopLine = styled.div`
@@ -758,9 +758,9 @@ export const MetricItem = styled.section`
   min-width: 0;
   min-height: 92px;
   padding: 14px 16px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const MetricLabel = styled.p`
@@ -805,9 +805,9 @@ export const WorkGrid = styled.div`
 
 export const Section = styled.section`
   min-width: 0;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const SectionHeader = styled.header`
@@ -1300,9 +1300,9 @@ export const DetailStack = styled.div`
 export const DetailGroup = styled.section`
   min-width: 0;
   padding: 14px;
-  border: 1px solid ${neutral.borderSoft};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const DetailActionGroup = styled(DetailGroup)`

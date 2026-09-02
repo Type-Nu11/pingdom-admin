@@ -441,8 +441,8 @@ export const PlaceDetailPanel = styled.aside<{ $open?: boolean }>`
   display: ${({ $open }) => ($open ? 'flex' : 'none')};
   overflow: hidden;
   flex-direction: column;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
+  border: 0;
+  border-radius: ${radius.lg};
   background: ${neutral.surface};
   box-shadow: 0 18px 48px ${neutral.strongShadow};
 

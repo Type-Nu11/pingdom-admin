@@ -10,9 +10,9 @@ export const TabList = styled.div`
   overflow-x: auto;
   gap: 6px;
   padding: 5px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const TabButton = styled.button<{ $active?: boolean }>`

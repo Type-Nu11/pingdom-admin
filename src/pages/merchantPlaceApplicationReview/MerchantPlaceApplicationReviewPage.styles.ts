@@ -89,9 +89,9 @@ export const FilterBar = styled.div`
   gap: 16px;
   flex-wrap: wrap;
   padding: 14px 16px;
-  border: 1px solid ${colors.borderSoft};
-  border-radius: 10px;
-  background: ${colors.surface};
+  border: 0;
+  border-radius: ${radius.lg};
+  background: ${colors.surfaceLow};
 `
 
 export const FilterTabs = styled.div`

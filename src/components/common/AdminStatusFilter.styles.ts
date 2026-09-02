@@ -1,10 +1,10 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 export const Panel = styled.section`
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  background: ${adminColors.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${adminColors.surfaceLow};
 `
 
 export const Row = styled.div`

@@ -999,9 +999,9 @@ export const QuickActionPanel = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.lg};
+  background: ${neutral.surfaceLow};
 `
 
 export const QuickActionButton = styled.button`

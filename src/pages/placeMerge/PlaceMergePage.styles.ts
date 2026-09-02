@@ -134,9 +134,9 @@ export const Panel = styled.section`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const PanelHeader = styled.header`
@@ -146,7 +146,7 @@ export const PanelHeader = styled.header`
   gap: 12px;
   min-height: 58px;
   padding: 12px 16px;
-  border-bottom: 1px solid ${neutral.border};
+  border-bottom: 1px solid ${neutral.borderSoft};
 `
 
 export const PanelTitle = styled.h2`
@@ -543,9 +543,9 @@ export const EmptyState = styled.div`
 
 export const EmptyStateCard = styled(EmptyState)`
   min-height: 220px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const EmptyStateActions = styled.div`
@@ -560,9 +560,9 @@ export const SelectionPrompt = styled(EmptyStateCard)`
 `
 
 export const HistoryPanel = styled.section`
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  background: ${neutral.surface};
+  border: 0;
+  border-radius: ${radius.md};
+  background: ${neutral.surfaceLow};
 `
 
 export const HistoryList = styled.div`

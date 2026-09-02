@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './AdminNavigationMenu.styles'
 
@@ -71,17 +71,38 @@ const isCurrentPath = (pathname: string, path: string) =>
 const isPlaceManagementPath = (pathname: string) =>
   pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
 
+let savedSideMenuScrollTop = 0
+
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const navigationRef = useRef<HTMLDivElement | null>(null)
   const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(true)
   const [openGroups, setOpenGroups] = useState(() => new Set(NAVIGATION_GROUPS.map((group) => group.title)))
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
 
+  useLayoutEffect(() => {
+    const sideMenu = navigationRef.current?.parentElement
+    if (!sideMenu) return
+
+    sideMenu.scrollTop = savedSideMenuScrollTop
+
+    const saveScrollPosition = () => {
+      savedSideMenuScrollTop = sideMenu.scrollTop
+    }
+
+    sideMenu.addEventListener('scroll', saveScrollPosition, { passive: true })
+
+    return () => {
+      saveScrollPosition()
+      sideMenu.removeEventListener('scroll', saveScrollPosition)
+    }
+  }, [])
+
   return (
-    <S.Navigation aria-label="세부 관리자 메뉴">
+    <S.Navigation ref={navigationRef} aria-label="세부 관리자 메뉴">
       <S.DashboardButton
         type="button"
         $active={dashboardActive}

@@ -459,7 +459,7 @@ export const DetailHeader = styled.header`
   justify-content: space-between;
   gap: 12px;
   padding: 16px;
-  border-bottom: 1px solid ${neutral.border};
+  background: ${neutral.surfaceLow};
 `
 
 export const DetailTitleGroup = styled.div`

@@ -146,7 +146,6 @@ export const PanelHeader = styled.header`
   gap: 12px;
   min-height: 58px;
   padding: 12px 16px;
-  border-bottom: 1px solid ${neutral.borderSoft};
 `
 
 export const PanelTitle = styled.h2`
@@ -175,6 +174,7 @@ export const ScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 12px 14px;
+  background: ${neutral.surface};
 `
 
 export const GroupList = styled.div`

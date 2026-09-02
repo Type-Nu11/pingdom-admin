@@ -435,9 +435,9 @@ export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action' }>`
   display: flex;
   flex-direction: column;
   padding: 18px;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surface)};
+  border: 0;
+  border-radius: ${radius.lg};
+  background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
 `
 
 export const OperationsPanelHeader = styled.div`

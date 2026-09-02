@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   banAdminUser,
   getAdminBannedUser,
@@ -145,7 +146,9 @@ export function useAdminBannedUsers({
   const [sanctionHistoryErrorMessage, setSanctionHistoryErrorMessage] =
     useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const [banningUserId, setBanningUserId] = useState<number | null>(null)
   const [releasingUserId, setReleasingUserId] = useState<number | null>(null)
   const latestRequestIdRef = useRef(0)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getAdminPlaceReviewDeletionRequest,
   getAdminPlaceReviewDeletionRequests,
@@ -54,7 +55,9 @@ export function useAdminPlaceReviewDeletionRequests() {
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const listRequestRef = useRef(0)
   const detailRequestRef = useRef(0)
   const reviewRequestRef = useRef(false)

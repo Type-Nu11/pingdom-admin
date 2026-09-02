@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminTrustScoreApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -28,7 +29,9 @@ export function useAdminTrustScore() {
   const [activeAction, setActiveAction] = useState<Action | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const actionRef = useRef<Action | null>(null)
   const anomalyQueryRef = useRef({ page: 1, reporterUserId: undefined as number | undefined, unresolvedOnly: true })
   const rulesEnabledRef = useRef(false)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   deleteAdminPlace,
   getAdminPlace,
@@ -166,6 +167,7 @@ export function useAdminPlaces({
   const [updateErrorMessages, setUpdateErrorMessages] =
     useState<PlaceUpdateState<string>>(EMPTY_PLACE_UPDATE_ERRORS)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const [placeDetail, setPlaceDetail] = useState<AdminPlaceDetail | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')

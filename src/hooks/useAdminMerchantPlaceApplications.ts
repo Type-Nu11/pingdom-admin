@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminMerchantPlaceApplicationApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -53,7 +54,9 @@ export function useAdminMerchantPlaceApplications() {
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [attachmentErrorMessage, setAttachmentErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const reviewRef = useRef(false)
   const pageRef = useRef(1)
   const viewRef = useRef<ApplicationReviewView>('pending')

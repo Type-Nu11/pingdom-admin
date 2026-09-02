@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   approveAdminMerchantOwner,
   getAdminMerchantOwner,
@@ -78,8 +79,10 @@ export function useAdminMerchantOwners() {
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [detailErrorMessage, setDetailErrorMessage] = useState("");
-  const [actionErrorMessage, setActionErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [actionErrorMessage, setActionErrorMessage] = useState("")
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage);
+  const [successMessage, setSuccessMessage] = useState("")
+  useAutoDismissMessage(successMessage, setSuccessMessage);
   const listRef = useRef(0);
   const detailRef = useRef(0);
   const actionRef = useRef<MerchantOwnerAction | null>(null);

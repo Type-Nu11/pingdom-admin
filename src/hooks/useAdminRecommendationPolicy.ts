@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   resyncAdminRecommendationSnapshots,
   updateAdminRecommendationTraffic,
@@ -42,6 +43,7 @@ export function useAdminRecommendationPolicy() {
   const [activeAction, setActiveAction] = useState<PolicyAction | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const activeActionRef = useRef<PolicyAction | null>(null)
 
   const runAction = useCallback(async <T,>(

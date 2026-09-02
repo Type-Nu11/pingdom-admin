@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminUserRoleApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -25,7 +26,9 @@ export function useAdminUserRoles() {
   const [isMutating, setIsMutating] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const mutationRef = useRef(false)
 
   const errorText = useCallback((error: unknown, fallback: string) => {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   acceptAdminReport,
   declineAdminReport,
@@ -98,7 +99,9 @@ export function useAdminReports({
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const [actionResult, setActionResult] =
     useState<AdminReportActionResponse | null>(null)
   const [processingReportId, setProcessingReportId] = useState<number | null>(null)

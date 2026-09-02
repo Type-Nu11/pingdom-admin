@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 export const Pagination = styled.nav`
   display: flex;
@@ -20,7 +20,7 @@ export const IconButton = styled.button`
   justify-content: center;
   padding: 0;
   border: 1px solid ${adminColors.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${adminColors.surface};
   color: ${adminColors.text};
   cursor: pointer;
@@ -74,12 +74,12 @@ export const PageButton = styled.button<{ $active?: boolean }>`
   height: 36px;
   padding: 0 8px;
   border: 1px solid ${adminColors.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${adminColors.surface};
   color: ${adminColors.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition:
     border-color 160ms ease,

@@ -34,8 +34,8 @@ export const GroupTitle = styled.button`
   background: transparent;
   color: ${adminColors.muted};
   font-family: inherit;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-align: left;
   cursor: pointer;
@@ -88,9 +88,9 @@ export const ItemButton = styled.button<{ $active?: boolean }>`
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: ${adminColors.muted};
+  color: ${adminColors.neutralText};
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-align: left;
   cursor: pointer;

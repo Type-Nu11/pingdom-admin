@@ -56,14 +56,14 @@ const CardContent = styled.div`
 const CardLabel = styled.strong`
   color: ${adminColors.text};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 `
 
 const CardDescription = styled.p`
   margin: 2px 0 0;
   color: ${adminColors.softText};
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.3;
 `
 
 function DashboardPlaceholderCard({

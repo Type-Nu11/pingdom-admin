@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -52,7 +52,7 @@ export const IntroTitle = styled.h1`
   color: ${neutral.strongText};
   font-size: 24px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
 `
 
 export const IntroDescription = styled.p`
@@ -60,7 +60,7 @@ export const IntroDescription = styled.p`
   margin: 8px 0 0;
   color: ${neutral.muted};
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.3;
 `
 
 export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
@@ -72,13 +72,13 @@ export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
   border: 1px solid
     ${({ $tone }) =>
       $tone === 'warning' ? neutral.warning : neutral.primarySoft};
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${({ $tone }) =>
     $tone === 'warning' ? neutral.warningTint : neutral.primaryTint};
   color: ${({ $tone }) =>
     $tone === 'warning' ? neutral.warningText : neutral.primary};
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
 `
 
@@ -137,7 +137,7 @@ export const SummaryBarItem = styled.div`
 
   strong {
     color: ${neutral.strongText};
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     white-space: nowrap;
   }
@@ -179,13 +179,13 @@ export const FilterTopLine = styled.div`
 export const ResultSummary = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.3;
 
   strong {
     color: ${neutral.strongText};
-    font-weight: 600;
+    font-weight: 500;
   }
 `
 
@@ -216,8 +216,8 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
     $active ? neutral.primaryTint : neutral.surface};
   color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -332,15 +332,15 @@ export const FilterGroupControls = styled.div`
 
 export const FilterRangeSeparator = styled.span`
   color: ${neutral.softText};
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
 `
 
 export const FilterHelpText = styled.span`
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.3;
 `
 
 const inputControlStyle = css`
@@ -354,7 +354,7 @@ const inputControlStyle = css`
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
 
   &:focus {
     border-color: ${neutral.primary};
@@ -429,7 +429,7 @@ export const DatePickerIconButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -445,8 +445,8 @@ export const DatePickerWeekdays = styled.div`
   grid-template-columns: repeat(7, 1fr);
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   text-align: center;
 `
 
@@ -505,8 +505,8 @@ export const DatePickerTimeField = styled.div`
 
 export const DatePickerTimeLabel = styled.span`
   color: ${neutral.muted};
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
 `
 
 export const DatePickerTimePicker = styled.div`
@@ -537,12 +537,12 @@ export const DatePickerTimeButton = styled.button`
 
   > span:first-child {
     color: ${neutral.primary};
-    font-size: 17px;
+    font-size: 18px;
   }
 
   > span:last-child {
     color: ${neutral.softText};
-    font-size: 17px;
+    font-size: 18px;
   }
 
   &:hover,
@@ -578,9 +578,9 @@ export const DatePickerTimePreview = styled.span`
   display: block;
   margin-bottom: 8px;
   color: ${neutral.primary};
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 500;
 `
 
 export const DatePickerTimeColumns = styled.div`
@@ -598,8 +598,8 @@ export const DatePickerTimeColumnLabel = styled.span`
   display: block;
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   text-align: center;
 `
 
@@ -712,7 +712,7 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
     $active ? neutral.primaryTint : 'transparent'};
   color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 
@@ -784,9 +784,9 @@ export const MetricValue = styled.strong`
   margin-top: 6px;
   overflow: hidden;
   color: ${neutral.strongText};
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -796,7 +796,7 @@ export const MetricHint = styled.span`
   margin-top: 6px;
   color: ${neutral.softText};
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.3;
 `
 
 export const WorkGrid = styled.div`
@@ -850,10 +850,10 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
   border-bottom: 2px solid
     ${({ $active }) => ($active ? neutral.primary : 'transparent')};
   background: transparent;
-  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
+  color: ${({ $active }) => ($active ? neutral.text : neutral.muted)};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -924,11 +924,11 @@ const buttonStyle = css`
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 14px;
-  border-radius: 8px;
+  padding: 0 16px;
+  border-radius: ${radius.pill};
   font: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:disabled {
@@ -970,7 +970,7 @@ export const IconActionButton = styled.button`
   flex: 0 0 auto;
   padding: 0;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.muted};
   cursor: pointer;
@@ -1003,7 +1003,7 @@ export const Table = styled.table`
   width: 100%;
   min-width: 620px;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 `
 
 export const TableHeadCell = styled.th`
@@ -1011,10 +1011,10 @@ export const TableHeadCell = styled.th`
   top: 0;
   z-index: 1;
   padding: 12px;
-  border-bottom: 1px solid ${neutral.borderSoft};
+  border-bottom: 1px solid ${neutral.border};
   background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
-  font-weight: 600;
+  color: ${neutral.neutralText};
+  font-weight: 500;
   text-align: left;
   white-space: nowrap;
 `
@@ -1055,9 +1055,9 @@ export const TableDateCell = styled(TableCell)`
 export const TableStrongText = styled.strong`
   display: block;
   color: ${neutral.strongText};
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
 `
 
 export const TableSubText = styled.span`
@@ -1065,7 +1065,7 @@ export const TableSubText = styled.span`
   margin-top: 3px;
   color: ${neutral.softText};
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.3;
 `
 
 export const TableStatusBadge = styled.span<{
@@ -1091,7 +1091,7 @@ export const TableStatusBadge = styled.span<{
 
       return neutral.error
     }};
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${({ $tone }) => {
     if ($tone === 'warning') {
       return neutral.warningTint
@@ -1123,7 +1123,7 @@ export const TableStatusBadge = styled.span<{
     return neutral.error
   }};
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 `
 
@@ -1150,9 +1150,9 @@ export const Notice = styled.div<{ $variant?: 'error' | 'info' }>`
   background: ${({ $variant }) =>
     $variant === 'error' ? neutral.errorTint : neutral.surfaceLow};
   color: ${({ $variant }) => ($variant === 'error' ? neutral.error : neutral.muted)};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const ActionPanel = styled.form`
@@ -1185,8 +1185,8 @@ export const TextArea = styled.textarea`
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.3;
 
   &::placeholder {
     color: ${neutral.placeholder};
@@ -1202,7 +1202,7 @@ export const TextArea = styled.textarea`
 export const ActionHelpText = styled.span`
   color: ${neutral.softText};
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.3;
 `
 
 export const ActionInfoText = styled.span`
@@ -1215,12 +1215,12 @@ export const ActionInfoText = styled.span`
   background: ${neutral.primaryTint};
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.3;
 
   .material-symbols-rounded {
     flex: 0 0 auto;
     color: ${neutral.primary};
-    font-size: 17px;
+    font-size: 18px;
   }
 `
 
@@ -1237,8 +1237,8 @@ export const Pagination = styled.nav`
 export const PaginationStatus = styled.span`
   min-width: 96px;
   color: ${neutral.muted};
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: center;
 `
 
@@ -1255,14 +1255,14 @@ export const DetailEmpty = styled.div`
 
   strong {
     color: ${neutral.strongText};
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
   }
 
   span {
     max-width: 260px;
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.3;
   }
 `
 
@@ -1359,8 +1359,8 @@ export const SanctionHistoryHeader = styled.div`
     min-width: 0;
     overflow: hidden;
     color: ${neutral.strongText};
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1371,7 +1371,7 @@ export const SanctionHistoryMeta = styled.span`
   margin-top: 4px;
   color: ${neutral.softText};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
 `
 
 export const DetailList = styled.dl`
@@ -1404,9 +1404,9 @@ export const DetailRow = styled.div`
     min-width: 0;
     margin: 0;
     color: ${neutral.text};
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
-    line-height: 1.45;
+    line-height: 1.3;
     overflow-wrap: anywhere;
   }
 `
@@ -1458,14 +1458,14 @@ export const ConfirmTitle = styled.h2`
   color: ${neutral.strongText};
   font-size: 20px;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.3;
 `
 
 export const ConfirmDescription = styled.p`
   margin: 10px 0 0;
   color: ${neutral.muted};
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.3;
 `
 
 export const ConfirmMeta = styled.div`
@@ -1478,9 +1478,9 @@ export const ConfirmMeta = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.3;
 
   span {
     color: ${neutral.muted};
@@ -1526,9 +1526,9 @@ export const PolicyText = styled.div`
   strong {
     display: block;
     color: ${neutral.strongText};
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
   }
 
   span {
@@ -1536,7 +1536,7 @@ export const PolicyText = styled.div`
     margin-top: 3px;
     color: ${neutral.muted};
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.3;
   }
 `
 
@@ -1603,8 +1603,8 @@ export const ToggleText = styled.span`
     display: block;
     color: ${neutral.strongText};
     font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
+    font-weight: 500;
+    line-height: 1.3;
   }
 
   small {
@@ -1612,7 +1612,7 @@ export const ToggleText = styled.span`
     margin-top: 4px;
     color: ${neutral.muted};
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.3;
   }
 `
 

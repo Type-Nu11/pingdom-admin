@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
 import KakaoMap from '../../components/map/KakaoMap'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 const mapControlHoverBackground = '#FFF0F4'
@@ -111,7 +111,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
   border: 0;
   border-right: 2px solid transparent;
   background: transparent;
-  color: ${neutral.muted};
+  color: ${neutral.neutralText};
   font-size: 14px;
   font-weight: 500;
   text-align: left;
@@ -237,14 +237,14 @@ export const AdminProfileText = styled.div`
   strong {
     color: ${neutral.strongText};
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.3;
   }
 
   span {
     color: ${neutral.muted};
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.3;
   }
 `
@@ -258,11 +258,11 @@ export const LogoutButton = styled.button`
   gap: 12px;
   padding: 0 12px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -344,7 +344,7 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -363,7 +363,7 @@ export const TopActionButton = styled.button`
   gap: 6px;
   padding: 0 11px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 12px;
@@ -475,8 +475,8 @@ export const DetailTitleGroup = styled.div`
 export const DetailEyebrow = styled.p`
   margin: 0 0 4px;
   color: ${neutral.primary};
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
 `
 
 export const DetailTitle = styled.h3`
@@ -484,7 +484,7 @@ export const DetailTitle = styled.h3`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -498,7 +498,7 @@ export const DetailCloseButton = styled.button`
   justify-content: center;
   flex-shrink: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -522,9 +522,9 @@ export const DetailStatus = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const DetailNotice = styled.p`
@@ -534,9 +534,9 @@ export const DetailNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const DetailErrorState = styled.div`
@@ -552,9 +552,9 @@ export const DetailErrorState = styled.div`
 
   p {
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
-    line-height: 1.5;
+    line-height: 1.3;
   }
 `
 
@@ -584,9 +584,9 @@ export const DetailMetaGroup = styled.section`
 export const DetailMetaGroupTitle = styled.h4`
   margin: 0 0 10px;
   color: ${neutral.strongText};
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const DetailMetaRow = styled.div`
@@ -609,18 +609,18 @@ export const DetailMetaRow = styled.div`
   span {
     display: block;
     color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1.4;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
   strong {
     display: block;
     overflow: hidden;
     color: ${neutral.text};
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
-    line-height: 1.5;
+    line-height: 1.3;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -634,8 +634,8 @@ export const DetailSectionTitle = styled.h4`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
-  line-height: 1.4;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const DetailSectionHeader = styled.div`
@@ -659,12 +659,12 @@ export const DetailInlineButton = styled.button`
   flex-shrink: 0;
   padding: 0 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 7px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.primary};
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
 
@@ -721,16 +721,16 @@ export const OperatingSummaryLabel = styled.div`
 
   span {
     color: ${neutral.text};
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
   }
 
   small {
     overflow: hidden;
     color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -757,7 +757,7 @@ export const OperatingStatusBadge = styled.span<{
   justify-content: center;
   padding: 0 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${({ $tone }) =>
     $tone === 'danger'
       ? neutral.errorTint
@@ -774,8 +774,8 @@ export const OperatingStatusBadge = styled.span<{
         : $tone === 'muted'
           ? neutral.primary
           : neutral.successText};
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 `
 
@@ -803,14 +803,14 @@ export const OperatingHoursItem = styled.div`
 
   span {
     color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
   }
 
   strong {
     overflow: hidden;
     color: ${neutral.text};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -827,12 +827,12 @@ export const OperatingExceptionHeader = styled.div`
   span {
     color: ${neutral.strongText};
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   small {
     color: ${neutral.muted};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
 `
@@ -862,13 +862,13 @@ export const OperatingExceptionItem = styled.div`
 
   span {
     color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
   }
 
   strong {
     color: ${neutral.text};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-align: right;
   }
@@ -882,8 +882,8 @@ export const OperatingEmptyState = styled.p`
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 600;
-  line-height: 1.45;
+  font-weight: 500;
+  line-height: 1.3;
 `
 
 export const DetailFooter = styled.footer`
@@ -906,11 +906,11 @@ export const DetailActionButton = styled.button`
   flex: 1;
   padding: 0 12px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.text};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -964,7 +964,7 @@ export const PanelCollapseButton = styled.button`
   justify-content: center;
   flex-shrink: 0;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.primary};
   cursor: pointer;
@@ -993,11 +993,11 @@ export const PanelCount = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.3;
 
   strong {
     color: ${neutral.primary};
-    font-weight: 800;
+    font-weight: 700;
   }
 `
 
@@ -1057,7 +1057,7 @@ export const SearchClearButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
   cursor: pointer;
@@ -1092,7 +1092,7 @@ export const PanelResultSummary = styled.div`
   gap: 12px;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 `
 
 export const ListInlineNotice = styled.div`
@@ -1109,7 +1109,7 @@ export const ListInlineNotice = styled.div`
   color: ${neutral.error};
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.45;
+  line-height: 1.3;
 
   button {
     min-height: 30px;
@@ -1127,7 +1127,7 @@ export const ClearFilterButton = styled.button`
   background: transparent;
   color: ${neutral.primary};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1181,8 +1181,8 @@ export const CompactSelect = styled.select`
   outline: 1px solid transparent;
   background: ${neutral.surface};
   color: ${neutral.text};
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 
   &:focus {
@@ -1204,7 +1204,7 @@ export const IconFilterButton = styled.button`
   align-items: center;
   justify-content: center;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.muted};
   cursor: pointer;
@@ -1393,9 +1393,9 @@ export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -1407,12 +1407,12 @@ export const PlaceCategoryBadge = styled.span`
   flex-shrink: 0;
   padding: 3px 7px;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
   white-space: nowrap;
 `
 
@@ -1423,12 +1423,12 @@ export const PlaceDiscoveryStatusBadge = styled.span`
   flex-shrink: 0;
   padding: 3px 7px;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primary};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.3;
   white-space: nowrap;
 `
 
@@ -1436,12 +1436,12 @@ export const ReportBadge = styled.span`
   flex-shrink: 0;
   padding: 3px 6px;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${neutral.errorTint};
   color: ${neutral.error};
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
 `
 
 export const PlaceMeta = styled.p`
@@ -1469,8 +1469,8 @@ export const PlaceMetaLine = styled.p`
   margin: 9px 0 0;
   color: ${neutral.softText};
   font-size: 12px;
-  font-weight: 600;
-  line-height: 1.45;
+  font-weight: 500;
+  line-height: 1.3;
 
   span {
     min-width: 0;
@@ -1511,18 +1511,18 @@ export const EmptyState = styled.div`
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const RetryButton = styled.button`
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -1556,7 +1556,7 @@ export const PageButton = styled.button`
   justify-content: center;
   padding: 0;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.text};
   cursor: pointer;
@@ -1603,11 +1603,11 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 9px;
+  border-radius: ${radius.pill};
   background: ${({ $active }) => ($active ? neutral.primary : 'transparent')};
   color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -1756,8 +1756,8 @@ export const MapListToggleButton = styled(PanelCollapseButton)`
   align-items: center;
   gap: 6px;
   padding: 0 12px 0 10px;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
 
   &&:hover:not(:disabled) {
     background: ${mapControlHoverBackground};
@@ -1792,7 +1792,7 @@ export const MapInfo = styled.div`
   border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.text};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   box-shadow: 0 8px 22px ${neutral.shadow};
 
@@ -1811,9 +1811,9 @@ export const MapInfoText = styled.span`
 
   strong {
     color: ${neutral.text};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    line-height: 1.35;
+    line-height: 1.3;
   }
 
 `
@@ -1866,15 +1866,15 @@ export const OperatingDialogHeader = styled.header`
 export const OperatingDialogEyebrow = styled.p`
   margin: 0 0 4px;
   color: ${neutral.primary};
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
 `
 
 export const OperatingDialogTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.3;
 `
 
@@ -1886,7 +1886,7 @@ export const OperatingDialogCloseButton = styled.button`
   justify-content: center;
   flex-shrink: 0;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -1920,9 +1920,9 @@ export const OperatingDialogBody = styled.div`
 export const OperatingDialogDescription = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.55;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
   word-break: keep-all;
 `
 
@@ -1931,14 +1931,14 @@ export const OperatingFormField = styled.label`
   flex-direction: column;
   gap: 7px;
   color: ${neutral.text};
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
 
   small {
     align-self: flex-end;
     color: ${neutral.softText};
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
   }
 
   &:is(fieldset) {
@@ -1994,17 +1994,17 @@ export const OperatingOption = styled.label<{
   strong {
     color: ${({ $selected, $tone }) =>
       $selected && $tone === 'danger' ? neutral.error : neutral.strongText};
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1.35;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
   small {
     align-self: auto;
     color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1.45;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
   }
 
   &:hover:not(:has(input:disabled)) {
@@ -2104,7 +2104,7 @@ export const OperatingCategoryOption = styled.label<{ $selected?: boolean }>`
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
   color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   input {
@@ -2160,7 +2160,7 @@ export const OperatingComparisonItem = styled.div<{ $changed?: boolean }>`
 
   span {
     color: ${neutral.muted};
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
 
@@ -2168,8 +2168,8 @@ export const OperatingComparisonItem = styled.div<{ $changed?: boolean }>`
     margin-top: 4px;
     overflow: hidden;
     color: ${neutral.strongText};
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -2189,7 +2189,7 @@ export const OperatingCoordinateComparison = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 
   strong {
@@ -2212,7 +2212,7 @@ export const OperatingActionTab = styled.button<{ $active?: boolean; $danger?: b
     $active && $danger ? neutral.error : $active ? neutral.primary : neutral.muted};
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -2241,11 +2241,11 @@ export const OperatingResultNotice = styled.div`
   color: ${neutral.text};
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 
   strong {
     color: ${neutral.primary};
-    font-weight: 800;
+    font-weight: 700;
   }
 `
 
@@ -2259,9 +2259,9 @@ export const OperatingTextArea = styled.textarea`
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
 
   &::placeholder {
     color: ${neutral.softText};
@@ -2287,7 +2287,7 @@ export const OperatingDangerNotice = styled.p`
   color: ${neutral.error};
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const OperatingInfoNotice = styled.p`
@@ -2299,7 +2299,7 @@ export const OperatingInfoNotice = styled.p`
   color: ${neutral.muted};
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const OperatingFormNotice = styled.p`
@@ -2311,7 +2311,7 @@ export const OperatingFormNotice = styled.p`
   color: ${neutral.error};
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const OperatingEditorSection = styled.section`
@@ -2330,14 +2330,14 @@ export const OperatingEditorSectionHeader = styled.div`
 
   strong {
     color: ${neutral.strongText};
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
   }
 
   > span {
     color: ${neutral.muted};
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
   }
 `
 
@@ -2386,7 +2386,7 @@ export const OperatingCheckLabel = styled.label`
   gap: 7px;
   color: ${neutral.text};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   input {
@@ -2409,7 +2409,7 @@ export const OperatingTimeControls = styled.div`
   flex-shrink: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const OperatingTimeInput = styled.input`
@@ -2511,13 +2511,13 @@ export const OperatingIconButton = styled.button`
   flex-shrink: 0;
   padding: 0;
   border: 1px solid ${neutral.border};
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.muted};
   cursor: pointer;
 
   ${MaterialIcon} {
-    font-size: 17px;
+    font-size: 18px;
   }
 
   &:hover:not(:disabled) {
@@ -2549,7 +2549,7 @@ export const OperatingTextButton = styled.button`
   color: ${neutral.primary};
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   ${MaterialIcon} {
@@ -2594,12 +2594,12 @@ export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
   min-height: 40px;
   padding: 0 18px;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
   color: ${neutral.primaryText};
   font: inherit;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -2654,7 +2654,7 @@ export const ModalCloseButton = styled.button`
   justify-content: center;
   flex-shrink: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.text};
   cursor: pointer;
@@ -2694,7 +2694,7 @@ export const DetailValue = styled.p`
   margin: 0;
   color: ${neutral.text};
   font-size: 16px;
-  line-height: 1.35;
+  line-height: 1.3;
   word-break: break-word;
 `
 
@@ -2724,7 +2724,7 @@ export const ReportDescription = styled.p`
   margin: 0;
   color: ${neutral.muted};
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.3;
 `
 
 export const PhotoLink = styled.button`
@@ -2781,7 +2781,7 @@ export const DeleteWarning = styled.div`
   color: ${neutral.primaryText};
   font-size: 14px;
   font-weight: 700;
-  line-height: 1.45;
+  line-height: 1.3;
 
   ${MaterialIcon} {
     flex-shrink: 0;
@@ -2801,7 +2801,7 @@ export const SecondaryButton = styled.button`
   min-height: 40px;
   padding: 0 18px;
   border: 1px solid ${neutral.border};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.text};
   font-size: 14px;
@@ -2817,7 +2817,7 @@ export const DangerOutlineButton = styled.button`
   min-height: 40px;
   padding: 0 18px;
   border: 1px solid ${neutral.error};
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.error};
   font-size: 14px;
@@ -2833,7 +2833,7 @@ export const DangerButton = styled.button`
   min-height: 40px;
   padding: 0 18px;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.error};
   color: ${neutral.primaryText};
   font-size: 14px;
@@ -2862,7 +2862,7 @@ export const ActionToast = styled.div`
   box-shadow: 0 16px 40px ${neutral.shadow};
   color: ${neutral.successText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 
   ${MaterialIcon} {
     color: ${neutral.success};
@@ -2921,16 +2921,16 @@ export const DeleteConfirmTitle = styled.h2`
   margin: 0 0 8px;
   color: ${neutral.strongText};
   font-size: 20px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-weight: 700;
+  line-height: 1.3;
 `
 
 export const DeleteConfirmDescription = styled.p`
   margin: 0;
   color: ${neutral.text};
   font-size: 14px;
-  font-weight: 600;
-  line-height: 1.6;
+  font-weight: 500;
+  line-height: 1.3;
   word-break: keep-all;
 `
 
@@ -2941,9 +2941,9 @@ export const DeleteConfirmMeta = styled.p`
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
   word-break: break-word;
 `
 
@@ -2954,9 +2954,9 @@ export const DeleteConfirmWarning = styled.p`
   border-radius: 8px;
   background: ${neutral.warningTint};
   color: ${neutral.warningText};
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.5;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
   word-break: keep-all;
 `
 
@@ -2982,9 +2982,9 @@ export const DeleteConfirmNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.error};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
 `
 
 export const DeleteConfirmActions = styled.div`

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -39,8 +39,8 @@ export const Trigger = styled.button`
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 
@@ -102,7 +102,7 @@ export const CalendarHeader = styled.div`
 export const CalendarTitle = styled.strong`
   color: ${neutral.strongText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const IconButton = styled.button`
@@ -113,7 +113,7 @@ export const IconButton = styled.button`
   justify-content: center;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: transparent;
   color: ${neutral.muted};
   cursor: pointer;
@@ -131,7 +131,7 @@ export const Weekdays = styled.div`
   grid-template-columns: repeat(7, minmax(0, 1fr));
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
 `
@@ -188,12 +188,12 @@ export const SecondaryButton = styled.button`
   min-height: 34px;
   padding: 0 10px;
   border: 1px solid ${neutral.border};
-  border-radius: 6px;
+  border-radius: ${radius.pill};
   background: ${neutral.surface};
   color: ${neutral.muted};
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover,
@@ -240,7 +240,7 @@ export const TimeMenuTitle = styled.strong`
   margin-bottom: 8px;
   color: ${neutral.strongText};
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 `
 
 export const TimeColumns = styled.div`
@@ -258,7 +258,7 @@ export const TimeColumnLabel = styled.span`
   display: block;
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
 `
@@ -303,5 +303,5 @@ export const TimeSeparator = styled.span`
   align-self: center;
   color: ${neutral.primary};
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
 `

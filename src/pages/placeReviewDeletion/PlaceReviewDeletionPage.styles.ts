@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -7,7 +7,7 @@ export const RequestSummary = styled.p`
   margin: 10px 0 0;
   color: ${neutral.text};
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.3;
   white-space: pre-wrap;
 `
 
@@ -46,7 +46,7 @@ export const ReviewNote = styled.div`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.3;
   white-space: pre-wrap;
 `
 
@@ -57,11 +57,11 @@ export const DangerButton = styled.button`
   justify-content: center;
   padding: 0 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: ${radius.pill};
   background: ${neutral.error};
   color: ${neutral.primaryText};
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {

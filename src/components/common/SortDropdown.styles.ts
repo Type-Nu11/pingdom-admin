@@ -25,7 +25,7 @@ export const DropdownTrigger = styled.button`
   outline: 1px solid transparent;
   background: ${adminColors.surface};
   color: ${adminColors.text};
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -128,8 +128,8 @@ export const DropdownOption = styled.button<{
   border-radius: 7px;
   background: transparent;
   color: ${adminColors.text};
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
   transition:
@@ -153,6 +153,6 @@ export const DropdownOption = styled.button<{
     css`
       background: ${adminColors.primaryTint};
       color: ${adminColors.primary};
-      font-weight: 800;
+      font-weight: 700;
     `}
 `

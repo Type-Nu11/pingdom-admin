@@ -79,5 +79,5 @@ const LoadingDescription = styled.p`
   margin: 0;
   color: ${adminColors.muted};
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.3;
 `

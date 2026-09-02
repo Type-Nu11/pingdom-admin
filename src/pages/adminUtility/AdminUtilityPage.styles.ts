@@ -818,6 +818,7 @@ export const SectionHeader = styled.header`
   gap: 16px;
   min-height: 60px;
   padding: 14px 16px;
+  border-bottom: 1px solid ${neutral.border};
 `
 
 export const SectionTitle = styled.h2`
@@ -859,7 +860,6 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
 
 export const SectionBody = styled.div`
   padding: 16px;
-  background: ${neutral.surface};
 `
 
 export const WorkSection = styled(Section)`

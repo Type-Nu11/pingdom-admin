@@ -234,17 +234,7 @@ export const TimeControls = styled.div`
   font-weight: 800;
 `
 
-export const IconButton = styled.button.attrs<{ $danger?: boolean }>((props) => {
-  const isMediaOrderControl = props['aria-label'] === '이전 순서로 이동'
-    || props['aria-label'] === '다음 순서로 이동'
-
-  return isMediaOrderControl
-    ? {
-      disabled: true,
-      title: '원자적 미디어 재정렬 API가 제공된 뒤 순서를 변경할 수 있습니다.',
-    }
-    : {}
-})<{ $danger?: boolean }>`
+export const IconButton = styled.button<{ $danger?: boolean }>`
   width: 32px;
   height: 32px;
   display: inline-flex;
@@ -368,14 +358,23 @@ export const RepresentativeBadge = styled.span`
 
 export const MediaActions = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  justify-content: flex-end;
 `
 
 export const MediaOrderActions = styled.div`
   display: flex;
+  justify-content: flex-end;
   gap: 5px;
+`
+
+export const RepresentativeMediaButton = styled(IconButton)<{ $selected: boolean }>`
+  color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
+  border-color: ${({ $selected }) => ($selected ? colors.primarySoft : colors.border)};
+  background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
+
+  &:disabled {
+    opacity: ${({ $selected }) => ($selected ? 1 : 0.5)};
+  }
 `
 
 export const UploadArea = styled.div`

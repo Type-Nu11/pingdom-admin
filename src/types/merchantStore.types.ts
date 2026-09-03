@@ -4,6 +4,8 @@ export type MerchantOwnerProfileStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'RE
 export type MerchantOnboardingStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
 export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
+export type MerchantPlaceMenuCurrency = 'KRW' | 'USD' | 'JPY' | 'CNY' | 'EUR'
+export type MerchantPlaceMenuStatus = 'AVAILABLE' | 'SOLD_OUT' | 'HIDDEN' | 'INACTIVE'
 export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
 export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELED'
@@ -195,6 +197,37 @@ export interface MerchantOfferCreateRequest {
   eligibilityPolicy?: MerchantOffer['eligibilityPolicy']
   inventoryPolicy?: MerchantOffer['inventoryPolicy']
   expiryPolicy?: MerchantOffer['expiryPolicy']
+}
+
+export interface MerchantPlaceMenu {
+  id: number
+  placeId: number
+  name: string
+  description: string | null
+  priceAmount: number
+  currency: MerchantPlaceMenuCurrency
+  imageUrl: string | null
+  status: MerchantPlaceMenuStatus
+  displayOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MerchantPlaceMenuCreateRequest {
+  name: string
+  description?: string
+  priceAmount: number
+  currency: MerchantPlaceMenuCurrency
+  imageUrl?: string | null
+  displayOrder: number
+}
+
+export interface MerchantPlaceMenuUpdateRequest {
+  name: string
+  description?: string
+  priceAmount: number
+  currency: MerchantPlaceMenuCurrency
+  imageUrl?: string | null
 }
 
 export type MerchantCouponStatus = 'ISSUED' | 'REDEEMED' | 'EXPIRED'

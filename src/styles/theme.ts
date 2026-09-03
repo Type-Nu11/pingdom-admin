@@ -103,6 +103,7 @@ export const adminColors = {
   success: semanticColors.status.success,
   successTint: `${semanticColors.status.success}${alpha.a08}`,
   successSurface: `${semanticColors.status.success}${alpha.a06}`,
+  successToastSurface: `${semanticColors.status.success}${alpha.a16}`,
   successText: '#157A36',
   warning: semanticColors.status.warning,
   warningTint: `${semanticColors.status.warning}${alpha.a12}`,

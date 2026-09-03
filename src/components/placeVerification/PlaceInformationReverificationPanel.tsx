@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
+import { AdminPagination } from '../common/AdminPagination'
 import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
 import type { PlaceInformationReverificationRequest } from '../../types/adminPlaceVerification.types'
 import * as Shell from '../../pages/place/PlaceManagePage.styles'
@@ -30,7 +31,6 @@ export function PlaceInformationReverificationPanel({
 }) {
   const {
     reverificationRequests,
-    reverificationTotalCount,
     reverificationPage,
     reverificationTotalPages,
     reverificationHasNext,
@@ -143,11 +143,7 @@ export function PlaceInformationReverificationPanel({
               </S.CardList>
             )}
           </Shared.CompareBody>
-          <S.Pagination aria-label="재확인 요청 페이지네이션">
-            <Shared.SecondaryButton type="button" disabled={isReverificationLoading || reverificationPage <= 1} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage - 1)}>이전</Shared.SecondaryButton>
-            <span>전체 {reverificationTotalCount.toLocaleString()}건 · {Math.max(reverificationPage, 1)} / {Math.max(reverificationTotalPages, 1)}</span>
-            <Shared.SecondaryButton type="button" disabled={isReverificationLoading || !reverificationHasNext} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage + 1)}>다음</Shared.SecondaryButton>
-          </S.Pagination>
+          {reverificationTotalPages > 1 ? <AdminPagination ariaLabel="재확인 요청 목록 페이지네이션" page={reverificationPage} totalPages={reverificationTotalPages} hasNext={reverificationHasNext} disabled={isReverificationLoading} onPageChange={(nextPage) => void fetchReverificationRequests(loadedPlaceId, nextPage)} /> : null}
         </Shared.Panel>
       )}
 

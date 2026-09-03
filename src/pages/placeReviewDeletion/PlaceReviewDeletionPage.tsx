@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -127,7 +128,7 @@ function PlaceReviewDeletionPage() {
                     <Form.RecordSummary>{item.requestReason || '요청 사유가 입력되지 않았습니다.'}</Form.RecordSummary>
                   </Form.RecordButton>)}</Form.CardList> : null}
                 </Shared.ScrollArea>
-                {hook.totalPages > 1 ? <Form.Pagination><Shared.SecondaryButton type="button" disabled={hook.page <= 1 || hook.isLoading} onClick={() => { setSelectedRequestId(null); hook.clearDetail(); void hook.fetchItems(hook.status, hook.page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(hook.page, 1)} / {Math.max(hook.totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.hasNext || hook.isLoading} onClick={() => { setSelectedRequestId(null); hook.clearDetail(); void hook.fetchItems(hook.status, hook.page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination> : null}
+                {hook.totalPages > 1 ? <AdminPagination ariaLabel="리뷰 삭제 요청 목록 페이지네이션" page={hook.page} totalPages={hook.totalPages} hasNext={hook.hasNext} disabled={hook.isLoading} onPageChange={(nextPage) => { setSelectedRequestId(null); hook.clearDetail(); void hook.fetchItems(hook.status, nextPage) }} /> : null}
               </Shared.Panel>
 
               <Shared.Panel>

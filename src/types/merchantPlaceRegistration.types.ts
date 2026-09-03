@@ -39,12 +39,7 @@ export type MerchantOperatingDayOfWeek =
 
 export type MerchantOperatingDayStatus = 'OPEN' | 'CLOSED' | 'OPEN_24_HOURS'
 
-export interface MerchantLocalTime {
-  hour: number
-  minute: number
-  second: number
-  nano: number
-}
+export type MerchantLocalTime = string
 
 export interface MerchantOperatingBreakTime {
   opensAt: MerchantLocalTime

@@ -30,9 +30,46 @@ import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
-type Action = 'save' | 'submit' | 'reopen' | 'cancel' | 'detail' | 'upload' | 'delete' | 'reorder' | null
+type Action = 'save' | 'request' | 'reopen' | 'cancel' | 'detail' | 'upload' | 'delete' | 'reorder' | null
+
+export type MerchantPlaceRegistrationStagedAttachment = {
+  documentType: MerchantPlaceApplicationAttachment['documentType']
+  file: File
+}
+
+const VALIDATION_FIELD_LABELS: Record<string, string> = {
+  legalName: '법적 성명',
+  businessName: '사업자명',
+  businessRegistrationNumber: '사업자등록번호',
+  merchantDisplayName: '상점주 노출명',
+  merchantContactEmail: '상점주 연락 이메일',
+  merchantContactPhone: '상점주 연락처',
+  'newPlace.placeName': '장소명',
+  'newPlace.category': '장소 카테고리',
+  'newPlace.latitude': '위도',
+  'newPlace.longitude': '경도',
+  'newPlace.roadAddress': '도로명 주소',
+  'newPlace.jibunAddress': '지번 주소',
+  'newPlace.postalCode': '우편번호',
+  'newPlace.description': '장소 소개',
+  'newPlace.businessContactPhone': '사업장 연락처',
+  'newPlace.applicantContactPhone': '신청자 연락처',
+  'newPlace.operatingDays': '영업시간',
+}
+
+function getValidationMessage(error: unknown) {
+  if (!isApiError<MerchantPlaceApplicationErrorResponse>(error)) return null
+
+  const errors = error.response?.data?.errors
+  const [field, message] = Object.entries(errors ?? {})[0] ?? []
+  if (!field || !message) return null
+
+  return `${VALIDATION_FIELD_LABELS[field] ?? field}: ${message}`
+}
 
 function getErrorMessage(error: unknown, fallbackMessage: string) {
+  const validationMessage = getValidationMessage(error)
+  if (validationMessage) return validationMessage
   if (!isApiError<MerchantPlaceApplicationErrorResponse>(error)) return fallbackMessage
   return getAuthErrorMessage(error, {
     fallbackMessage,
@@ -222,13 +259,64 @@ export function useMerchantPlaceRegistrations() {
     '신규 장소 신청서를 저장하지 못했습니다.',
   ).then((application) => application ? toRegistration(application) : null), [applyApplication, runAction])
 
-  const submitRegistration = useCallback((applicationId: number) => runAction(
-    'submit',
-    () => submitMerchantPlaceApplication(applicationId),
-    applyApplication,
-    '신규 장소 등록 신청을 제출했습니다.',
-    '신규 장소 등록 신청을 제출하지 못했습니다.',
-  ).then((application) => application ? toRegistration(application) : null), [applyApplication, runAction])
+  const requestRegistrationReview = useCallback(async (
+    applicationId: number | null,
+    request: MerchantPlaceRegistrationRequest | null,
+    stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
+  ) => {
+    if (actionRef.current) return null
+    actionRef.current = 'request'
+    setActiveAction('request')
+    setActionErrorMessage('')
+    setSuccessMessage('')
+
+    let application: MerchantPlaceApplication | null = null
+    try {
+      if (applicationId) {
+        application = request
+          ? await updateMerchantPlaceApplication(applicationId, toRequest(request))
+          : await getMerchantPlaceApplication(applicationId)
+      } else {
+        if (!request) return null
+        application = await createMerchantPlaceApplication(toRequest(request))
+      }
+
+      if (!mountedRef.current) return null
+      applyApplication(application)
+
+      for (const attachment of stagedAttachments) {
+        await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)
+      }
+
+      const submitted = await submitMerchantPlaceApplication(application.id)
+      if (!mountedRef.current) return null
+      applyApplication(submitted)
+      setSuccessMessage('신규 장소 등록 신청을 제출했습니다.')
+      return toRegistration(submitted)
+    } catch (error) {
+      if (mountedRef.current) {
+        clearUnauthorizedSession(error)
+        setActionErrorMessage(application
+          ? '신청서를 저장했지만 일부 증빙 파일 업로드 또는 심사 요청에 실패했습니다. 신청 내역에서 이어서 처리해주세요.'
+          : getErrorMessage(error, '신규 장소 등록 신청을 제출하지 못했습니다.'))
+        logDebugError('신규 장소 등록 신청 심사 요청 실패', error)
+
+        if (application) {
+          try {
+            const recovered = await getMerchantPlaceApplication(application.id)
+            applyApplication(recovered)
+            return toRegistration(recovered)
+          } catch (recoveryError) {
+            logDebugError('신규 장소 등록 신청 복구 조회 실패', recoveryError)
+          }
+        }
+      }
+      return null
+    } finally {
+      actionRef.current = null
+      if (mountedRef.current) setActiveAction(null)
+    }
+  }, [applyApplication, clearUnauthorizedSession])
 
   const reopenRegistration = useCallback((applicationId: number) => runAction(
     'reopen',
@@ -279,7 +367,7 @@ export function useMerchantPlaceRegistrations() {
 
   return {
     status, profile, registrations, errorMessage, actionErrorMessage, successMessage, activeAction,
-    fetchRegistrations, selectRegistration, saveRegistration, submitRegistration,
+    fetchRegistrations, selectRegistration, saveRegistration, requestRegistrationReview,
     reopenRegistration, cancelRegistration, uploadAttachment, deleteAttachment, reorderAttachments,
   }
 }

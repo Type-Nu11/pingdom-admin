@@ -759,6 +759,9 @@ export const ReadonlyBlock = styled.div`
 `
 
 export const AttachmentNotice = styled.div`
+  grid-column: 1 / -1;
+  width: min(100%, 440px);
+  box-sizing: border-box;
   padding: 16px;
   border: 1px solid ${colors.borderSoft};
   border-radius: 6px;

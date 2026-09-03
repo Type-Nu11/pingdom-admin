@@ -597,7 +597,7 @@ export const SaveButton = styled.button`
 
 export const Notice = styled.div<{ $tone: 'error' | 'success' }>`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   padding: 12px 14px;
   border: 0;
@@ -609,7 +609,8 @@ export const Notice = styled.div<{ $tone: 'error' | 'success' }>`
 `
 
 export const NoticeIcon = styled.span`
-  margin-top: 1px;
+  flex: 0 0 auto;
+  line-height: 1;
   font-family: 'Material Symbols Outlined';
   font-size: 18px;
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;

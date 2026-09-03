@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantPlaceApplications } from '../../hooks/useMerchantPlaceApplications'
@@ -24,6 +25,18 @@ const STATUS: Record<MerchantPlaceApplicationStatus, { label: string; tone: 'dra
 
 const E164_PHONE_PATTERN = /^\+[1-9]\d{7,14}$/
 
+const ATTACHMENT_DOCUMENT_LABELS: Record<MerchantPlaceApplicationAttachment['documentType'], string> = {
+  BUSINESS_REGISTRATION: '사업자등록증',
+  IDENTITY_DOCUMENT: '신분증',
+  REPRESENTATIVE_IMAGE: '대표 이미지',
+}
+
+const ATTACHMENT_DOCUMENT_OPTIONS: Array<{ value: MerchantPlaceApplicationAttachment['documentType']; label: string }> = [
+  { value: 'BUSINESS_REGISTRATION', label: ATTACHMENT_DOCUMENT_LABELS.BUSINESS_REGISTRATION },
+  { value: 'IDENTITY_DOCUMENT', label: ATTACHMENT_DOCUMENT_LABELS.IDENTITY_DOCUMENT },
+  { value: 'REPRESENTATIVE_IMAGE', label: ATTACHMENT_DOCUMENT_LABELS.REPRESENTATIVE_IMAGE },
+]
+
 function formatDate(value: string | null) {
   if (!value) return '날짜 없음'
   const date = new Date(value)
@@ -39,6 +52,13 @@ function canEdit(application: MerchantPlaceApplication | null) {
 
 function normalizeE164Phone(value: string) {
   return value.trim().replace(/[\s-]/g, '')
+}
+
+function formatFileSize(value: number) {
+  if (!Number.isFinite(value) || value < 1) return '크기 정보 없음'
+  if (value < 1024) return `${value}B`
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)}KB`
+  return `${(value / (1024 * 1024)).toFixed(1)}MB`
 }
 
 function ApplicationForm({
@@ -151,6 +171,10 @@ function ApplicationForm({
     }
     const uploaded = await onUpload(application.id, attachmentDocumentType, attachmentFile)
     if (!uploaded) return
+    clearAttachmentFile()
+  }
+
+  const clearAttachmentFile = () => {
     setAttachmentFile(null)
     if (attachmentInputRef.current) attachmentInputRef.current.value = ''
   }
@@ -226,9 +250,39 @@ function ApplicationForm({
         <S.SearchHint>{description.length}/1000</S.SearchHint>
       </Store.Field>
       <S.AttachmentNotice>
-        <strong>증빙 파일</strong><br />임시 저장한 신청서에 사업자등록증, 신분증, 대표 이미지를 업로드할 수 있습니다. 첨부 후에는 내용 수정 없이 심사 요청만 할 수 있습니다.
-        {application?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceApplicationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}
-        {application?.attachments.length ? <S.AttachmentList>{application.attachments.map((attachment) => <li key={attachment.id}><strong>{attachment.originalFilename}</strong> · {attachment.documentType}{application.status === 'DRAFT' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(application.id, attachment.id)}>삭제</S.SecondaryButton>{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton></> : null}</> : null}</li>)}</S.AttachmentList> : null}
+        <S.AttachmentHeading>
+          <span aria-hidden="true">attach_file</span>
+          <div>
+            <strong>증빙 파일</strong>
+            <p>사업자등록증, 신분증, 대표 이미지를 첨부하세요. 파일을 첨부하면 신청 내용은 더 이상 수정할 수 없고 심사 요청만 가능합니다.</p>
+          </div>
+        </S.AttachmentHeading>
+        {!application ? <S.AttachmentPending>신청서를 임시 저장한 뒤 증빙 파일을 첨부할 수 있습니다.</S.AttachmentPending> : null}
+        {application?.status === 'DRAFT' ? <S.AttachmentUploader>
+          <AttachmentTypeDropdown ariaLabel="증빙 파일 종류" value={attachmentDocumentType} options={ATTACHMENT_DOCUMENT_OPTIONS} disabled={activeAction !== null} onChange={setAttachmentDocumentType} />
+          <S.FilePicker $hasFile={Boolean(attachmentFile)} $disabled={activeAction !== null}>
+            <input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} />
+            <span aria-hidden="true">{attachmentFile ? 'description' : 'upload_file'}</span>
+            <div>
+              <strong>{attachmentFile?.name || '증빙 파일 선택'}</strong>
+              <small>{attachmentFile ? `${formatFileSize(attachmentFile.size)} · 다시 클릭해 파일 변경` : '업로드할 파일을 선택하세요.'}</small>
+            </div>
+          </S.FilePicker>
+          <S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton>
+        </S.AttachmentUploader> : null}
+        {application?.attachments.length ? <S.AttachmentList>{application.attachments.map((attachment) => <li key={attachment.id}>
+          <S.AttachmentFileInfo>
+            <span aria-hidden="true">{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? 'image' : 'description'}</span>
+            <div><strong>{attachment.originalFilename}</strong><small>{ATTACHMENT_DOCUMENT_LABELS[attachment.documentType]} · {formatFileSize(attachment.fileSize)}</small></div>
+          </S.AttachmentFileInfo>
+          {application.status === 'DRAFT' ? <S.AttachmentActions>
+            <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(application.id, attachment.id)}>삭제</S.SecondaryButton>
+            {attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <>
+              <S.SecondaryButton type="button" aria-label={`${attachment.originalFilename} 순서 위로`} disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton>
+              <S.SecondaryButton type="button" aria-label={`${attachment.originalFilename} 순서 아래로`} disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton>
+            </> : null}
+          </S.AttachmentActions> : null}
+        </li>)}</S.AttachmentList> : application?.status === 'DRAFT' ? <S.AttachmentEmpty>아직 첨부한 증빙 파일이 없습니다.</S.AttachmentEmpty> : null}
       </S.AttachmentNotice>
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>

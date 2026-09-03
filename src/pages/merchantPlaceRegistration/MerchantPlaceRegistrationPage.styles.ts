@@ -759,8 +759,8 @@ export const ReadonlyBlock = styled.div`
 `
 
 export const AttachmentNotice = styled.div`
-  padding: 12px 14px;
-  border: 0;
+  padding: 16px;
+  border: 1px solid ${colors.borderSoft};
   border-radius: 6px;
   background: ${colors.surfaceLow};
   color: ${colors.muted};
@@ -791,6 +791,153 @@ export const SecondaryButton = styled.button`
   &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primary}; background: ${colors.primaryTint}; }
   &:disabled { cursor: wait; opacity: 0.65; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
+export const AttachmentHeading = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  > span {
+    flex: 0 0 auto;
+    color: ${colors.primary};
+    font-family: 'Material Symbols Outlined';
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  strong {
+    display: block;
+    color: ${colors.text};
+    font-size: 14px;
+  }
+
+  p { margin: 4px 0 0; }
+`
+
+export const AttachmentPending = styled.p`
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 5px;
+  background: ${colors.surface};
+  color: ${colors.muted};
+`
+
+export const AttachmentUploader = styled.div`
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 14px;
+
+  @media (max-width: 400px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    > :first-child { grid-column: 1 / -1; }
+  }
+`
+
+export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }>`
+  position: relative;
+  min-width: 0;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 11px;
+  border: 1px dashed ${({ $hasFile }) => ($hasFile ? colors.primary : colors.border)};
+  border-radius: 6px;
+  background: ${({ $hasFile }) => ($hasFile ? colors.primaryTint : colors.surface)};
+  color: ${colors.text};
+  cursor: ${({ $disabled }) => ($disabled ? 'wait' : 'pointer')};
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  > span {
+    flex: 0 0 auto;
+    color: ${colors.primary};
+    font-family: 'Material Symbols Outlined';
+    font-size: 19px;
+  }
+
+  div { min-width: 0; }
+  strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  strong { color: ${colors.text}; font-size: 12px; }
+  small { margin-top: 1px; color: ${colors.muted}; font-size: 11px; }
+
+  &:hover { border-color: ${colors.primary}; background: ${colors.primaryTint}; }
+  &:focus-within { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
+export const AttachmentList = styled.ul`
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid ${colors.borderSoft};
+    border-radius: 6px;
+    background: ${colors.surface};
+
+    @media (max-width: 640px) {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+`
+
+export const AttachmentFileInfo = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  > span {
+    flex: 0 0 auto;
+    color: ${colors.primary};
+    font-family: 'Material Symbols Outlined';
+    font-size: 19px;
+  }
+
+  div { min-width: 0; }
+  strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  strong { color: ${colors.text}; font-size: 12px; }
+  small { margin-top: 2px; color: ${colors.muted}; font-size: 11px; }
+`
+
+export const AttachmentActions = styled.div`
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+
+  ${SecondaryButton} { min-height: 32px; padding: 0 9px; font-size: 12px; }
+
+  @media (max-width: 640px) { justify-content: flex-start; }
+`
+
+export const AttachmentEmpty = styled.p`
+  margin: 14px 0 0;
+  padding: 11px 12px;
+  border-radius: 6px;
+  background: ${colors.surface};
+  color: ${colors.muted};
 `
 
 export const DangerButton = styled(SecondaryButton)`

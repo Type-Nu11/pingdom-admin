@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { useMerchantPayments } from '../../hooks/useMerchantPayments'
 import type {
   MerchantPayment,
@@ -128,7 +129,7 @@ function MerchantPaymentsPage() {
                   const isRefunding = payments.refundingPaymentId === payment.id
                   return <S.CampaignItem as="article" key={payment.id} $selected={false}><S.CampaignTop><S.CampaignTitle title={`결제 #${payment.id}`}>결제 #{payment.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>예약 #{payment.reservationId} · {formatAmountMinor(payment.amountMinor, payment.currency)}</S.CampaignMeta><S.CampaignMeta title={payment.providerPaymentId ?? undefined}>결제 수단 {payment.provider} · 승인 번호 {payment.providerPaymentId ?? '-'}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(payment.createdAt)} · 결제 {formatDateTime(payment.paidAt)}{payment.refundedAt ? ` · 환불 ${formatDateTime(payment.refundedAt)}` : ''}</S.CampaignMeta>{payment.failureCode ? <S.CampaignMeta>실패 코드 {payment.failureCode}</S.CampaignMeta> : null}{payment.status === 'PAID' ? <S.FormActions><S.ActionButton type="button" $variant="danger" disabled={isRefunding || payments.refundingPaymentId !== null} onClick={() => setRefundTarget(payment)}>전액 환불</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
                 })}</S.CampaignList>}
-                {payments.paymentPageInfo.totalPages > 1 ? <S.Pagination><S.PaginationButton type="button" disabled={payments.isLoadingPayments || payments.paymentPageInfo.page <= 1} onClick={() => void payments.fetchPayments(payments.paymentPageInfo.page - 1)}>이전</S.PaginationButton><S.PageText>{payments.paymentPageInfo.page} / {payments.paymentPageInfo.totalPages}</S.PageText><S.PaginationButton type="button" disabled={payments.isLoadingPayments || !payments.paymentPageInfo.hasNext} onClick={() => void payments.fetchPayments(payments.paymentPageInfo.page + 1)}>다음</S.PaginationButton></S.Pagination> : null}
+                {payments.paymentPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="결제 내역 페이지네이션" page={payments.paymentPageInfo.page} totalPages={payments.paymentPageInfo.totalPages} hasNext={payments.paymentPageInfo.hasNext} disabled={payments.isLoadingPayments} onPageChange={(nextPage) => void payments.fetchPayments(nextPage)} /> : null}
               </>}
             </>
           ) : (
@@ -146,7 +147,7 @@ function MerchantPaymentsPage() {
                   const status = SETTLEMENT_STATUS[entry.status]
                   return <S.CampaignItem as="article" key={entry.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{SETTLEMENT_TYPE[entry.entryType]} 정산 #{entry.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>결제 #{entry.paymentTransactionId} · 총액 {formatAmountMinor(entry.grossAmountMinor, entry.currency)}</S.CampaignMeta><S.CampaignMeta>수수료 {formatAmountMinor(entry.feeAmountMinor, entry.currency)} · 정산액 {formatAmountMinor(entry.netAmountMinor, entry.currency)}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(entry.createdAt)} · 정산 {formatDateTime(entry.settledAt)}</S.CampaignMeta></S.CampaignItem>
                 })}</S.CampaignList>}
-                {payments.settlementPageInfo.totalPages > 1 ? <S.Pagination><S.PaginationButton type="button" disabled={payments.isLoadingSettlements || payments.settlementPageInfo.page <= 1} onClick={() => void payments.fetchSettlements(payments.settlementPageInfo.page - 1)}>이전</S.PaginationButton><S.PageText>{payments.settlementPageInfo.page} / {payments.settlementPageInfo.totalPages}</S.PageText><S.PaginationButton type="button" disabled={payments.isLoadingSettlements || !payments.settlementPageInfo.hasNext} onClick={() => void payments.fetchSettlements(payments.settlementPageInfo.page + 1)}>다음</S.PaginationButton></S.Pagination> : null}
+                {payments.settlementPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="정산 내역 페이지네이션" page={payments.settlementPageInfo.page} totalPages={payments.settlementPageInfo.totalPages} hasNext={payments.settlementPageInfo.hasNext} disabled={payments.isLoadingSettlements} onPageChange={(nextPage) => void payments.fetchSettlements(nextPage)} /> : null}
               </>}
             </>
           )}

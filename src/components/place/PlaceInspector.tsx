@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 import type {
   AdminPlaceDetail,
   AdminPlaceDiscoveryStatus,
@@ -72,6 +72,27 @@ function getOperatingTone(status?: AdminPlaceOperatingStatus) {
     : status === 'TEMPORARILY_CLOSED'
       ? 'notice'
       : 'normal'
+}
+
+function RepresentativeImage({ imageUrl, placeName }: { imageUrl?: string | null; placeName: string }) {
+  const [isUnavailable, setIsUnavailable] = useState(false)
+
+  if (!imageUrl || isUnavailable) {
+    return (
+      <S.DetailImagePlaceholder role="status">
+        <S.MaterialIcon aria-hidden="true">image_not_supported</S.MaterialIcon>
+        <span>대표 이미지 없음</span>
+      </S.DetailImagePlaceholder>
+    )
+  }
+
+  return (
+    <S.DetailRepresentativeImage
+      src={imageUrl}
+      alt={`${placeName} 대표 이미지`}
+      onError={() => setIsUnavailable(true)}
+    />
+  )
 }
 
 export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
@@ -148,12 +169,11 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       정보 보정
                     </S.DetailInlineButton>
                   </S.DetailSectionHeader>
-                  {representativeImageUrl ? (
-                    <S.DetailRepresentativeImage
-                      src={representativeImageUrl}
-                      alt={`${placeDetail.name} 대표 이미지`}
-                    />
-                  ) : null}
+                  <RepresentativeImage
+                    key={representativeImageUrl ?? 'missing'}
+                    imageUrl={representativeImageUrl}
+                    placeName={placeDetail.name}
+                  />
                   <S.DetailMetaList>
                     <S.DetailMetaGroup>
                       <S.DetailMetaRow>

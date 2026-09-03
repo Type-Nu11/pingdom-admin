@@ -568,6 +568,25 @@ export const DetailRepresentativeImage = styled.img`
   object-fit: cover;
 `
 
+export const DetailImagePlaceholder = styled.div`
+  width: 100%;
+  height: 176px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 13px;
+  font-weight: 700;
+
+  ${MaterialIcon} {
+    font-size: 20px;
+  }
+`
+
 export const DetailMetaGroup = styled.section`
   padding: 12px;
   border: 0;
@@ -2835,7 +2854,7 @@ export const ActionToast = styled.div`
   padding: 12px 14px;
   border: 0;
   border-radius: 8px;
-  background: ${neutral.successSurface};
+  background: ${neutral.successToastSurface};
   box-shadow: 0 16px 40px ${neutral.shadow};
   color: ${neutral.successText};
   font-size: 14px;

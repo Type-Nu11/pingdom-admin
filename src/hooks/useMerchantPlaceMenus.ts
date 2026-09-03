@@ -82,7 +82,9 @@ export function useMerchantPlaceMenus() {
       return true
     } catch (error) {
       if (mountedRef.current && requestId === requestRef.current) {
-        setSectionErrorMessage(getErrorMessage(error, '메뉴 목록을 불러오지 못했습니다.'))
+        const message = getErrorMessage(error, '메뉴 목록을 불러오지 못했습니다.')
+        setSectionErrorMessage(message)
+        setErrorMessage(message)
         logDebugError('상점주 메뉴 목록 조회 실패', error)
       }
       return false

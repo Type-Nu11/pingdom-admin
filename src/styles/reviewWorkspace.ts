@@ -1,7 +1,7 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { adminColors } from './theme'
 
-export const OwnerContent = styled.main`
+export const ReviewContent = styled.main`
   min-height: 0;
   flex: 1;
   overflow: hidden;
@@ -17,7 +17,7 @@ export const OwnerContent = styled.main`
   }
 `
 
-export const OwnerPageStack = styled.div`
+export const ReviewPageStack = styled.div`
   width: min(1280px, 100%);
   min-height: 0;
   height: 100%;
@@ -31,29 +31,31 @@ export const OwnerPageStack = styled.div`
   }
 `
 
-export const OwnerWorkspace = styled.div`
+export const ReviewWorkspace = styled.div`
   min-height: 0;
   flex: 1;
   display: grid;
   grid-template-columns: 380px minmax(0, 1fr);
   gap: 16px;
 
-  @media (max-width: 1080px) {
-    min-height: 360px;
-    flex: initial;
-    grid-template-columns: 1fr;
-  }
-`
-
-export const OwnerPanel = styled.div`
-  min-height: 0;
-  height: 100%;
-
   > section {
+    min-height: 0;
     height: 100%;
   }
 
   @media (max-width: 1080px) {
-    height: min(620px, 65dvh);
+    min-height: 360px;
+    flex: initial;
+    grid-template-columns: 1fr;
+
+    > section {
+      height: min(620px, 65dvh);
+    }
   }
+`
+
+export const ReviewScrollWorkspace = styled(ReviewWorkspace)`
+  flex: initial;
+  height: min(620px, 65dvh);
+  min-height: 440px;
 `

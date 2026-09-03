@@ -1,5 +1,6 @@
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
+import { AdminPagination } from "../../components/common/AdminPagination";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
@@ -332,25 +333,7 @@ function NotificationOperationsPage() {
                   </S.CardList>
                 )}
               </Shared.CompareBody>
-              {tp > 1 ? <S.Pagination>
-                <Shared.SecondaryButton
-                  type="button"
-                  disabled={page <= 1 || h.isLoading}
-                  onClick={() => void h.fetchTab(tab, page - 1)}
-                >
-                  이전
-                </Shared.SecondaryButton>
-                <span>
-                  {Math.max(page, 1)} / {Math.max(tp, 1)}
-                </span>
-                <Shared.SecondaryButton
-                  type="button"
-                  disabled={!next || h.isLoading}
-                  onClick={() => void h.fetchTab(tab, page + 1)}
-                >
-                  다음
-                </Shared.SecondaryButton>
-              </S.Pagination> : null}
+              {tp > 1 ? <AdminPagination ariaLabel="알림 운영 목록 페이지네이션" page={page} totalPages={tp} hasNext={next} disabled={h.isLoading} onPageChange={(nextPage) => void h.fetchTab(tab, nextPage)} /> : null}
             </Shared.Panel>
           </Shared.PageStack>
         </Shared.Content>

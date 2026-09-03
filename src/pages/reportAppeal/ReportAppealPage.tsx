@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -131,7 +132,7 @@ function ReportAppealPage() {
                     ))}</Form.CardList>
                   )}
                 </Shared.ScrollArea>
-                {totalPages > 1 ? <Form.Pagination><Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page - 1) }}>이전</Shared.SecondaryButton><span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => { setSelectedAppeal(null); void fetchAppeals(status, page + 1) }}>다음</Shared.SecondaryButton></Form.Pagination> : null}
+                {totalPages > 1 ? <AdminPagination ariaLabel="신고 이의제기 목록 페이지네이션" page={page} totalPages={totalPages} hasNext={hasNext} disabled={isLoading} onPageChange={(nextPage) => { setSelectedAppeal(null); void fetchAppeals(status, nextPage) }} /> : null}
               </Shared.Panel>
               <Shared.Panel>
                 <Shared.PanelHeader><div><Shared.PanelTitle>이의제기 상세</Shared.PanelTitle><Shared.PanelDescription>원 신고와 처리 이력을 함께 확인합니다.</Shared.PanelDescription></div></Shared.PanelHeader>

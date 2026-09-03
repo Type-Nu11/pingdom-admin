@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { adminColors, radius } from '../../styles/theme'
 
 export const Pagination = styled.nav`
@@ -13,8 +13,8 @@ export const Pagination = styled.nav`
 `
 
 export const IconButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -39,8 +39,8 @@ export const IconButton = styled.button`
   }
 
   &:disabled {
-    cursor: default;
-    opacity: 0.4;
+    cursor: not-allowed;
+    opacity: 0.32;
   }
 `
 
@@ -65,27 +65,31 @@ export const PageList = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 4px;
+  border: 1px solid ${adminColors.border};
+  border-radius: 12px;
+  background: ${adminColors.surface};
 `
 
 export const PageButton = styled.button<{ $active?: boolean }>`
-  min-width: 36px;
-  height: 36px;
-  padding: 0 8px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${adminColors.surfaceLow};
-  color: ${adminColors.text};
+  background: ${({ $active }) => ($active ? adminColors.primary : 'transparent')};
+  color: ${({ $active }) => ($active ? adminColors.primaryText : adminColors.text)};
   font: inherit;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 160ms ease,
     color 160ms ease;
 
   &:hover:not(:disabled) {
-    background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    background: ${({ $active }) => ($active ? adminColors.primary : adminColors.primaryTint)};
+    color: ${({ $active }) => ($active ? adminColors.primaryText : adminColors.primary)};
   }
 
   &:focus-visible {
@@ -95,18 +99,6 @@ export const PageButton = styled.button<{ $active?: boolean }>`
 
   &:disabled {
     cursor: default;
-    opacity: 0.5;
+    opacity: 0.72;
   }
-
-  ${({ $active }) =>
-    $active &&
-    css`
-      background: ${adminColors.primary};
-      color: ${adminColors.primaryText};
-
-      &:hover:not(:disabled) {
-        background: ${adminColors.primary};
-        color: ${adminColors.primaryText};
-      }
-    `}
 `

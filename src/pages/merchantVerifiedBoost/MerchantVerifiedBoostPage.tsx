@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantVerifiedBoost } from '../../hooks/useMerchantVerifiedBoost'
 import type {
@@ -36,22 +37,6 @@ function formatCurrency(amount: number, currency: string) {
 function createIdempotencyKey() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
-}
-
-function Pagination({
-  page,
-  totalPages,
-  isBusy,
-  onChange,
-}: {
-  page: number
-  totalPages: number
-  isBusy: boolean
-  onChange: (page: number) => void
-}) {
-  if (totalPages <= 1) return null
-
-  return <S.Pagination><S.PaginationButton type="button" disabled={isBusy || page <= 1} onClick={() => onChange(page - 1)}>이전</S.PaginationButton><S.PageText>{page} / {totalPages}</S.PageText><S.PaginationButton type="button" disabled={isBusy || page >= totalPages} onClick={() => onChange(page + 1)}>다음</S.PaginationButton></S.Pagination>
 }
 
 function BoostSelectionDialog({
@@ -139,7 +124,7 @@ function MerchantVerifiedBoostPage() {
           const product = productById.get(selection.productId)
           return <S.CampaignItem as="div" key={selection.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{product?.name || `상품 #${selection.productId}`}</S.CampaignTitle><S.StatusBadge $tone={hasActiveExecution ? 'published' : 'draft'}>{hasActiveExecution ? '집행 중' : '선택 완료'}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>장소 #{selection.placeId} · {product ? `${product.durationDays}일 · ${formatCurrency(product.priceAmount, product.currency)}` : `상품 #${selection.productId}`}</S.CampaignMeta><S.CampaignMeta>선택 {formatDateTime(selection.selectedAt)}</S.CampaignMeta><S.FormActions><S.ActionButton type="button" disabled={isActionPending || hasActiveExecution} $variant="primary" onClick={() => void boost.startExecution(selection)}>{isStarting ? '시작 중' : hasActiveExecution ? '집행 중' : '집행 시작'}</S.ActionButton></S.FormActions></S.CampaignItem>
         })}</S.CampaignList>}
-        <Pagination page={boost.selectionPageInfo.page} totalPages={boost.selectionPageInfo.totalPages} isBusy={isActionPending || boost.selectionState === 'loading'} onChange={(page) => void boost.fetchSelections(page)} />
+        {boost.selectionPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="Verified Boost 선택 목록 페이지네이션" page={boost.selectionPageInfo.page} totalPages={boost.selectionPageInfo.totalPages} hasNext={boost.selectionPageInfo.hasNext} disabled={isActionPending || boost.selectionState === 'loading'} onPageChange={(nextPage) => void boost.fetchSelections(nextPage)} /> : null}
       </S.Panel>
       <S.Panel>
         <S.PanelHeader><div><S.PanelTitle>집행 내역</S.PanelTitle><S.PanelDescription>집행 중인 항목은 즉시 중단할 수 있습니다.</S.PanelDescription></div></S.PanelHeader>
@@ -149,7 +134,7 @@ function MerchantVerifiedBoostPage() {
           const product = productById.get(execution.productId)
           return <S.CampaignItem as="div" key={execution.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{product?.name || `상품 #${execution.productId}`}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>장소 #{execution.placeId} · 선택 #{execution.selectionId}</S.CampaignMeta><S.CampaignMeta>시작 {formatDateTime(execution.startedAt)} · 종료 {formatDateTime(execution.endsAt)}</S.CampaignMeta>{execution.stoppedAt ? <S.CampaignMeta>중단 {formatDateTime(execution.stoppedAt)}</S.CampaignMeta> : null}{execution.status === 'ACTIVE' ? <S.FormActions><S.ActionButton type="button" disabled={isActionPending} $variant="danger" onClick={() => setPendingStop(execution)}>{isStopping ? '중단 중' : '집행 중단'}</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
         })}</S.CampaignList>}
-        <Pagination page={boost.executionPageInfo.page} totalPages={boost.executionPageInfo.totalPages} isBusy={isActionPending || boost.executionState === 'loading'} onChange={(page) => void boost.fetchExecutions(page)} />
+        {boost.executionPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="Verified Boost 집행 내역 페이지네이션" page={boost.executionPageInfo.page} totalPages={boost.executionPageInfo.totalPages} hasNext={boost.executionPageInfo.hasNext} disabled={isActionPending || boost.executionState === 'loading'} onPageChange={(nextPage) => void boost.fetchExecutions(nextPage)} /> : null}
       </S.Panel>
     </S.Workspace>
   </Store.Content>{isSelectionOpen && canOpenSelection ? <BoostSelectionDialog products={boost.products} placeIds={boost.profile?.placeIds ?? []} existingPairs={selectedPairs} isBusy={isActionPending} onClose={() => setIsSelectionOpen(false)} onSubmit={async (request) => Boolean(await boost.createSelection(request))} /> : null}{pendingStop ? <S.ModalOverlay role="presentation" onMouseDown={() => !isActionPending && setPendingStop(null)}><S.Modal role="dialog" aria-modal="true" aria-labelledby="verified-boost-stop-title" onMouseDown={(event) => event.stopPropagation()}><S.ModalHeader><div><S.ModalTitle id="verified-boost-stop-title">Verified Boost 집행 중단</S.ModalTitle></div><S.CloseButton type="button" aria-label="닫기" disabled={isActionPending} onClick={() => setPendingStop(null)}>close</S.CloseButton></S.ModalHeader><S.ModalBody><S.ReadonlyNotice>장소 #{pendingStop.placeId}의 Verified Boost 집행을 중단합니다. 중단 후에는 현재 노출 상태가 즉시 변경될 수 있습니다.</S.ReadonlyNotice><S.FormActions><S.ActionButton type="button" disabled={isActionPending} onClick={() => setPendingStop(null)}>돌아가기</S.ActionButton><S.ActionButton type="button" disabled={isActionPending} $variant="danger" onClick={() => void handleStop()}>{isActionPending ? '중단 중' : '집행 중단'}</S.ActionButton></S.FormActions></S.ModalBody></S.Modal></S.ModalOverlay> : null}</Store.Page>

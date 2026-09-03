@@ -9,7 +9,7 @@ interface AdminPaginationProps {
   ariaLabel?: string
 }
 
-const MAX_VISIBLE_PAGE_COUNT = 5
+const MAX_VISIBLE_PAGE_COUNT = 3
 
 function getVisiblePageNumbers(page: number, totalPages: number) {
   const visibleCount = Math.min(MAX_VISIBLE_PAGE_COUNT, totalPages)

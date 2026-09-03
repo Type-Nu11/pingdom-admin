@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceEvents } from '../../hooks/useAdminPlaceEvents'
@@ -322,11 +323,7 @@ function PlaceEventPage() {
                     </S.RecordButton>)}
                   </S.CardList>}
                 </Shared.ScrollArea>
-                {hook.totalPages > 1 ? <S.Pagination>
-                  <Shared.SecondaryButton type="button" disabled={hook.page <= 1 || hook.isLoading} onClick={() => void hook.fetchEvents({ ...hook.query, page: hook.page - 1 })}>이전</Shared.SecondaryButton>
-                  <span>{Math.max(hook.page, 1)} / {Math.max(hook.totalPages, 1)}</span>
-                  <Shared.SecondaryButton type="button" disabled={!hook.hasNext || hook.isLoading} onClick={() => void hook.fetchEvents({ ...hook.query, page: hook.page + 1 })}>다음</Shared.SecondaryButton>
-                </S.Pagination> : null}
+                {hook.totalPages > 1 ? <AdminPagination ariaLabel="기간형 이벤트 목록 페이지네이션" page={hook.page} totalPages={hook.totalPages} hasNext={hook.hasNext} disabled={hook.isLoading} onPageChange={(nextPage) => void hook.fetchEvents({ ...hook.query, page: nextPage })} /> : null}
               </Shared.Panel>
 
               <Shared.Panel>

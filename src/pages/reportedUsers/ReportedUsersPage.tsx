@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminReports } from '../../hooks/useAdminReports'
@@ -127,13 +128,7 @@ function ReportedUsersPage() {
                     </Form.CardList>
                   )}
                 </Shared.ScrollArea>
-                {totalPages > 1 ? (
-                  <Form.Pagination>
-                    <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => movePage(page - 1)}>이전</Shared.SecondaryButton>
-                    <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
-                    <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => movePage(page + 1)}>다음</Shared.SecondaryButton>
-                  </Form.Pagination>
-                ) : null}
+                {totalPages > 1 ? <AdminPagination ariaLabel="신고 사용자 목록 페이지네이션" page={page} totalPages={totalPages} hasNext={hasNext} disabled={isLoading} onPageChange={movePage} /> : null}
               </Shared.Panel>
 
               <Shared.Panel>

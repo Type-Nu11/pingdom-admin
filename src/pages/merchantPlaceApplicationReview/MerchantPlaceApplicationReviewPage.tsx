@@ -167,6 +167,19 @@ function MerchantPlaceApplicationReviewPage() {
   const loadingMessage = isHistoryView ? '처리 이력을 불러오는 중입니다.' : '심사 대기 신청을 불러오는 중입니다.'
   const safeTotalPages = Math.max(hook.totalPages, 1)
   const visiblePageNumbers = getVisiblePageNumbers(hook.page, safeTotalPages)
+  const activeApplicantBusinessName = hook.applicantMerchantProfile?.status === 'ACTIVE'
+    ? hook.applicantMerchantProfile.businessName.trim()
+    : null
+  const hasBusinessNameMismatch = Boolean(
+    hook.detail
+    && activeApplicantBusinessName
+    && hook.detail.businessName.trim() !== activeApplicantBusinessName,
+  )
+  const approvalBlockMessage = hook.isApplicantMerchantProfileLoading
+    ? '현재 상점주 정보를 확인하고 있습니다. 잠시 후 승인할 수 있습니다.'
+    : hasBusinessNameMismatch
+      ? '신청서의 사업자명이 현재 활성 상점주 정보와 달라 승인할 수 없습니다. 상점주에게 신청 취소 후 다시 작성하도록 안내해주세요.'
+      : ''
 
   const changePage = (nextPage: number) => {
     const page = Math.min(Math.max(nextPage, 1), safeTotalPages)
@@ -199,6 +212,7 @@ function MerchantPlaceApplicationReviewPage() {
   }, [applicationIdFromNavigation, fetchApplicationDetail])
 
   const openReview = (nextDecision: 'approve' | 'reject') => {
+    if (nextDecision === 'approve' && approvalBlockMessage) return
     setDecision(nextDecision)
     setReason('')
     setFormError('')
@@ -206,6 +220,10 @@ function MerchantPlaceApplicationReviewPage() {
 
   const submitReview = async () => {
     if (!decision || hook.isReviewing) return
+    if (decision === 'approve' && approvalBlockMessage) {
+      setFormError(approvalBlockMessage)
+      return
+    }
     const trimmedReason = reason.trim()
     if (!trimmedReason) {
       setFormError('심사 사유를 입력해주세요.')
@@ -259,22 +277,23 @@ function MerchantPlaceApplicationReviewPage() {
               {!selectedId ? <Shared.EmptyState><strong>{emptyDetailTitle}</strong><p>{emptyDetailDescription}</p></Shared.EmptyState> : null}
               {selectedId && hook.isDetailLoading ? <Shared.EmptyState><strong>장소 신청 상세를 불러오는 중입니다.</strong></Shared.EmptyState> : null}
               {selectedId && !hook.isDetailLoading && hook.detailErrorMessage ? <Shared.EmptyState><strong>{hook.detailErrorMessage}</strong><Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedId)}>다시 시도</Shared.SecondaryButton></Shared.EmptyState> : null}
-              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} isReviewing={hook.isReviewing} onOpenReview={openReview} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
+              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} isReviewing={hook.isReviewing} approvalBlockMessage={approvalBlockMessage} onOpenReview={openReview} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
             </Shared.CompareBody></Shared.Panel></S.ReviewDetailPanel>
           </S.ReviewWorkspace>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
-      {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-place-application-review-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-place-application-review-title">장소 신청 {decision === 'approve' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>장소 신청 #{hook.detail.id}을 {decision === 'approve' ? '승인' : '반려'}합니다. 처리 후 상태가 즉시 변경되며 되돌릴 수 없습니다.</Shared.ModalWarning><Form.Section><Form.Field>심사 사유 *<Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></Form.Field></Form.Section>{formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'reject' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '승인 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
+      {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-place-application-review-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-place-application-review-title">장소 신청 {decision === 'approve' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>장소 신청 #{hook.detail.id}을 {decision === 'approve' ? '승인' : '반려'}합니다. 처리 후 상태가 즉시 변경되며 되돌릴 수 없습니다.</Shared.ModalWarning><Form.Section><Form.Field>심사 사유 *<Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></Form.Field></Form.Section>{formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'reject' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing || Boolean(approvalBlockMessage)} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '승인 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
     </Shell.AppShell>
   )
 }
 
-function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, isReviewing, onOpenReview, onDownload }: {
+function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, isReviewing, approvalBlockMessage, onOpenReview, onDownload }: {
   application: AdminMerchantPlaceApplication
   attachments: AdminMerchantPlaceApplicationAttachment[]
   attachmentErrorMessage: string
   downloadingAttachmentId: number | null
   isReviewing: boolean
+  approvalBlockMessage: string
   onOpenReview: (decision: 'approve' | 'reject') => void
   onDownload: (attachment: AdminMerchantPlaceApplicationAttachment) => void
 }) {
@@ -289,7 +308,8 @@ function ApplicationDetail({ application, attachments, attachmentErrorMessage, d
     {application.applicationType === 'EXISTING_PLACE_CLAIM' ? <Form.Section><Form.SectionTitle>기존 장소 운영 신청</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>대상 장소</dt><dd>{application.existingPlaceId ? `장소 #${application.existingPlaceId}` : '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>심사 완료 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid>{application.claimReason ? <S.Reason>{application.claimReason}</S.Reason> : <Form.RecordDescription>등록된 신청 사유가 없습니다.</Form.RecordDescription>}</Form.Section> : null}
     <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
     {application.reviewReason ? <Form.Section><Form.SectionTitle>심사 사유</Form.SectionTitle><S.Reason>{application.reviewReason}</S.Reason></Form.Section> : null}
-    {application.status === 'PENDING' ? <Form.InlineActions><Shared.SecondaryButton type="button" disabled={isReviewing} onClick={() => onOpenReview('reject')}>반려</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={isReviewing} onClick={() => onOpenReview('approve')}>승인</Shared.PrimaryButton></Form.InlineActions> : null}
+    {application.status === 'PENDING' && approvalBlockMessage ? <Shared.Notice $variant="error">{approvalBlockMessage}</Shared.Notice> : null}
+    {application.status === 'PENDING' ? <Form.InlineActions><Shared.SecondaryButton type="button" disabled={isReviewing} onClick={() => onOpenReview('reject')}>반려</Shared.SecondaryButton><Shared.PrimaryButton type="button" title={approvalBlockMessage || undefined} disabled={isReviewing || Boolean(approvalBlockMessage)} onClick={() => onOpenReview('approve')}>승인</Shared.PrimaryButton></Form.InlineActions> : null}
   </>
 }
 

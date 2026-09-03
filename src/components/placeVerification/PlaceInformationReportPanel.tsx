@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AdminSelect } from '../common/AdminStatusSelect'
 import { AdminStatusFilter } from '../common/AdminStatusFilter'
+import { AdminPagination } from '../common/AdminPagination'
 import type { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
 import type {
   PlaceInformationDispute,
@@ -160,13 +161,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               ))}
             </S.CardList>
           </Shared.ScrollArea>
-          {totalPages > 1 ? (
-            <S.Pagination>
-              <Shared.SecondaryButton type="button" disabled={page <= 1 || isLoading} onClick={() => void fetchReports(status, page - 1)}>이전</Shared.SecondaryButton>
-              <span>{Math.max(page, 1)} / {Math.max(totalPages, 1)}</span>
-              <Shared.SecondaryButton type="button" disabled={!hasNext || isLoading} onClick={() => void fetchReports(status, page + 1)}>다음</Shared.SecondaryButton>
-            </S.Pagination>
-          ) : null}
+          {totalPages > 1 ? <AdminPagination ariaLabel="장소 정보 신고 목록 페이지네이션" page={page} totalPages={totalPages} hasNext={hasNext} disabled={isLoading} onPageChange={(nextPage) => void fetchReports(status, nextPage)} /> : null}
         </Shared.Panel>
 
         <Shared.Panel>

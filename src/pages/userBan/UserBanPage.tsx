@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -1058,27 +1059,7 @@ function UserBanPage() {
                       </U.Table>
                     </U.TableWrap>
                   )}
-                  {hasUsers && !isError && totalCount > 0 && safeTotalPages > 1 ? (
-                    <U.Pagination aria-label="밴 사용자 목록 페이지네이션">
-                      <U.SecondaryButton
-                        type="button"
-                        disabled={isLoading || page <= 1}
-                        onClick={() => handlePageChange(page - 1)}
-                      >
-                        이전
-                      </U.SecondaryButton>
-                      <U.PaginationStatus>
-                        {page} / {safeTotalPages}
-                      </U.PaginationStatus>
-                      <U.SecondaryButton
-                        type="button"
-                        disabled={isLoading || !hasNext}
-                        onClick={() => handlePageChange(page + 1)}
-                      >
-                        다음
-                      </U.SecondaryButton>
-                    </U.Pagination>
-                  ) : null}
+                  {hasUsers && !isError && totalCount > 0 && safeTotalPages > 1 ? <AdminPagination ariaLabel="밴 사용자 목록 페이지네이션" page={page} totalPages={safeTotalPages} hasNext={hasNext} disabled={isLoading} onPageChange={handlePageChange} /> : null}
                 </U.WorkSectionBody>
               </U.WorkSection>
 
@@ -1350,40 +1331,7 @@ function UserBanPage() {
                               ))}
                             </U.DetailList>
                             {safeSanctionHistoryTotalPages > 1 ? (
-                              <U.Pagination aria-label="사용자 제재 이력 페이지네이션">
-                                <U.SecondaryButton
-                                  type="button"
-                                  disabled={
-                                    isSanctionHistoryLoading ||
-                                    sanctionHistoryPage <= 1
-                                  }
-                                  onClick={() =>
-                                    handleSanctionHistoryPageChange(
-                                      sanctionHistoryPage - 1
-                                    )
-                                  }
-                                >
-                                  이전
-                                </U.SecondaryButton>
-                                <U.PaginationStatus>
-                                  {sanctionHistoryPage} /{' '}
-                                  {safeSanctionHistoryTotalPages}
-                                </U.PaginationStatus>
-                                <U.SecondaryButton
-                                  type="button"
-                                  disabled={
-                                    isSanctionHistoryLoading ||
-                                    !sanctionHistoryHasNext
-                                  }
-                                  onClick={() =>
-                                    handleSanctionHistoryPageChange(
-                                      sanctionHistoryPage + 1
-                                    )
-                                  }
-                                >
-                                  다음
-                                </U.SecondaryButton>
-                              </U.Pagination>
+                              <AdminPagination ariaLabel="사용자 제재 이력 페이지네이션" page={sanctionHistoryPage} totalPages={safeSanctionHistoryTotalPages} hasNext={sanctionHistoryHasNext} disabled={isSanctionHistoryLoading} onPageChange={handleSanctionHistoryPageChange} />
                             ) : null}
                           </>
                         ) : (

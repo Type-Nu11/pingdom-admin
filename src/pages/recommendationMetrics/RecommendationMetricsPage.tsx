@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { RecommendationPolicyPanel } from '../../components/recommendation/RecommendationPolicyPanel'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -173,7 +174,7 @@ function RecommendationMetricsPage() {
             <Shared.Panel>
               <Shared.PanelHeader><div><Shared.PanelTitle>장소별 추천 성과</Shared.PanelTitle><Shared.PanelDescription>{hook.query.recommendationVersion || '전체 버전'} · {SORT_OPTIONS.find((item) => item.value === hook.query.sortBy)?.label} 순</Shared.PanelDescription></div><Shared.PanelCount>{hook.totalCount.toLocaleString()}개 장소</Shared.PanelCount></Shared.PanelHeader>
               {hook.isLoading && hook.metrics.length === 0 ? <Shared.EmptyState><strong>추천 성과를 불러오는 중입니다.</strong></Shared.EmptyState> : hook.metrics.length === 0 ? <Shared.EmptyState><strong>조건에 맞는 추천 성과가 없습니다.</strong></Shared.EmptyState> : <S.TableScroll><S.Table><thead><tr><th>장소</th><th>노출</th><th>클릭</th><th>원본 CTR</th><th>보정 CTR</th><th>북마크</th><th>좋아요</th><th>전체 전환율</th><th>갱신</th></tr></thead><tbody>{hook.metrics.map((metric) => <tr key={metric.id}><td><S.TableTitle>{metric.name}</S.TableTitle><S.TableMeta>#{metric.id} · {metric.address}</S.TableMeta></td><td>{metric.exposureCount.toLocaleString()}</td><td>{metric.clickCount.toLocaleString()}</td><td>{percent(metric.rawCtr)}</td><td>{percent(metric.smoothedCtr)}</td><td>{metric.bookmarkConversionCount.toLocaleString()} · {percent(metric.bookmarkConversionRate)}</td><td>{metric.likeConversionCount.toLocaleString()} · {percent(metric.likeConversionRate)}</td><td>{percent(metric.totalConversionRate)}</td><td>{formatDate(metric.snapshotUpdatedAt)}</td></tr>)}</tbody></S.Table></S.TableScroll>}
-              {hook.totalPages > 1 ? <S.Pagination><Shared.SecondaryButton type="button" disabled={hook.query.page <= 1 || hook.isLoading} onClick={() => movePage(hook.query.page - 1)}>이전</Shared.SecondaryButton><span>{Math.max(hook.query.page, 1)} / {Math.max(hook.totalPages, 1)}</span><Shared.SecondaryButton type="button" disabled={!hook.hasNext || hook.isLoading} onClick={() => movePage(hook.query.page + 1)}>다음</Shared.SecondaryButton></S.Pagination> : null}
+              {hook.totalPages > 1 ? <AdminPagination ariaLabel="추천 성과 목록 페이지네이션" page={hook.query.page} totalPages={hook.totalPages} hasNext={hook.hasNext} disabled={hook.isLoading} onPageChange={movePage} /> : null}
             </Shared.Panel>
           </> : null}
 

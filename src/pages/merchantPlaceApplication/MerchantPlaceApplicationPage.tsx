@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
+import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantPlaceApplications } from '../../hooks/useMerchantPlaceApplications'
 import type {
@@ -23,6 +25,18 @@ const STATUS: Record<MerchantPlaceApplicationStatus, { label: string; tone: 'dra
 
 const E164_PHONE_PATTERN = /^\+[1-9]\d{7,14}$/
 
+const ATTACHMENT_DOCUMENT_LABELS: Record<MerchantPlaceApplicationAttachment['documentType'], string> = {
+  BUSINESS_REGISTRATION: '사업자등록증',
+  IDENTITY_DOCUMENT: '신분증',
+  REPRESENTATIVE_IMAGE: '대표 이미지',
+}
+
+const ATTACHMENT_DOCUMENT_OPTIONS: Array<{ value: MerchantPlaceApplicationAttachment['documentType']; label: string }> = [
+  { value: 'BUSINESS_REGISTRATION', label: ATTACHMENT_DOCUMENT_LABELS.BUSINESS_REGISTRATION },
+  { value: 'IDENTITY_DOCUMENT', label: ATTACHMENT_DOCUMENT_LABELS.IDENTITY_DOCUMENT },
+  { value: 'REPRESENTATIVE_IMAGE', label: ATTACHMENT_DOCUMENT_LABELS.REPRESENTATIVE_IMAGE },
+]
+
 function formatDate(value: string | null) {
   if (!value) return '날짜 없음'
   const date = new Date(value)
@@ -38,6 +52,13 @@ function canEdit(application: MerchantPlaceApplication | null) {
 
 function normalizeE164Phone(value: string) {
   return value.trim().replace(/[\s-]/g, '')
+}
+
+function formatFileSize(value: number) {
+  if (!Number.isFinite(value) || value < 1) return '크기 정보 없음'
+  if (value < 1024) return `${value}B`
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)}KB`
+  return `${(value / (1024 * 1024)).toFixed(1)}MB`
 }
 
 function ApplicationForm({
@@ -72,13 +93,21 @@ function ApplicationForm({
   const hasExistingAttachments = (application?.attachments.length ?? 0) > 0
   const editable = canEdit(application) && !hasExistingAttachments
   const canSubmitExistingAttachments = application?.status === 'DRAFT' && hasExistingAttachments
+  const activeBusinessName = profile?.status === 'ACTIVE' && profile.businessName.trim()
+    ? profile.businessName.trim()
+    : null
+  const hasBusinessNameMismatch = Boolean(
+    activeBusinessName
+    && application?.businessName.trim()
+    && application.businessName.trim() !== activeBusinessName,
+  )
   const [legalName, setLegalName] = useState(application?.legalName ?? '')
-  const [businessName, setBusinessName] = useState(application?.businessName ?? profile?.businessName ?? '')
+  const [businessName, setBusinessName] = useState(activeBusinessName ?? application?.businessName ?? '')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
-  const [displayName, setDisplayName] = useState(application?.merchantDisplayName ?? profile?.displayName ?? '')
-  const [email, setEmail] = useState(application?.merchantContactEmail ?? profile?.contactEmail ?? '')
-  const [phone, setPhone] = useState(application?.merchantContactPhone ?? profile?.contactPhone ?? '')
-  const [description, setDescription] = useState(application?.merchantDescription ?? profile?.description ?? '')
+  const [displayName, setDisplayName] = useState(application?.merchantDisplayName ?? '')
+  const [email, setEmail] = useState(application?.merchantContactEmail ?? '')
+  const [phone, setPhone] = useState(application?.merchantContactPhone ?? '')
+  const [description, setDescription] = useState(application?.merchantDescription ?? '')
   const [reason, setReason] = useState(application?.claimReason ?? '')
   const [keyword, setKeyword] = useState('')
   const [selectedPlace, setSelectedPlace] = useState<MerchantPlaceSearchItem | null>(
@@ -89,6 +118,7 @@ function ApplicationForm({
   const [formError, setFormError] = useState('')
   const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceApplicationAttachment['documentType']>('BUSINESS_REGISTRATION')
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const attachmentInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
@@ -97,7 +127,9 @@ function ApplicationForm({
   }, [keyword, onSearch])
 
   const buildRequest = (): MerchantPlaceApplicationRequest | null => {
-    if (!legalName.trim() || !businessName.trim() || !businessRegistrationNumber.trim() || !displayName.trim() || !email.trim() || !phone.trim()) {
+    const requestBusinessName = activeBusinessName ?? businessName.trim()
+
+    if (!legalName.trim() || !requestBusinessName || !businessRegistrationNumber.trim() || !displayName.trim() || !email.trim() || !phone.trim()) {
       setFormError('필수 항목을 모두 입력해주세요.')
       return null
     }
@@ -118,7 +150,7 @@ function ApplicationForm({
     return {
       applicationType: 'EXISTING_PLACE_CLAIM',
       legalName: legalName.trim(),
-      businessName: businessName.trim(),
+      businessName: requestBusinessName,
       businessRegistrationNumber: businessRegistrationNumber.trim(),
       merchantDisplayName: displayName.trim(),
       merchantDescription: description.trim() || null,
@@ -149,8 +181,18 @@ function ApplicationForm({
     }
     const uploaded = await onUpload(application.id, attachmentDocumentType, attachmentFile)
     if (!uploaded) return
+    clearAttachmentFile()
+  }
+
+  const clearAttachmentFile = () => {
     setAttachmentFile(null)
     if (attachmentInputRef.current) attachmentInputRef.current.value = ''
+  }
+
+  const confirmCancellation = async () => {
+    if (!application) return
+    const canceled = await onCancel(application.id)
+    if (canceled) setIsCancelDialogOpen(false)
   }
 
   const moveRepresentativeImage = async (attachmentId: number, direction: -1 | 1) => {
@@ -173,13 +215,15 @@ function ApplicationForm({
         {hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : application.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
         {application.reviewReason ? <><br />검토 의견: {application.reviewReason}</> : null}
       </S.ReadonlyBlock> : null}
+      {hasBusinessNameMismatch ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>현재 신청서의 사업자명이 활성 상점주 정보와 달라 승인할 수 없습니다. 신청을 취소한 뒤 현재 사업자명으로 다시 작성해주세요.</Store.Notice> : null}
       <Store.Field>
         법적 성명
         <Store.Input value={legalName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setLegalName(event.target.value)} />
       </Store.Field>
       <Store.Field>
         사업자명
-        <Store.Input value={businessName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessName(event.target.value)} />
+        <Store.Input value={activeBusinessName ?? businessName} maxLength={100} disabled={!editable || activeAction !== null || Boolean(activeBusinessName)} onChange={(event) => setBusinessName(event.target.value)} />
+        {activeBusinessName ? <S.SearchHint>활성 상점주의 사업자명은 장소 신청에서 변경할 수 없습니다.</S.SearchHint> : null}
       </Store.Field>
       <Store.Field>
         사업자등록번호
@@ -218,17 +262,48 @@ function ApplicationForm({
         <S.SearchHint>{description.length}/1000</S.SearchHint>
       </Store.Field>
       <S.AttachmentNotice>
-        <strong>증빙 파일</strong><br />임시 저장한 신청서에 사업자등록증, 신분증, 대표 이미지를 업로드할 수 있습니다. 첨부 후에는 내용 수정 없이 심사 요청만 할 수 있습니다.
-        {application?.status === 'DRAFT' ? <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><select aria-label="증빙 파일 종류" value={attachmentDocumentType} disabled={activeAction !== null} onChange={(event) => setAttachmentDocumentType(event.target.value as MerchantPlaceApplicationAttachment['documentType'])}><option value="BUSINESS_REGISTRATION">사업자등록증</option><option value="IDENTITY_DOCUMENT">신분증</option><option value="REPRESENTATIVE_IMAGE">대표 이미지</option></select><input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} /><S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton></div> : null}
-        {application?.attachments.length ? <S.AttachmentList>{application.attachments.map((attachment) => <li key={attachment.id}><strong>{attachment.originalFilename}</strong> · {attachment.documentType}{application.status === 'DRAFT' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(application.id, attachment.id)}>삭제</S.SecondaryButton>{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton><S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton></> : null}</> : null}</li>)}</S.AttachmentList> : null}
+        <S.AttachmentHeading>
+          <span aria-hidden="true">attach_file</span>
+          <div>
+            <strong>증빙 파일</strong>
+            <p>사업자등록증, 신분증, 대표 이미지를 첨부하세요. 파일을 첨부하면 신청 내용은 더 이상 수정할 수 없고 심사 요청만 가능합니다.</p>
+          </div>
+        </S.AttachmentHeading>
+        {!application ? <S.AttachmentPending>신청서를 임시 저장한 뒤 증빙 파일을 첨부할 수 있습니다.</S.AttachmentPending> : null}
+        {application?.status === 'DRAFT' ? <S.AttachmentUploader>
+          <AttachmentTypeDropdown ariaLabel="증빙 파일 종류" value={attachmentDocumentType} options={ATTACHMENT_DOCUMENT_OPTIONS} disabled={activeAction !== null} onChange={setAttachmentDocumentType} />
+          <S.FilePicker $hasFile={Boolean(attachmentFile)} $disabled={activeAction !== null}>
+            <input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} />
+            <span aria-hidden="true">{attachmentFile ? 'description' : 'upload_file'}</span>
+            <div>
+              <strong>{attachmentFile?.name || '증빙 파일 선택'}</strong>
+              <small>{attachmentFile ? `${formatFileSize(attachmentFile.size)} · 다시 클릭해 파일 변경` : '업로드할 파일을 선택하세요.'}</small>
+            </div>
+          </S.FilePicker>
+          <S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={() => void uploadAttachment()}>{activeAction === 'upload' ? '업로드 중' : '파일 추가'}</S.SecondaryButton>
+        </S.AttachmentUploader> : null}
+        {application?.attachments.length ? <S.AttachmentList>{application.attachments.map((attachment) => <li key={attachment.id}>
+          <S.AttachmentFileInfo>
+            <span aria-hidden="true">{attachment.documentType === 'REPRESENTATIVE_IMAGE' ? 'image' : 'description'}</span>
+            <div><strong>{attachment.originalFilename}</strong><small>{ATTACHMENT_DOCUMENT_LABELS[attachment.documentType]} · {formatFileSize(attachment.fileSize)}</small></div>
+          </S.AttachmentFileInfo>
+          {application.status === 'DRAFT' ? <S.AttachmentActions>
+            <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onDelete(application.id, attachment.id)}>삭제</S.SecondaryButton>
+            {attachment.documentType === 'REPRESENTATIVE_IMAGE' ? <>
+              <S.SecondaryButton type="button" aria-label={`${attachment.originalFilename} 순서 위로`} disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, -1)}>위로</S.SecondaryButton>
+              <S.SecondaryButton type="button" aria-label={`${attachment.originalFilename} 순서 아래로`} disabled={activeAction !== null} onClick={() => void moveRepresentativeImage(attachment.id, 1)}>아래로</S.SecondaryButton>
+            </> : null}
+          </S.AttachmentActions> : null}
+        </li>)}</S.AttachmentList> : application?.status === 'DRAFT' ? <S.AttachmentEmpty>아직 첨부한 증빙 파일이 없습니다.</S.AttachmentEmpty> : null}
       </S.AttachmentNotice>
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>
         {application?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(application.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
-        {application && (application.status === 'DRAFT' || application.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('이 운영 장소 신청을 취소할까요?')) void onCancel(application.id) }}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
+        {application && (application.status === 'DRAFT' || application.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => setIsCancelDialogOpen(true)}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
         {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
         {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void onSubmit(application.id)}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
+      {application && isCancelDialogOpen ? <MerchantConfirmationDialog title="운영 장소 신청을 취소할까요?" description="취소한 신청은 심사 대상에서 제외되며 다시 되돌릴 수 없습니다." confirmLabel="신청 취소" isPending={activeAction === 'cancel'} onClose={() => setIsCancelDialogOpen(false)} onConfirm={() => void confirmCancellation()} /> : null}
     </Store.Form>
   )
 }
@@ -238,10 +313,19 @@ function MerchantPlaceApplicationPage() {
   const { logout, user } = useAuth()
   const claim = useMerchantPlaceApplications()
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const applications = useMemo(
+  const [newApplicationFormVersion, setNewApplicationFormVersion] = useState(0)
+  const [applicationListView, setApplicationListView] = useState<'applications' | 'canceled'>('applications')
+  const claimApplications = useMemo(
     () => claim.applications.filter((application) => application.applicationType === 'EXISTING_PLACE_CLAIM'),
     [claim.applications],
   )
+  const applications = useMemo(
+    () => claimApplications.filter((application) => applicationListView === 'canceled'
+      ? application.status === 'CANCELED'
+      : application.status !== 'CANCELED'),
+    [applicationListView, claimApplications],
+  )
+  const canceledApplicationCount = claimApplications.length - claimApplications.filter((application) => application.status !== 'CANCELED').length
   const selectedApplication = useMemo(
     () => applications.find((application) => application.id === selectedId) ?? null,
     [applications, selectedId],
@@ -252,6 +336,26 @@ function MerchantPlaceApplicationPage() {
     navigate('/login', { replace: true })
   }
 
+  const resetToNewApplication = () => {
+    setSelectedId(null)
+    setNewApplicationFormVersion((current) => current + 1)
+  }
+
+  const refreshApplications = () => {
+    resetToNewApplication()
+    void claim.fetchApplications()
+  }
+
+  const changeApplicationListView = (nextView: 'applications' | 'canceled') => {
+    setApplicationListView(nextView)
+    resetToNewApplication()
+  }
+
+  const startNewApplication = () => {
+    setApplicationListView('applications')
+    resetToNewApplication()
+  }
+
   if (claim.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void claim.fetchApplications()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
@@ -260,19 +364,19 @@ function MerchantPlaceApplicationPage() {
     <Store.Page>
       <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{claim.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
-        <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={() => void claim.fetchApplications()}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
+        <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={refreshApplications}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
         {claim.error ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice> : null}
         {claim.actionError ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.actionError}</Store.Notice> : null}
         {claim.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{claim.successMessage}</Store.Notice> : null}
         <S.Layout>
           <S.Panel>
-            <S.PanelHeading><div><S.PanelTitle>신청 내역</S.PanelTitle><S.PanelDescription>제출 후에는 심사 상태와 검토 의견을 확인할 수 있습니다.</S.PanelDescription></div></S.PanelHeading>
-            {claim.status === 'loading' ? <Store.Empty>신청 내역을 불러오는 중입니다.</Store.Empty> : applications.length === 0 ? <S.Empty>아직 기존 장소 운영 권한 신청이 없습니다. 등록된 장소를 검색해 첫 신청서를 작성하세요.</S.Empty> : <S.ApplicationList>{applications.map((application) => <S.ApplicationItem type="button" key={application.id} $selected={application.id === selectedId} onClick={() => setSelectedId(application.id)}><S.ApplicationTop><S.ApplicationName>{application.placeName || `장소 #${application.existingPlaceId ?? '-'}`}</S.ApplicationName><S.StatusBadge $tone={STATUS[application.status].tone}>{STATUS[application.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{application.businessName} · {formatDate(application.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList>}
-            <S.NewApplicationButton type="button" onClick={() => setSelectedId(null)}>새 운영 장소 신청</S.NewApplicationButton>
+            <S.PanelHeading><div><S.PanelTitle>신청 내역</S.PanelTitle><S.PanelDescription>제출 후에는 심사 상태와 검토 의견을 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs role="tablist" aria-label="운영 장소 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'applications'} $active={applicationListView === 'applications'} onClick={() => changeApplicationListView('applications')}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'canceled'} $active={applicationListView === 'canceled'} onClick={() => changeApplicationListView('canceled')}>취소 내역 ({canceledApplicationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>
+            {claim.status === 'loading' ? <Store.Empty>신청 내역을 불러오는 중입니다.</Store.Empty> : applications.length === 0 ? <S.Empty>{applicationListView === 'canceled' ? '취소한 기존 장소 운영 권한 신청이 없습니다.' : '아직 기존 장소 운영 권한 신청이 없습니다. 등록된 장소를 검색해 첫 신청서를 작성하세요.'}</S.Empty> : <S.ApplicationList>{applications.map((application) => <S.ApplicationItem type="button" key={application.id} $selected={application.id === selectedId} onClick={() => setSelectedId(application.id)}><S.ApplicationTop><S.ApplicationName>{application.placeName || `장소 #${application.existingPlaceId ?? '-'}`}</S.ApplicationName><S.StatusBadge $tone={STATUS[application.status].tone}>{STATUS[application.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{application.businessName} · {formatDate(application.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList>}
+            <S.NewApplicationButton type="button" onClick={startNewApplication}>새 운영 장소 신청</S.NewApplicationButton>
           </S.Panel>
           <S.Panel>
             <S.PanelHeading><div><S.PanelTitle>{selectedApplication ? '운영 장소 신청 상세' : '새 운영 장소 신청'}</S.PanelTitle><S.PanelDescription>{selectedApplication ? `신청 번호 #${selectedApplication.id} · 마지막 수정 ${formatDate(selectedApplication.updatedAt)}` : '장소 검색부터 심사 요청까지 한 신청서에서 진행합니다.'}</S.PanelDescription></div>{selectedApplication ? <S.StatusBadge $tone={STATUS[selectedApplication.status].tone}>{STATUS[selectedApplication.status].label}</S.StatusBadge> : null}</S.PanelHeading>
-            <ApplicationForm key={selectedApplication?.id ?? 'new'} application={selectedApplication} profile={claim.profile} suggestions={claim.suggestions} isSearching={claim.isSearching} activeAction={claim.activeAction} onSearch={claim.searchPlaces} onSave={async (id, request) => { const next = await claim.saveApplication(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={claim.submitApplication} onReopen={claim.reopenApplication} onCancel={claim.cancelApplication} onUpload={claim.uploadAttachment} onDelete={claim.deleteAttachment} onReorder={claim.reorderAttachments} />
+            <ApplicationForm key={selectedApplication?.id ?? `new-${newApplicationFormVersion}`} application={selectedApplication} profile={claim.profile} suggestions={claim.suggestions} isSearching={claim.isSearching} activeAction={claim.activeAction} onSearch={claim.searchPlaces} onSave={async (id, request) => { const next = await claim.saveApplication(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={claim.submitApplication} onReopen={claim.reopenApplication} onCancel={async (applicationId) => { const canceled = await claim.cancelApplication(applicationId); if (canceled) resetToNewApplication(); return canceled }} onUpload={claim.uploadAttachment} onDelete={claim.deleteAttachment} onReorder={claim.reorderAttachments} />
           </S.Panel>
         </S.Layout>
       </Store.Content>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
+import { AdminPagination } from "../../components/common/AdminPagination";
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminTrustScore } from "../../hooks/useAdminTrustScore";
@@ -617,31 +618,7 @@ function TrustScorePage() {
                       </S.CardList>
                     )}
                   </S.FormBody>
-                  {hook.anomalyTotalPages > 1 ? <S.Pagination>
-                    <Shared.SecondaryButton
-                      type="button"
-                      disabled={
-                        hook.anomalyPage <= 1 || hook.isAnomaliesLoading
-                      }
-                      onClick={() => searchAnomalies(hook.anomalyPage - 1)}
-                    >
-                      이전
-                    </Shared.SecondaryButton>
-                    <span>
-                      {Math.max(hook.anomalyPage, 1)} /{" "}
-                      {Math.max(hook.anomalyTotalPages, 1)}
-                    </span>
-                    <Shared.SecondaryButton
-                      type="button"
-                      disabled={
-                        hook.anomalyPage >= hook.anomalyTotalPages ||
-                        hook.isAnomaliesLoading
-                      }
-                      onClick={() => searchAnomalies(hook.anomalyPage + 1)}
-                    >
-                      다음
-                    </Shared.SecondaryButton>
-                  </S.Pagination> : null}
+                  {hook.anomalyTotalPages > 1 ? <AdminPagination ariaLabel="신뢰 점수 이상치 목록 페이지네이션" page={hook.anomalyPage} totalPages={hook.anomalyTotalPages} disabled={hook.isAnomaliesLoading} onPageChange={searchAnomalies} /> : null}
                 </Shared.Panel>
               </>
             ) : null}

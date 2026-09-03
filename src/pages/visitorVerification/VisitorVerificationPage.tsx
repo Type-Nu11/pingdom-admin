@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
+import { AdminPagination } from "../../components/common/AdminPagination";
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
@@ -309,31 +310,7 @@ function VisitorVerificationPage() {
                     </S.CardList>
                   )}
                 </Shared.ScrollArea>
-                {totalPages > 1 ? <S.Pagination>
-                  <Shared.SecondaryButton
-                    type="button"
-                    disabled={page <= 1 || hook.isLoading}
-                    onClick={() => {
-                      setSelected(null);
-                      void hook.fetchItems(tab, status, page - 1);
-                    }}
-                  >
-                    이전
-                  </Shared.SecondaryButton>
-                  <span>
-                    {Math.max(page, 1)} / {Math.max(totalPages, 1)}
-                  </span>
-                  <Shared.SecondaryButton
-                    type="button"
-                    disabled={!hasNext || hook.isLoading}
-                    onClick={() => {
-                      setSelected(null);
-                      void hook.fetchItems(tab, status, page + 1);
-                    }}
-                  >
-                    다음
-                  </Shared.SecondaryButton>
-                </S.Pagination> : null}
+                {totalPages > 1 ? <AdminPagination ariaLabel="방문자 제보 및 정정 목록 페이지네이션" page={page} totalPages={totalPages} hasNext={hasNext} disabled={hook.isLoading} onPageChange={(nextPage) => { setSelected(null); void hook.fetchItems(tab, status, nextPage); }} /> : null}
               </Shared.Panel>
               <Shared.Panel>
                 <Shared.PanelHeader>

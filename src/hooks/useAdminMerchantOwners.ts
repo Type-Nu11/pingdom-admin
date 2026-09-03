@@ -230,6 +230,7 @@ export function useAdminMerchantOwners() {
     },
     [runAction],
   );
+
   const revoke = useCallback(
     (userId: number, request: AdminMerchantOwnerReviewRequest) => {
       return runAction(

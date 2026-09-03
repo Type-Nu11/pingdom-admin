@@ -34,11 +34,11 @@ export async function getAdminMerchantOwnerPlaces(userId: number) {
 async function reviewMerchantOwner(
   userId: number,
   action: 'approve' | 'reject' | 'revoke',
-  request: AdminMerchantOwnerReviewRequest
+  request: AdminMerchantOwnerReviewRequest,
 ) {
   const { data } = await customAxios.post<AdminMerchantOwnerProfile>(
     `${PATH}/${userId}/${action}`,
-    request
+    request,
   )
   return data
 }

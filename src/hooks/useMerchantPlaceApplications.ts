@@ -61,6 +61,7 @@ export function useMerchantPlaceApplications() {
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(actionError, setActionError)
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<Action>(null)
   const mountedRef = useRef(true)

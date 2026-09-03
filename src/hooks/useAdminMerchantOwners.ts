@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
-  approveAdminMerchantOwner,
   getAdminMerchantOwner,
   getAdminMerchantOwnerPlaces,
   getAdminMerchantOwners,
-  rejectAdminMerchantOwner,
   replaceAdminMerchantOwnerPlaces,
   revokeAdminMerchantOwner,
   updateAdminMerchantOwnerOnboarding,
@@ -21,15 +19,12 @@ import type {
   AdminMerchantOwnerPlaceUpdateRequest,
   AdminMerchantOwnerProfile,
   AdminMerchantOwnerReviewRequest,
-  MerchantOwnerStatus,
 } from "../types/adminMerchantOwner.types";
 import { logDebugError } from "../utils/debugLogger";
 import { useAuth } from "./useAuth";
 
 const LIMIT = 10;
 export type MerchantOwnerAction =
-  | "approve"
-  | "reject"
   | "revoke"
   | "places"
   | "onboarding"
@@ -62,7 +57,6 @@ function shouldClearAuth(error: unknown) {
 
 export function useAdminMerchantOwners() {
   const { clearAuth } = useAuth();
-  const [status, setStatus] = useState<MerchantOwnerStatus | "">("PENDING");
   const [profiles, setProfiles] = useState<AdminMerchantOwnerProfile[]>([]);
   const [profile, setProfile] = useState<AdminMerchantOwnerProfile | null>(
     null,
@@ -86,22 +80,18 @@ export function useAdminMerchantOwners() {
   const listRef = useRef(0);
   const detailRef = useRef(0);
   const actionRef = useRef<MerchantOwnerAction | null>(null);
-  const queryRef = useRef({ status, page });
+  const queryRef = useRef({ page });
 
   const fetchProfiles = useCallback(
-    async (
-      nextStatus = queryRef.current.status,
-      nextPage = queryRef.current.page,
-    ) => {
+    async (nextPage = queryRef.current.page) => {
       const requestId = ++listRef.current;
-      queryRef.current = { status: nextStatus, page: nextPage };
-      setStatus(nextStatus);
+      queryRef.current = { page: nextPage };
       setPage(nextPage);
       setIsLoading(true);
       setErrorMessage("");
       try {
         const data = await getAdminMerchantOwners({
-          status: nextStatus || undefined,
+          status: "ACTIVE",
           page: nextPage,
           limit: LIMIT,
         });
@@ -189,7 +179,7 @@ export function useAdminMerchantOwners() {
         const data = await request();
         setSuccessMessage(message);
         await Promise.all([
-          fetchProfiles(queryRef.current.status, queryRef.current.page),
+          fetchProfiles(queryRef.current.page),
           fetchDetail(userId),
         ]);
         return data;
@@ -208,28 +198,6 @@ export function useAdminMerchantOwners() {
     [clearAuth, fetchDetail, fetchProfiles],
   );
 
-  const approve = useCallback(
-    (userId: number, request: AdminMerchantOwnerReviewRequest) => {
-      return runAction(
-        "approve",
-        userId,
-        () => approveAdminMerchantOwner(userId, request),
-        "상점주 신청을 승인했습니다.",
-      );
-    },
-    [runAction],
-  );
-  const reject = useCallback(
-    (userId: number, request: AdminMerchantOwnerReviewRequest) => {
-      return runAction(
-        "reject",
-        userId,
-        () => rejectAdminMerchantOwner(userId, request),
-        "상점주 신청을 반려했습니다.",
-      );
-    },
-    [runAction],
-  );
   const revoke = useCallback(
     (userId: number, request: AdminMerchantOwnerReviewRequest) => {
       return runAction(
@@ -283,11 +251,10 @@ export function useAdminMerchantOwners() {
   }, []);
 
   useEffect(() => {
-    void fetchProfiles("PENDING", 1);
+    void fetchProfiles(1);
   }, [fetchProfiles]);
 
   return {
-    status,
     profiles,
     profile,
     places,
@@ -305,8 +272,6 @@ export function useAdminMerchantOwners() {
     fetchProfiles,
     fetchDetail,
     clearDetail,
-    approve,
-    reject,
     revoke,
     replacePlaces,
     updateOnboarding,

@@ -19,6 +19,7 @@ import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 import * as History from './OperationHistoryPage.styles'
+import * as Review from '../../styles/reviewWorkspace'
 
 type Tab = 'audit' | 'privacy'
 
@@ -425,7 +426,7 @@ function OperationHistoryPage() {
                   </S.FormBody>
                 </Shared.Panel>
 
-                <Shared.Workspace>
+                <Review.ReviewScrollWorkspace>
                   <Shared.Panel>
                     <Shared.PanelHeader>
                       <div>
@@ -509,7 +510,7 @@ function OperationHistoryPage() {
                       )}
                     </Shared.CompareBody>
                   </Shared.Panel>
-                </Shared.Workspace>
+                </Review.ReviewScrollWorkspace>
               </>
             ) : (
               <>
@@ -532,7 +533,7 @@ function OperationHistoryPage() {
                   </S.FormBody>
                 </Shared.Panel>
 
-                <Shared.Workspace>
+                <Review.ReviewScrollWorkspace>
                   <Shared.Panel>
                     <Shared.PanelHeader><div><Shared.PanelTitle>개인정보 처리 이력</Shared.PanelTitle><Shared.PanelDescription>항목을 선택해 요청과 처리 결과를 확인합니다.</Shared.PanelDescription></div><Shared.PanelCount>{(hook.privacy?.totalCount ?? 0).toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
                     <Shared.ScrollArea>
@@ -546,7 +547,7 @@ function OperationHistoryPage() {
                       {!selectedPrivacy ? <Shared.EmptyState><strong>확인할 개인정보 처리 이력을 선택해주세요.</strong></Shared.EmptyState> : <><S.RecordHeader><div><S.RecordTitle>{PRIVACY_ACTION_LABELS[selectedPrivacy.action]}</S.RecordTitle><S.RecordMeta>처리 이력 #{selectedPrivacy.id}</S.RecordMeta></div><S.StatusBadge>{selectedPrivacy.actorType}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>대상 사용자</dt><dd>#{selectedPrivacy.subjectUserId}</dd></S.DetailItem><S.DetailItem><dt>수행 사용자</dt><dd>#{selectedPrivacy.actorUserId}</dd></S.DetailItem><S.DetailItem><dt>요청 ID</dt><dd>{selectedPrivacy.requestId || '없음'}</dd></S.DetailItem><S.DetailItem><dt>처리 시각</dt><dd>{formatDate(selectedPrivacy.createdAt)}</dd></S.DetailItem></S.DetailGrid><S.Section><S.SectionTitle>처리 상세</S.SectionTitle><S.RecordDescription>{selectedPrivacy.details || '기록된 처리 상세가 없습니다.'}</S.RecordDescription></S.Section></>}
                     </Shared.CompareBody>
                   </Shared.Panel>
-                </Shared.Workspace>
+                </Review.ReviewScrollWorkspace>
               </>
             )}
           </Shared.PageStack>

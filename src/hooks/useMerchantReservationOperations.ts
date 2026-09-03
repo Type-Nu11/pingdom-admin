@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   cancelMerchantReservation,
   getMerchantAvailabilities,
@@ -43,7 +44,9 @@ export function useMerchantReservationOperations() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeReservationId, setActiveReservationId] = useState<number | null>(null)
   const [activeAction, setActiveAction] = useState<ReservationAction>(null)
   const mountedRef = useRef(true)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getAdminPlaceDuplicateDetail,
   getAdminPlaceDuplicateGroups,
@@ -83,7 +84,9 @@ export function useAdminPlaceMerge() {
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [historyErrorMessage, setHistoryErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestGroupsRequestIdRef = useRef(0)
   const latestDetailRequestIdRef = useRef(0)
   const latestHistoriesRequestIdRef = useRef(0)

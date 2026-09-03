@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   cancelMerchantPlaceApplication,
   createMerchantPlaceApplication,
@@ -118,7 +119,9 @@ export function useMerchantPlaceRegistrations() {
   const [registrations, setRegistrations] = useState<MerchantPlaceRegistration[]>([])
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<Action>(null)
   const mountedRef = useRef(true)
   const actionRef = useRef<Action>(null)

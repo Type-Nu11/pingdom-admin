@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   closeMerchantCampaign,
   createMerchantBrand,
@@ -85,7 +86,9 @@ export function useMerchantCampaigns() {
   const [isListLoading, setIsListLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<CampaignAction>(null)
   const mountedRef = useRef(true)
   const actionRef = useRef<CampaignAction>(null)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getAdminNotificationDeliveries,
   getAdminNotifications,
@@ -59,7 +60,8 @@ export function useAdminNotificationOperations() {
   const [isLoading, setIsLoading] = useState(false);
   const [retryingId, setRetryingId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("")
+  useAutoDismissMessage(successMessage, setSuccessMessage);
   const retryRef = useRef(false);
   const msg = useCallback(
     (e: unknown, f: string) => {

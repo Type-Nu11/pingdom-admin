@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminVerifiedBoostProductApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -34,7 +35,9 @@ export function useAdminVerifiedBoostProducts() {
   const [activeAction, setActiveAction] = useState<'create' | 'status' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const actionRef = useRef(false)
 
   const errorText = useCallback((error: unknown, fallback: string) => {

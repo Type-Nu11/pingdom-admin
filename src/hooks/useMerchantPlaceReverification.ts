@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getMerchantPlaceReverificationRequests,
   respondMerchantPlaceReverificationRequest,
@@ -39,7 +40,9 @@ export function useMerchantPlaceReverification() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [respondingRequestId, setRespondingRequestId] = useState<number | null>(null)
   const mountedRef = useRef(true)
   const requestRef = useRef(0)

@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   cancelAdminPlaceInformationReverificationRequest,
   completeAdminPlaceInformationReverificationRequest,
@@ -71,7 +72,9 @@ export function useAdminPlaceVerification() {
   const [evidenceErrorMessage, setEvidenceErrorMessage] = useState('')
   const [reverificationErrorMessage, setReverificationErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestEvidenceRequestIdRef = useRef(0)
   const latestReverificationRequestIdRef = useRef(0)
   const activeActionRef = useRef<PlaceVerificationAction | null>(null)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   approveAdminReportAppeal,
   getAdminReportAppeals,
@@ -49,7 +50,9 @@ export function useAdminReportAppeals() {
   const [processingAppealId, setProcessingAppealId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
+  useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestRequestIdRef = useRef(0)
   const processingRef = useRef<number | null>(null)
   const queryRef = useRef({ status, page })

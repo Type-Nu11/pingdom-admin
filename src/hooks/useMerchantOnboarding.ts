@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   createMerchantOwnerApplicationProfile,
   createMerchantVerification,
@@ -64,6 +65,7 @@ export function useMerchantOnboarding() {
   const [profileErrorMessage, setProfileErrorMessage] = useState('')
   const [verificationErrorMessage, setVerificationErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  useAutoDismissMessage(successMessage, setSuccessMessage)
   const [savingSection, setSavingSection] = useState<SavingSection>(null)
   const mountedRef = useRef(true)
   const savingRef = useRef<SavingSection>(null)

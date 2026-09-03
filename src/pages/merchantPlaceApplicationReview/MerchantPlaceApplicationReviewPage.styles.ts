@@ -3,6 +3,65 @@ import { adminColors, radius } from '../../styles/theme'
 
 const colors = adminColors
 
+export const ReviewContent = styled.main`
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  padding: 32px 32px 24px;
+  background: ${colors.background};
+
+  @media (max-width: 1080px) {
+    overflow-y: auto;
+  }
+
+  @media (max-width: 720px) {
+    padding: 24px 16px;
+  }
+`
+
+export const ReviewPageStack = styled.div`
+  width: min(1280px, 100%);
+  min-height: 0;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (max-width: 1080px) {
+    height: auto;
+  }
+`
+
+export const ReviewWorkspace = styled.div`
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1080px) {
+    min-height: 360px;
+    flex: initial;
+    grid-template-columns: 1fr;
+  }
+`
+
+export const ReviewListPanel = styled.div`
+  min-height: 0;
+  height: 100%;
+
+  > section {
+    height: 100%;
+  }
+
+  @media (max-width: 1080px) {
+    height: min(620px, 65dvh);
+  }
+`
+
+export const ReviewDetailPanel = styled(ReviewListPanel)``
+
 export const AttachmentList = styled.div`
   display: flex;
   flex-direction: column;
@@ -50,6 +109,7 @@ export const AttachmentButton = styled.button`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 0 10px;
   border: 0;
@@ -59,6 +119,14 @@ export const AttachmentButton = styled.button`
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  line-height: 1;
+
+  > span {
+    display: block;
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
 
   &:hover:not(:disabled) {
     background: ${colors.primaryTint};
@@ -67,6 +135,38 @@ export const AttachmentButton = styled.button`
   &:disabled {
     cursor: default;
     opacity: 0.55;
+  }
+`
+
+export const OperatingHoursList = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 12px;
+`
+
+export const OperatingHoursItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: ${colors.surfaceLow};
+
+  span {
+    flex: 0 0 16px;
+    color: ${colors.muted};
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    color: ${colors.strongText};
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
   }
 `
 

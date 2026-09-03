@@ -77,6 +77,9 @@ const MerchantOperatingNoticePage = lazy(
 const MerchantOfferPage = lazy(
   () => import('../../pages/merchantOffer/MerchantOfferPage'),
 )
+const MerchantMenuPage = lazy(
+  () => import('../../pages/merchantMenu/MerchantMenuPage'),
+)
 const MerchantReservationSetupPage = lazy(
   () => import('../../pages/merchantReservationSetup/MerchantReservationSetupPage'),
 )
@@ -167,6 +170,7 @@ export function Router() {
               <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
               <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
               <Route path="/merchant/offers" element={<MerchantOfferPage />} />
+              <Route path="/merchant/menus" element={<MerchantMenuPage />} />
               <Route path="/merchant/reservations/products" element={<MerchantReservationProductsPage />} />
               <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
               <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />

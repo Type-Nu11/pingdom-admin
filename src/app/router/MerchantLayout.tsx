@@ -9,7 +9,7 @@ const getSectionTitle = (pathname: string) => {
   if (pathname.startsWith('/merchant/place-')) return '장소 관리'
   if (pathname.startsWith('/merchant/reviews')) return '장소 운영'
   if (pathname.startsWith('/merchant/operating-notices')) return '장소 운영'
-  if (pathname.startsWith('/merchant/campaigns') || pathname.startsWith('/merchant/offers')) return '콘텐츠 관리'
+  if (pathname.startsWith('/merchant/menus') || pathname.startsWith('/merchant/campaigns') || pathname.startsWith('/merchant/offers')) return '콘텐츠 관리'
   if (pathname.startsWith('/merchant/reservations')) return '예약 관리'
   if (pathname.startsWith('/merchant/payments')) return '결제 · 정산'
   if (pathname.startsWith('/merchant/verified-boost')) return 'Verified Boost'

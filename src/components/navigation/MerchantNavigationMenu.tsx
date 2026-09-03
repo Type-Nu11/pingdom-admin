@@ -33,6 +33,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
     title: '콘텐츠 · 판매',
     items: [
+      { label: '메뉴 관리', icon: 'restaurant_menu', path: '/merchant/menus' },
       { label: '이벤트 관리', icon: 'event', path: '/merchant/campaigns' },
       { label: '혜택 · 쿠폰', icon: 'local_offer', path: '/merchant/offers' },
       { label: 'Verified Boost', icon: 'rocket_launch', path: '/merchant/verified-boost' },

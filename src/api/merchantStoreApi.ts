@@ -11,6 +11,10 @@ import type {
   MerchantOfferPageResponse,
   MerchantOffer,
   MerchantOfferCreateRequest,
+  MerchantPlaceMenu,
+  MerchantPlaceMenuCreateRequest,
+  MerchantPlaceMenuStatus,
+  MerchantPlaceMenuUpdateRequest,
   MerchantOperatingNotice,
   MerchantOperatingNoticeCancelRequest,
   MerchantOperatingNoticeListResponse,
@@ -326,6 +330,66 @@ export async function redeemMerchantCoupon(request: MerchantCouponRedeemRequest)
     request,
   )
   return data
+}
+
+export async function getMerchantPlaceMenus(placeId: number) {
+  const { data } = await customAxios.get<MerchantPlaceMenu[]>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/menus`,
+  )
+  return data
+}
+
+export async function createMerchantPlaceMenu(
+  placeId: number,
+  request: MerchantPlaceMenuCreateRequest,
+) {
+  const { data } = await customAxios.post<MerchantPlaceMenu>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/menus`,
+    request,
+  )
+  return data
+}
+
+export async function updateMerchantPlaceMenu(
+  placeId: number,
+  menuId: number,
+  request: MerchantPlaceMenuUpdateRequest,
+) {
+  const { data } = await customAxios.patch<MerchantPlaceMenu>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/menus/${menuId}`,
+    request,
+  )
+  return data
+}
+
+export async function updateMerchantPlaceMenuStatus(
+  placeId: number,
+  menuId: number,
+  status: Exclude<MerchantPlaceMenuStatus, 'INACTIVE'>,
+) {
+  const { data } = await customAxios.patch<MerchantPlaceMenu>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/menus/${menuId}/status`,
+    { status },
+  )
+  return data
+}
+
+export async function updateMerchantPlaceMenuOrder(
+  placeId: number,
+  menuId: number,
+  displayOrder: number,
+) {
+  const { data } = await customAxios.patch<MerchantPlaceMenu>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/menus/${menuId}/order`,
+    { displayOrder },
+  )
+  return data
+}
+
+export async function deactivateMerchantPlaceMenu(placeId: number, menuId: number) {
+  await customAxios.post<void>(
+    `${MERCHANT_OWNER_PATH}/places/${placeId}/menus/${menuId}/deactivate`,
+  )
 }
 
 export async function getMerchantReservableProducts() {

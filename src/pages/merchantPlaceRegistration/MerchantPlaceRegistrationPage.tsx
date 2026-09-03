@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import { useNavigate } from 'react-router-dom'
 import { AdminTimePicker } from '../../components/common/AdminDateTimePicker'
 import type { KakaoMapHandle, KakaoPlaceSearchResult } from '../../components/map/KakaoMap'
+import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantPlaceRegistrations } from '../../hooks/useMerchantPlaceRegistrations'
 import type {
@@ -176,6 +177,7 @@ function RegistrationForm({
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false)
   const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceRegistrationAttachment['documentType']>('BUSINESS_REGISTRATION')
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const attachmentInputRef = useRef<HTMLInputElement | null>(null)
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
@@ -384,6 +386,12 @@ function RegistrationForm({
     if (attachmentInputRef.current) attachmentInputRef.current.value = ''
   }
 
+  const confirmCancellation = async () => {
+    if (!registration) return
+    const canceled = await onCancel(registration.id)
+    if (canceled) setIsCancelDialogOpen(false)
+  }
+
   const moveRepresentativeImage = async (attachmentId: number, direction: -1 | 1) => {
     if (!registration) return
     const images = registration.attachments
@@ -451,10 +459,11 @@ function RegistrationForm({
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>
         {registration?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(registration.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
-        {registration && (registration.status === 'DRAFT' || registration.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => { if (window.confirm('이 신규 장소 등록 신청을 취소할까요?')) void onCancel(registration.id) }}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
+        {registration && (registration.status === 'DRAFT' || registration.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => setIsCancelDialogOpen(true)}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
         {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
         {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void submit()}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
+      {registration && isCancelDialogOpen ? <MerchantConfirmationDialog title="신규 장소 등록 신청을 취소할까요?" description="취소한 신청은 심사 대상에서 제외되며 다시 되돌릴 수 없습니다." confirmLabel="신청 취소" isPending={activeAction === 'cancel'} onClose={() => setIsCancelDialogOpen(false)} onConfirm={() => void confirmCancellation()} /> : null}
     </S.RegistrationForm>
   )
 }

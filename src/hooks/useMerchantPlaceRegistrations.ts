@@ -263,6 +263,7 @@ export function useMerchantPlaceRegistrations() {
     applicationId: number | null,
     request: MerchantPlaceRegistrationRequest | null,
     stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
+    onAttachmentUploaded?: (attachment: MerchantPlaceRegistrationStagedAttachment) => void,
   ) => {
     if (actionRef.current) return null
     actionRef.current = 'request'
@@ -286,6 +287,7 @@ export function useMerchantPlaceRegistrations() {
 
       for (const attachment of stagedAttachments) {
         await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)
+        if (mountedRef.current) onAttachmentUploaded?.(attachment)
       }
 
       const submitted = await submitMerchantPlaceApplication(application.id)

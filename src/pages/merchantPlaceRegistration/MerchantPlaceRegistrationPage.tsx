@@ -182,6 +182,7 @@ function RegistrationForm({
     applicationId: number | null,
     request: MerchantPlaceRegistrationRequest | null,
     stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
+    onAttachmentUploaded?: (attachment: MerchantPlaceRegistrationStagedAttachment) => void,
   ) => Promise<MerchantPlaceRegistration | null>
   onReopen: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
   onCancel: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
@@ -463,7 +464,14 @@ function RegistrationForm({
 
     const request = editable ? buildRequest() : null
     if (!registration && !request) return
-    const next = await onRequestReview(registration?.id ?? null, request, stagedAttachments)
+    const next = await onRequestReview(
+      registration?.id ?? null,
+      request,
+      stagedAttachments,
+      (uploadedAttachment) => {
+        setStagedAttachments((current) => current.filter((attachment) => attachment !== uploadedAttachment))
+      },
+    )
     if (next?.status === 'PENDING') {
       setStagedAttachments([])
       clearAttachmentFile()

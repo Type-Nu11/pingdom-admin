@@ -93,13 +93,21 @@ function ApplicationForm({
   const hasExistingAttachments = (application?.attachments.length ?? 0) > 0
   const editable = canEdit(application) && !hasExistingAttachments
   const canSubmitExistingAttachments = application?.status === 'DRAFT' && hasExistingAttachments
+  const activeBusinessName = profile?.status === 'ACTIVE' && profile.businessName.trim()
+    ? profile.businessName.trim()
+    : null
+  const hasBusinessNameMismatch = Boolean(
+    activeBusinessName
+    && application?.businessName.trim()
+    && application.businessName.trim() !== activeBusinessName,
+  )
   const [legalName, setLegalName] = useState(application?.legalName ?? '')
-  const [businessName, setBusinessName] = useState(application?.businessName ?? profile?.businessName ?? '')
+  const [businessName, setBusinessName] = useState(activeBusinessName ?? application?.businessName ?? '')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
-  const [displayName, setDisplayName] = useState(application?.merchantDisplayName ?? profile?.displayName ?? '')
-  const [email, setEmail] = useState(application?.merchantContactEmail ?? profile?.contactEmail ?? '')
-  const [phone, setPhone] = useState(application?.merchantContactPhone ?? profile?.contactPhone ?? '')
-  const [description, setDescription] = useState(application?.merchantDescription ?? profile?.description ?? '')
+  const [displayName, setDisplayName] = useState(application?.merchantDisplayName ?? '')
+  const [email, setEmail] = useState(application?.merchantContactEmail ?? '')
+  const [phone, setPhone] = useState(application?.merchantContactPhone ?? '')
+  const [description, setDescription] = useState(application?.merchantDescription ?? '')
   const [reason, setReason] = useState(application?.claimReason ?? '')
   const [keyword, setKeyword] = useState('')
   const [selectedPlace, setSelectedPlace] = useState<MerchantPlaceSearchItem | null>(
@@ -119,7 +127,9 @@ function ApplicationForm({
   }, [keyword, onSearch])
 
   const buildRequest = (): MerchantPlaceApplicationRequest | null => {
-    if (!legalName.trim() || !businessName.trim() || !businessRegistrationNumber.trim() || !displayName.trim() || !email.trim() || !phone.trim()) {
+    const requestBusinessName = activeBusinessName ?? businessName.trim()
+
+    if (!legalName.trim() || !requestBusinessName || !businessRegistrationNumber.trim() || !displayName.trim() || !email.trim() || !phone.trim()) {
       setFormError('필수 항목을 모두 입력해주세요.')
       return null
     }
@@ -140,7 +150,7 @@ function ApplicationForm({
     return {
       applicationType: 'EXISTING_PLACE_CLAIM',
       legalName: legalName.trim(),
-      businessName: businessName.trim(),
+      businessName: requestBusinessName,
       businessRegistrationNumber: businessRegistrationNumber.trim(),
       merchantDisplayName: displayName.trim(),
       merchantDescription: description.trim() || null,
@@ -205,13 +215,15 @@ function ApplicationForm({
         {hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : application.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
         {application.reviewReason ? <><br />검토 의견: {application.reviewReason}</> : null}
       </S.ReadonlyBlock> : null}
+      {hasBusinessNameMismatch ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>현재 신청서의 사업자명이 활성 상점주 정보와 달라 승인할 수 없습니다. 신청을 취소한 뒤 현재 사업자명으로 다시 작성해주세요.</Store.Notice> : null}
       <Store.Field>
         법적 성명
         <Store.Input value={legalName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setLegalName(event.target.value)} />
       </Store.Field>
       <Store.Field>
         사업자명
-        <Store.Input value={businessName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessName(event.target.value)} />
+        <Store.Input value={activeBusinessName ?? businessName} maxLength={100} disabled={!editable || activeAction !== null || Boolean(activeBusinessName)} onChange={(event) => setBusinessName(event.target.value)} />
+        {activeBusinessName ? <S.SearchHint>활성 상점주의 사업자명은 장소 신청에서 변경할 수 없습니다.</S.SearchHint> : null}
       </Store.Field>
       <Store.Field>
         사업자등록번호

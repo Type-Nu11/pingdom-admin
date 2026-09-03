@@ -168,6 +168,14 @@ function RegistrationForm({
   const hasExistingAttachments = (registration?.attachments.length ?? 0) > 0
   const editable = canEdit(registration) && !hasExistingAttachments
   const canSubmitExistingAttachments = registration?.status === 'DRAFT' && hasExistingAttachments
+  const activeBusinessName = profile?.status === 'ACTIVE' && profile.businessName.trim()
+    ? profile.businessName.trim()
+    : null
+  const hasBusinessNameMismatch = Boolean(
+    activeBusinessName
+    && registration?.businessName.trim()
+    && registration.businessName.trim() !== activeBusinessName,
+  )
   const [placeName, setPlaceName] = useState(registration?.placeName ?? '')
   const [category, setCategory] = useState<MerchantPlaceCategory>(registration?.category ?? 'RESTAURANT')
   const [roadAddress, setRoadAddress] = useState(registration?.roadAddress ?? '')
@@ -175,15 +183,15 @@ function RegistrationForm({
   const [postalCode, setPostalCode] = useState(registration?.postalCode ?? '')
   const [latitude, setLatitude] = useState(registration ? String(registration.latitude) : '')
   const [longitude, setLongitude] = useState(registration ? String(registration.longitude) : '')
-  const [description, setDescription] = useState(registration?.description ?? profile?.description ?? '')
-  const [businessPhone, setBusinessPhone] = useState(registration?.businessContactPhone ?? profile?.contactPhone ?? '')
-  const [applicantPhone, setApplicantPhone] = useState(profile?.contactPhone ?? '')
+  const [description, setDescription] = useState(registration?.description ?? '')
+  const [businessPhone, setBusinessPhone] = useState(registration?.businessContactPhone ?? '')
+  const [applicantPhone, setApplicantPhone] = useState('')
   const [legalName, setLegalName] = useState(registration?.legalName ?? '')
-  const [businessName, setBusinessName] = useState(registration?.businessName ?? profile?.businessName ?? '')
+  const [businessName, setBusinessName] = useState(activeBusinessName ?? registration?.businessName ?? '')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
-  const [merchantDisplayName, setMerchantDisplayName] = useState(registration?.merchantDisplayName ?? profile?.displayName ?? '')
-  const [merchantContactEmail, setMerchantContactEmail] = useState(registration?.merchantContactEmail ?? profile?.contactEmail ?? '')
-  const [merchantContactPhone, setMerchantContactPhone] = useState(registration?.merchantContactPhone ?? profile?.contactPhone ?? '')
+  const [merchantDisplayName, setMerchantDisplayName] = useState(registration?.merchantDisplayName ?? '')
+  const [merchantContactEmail, setMerchantContactEmail] = useState(registration?.merchantContactEmail ?? '')
+  const [merchantContactPhone, setMerchantContactPhone] = useState(registration?.merchantContactPhone ?? '')
   const [isApplicantPhoneSame, setIsApplicantPhoneSame] = useState(false)
   const [tags, setTags] = useState<MerchantPlaceTag[]>(registration?.tags ?? [])
   const [schedule, setSchedule] = useState<ScheduleDraft[]>(parseSchedule(registration?.operatingScheduleJson ?? null))
@@ -346,7 +354,9 @@ function RegistrationForm({
   }, [])
 
   const buildRequest = (): MerchantPlaceRegistrationRequest | null => {
-    if (!legalName.trim() || !businessName.trim() || !businessRegistrationNumber.trim() || !merchantDisplayName.trim() || !merchantContactEmail.trim() || !merchantContactPhone.trim() || !placeName.trim() || !roadAddress.trim() || !jibunAddress.trim() || !postalCode.trim() || !description.trim() || !businessPhone.trim() || !applicantPhone.trim()) {
+    const requestBusinessName = activeBusinessName ?? businessName.trim()
+
+    if (!legalName.trim() || !requestBusinessName || !businessRegistrationNumber.trim() || !merchantDisplayName.trim() || !merchantContactEmail.trim() || !merchantContactPhone.trim() || !placeName.trim() || !roadAddress.trim() || !jibunAddress.trim() || !postalCode.trim() || !description.trim() || !businessPhone.trim() || !applicantPhone.trim()) {
       setFormError('필수 항목을 모두 입력해주세요.')
       return null
     }
@@ -376,7 +386,7 @@ function RegistrationForm({
       ...(day.status === 'OPEN' ? { opensAt: toTime(day.opensAt), closesAt: toTime(day.closesAt), breakTimes: [] } : {}),
     }))
     return {
-      legalName: legalName.trim(), businessName: businessName.trim(), businessRegistrationNumber: businessRegistrationNumber.trim(),
+      legalName: legalName.trim(), businessName: requestBusinessName, businessRegistrationNumber: businessRegistrationNumber.trim(),
       merchantDisplayName: merchantDisplayName.trim(), merchantDescription: null, merchantContactEmail: merchantContactEmail.trim(), merchantContactPhone: normalizedMerchantContactPhone,
       placeName: placeName.trim(), category, latitude: numericLatitude, longitude: numericLongitude,
       roadAddress: roadAddress.trim(), jibunAddress: jibunAddress.trim(), postalCode: postalCode.trim(),
@@ -432,11 +442,12 @@ function RegistrationForm({
   return (
     <S.RegistrationForm onSubmit={save}>
       {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '증빙 파일이 첨부된 신청서는 심사 내용의 일관성을 위해 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '승인이 완료되어 장소 생성과 상점주 연결이 자동으로 처리되었습니다.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
+      {hasBusinessNameMismatch ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>현재 신청서의 사업자명이 활성 상점주 정보와 달라 승인할 수 없습니다. 신청을 취소한 뒤 현재 사업자명으로 다시 작성해주세요.</Store.Notice> : null}
       <S.FormWorkspace>
         <S.FormSections>
           <S.Section><S.SectionLegend>사업자·상점주 정보</S.SectionLegend><S.SectionHint>심사와 승인 후 상점주 권한 연결에 사용하는 정보입니다.</S.SectionHint>
         <Store.Field>법적 성명<Store.Input value={legalName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setLegalName(event.target.value)} /></Store.Field>
-        <Store.Field>사업자명<Store.Input value={businessName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessName(event.target.value)} /></Store.Field>
+        <Store.Field>사업자명<Store.Input value={activeBusinessName ?? businessName} maxLength={100} disabled={!editable || activeAction !== null || Boolean(activeBusinessName)} onChange={(event) => setBusinessName(event.target.value)} />{activeBusinessName ? <S.SectionHint>활성 상점주의 사업자명은 장소 신청에서 변경할 수 없습니다.</S.SectionHint> : null}</Store.Field>
         <Store.Field>사업자등록번호<Store.Input value={businessRegistrationNumber} inputMode="numeric" maxLength={30} placeholder={registration ? '수정·재신청 시 다시 입력하세요.' : '사업자등록번호를 입력하세요.'} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessRegistrationNumber(event.target.value)} /></Store.Field>
         <Store.Field>상점주 노출명<Store.Input value={merchantDisplayName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantDisplayName(event.target.value)} /></Store.Field>
         <Store.Field>상점주 연락 이메일<Store.Input type="email" value={merchantContactEmail} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactEmail(event.target.value)} /></Store.Field>

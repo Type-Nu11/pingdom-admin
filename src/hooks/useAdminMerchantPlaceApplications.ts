@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminMerchantPlaceApplicationApi'
+import { getAdminMerchantOwner } from '../api/adminMerchantOwnerApi'
 import { getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
@@ -11,6 +12,7 @@ import type {
   MerchantPlaceApplicationStatus,
   MerchantPlaceApplicationType,
 } from '../types/adminMerchantPlaceApplication.types'
+import type { AdminMerchantOwnerProfile } from '../types/adminMerchantOwner.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
@@ -39,6 +41,8 @@ export function useAdminMerchantPlaceApplications() {
   const { clearAuth } = useAuth()
   const [items, setItems] = useState<AdminMerchantPlaceApplicationListItem[]>([])
   const [detail, setDetail] = useState<AdminMerchantPlaceApplication | null>(null)
+  const [applicantMerchantProfile, setApplicantMerchantProfile] = useState<AdminMerchantOwnerProfile | null>(null)
+  const [isApplicantMerchantProfileLoading, setIsApplicantMerchantProfileLoading] = useState(false)
   const [attachments, setAttachments] = useState<AdminMerchantPlaceApplicationAttachment[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -132,6 +136,8 @@ export function useAdminMerchantPlaceApplications() {
     const requestId = detailRequestRef.current + 1
     detailRequestRef.current = requestId
     setDetail(null)
+    setApplicantMerchantProfile(null)
+    setIsApplicantMerchantProfileLoading(false)
     setAttachments([])
     setIsDetailLoading(true)
     setDetailErrorMessage('')
@@ -154,11 +160,26 @@ export function useAdminMerchantPlaceApplications() {
         setAttachmentErrorMessage(message(attachmentResult.reason, '첨부파일 목록을 불러오지 못했습니다.'))
         logDebugError('관리자 Merchant 장소 신청 첨부파일 목록 조회 실패', attachmentResult.reason)
       }
+      setIsApplicantMerchantProfileLoading(true)
+      void getAdminMerchantOwner(applicationResult.value.applicantUserId)
+        .then((profile) => {
+          if (requestId === detailRequestRef.current) setApplicantMerchantProfile(profile)
+        })
+        .catch((error) => {
+          if (requestId === detailRequestRef.current) {
+            logDebugError('관리자 Merchant 신청자 정보 조회 실패', error)
+          }
+        })
+        .finally(() => {
+          if (requestId === detailRequestRef.current) setIsApplicantMerchantProfileLoading(false)
+        })
       return applicationResult.value
     } catch (error) {
       if (requestId !== detailRequestRef.current) return null
 
       setDetail(null)
+      setApplicantMerchantProfile(null)
+      setIsApplicantMerchantProfileLoading(false)
       setAttachments([])
       setDetailErrorMessage(message(error, '장소 신청 상세를 불러오지 못했습니다.'))
       logDebugError('관리자 Merchant 장소 신청 상세 조회 실패', error)
@@ -226,6 +247,8 @@ export function useAdminMerchantPlaceApplications() {
   return {
     items,
     detail,
+    applicantMerchantProfile,
+    isApplicantMerchantProfileLoading,
     attachments,
     page,
     total,

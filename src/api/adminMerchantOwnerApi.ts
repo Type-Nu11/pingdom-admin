@@ -31,16 +31,24 @@ export async function getAdminMerchantOwnerPlaces(userId: number) {
   return data
 }
 
-export async function revokeAdminMerchantOwner(
+async function reviewMerchantOwner(
   userId: number,
+  action: 'approve' | 'reject' | 'revoke',
   request: AdminMerchantOwnerReviewRequest,
 ) {
   const { data } = await customAxios.post<AdminMerchantOwnerProfile>(
-    `${PATH}/${userId}/revoke`,
+    `${PATH}/${userId}/${action}`,
     request,
   )
   return data
 }
+
+export const approveAdminMerchantOwner = (userId: number, request: AdminMerchantOwnerReviewRequest) =>
+  reviewMerchantOwner(userId, 'approve', request)
+export const rejectAdminMerchantOwner = (userId: number, request: AdminMerchantOwnerReviewRequest) =>
+  reviewMerchantOwner(userId, 'reject', request)
+export const revokeAdminMerchantOwner = (userId: number, request: AdminMerchantOwnerReviewRequest) =>
+  reviewMerchantOwner(userId, 'revoke', request)
 
 export async function replaceAdminMerchantOwnerPlaces(
   userId: number,

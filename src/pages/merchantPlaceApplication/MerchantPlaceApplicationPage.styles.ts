@@ -47,6 +47,32 @@ export const PanelDescription = styled.p`
   line-height: 1.5;
 `
 
+export const HistoryTabs = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: ${colors.surfaceLow};
+`
+
+export const HistoryTab = styled.button<{ $active: boolean }>`
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: ${({ $active }) => ($active ? colors.surface : 'transparent')};
+  box-shadow: ${({ $active }) => ($active ? '0 1px 3px rgba(28, 28, 35, 0.1)' : 'none')};
+  color: ${({ $active }) => ($active ? colors.text : colors.muted)};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { color: ${colors.primary}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
 export const ApplicationList = styled.div`
   display: flex;
   flex-direction: column;

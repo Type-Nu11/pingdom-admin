@@ -473,22 +473,52 @@ function MerchantPlaceRegistrationPage() {
   const { logout, user } = useAuth()
   const registration = useMerchantPlaceRegistrations()
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const selectedRegistration = useMemo(() => registration.registrations.find((item) => item.id === selectedId) ?? null, [registration.registrations, selectedId])
+  const [registrationListView, setRegistrationListView] = useState<'applications' | 'canceled'>('applications')
+  const visibleRegistrations = useMemo(
+    () => registration.registrations.filter((item) => registrationListView === 'canceled'
+      ? item.status === 'CANCELED'
+      : item.status !== 'CANCELED'),
+    [registration.registrations, registrationListView],
+  )
+  const canceledRegistrationCount = registration.registrations.length - registration.registrations.filter((item) => item.status !== 'CANCELED').length
+  const selectedRegistration = useMemo(() => visibleRegistrations.find((item) => item.id === selectedId) ?? null, [visibleRegistrations, selectedId])
   const isConnectedPlace = Boolean(
     selectedRegistration?.registeredPlaceId && registration.profile?.placeIds.includes(selectedRegistration.registeredPlaceId),
   )
   const handleLogout = () => { void logout(); navigate('/login', { replace: true }) }
+  const refreshRegistrations = () => {
+    setSelectedId(null)
+    void registration.fetchRegistrations()
+  }
+  const changeRegistrationListView = (nextView: 'applications' | 'canceled') => {
+    setRegistrationListView(nextView)
+    setSelectedId(null)
+  }
+  const startNewRegistration = () => {
+    setRegistrationListView('applications')
+    setSelectedId(null)
+  }
 
   if (registration.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void registration.fetchRegistrations()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
-  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{registration.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle><Store.PageDescription>아직 등록되지 않은 가게를 신청하세요. 이미 등록된 장소라면 기존 장소 운영 신청을 이용해야 합니다.</Store.PageDescription></div><Store.QuickLinks aria-label="신청 내역 새로고침"><Store.QuickLink type="button" onClick={() => void registration.fetchRegistrations()}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
+  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{registration.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle><Store.PageDescription>아직 등록되지 않은 가게를 신청하세요. 이미 등록된 장소라면 기존 장소 운영 신청을 이용해야 합니다.</Store.PageDescription></div><Store.QuickLinks aria-label="신청 내역 새로고침"><Store.QuickLink type="button" onClick={refreshRegistrations}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
     {registration.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice> : null}
     {registration.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.actionErrorMessage}</Store.Notice> : null}
     {registration.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{registration.successMessage}</Store.Notice> : null}
     {isConnectedPlace ? <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}><Store.SaveButton type="button" onClick={() => navigate('/merchant')}>연결된 가게 관리</Store.SaveButton></div> : null}
-    <S.Layout><S.RegistrationPanel><S.PanelHeading><div><S.PanelTitle>{selectedRegistration ? '등록 신청 상세' : '장소 정보 입력'}</S.PanelTitle><S.PanelDescription>{selectedRegistration ? `신청 번호 #${selectedRegistration.id} · 마지막 수정 ${formatDate(selectedRegistration.updatedAt)}` : '기본 정보, 위치, 영업시간을 입력한 뒤 심사를 요청하세요.'}</S.PanelDescription></div>{selectedRegistration ? <S.StatusBadge $tone={STATUS[selectedRegistration.status].tone}>{STATUS[selectedRegistration.status].label}</S.StatusBadge> : null}</S.PanelHeading><RegistrationForm key={selectedRegistration?.id ?? 'new'} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={registration.submitRegistration} onReopen={registration.reopenRegistration} onCancel={registration.cancelRegistration} onUpload={registration.uploadAttachment} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} /></S.RegistrationPanel>{registration.registrations.length > 0 ? <S.HistoryPanel><S.PanelHeading><div><S.PanelTitle>등록 신청 내역</S.PanelTitle><S.PanelDescription>작성 중이거나 처리된 신청서를 선택해 확인할 수 있습니다.</S.PanelDescription></div></S.PanelHeading><S.ApplicationList>{registration.registrations.map((item) => <S.ApplicationItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => { setSelectedId(item.id); void registration.selectRegistration(item.id) }}><S.ApplicationTop><S.ApplicationName>{item.placeName}</S.ApplicationName><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{CATEGORIES.find((categoryItem) => categoryItem.value === item.category)?.label ?? item.category} · {formatDate(item.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList><S.NewApplicationButton type="button" onClick={() => setSelectedId(null)}>새 장소 등록 신청</S.NewApplicationButton></S.HistoryPanel> : null}</S.Layout>
+    <S.Layout>
+      <S.RegistrationPanel>
+        <S.PanelHeading><div><S.PanelTitle>{selectedRegistration ? '등록 신청 상세' : '장소 정보 입력'}</S.PanelTitle><S.PanelDescription>{selectedRegistration ? `신청 번호 #${selectedRegistration.id} · 마지막 수정 ${formatDate(selectedRegistration.updatedAt)}` : '기본 정보, 위치, 영업시간을 입력한 뒤 심사를 요청하세요.'}</S.PanelDescription></div>{selectedRegistration ? <S.StatusBadge $tone={STATUS[selectedRegistration.status].tone}>{STATUS[selectedRegistration.status].label}</S.StatusBadge> : null}</S.PanelHeading>
+        <RegistrationForm key={selectedRegistration?.id ?? 'new'} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={registration.submitRegistration} onReopen={registration.reopenRegistration} onCancel={async (applicationId) => { const canceled = await registration.cancelRegistration(applicationId); if (canceled) setSelectedId(null); return canceled }} onUpload={registration.uploadAttachment} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} />
+      </S.RegistrationPanel>
+      {registration.registrations.length > 0 ? <S.HistoryPanel>
+        <S.PanelHeading><div><S.PanelTitle>등록 신청 내역</S.PanelTitle><S.PanelDescription>작성 중이거나 처리된 신청서를 선택해 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs role="tablist" aria-label="신규 장소 등록 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={registrationListView === 'applications'} $active={registrationListView === 'applications'} onClick={() => changeRegistrationListView('applications')}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={registrationListView === 'canceled'} $active={registrationListView === 'canceled'} onClick={() => changeRegistrationListView('canceled')}>취소 내역 ({canceledRegistrationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>
+        {visibleRegistrations.length > 0 ? <S.ApplicationList>{visibleRegistrations.map((item) => <S.ApplicationItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => { setSelectedId(item.id); void registration.selectRegistration(item.id) }}><S.ApplicationTop><S.ApplicationName>{item.placeName}</S.ApplicationName><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{CATEGORIES.find((categoryItem) => categoryItem.value === item.category)?.label ?? item.category} · {formatDate(item.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList> : <S.Empty>{registrationListView === 'canceled' ? '취소한 신규 장소 등록 신청이 없습니다.' : '작성 중이거나 처리된 신규 장소 등록 신청이 없습니다.'}</S.Empty>}
+        <S.NewApplicationButton type="button" onClick={startNewRegistration}>새 장소 등록 신청</S.NewApplicationButton>
+      </S.HistoryPanel> : null}
+    </S.Layout>
   </Store.Content></Store.Page>
 }
 

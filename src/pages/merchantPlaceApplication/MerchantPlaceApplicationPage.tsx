@@ -247,10 +247,19 @@ function MerchantPlaceApplicationPage() {
   const { logout, user } = useAuth()
   const claim = useMerchantPlaceApplications()
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const applications = useMemo(
+  const [newApplicationFormVersion, setNewApplicationFormVersion] = useState(0)
+  const [applicationListView, setApplicationListView] = useState<'applications' | 'canceled'>('applications')
+  const claimApplications = useMemo(
     () => claim.applications.filter((application) => application.applicationType === 'EXISTING_PLACE_CLAIM'),
     [claim.applications],
   )
+  const applications = useMemo(
+    () => claimApplications.filter((application) => applicationListView === 'canceled'
+      ? application.status === 'CANCELED'
+      : application.status !== 'CANCELED'),
+    [applicationListView, claimApplications],
+  )
+  const canceledApplicationCount = claimApplications.length - claimApplications.filter((application) => application.status !== 'CANCELED').length
   const selectedApplication = useMemo(
     () => applications.find((application) => application.id === selectedId) ?? null,
     [applications, selectedId],
@@ -261,6 +270,26 @@ function MerchantPlaceApplicationPage() {
     navigate('/login', { replace: true })
   }
 
+  const resetToNewApplication = () => {
+    setSelectedId(null)
+    setNewApplicationFormVersion((current) => current + 1)
+  }
+
+  const refreshApplications = () => {
+    resetToNewApplication()
+    void claim.fetchApplications()
+  }
+
+  const changeApplicationListView = (nextView: 'applications' | 'canceled') => {
+    setApplicationListView(nextView)
+    resetToNewApplication()
+  }
+
+  const startNewApplication = () => {
+    setApplicationListView('applications')
+    resetToNewApplication()
+  }
+
   if (claim.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void claim.fetchApplications()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
@@ -269,19 +298,19 @@ function MerchantPlaceApplicationPage() {
     <Store.Page>
       <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{claim.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
-        <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={() => void claim.fetchApplications()}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
+        <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={refreshApplications}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
         {claim.error ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice> : null}
         {claim.actionError ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.actionError}</Store.Notice> : null}
         {claim.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{claim.successMessage}</Store.Notice> : null}
         <S.Layout>
           <S.Panel>
-            <S.PanelHeading><div><S.PanelTitle>신청 내역</S.PanelTitle><S.PanelDescription>제출 후에는 심사 상태와 검토 의견을 확인할 수 있습니다.</S.PanelDescription></div></S.PanelHeading>
-            {claim.status === 'loading' ? <Store.Empty>신청 내역을 불러오는 중입니다.</Store.Empty> : applications.length === 0 ? <S.Empty>아직 기존 장소 운영 권한 신청이 없습니다. 등록된 장소를 검색해 첫 신청서를 작성하세요.</S.Empty> : <S.ApplicationList>{applications.map((application) => <S.ApplicationItem type="button" key={application.id} $selected={application.id === selectedId} onClick={() => setSelectedId(application.id)}><S.ApplicationTop><S.ApplicationName>{application.placeName || `장소 #${application.existingPlaceId ?? '-'}`}</S.ApplicationName><S.StatusBadge $tone={STATUS[application.status].tone}>{STATUS[application.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{application.businessName} · {formatDate(application.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList>}
-            <S.NewApplicationButton type="button" onClick={() => setSelectedId(null)}>새 운영 장소 신청</S.NewApplicationButton>
+            <S.PanelHeading><div><S.PanelTitle>신청 내역</S.PanelTitle><S.PanelDescription>제출 후에는 심사 상태와 검토 의견을 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs role="tablist" aria-label="운영 장소 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'applications'} $active={applicationListView === 'applications'} onClick={() => changeApplicationListView('applications')}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'canceled'} $active={applicationListView === 'canceled'} onClick={() => changeApplicationListView('canceled')}>취소 내역 ({canceledApplicationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>
+            {claim.status === 'loading' ? <Store.Empty>신청 내역을 불러오는 중입니다.</Store.Empty> : applications.length === 0 ? <S.Empty>{applicationListView === 'canceled' ? '취소한 기존 장소 운영 권한 신청이 없습니다.' : '아직 기존 장소 운영 권한 신청이 없습니다. 등록된 장소를 검색해 첫 신청서를 작성하세요.'}</S.Empty> : <S.ApplicationList>{applications.map((application) => <S.ApplicationItem type="button" key={application.id} $selected={application.id === selectedId} onClick={() => setSelectedId(application.id)}><S.ApplicationTop><S.ApplicationName>{application.placeName || `장소 #${application.existingPlaceId ?? '-'}`}</S.ApplicationName><S.StatusBadge $tone={STATUS[application.status].tone}>{STATUS[application.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{application.businessName} · {formatDate(application.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList>}
+            <S.NewApplicationButton type="button" onClick={startNewApplication}>새 운영 장소 신청</S.NewApplicationButton>
           </S.Panel>
           <S.Panel>
             <S.PanelHeading><div><S.PanelTitle>{selectedApplication ? '운영 장소 신청 상세' : '새 운영 장소 신청'}</S.PanelTitle><S.PanelDescription>{selectedApplication ? `신청 번호 #${selectedApplication.id} · 마지막 수정 ${formatDate(selectedApplication.updatedAt)}` : '장소 검색부터 심사 요청까지 한 신청서에서 진행합니다.'}</S.PanelDescription></div>{selectedApplication ? <S.StatusBadge $tone={STATUS[selectedApplication.status].tone}>{STATUS[selectedApplication.status].label}</S.StatusBadge> : null}</S.PanelHeading>
-            <ApplicationForm key={selectedApplication?.id ?? 'new'} application={selectedApplication} profile={claim.profile} suggestions={claim.suggestions} isSearching={claim.isSearching} activeAction={claim.activeAction} onSearch={claim.searchPlaces} onSave={async (id, request) => { const next = await claim.saveApplication(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={claim.submitApplication} onReopen={claim.reopenApplication} onCancel={claim.cancelApplication} onUpload={claim.uploadAttachment} onDelete={claim.deleteAttachment} onReorder={claim.reorderAttachments} />
+            <ApplicationForm key={selectedApplication?.id ?? `new-${newApplicationFormVersion}`} application={selectedApplication} profile={claim.profile} suggestions={claim.suggestions} isSearching={claim.isSearching} activeAction={claim.activeAction} onSearch={claim.searchPlaces} onSave={async (id, request) => { const next = await claim.saveApplication(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={claim.submitApplication} onReopen={claim.reopenApplication} onCancel={async (applicationId) => { const canceled = await claim.cancelApplication(applicationId); if (canceled) resetToNewApplication(); return canceled }} onUpload={claim.uploadAttachment} onDelete={claim.deleteAttachment} onReorder={claim.reorderAttachments} />
           </S.Panel>
         </S.Layout>
       </Store.Content>

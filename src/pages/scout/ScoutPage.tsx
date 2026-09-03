@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
+import { AdminPagination } from "../../components/common/AdminPagination";
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { AdminDateTimePicker } from "../../components/common/AdminDateTimePicker";
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
@@ -344,36 +345,7 @@ function ScoutPage() {
                         </S.CardList>
                       )}
                     </Shared.ScrollArea>
-                    {hook.profileTotalPages > 1 ? <S.Pagination>
-                      <Shared.SecondaryButton
-                        type="button"
-                        disabled={hook.profilePage <= 1}
-                        onClick={() =>
-                          void hook.fetchProfiles(
-                            hook.profileStatus,
-                            hook.profilePage - 1,
-                          )
-                        }
-                      >
-                        이전
-                      </Shared.SecondaryButton>
-                      <span>
-                        {Math.max(hook.profilePage, 1)} /{" "}
-                        {Math.max(hook.profileTotalPages, 1)}
-                      </span>
-                      <Shared.SecondaryButton
-                        type="button"
-                        disabled={!hook.profileHasNext}
-                        onClick={() =>
-                          void hook.fetchProfiles(
-                            hook.profileStatus,
-                            hook.profilePage + 1,
-                          )
-                        }
-                      >
-                        다음
-                      </Shared.SecondaryButton>
-                    </S.Pagination> : null}
+                    {hook.profileTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 프로필 목록 페이지네이션" page={hook.profilePage} totalPages={hook.profileTotalPages} hasNext={hook.profileHasNext} disabled={hook.isLoading} onPageChange={(nextPage) => void hook.fetchProfiles(hook.profileStatus, nextPage)} /> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader>
@@ -600,36 +572,7 @@ function ScoutPage() {
                         </S.CardList>
                       )}
                     </Shared.ScrollArea>
-                    {hook.reportTotalPages > 1 ? <S.Pagination>
-                      <Shared.SecondaryButton
-                        type="button"
-                        disabled={hook.reportPage <= 1}
-                        onClick={() =>
-                          void hook.fetchReports(
-                            hook.reportStatus,
-                            hook.reportPage - 1,
-                          )
-                        }
-                      >
-                        이전
-                      </Shared.SecondaryButton>
-                      <span>
-                        {Math.max(hook.reportPage, 1)} /{" "}
-                        {Math.max(hook.reportTotalPages, 1)}
-                      </span>
-                      <Shared.SecondaryButton
-                        type="button"
-                        disabled={!hook.reportHasNext}
-                        onClick={() =>
-                          void hook.fetchReports(
-                            hook.reportStatus,
-                            hook.reportPage + 1,
-                          )
-                        }
-                      >
-                        다음
-                      </Shared.SecondaryButton>
-                    </S.Pagination> : null}
+                    {hook.reportTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 현장 제보 목록 페이지네이션" page={hook.reportPage} totalPages={hook.reportTotalPages} hasNext={hook.reportHasNext} disabled={hook.isLoading} onPageChange={(nextPage) => void hook.fetchReports(hook.reportStatus, nextPage)} /> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader>

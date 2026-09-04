@@ -5,6 +5,8 @@ import { AdminNotificationButton } from '../../components/adminNotification/Admi
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminPagination } from '../../components/common/AdminPagination'
+import { ListPane } from '../../components/common/ListPane'
+import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminOperationHistories } from '../../hooks/useAdminOperationHistories'
 import { useAuth } from '../../hooks/useAuth'
@@ -19,7 +21,6 @@ import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 import * as History from './OperationHistoryPage.styles'
-import * as Review from '../../styles/reviewWorkspace'
 
 type Tab = 'audit' | 'privacy'
 
@@ -426,16 +427,15 @@ function OperationHistoryPage() {
                   </S.FormBody>
                 </Shared.Panel>
 
-                <Review.ReviewScrollWorkspace>
-                  <Shared.Panel>
-                    <Shared.PanelHeader>
-                      <div>
-                        <Shared.PanelTitle>감사 로그</Shared.PanelTitle>
-                        <Shared.PanelDescription>항목을 선택해 전후 상태를 확인합니다.</Shared.PanelDescription>
-                      </div>
-                      <Shared.PanelCount>{(hook.audit?.totalCount ?? 0).toLocaleString()}건</Shared.PanelCount>
-                    </Shared.PanelHeader>
-                    <Shared.ScrollArea>
+                <ListDetailWorkspace constrained>
+                  <ListPane
+                    title="감사 로그"
+                    description="항목을 선택해 전후 상태를 확인합니다."
+                    count={`${(hook.audit?.totalCount ?? 0).toLocaleString()}건`}
+                    page={hook.audit?.page}
+                    ariaLabel="감사 로그 목록"
+                    footer={(hook.audit?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="감사 로그 페이지네이션" page={hook.audit?.page ?? 1} totalPages={hook.audit?.totalPages ?? 1} hasNext={hook.audit?.hasNext} disabled={isLoading} onPageChange={moveAudit} /> : null}
+                  >
                       {isLoading && !hook.audit ? (
                         <Shared.EmptyState><strong>감사 로그를 불러오는 중입니다.</strong></Shared.EmptyState>
                       ) : !hook.audit?.auditLogs.length ? (
@@ -465,18 +465,7 @@ function OperationHistoryPage() {
                           ))}
                         </History.AuditList>
                       )}
-                    </Shared.ScrollArea>
-                    {(hook.audit?.totalPages ?? 0) > 1 ? (
-                      <AdminPagination
-                        ariaLabel="감사 로그 페이지네이션"
-                        page={hook.audit?.page ?? 1}
-                        totalPages={hook.audit?.totalPages ?? 1}
-                        hasNext={hook.audit?.hasNext}
-                        disabled={isLoading}
-                        onPageChange={moveAudit}
-                      />
-                    ) : null}
-                  </Shared.Panel>
+                  </ListPane>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>감사 로그 상세</Shared.PanelTitle></Shared.PanelHeader>
                     <Shared.CompareBody>
@@ -510,7 +499,7 @@ function OperationHistoryPage() {
                       )}
                     </Shared.CompareBody>
                   </Shared.Panel>
-                </Review.ReviewScrollWorkspace>
+                </ListDetailWorkspace>
               </>
             ) : (
               <>
@@ -533,21 +522,24 @@ function OperationHistoryPage() {
                   </S.FormBody>
                 </Shared.Panel>
 
-                <Review.ReviewScrollWorkspace>
-                  <Shared.Panel>
-                    <Shared.PanelHeader><div><Shared.PanelTitle>개인정보 처리 이력</Shared.PanelTitle><Shared.PanelDescription>항목을 선택해 요청과 처리 결과를 확인합니다.</Shared.PanelDescription></div><Shared.PanelCount>{(hook.privacy?.totalCount ?? 0).toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
-                    <Shared.ScrollArea>
+                <ListDetailWorkspace constrained>
+                  <ListPane
+                    title="개인정보 처리 이력"
+                    description="항목을 선택해 요청과 처리 결과를 확인합니다."
+                    count={`${(hook.privacy?.totalCount ?? 0).toLocaleString()}건`}
+                    page={hook.privacy?.page}
+                    ariaLabel="개인정보 처리 이력 목록"
+                    footer={(hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
+                  >
                       {isLoading && !hook.privacy ? <Shared.EmptyState><strong>개인정보 처리 이력을 불러오는 중입니다.</strong></Shared.EmptyState> : !hook.privacy?.histories.length ? <Shared.EmptyState><strong>조건에 맞는 개인정보 처리 이력이 없습니다.</strong></Shared.EmptyState> : <S.CardList>{hook.privacy.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>}
-                    </Shared.ScrollArea>
-                    {(hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
-                  </Shared.Panel>
+                  </ListPane>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>개인정보 처리 상세</Shared.PanelTitle></Shared.PanelHeader>
                     <Shared.CompareBody>
                       {!selectedPrivacy ? <Shared.EmptyState><strong>확인할 개인정보 처리 이력을 선택해주세요.</strong></Shared.EmptyState> : <><S.RecordHeader><div><S.RecordTitle>{PRIVACY_ACTION_LABELS[selectedPrivacy.action]}</S.RecordTitle><S.RecordMeta>처리 이력 #{selectedPrivacy.id}</S.RecordMeta></div><S.StatusBadge>{selectedPrivacy.actorType}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>대상 사용자</dt><dd>#{selectedPrivacy.subjectUserId}</dd></S.DetailItem><S.DetailItem><dt>수행 사용자</dt><dd>#{selectedPrivacy.actorUserId}</dd></S.DetailItem><S.DetailItem><dt>요청 ID</dt><dd>{selectedPrivacy.requestId || '없음'}</dd></S.DetailItem><S.DetailItem><dt>처리 시각</dt><dd>{formatDate(selectedPrivacy.createdAt)}</dd></S.DetailItem></S.DetailGrid><S.Section><S.SectionTitle>처리 상세</S.SectionTitle><S.RecordDescription>{selectedPrivacy.details || '기록된 처리 상세가 없습니다.'}</S.RecordDescription></S.Section></>}
                     </Shared.CompareBody>
                   </Shared.Panel>
-                </Review.ReviewScrollWorkspace>
+                </ListDetailWorkspace>
               </>
             )}
           </Shared.PageStack>

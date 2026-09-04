@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { ListPane } from '../../components/common/ListPane'
+import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
@@ -54,8 +57,6 @@ const DAY_LABELS: Record<string, string> = {
   MONDAY: '월', TUESDAY: '화', WEDNESDAY: '수', THURSDAY: '목', FRIDAY: '금', SATURDAY: '토', SUNDAY: '일',
 }
 
-const MAX_VISIBLE_PAGE_NUMBER_COUNT = 3
-
 function statusTone(status: MerchantPlaceApplicationStatus) {
   if (status === 'APPROVED' || status === 'COMPLETED') return 'success' as const
   if (status === 'REJECTED' || status === 'CANCELED') return 'danger' as const
@@ -78,18 +79,6 @@ function formatFileSize(value: number) {
 function formatCoordinates(latitude: number, longitude: number) {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return '정보 없음'
   return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-}
-
-function getVisiblePageNumbers(currentPage: number, totalPages: number) {
-  const visiblePageCount = Math.min(MAX_VISIBLE_PAGE_NUMBER_COUNT, totalPages)
-  const sidePageCount = Math.floor(visiblePageCount / 2)
-  let startPage = Math.max(1, currentPage - sidePageCount)
-  let endPage = Math.min(totalPages, startPage + visiblePageCount - 1)
-
-  startPage = Math.max(1, endPage - visiblePageCount + 1)
-  endPage = Math.min(totalPages, startPage + visiblePageCount - 1)
-
-  return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index)
 }
 
 function formatLocalTime(value: unknown) {
@@ -157,7 +146,6 @@ function MerchantPlaceApplicationReviewPage() {
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState('')
   const openedApplicationIdRef = useRef<number | null>(null)
-  const listScrollRef = useRef<HTMLDivElement | null>(null)
   const fetchApplicationDetail = hook.fetchDetail
   const admin = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const isHistoryView = hook.view === 'history'
@@ -166,7 +154,6 @@ function MerchantPlaceApplicationReviewPage() {
   const emptyMessage = isHistoryView ? '처리된 장소 신청 이력이 없습니다.' : '심사 대기 중인 장소 신청이 없습니다.'
   const loadingMessage = isHistoryView ? '처리 이력을 불러오는 중입니다.' : '심사 대기 신청을 불러오는 중입니다.'
   const safeTotalPages = Math.max(hook.totalPages, 1)
-  const visiblePageNumbers = getVisiblePageNumbers(hook.page, safeTotalPages)
   const activeApplicantBusinessName = hook.applicantMerchantProfile?.status === 'ACTIVE'
     ? hook.applicantMerchantProfile.businessName.trim()
     : null
@@ -187,7 +174,6 @@ function MerchantPlaceApplicationReviewPage() {
 
     setSelectedId(null)
     setDecision(null)
-    listScrollRef.current?.scrollTo({ top: 0 })
     void hook.fetchApplications(page)
   }
 
@@ -267,19 +253,19 @@ function MerchantPlaceApplicationReviewPage() {
               </AdminSelect>
             </S.FilterField>
           </S.FilterBar>
-          <S.ReviewWorkspace>
-            <S.ReviewListPanel><Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>{listTitle}</Shared.PanelTitle><Shared.PanelDescription>{listDescription}</Shared.PanelDescription></div><Shared.PanelCount>{hook.total.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader><Shared.ScrollArea ref={listScrollRef}>
+          <ListDetailWorkspace>
+            <ListPane title={listTitle} description={listDescription} count={`${hook.total.toLocaleString()}건`} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}
               {!hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{emptyMessage}</strong></Shared.EmptyState> : null}
               {hook.items.length > 0 ? <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt ?? item.updatedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList> : null}
-            </Shared.ScrollArea>{safeTotalPages > 1 ? <Shell.PanelPagination><Shell.PageButton type="button" aria-label="첫 페이지" disabled={hook.page <= 1 || hook.isLoading || hook.isReviewing} onClick={() => changePage(1)}><Shell.MaterialIcon aria-hidden="true">first_page</Shell.MaterialIcon></Shell.PageButton><Shell.PageButton type="button" aria-label="이전 페이지" disabled={hook.page <= 1 || hook.isLoading || hook.isReviewing} onClick={() => changePage(hook.page - 1)}><Shell.MaterialIcon aria-hidden="true">chevron_left</Shell.MaterialIcon></Shell.PageButton><Shell.PageNumberList>{visiblePageNumbers.map((page) => <Shell.PageNumberButton key={page} type="button" $active={page === hook.page} aria-current={page === hook.page ? 'page' : undefined} disabled={hook.isLoading || hook.isReviewing} onClick={() => changePage(page)}>{page}</Shell.PageNumberButton>)}</Shell.PageNumberList><Shell.PageButton type="button" aria-label="다음 페이지" disabled={!hook.hasNext || hook.isLoading || hook.isReviewing} onClick={() => changePage(hook.page + 1)}><Shell.MaterialIcon aria-hidden="true">chevron_right</Shell.MaterialIcon></Shell.PageButton><Shell.PageButton type="button" aria-label="마지막 페이지" disabled={!hook.hasNext || hook.isLoading || hook.isReviewing} onClick={() => changePage(safeTotalPages)}><Shell.MaterialIcon aria-hidden="true">last_page</Shell.MaterialIcon></Shell.PageButton></Shell.PanelPagination> : null}</Shared.Panel></S.ReviewListPanel>
-            <S.ReviewDetailPanel><Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>장소 신청 상세</Shared.PanelTitle><Shared.PanelDescription>신청자·장소·증빙을 확인한 뒤 심사 결과를 기록합니다.</Shared.PanelDescription></div></Shared.PanelHeader><Shared.CompareBody>
+            </ListPane>
+            <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>장소 신청 상세</Shared.PanelTitle><Shared.PanelDescription>신청자·장소·증빙을 확인한 뒤 심사 결과를 기록합니다.</Shared.PanelDescription></div></Shared.PanelHeader><Shared.CompareBody>
               {!selectedId ? <Shared.EmptyState><strong>{emptyDetailTitle}</strong><p>{emptyDetailDescription}</p></Shared.EmptyState> : null}
               {selectedId && hook.isDetailLoading ? <Shared.EmptyState><strong>장소 신청 상세를 불러오는 중입니다.</strong></Shared.EmptyState> : null}
               {selectedId && !hook.isDetailLoading && hook.detailErrorMessage ? <Shared.EmptyState><strong>{hook.detailErrorMessage}</strong><Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedId)}>다시 시도</Shared.SecondaryButton></Shared.EmptyState> : null}
               {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} isReviewing={hook.isReviewing} approvalBlockMessage={approvalBlockMessage} onOpenReview={openReview} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
-            </Shared.CompareBody></Shared.Panel></S.ReviewDetailPanel>
-          </S.ReviewWorkspace>
+            </Shared.CompareBody></Shared.Panel>
+          </ListDetailWorkspace>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
       {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-place-application-review-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-place-application-review-title">장소 신청 {decision === 'approve' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>장소 신청 #{hook.detail.id}을 {decision === 'approve' ? '승인' : '반려'}합니다. 처리 후 상태가 즉시 변경되며 되돌릴 수 없습니다.</Shared.ModalWarning><Form.Section><Form.Field>심사 사유 *<Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></Form.Field></Form.Section>{formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'reject' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing || Boolean(approvalBlockMessage)} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '승인 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}

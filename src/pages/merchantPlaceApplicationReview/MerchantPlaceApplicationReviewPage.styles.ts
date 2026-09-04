@@ -33,35 +33,6 @@ export const ReviewPageStack = styled.div`
   }
 `
 
-export const ReviewWorkspace = styled.div`
-  min-height: 0;
-  flex: 1;
-  display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
-  gap: 16px;
-
-  @media (max-width: 1080px) {
-    min-height: 360px;
-    flex: initial;
-    grid-template-columns: 1fr;
-  }
-`
-
-export const ReviewListPanel = styled.div`
-  min-height: 0;
-  height: 100%;
-
-  > section {
-    height: 100%;
-  }
-
-  @media (max-width: 1080px) {
-    height: min(620px, 65dvh);
-  }
-`
-
-export const ReviewDetailPanel = styled(ReviewListPanel)``
-
 export const AttachmentList = styled.div`
   display: flex;
   flex-direction: column;

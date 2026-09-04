@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { ListPane } from '../../components/common/ListPane'
+import { ListDetailPage, ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -14,7 +16,6 @@ import type {
 import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
-import * as Review from '../../styles/reviewWorkspace'
 
 const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 'warning' | 'danger' }> = {
   PENDING: { label: '심사 대기', tone: 'warning' },
@@ -149,8 +150,7 @@ function AdminReservationReviewPage() {
           </Shell.TopActions>
         </Shell.TopBar>
 
-        <Review.ReviewContent>
-          <Review.ReviewPageStack>
+        <ListDetailPage>
             <Shared.PageHeader>
               <div>
                 <Shared.Eyebrow>검토함 &gt; 예약 심사</Shared.Eyebrow>
@@ -196,16 +196,24 @@ function AdminReservationReviewPage() {
             {filterError ? <Shared.Notice $variant="error">{filterError}</Shared.Notice> : null}
             {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
 
-            <Review.ReviewWorkspace>
-              <Shared.Panel>
-                <Shared.PanelHeader>
-                  <div>
-                    <Shared.PanelTitle>예약 목록</Shared.PanelTitle>
-                    <Shared.PanelDescription>예약을 선택해 신청 정보와 심사 이력을 확인합니다.</Shared.PanelDescription>
-                  </div>
-                  <Shared.PanelCount>{hook.totalCount.toLocaleString()}건</Shared.PanelCount>
-                </Shared.PanelHeader>
-                <Shared.ScrollArea>
+            <ListDetailWorkspace>
+              <ListPane
+                title="예약 목록"
+                description="예약을 선택해 신청 정보와 심사 이력을 확인합니다."
+                count={`${hook.totalCount.toLocaleString()}건`}
+                page={hook.query.page}
+                ariaLabel="예약 목록"
+                footer={hook.totalPages > 1 ? (
+                  <AdminPagination
+                    page={hook.query.page}
+                    totalPages={hook.totalPages}
+                    hasNext={hook.hasNext}
+                    disabled={hook.isLoading || hook.activeAction !== null}
+                    onPageChange={search}
+                    ariaLabel="예약 목록 페이지네이션"
+                  />
+                ) : null}
+              >
                   {hook.isLoading && hook.reservations.length === 0 ? (
                     <Shared.EmptyState><strong>예약 목록을 불러오는 중입니다.</strong></Shared.EmptyState>
                   ) : hook.reservations.length === 0 ? (
@@ -232,18 +240,7 @@ function AdminReservationReviewPage() {
                       })}
                     </S.CardList>
                   )}
-                </Shared.ScrollArea>
-                {hook.totalPages > 1 ? (
-                  <AdminPagination
-                    page={hook.query.page}
-                    totalPages={hook.totalPages}
-                    hasNext={hook.hasNext}
-                    disabled={hook.isLoading || hook.activeAction !== null}
-                    onPageChange={search}
-                    ariaLabel="예약 목록 페이지네이션"
-                  />
-                ) : null}
-              </Shared.Panel>
+              </ListPane>
 
               <Shared.Panel>
                 <Shared.PanelHeader>
@@ -319,9 +316,8 @@ function AdminReservationReviewPage() {
                   ) : null}
                 </Shared.CompareBody>
               </Shared.Panel>
-            </Review.ReviewWorkspace>
-          </Review.ReviewPageStack>
-        </Review.ReviewContent>
+            </ListDetailWorkspace>
+        </ListDetailPage>
       </Shell.MainArea>
 
       {dialog && hook.reservation ? (

@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
 
-export const OwnerContent = styled.main`
+export const PageContent = styled.main`
   min-height: 0;
   flex: 1;
   overflow: hidden;
@@ -17,7 +17,7 @@ export const OwnerContent = styled.main`
   }
 `
 
-export const OwnerPageStack = styled.div`
+export const PageStack = styled.div`
   width: min(1280px, 100%);
   min-height: 0;
   height: 100%;
@@ -31,29 +31,27 @@ export const OwnerPageStack = styled.div`
   }
 `
 
-export const OwnerWorkspace = styled.div`
-  min-height: 0;
-  flex: 1;
+export const Workspace = styled.div<{ $constrained: boolean }>`
+  min-height: ${({ $constrained }) => ($constrained ? '440px' : '0')};
+  height: ${({ $constrained }) => ($constrained ? 'min(620px, 65dvh)' : 'auto')};
+  flex: ${({ $constrained }) => ($constrained ? 'initial' : '1')};
   display: grid;
   grid-template-columns: 380px minmax(0, 1fr);
   gap: 16px;
 
-  @media (max-width: 1080px) {
-    min-height: 360px;
-    flex: initial;
-    grid-template-columns: 1fr;
-  }
-`
-
-export const OwnerPanel = styled.div`
-  min-height: 0;
-  height: 100%;
-
-  > section {
+  > * {
+    min-height: 0;
     height: 100%;
   }
 
   @media (max-width: 1080px) {
-    height: min(620px, 65dvh);
+    min-height: 360px;
+    height: auto;
+    flex: initial;
+    grid-template-columns: 1fr;
+
+    > * {
+      height: min(620px, 65dvh);
+    }
   }
 `

@@ -1,8 +1,9 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
-import { useAuth } from '../../hooks/useAuth'
+import { MerchantPageShell } from '../../components/merchant/MerchantPageShell'
 import { useMerchantPlaceMenus } from '../../hooks/useMerchantPlaceMenus'
 import type {
   MerchantPlaceMenu,
@@ -169,7 +170,6 @@ function MenuEditor({
 
 function MerchantMenuPage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
   const menu = useMerchantPlaceMenus()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [pendingDeactivation, setPendingDeactivation] = useState<MerchantPlaceMenu | null>(null)
@@ -177,11 +177,6 @@ function MerchantMenuPage() {
   const selectedMenuIndex = selectedMenu ? menu.menus.findIndex((item) => item.id === selectedMenu.id) : -1
   const isBusy = menu.activeAction !== null
   const availableMenus = useMemo(() => menu.menus.filter((item) => item.status === 'AVAILABLE'), [menu.menus])
-
-  const handleLogout = () => {
-    void logout()
-    navigate('/login', { replace: true })
-  }
 
   const startNew = () => setSelectedId(null)
   const moveMenu = (item: MerchantPlaceMenu, direction: -1 | 1) => {
@@ -200,21 +195,31 @@ function MerchantMenuPage() {
   }
 
   if (menu.status === 'error') {
-    return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>메뉴 관리</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{menu.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void menu.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
+    return (
+      <MerchantPageShell title="메뉴 관리">
+        <FeedbackMessage tone="error">{menu.errorMessage}</FeedbackMessage>
+        <div style={{ marginTop: 16 }}>
+          <Store.RetryButton type="button" onClick={() => void menu.fetchInitialData()}>다시 시도</Store.RetryButton>
+        </div>
+      </MerchantPageShell>
+    )
   }
 
-  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{menu.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content>
-    <Store.PageIntro><div><Store.PageTitle>메뉴 관리</Store.PageTitle><Store.PageDescription>연결된 장소의 메뉴, 판매 상태, 고객 노출 순서를 관리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={menu.status === 'loading' || isBusy} onClick={() => void menu.fetchMenus()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
+  return <MerchantPageShell
+    title="메뉴 관리"
+    description="연결된 장소의 메뉴, 판매 상태, 고객 노출 순서를 관리합니다."
+    actions={<S.HeaderActions><S.HeaderButton type="button" disabled={menu.status === 'loading' || isBusy} onClick={() => void menu.fetchMenus()}>새로고침</S.HeaderButton></S.HeaderActions>}
+  >
     {menu.profile && menu.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="메뉴를 관리할 장소 선택" value={menu.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => { setSelectedId(null); menu.selectPlace(Number(event.target.value)) }}>{menu.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
-    {menu.sectionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{menu.sectionErrorMessage}</Store.Notice> : null}
-    {menu.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{menu.actionErrorMessage}</Store.Notice> : null}
-    {menu.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{menu.successMessage}</Store.Notice> : null}
+    {menu.sectionErrorMessage ? <FeedbackMessage tone="error" style={{ marginBottom: 16 }}>{menu.sectionErrorMessage}</FeedbackMessage> : null}
+    {menu.actionErrorMessage ? <FeedbackMessage tone="error" style={{ marginBottom: 16 }}>{menu.actionErrorMessage}</FeedbackMessage> : null}
+    {menu.successMessage ? <FeedbackMessage tone="success" style={{ marginBottom: 16 }}>{menu.successMessage}</FeedbackMessage> : null}
     {menu.status === 'loading' || menu.isLoading ? <Store.LoadingSummary aria-label="메뉴를 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : !menu.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">restaurant_menu</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 메뉴를 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Workspace>
       <S.Panel><S.PanelHeader><div><S.PanelTitle>등록 메뉴</S.PanelTitle><S.PanelDescription>판매 상태와 고객에게 표시되는 순서를 확인합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy} onClick={startNew}>새 메뉴</S.CreateButton></S.PanelHeader><S.ResultMeta>총 {menu.menus.length}개 · 판매 중 {availableMenus.length}개</S.ResultMeta>{menu.menus.length === 0 ? <S.Empty>등록된 메뉴가 없습니다. 첫 메뉴를 등록해보세요.</S.Empty> : <S.CampaignList>{menu.menus.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => setSelectedId(item.id)}><S.CampaignTop><S.CampaignTitle title={item.name}>{item.name}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{formatPrice(item.priceAmount, item.currency)} · 표시 순서 {item.displayOrder + 1}</S.CampaignMeta>{item.description ? <S.CampaignMeta title={item.description}>{item.description}</S.CampaignMeta> : null}</S.CampaignItem>)}</S.CampaignList>}</S.Panel>
       <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedMenu ? '메뉴 상세' : '새 메뉴 등록'}</S.PanelTitle><S.PanelDescription>{selectedMenu ? `메뉴 #${selectedMenu.id} · 표시 순서 ${selectedMenu.displayOrder + 1}` : '메뉴 정보를 입력하면 목록 마지막 순서로 등록됩니다.'}</S.PanelDescription></div>{selectedMenu ? <S.StatusBadge $tone={STATUS[selectedMenu.status].tone}>{STATUS[selectedMenu.status].label}</S.StatusBadge> : null}</S.PanelHeader><MenuEditor key={selectedMenu?.id ?? `new-${menu.menus.length}`} menu={selectedMenu} nextDisplayOrder={menu.menus.length} activeAction={menu.activeAction} onCreate={menu.createMenu} onUpdate={menu.updateMenu} onStatusChange={menu.updateMenuStatus} onRequestDeactivate={setPendingDeactivation} canMoveUp={selectedMenuIndex > 0} canMoveDown={selectedMenuIndex >= 0 && selectedMenuIndex < menu.menus.length - 1} onMove={(direction) => selectedMenu && moveMenu(selectedMenu, direction)} onSelect={setSelectedId} /></S.Panel>
     </S.Workspace>}
     {pendingDeactivation ? <MerchantConfirmationDialog title="메뉴를 비활성화할까요?" description={`'${pendingDeactivation.name}' 메뉴는 고객에게 더 이상 노출되지 않으며 다시 활성화할 수 없습니다.`} cancelLabel="유지하기" confirmLabel="메뉴 비활성화" isPending={menu.activeAction === 'deactivate'} onClose={() => setPendingDeactivation(null)} onConfirm={() => void confirmDeactivation()} /> : null}
-  </Store.Content></Store.Page>
+  </MerchantPageShell>
 }
 
 export default MerchantMenuPage

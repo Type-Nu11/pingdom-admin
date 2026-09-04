@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { AppDialog } from '../common/AppDialog'
 import * as S from './MerchantConfirmationDialog.styles'
 
@@ -20,9 +21,12 @@ export function MerchantConfirmationDialog({
   onClose,
   onConfirm,
 }: MerchantConfirmationDialogProps) {
+  const warningId = useId()
+
   return (
     <AppDialog
       title={title}
+      descriptionId={warningId}
       isDismissible={!isPending}
       onClose={onClose}
       footer={(
@@ -32,7 +36,7 @@ export function MerchantConfirmationDialog({
         </>
       )}
     >
-      <S.Warning><span aria-hidden="true">warning</span>{description}</S.Warning>
+      <S.Warning id={warningId}><span aria-hidden="true">warning</span>{description}</S.Warning>
     </AppDialog>
   )
 }

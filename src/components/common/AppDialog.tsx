@@ -21,6 +21,7 @@ interface AppDialogProps {
   children: ReactNode
   footer?: ReactNode
   description?: ReactNode
+  descriptionId?: string
   isDismissible?: boolean
   onClose: () => void
 }
@@ -30,11 +31,12 @@ export function AppDialog({
   children,
   footer,
   description,
+  descriptionId,
   isDismissible = true,
   onClose,
 }: AppDialogProps) {
   const titleId = useId()
-  const descriptionId = useId()
+  const generatedDescriptionId = useId()
   const dialogRef = useRef<HTMLElement>(null)
   const previousActiveElementRef = useRef<HTMLElement | null>(null)
 
@@ -44,7 +46,8 @@ export function AppDialog({
       : null
 
     const focusFirstElement = window.requestAnimationFrame(() => {
-      dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus()
+      const firstFocusableElement = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
+      ;(firstFocusableElement ?? dialogRef.current)?.focus()
     })
 
     return () => {
@@ -52,6 +55,22 @@ export function AppDialog({
       previousActiveElementRef.current?.focus()
     }
   }, [])
+
+  useEffect(() => {
+    if (isDismissible) return
+
+    const focusPendingDialog = window.requestAnimationFrame(() => {
+      const focusableElements = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? [],
+      )
+
+      if (!focusableElements.includes(document.activeElement as HTMLElement)) {
+        dialogRef.current?.focus()
+      }
+    })
+
+    return () => window.cancelAnimationFrame(focusPendingDialog)
+  }, [isDismissible])
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape' && isDismissible) {
@@ -91,16 +110,17 @@ export function AppDialog({
     >
       <S.Dialog
         ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
+        aria-describedby={descriptionId ?? (description ? generatedDescriptionId : undefined)}
         onKeyDown={handleKeyDown}
       >
         <S.Header>
           <S.Heading>
             <S.Title id={titleId}>{title}</S.Title>
-            {description ? <S.Description id={descriptionId}>{description}</S.Description> : null}
+            {description ? <S.Description id={generatedDescriptionId}>{description}</S.Description> : null}
           </S.Heading>
           <S.CloseButton type="button" aria-label="닫기" disabled={!isDismissible} onClick={onClose}>
             <S.Icon aria-hidden="true">close</S.Icon>

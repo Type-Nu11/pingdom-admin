@@ -104,9 +104,15 @@ function OperationHistoryPage() {
   const hook = useAdminOperationHistories()
   const { fetchPrivacy } = hook
   const [tab, setTab] = useState<Tab>('audit')
-  const [selectedAudit, setSelectedAudit] = useState<AdminAuditLogItem | null>(null)
-  const [selectedPrivacy, setSelectedPrivacy] =
+  const [auditSelection, setSelectedAudit] = useState<AdminAuditLogItem | null>(null)
+  const [privacySelection, setSelectedPrivacy] =
     useState<PrivacyProcessingHistoryItem | null>(null)
+  const selectedAudit = hook.auditState.hasResult && !hook.auditState.restricted
+    ? auditSelection
+    : null
+  const selectedPrivacy = hook.privacyState.hasResult && !hook.privacyState.restricted
+    ? privacySelection
+    : null
   const [isAuditAdvancedFilterOpen, setIsAuditAdvancedFilterOpen] = useState(false)
   const [formError, setFormError] = useState('')
   const [auditActorId, setAuditActorId] = useState('')
@@ -231,9 +237,17 @@ function OperationHistoryPage() {
   }
 
   const isLoading = hook.loadingTabs[tab]
+  const retryAudit = () => {
+    setSelectedAudit(null)
+    void hook.retryAudit()
+  }
+  const retryPrivacy = () => {
+    setSelectedPrivacy(null)
+    void hook.retryPrivacy()
+  }
   const refresh = () => {
-    if (tab === 'audit') void hook.retryAudit()
-    else void hook.retryPrivacy()
+    if (tab === 'audit') retryAudit()
+    else retryPrivacy()
   }
   return (
     <Shell.AppShell>
@@ -436,7 +450,7 @@ function OperationHistoryPage() {
                     ariaLabel="감사 로그 목록"
                     footer={hook.auditState.hasResult && (hook.audit?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="감사 로그 페이지네이션" page={hook.audit?.page ?? 1} totalPages={hook.audit?.totalPages ?? 1} hasNext={hook.audit?.hasNext} disabled={isLoading} onPageChange={moveAudit} /> : null}
                   >
-                    <ListQueryBoundary state={hook.auditState} error={hook.errors.audit} empty={!hook.audit?.auditLogs.length} onRetry={() => void hook.retryAudit()} onReset={resetAudit}>
+                    <ListQueryBoundary state={hook.auditState} error={hook.errors.audit} empty={!hook.audit?.auditLogs.length} onRetry={retryAudit} onReset={resetAudit}>
                         <History.AuditList>
                           {hook.audit?.auditLogs.map((item) => (
                             <History.AuditRowButton
@@ -527,7 +541,7 @@ function OperationHistoryPage() {
                     ariaLabel="개인정보 처리 이력 목록"
                     footer={hook.privacyState.hasResult && (hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
                   >
-                    <ListQueryBoundary state={hook.privacyState} error={hook.errors.privacy} empty={!hook.privacy?.histories.length} onRetry={() => void hook.retryPrivacy()} onReset={resetPrivacy}>
+                    <ListQueryBoundary state={hook.privacyState} error={hook.errors.privacy} empty={!hook.privacy?.histories.length} onRetry={retryPrivacy} onReset={resetPrivacy}>
 <S.CardList>{hook.privacy?.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>
                     </ListQueryBoundary>
                   </ListPane>

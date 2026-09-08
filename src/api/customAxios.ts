@@ -3,6 +3,7 @@ import type { RefreshTokenResponse } from '../types/auth.types'
 import {
   clearStoredAuth,
   getStoredAccessToken,
+  getAuthSessionId,
   saveRefreshedAuthTokens,
 } from '../utils/authStorage'
 
@@ -27,6 +28,7 @@ export type ApiError<T = unknown> = AxiosError<T> & {
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean
+  _authSessionId?: string
 }
 
 export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
@@ -37,7 +39,13 @@ const API_BASE_URL = import.meta.env.DEV
   ? '/api'
   : import.meta.env.VITE_PUBLIC_API_BASE_URL
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
-let tokenRefreshRequest: Promise<RefreshTokenResponse> | null = null
+const tokenRefreshRequests = new Map<string, Promise<RefreshTokenResponse>>()
+
+function assertCurrentSession(sessionId: string) {
+  if (getAuthSessionId() !== sessionId) {
+    throw new axios.CanceledError('로그인 세션이 변경되어 요청을 취소했습니다.')
+  }
+}
 
 function isBrowserOffline() {
   return typeof navigator !== 'undefined' && navigator.onLine === false
@@ -146,23 +154,28 @@ function shouldRefreshAccessToken(
   )
 }
 
-async function requestTokenRefresh() {
-  tokenRefreshRequest ??= axios
+async function requestTokenRefresh(sessionId: string) {
+  assertCurrentSession(sessionId)
+  const pending = tokenRefreshRequests.get(sessionId)
+  if (pending) return pending
+  const request = axios
     .post<RefreshTokenResponse>(TOKEN_REFRESH_API_PATH, undefined, {
       baseURL: API_BASE_URL,
       timeout: 10000,
       withCredentials: true,
     })
     .then(({ data }) => {
-      saveRefreshedAuthTokens(data)
+      assertCurrentSession(sessionId)
+      saveRefreshedAuthTokens(data, sessionId)
 
       return data
     })
     .finally(() => {
-      tokenRefreshRequest = null
+      tokenRefreshRequests.delete(sessionId)
     })
 
-  return tokenRefreshRequest
+  tokenRefreshRequests.set(sessionId, request)
+  return request
 }
 
 function shouldClearAuthAfterRefreshFailure(error: unknown) {
@@ -176,6 +189,11 @@ function shouldClearAuthAfterRefreshFailure(error: unknown) {
 }
 
 customAxios.interceptors.request.use((config) => {
+  const request = config as RetriableRequestConfig
+  if (shouldAttachAccessToken(config.url)) {
+    request._authSessionId ??= getAuthSessionId()
+    assertCurrentSession(request._authSessionId)
+  }
   const accessToken = getStoredAccessToken()
 
   if (accessToken && shouldAttachAccessToken(config.url)) {
@@ -186,11 +204,17 @@ customAxios.interceptors.request.use((config) => {
 })
 
 customAxios.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config = response.config as RetriableRequestConfig
+    if (config._authSessionId) assertCurrentSession(config._authSessionId)
+    return response
+  },
 
   async (error: AxiosError) => {
-    const apiError = enrichApiError(error)
     const originalRequest = error.config as RetriableRequestConfig | undefined
+    if (originalRequest?._authSessionId) assertCurrentSession(originalRequest._authSessionId)
+    if (axios.isCancel(error)) return Promise.reject(error)
+    const apiError = enrichApiError(error)
 
     if (originalRequest && shouldRefreshAccessToken(error, originalRequest)) {
       originalRequest._retry = true
@@ -209,11 +233,14 @@ customAxios.interceptors.response.use(
       }
 
       try {
-        const refreshedTokens = await requestTokenRefresh()
+        const sessionId = originalRequest._authSessionId!
+        const refreshedTokens = await requestTokenRefresh(sessionId)
+        assertCurrentSession(sessionId)
         setAuthorizationHeader(originalRequest, refreshedTokens.accessToken)
 
         return customAxios(originalRequest)
       } catch (refreshError) {
+        assertCurrentSession(originalRequest._authSessionId!)
         if (shouldClearAuthAfterRefreshFailure(refreshError)) {
           clearStoredAuth()
         }

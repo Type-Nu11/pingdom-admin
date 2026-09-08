@@ -215,7 +215,20 @@ function AdminReservationReviewPage() {
                   />
                 ) : null}
               >
-                <ListQueryBoundary state={hook.listState} error={hook.errorMessage} empty={hook.reservations.length === 0} onRetry={() => void hook.fetchReservations()} onReset={() => { setStatus(''); setPlaceId(''); setSelectedReservationId(null); hook.clearDetail(); void hook.fetchReservations({ status: '', placeId: undefined, page: 1 }) }}>
+                <ListQueryBoundary
+                  state={hook.listState}
+                  error={hook.errorMessage}
+                  empty={hook.reservations.length === 0}
+                  onRetry={() => void hook.fetchReservations()}
+                  onReset={() => {
+                    setStatus('')
+                    setPlaceId('')
+                    setFilterError('')
+                    setSelectedReservationId(null)
+                    hook.clearDetail()
+                    void hook.fetchReservations({ status: '', placeId: undefined, page: 1 })
+                  }}
+                >
                     <S.CardList>
                       {hook.reservations.map((item) => {
                         const itemStatus = STATUS[item.status]

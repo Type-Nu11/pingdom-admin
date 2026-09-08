@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 import { logout as requestLogout } from '../../api/authApi'
+import { runAuthTransition } from '../../api/customAxios'
 import type { LoginResponse } from '../../types/auth.types'
 import {
   clearStoredAuth,
@@ -49,7 +50,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     clearAuth()
 
     try {
-      await requestLogout()
+      await runAuthTransition(async () => {
+        // 앞서 대기 중이던 로그인 응답이 저장됐더라도 로그아웃이 마지막 상태가 됩니다.
+        clearAuth()
+        await requestLogout()
+      })
     } catch (error) {
       logDebugError('로그아웃 요청 실패', error)
     }

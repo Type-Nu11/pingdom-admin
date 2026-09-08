@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { type LoginMode } from '../../api/authApi'
 import { useAuth } from '../../hooks/useAuth'
 import { useLogin } from '../../hooks/useLogin'
+import { getAuthSessionNotice } from '../../utils/authStorage'
 import * as S from './LoginPage.styles'
 
 const ROLE_OPTIONS: Array<{
@@ -28,6 +29,7 @@ function LoginPage() {
   const [selectedMode, setSelectedMode] = useState<LoginMode>('admin')
   const [showPassword, setShowPassword] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [sessionNotice, setSessionNotice] = useState(getAuthSessionNotice)
   const usernameInputRef = useRef<HTMLInputElement>(null)
   const passwordInputRef = useRef<HTMLInputElement>(null)
   const isMerchantSession = isAuthenticated && user?.role === 'MERCHANT_OWNER'
@@ -123,6 +125,7 @@ function LoginPage() {
                 return
               }
 
+              setSessionNotice('')
               const result = await handleLogin()
 
               if (result === 'success') {
@@ -187,8 +190,8 @@ function LoginPage() {
             </S.Field>
 
             <S.ErrorMessageSlot aria-live="polite">
-              {isError && errorMessage ? (
-                <S.ErrorMessage role="alert">{errorMessage}</S.ErrorMessage>
+              {(isError && errorMessage) || sessionNotice ? (
+                <S.ErrorMessage role="alert">{isError && errorMessage ? errorMessage : sessionNotice}</S.ErrorMessage>
               ) : null}
             </S.ErrorMessageSlot>
 

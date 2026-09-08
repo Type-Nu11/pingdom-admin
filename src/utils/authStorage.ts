@@ -1,9 +1,32 @@
 import { AUTH_STORAGE_KEYS } from '../constants/auth'
+import { getAccessTokenSubject } from './accessTokenSubject'
 import type { LoginResponse, RefreshTokenResponse } from '../types/auth.types'
 import type { AuthState, AuthUser } from '../app/providers/AuthContext'
 
 const AUTH_STORAGE_CHANGE_EVENT = 'pingdom-auth-storage-change'
 const LEGACY_REFRESH_TOKEN_STORAGE_KEY = 'refreshToken'
+const AUTH_SESSION_KEY = 'pingdom-auth-session'
+let fallbackSessionId = ''
+let authSessionNotice = ''
+
+export function getAuthSessionNotice() {
+  return authSessionNotice
+}
+
+export function getAuthSessionId() {
+  let sessionId = canUseStorage() ? getStoredString(AUTH_SESSION_KEY) : fallbackSessionId
+  if (!sessionId) {
+    sessionId = crypto.randomUUID()
+    setStoredString(AUTH_SESSION_KEY, sessionId)
+    fallbackSessionId = sessionId
+  }
+  return sessionId
+}
+
+function rotateAuthSession() {
+  fallbackSessionId = crypto.randomUUID()
+  setStoredString(AUTH_SESSION_KEY, fallbackSessionId)
+}
 
 function canUseStorage() {
   return typeof localStorage !== 'undefined'
@@ -115,6 +138,8 @@ export function createAuthStateFromLogin(data: LoginResponse): AuthState {
 }
 
 export function saveLoginAuth(data: LoginResponse) {
+  rotateAuthSession()
+  authSessionNotice = ''
   removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
   setStoredString(AUTH_STORAGE_KEYS.userId, stringifyAuthNumber(data.id))
@@ -131,12 +156,18 @@ export function saveLoginAuth(data: LoginResponse) {
   setStoredString(AUTH_STORAGE_KEYS.role, normalizeAuthString(data.role))
 }
 
-export function saveRefreshedAuthTokens(data: RefreshTokenResponse) {
+export function saveRefreshedAuthTokens(data: RefreshTokenResponse, sessionId: string) {
+  if (getAuthSessionId() !== sessionId) return false
+  const userId = getStoredString(AUTH_STORAGE_KEYS.userId)
+  if (!userId || getAccessTokenSubject(data.accessToken) !== userId) return false
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
   notifyAuthStorageChange()
+  return true
 }
 
-export function clearStoredAuth() {
+export function clearStoredAuth(notice?: string) {
+  if (notice) authSessionNotice = notice
+  rotateAuthSession()
   Object.values(AUTH_STORAGE_KEYS).forEach(removeStoredValue)
   removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
   notifyAuthStorageChange()

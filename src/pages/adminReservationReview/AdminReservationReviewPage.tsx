@@ -1,3 +1,4 @@
+import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminPagination } from '../../components/common/AdminPagination'
@@ -194,16 +195,16 @@ function AdminReservationReviewPage() {
               </S.SearchFilterGrid>
             </S.SearchBar>
             {filterError ? <Shared.Notice $variant="error">{filterError}</Shared.Notice> : null}
-            {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
+
 
             <ListDetailWorkspace>
               <ListPane
                 title="예약 목록"
                 description="예약을 선택해 신청 정보와 심사 이력을 확인합니다."
-                count={`${hook.totalCount.toLocaleString()}건`}
-                page={hook.query.page}
+                count={hook.listState.hasResult ? `${hook.totalCount.toLocaleString()}건${hook.listState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                page={hook.listState.hasResult ? hook.query.page : undefined}
                 ariaLabel="예약 목록"
-                footer={hook.totalPages > 1 ? (
+                footer={hook.listState.hasResult && hook.totalPages > 1 ? (
                   <AdminPagination
                     page={hook.query.page}
                     totalPages={hook.totalPages}
@@ -214,11 +215,20 @@ function AdminReservationReviewPage() {
                   />
                 ) : null}
               >
-                  {hook.isLoading && hook.reservations.length === 0 ? (
-                    <Shared.EmptyState><strong>예약 목록을 불러오는 중입니다.</strong></Shared.EmptyState>
-                  ) : hook.reservations.length === 0 ? (
-                    <Shared.EmptyState><strong>조건에 맞는 예약이 없습니다.</strong></Shared.EmptyState>
-                  ) : (
+                <ListQueryBoundary
+                  state={hook.listState}
+                  error={hook.errorMessage}
+                  empty={hook.reservations.length === 0}
+                  onRetry={() => void hook.fetchReservations()}
+                  onReset={() => {
+                    setStatus('')
+                    setPlaceId('')
+                    setFilterError('')
+                    setSelectedReservationId(null)
+                    hook.clearDetail()
+                    void hook.fetchReservations({ status: '', placeId: undefined, page: 1 })
+                  }}
+                >
                     <S.CardList>
                       {hook.reservations.map((item) => {
                         const itemStatus = STATUS[item.status]
@@ -239,7 +249,7 @@ function AdminReservationReviewPage() {
                         )
                       })}
                     </S.CardList>
-                  )}
+                </ListQueryBoundary>
               </ListPane>
 
               <Shared.Panel>

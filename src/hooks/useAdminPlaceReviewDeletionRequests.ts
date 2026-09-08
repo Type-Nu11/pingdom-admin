@@ -1,3 +1,4 @@
+import { useListQueryState, listQueryKey } from './useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
@@ -42,6 +43,8 @@ function shouldClearAuth(error: unknown) {
 
 export function useAdminPlaceReviewDeletionRequests() {
   const { clearAuth } = useAuth()
+  const listState = useListQueryState()
+  const { begin, succeed, fail } = listState
   const [status, setStatus] = useState<PlaceReviewDeletionRequestStatus | ''>('PENDING')
   const [items, setItems] = useState<AdminPlaceReviewDeletionRequest[]>([])
   const [detail, setDetail] = useState<AdminPlaceReviewDeletionRequest | null>(null)
@@ -68,6 +71,12 @@ export function useAdminPlaceReviewDeletionRequests() {
     nextPage = queryRef.current.page
   ) => {
     const requestId = ++listRequestRef.current
+    if (!begin(listQueryKey({ status: nextStatus, page: nextPage }), Boolean(nextStatus))) {
+      setItems([])
+      setTotalElements(0)
+      setTotalPages(0)
+      setHasNext(false)
+    }
     queryRef.current = { status: nextStatus, page: nextPage }
     setStatus(nextStatus)
     setPage(nextPage)
@@ -84,6 +93,7 @@ export function useAdminPlaceReviewDeletionRequests() {
       const resolvedPage = Math.min(nextPage, Math.max(data.totalPages, 1))
       if (resolvedPage !== nextPage) return fetchItems(nextStatus, resolvedPage)
 
+      succeed(listQueryKey({ status: nextStatus, page: nextPage }))
       setItems(data.deletionRequests)
       setPage(data.page)
       setTotalElements(data.totalElements)
@@ -92,10 +102,7 @@ export function useAdminPlaceReviewDeletionRequests() {
       return true
     } catch (error) {
       if (requestId === listRequestRef.current) {
-        setItems([])
-        setTotalElements(0)
-        setTotalPages(0)
-        setHasNext(false)
+        fail(error)
         setErrorMessage(message(error, '리뷰 삭제 요청을 불러오지 못했습니다.'))
         if (shouldClearAuth(error)) clearAuth()
       }
@@ -104,7 +111,7 @@ export function useAdminPlaceReviewDeletionRequests() {
     } finally {
       if (requestId === listRequestRef.current) setIsLoading(false)
     }
-  }, [clearAuth])
+  }, [clearAuth, begin, succeed, fail])
 
   const fetchDetail = useCallback(async (deletionRequestId: number) => {
     const requestId = ++detailRequestRef.current
@@ -169,6 +176,7 @@ export function useAdminPlaceReviewDeletionRequests() {
   }, [fetchItems])
 
   return {
+    listState,
     status,
     items,
     detail,

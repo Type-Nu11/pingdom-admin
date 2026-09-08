@@ -1,3 +1,4 @@
+import { useListQueryState, listQueryKey } from './useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
@@ -69,6 +70,8 @@ function toReservationQueryParams(query: ReservationQueryState): AdminReservatio
 
 export function useAdminReservations() {
   const { clearAuth } = useAuth()
+  const listState = useListQueryState()
+  const { begin, succeed, fail } = listState
   const [reservations, setReservations] = useState<AdminReservation[]>([])
   const [reservation, setReservation] = useState<AdminReservation | null>(null)
   const [query, setQuery] = useState<ReservationQueryState>({
@@ -96,6 +99,12 @@ export function useAdminReservations() {
   const fetchReservations = useCallback(async (nextQuery = queryRef.current) => {
     const normalizedQuery = normalizeQuery(nextQuery)
     const requestId = ++listRef.current
+    if (!begin(listQueryKey(normalizedQuery), Boolean(normalizedQuery.status || normalizedQuery.placeId))) {
+      setReservations([])
+      setTotalCount(0)
+      setTotalPages(0)
+      setHasNext(false)
+    }
     queryRef.current = normalizedQuery
     setQuery(normalizedQuery)
     setIsLoading(true)
@@ -113,6 +122,7 @@ export function useAdminReservations() {
       }
 
       if (requestId === listRef.current) {
+        succeed(listQueryKey(resolvedQuery))
         queryRef.current = resolvedQuery
         setQuery(resolvedQuery)
         setReservations(data.reservations)
@@ -123,10 +133,7 @@ export function useAdminReservations() {
       return true
     } catch (error) {
       if (requestId === listRef.current) {
-        setReservations([])
-        setTotalCount(0)
-        setTotalPages(0)
-        setHasNext(false)
+        fail(error)
         setErrorMessage(getErrorMessage(error, '예약 목록을 불러오지 못했습니다.'))
         if (shouldClearAuth(error)) clearAuth()
       }
@@ -135,7 +142,7 @@ export function useAdminReservations() {
     } finally {
       if (requestId === listRef.current) setIsLoading(false)
     }
-  }, [clearAuth])
+  }, [clearAuth, begin, succeed, fail])
 
   const fetchDetail = useCallback(async (reservationId: number) => {
     const requestId = ++detailRef.current
@@ -204,6 +211,7 @@ export function useAdminReservations() {
   }, [fetchReservations])
 
   return {
+    listState,
     reservations,
     reservation,
     query,

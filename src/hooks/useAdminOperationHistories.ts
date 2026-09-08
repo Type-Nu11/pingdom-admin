@@ -1,3 +1,4 @@
+import { useListQueryState, listQueryKey } from './useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getAdminAuditLogs,
@@ -37,6 +38,12 @@ function getHistoryErrorMessage(error: unknown) {
 
 export function useAdminOperationHistories() {
   const { clearAuth } = useAuth()
+  const auditState = useListQueryState()
+  const privacyState = useListQueryState()
+  const { begin: beginAudit, succeed: succeedAudit, fail: failAudit } = auditState
+  const { begin: beginPrivacy, succeed: succeedPrivacy, fail: failPrivacy } = privacyState
+  const auditQuery = useRef<AdminAuditLogRequest>({})
+  const privacyQuery = useRef<PrivacyProcessingHistoryRequest>({})
   const [audit, setAudit] = useState<AdminAuditLogResponse | null>(null)
   const [privacy, setPrivacy] = useState<PrivacyProcessingHistoryResponse | null>(null)
   const [loadingTabs, setLoadingTabs] = useState<Record<HistoryTab, boolean>>({
@@ -54,7 +61,16 @@ export function useAdminOperationHistories() {
     request: () => Promise<T>,
     apply: (data: T) => void,
     debugLabel: string,
+    query: AdminAuditLogRequest | PrivacyProcessingHistoryRequest,
   ) => {
+    const normalized = { ...query, page: query.page ?? 1, limit: query.limit ?? 5 }
+    const key = listQueryKey(normalized)
+    const filtered = Object.entries(query).some(([name, value]) => name !== 'page' && name !== 'limit' && value !== undefined && value !== '')
+    const retain = (tab === 'audit' ? beginAudit : beginPrivacy)(key, filtered)
+    if (!retain) {
+      if (tab === 'audit') setAudit(null)
+      else setPrivacy(null)
+    }
     const sequence = ++requestSequence.current[tab]
     setLoadingTabs((current) => ({ ...current, [tab]: true }))
     setErrors((current) => ({ ...current, [tab]: '' }))
@@ -63,10 +79,14 @@ export function useAdminOperationHistories() {
       const data = await request()
       if (requestSequence.current[tab] === sequence) {
         apply(data)
+        if (tab === 'audit') succeedAudit(key)
+        else succeedPrivacy(key)
       }
       return data
     } catch (error) {
       if (requestSequence.current[tab] === sequence) {
+        if (tab === 'audit') failAudit(error)
+        else failPrivacy(error)
         setErrors((current) => ({ ...current, [tab]: getHistoryErrorMessage(error) }))
       }
       if (isApiError(error) && error.category === 'unauthorized') {
@@ -79,28 +99,21 @@ export function useAdminOperationHistories() {
         setLoadingTabs((current) => ({ ...current, [tab]: false }))
       }
     }
-  }, [clearAuth])
+  }, [clearAuth, beginAudit, beginPrivacy, succeedAudit, succeedPrivacy, failAudit, failPrivacy])
 
-  const fetchAudit = useCallback(
-    (request: AdminAuditLogRequest = {}) =>
-      run('audit', () => getAdminAuditLogs(request), setAudit, '관리자 감사 로그 조회 실패'),
-    [run],
-  )
+  const fetchAudit = useCallback((request: AdminAuditLogRequest = {}) => {
+    auditQuery.current = request
+    return run('audit', () => getAdminAuditLogs(request), setAudit, '관리자 감사 로그 조회 실패', request)
+  }, [run])
 
-  const fetchPrivacy = useCallback(
-    (request: PrivacyProcessingHistoryRequest = {}) =>
-      run(
-        'privacy',
-        () => getPrivacyProcessingHistories(request),
-        setPrivacy,
-        '개인정보 처리 이력 조회 실패',
-      ),
-    [run],
-  )
+  const fetchPrivacy = useCallback((request: PrivacyProcessingHistoryRequest = {}) => {
+    privacyQuery.current = request
+    return run('privacy', () => getPrivacyProcessingHistories(request), setPrivacy, '개인정보 처리 이력 조회 실패', request)
+  }, [run])
 
   useEffect(() => {
     void fetchAudit()
   }, [fetchAudit])
 
-  return { audit, privacy, loadingTabs, errors, fetchAudit, fetchPrivacy }
+  return { auditState, privacyState, retryAudit: () => fetchAudit(auditQuery.current), retryPrivacy: () => fetchPrivacy(privacyQuery.current), audit, privacy, loadingTabs, errors, fetchAudit, fetchPrivacy }
 }

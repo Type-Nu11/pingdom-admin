@@ -1,3 +1,4 @@
+import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -114,21 +115,21 @@ function PlaceReviewDeletionPage() {
               <option value="REJECTED">반려</option>
               <option value="">전체</option>
             </AdminStatusFilter>
-            {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
+
 
             <Shared.Workspace>
               <Shared.Panel>
-                <Shared.PanelHeader><div><Shared.PanelTitle>{hook.status ? STATUS_LABELS[hook.status] : '전체'} 요청</Shared.PanelTitle><Shared.PanelDescription>항목을 선택해 리뷰 원문과 요청 사유를 확인합니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.totalElements.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
+                <Shared.PanelHeader><div><Shared.PanelTitle>{hook.status ? STATUS_LABELS[hook.status] : '전체'} 요청</Shared.PanelTitle><Shared.PanelDescription>항목을 선택해 리뷰 원문과 요청 사유를 확인합니다.</Shared.PanelDescription></div>{hook.listState.hasResult ? <Shared.PanelCount>{hook.totalElements.toLocaleString()}건{hook.listState.phase === 'error' ? ' (이전 결과)' : ''}</Shared.PanelCount> : null}</Shared.PanelHeader>
                 <Shared.ScrollArea>
-                  {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>리뷰 삭제 요청을 불러오는 중입니다.</strong></Shared.EmptyState> : null}
-                  {!hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>조건에 맞는 요청이 없습니다.</strong></Shared.EmptyState> : null}
+                  <ListQueryBoundary state={hook.listState} error={hook.errorMessage} empty={hook.items.length === 0} onRetry={() => void hook.fetchItems()} onReset={() => changeStatus('')}>
                   {hook.items.length > 0 ? <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.deletionRequestId} type="button" $selected={selectedRequestId === item.deletionRequestId} onClick={() => selectRequest(item.deletionRequestId)}>
                     <Form.RecordHeader><Form.RecordTitle>장소 #{item.placeId} · 리뷰 #{item.reviewId}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader>
                     <Form.RecordMeta>상점주 요청자 #{item.requesterUserId} · {formatDate(item.requestedAt)}</Form.RecordMeta>
                     <Form.RecordSummary>{item.requestReason || '요청 사유가 입력되지 않았습니다.'}</Form.RecordSummary>
                   </Form.RecordButton>)}</Form.CardList> : null}
+                  </ListQueryBoundary>
                 </Shared.ScrollArea>
-                {hook.totalPages > 1 ? <AdminPagination ariaLabel="리뷰 삭제 요청 목록 페이지네이션" page={hook.page} totalPages={hook.totalPages} hasNext={hook.hasNext} disabled={hook.isLoading} onPageChange={(nextPage) => { setSelectedRequestId(null); hook.clearDetail(); void hook.fetchItems(hook.status, nextPage) }} /> : null}
+                {hook.listState.hasResult && hook.totalPages > 1 ? <AdminPagination ariaLabel="리뷰 삭제 요청 목록 페이지네이션" page={hook.page} totalPages={hook.totalPages} hasNext={hook.hasNext} disabled={hook.isLoading} onPageChange={(nextPage) => { setSelectedRequestId(null); hook.clearDetail(); void hook.fetchItems(hook.status, nextPage) }} /> : null}
               </Shared.Panel>
 
               <Shared.Panel>

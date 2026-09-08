@@ -1,3 +1,4 @@
+import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
@@ -101,11 +102,17 @@ function OperationHistoryPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const hook = useAdminOperationHistories()
-  const { fetchPrivacy, privacy } = hook
+  const { fetchPrivacy } = hook
   const [tab, setTab] = useState<Tab>('audit')
-  const [selectedAudit, setSelectedAudit] = useState<AdminAuditLogItem | null>(null)
-  const [selectedPrivacy, setSelectedPrivacy] =
+  const [auditSelection, setSelectedAudit] = useState<AdminAuditLogItem | null>(null)
+  const [privacySelection, setSelectedPrivacy] =
     useState<PrivacyProcessingHistoryItem | null>(null)
+  const selectedAudit = hook.auditState.hasResult && !hook.auditState.restricted
+    ? auditSelection
+    : null
+  const selectedPrivacy = hook.privacyState.hasResult && !hook.privacyState.restricted
+    ? privacySelection
+    : null
   const [isAuditAdvancedFilterOpen, setIsAuditAdvancedFilterOpen] = useState(false)
   const [formError, setFormError] = useState('')
   const [auditActorId, setAuditActorId] = useState('')
@@ -123,10 +130,10 @@ function OperationHistoryPage() {
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 
   useEffect(() => {
-    if (tab === 'privacy' && !privacy) {
+    if (tab === 'privacy' && hook.privacyState.phase === 'idle') {
       void fetchPrivacy()
     }
-  }, [fetchPrivacy, privacy, tab])
+  }, [fetchPrivacy, hook.privacyState.phase, tab])
 
   const auditRequest = (page: number): AdminAuditLogRequest | null => {
     const actorUserId = parseUserId(auditActorId)
@@ -230,10 +237,17 @@ function OperationHistoryPage() {
   }
 
   const isLoading = hook.loadingTabs[tab]
-  const activeError = hook.errors[tab]
+  const retryAudit = () => {
+    setSelectedAudit(null)
+    void hook.retryAudit()
+  }
+  const retryPrivacy = () => {
+    setSelectedPrivacy(null)
+    void hook.retryPrivacy()
+  }
   const refresh = () => {
-    if (tab === 'audit') moveAudit(hook.audit?.page ?? 1)
-    else movePrivacy(hook.privacy?.page ?? 1)
+    if (tab === 'audit') retryAudit()
+    else retryPrivacy()
   }
   return (
     <Shell.AppShell>
@@ -338,7 +352,7 @@ function OperationHistoryPage() {
             </S.TabList>
 
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}
-            {activeError ? <Shared.Notice $variant="error">{activeError}</Shared.Notice> : null}
+
 
             {tab === 'audit' ? (
               <>
@@ -431,18 +445,14 @@ function OperationHistoryPage() {
                   <ListPane
                     title="감사 로그"
                     description="항목을 선택해 전후 상태를 확인합니다."
-                    count={`${(hook.audit?.totalCount ?? 0).toLocaleString()}건`}
-                    page={hook.audit?.page}
+                    count={hook.auditState.hasResult ? `${(hook.audit?.totalCount ?? 0).toLocaleString()}건${hook.auditState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                    page={hook.auditState.hasResult ? hook.audit?.page : undefined}
                     ariaLabel="감사 로그 목록"
-                    footer={(hook.audit?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="감사 로그 페이지네이션" page={hook.audit?.page ?? 1} totalPages={hook.audit?.totalPages ?? 1} hasNext={hook.audit?.hasNext} disabled={isLoading} onPageChange={moveAudit} /> : null}
+                    footer={hook.auditState.hasResult && (hook.audit?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="감사 로그 페이지네이션" page={hook.audit?.page ?? 1} totalPages={hook.audit?.totalPages ?? 1} hasNext={hook.audit?.hasNext} disabled={isLoading} onPageChange={moveAudit} /> : null}
                   >
-                      {isLoading && !hook.audit ? (
-                        <Shared.EmptyState><strong>감사 로그를 불러오는 중입니다.</strong></Shared.EmptyState>
-                      ) : !hook.audit?.auditLogs.length ? (
-                        <Shared.EmptyState><strong>조건에 맞는 감사 로그가 없습니다.</strong></Shared.EmptyState>
-                      ) : (
+                    <ListQueryBoundary state={hook.auditState} error={hook.errors.audit} empty={!hook.audit?.auditLogs.length} onRetry={retryAudit} onReset={resetAudit}>
                         <History.AuditList>
-                          {hook.audit.auditLogs.map((item) => (
+                          {hook.audit?.auditLogs.map((item) => (
                             <History.AuditRowButton
                               key={item.auditLogId}
                               type="button"
@@ -464,7 +474,7 @@ function OperationHistoryPage() {
                             </History.AuditRowButton>
                           ))}
                         </History.AuditList>
-                      )}
+                    </ListQueryBoundary>
                   </ListPane>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>감사 로그 상세</Shared.PanelTitle></Shared.PanelHeader>
@@ -526,12 +536,14 @@ function OperationHistoryPage() {
                   <ListPane
                     title="개인정보 처리 이력"
                     description="항목을 선택해 요청과 처리 결과를 확인합니다."
-                    count={`${(hook.privacy?.totalCount ?? 0).toLocaleString()}건`}
-                    page={hook.privacy?.page}
+                    count={hook.privacyState.hasResult ? `${(hook.privacy?.totalCount ?? 0).toLocaleString()}건${hook.privacyState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                    page={hook.privacyState.hasResult ? hook.privacy?.page : undefined}
                     ariaLabel="개인정보 처리 이력 목록"
-                    footer={(hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
+                    footer={hook.privacyState.hasResult && (hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
                   >
-                      {isLoading && !hook.privacy ? <Shared.EmptyState><strong>개인정보 처리 이력을 불러오는 중입니다.</strong></Shared.EmptyState> : !hook.privacy?.histories.length ? <Shared.EmptyState><strong>조건에 맞는 개인정보 처리 이력이 없습니다.</strong></Shared.EmptyState> : <S.CardList>{hook.privacy.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>}
+                    <ListQueryBoundary state={hook.privacyState} error={hook.errors.privacy} empty={!hook.privacy?.histories.length} onRetry={retryPrivacy} onReset={resetPrivacy}>
+<S.CardList>{hook.privacy?.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>
+                    </ListQueryBoundary>
                   </ListPane>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>개인정보 처리 상세</Shared.PanelTitle></Shared.PanelHeader>

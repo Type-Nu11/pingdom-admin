@@ -39,10 +39,30 @@ const API_BASE_URL = import.meta.env.DEV
   ? '/api'
   : import.meta.env.VITE_PUBLIC_API_BASE_URL
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
-const tokenRefreshRequests = new Map<string, Promise<RefreshTokenResponse>>()
+const tokenRefreshRequests = new Map<string, {
+  controller: AbortController
+  promise: Promise<RefreshTokenResponse>
+}>()
+let pendingAuthTransitions = 0
+let authTransitionTail: Promise<unknown> = Promise.resolve()
+
+// 같은 탭의 쿠키 변경 요청을 직렬화합니다. 쿠키가 다른 계정을 가리키는 경우에는 토큰 사용자 비교로 방어합니다.
+export function runAuthTransition<T>(action: () => Promise<T>): Promise<T> {
+  pendingAuthTransitions++
+  const refreshes = [...tokenRefreshRequests.values()]
+  refreshes.forEach(({ controller }) => controller.abort())
+  const settled = Promise.allSettled(refreshes.map(({ promise }) => promise))
+  const transition = authTransitionTail.then(async () => {
+    await settled
+    return action()
+  })
+  const result = transition.finally(() => { pendingAuthTransitions-- })
+  authTransitionTail = result.catch(() => {})
+  return result
+}
 
 function assertCurrentSession(sessionId: string) {
-  if (getAuthSessionId() !== sessionId) {
+  if (pendingAuthTransitions > 0 || getAuthSessionId() !== sessionId) {
     throw new axios.CanceledError('로그인 세션이 변경되어 요청을 취소했습니다.')
   }
 }
@@ -157,12 +177,14 @@ function shouldRefreshAccessToken(
 async function requestTokenRefresh(sessionId: string) {
   assertCurrentSession(sessionId)
   const pending = tokenRefreshRequests.get(sessionId)
-  if (pending) return pending
+  if (pending) return pending.promise
+  const controller = new AbortController()
   const request = axios
     .post<RefreshTokenResponse>(TOKEN_REFRESH_API_PATH, undefined, {
       baseURL: API_BASE_URL,
       timeout: 10000,
       withCredentials: true,
+      signal: controller.signal,
     })
     .then(({ data }) => {
       assertCurrentSession(sessionId)
@@ -174,7 +196,7 @@ async function requestTokenRefresh(sessionId: string) {
       tokenRefreshRequests.delete(sessionId)
     })
 
-  tokenRefreshRequests.set(sessionId, request)
+  tokenRefreshRequests.set(sessionId, { controller, promise: request })
   return request
 }
 

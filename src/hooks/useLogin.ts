@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { isApiError, runAuthTransition } from '../api/customAxios'
 import { login as requestLogin, type LoginMode } from '../api/authApi'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -66,9 +66,10 @@ export function useLogin(mode: LoginMode = 'admin') {
         password,
       }
 
-      const data = await requestLogin(payload, mode)
-
-      login(data)
+      await runAuthTransition(async () => {
+        const data = await requestLogin(payload, mode)
+        login(data)
+      })
 
       return 'success' satisfies LoginResult
     } catch (error) {

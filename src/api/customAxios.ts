@@ -45,6 +45,9 @@ const tokenRefreshRequests = new Map<string, {
 }>()
 let pendingAuthTransitions = 0
 let authTransitionTail: Promise<unknown> = Promise.resolve()
+const SESSION_MISMATCH_MESSAGE = '로그인 정보가 일치하지 않아 세션을 종료했습니다. 다시 로그인해주세요.'
+
+class AuthSessionMismatchError extends Error {}
 
 // 같은 탭의 쿠키 변경 요청을 직렬화합니다. 쿠키가 다른 계정을 가리키는 경우에는 토큰 사용자 비교로 방어합니다.
 export function runAuthTransition<T>(action: () => Promise<T>): Promise<T> {
@@ -188,7 +191,9 @@ async function requestTokenRefresh(sessionId: string) {
     })
     .then(({ data }) => {
       assertCurrentSession(sessionId)
-      saveRefreshedAuthTokens(data, sessionId)
+      if (!saveRefreshedAuthTokens(data, sessionId)) {
+        throw new AuthSessionMismatchError(SESSION_MISMATCH_MESSAGE)
+      }
 
       return data
     })
@@ -264,7 +269,7 @@ customAxios.interceptors.response.use(
       } catch (refreshError) {
         assertCurrentSession(originalRequest._authSessionId!)
         if (shouldClearAuthAfterRefreshFailure(refreshError)) {
-          clearStoredAuth()
+          clearStoredAuth(refreshError instanceof AuthSessionMismatchError ? SESSION_MISMATCH_MESSAGE : undefined)
         }
 
         return Promise.reject(apiError)

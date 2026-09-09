@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -94,7 +95,7 @@ function AdminReservationReviewPage() {
   const openDialog = (action: 'confirm' | 'reject') => {
     if (!hook.reservation || hook.reservation.status !== 'PENDING') return
     setReason('')
-    setFormError('')
+    setFormError(''); hook.dismissActionError()
     setDialog({ action })
   }
 
@@ -160,8 +161,8 @@ function AdminReservationReviewPage() {
               </div>
             </Shared.PageHeader>
 
-            {hook.actionErrorMessage ? <Shared.Notice $variant="error">{hook.actionErrorMessage}</Shared.Notice> : null}
-            {hook.successMessage ? <Shared.Notice $variant="success">{hook.successMessage}</Shared.Notice> : null}
+            {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
+            {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
 
             <S.SearchBar onSubmit={(event) => { event.preventDefault(); search(1) }}>
               <S.SearchFilterGrid>
@@ -194,7 +195,7 @@ function AdminReservationReviewPage() {
                 </S.SearchFilterActions>
               </S.SearchFilterGrid>
             </S.SearchBar>
-            {filterError ? <Shared.Notice $variant="error">{filterError}</Shared.Notice> : null}
+            {filterError ? <Shared.Notice $variant="error" role="alert">{filterError}</Shared.Notice> : null}
 
 
             <ListDetailWorkspace>
@@ -348,12 +349,12 @@ function AdminReservationReviewPage() {
                     maxLength={500}
                     disabled={hook.activeAction !== null}
                     placeholder={dialog.action === 'reject' ? '예약을 반려하는 사유를 입력해주세요.' : '승인 메모가 있으면 입력해주세요.'}
-                    onChange={(event) => { setReason(event.target.value); setFormError('') }}
+                    onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }}
                   />
                   <small>{reason.length}/500</small>
                 </S.WideField>
               </S.FormGrid>
-              {formError || hook.actionErrorMessage ? <Shared.Notice $variant="error">{formError || hook.actionErrorMessage}</Shared.Notice> : null}
+              {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>
               <Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>

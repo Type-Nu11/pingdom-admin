@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
 import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
 import { AdminPagination } from '../common/AdminPagination'
@@ -38,6 +39,7 @@ export function PlaceInformationReverificationPanel({
     activeAction,
     reverificationErrorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     fetchReverificationRequests,
     createReverification,
@@ -51,7 +53,7 @@ export function PlaceInformationReverificationPanel({
   const openCreate = () => {
     setReason('')
     setDueAt('')
-    setFormError('')
+    setFormError(''); dismissActionError()
     setDialog({ type: 'create' })
   }
 
@@ -85,8 +87,8 @@ export function PlaceInformationReverificationPanel({
 
   return (
     <>
-      {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
-      {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}
+      {actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage> : null}
+      {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
       {!loadedPlaceId ? (
         <Shared.EmptyStateCard>
           <Shell.MaterialIcon aria-hidden="true">sync_problem</Shell.MaterialIcon>
@@ -106,7 +108,7 @@ export function PlaceInformationReverificationPanel({
             </Shared.HeaderActions>
           </Shared.PanelHeader>
           <Shared.CompareBody>
-            {reverificationErrorMessage ? <Shared.Notice $variant="error">{reverificationErrorMessage}</Shared.Notice> : null}
+            {reverificationErrorMessage ? <Shared.Notice $variant="error" role="alert">{reverificationErrorMessage}</Shared.Notice> : null}
             {isReverificationLoading ? (
               <Shared.EmptyState><strong>재확인 요청을 불러오는 중입니다.</strong></Shared.EmptyState>
             ) : reverificationRequests.length === 0 ? (
@@ -158,11 +160,11 @@ export function PlaceInformationReverificationPanel({
               {dialog.type === 'create' ? (
                 <S.FormGrid>
                   <S.WideField>요청 사유 *
-                    <S.TextArea value={reason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReason(event.target.value); setFormError('') }} />
+                    <S.TextArea value={reason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReason(event.target.value); setFormError(''); dismissActionError() }} />
                     <small>{reason.length}/500</small>
                   </S.WideField>
                   <S.WideField>응답 기한 *
-                    <AdminDateTimePicker ariaLabel="재확인 응답 기한" value={dueAt} disabled={activeAction !== null} onChange={(value) => { setDueAt(value); setFormError('') }} />
+                    <AdminDateTimePicker ariaLabel="재확인 응답 기한" value={dueAt} disabled={activeAction !== null} onChange={(value) => { setDueAt(value); setFormError(''); dismissActionError() }} />
                   </S.WideField>
                 </S.FormGrid>
               ) : (
@@ -170,7 +172,7 @@ export function PlaceInformationReverificationPanel({
                   요청 #{dialog.request.requestId}을(를) {ACTION_LABELS[dialog.action]} 처리합니다. 서버의 현재 상태 검증을 통과한 경우에만 반영됩니다.
                 </Shared.ModalWarning>
               )}
-              {formError || actionErrorMessage ? <Shared.Notice $variant="error">{formError || actionErrorMessage}</Shared.Notice> : null}
+              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>
               <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>

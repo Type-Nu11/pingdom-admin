@@ -32,4 +32,28 @@ export const Icon = styled.span`
   line-height: 1;
 `
 
+export const Content = styled.span`
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+`
+
+export const DismissButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: ${radius.md};
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover { background: rgb(0 0 0 / 5%); }
+  &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+`
+
 export type { FeedbackTone }

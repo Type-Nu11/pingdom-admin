@@ -13,9 +13,10 @@ const ICON_BY_TONE: Record<FeedbackTone, string> = {
 interface FeedbackMessageProps extends HTMLAttributes<HTMLDivElement> {
   tone: FeedbackTone
   children: ReactNode
+  onDismiss?: () => void
 }
 
-export function FeedbackMessage({ tone, children, role, ...props }: FeedbackMessageProps) {
+export function FeedbackMessage({ tone, children, role, onDismiss, ...props }: FeedbackMessageProps) {
   return (
     <S.Root
       {...props}
@@ -24,7 +25,12 @@ export function FeedbackMessage({ tone, children, role, ...props }: FeedbackMess
       aria-live={tone === 'error' ? 'assertive' : 'polite'}
     >
       <S.Icon aria-hidden="true">{ICON_BY_TONE[tone]}</S.Icon>
-      <span>{children}</span>
+      <S.Content>{children}</S.Content>
+      {onDismiss ? (
+        <S.DismissButton type="button" aria-label="안내 닫기" onClick={onDismiss}>
+          <S.Icon aria-hidden="true">close</S.Icon>
+        </S.DismissButton>
+      ) : null}
     </S.Root>
   )
 }

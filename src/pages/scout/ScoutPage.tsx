@@ -18,7 +18,7 @@ import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 
 type Tab = "profiles" | "reports";
-type Dialog =
+type DialogRequest =
   | { type: "profile"; action: "approve" | "suspend" | "revoke" }
   | { type: "eligibility"; action: "grant" | "suspend" | "revoke" }
   | {
@@ -26,6 +26,12 @@ type Dialog =
       report: ScoutFieldReport;
       decision: "ACCEPTED" | "REJECTED";
     }
+  | null;
+type Dialog =
+  | (Exclude<DialogRequest, { type: "report" } | null> & {
+      target: { userId: number; displayName: string };
+    })
+  | Extract<DialogRequest, { type: "report" }>
   | null;
 const PROFILE: Record<ScoutProfileStatus, string> = {
   PENDING: "승인 대기",
@@ -68,7 +74,6 @@ function ScoutPage() {
     params.set("tab", next);
     setSearchParams(params, { replace: true });
   };
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedReport, setSelectedReport] = useState<ScoutFieldReport | null>(
     null,
   );
@@ -80,12 +85,18 @@ function ScoutPage() {
   const adminIdentifier =
     user?.username ||
     (typeof user?.id === "number" ? `ID ${user.id}` : "관리자 계정");
-  const open = (next: Dialog) => {
+  const open = (next: DialogRequest) => {
+    if (!next || hook.activeAction) return;
+    if (next.type !== "report" &&
+      (hook.isDetailLoading || !hook.profile || hook.profile.userId !== hook.selectedUserId)) return;
     setReason("");
     setEligibleFrom("");
     setEligibleUntil("");
     setFormError("");
-    setDialog(next);
+    setDialog(next.type === "report" ? next : {
+      ...next,
+      target: { userId: hook.profile!.userId, displayName: hook.profile!.displayName },
+    });
   };
   const submit = async () => {
     if (!dialog || hook.activeAction) return;
@@ -106,11 +117,10 @@ function ScoutPage() {
       }
       return;
     }
-    if (!hook.profile) return;
     if (dialog.type === "profile") {
       if (
         await hook.reviewProfile(
-          hook.profile.userId,
+          dialog.target.userId,
           dialog.action,
           reason.trim(),
         )
@@ -128,7 +138,7 @@ function ScoutPage() {
         return;
       }
       if (
-        await hook.grantEligibility(hook.profile.userId, {
+        await hook.grantEligibility(dialog.target.userId, {
           eligibleFrom,
           eligibleUntil: eligibleUntil || undefined,
           reason: reason.trim(),
@@ -139,7 +149,7 @@ function ScoutPage() {
     }
     if (
       await hook.reviewEligibility(
-        hook.profile.userId,
+        dialog.target.userId,
         dialog.action,
         reason.trim(),
       )
@@ -272,7 +282,7 @@ function ScoutPage() {
                   label="프로필 상태"
                   value={hook.profileStatus}
                   onChange={(event) => {
-                    setSelectedUserId(null);
+                    hook.clearProfile();
                     void hook.fetchProfiles(
                       event.target.value as ScoutProfileStatus | "",
                       1,
@@ -311,9 +321,8 @@ function ScoutPage() {
                             <S.RecordButton
                               key={item.userId}
                               type="button"
-                              $selected={selectedUserId === item.userId}
+                              $selected={hook.selectedUserId === item.userId}
                               onClick={() => {
-                                setSelectedUserId(item.userId);
                                 void hook.fetchProfile(item.userId);
                               }}
                             >
@@ -345,7 +354,7 @@ function ScoutPage() {
                         </S.CardList>
                       )}
                     </Shared.ScrollArea>
-                    {hook.profileTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 프로필 목록 페이지네이션" page={hook.profilePage} totalPages={hook.profileTotalPages} hasNext={hook.profileHasNext} disabled={hook.isLoading} onPageChange={(nextPage) => void hook.fetchProfiles(hook.profileStatus, nextPage)} /> : null}
+                    {hook.profileTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 프로필 목록 페이지네이션" page={hook.profilePage} totalPages={hook.profileTotalPages} hasNext={hook.profileHasNext} disabled={hook.isLoading} onPageChange={(nextPage) => { hook.clearProfile(); void hook.fetchProfiles(hook.profileStatus, nextPage) }} /> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader>
@@ -360,7 +369,7 @@ function ScoutPage() {
                         <Shared.EmptyState>
                           <strong>상세 조회 중입니다.</strong>
                         </Shared.EmptyState>
-                      ) : !hook.profile ? (
+                      ) : !hook.profile || hook.profile.userId !== hook.selectedUserId ? (
                         <Shared.EmptyState>
                           <strong>탐색 후보를 선택해주세요.</strong>
                         </Shared.EmptyState>
@@ -700,6 +709,11 @@ function ScoutPage() {
               </Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>
+              {dialog.type !== "report" ? (
+                <S.RecordDescription>
+                  {dialog.target.displayName} · 사용자 #{dialog.target.userId}
+                </S.RecordDescription>
+              ) : null}
               <S.FormGrid>
                 {dialog.type === "eligibility" && dialog.action === "grant" ? (
                   <>

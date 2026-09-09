@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -150,6 +151,7 @@ function PlaceMergePage() {
     detailErrorMessage,
     historyErrorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     fetchDuplicateGroups,
     fetchDuplicateDetail,
@@ -352,12 +354,12 @@ function PlaceMergePage() {
               </S.HeaderActions>
             </S.PageHeader>
 
-            {errorMessage ? <S.Notice $variant="error">{errorMessage}</S.Notice> : null}
+            {errorMessage ? <S.Notice $variant="error" role="alert">{errorMessage}</S.Notice> : null}
             {actionErrorMessage ? (
-              <S.Notice $variant="error">{actionErrorMessage}</S.Notice>
+              <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage>
             ) : null}
             {actionSuccessMessage ? (
-              <S.Notice $variant="success">{actionSuccessMessage}</S.Notice>
+              <S.Notice $variant="success" role="status">{actionSuccessMessage}</S.Notice>
             ) : null}
 
             {isGroupsLoading && duplicateGroups.length === 0 ? (

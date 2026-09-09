@@ -58,7 +58,6 @@ export function useAdminMerchantPlaceApplications() {
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [attachmentErrorMessage, setAttachmentErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const reviewRef = useRef(false)
@@ -264,6 +263,7 @@ export function useAdminMerchantPlaceApplications() {
     detailErrorMessage,
     attachmentErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     successMessage,
     fetchApplications,
     changeView,

@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
@@ -93,6 +94,7 @@ function ScoutPage() {
     setEligibleFrom("");
     setEligibleUntil("");
     setFormError("");
+    hook.dismissActionError();
     setDialog(next.type === "report" ? next : {
       ...next,
       target: { userId: hook.profile!.userId, displayName: hook.profile!.displayName },
@@ -262,17 +264,15 @@ function ScoutPage() {
               </S.TabButton>
             </S.TabList>
             {hook.actionErrorMessage ? (
-              <Shared.Notice $variant="error">
-                {hook.actionErrorMessage}
-              </Shared.Notice>
+              <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage>
             ) : null}
             {hook.successMessage ? (
-              <Shared.Notice $variant="success">
+              <Shared.Notice $variant="success" role="status">
                 {hook.successMessage}
               </Shared.Notice>
             ) : null}
             {hook.errorMessage ? (
-              <Shared.Notice $variant="error">
+              <Shared.Notice $variant="error" role="alert">
                 {hook.errorMessage}
               </Shared.Notice>
             ) : null}
@@ -742,15 +742,13 @@ function ScoutPage() {
                     maxLength={500}
                     onChange={(event) => {
                       setReason(event.target.value);
-                      setFormError("");
+                      setFormError(''); hook.dismissActionError();
                     }}
                   />
                 </S.WideField>
               </S.FormGrid>
               {formError || hook.actionErrorMessage ? (
-                <Shared.Notice $variant="error">
-                  {formError || hook.actionErrorMessage}
-                </Shared.Notice>
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
               ) : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>

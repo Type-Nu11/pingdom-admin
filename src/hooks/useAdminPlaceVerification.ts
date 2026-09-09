@@ -72,7 +72,6 @@ export function useAdminPlaceVerification() {
   const [evidenceErrorMessage, setEvidenceErrorMessage] = useState('')
   const [reverificationErrorMessage, setReverificationErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestEvidenceRequestIdRef = useRef(0)
@@ -269,6 +268,7 @@ export function useAdminPlaceVerification() {
     evidenceErrorMessage,
     reverificationErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     fetchEvidence,
     fetchReverificationRequests,

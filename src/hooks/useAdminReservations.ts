@@ -88,7 +88,6 @@ export function useAdminReservations() {
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const listRef = useRef(0)
@@ -224,6 +223,7 @@ export function useAdminReservations() {
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     successMessage,
     fetchReservations,
     fetchDetail,

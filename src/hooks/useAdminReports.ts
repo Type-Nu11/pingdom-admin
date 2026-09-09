@@ -99,7 +99,6 @@ export function useAdminReports({
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const [actionResult, setActionResult] =
@@ -358,6 +357,7 @@ export function useAdminReports({
     isDetailLoading,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     actionResult,
     processingReportId,

@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAdminPlace } from '../../api/adminPlaceApi'
@@ -128,6 +129,7 @@ function PlaceDuplicateCandidatePage() {
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     fetchCandidates,
     fetchCandidateDetail,
@@ -213,7 +215,7 @@ function PlaceDuplicateCandidatePage() {
   const openDialog = (action: AdminPlaceDuplicateReviewAction) => {
     setReviewNote('')
     setHasConfirmedMerge(false)
-    setFormError('')
+    setFormError(''); dismissActionError()
     setDialogState(action)
   }
 
@@ -235,7 +237,7 @@ function PlaceDuplicateCandidatePage() {
       return
     }
 
-    setFormError('')
+    setFormError(''); dismissActionError()
     if (dialogState === 'merge') {
       if (
         !targetPlaceId ||
@@ -353,8 +355,8 @@ function PlaceDuplicateCandidatePage() {
               </S.HeaderActions>
             </S.PageHeader>
 
-            {actionErrorMessage ? <S.Notice $variant="error">{actionErrorMessage}</S.Notice> : null}
-            {actionSuccessMessage ? <S.Notice $variant="success">{actionSuccessMessage}</S.Notice> : null}
+            {actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage> : null}
+            {actionSuccessMessage ? <S.Notice $variant="success" role="status">{actionSuccessMessage}</S.Notice> : null}
 
             <AdminStatusFilter
               label="검토 상태"
@@ -375,7 +377,7 @@ function PlaceDuplicateCandidatePage() {
               ))}
             </AdminStatusFilter>
 
-            {errorMessage ? <S.Notice $variant="error">{errorMessage}</S.Notice> : null}
+            {errorMessage ? <S.Notice $variant="error" role="alert">{errorMessage}</S.Notice> : null}
             {isLoading && candidates.length === 0 ? (
               <S.EmptyStateCard><strong>중복 후보를 불러오는 중입니다.</strong></S.EmptyStateCard>
             ) : !errorMessage && candidates.length === 0 ? (
@@ -449,7 +451,7 @@ function PlaceDuplicateCandidatePage() {
                           <PlaceDetailCard place={rightPlace} label="오른쪽 장소" selected={targetPlaceId === rightPlace.id} onSelect={() => setTargetPlaceId(rightPlace.id)} />
                         </S.ComparisonGrid>
                         {candidateDetail.reviewNote ? (
-                          <S.Notice $variant="success">판정 메모: {candidateDetail.reviewNote}</S.Notice>
+                          <S.Notice $variant="success" role="status">판정 메모: {candidateDetail.reviewNote}</S.Notice>
                         ) : null}
                         <S.ActionBar>
                           <S.ActionHint>
@@ -497,18 +499,18 @@ function PlaceDuplicateCandidatePage() {
                     병합 후 유지 장소 #{targetPlaceId}. 다른 장소의 연결 데이터가 이동하며 병합 이력이 생성됩니다.
                   </S.ModalWarning>
                   <Shell.OperatingCheckLabel>
-                    <input type="checkbox" checked={hasConfirmedMerge} disabled={activeAction !== null} onChange={(event) => { setHasConfirmedMerge(event.target.checked); setFormError('') }} />
+                    <input type="checkbox" checked={hasConfirmedMerge} disabled={activeAction !== null} onChange={(event) => { setHasConfirmedMerge(event.target.checked); setFormError(''); dismissActionError() }} />
                     <span>두 장소의 기본 정보와 유지 대상을 확인했습니다.</span>
                   </Shell.OperatingCheckLabel>
                 </>
               ) : (
                 <Shell.OperatingFormField>
                   <span>판정 사유 *</span>
-                  <Shell.OperatingTextArea value={reviewNote} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewNote(event.target.value); setFormError('') }} />
+                  <Shell.OperatingTextArea value={reviewNote} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewNote(event.target.value); setFormError(''); dismissActionError() }} />
                   <small>{reviewNote.length}/500</small>
                 </Shell.OperatingFormField>
               )}
-              {formError || actionErrorMessage ? <S.Notice $variant="error">{formError || actionErrorMessage}</S.Notice> : null}
+              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </S.ModalBody>
             <S.ModalFooter>
               <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</S.SecondaryButton>

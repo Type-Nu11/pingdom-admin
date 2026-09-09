@@ -146,7 +146,6 @@ export function useAdminBannedUsers({
   const [sanctionHistoryErrorMessage, setSanctionHistoryErrorMessage] =
     useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const [banningUserId, setBanningUserId] = useState<number | null>(null)
@@ -567,6 +566,7 @@ export function useAdminBannedUsers({
     isSanctionHistoryLoading,
     sanctionHistoryErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     banningUserId,
     releasingUserId,

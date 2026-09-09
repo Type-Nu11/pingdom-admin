@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
@@ -65,12 +66,12 @@ function UserRolePage() {
       setFormError("관리자 사용자 ID를 양의 정수로 입력해주세요.");
       return;
     }
-    setFormError("");
+    setFormError(''); hook.dismissActionError();
     void hook.fetchRoles(id);
   };
   const open = (action: "assign" | "revoke", role: AdminRole) => {
     setReason("");
-    setFormError("");
+    setFormError(''); hook.dismissActionError();
     setDialog({ action, role });
   };
   const submit = async () => {
@@ -157,7 +158,7 @@ function UserRolePage() {
                     placeholder="예: 42"
                     onChange={(event) => {
                       setUserIdInput(event.target.value);
-                      setFormError("");
+                      setFormError(''); hook.dismissActionError();
                     }}
                   />
                 </S.Field>
@@ -167,20 +168,18 @@ function UserRolePage() {
               </S.InlineSearchControls>
             </S.SearchBar>
             {formError ? (
-              <Shared.Notice $variant="error">{formError}</Shared.Notice>
+              <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice>
             ) : null}
             {hook.errorMessage ? (
-              <Shared.Notice $variant="error">
+              <Shared.Notice $variant="error" role="alert">
                 {hook.errorMessage}
               </Shared.Notice>
             ) : null}
             {hook.actionErrorMessage ? (
-              <Shared.Notice $variant="error">
-                {hook.actionErrorMessage}
-              </Shared.Notice>
+              <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage>
             ) : null}
             {hook.successMessage ? (
-              <Shared.Notice $variant="success">
+              <Shared.Notice $variant="success" role="status">
                 {hook.successMessage}
               </Shared.Notice>
             ) : null}
@@ -361,16 +360,14 @@ function UserRolePage() {
                     maxLength={500}
                     onChange={(event) => {
                       setReason(event.target.value);
-                      setFormError("");
+                      setFormError(''); hook.dismissActionError();
                     }}
                   />
                   <small>{reason.length}/500</small>
                 </S.Field>
               </S.Section>
               {formError || hook.actionErrorMessage ? (
-                <Shared.Notice $variant="error">
-                  {formError || hook.actionErrorMessage}
-                </Shared.Notice>
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
               ) : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>

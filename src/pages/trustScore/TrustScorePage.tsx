@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
@@ -97,7 +98,7 @@ function TrustScorePage() {
       setFormError("신고자 ID는 1 이상의 정수로 입력해주세요.");
       return;
     }
-    setFormError("");
+    setFormError(''); hook.dismissActionError();
     void hook.fetchReporter(id);
   };
   const searchAnomalies = (page = 1) => {
@@ -106,12 +107,12 @@ function TrustScorePage() {
       setFormError("신고자 ID는 1 이상의 정수로 입력해주세요.");
       return;
     }
-    setFormError("");
+    setFormError(''); hook.dismissActionError();
     void hook.fetchAnomalies({ page, reporterUserId: id, unresolvedOnly });
   };
   const openRule = (rule: TrustScoreInterventionRule | null) => {
     setDialog({ type: "rule", rule });
-    setFormError("");
+    setFormError(''); hook.dismissActionError();
     setRuleName(rule?.ruleName ?? "");
     setTriggerType(rule?.triggerType ?? "TRUST_SCORE_RANGE");
     setActionType(rule?.actionType ?? "WARN");
@@ -276,7 +277,7 @@ function TrustScorePage() {
                   aria-selected={tab === value}
                   onClick={() => {
                     setTab(value);
-                    setFormError("");
+                    setFormError(''); hook.dismissActionError();
                   }}
                 >
                   <Shell.MaterialIcon aria-hidden="true">
@@ -287,17 +288,15 @@ function TrustScorePage() {
               ))}
             </S.TabList>
             {hook.actionErrorMessage ? (
-              <Shared.Notice $variant="error">
-                {hook.actionErrorMessage}
-              </Shared.Notice>
+              <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage>
             ) : null}
             {hook.successMessage ? (
-              <Shared.Notice $variant="success">
+              <Shared.Notice $variant="success" role="status">
                 {hook.successMessage}
               </Shared.Notice>
             ) : null}
             {hook.errorMessage ? (
-              <Shared.Notice $variant="error">
+              <Shared.Notice $variant="error" role="alert">
                 {hook.errorMessage}
               </Shared.Notice>
             ) : null}
@@ -314,7 +313,7 @@ function TrustScorePage() {
                         placeholder="예: 12"
                         onChange={(event) => {
                           setReporterId(event.target.value);
-                          setFormError("");
+                          setFormError(''); hook.dismissActionError();
                         }}
                       />
                       <Shared.PrimaryButton
@@ -327,7 +326,7 @@ function TrustScorePage() {
                   </S.Field>
                 </S.SearchBar>
                 {formError ? (
-                  <Shared.Notice $variant="error">{formError}</Shared.Notice>
+                  <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice>
                 ) : null}
                 {!hook.reporter ? (
                   <Shared.EmptyStateCard>
@@ -392,7 +391,7 @@ function TrustScorePage() {
                           </S.MetricCard>
                         </S.MetricGrid>
                         {hook.reporter.restricted ? (
-                          <Shared.Notice $variant="error">
+                          <Shared.Notice $variant="error" role="alert">
                             신고 제한 중 ·{" "}
                             {hook.reporter.restrictionReason || "사유 없음"} ·{" "}
                             {formatDate(hook.reporter.restrictedUntil)}
@@ -471,7 +470,7 @@ function TrustScorePage() {
                   </>
                 )}
                 {hook.evaluation ? (
-                  <Shared.Notice $variant="success">
+                  <Shared.Notice $variant="success" role="status">
                     평가 결과: {hook.evaluation.message}
                     {hook.evaluation.matchedRuleName
                       ? ` · ${hook.evaluation.matchedRuleName} / ${hook.evaluation.actionType}`
@@ -479,7 +478,7 @@ function TrustScorePage() {
                   </Shared.Notice>
                 ) : null}
                 {hook.batchResult ? (
-                  <Shared.Notice $variant="success">
+                  <Shared.Notice $variant="success" role="status">
                     재계산 {hook.batchResult.processedCount.toLocaleString()}명
                     · 점수 변경 {hook.batchResult.changedCount.toLocaleString()}
                     명
@@ -527,7 +526,7 @@ function TrustScorePage() {
                   </S.InlineSearchControls>
                 </S.SearchBar>
                 {formError ? (
-                  <Shared.Notice $variant="error">{formError}</Shared.Notice>
+                  <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice>
                 ) : null}
                 <Shared.Panel>
                   <Shared.PanelHeader>
@@ -602,7 +601,7 @@ function TrustScorePage() {
                                   disabled={hook.activeAction !== null}
                                   onClick={() => {
                                     setReason("");
-                                    setFormError("");
+                                    setFormError(''); hook.dismissActionError();
                                     setDialog({
                                       type: "resolve",
                                       anomaly: item,
@@ -883,7 +882,7 @@ function TrustScorePage() {
                     maxLength={500}
                     onChange={(event) => {
                       setReason(event.target.value);
-                      setFormError("");
+                      setFormError(''); hook.dismissActionError();
                     }}
                   />
                 </S.Field>
@@ -897,9 +896,7 @@ function TrustScorePage() {
                 </Shared.ModalWarning>
               )}
               {formError || hook.actionErrorMessage ? (
-                <Shared.Notice $variant="error">
-                  {formError || hook.actionErrorMessage}
-                </Shared.Notice>
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
               ) : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>

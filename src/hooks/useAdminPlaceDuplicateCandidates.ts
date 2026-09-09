@@ -68,7 +68,6 @@ export function useAdminPlaceDuplicateCandidates() {
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestListRequestIdRef = useRef(0)
@@ -253,6 +252,7 @@ export function useAdminPlaceDuplicateCandidates() {
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     fetchCandidates,
     fetchCandidateDetail,

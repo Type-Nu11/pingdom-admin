@@ -29,7 +29,6 @@ export function useAdminTrustScore() {
   const [activeAction, setActiveAction] = useState<Action | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const actionRef = useRef<Action | null>(null)
@@ -47,5 +46,5 @@ export function useAdminTrustScore() {
   const evaluateReporter = useCallback(async (reporterUserId: number) => { const data = await run('evaluate', () => api.evaluateAdminTrustScoreReporter(reporterUserId), '신고자 개입 규칙 평가를 완료했습니다.', () => fetchReporter(reporterUserId)); if (data) setEvaluation(data); return data }, [fetchReporter, run])
   const recalculate = useCallback(async () => { const data = await run('batch', api.recalculateAdminTrustScores, 'Trust Score 일괄 재계산을 완료했습니다.', () => fetchAnomalies()); if (data) setBatchResult(data); return data }, [fetchAnomalies, run])
   useEffect(() => { void fetchAnomalies(); void fetchRules(false) }, [fetchAnomalies, fetchRules])
-  return { reporter, history, anomalies, anomalyPage, anomalyTotalCount, anomalyTotalPages, rules, evaluation, batchResult, isReporterLoading, isAnomaliesLoading, isRulesLoading, activeAction, errorMessage, actionErrorMessage, successMessage, fetchReporter, fetchAnomalies, fetchRules, resolveAnomaly, saveRule, toggleRule, evaluateReporter, recalculate }
+  return { reporter, history, anomalies, anomalyPage, anomalyTotalCount, anomalyTotalPages, rules, evaluation, batchResult, isReporterLoading, isAnomaliesLoading, isRulesLoading, activeAction, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchReporter, fetchAnomalies, fetchRules, resolveAnomaly, saveRule, toggleRule, evaluateReporter, recalculate }
 }

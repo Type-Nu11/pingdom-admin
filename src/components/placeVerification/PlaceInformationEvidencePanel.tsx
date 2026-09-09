@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
 import { AdminSelect } from '../common/AdminStatusSelect'
 import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
@@ -47,6 +48,7 @@ export function PlaceInformationEvidencePanel({
     activeAction,
     evidenceErrorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     fetchEvidence,
     createEvidence,
@@ -71,20 +73,20 @@ export function PlaceInformationEvidencePanel({
     setReferenceUrl('')
     setDescription('')
     setSubmittedByUserId('')
-    setFormError('')
+    setFormError(''); dismissActionError()
     setDialog({ type: 'create' })
   }
 
   const openReview = (evidence: PlaceInformationEvidence) => {
     setVerificationStatus('ADMIN_VERIFIED')
     setReviewReason('')
-    setFormError('')
+    setFormError(''); dismissActionError()
     setDialog({ type: 'review', evidence })
   }
 
   const submit = async () => {
     if (!loadedPlaceId || !dialog || activeAction) return
-    setFormError('')
+    setFormError(''); dismissActionError()
 
     if (dialog.type === 'create') {
       if (!isValidHttpUrl(referenceUrl.trim())) {
@@ -122,8 +124,8 @@ export function PlaceInformationEvidencePanel({
 
   return (
     <>
-      {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
-      {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}
+      {actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage> : null}
+      {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
       {!loadedPlaceId ? (
         <Shared.EmptyStateCard>
           <Shell.MaterialIcon aria-hidden="true">fact_check</Shell.MaterialIcon>
@@ -143,7 +145,7 @@ export function PlaceInformationEvidencePanel({
             </Shared.HeaderActions>
           </Shared.PanelHeader>
           <Shared.CompareBody>
-            {evidenceErrorMessage ? <Shared.Notice $variant="error">{evidenceErrorMessage}</Shared.Notice> : null}
+            {evidenceErrorMessage ? <Shared.Notice $variant="error" role="alert">{evidenceErrorMessage}</Shared.Notice> : null}
             {isEvidenceLoading ? (
               <Shared.EmptyState><strong>증빙을 불러오는 중입니다.</strong></Shared.EmptyState>
             ) : evidences.length === 0 ? (
@@ -219,12 +221,12 @@ export function PlaceInformationEvidencePanel({
                     </AdminSelect>
                   </S.WideField>
                   <S.WideField>검토 근거 *
-                    <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError('') }} />
+                    <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError(''); dismissActionError() }} />
                     <small>{reviewReason.length}/500</small>
                   </S.WideField>
                 </S.FormGrid>
               )}
-              {formError || actionErrorMessage ? <Shared.Notice $variant="error">{formError || actionErrorMessage}</Shared.Notice> : null}
+              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>
               <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>

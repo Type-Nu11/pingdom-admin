@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
@@ -107,7 +108,7 @@ function PlaceEventPage() {
     setStartAt('')
     setEndAt('')
     setReason('')
-    setFormError('')
+    setFormError(''); hook.dismissActionError()
   }
 
   const openCreate = () => {
@@ -123,13 +124,13 @@ function PlaceEventPage() {
     setStartAt(toDateTimeValue(event.startAt))
     setEndAt(toDateTimeValue(event.endAt))
     setReason('')
-    setFormError('')
+    setFormError(''); hook.dismissActionError()
     setDialog({ type: 'edit', event })
   }
 
   const openAction = (type: 'publish' | 'cancel', event: AdminPlaceEventListItem) => {
     setReason('')
-    setFormError('')
+    setFormError(''); hook.dismissActionError()
     setDialog({ type, event })
   }
 
@@ -142,7 +143,7 @@ function PlaceEventPage() {
       return
     }
 
-    setFormError('')
+    setFormError(''); hook.dismissActionError()
     void hook.fetchEvents({
       page: 1,
       limit: 10,
@@ -160,7 +161,7 @@ function PlaceEventPage() {
     setEventType('')
     setPublicationStatus('')
     setScheduleStatus('')
-    setFormError('')
+    setFormError(''); hook.dismissActionError()
     void hook.fetchEvents({ page: 1, limit: 10 })
   }
 
@@ -304,10 +305,10 @@ function PlaceEventPage() {
               </S.SearchFilterGrid>
             </S.SearchBar>
 
-            {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}
-            {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
-            {hook.actionErrorMessage ? <Shared.Notice $variant="error">{hook.actionErrorMessage}</Shared.Notice> : null}
-            {hook.successMessage ? <Shared.Notice $variant="success">{hook.successMessage}</Shared.Notice> : null}
+            {formError ? <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice> : null}
+            {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
+            {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
+            {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
 
             <Shared.Workspace>
               <Shared.Panel>
@@ -363,18 +364,18 @@ function PlaceEventPage() {
           <Shared.ModalHeader><Shared.ModalTitle id="place-event-dialog-title">{dialogTitle}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
           <Shared.ModalBody>
             {dialog.type === 'create' || dialog.type === 'edit' ? <S.FormGrid>
-              <S.Field>장소 ID *<S.Input inputMode="numeric" value={formPlaceId} disabled={isBusy || dialog.type === 'edit'} placeholder="예: 42" onChange={(event) => { setFormPlaceId(event.target.value); setFormError('') }} /></S.Field>
-              <S.Field>이벤트 유형 *<AdminSelect aria-label="등록 이벤트 유형" width="100%" value={formEventType} disabled={isBusy} onChange={(event) => { setFormEventType(event.target.value as AdminPlaceEventType); setFormError('') }}>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
-              <S.WideField>이벤트 제목 *<S.Input maxLength={150} value={title} disabled={isBusy} onChange={(event) => { setTitle(event.target.value); setFormError('') }} /><small>{title.length}/150</small></S.WideField>
-              <S.Field>시작 일시 *<AdminDateTimePicker ariaLabel="이벤트 시작 일시" value={startAt} disabled={isBusy} onChange={(value) => { setStartAt(value); setFormError('') }} /></S.Field>
-              <S.Field>종료 일시 *<AdminDateTimePicker ariaLabel="이벤트 종료 일시" value={endAt} disabled={isBusy} onChange={(value) => { setEndAt(value); setFormError('') }} /></S.Field>
-              <S.WideField>상세 설명<S.TextArea maxLength={1000} value={description} disabled={isBusy} onChange={(event) => { setDescription(event.target.value); setFormError('') }} /><small>{description.length}/1000</small></S.WideField>
-              <S.WideField>처리 사유 *<S.TextArea maxLength={500} value={reason} disabled={isBusy} placeholder="등록 또는 수정이 필요한 운영 사유를 입력해주세요." onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></S.WideField>
+              <S.Field>장소 ID *<S.Input inputMode="numeric" value={formPlaceId} disabled={isBusy || dialog.type === 'edit'} placeholder="예: 42" onChange={(event) => { setFormPlaceId(event.target.value); setFormError(''); hook.dismissActionError() }} /></S.Field>
+              <S.Field>이벤트 유형 *<AdminSelect aria-label="등록 이벤트 유형" width="100%" value={formEventType} disabled={isBusy} onChange={(event) => { setFormEventType(event.target.value as AdminPlaceEventType); setFormError(''); hook.dismissActionError() }}>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
+              <S.WideField>이벤트 제목 *<S.Input maxLength={150} value={title} disabled={isBusy} onChange={(event) => { setTitle(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{title.length}/150</small></S.WideField>
+              <S.Field>시작 일시 *<AdminDateTimePicker ariaLabel="이벤트 시작 일시" value={startAt} disabled={isBusy} onChange={(value) => { setStartAt(value); setFormError(''); hook.dismissActionError() }} /></S.Field>
+              <S.Field>종료 일시 *<AdminDateTimePicker ariaLabel="이벤트 종료 일시" value={endAt} disabled={isBusy} onChange={(value) => { setEndAt(value); setFormError(''); hook.dismissActionError() }} /></S.Field>
+              <S.WideField>상세 설명<S.TextArea maxLength={1000} value={description} disabled={isBusy} onChange={(event) => { setDescription(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{description.length}/1000</small></S.WideField>
+              <S.WideField>처리 사유 *<S.TextArea maxLength={500} value={reason} disabled={isBusy} placeholder="등록 또는 수정이 필요한 운영 사유를 입력해주세요." onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reason.length}/500</small></S.WideField>
             </S.FormGrid> : <>
               <Shared.ModalWarning>{dialog.type === 'publish' ? `${dialog.event.title} 이벤트를 공개하면 앱 탐색 화면에 노출될 수 있습니다.` : `${dialog.event.title} 이벤트를 취소하면 앱 탐색 노출에서 제외됩니다.`}</Shared.ModalWarning>
-              <S.Section><S.Field>처리 사유 *<S.TextArea maxLength={500} value={reason} disabled={isBusy} placeholder="처리 근거를 입력해주세요." onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></S.Field></S.Section>
+              <S.Section><S.Field>처리 사유 *<S.TextArea maxLength={500} value={reason} disabled={isBusy} placeholder="처리 근거를 입력해주세요." onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reason.length}/500</small></S.Field></S.Section>
             </>}
-            {formError || hook.actionErrorMessage ? <Shared.Notice $variant="error">{formError || hook.actionErrorMessage}</Shared.Notice> : null}
+            {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
           </Shared.ModalBody>
           <Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={isBusy} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={isBusy} onClick={() => void submitDialog()}>{isBusy ? '처리 중' : dialogSubmitLabel}</Shared.PrimaryButton></Shared.ModalFooter>
         </Shared.Modal>

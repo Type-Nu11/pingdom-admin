@@ -26,7 +26,6 @@ export function useAdminUserRoles() {
   const [isMutating, setIsMutating] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const mutationRef = useRef(false)
@@ -68,5 +67,5 @@ export function useAdminUserRoles() {
     } finally { mutationRef.current = false; setIsMutating(false) }
   }, [errorText, targetUserId])
 
-  return { targetUserId, assignments, isLoading, isMutating, errorMessage, actionErrorMessage, successMessage, fetchRoles, mutate }
+  return { targetUserId, assignments, isLoading, isMutating, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchRoles, mutate }
 }

@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
 import { AdminSelect } from '../common/AdminStatusSelect'
 import { AdminStatusFilter } from '../common/AdminStatusFilter'
@@ -50,6 +51,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     fetchReports,
     fetchReportDetail,
@@ -73,13 +75,13 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
   const openReportReview = () => {
     setReportStatus(reportDetail?.status === 'SUBMITTED' ? 'UNDER_REVIEW' : 'RESOLVED')
     setReviewReason('')
-    setFormError('')
+    setFormError(''); dismissActionError()
     setDialog({ type: 'report' })
   }
 
   const openDisputeReview = (dispute: PlaceInformationDispute) => {
     setReviewReason('')
-    setFormError('')
+    setFormError(''); dismissActionError()
     setDialog({ type: 'dispute', dispute })
   }
 
@@ -108,8 +110,8 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
 
   return (
     <>
-      {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
-      {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}
+      {actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage> : null}
+      {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
 
       <AdminStatusFilter
         label="신고 상태"
@@ -124,7 +126,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
         ))}
       </AdminStatusFilter>
 
-      {errorMessage ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}
+      {errorMessage ? <Shared.Notice $variant="error" role="alert">{errorMessage}</Shared.Notice> : null}
       {isLoading && reports.length === 0 ? (
         <Shared.EmptyStateCard><strong>신고를 불러오는 중입니다.</strong></Shared.EmptyStateCard>
       ) : reports.length === 0 ? (
@@ -260,11 +262,11 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
                   </S.WideField>
                 ) : null}
                 <S.WideField>판정 근거 *
-                  <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError('') }} />
+                  <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError(''); dismissActionError() }} />
                   <small>{reviewReason.length}/500</small>
                 </S.WideField>
               </S.FormGrid>
-              {formError || actionErrorMessage ? <Shared.Notice $variant="error">{formError || actionErrorMessage}</Shared.Notice> : null}
+              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>
               <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>

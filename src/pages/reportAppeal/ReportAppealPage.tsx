@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -47,6 +48,7 @@ function ReportAppealPage() {
     processingAppealId,
     errorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     fetchAppeals,
     processAppeal,
@@ -61,7 +63,7 @@ function ReportAppealPage() {
   const openAction = (nextAction: 'approve' | 'reject') => {
     setAction(nextAction)
     setReason('')
-    setFormError('')
+    setFormError(''); dismissActionError()
   }
 
   const submitAction = async () => {
@@ -102,8 +104,8 @@ function ReportAppealPage() {
               <div><Shared.Eyebrow>사용자 · 안전 &gt; 신고 이의제기</Shared.Eyebrow><Shared.PageTitle>신고 이의제기 검토</Shared.PageTitle><Shared.PageDescription>신고 처리에 대한 사용자 이의제기를 검토하고 승인 또는 반려합니다.</Shared.PageDescription></div>
               <Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/reports/reported-users')}>신고 사용자 조회</Shared.HeaderButton><Shared.HeaderButton type="button" onClick={() => navigate('/bans')}>사용자 밴</Shared.HeaderButton></Shared.HeaderActions>
             </Shared.PageHeader>
-            {actionErrorMessage ? <Shared.Notice $variant="error">{actionErrorMessage}</Shared.Notice> : null}
-            {actionSuccessMessage ? <Shared.Notice $variant="success">{actionSuccessMessage}</Shared.Notice> : null}
+            {actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage> : null}
+            {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
             <AdminStatusFilter
               label="처리 상태"
               description="상태별 이의제기를 조회합니다."
@@ -117,7 +119,7 @@ function ReportAppealPage() {
               <option value="APPROVED">승인</option>
               <option value="REJECTED">반려</option>
             </AdminStatusFilter>
-            {errorMessage ? <Shared.Notice $variant="error">{errorMessage}</Shared.Notice> : null}
+            {errorMessage ? <Shared.Notice $variant="error" role="alert">{errorMessage}</Shared.Notice> : null}
             <Shared.Workspace>
               <Shared.Panel>
                 <Shared.PanelHeader><div><Shared.PanelTitle>{status ? STATUS_LABELS[status] : '전체'} 이의제기</Shared.PanelTitle><Shared.PanelDescription>항목을 선택하면 상세 사유를 확인합니다.</Shared.PanelDescription></div><Shared.PanelCount>{totalCount.toLocaleString()}건</Shared.PanelCount></Shared.PanelHeader>
@@ -166,8 +168,8 @@ function ReportAppealPage() {
             <Shared.ModalHeader><Shared.ModalTitle id="appeal-action-title">이의제기 {action === 'approve' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={processingAppealId !== null} onClick={() => setAction(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
             <Shared.ModalBody>
               <Shared.ModalWarning>이의제기 #{selectedAppeal.appealId}의 처리 결과는 원 신고 및 관련 제재 상태에 영향을 줄 수 있습니다.</Shared.ModalWarning>
-              <Form.Section><Form.Field>처리 사유 *<Form.TextArea value={reason} maxLength={500} disabled={processingAppealId !== null} onChange={(event) => { setReason(event.target.value); setFormError('') }} /><small>{reason.length}/500</small></Form.Field></Form.Section>
-              {formError || actionErrorMessage ? <Shared.Notice $variant="error">{formError || actionErrorMessage}</Shared.Notice> : null}
+              <Form.Section><Form.Field>처리 사유 *<Form.TextArea value={reason} maxLength={500} disabled={processingAppealId !== null} onChange={(event) => { setReason(event.target.value); setFormError(''); dismissActionError() }} /><small>{reason.length}/500</small></Form.Field></Form.Section>
+              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={processingAppealId !== null} onClick={() => setAction(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={processingAppealId !== null} onClick={() => void submitAction()}>{processingAppealId !== null ? '처리 중' : action === 'approve' ? '승인 확정' : '반려 확정'}</Shared.PrimaryButton></Shared.ModalFooter>
           </Shared.Modal>

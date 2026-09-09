@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -374,6 +375,7 @@ function UserBanPage() {
     isSanctionHistoryLoading,
     sanctionHistoryErrorMessage,
     actionErrorMessage,
+    dismissActionError,
     actionSuccessMessage,
     banningUserId,
     releasingUserId,
@@ -938,9 +940,7 @@ function UserBanPage() {
             ) : null}
 
             {actionErrorMessage ? (
-              <U.Notice $variant="error" role="alert">
-                {actionErrorMessage}
-              </U.Notice>
+              <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage>
             ) : null}
             {actionSuccessMessage ? (
               <U.Notice role="status">{actionSuccessMessage}</U.Notice>
@@ -1537,9 +1537,7 @@ function UserBanPage() {
               확인한 뒤 진행해 주세요.
             </U.ConfirmDescription>
             {actionErrorMessage ? (
-              <U.Notice $variant="error" role="alert">
-                {actionErrorMessage}
-              </U.Notice>
+              <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage>
             ) : null}
             <U.ConfirmMeta>
               <span>사용자 ID</span>
@@ -1593,9 +1591,7 @@ function UserBanPage() {
               사유를 확인한 뒤 진행해 주세요.
             </U.ConfirmDescription>
             {actionErrorMessage ? (
-              <U.Notice $variant="error" role="alert">
-                {actionErrorMessage}
-              </U.Notice>
+              <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage>
             ) : null}
             <U.ActionLabel>
               해제 사유

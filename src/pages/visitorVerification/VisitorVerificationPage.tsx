@@ -1,3 +1,4 @@
+import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
@@ -210,17 +211,15 @@ function VisitorVerificationPage() {
               </S.TabButton>
             </S.TabList>
             {hook.actionErrorMessage ? (
-              <Shared.Notice $variant="error">
-                {hook.actionErrorMessage}
-              </Shared.Notice>
+              <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage>
             ) : null}
             {hook.successMessage ? (
-              <Shared.Notice $variant="success">
+              <Shared.Notice $variant="success" role="status">
                 {hook.successMessage}
               </Shared.Notice>
             ) : null}
             {hook.errorMessage ? (
-              <Shared.Notice $variant="error">
+              <Shared.Notice $variant="error" role="alert">
                 {hook.errorMessage}
               </Shared.Notice>
             ) : null}
@@ -405,7 +404,7 @@ function VisitorVerificationPage() {
                             onClick={() => {
                               setDecision("REJECTED");
                               setReviewNote("");
-                              setFormError("");
+                              setFormError(''); hook.dismissActionError();
                             }}
                           >
                             반려
@@ -416,7 +415,7 @@ function VisitorVerificationPage() {
                             onClick={() => {
                               setDecision("ACCEPTED");
                               setReviewNote("");
-                              setFormError("");
+                              setFormError(''); hook.dismissActionError();
                             }}
                           >
                             승인
@@ -472,15 +471,13 @@ function VisitorVerificationPage() {
                     disabled={hook.isReviewing}
                     onChange={(event) => {
                       setReviewNote(event.target.value);
-                      setFormError("");
+                      setFormError(''); hook.dismissActionError();
                     }}
                   />
                 </S.Field>
               </S.Section>
               {formError || hook.actionErrorMessage ? (
-                <Shared.Notice $variant="error">
-                  {formError || hook.actionErrorMessage}
-                </Shared.Notice>
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
               ) : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>

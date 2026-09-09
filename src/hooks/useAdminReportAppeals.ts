@@ -50,7 +50,6 @@ export function useAdminReportAppeals() {
   const [processingAppealId, setProcessingAppealId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestRequestIdRef = useRef(0)
@@ -139,6 +138,7 @@ export function useAdminReportAppeals() {
     processingAppealId,
     errorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     fetchAppeals,
     processAppeal,

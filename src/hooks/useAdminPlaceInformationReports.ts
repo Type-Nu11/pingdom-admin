@@ -62,7 +62,6 @@ export function useAdminPlaceInformationReports() {
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestListRequestIdRef = useRef(0)
@@ -216,6 +215,7 @@ export function useAdminPlaceInformationReports() {
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     fetchReports,
     fetchReportDetail,

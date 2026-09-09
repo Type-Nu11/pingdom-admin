@@ -84,7 +84,6 @@ export function useAdminPlaceMerge() {
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [historyErrorMessage, setHistoryErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [actionSuccessMessage, setActionSuccessMessage] = useState('')
   useAutoDismissMessage(actionSuccessMessage, setActionSuccessMessage)
   const latestGroupsRequestIdRef = useRef(0)
@@ -315,6 +314,7 @@ export function useAdminPlaceMerge() {
     detailErrorMessage,
     historyErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     actionSuccessMessage,
     fetchDuplicateGroups,
     fetchDuplicateDetail,

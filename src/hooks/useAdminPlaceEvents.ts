@@ -47,7 +47,6 @@ export function useAdminPlaceEvents() {
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const actionRef = useRef(false)
@@ -222,6 +221,7 @@ export function useAdminPlaceEvents() {
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     successMessage,
     fetchEvents,
     fetchEvent,

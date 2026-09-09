@@ -58,7 +58,6 @@ export function useAdminPlaceReviewDeletionRequests() {
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const listRequestRef = useRef(0)
@@ -190,6 +189,7 @@ export function useAdminPlaceReviewDeletionRequests() {
     errorMessage,
     detailErrorMessage,
     actionErrorMessage,
+    dismissActionError: () => setActionErrorMessage(''),
     successMessage,
     fetchItems,
     fetchDetail,

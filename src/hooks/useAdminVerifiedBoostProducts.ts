@@ -35,7 +35,6 @@ export function useAdminVerifiedBoostProducts() {
   const [activeAction, setActiveAction] = useState<'create' | 'status' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const actionRef = useRef(false)
@@ -134,7 +133,7 @@ export function useAdminVerifiedBoostProducts() {
 
   return {
     products, selectedProduct, page, totalElements, totalPages, hasNext,
-    isLoading, isDetailLoading, activeAction, errorMessage, actionErrorMessage,
+    isLoading, isDetailLoading, activeAction, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''),
     successMessage, fetchProducts, fetchProduct, createProduct, changeStatus,
   }
 }

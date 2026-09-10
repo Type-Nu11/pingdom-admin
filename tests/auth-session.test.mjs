@@ -9,7 +9,7 @@ globalThis.localStorage = {
   setItem: (key, value) => storage.set(key, value),
   removeItem: (key) => storage.delete(key),
 }
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 const auth = await server.ssrLoadModule('/src/utils/authStorage.ts')
 const { default: client, runAuthTransition } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const authApi = await server.ssrLoadModule('/src/api/authApi.ts')

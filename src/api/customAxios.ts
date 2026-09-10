@@ -24,6 +24,7 @@ export type ApiErrorCategory =
 export type ApiError<T = unknown> = AxiosError<T> & {
   category?: ApiErrorCategory
   status?: number
+  isRefreshFailure?: boolean
 }
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
@@ -206,13 +207,9 @@ async function requestTokenRefresh(sessionId: string) {
 }
 
 function shouldClearAuthAfterRefreshFailure(error: unknown) {
-  if (!axios.isAxiosError(error)) {
-    return true
-  }
-
-  const status = error.response?.status
-
-  return Boolean(error.response && (typeof status !== 'number' || status < 500))
+  if (error instanceof AuthSessionMismatchError) return true
+  if (!axios.isAxiosError(error)) return false
+  return error.response?.status === 401 || error.response?.status === 403
 }
 
 customAxios.interceptors.request.use((config) => {
@@ -268,11 +265,16 @@ customAxios.interceptors.response.use(
         return customAxios(originalRequest)
       } catch (refreshError) {
         assertCurrentSession(originalRequest._authSessionId!)
+        if (axios.isCancel(refreshError)) return Promise.reject(refreshError)
         if (shouldClearAuthAfterRefreshFailure(refreshError)) {
           clearStoredAuth(refreshError instanceof AuthSessionMismatchError ? SESSION_MISMATCH_MESSAGE : undefined)
         }
-
-        return Promise.reject(apiError)
+        if (refreshError instanceof AuthSessionMismatchError) return Promise.reject(apiError)
+        const refreshApiError = enrichApiError(
+          axios.isAxiosError(refreshError) ? refreshError : AxiosError.from(refreshError)
+        )
+        refreshApiError.isRefreshFailure = true
+        return Promise.reject(refreshApiError)
       }
     }
 

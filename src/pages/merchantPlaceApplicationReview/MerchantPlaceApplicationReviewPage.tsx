@@ -228,6 +228,10 @@ function MerchantPlaceApplicationReviewPage() {
     }
   }
 
+  const visibleDetail = selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId
+    ? hook.detail
+    : null
+
   const emptyDetailTitle = hook.items.length === 0 && !hook.isLoading
     ? (isHistoryView ? '처리 이력이 없습니다.' : '현재 검토할 신청이 없습니다.')
     : '목록에서 장소 신청을 선택하세요.'
@@ -270,8 +274,24 @@ function MerchantPlaceApplicationReviewPage() {
               {!selectedId ? <Shared.EmptyState><strong>{emptyDetailTitle}</strong><p>{emptyDetailDescription}</p></Shared.EmptyState> : null}
               {selectedId && hook.isDetailLoading ? <Shared.EmptyState><strong>장소 신청 상세를 불러오는 중입니다.</strong></Shared.EmptyState> : null}
               {selectedId && !hook.isDetailLoading && hook.detailErrorMessage ? <Shared.EmptyState><strong>{hook.detailErrorMessage}</strong><Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedId)}>다시 시도</Shared.SecondaryButton></Shared.EmptyState> : null}
-              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} isReviewing={hook.isReviewing} approvalBlockMessage={approvalBlockMessage} onOpenReview={openReview} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
-            </Shared.CompareBody></Shared.Panel>
+              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
+            </Shared.CompareBody>
+            {visibleDetail ? (
+              <S.ReviewActions aria-label="장소 신청 심사 작업">
+                <S.ActionTarget>
+                  <strong>{visibleDetail.placeName || visibleDetail.newPlace?.placeName || visibleDetail.businessName || '장소명 정보 없음'}</strong>
+                  <span>신청 #{visibleDetail.id} · {STATUS_LABELS[visibleDetail.status]}</span>
+                </S.ActionTarget>
+                {visibleDetail.status === 'PENDING' ? <>
+                  {approvalBlockMessage ? <S.ActionReason id="application-approval-block" role="status">{approvalBlockMessage}</S.ActionReason> : null}
+                  <S.ActionButtons>
+                    <Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => openReview('reject')}>반려</Shared.SecondaryButton>
+                    <Shared.PrimaryButton type="button" aria-describedby={approvalBlockMessage ? 'application-approval-block' : undefined} disabled={hook.isReviewing || Boolean(approvalBlockMessage)} onClick={() => openReview('approve')}>{hook.isReviewing ? '처리 중' : '승인'}</Shared.PrimaryButton>
+                  </S.ActionButtons>
+                </> : <S.ActionReason>읽기 전용 · 현재 상태에서는 심사할 수 없습니다.</S.ActionReason>}
+              </S.ReviewActions>
+            ) : null}
+            </Shared.Panel>
           </ListDetailWorkspace>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
@@ -306,14 +326,11 @@ function MerchantPlaceApplicationReviewPage() {
   )
 }
 
-function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, isReviewing, approvalBlockMessage, onOpenReview, onDownload }: {
+function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, onDownload }: {
   application: AdminMerchantPlaceApplication
   attachments: AdminMerchantPlaceApplicationAttachment[]
   attachmentErrorMessage: string
   downloadingAttachmentId: number | null
-  isReviewing: boolean
-  approvalBlockMessage: string
-  onOpenReview: (decision: 'approve' | 'reject') => void
   onDownload: (attachment: AdminMerchantPlaceApplicationAttachment) => void
 }) {
   const newPlace = application.newPlace
@@ -327,8 +344,6 @@ function ApplicationDetail({ application, attachments, attachmentErrorMessage, d
     {application.applicationType === 'EXISTING_PLACE_CLAIM' ? <Form.Section><Form.SectionTitle>기존 장소 운영 신청</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>대상 장소</dt><dd>{application.existingPlaceId ? `장소 #${application.existingPlaceId}` : '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>심사 완료 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid>{application.claimReason ? <S.Reason>{application.claimReason}</S.Reason> : <Form.RecordDescription>등록된 신청 사유가 없습니다.</Form.RecordDescription>}</Form.Section> : null}
     <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error" role="alert">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
     {application.reviewReason ? <Form.Section><Form.SectionTitle>심사 사유</Form.SectionTitle><S.Reason>{application.reviewReason}</S.Reason></Form.Section> : null}
-    {application.status === 'PENDING' && approvalBlockMessage ? <Shared.Notice $variant="error" role="alert">{approvalBlockMessage}</Shared.Notice> : null}
-    {application.status === 'PENDING' ? <Form.InlineActions><Shared.SecondaryButton type="button" disabled={isReviewing} onClick={() => onOpenReview('reject')}>반려</Shared.SecondaryButton><Shared.PrimaryButton type="button" title={approvalBlockMessage || undefined} disabled={isReviewing || Boolean(approvalBlockMessage)} onClick={() => onOpenReview('approve')}>승인</Shared.PrimaryButton></Form.InlineActions> : null}
   </>
 }
 

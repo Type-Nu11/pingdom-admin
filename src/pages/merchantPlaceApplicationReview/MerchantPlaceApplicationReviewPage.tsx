@@ -1,3 +1,4 @@
+import { AttachmentPreview } from '../../components/common/AttachmentPreview'
 import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState } from 'react'
@@ -143,6 +144,7 @@ function MerchantPlaceApplicationReviewPage() {
   const { logout, user } = useAuth()
   const hook = useAdminMerchantPlaceApplications()
   const applicationIdFromNavigation = getApplicationIdFromNavigationState(location.state)
+  const [preview, setPreview] = useState<{ applicationId: number; attachment: AdminMerchantPlaceApplicationAttachment } | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(applicationIdFromNavigation)
   const [decision, setDecision] = useState<'approve' | 'reject' | null>(null)
   const [reviewTarget, setReviewTarget] = useState<AdminMerchantPlaceApplication | null>(null)
@@ -175,12 +177,14 @@ function MerchantPlaceApplicationReviewPage() {
     const page = Math.min(Math.max(nextPage, 1), safeTotalPages)
     if (page === hook.page || hook.isLoading || hook.isReviewing) return
 
+    setPreview(null)
     setSelectedId(null)
     setDecision(null)
     void hook.fetchApplications(page)
   }
 
   const selectApplication = (applicationId: number) => {
+    setPreview(null)
     setSelectedId(applicationId)
     setDecision(null)
     setReason('')
@@ -224,6 +228,7 @@ function MerchantPlaceApplicationReviewPage() {
     }
     if (await hook.review(reviewTarget, decision === 'approve', trimmedReason)) {
       setDecision(null)
+      setPreview(null)
       setSelectedId(null)
     }
   }
@@ -274,7 +279,7 @@ function MerchantPlaceApplicationReviewPage() {
               {!selectedId ? <Shared.EmptyState><strong>{emptyDetailTitle}</strong><p>{emptyDetailDescription}</p></Shared.EmptyState> : null}
               {selectedId && hook.isDetailLoading ? <Shared.EmptyState><strong>장소 신청 상세를 불러오는 중입니다.</strong></Shared.EmptyState> : null}
               {selectedId && !hook.isDetailLoading && hook.detailErrorMessage ? <Shared.EmptyState><strong>{hook.detailErrorMessage}</strong><Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedId)}>다시 시도</Shared.SecondaryButton></Shared.EmptyState> : null}
-              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
+              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} onPreview={(attachment) => setPreview({ applicationId: selectedId, attachment })} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
             </Shared.CompareBody>
             {visibleDetail ? (
               <S.ReviewActions aria-label="장소 신청 심사 작업">
@@ -295,6 +300,13 @@ function MerchantPlaceApplicationReviewPage() {
           </ListDetailWorkspace>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
+      {preview && visibleDetail?.id === preview.applicationId ? <AttachmentPreview
+        key={`${preview.applicationId}:${preview.attachment.id}`}
+        applicationId={preview.applicationId}
+        attachment={preview.attachment}
+        onClose={() => setPreview(null)}
+        onDownload={() => hook.downloadAttachment(preview.applicationId, preview.attachment)}
+      /> : null}
       {decision && reviewTarget ? (
         <AppDialog
           title={`장소 신청 ${decision === 'approve' ? '승인' : '반려'}`}
@@ -326,11 +338,12 @@ function MerchantPlaceApplicationReviewPage() {
   )
 }
 
-function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, onDownload }: {
+function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, onPreview, onDownload }: {
   application: AdminMerchantPlaceApplication
   attachments: AdminMerchantPlaceApplicationAttachment[]
   attachmentErrorMessage: string
   downloadingAttachmentId: number | null
+  onPreview: (attachment: AdminMerchantPlaceApplicationAttachment) => void
   onDownload: (attachment: AdminMerchantPlaceApplicationAttachment) => void
 }) {
   const newPlace = application.newPlace
@@ -342,7 +355,7 @@ function ApplicationDetail({ application, attachments, attachmentErrorMessage, d
     {application.merchantDescription ? <Form.Section><Form.SectionTitle>상점 소개</Form.SectionTitle><S.Reason>{application.merchantDescription}</S.Reason></Form.Section> : null}
     {application.applicationType === 'NEW_PLACE' ? <Form.Section><Form.SectionTitle>신규 장소 정보</Form.SectionTitle>{newPlace ? <><Form.DetailGrid><Form.DetailItem><dt>장소명</dt><dd>{newPlace.placeName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>카테고리</dt><dd>{CATEGORY_LABELS[newPlace.category] ?? newPlace.category}</dd></Form.DetailItem><Form.DetailItem><dt>도로명 주소</dt><dd>{newPlace.roadAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>지번 주소</dt><dd>{newPlace.jibunAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>우편번호</dt><dd>{newPlace.postalCode || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>좌표</dt><dd>{formatCoordinates(newPlace.latitude, newPlace.longitude)}</dd></Form.DetailItem><Form.DetailItem><dt>사업장 연락처</dt><dd>{newPlace.businessContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>신청자 연락처</dt><dd>{newPlace.applicantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>시간대</dt><dd>{newPlace.timezone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>태그</dt><dd>{tags.length ? tags.map((tag) => TAG_LABELS[tag] ?? tag).join(' · ') : '등록 정보 없음'}</dd></Form.DetailItem></Form.DetailGrid>{newPlace.description ? <Form.Section><Form.SectionTitle>장소 소개</Form.SectionTitle><S.Reason>{newPlace.description}</S.Reason></Form.Section> : null}<Form.Section><Form.SectionTitle>영업 시간</Form.SectionTitle><OperatingHours days={newPlace.operatingDays} /></Form.Section></> : <Form.RecordDescription>이 신청의 신규 장소 정보는 서버 응답에 없습니다.</Form.RecordDescription>}</Form.Section> : null}
     {application.applicationType === 'EXISTING_PLACE_CLAIM' ? <Form.Section><Form.SectionTitle>기존 장소 운영 신청</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>대상 장소</dt><dd>{application.existingPlaceId ? `장소 #${application.existingPlaceId}` : '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>심사 완료 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid>{application.claimReason ? <S.Reason>{application.claimReason}</S.Reason> : <Form.RecordDescription>등록된 신청 사유가 없습니다.</Form.RecordDescription>}</Form.Section> : null}
-    <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error" role="alert">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
+    <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error" role="alert">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" onClick={() => onPreview(attachment)}>미리보기</S.AttachmentButton><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
     {application.reviewReason ? <Form.Section><Form.SectionTitle>심사 사유</Form.SectionTitle><S.Reason>{application.reviewReason}</S.Reason></Form.Section> : null}
   </>
 }

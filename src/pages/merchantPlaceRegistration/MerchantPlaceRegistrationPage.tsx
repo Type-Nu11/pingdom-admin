@@ -449,6 +449,7 @@ function RegistrationForm({
   }
 
   const requestReview = async () => {
+    if (activeAction !== null || !canEdit(registration)) return
     const attachmentTypes = [
       ...(registration?.attachments.map((attachment) => attachment.documentType) ?? []),
       ...stagedAttachments.map((attachment) => attachment.documentType),

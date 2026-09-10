@@ -1,3 +1,4 @@
+import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -144,6 +145,7 @@ function MerchantPlaceApplicationReviewPage() {
   const applicationIdFromNavigation = getApplicationIdFromNavigationState(location.state)
   const [selectedId, setSelectedId] = useState<number | null>(applicationIdFromNavigation)
   const [decision, setDecision] = useState<'approve' | 'reject' | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<AdminMerchantPlaceApplication | null>(null)
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState('')
   const openedApplicationIdRef = useRef<number | null>(null)
@@ -199,14 +201,18 @@ function MerchantPlaceApplicationReviewPage() {
   }, [applicationIdFromNavigation, fetchApplicationDetail])
 
   const openReview = (nextDecision: 'approve' | 'reject') => {
+    if (!hook.detail || hook.detail.id !== selectedId || hook.detail.status !== 'PENDING' || hook.isReviewing) return
+    setReviewTarget({ ...hook.detail })
     if (nextDecision === 'approve' && approvalBlockMessage) return
     setDecision(nextDecision)
     setReason('')
     setFormError(''); hook.dismissActionError()
   }
 
+  const ReviewButton = decision === 'reject' ? S.DangerButton : Shared.PrimaryButton
+
   const submitReview = async () => {
-    if (!decision || hook.isReviewing) return
+    if (!decision || !reviewTarget || hook.isReviewing) return
     if (decision === 'approve' && approvalBlockMessage) {
       setFormError(approvalBlockMessage)
       return
@@ -216,7 +222,7 @@ function MerchantPlaceApplicationReviewPage() {
       setFormError('심사 사유를 입력해주세요.')
       return
     }
-    if (await hook.review(decision === 'approve', trimmedReason)) {
+    if (await hook.review(reviewTarget, decision === 'approve', trimmedReason)) {
       setDecision(null)
       setSelectedId(null)
     }
@@ -269,7 +275,33 @@ function MerchantPlaceApplicationReviewPage() {
           </ListDetailWorkspace>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
-      {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-place-application-review-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-place-application-review-title">장소 신청 {decision === 'approve' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>장소 신청 #{hook.detail.id}을 {decision === 'approve' ? '승인' : '반려'}합니다. 처리 후 상태가 즉시 변경되며 되돌릴 수 없습니다.</Shared.ModalWarning><Form.Section><Form.Field>심사 사유 *<Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reason.length}/500</small></Form.Field></Form.Section>{formError ? <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'reject' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing || Boolean(approvalBlockMessage)} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '승인 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
+      {decision && reviewTarget ? (
+        <AppDialog
+          title={`장소 신청 ${decision === 'approve' ? '승인' : '반려'}`}
+          isDismissible={!hook.isReviewing}
+          onClose={() => setDecision(null)}
+          footer={<>
+            <Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>
+            <ReviewButton type="button" disabled={hook.isReviewing || (decision === 'approve' && Boolean(approvalBlockMessage))} onClick={() => void submitReview()}>
+              {hook.isReviewing ? '처리 중' : decision === 'approve' ? '승인 확정' : '반려 확정'}
+            </ReviewButton>
+          </>}
+        >
+          <Form.DetailGrid>
+            <Form.DetailItem><dt>신청 번호</dt><dd>#{reviewTarget.id}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>신청 유형</dt><dd>{TYPE_LABELS[reviewTarget.applicationType]}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>장소</dt><dd>{reviewTarget.placeName || reviewTarget.newPlace?.placeName || '장소명 정보 없음'}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>신청자</dt><dd>{reviewTarget.legalName || '이름 정보 없음'} · #{reviewTarget.applicantUserId}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>상호</dt><dd>{reviewTarget.businessName || '정보 없음'}</dd></Form.DetailItem>
+          </Form.DetailGrid>
+          <p>이 신청을 {decision === 'approve' ? '승인' : '반려'}합니다. 대상과 심사 사유를 확인해주세요.</p>
+          <Form.Field>심사 사유 *
+            <Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} />
+            <small>{reason.length}/500</small>
+          </Form.Field>
+          {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
+        </AppDialog>
+      ) : null}
     </Shell.AppShell>
   )
 }

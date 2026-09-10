@@ -215,16 +215,20 @@ export function useAdminMerchantPlaceApplications() {
     }
   }, [downloadingAttachmentId, message])
 
-  const review = useCallback(async (approved: boolean, reason: string) => {
-    if (!detail || reviewRef.current) return null
+  const review = useCallback(async (target: Pick<AdminMerchantPlaceApplication, 'id' | 'version'>, approved: boolean, reason: string) => {
+    if (reviewRef.current) return null
+    if (!detail || detail.id !== target.id || detail.version !== target.version || detail.status !== 'PENDING') {
+      setActionErrorMessage('신청 정보가 변경되었습니다. 확인창을 닫고 다시 조회해주세요.')
+      return null
+    }
     reviewRef.current = true
     setIsReviewing(true)
     setActionErrorMessage('')
     setSuccessMessage('')
     try {
       const reviewed = approved
-        ? await api.approveAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
-        : await api.rejectAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
+        ? await api.approveAdminMerchantPlaceApplication(target.id, { reviewedVersion: target.version, reason })
+        : await api.rejectAdminMerchantPlaceApplication(target.id, { reviewedVersion: target.version, reason })
       setDetail(reviewed)
       setAttachments(reviewed.attachments)
       await fetchApplications(1)

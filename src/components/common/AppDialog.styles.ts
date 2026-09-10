@@ -86,6 +86,11 @@ export const Icon = styled.span`
 `
 
 export const Body = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 0;
   overflow-y: auto;
   padding: 20px;
@@ -93,6 +98,7 @@ export const Body = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
   padding: 0 20px 20px;

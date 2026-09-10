@@ -92,7 +92,10 @@ export function AppDialog({
       return
     }
 
-    if (event.shiftKey && document.activeElement === firstElement) {
+    if (!focusableElements.includes(document.activeElement as HTMLElement)) {
+      event.preventDefault()
+      ;(event.shiftKey ? lastElement : firstElement).focus()
+    } else if (event.shiftKey && document.activeElement === firstElement) {
       event.preventDefault()
       lastElement.focus()
     } else if (!event.shiftKey && document.activeElement === lastElement) {

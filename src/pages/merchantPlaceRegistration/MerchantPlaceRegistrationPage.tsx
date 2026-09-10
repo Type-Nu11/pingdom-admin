@@ -449,6 +449,7 @@ function RegistrationForm({
   }
 
   const requestReview = async () => {
+    if (activeAction !== null || !canEdit(registration)) return
     const attachmentTypes = [
       ...(registration?.attachments.map((attachment) => attachment.documentType) ?? []),
       ...stagedAttachments.map((attachment) => attachment.documentType),
@@ -463,7 +464,8 @@ function RegistrationForm({
     }
 
     const request = editable ? buildRequest() : null
-    if (!registration && !request) return
+    if (editable && !request) return
+    if (!editable && !registration) return
     const next = await onRequestReview(
       registration?.id ?? null,
       request,

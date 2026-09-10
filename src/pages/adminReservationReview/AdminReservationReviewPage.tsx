@@ -1,3 +1,4 @@
+import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useState } from 'react'
@@ -26,7 +27,7 @@ const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 
   CANCELED: { label: '취소', tone: 'danger' },
 }
 
-type Dialog = { action: 'confirm' | 'reject' } | null
+type Dialog = { action: 'confirm' | 'reject'; target: AdminReservation } | null
 
 function formatDate(value?: string | null) {
   if (!value) return '정보 없음'
@@ -73,6 +74,7 @@ function AdminReservationReviewPage() {
       return
     }
     setFilterError('')
+    setDialog(null)
     setSelectedReservationId(null)
     hook.clearDetail()
     void hook.fetchReservations({ status, placeId: nextPlaceId, page })
@@ -96,19 +98,23 @@ function AdminReservationReviewPage() {
     if (!hook.reservation || hook.reservation.status !== 'PENDING') return
     setReason('')
     setFormError(''); hook.dismissActionError()
-    setDialog({ action })
+    setDialog({ action, target: { ...hook.reservation } })
   }
 
   const submitReview = async () => {
-    if (!hook.reservation || !dialog || hook.activeAction) return
+    if (!dialog || hook.activeAction) return
+    if (hook.reservation?.id !== dialog.target.id || hook.reservation.status !== 'PENDING') {
+      setFormError('예약 상태가 변경되었습니다. 확인창을 닫고 예약을 다시 조회해주세요.')
+      return
+    }
     const trimmedReason = reason.trim()
     if (dialog.action === 'reject' && !trimmedReason) {
       setFormError('반려 사유를 입력해주세요.')
       return
     }
     const result = dialog.action === 'confirm'
-      ? await hook.confirm(hook.reservation.id, trimmedReason ? { reason: trimmedReason } : undefined)
-      : await hook.reject(hook.reservation.id, { reason: trimmedReason })
+      ? await hook.confirm(dialog.target.id, trimmedReason ? { reason: trimmedReason } : undefined)
+      : await hook.reject(dialog.target.id, { reason: trimmedReason })
     if (result) setDialog(null)
   }
 
@@ -331,39 +337,41 @@ function AdminReservationReviewPage() {
         </ListDetailPage>
       </Shell.MainArea>
 
-      {dialog && hook.reservation ? (
-        <Shared.ModalOverlay role="presentation" onMouseDown={() => hook.activeAction === null && setDialog(null)}>
-          <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="reservation-review-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="reservation-review-dialog-title">예약 {dialog.action === 'confirm' ? '승인' : '반려'}</Shared.ModalTitle>
-              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>
-                <Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon>
-              </Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              <S.FormGrid>
-                <S.WideField>
-                  {dialog.action === 'reject' ? '반려 사유 *' : '승인 메모'}
-                  <S.TextArea
-                    value={reason}
-                    maxLength={500}
-                    disabled={hook.activeAction !== null}
-                    placeholder={dialog.action === 'reject' ? '예약을 반려하는 사유를 입력해주세요.' : '승인 메모가 있으면 입력해주세요.'}
-                    onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }}
-                  />
-                  <small>{reason.length}/500</small>
-                </S.WideField>
-              </S.FormGrid>
-              {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>
-              <Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void submitReview()}>
-                {hook.activeAction ? '처리 중' : dialog.action === 'confirm' ? '승인 확정' : '반려 확정'}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
+      {dialog ? (
+        <AppDialog
+          title={`예약 ${dialog.action === 'confirm' ? '승인' : '반려'}`}
+          isDismissible={hook.activeAction === null}
+          onClose={() => setDialog(null)}
+          footer={<>
+            <Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>
+            <Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void submitReview()}>
+              {hook.activeAction ? '처리 중' : dialog.action === 'confirm' ? '승인 확정' : '반려 확정'}
+            </Shared.PrimaryButton>
+          </>}
+        >
+          <S.DetailGrid>
+            <S.DetailItem><dt>예약 번호</dt><dd>#{dialog.target.id}</dd></S.DetailItem>
+            <S.DetailItem><dt>장소</dt><dd>{dialog.target.placeName || '정보 없음'} · #{dialog.target.placeId}</dd></S.DetailItem>
+            <S.DetailItem><dt>예약자</dt><dd>{formatPerson(dialog.target.touristUsername, dialog.target.touristUserId)}</dd></S.DetailItem>
+            <S.DetailItem><dt>예약 상품</dt><dd>{dialog.target.productName || '정보 없음'}</dd></S.DetailItem>
+            <S.DetailItem><dt>예약 일정</dt><dd>{formatSchedule(dialog.target)}</dd></S.DetailItem>
+            <S.DetailItem><dt>예약 수량</dt><dd>{dialog.target.quantity.toLocaleString()}명</dd></S.DetailItem>
+          </S.DetailGrid>
+          <S.FormGrid>
+            <S.WideField>
+              {dialog.action === 'reject' ? '반려 사유 *' : '승인 메모'}
+              <S.TextArea
+                value={reason}
+                maxLength={500}
+                disabled={hook.activeAction !== null}
+                placeholder={dialog.action === 'reject' ? '예약을 반려하는 사유를 입력해주세요.' : '승인 메모가 있으면 입력해주세요.'}
+                onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }}
+              />
+              <small>{reason.length}/500</small>
+            </S.WideField>
+          </S.FormGrid>
+          {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
+        </AppDialog>
       ) : null}
     </Shell.AppShell>
   )

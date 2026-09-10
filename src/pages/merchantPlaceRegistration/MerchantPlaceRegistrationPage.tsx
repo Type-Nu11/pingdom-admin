@@ -463,7 +463,8 @@ function RegistrationForm({
     }
 
     const request = editable ? buildRequest() : null
-    if (!registration && !request) return
+    if (editable && !request) return
+    if (!editable && !registration) return
     const next = await onRequestReview(
       registration?.id ?? null,
       request,

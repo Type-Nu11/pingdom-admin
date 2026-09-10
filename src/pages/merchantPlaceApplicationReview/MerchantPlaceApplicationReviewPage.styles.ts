@@ -3,6 +3,54 @@ import { adminColors, radius } from '../../styles/theme'
 
 const colors = adminColors
 
+export const ReviewActions = styled.footer`
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid ${colors.border};
+  background: ${colors.surface};
+`
+
+export const ActionTarget = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+
+  strong {
+    font-size: 14px;
+    line-height: 1.4;
+    color: ${colors.strongText};
+  }
+
+  span {
+    font-size: 12px;
+    color: ${colors.muted};
+  }
+`
+
+export const ActionReason = styled.p`
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: ${colors.muted};
+  overflow-wrap: anywhere;
+`
+
+export const ActionButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  > button {
+    min-width: 80px;
+  }
+`
+
 export const ReviewContent = styled.main`
   min-height: 0;
   flex: 1;

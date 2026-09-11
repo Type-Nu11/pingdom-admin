@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { getPdfDocumentOptions } from '../../utils/pdfDocumentOptions'
 import * as S from './AttachmentPreview.styles'
 
 export function PdfAttachment({ url, zoom, onError }: { url: string; zoom: number; onError: () => void }) {
@@ -17,7 +18,7 @@ export function PdfAttachment({ url, zoom, onError }: { url: string; zoom: numbe
     void import('pdfjs-dist').then(async (lib) => {
       if (!active) return
       lib.GlobalWorkerOptions.workerSrc = workerUrl
-      const task = lib.getDocument({ url })
+      const task = lib.getDocument(getPdfDocumentOptions(url))
       destroy = () => { void task.destroy() }
       const doc = await task.promise
       if (active) setPdf(doc)

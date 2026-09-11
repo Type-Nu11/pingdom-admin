@@ -13,6 +13,7 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const auth = await server.ssrLoadModule('/src/utils/authStorage.ts')
 const { default: client, runAuthTransition } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const authApi = await server.ssrLoadModule('/src/api/authApi.ts')
+const { getAuthErrorMessage } = await server.ssrLoadModule('/src/api/authError.ts')
 const originalAdapter = axios.defaults.adapter
 after(async () => {
   axios.defaults.adapter = originalAdapter
@@ -38,6 +39,72 @@ function unauthorized(config) {
     ...response(config, { code: 'INVALID_TOKEN' }), status: 401,
   })
 }
+
+for (const [status, code, category] of [
+  [500, 'ERR_BAD_RESPONSE', 'server'], [503, 'ERR_BAD_RESPONSE', 'server'],
+  [429, 'ERR_BAD_REQUEST', 'too-many-requests'], [400, 'ERR_BAD_REQUEST', 'bad-request'],
+  [undefined, 'ERR_NETWORK', 'request-blocked'], [undefined, 'ECONNABORTED', 'timeout'],
+  [undefined, 'ETIMEDOUT', 'timeout'], [undefined, undefined, 'network'],
+]) {
+  test(`refresh ${status ?? code ?? 'network'} preserves failure classification and session`, async () => {
+    const sessionId = auth.getAuthSessionId()
+    let requests = 0
+    let failure
+    axios.defaults.adapter = async config => {
+      failure = new axios.AxiosError('refresh failure', code, config, undefined,
+        status ? { ...response(config, { message: 'upstream failure' }), status } : undefined)
+      throw failure
+    }
+    client.defaults.adapter = async config => { requests++; throw unauthorized(config) }
+    const error = await client.post('/write').catch(error => error)
+    assert.equal(error, failure)
+    assert.equal(error.category, category)
+    assert.equal(error.status, status)
+    assert.equal(error.isRefreshFailure, true)
+    assert.equal(auth.getStoredAccessToken(), 'A')
+    assert.equal(auth.getAuthSessionId(), sessionId)
+    assert.equal(requests, 1)
+    assert.notEqual(error.response?.data?.code, 'INVALID_TOKEN')
+    const message = getAuthErrorMessage(error, { fallbackMessage: 'fallback', categoryMessages: { [category]: '로그인이 필요합니다.' } })
+    assert.ok(!message.includes('로그인'))
+    assert.notEqual(message, 'upstream failure')
+  })
+}
+
+for (const status of [401, 403]) {
+  test(`refresh authentication rejection ${status} clears session`, async () => {
+    axios.defaults.adapter = async config => { throw new axios.AxiosError('rejected', 'ERR_BAD_REQUEST', config, {}, { ...response(config), status }) }
+    client.defaults.adapter = async config => { throw unauthorized(config) }
+    const error = await client.get('/detail').catch(error => error)
+    assert.equal(error.status, status)
+    assert.equal(auth.getStoredAccessToken(), '')
+  })
+}
+
+test('a later request can refresh after a temporary failure', async () => {
+  let refreshes = 0
+  axios.defaults.adapter = async config => {
+    if (++refreshes === 1) throw new axios.AxiosError('temporary', 'ERR_BAD_RESPONSE', config, {}, { ...response(config), status: 503 })
+    return response(config, { accessToken: accessToken(1) })
+  }
+  client.defaults.adapter = async config => {
+    if (config.headers.get('Authorization') === 'Bearer A') throw unauthorized(config)
+    return response(config, 'ok')
+  }
+  await assert.rejects(client.get('/detail'))
+  assert.equal((await client.get('/detail')).data, 'ok')
+  assert.equal(refreshes, 2)
+})
+
+test('retry remains limited to one refresh when retried request also returns 401', async () => {
+  let refreshes = 0, requests = 0
+  axios.defaults.adapter = async config => { refreshes++; return response(config, { accessToken: accessToken(1) }) }
+  client.defaults.adapter = async config => { requests++; throw unauthorized(config) }
+  const error = await client.post('/write').catch(error => error)
+  assert.equal(error.category, 'unauthorized')
+  assert.equal(refreshes, 1)
+  assert.equal(requests, 2)
+})
 
 for (const transition of ['logout', 'switch']) {
   test('late refresh after ' + transition + ' cannot restore tokens or retry writes', async () => {

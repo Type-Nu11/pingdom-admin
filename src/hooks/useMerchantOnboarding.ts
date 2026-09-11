@@ -24,7 +24,7 @@ type MerchantOnboardingLoadStatus = 'loading' | 'ready' | 'error'
 type SavingSection = 'profile' | 'verification' | null
 
 function isNotFoundError(error: unknown) {
-  return isApiError(error) && error.category === 'not-found'
+  return isApiError(error) && !error.isRefreshFailure && error.category === 'not-found'
 }
 
 function getOnboardingErrorMessage(error: unknown, fallbackMessage: string) {

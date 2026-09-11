@@ -121,11 +121,14 @@ export function AdminNavigationMenu() {
       </S.DashboardButton>
       {NAVIGATION_GROUPS.map((group) => {
         const isGroupOpen = !navigationState.closedGroups.includes(group.id)
+        const groupActive = group.id === 'places' ? placeManagementActive : group.items.some(item => isCurrentPath(pathname, item.path))
 
         return (
           <S.Group key={group.id}>
             <S.GroupTitle
               type="button"
+              $active={groupActive && !isGroupOpen}
+              aria-label={groupActive && !isGroupOpen ? `${group.title}, 현재 페이지 포함` : group.title}
               aria-expanded={isGroupOpen}
               aria-controls={`admin-navigation-group-${group.id}`}
               onClick={() => setNavigationState(current => ({ ...current, closedGroups: current.closedGroups.includes(group.id)

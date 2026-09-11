@@ -6,14 +6,24 @@ import type { AuthState, AuthUser } from '../app/providers/AuthContext'
 const AUTH_STORAGE_CHANGE_EVENT = 'pingdom-auth-storage-change'
 const LEGACY_REFRESH_TOKEN_STORAGE_KEY = 'refreshToken'
 const AUTH_SESSION_KEY = 'pingdom-auth-session'
+const AUTH_STORAGE_COMMIT_KEY = 'pingdom-auth-storage-commit'
 let fallbackSessionId = ''
 let authSessionNotice = ''
+
+export interface AuthStorageSnapshot {
+  sessionId: string
+  authState: AuthState | null
+}
 
 export function getAuthSessionNotice() {
   return authSessionNotice
 }
 
 export function getAuthSessionId() {
+  return getStoredAuthSnapshot().sessionId
+}
+
+function getLegacySessionId() {
   let sessionId = canUseStorage() ? getStoredString(AUTH_SESSION_KEY) : fallbackSessionId
   if (!sessionId) {
     sessionId = crypto.randomUUID()
@@ -26,6 +36,7 @@ export function getAuthSessionId() {
 function rotateAuthSession() {
   fallbackSessionId = crypto.randomUUID()
   setStoredString(AUTH_SESSION_KEY, fallbackSessionId)
+  return fallbackSessionId
 }
 
 function canUseStorage() {
@@ -36,7 +47,9 @@ function canUseWindow() {
   return typeof window !== 'undefined'
 }
 
-function notifyAuthStorageChange() {
+function notifyAuthStorageChange(snapshot: AuthStorageSnapshot) {
+  // Publish the operation's complete value, never reread partially written fields.
+  setStoredString(AUTH_STORAGE_COMMIT_KEY, JSON.stringify({ ...snapshot, commitId: crypto.randomUUID() }))
   if (!canUseWindow()) {
     return
   }
@@ -93,12 +106,39 @@ function stringifyAuthNumber(value: unknown) {
 }
 
 export function getStoredAccessToken() {
-  return getStoredString(AUTH_STORAGE_KEYS.accessToken)
+  return getStoredAuthSnapshot().authState?.accessToken ?? ''
 }
 
 export function getStoredAuthState(): AuthState | null {
+  return getStoredAuthSnapshot().authState
+}
+
+export function getStoredAuthSnapshot(): AuthStorageSnapshot {
+  const committed = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+  if (committed) {
+    try {
+      const value = JSON.parse(committed) as AuthStorageSnapshot
+      const state = value?.authState
+      const user = state?.user
+      if (typeof value?.sessionId === 'string' && value.sessionId && (
+        state === null || (
+          typeof state?.accessToken === 'string' && state.accessToken && user &&
+          (user.id === null || typeof user.id === 'number' && Number.isFinite(user.id)) &&
+          (user.birthYear === null || typeof user.birthYear === 'number' && Number.isFinite(user.birthYear)) &&
+          ['username', 'name', 'email', 'profileImageUrl', 'language', 'country', 'role']
+            .every(key => typeof user[key as keyof AuthUser] === 'string')
+        )
+      )) return { sessionId: value.sessionId, authState: state }
+    } catch { /* An invalid commit must not resurrect old individual fields. */ }
+    return { sessionId: getLegacySessionId(), authState: null }
+  }
+  // Existing installations have individual fields but no committed snapshot yet.
+  return { sessionId: getLegacySessionId(), authState: readLegacyAuthState() }
+}
+
+function readLegacyAuthState(): AuthState | null {
   removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
-  const accessToken = getStoredAccessToken()
+  const accessToken = getStoredString(AUTH_STORAGE_KEYS.accessToken)
 
   if (!accessToken) {
     return null
@@ -138,7 +178,7 @@ export function createAuthStateFromLogin(data: LoginResponse): AuthState {
 }
 
 export function saveLoginAuth(data: LoginResponse) {
-  rotateAuthSession()
+  const sessionId = rotateAuthSession()
   authSessionNotice = ''
   removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
@@ -154,26 +194,39 @@ export function saveLoginAuth(data: LoginResponse) {
   setStoredString(AUTH_STORAGE_KEYS.language, normalizeAuthString(data.language))
   setStoredString(AUTH_STORAGE_KEYS.country, normalizeAuthString(data.country))
   setStoredString(AUTH_STORAGE_KEYS.role, normalizeAuthString(data.role))
+  notifyAuthStorageChange({ sessionId, authState: createAuthStateFromLogin(data) })
 }
 
 export function saveRefreshedAuthTokens(data: RefreshTokenResponse, sessionId: string) {
-  if (getAuthSessionId() !== sessionId) return false
-  const userId = getStoredString(AUTH_STORAGE_KEYS.userId)
-  if (!userId || getAccessTokenSubject(data.accessToken) !== userId) return false
+  const snapshot = getStoredAuthSnapshot()
+  if (snapshot.sessionId !== sessionId || !snapshot.authState?.user) return false
+  const userId = snapshot.authState.user.id
+  if (userId === null || getAccessTokenSubject(data.accessToken) !== String(userId)) return false
   setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
-  notifyAuthStorageChange()
+  notifyAuthStorageChange({ sessionId, authState: { ...snapshot.authState, accessToken: data.accessToken } })
   return true
 }
 
 export function clearStoredAuth(notice?: string) {
   if (notice) authSessionNotice = notice
-  rotateAuthSession()
+  const sessionId = rotateAuthSession()
   Object.values(AUTH_STORAGE_KEYS).forEach(removeStoredValue)
   removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
-  notifyAuthStorageChange()
+  notifyAuthStorageChange({ sessionId, authState: null })
 }
 
 export function updateStoredAuthUser(user: Partial<AuthUser>) {
+  const snapshot = getStoredAuthSnapshot()
+  if (!snapshot.authState?.user) return
+  const nextUser = { ...snapshot.authState.user }
+  for (const key of ['id', 'birthYear'] as const) {
+    if (user[key] === null || typeof user[key] === 'number' && Number.isFinite(user[key])) {
+      nextUser[key] = user[key]
+    }
+  }
+  for (const key of ['username', 'name', 'email', 'profileImageUrl', 'language', 'country', 'role'] as const) {
+    if (typeof user[key] === 'string') nextUser[key] = user[key]
+  }
   if (typeof user.id === 'number') {
     setStoredString(AUTH_STORAGE_KEYS.userId, String(user.id))
   }
@@ -217,6 +270,7 @@ export function updateStoredAuthUser(user: Partial<AuthUser>) {
   if (typeof user.role === 'string') {
     setStoredString(AUTH_STORAGE_KEYS.role, user.role)
   }
+  notifyAuthStorageChange({ ...snapshot, authState: { ...snapshot.authState, user: nextUser } })
 }
 
 export function subscribeAuthStorageChange(listener: () => void) {
@@ -224,9 +278,24 @@ export function subscribeAuthStorageChange(listener: () => void) {
     return () => {}
   }
 
-  window.addEventListener(AUTH_STORAGE_CHANGE_EVENT, listener)
+  let lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+  const handleLocalChange = () => {
+    lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+    listener()
+  }
+  const handleStorage = (event: StorageEvent) => {
+    if (event.storageArea !== localStorage) return
+    if (event.key !== null && event.key !== AUTH_STORAGE_COMMIT_KEY) return
+    const commit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+    if (event.key !== null && commit === lastCommit) return
+    lastCommit = commit
+    listener()
+  }
+  window.addEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
+  window.addEventListener('storage', handleStorage)
 
   return () => {
-    window.removeEventListener(AUTH_STORAGE_CHANGE_EVENT, listener)
+    window.removeEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
+    window.removeEventListener('storage', handleStorage)
   }
 }

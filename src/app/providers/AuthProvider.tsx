@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 import { logout as requestLogout } from '../../api/authApi'
 import { runAuthTransition } from '../../api/customAxios'
 import type { LoginResponse } from '../../types/auth.types'
 import {
   clearStoredAuth,
-  createAuthStateFromLogin,
+  getStoredAuthSnapshot,
   getStoredAuthState,
   saveLoginAuth,
   subscribeAuthStorageChange,
@@ -15,35 +15,36 @@ import {
   AuthContext,
   EMPTY_AUTH_STATE,
   type AuthContextValue,
-  type AuthState,
   type AuthUser,
 } from './AuthContext'
 
-function getInitialAuthState(): AuthState {
-  return getStoredAuthState() ?? EMPTY_AUTH_STATE
+function getInitialAuthSnapshot() {
+  const snapshot = getStoredAuthSnapshot()
+  return { ...snapshot, authState: snapshot.authState ?? EMPTY_AUTH_STATE }
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [authState, setAuthState] = useState<AuthState>(() => getInitialAuthState())
+  const [snapshot, setSnapshot] = useState(getInitialAuthSnapshot)
+  const { authState, sessionId } = snapshot
   const [isAuthReady, setIsAuthReady] = useState(true)
+  const syncAuth = useCallback(() => {
+    setSnapshot(getInitialAuthSnapshot())
+    setIsAuthReady(true)
+  }, [])
 
   useEffect(() => {
-    return subscribeAuthStorageChange(() => {
-      setAuthState(getInitialAuthState())
-      setIsAuthReady(true)
-    })
-  }, [])
+    let active = true
+    const unsubscribe = subscribeAuthStorageChange(syncAuth)
+    queueMicrotask(() => { if (active) syncAuth() })
+    return () => { active = false; unsubscribe() }
+  }, [syncAuth])
 
   const clearAuth = useCallback(() => {
     clearStoredAuth()
-    setAuthState(EMPTY_AUTH_STATE)
-    setIsAuthReady(true)
   }, [])
 
   const login = useCallback((data: LoginResponse) => {
     saveLoginAuth(data)
-    setAuthState(createAuthStateFromLogin(data))
-    setIsAuthReady(true)
   }, [])
 
   const logout = useCallback(async () => {
@@ -61,23 +62,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [clearAuth])
 
   const updateUser = useCallback((user: Partial<AuthUser>) => {
-    setAuthState((prevState) => {
-      if (!prevState.user) {
-        return prevState
-      }
-
-      const nextUser = {
-        ...prevState.user,
-        ...user,
-      }
-
-      updateStoredAuthUser(user)
-
-      return {
-        ...prevState,
-        user: nextUser,
-      }
-    })
+    if (getStoredAuthState()?.user) updateStoredAuthUser(user)
   }, [])
 
   const value = useMemo<AuthContextValue>(
@@ -93,5 +78,5 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [authState, clearAuth, isAuthReady, login, logout, updateUser]
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}><Fragment key={`${sessionId}:${authState.user?.id ?? ''}:${authState.user?.role ?? ''}`}>{children}</Fragment></AuthContext.Provider>
 }

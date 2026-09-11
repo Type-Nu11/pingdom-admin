@@ -88,7 +88,8 @@ export const AttachmentList = styled.div`
 `
 
 export const AttachmentRow = styled.article`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
@@ -98,8 +99,11 @@ export const AttachmentRow = styled.article`
   background: ${colors.surfaceLow};
 
   > div {
+    grid-column: 1 / -1;
     min-width: 0;
   }
+
+  > button:first-of-type { grid-column: 2; }
 
   strong,
   span {

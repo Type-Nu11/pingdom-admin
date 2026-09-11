@@ -4,7 +4,7 @@ import { runAuthTransition } from '../../api/customAxios'
 import type { LoginResponse } from '../../types/auth.types'
 import {
   clearStoredAuth,
-  getAuthSessionId,
+  getStoredAuthSnapshot,
   getStoredAuthState,
   saveLoginAuth,
   subscribeAuthStorageChange,
@@ -15,20 +15,20 @@ import {
   AuthContext,
   EMPTY_AUTH_STATE,
   type AuthContextValue,
-  type AuthState,
   type AuthUser,
 } from './AuthContext'
 
-function getInitialAuthState(): AuthState {
-  return getStoredAuthState() ?? EMPTY_AUTH_STATE
+function getInitialAuthSnapshot() {
+  const snapshot = getStoredAuthSnapshot()
+  return { ...snapshot, authState: snapshot.authState ?? EMPTY_AUTH_STATE }
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [snapshot, setSnapshot] = useState(() => ({ authState: getInitialAuthState(), sessionId: getAuthSessionId() }))
+  const [snapshot, setSnapshot] = useState(getInitialAuthSnapshot)
   const { authState, sessionId } = snapshot
   const [isAuthReady, setIsAuthReady] = useState(true)
   const syncAuth = useCallback(() => {
-    setSnapshot({ authState: getInitialAuthState(), sessionId: getAuthSessionId() })
+    setSnapshot(getInitialAuthSnapshot())
     setIsAuthReady(true)
   }, [])
 

@@ -24,11 +24,15 @@ function Probe() {
 function storageEvent(key = COMMIT, storageArea = localStorage) {
   window.dispatchEvent(new dom.window.StorageEvent('storage', { key, storageArea, newValue: key ? localStorage.getItem(key) : null }))
 }
-function remote(action) {
+function remoteWrite(action) {
   // Another tab writes shared storage but does not dispatch its custom event here.
   const original = window.dispatchEvent
   window.dispatchEvent = () => true
   try { action() } finally { window.dispatchEvent = original }
+  return localStorage.getItem(COMMIT)
+}
+function remote(action) {
+  remoteWrite(action)
   storageEvent()
 }
 function login(id) { auth.saveLoginAuth({ id, accessToken: `token-${id}`, username: `user-${id}`, role: 'MERCHANT_OWNER' }) }
@@ -98,4 +102,75 @@ test('subscription cleanup stops remote notifications', async () => {
   unsubscribe()
   await act(async () => remote(() => login(2)))
   assert.equal(count, 0)
+})
+
+function delayedCommit(value) {
+  window.dispatchEvent(new dom.window.StorageEvent('storage', { key: COMMIT, storageArea: localStorage, newValue: value }))
+}
+function beginNextLogin() {
+  localStorage.setItem('pingdom-auth-session', 'unfinished-session-2')
+  localStorage.setItem('accessToken', 'token-2')
+}
+
+test('delayed commit never combines the next login token with the previous identity', async () => {
+  const session = auth.getAuthSessionId()
+  const commit = remoteWrite(() => auth.updateStoredAuthUser({ name: 'Updated A' }))
+  beginNextLogin()
+  await act(async () => delayedCommit(commit))
+  assert.equal(context.user.id, 1)
+  assert.equal(context.user.name, 'Updated A')
+  assert.equal(context.accessToken, 'token-1')
+  assert.equal(auth.getStoredAccessToken(), 'token-1')
+  assert.equal(auth.getAuthSessionId(), session)
+  assert.equal(document.getElementById('root').textContent, '1:private-A')
+  await act(async () => remote(() => login(2)))
+  assert.equal(context.user.id, 2)
+  assert.equal(context.accessToken, 'token-2')
+  assert.equal(document.getElementById('root').textContent, '2:empty')
+})
+
+test('an old event cannot roll back a newer completed account switch', async () => {
+  const oldCommit = remoteWrite(() => auth.updateStoredAuthUser({ name: 'Updated A' }))
+  await act(async () => remote(() => login(2)))
+  await act(async () => delayedCommit(oldCommit))
+  assert.equal(context.user.id, 2)
+  assert.equal(context.accessToken, 'token-2')
+  assert.equal(mounts, 2)
+})
+
+test('committed logout is not resurrected by unfinished login fields', async () => {
+  const commit = remoteWrite(() => auth.clearStoredAuth())
+  beginNextLogin()
+  await act(async () => delayedCommit(commit))
+  assert.equal(context.isAuthenticated, false)
+  assert.equal(auth.getStoredAuthState(), null)
+  assert.equal(auth.getStoredAccessToken(), '')
+  assert.equal(document.getElementById('root').textContent, 'guest:empty')
+})
+
+test('provider initialization also reads one complete snapshot during a pending write', async () => {
+  const snapshot = auth.getStoredAuthSnapshot()
+  await act(async () => root.render(null))
+  beginNextLogin()
+  await act(async () => root.render(h(AuthProvider, {}, h(Probe))))
+  assert.equal(context.user.id, 1)
+  assert.equal(context.accessToken, 'token-1')
+  assert.deepEqual(auth.getStoredAuthSnapshot(), snapshot)
+})
+
+test('legacy storage without a snapshot is readable and migrates on publication', async () => {
+  localStorage.removeItem(COMMIT)
+  assert.equal(auth.getStoredAuthState().user.id, 1)
+  assert.equal(auth.getStoredAccessToken(), 'token-1')
+  await act(async () => auth.updateStoredAuthUser({ name: 'Migrated' }))
+  const committed = JSON.parse(localStorage.getItem(COMMIT))
+  assert.equal(committed.authState.user.name, 'Migrated')
+  assert.equal(committed.sessionId, auth.getAuthSessionId())
+})
+
+test('malformed snapshots fail closed rather than reading stale individual fields', async () => {
+  localStorage.setItem(COMMIT, '{invalid')
+  await act(async () => storageEvent())
+  assert.equal(context.isAuthenticated, false)
+  assert.equal(auth.getStoredAccessToken(), '')
 })

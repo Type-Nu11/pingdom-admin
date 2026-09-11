@@ -6,6 +6,7 @@ import type { AuthState, AuthUser } from '../app/providers/AuthContext'
 const AUTH_STORAGE_CHANGE_EVENT = 'pingdom-auth-storage-change'
 const LEGACY_REFRESH_TOKEN_STORAGE_KEY = 'refreshToken'
 const AUTH_SESSION_KEY = 'pingdom-auth-session'
+const AUTH_STORAGE_COMMIT_KEY = 'pingdom-auth-storage-commit'
 let fallbackSessionId = ''
 let authSessionNotice = ''
 
@@ -37,6 +38,8 @@ function canUseWindow() {
 }
 
 function notifyAuthStorageChange() {
+  // Publish only after all authentication fields have been written.
+  setStoredString(AUTH_STORAGE_COMMIT_KEY, crypto.randomUUID())
   if (!canUseWindow()) {
     return
   }
@@ -154,6 +157,7 @@ export function saveLoginAuth(data: LoginResponse) {
   setStoredString(AUTH_STORAGE_KEYS.language, normalizeAuthString(data.language))
   setStoredString(AUTH_STORAGE_KEYS.country, normalizeAuthString(data.country))
   setStoredString(AUTH_STORAGE_KEYS.role, normalizeAuthString(data.role))
+  notifyAuthStorageChange()
 }
 
 export function saveRefreshedAuthTokens(data: RefreshTokenResponse, sessionId: string) {
@@ -217,6 +221,7 @@ export function updateStoredAuthUser(user: Partial<AuthUser>) {
   if (typeof user.role === 'string') {
     setStoredString(AUTH_STORAGE_KEYS.role, user.role)
   }
+  notifyAuthStorageChange()
 }
 
 export function subscribeAuthStorageChange(listener: () => void) {
@@ -224,9 +229,24 @@ export function subscribeAuthStorageChange(listener: () => void) {
     return () => {}
   }
 
-  window.addEventListener(AUTH_STORAGE_CHANGE_EVENT, listener)
+  let lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+  const handleLocalChange = () => {
+    lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+    listener()
+  }
+  const handleStorage = (event: StorageEvent) => {
+    if (event.storageArea !== localStorage) return
+    if (event.key !== null && event.key !== AUTH_STORAGE_COMMIT_KEY) return
+    const commit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
+    if (event.key !== null && commit === lastCommit) return
+    lastCommit = commit
+    listener()
+  }
+  window.addEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
+  window.addEventListener('storage', handleStorage)
 
   return () => {
-    window.removeEventListener(AUTH_STORAGE_CHANGE_EVENT, listener)
+    window.removeEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
+    window.removeEventListener('storage', handleStorage)
   }
 }

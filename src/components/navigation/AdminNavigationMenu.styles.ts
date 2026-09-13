@@ -23,7 +23,7 @@ export const Group = styled.section`
   }
 `
 
-export const GroupTitle = styled.button`
+export const GroupTitle = styled.button<{ $active?: boolean }>`
   width: 100%;
   display: flex;
   align-items: center;
@@ -31,12 +31,14 @@ export const GroupTitle = styled.button`
   margin: 0;
   padding: 0 10px;
   border: 0;
-  background: transparent;
-  color: ${adminColors.muted};
+  background: ${({ $active }) => $active ? adminColors.primaryTint : 'transparent'};
+  color: ${({ $active }) => $active ? adminColors.primary : adminColors.muted};
+  border-radius: 6px;
+  min-height: 32px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
   text-align: left;
   cursor: pointer;
 
@@ -44,9 +46,7 @@ export const GroupTitle = styled.button`
     color: ${adminColors.primary};
   }
 
-  @media (max-width: 900px) {
-    display: none;
-  }
+  &:focus-visible { outline: 2px solid ${adminColors.primary}; outline-offset: 2px; }
 `
 
 export const ItemList = styled.div<{ $collapsed?: boolean }>`
@@ -54,7 +54,7 @@ export const ItemList = styled.div<{ $collapsed?: boolean }>`
   gap: 2px;
 
   @media (max-width: 900px) {
-    display: flex;
+    display: ${({ $collapsed }) => ($collapsed ? 'none' : 'flex')};
     gap: 2px;
   }
 `

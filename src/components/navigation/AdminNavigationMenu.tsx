@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { readNavigationState, saveNavigationState } from './adminNavigationState'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './AdminNavigationMenu.styles'
 
@@ -9,6 +10,7 @@ interface NavigationItem {
 }
 
 interface NavigationGroup {
+  id: string
   title: string
   items: NavigationItem[]
 }
@@ -21,10 +23,12 @@ const PLACE_MANAGEMENT_CHILDREN: NavigationItem[] = [
 
 const NAVIGATION_GROUPS: NavigationGroup[] = [
   {
+    id: 'places',
     title: '장소 운영',
     items: [],
   },
   {
+    id: 'reviews',
     title: '검토함',
     items: [
       { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
@@ -35,6 +39,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     ],
   },
   {
+    id: 'safety',
     title: '사용자 · 안전',
     items: [
       { label: '신고 사용자', icon: 'report', path: '/reports/reported-users' },
@@ -44,6 +49,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     ],
   },
   {
+    id: 'growth',
     title: '성장 운영',
     items: [
       { label: '상점주 관리', icon: 'storefront', path: '/merchant-owners' },
@@ -54,6 +60,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     ],
   },
   {
+    id: 'system',
     title: '시스템',
     items: [
       { label: '데이터 품질', icon: 'rule', path: '/data-quality' },
@@ -76,8 +83,9 @@ export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const navigationRef = useRef<HTMLDivElement | null>(null)
-  const [isPlaceManagementOpen, setIsPlaceManagementOpen] = useState(true)
-  const [openGroups, setOpenGroups] = useState(() => new Set(NAVIGATION_GROUPS.map((group) => group.title)))
+  const [navigationState, setNavigationState] = useState(readNavigationState)
+  const isPlaceManagementOpen = navigationState.placeManagementOpen
+  useEffect(() => { saveNavigationState(navigationState) }, [navigationState])
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
@@ -112,28 +120,27 @@ export function AdminNavigationMenu() {
         <span>대시보드</span>
       </S.DashboardButton>
       {NAVIGATION_GROUPS.map((group) => {
-        const isGroupOpen = openGroups.has(group.title)
+        const isGroupOpen = !navigationState.closedGroups.includes(group.id)
+        const groupActive = group.id === 'places' ? placeManagementActive : group.items.some(item => isCurrentPath(pathname, item.path))
 
         return (
-          <S.Group key={group.title}>
+          <S.Group key={group.id}>
             <S.GroupTitle
               type="button"
+              $active={groupActive && !isGroupOpen}
+              aria-label={groupActive && !isGroupOpen ? `${group.title}, 현재 페이지 포함` : group.title}
               aria-expanded={isGroupOpen}
-              aria-controls={`admin-navigation-group-${group.title}`}
-              onClick={() => setOpenGroups((current) => {
-                const next = new Set(current)
-                if (next.has(group.title)) next.delete(group.title)
-                else next.add(group.title)
-                return next
-              })}
+              aria-controls={`admin-navigation-group-${group.id}`}
+              onClick={() => setNavigationState(current => ({ ...current, closedGroups: current.closedGroups.includes(group.id)
+                ? current.closedGroups.filter(id => id !== group.id) : [...current.closedGroups, group.id] }))}
             >
               <span>{group.title}</span>
               <S.MaterialIcon aria-hidden="true">
                 {isGroupOpen ? 'expand_less' : 'expand_more'}
               </S.MaterialIcon>
             </S.GroupTitle>
-            <S.ItemList id={`admin-navigation-group-${group.title}`} $collapsed={!isGroupOpen}>
-              {group.title === '장소 운영' ? (
+            <S.ItemList id={`admin-navigation-group-${group.id}`} $collapsed={!isGroupOpen}>
+              {group.id === 'places' ? (
                 <>
                 <S.PlaceToolbar $active={placeManagementActive}>
                   <S.PlaceToolbarLink
@@ -141,7 +148,6 @@ export function AdminNavigationMenu() {
                     $active={pathname === '/places'}
                     aria-current={pathname === '/places' ? 'page' : undefined}
                     onClick={() => {
-                      setIsPlaceManagementOpen(true)
                       navigate('/places')
                     }}
                   >
@@ -153,7 +159,7 @@ export function AdminNavigationMenu() {
                     aria-label={`장소 관리 하위 메뉴 ${isPlaceManagementOpen ? '접기' : '펼치기'}`}
                     aria-expanded={isPlaceManagementOpen}
                     aria-controls="place-management-submenu"
-                    onClick={() => setIsPlaceManagementOpen((open) => !open)}
+                    onClick={() => setNavigationState(current => ({ ...current, placeManagementOpen: !current.placeManagementOpen }))}
                   >
                     <S.MaterialIcon aria-hidden="true">
                       {isPlaceManagementOpen ? 'expand_less' : 'expand_more'}

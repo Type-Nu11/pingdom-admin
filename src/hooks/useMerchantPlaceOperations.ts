@@ -81,7 +81,7 @@ export function useMerchantPlaceOperations() {
     })
   }, [clearAuth])
 
-  const fetchPlaceOperations = useCallback(async (placeId: number) => {
+  const fetchPlaceOperations = useCallback(async (placeId: number, initialLoad = false) => {
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsLoading(true)
@@ -111,12 +111,16 @@ export function useMerchantPlaceOperations() {
     }
 
     setIsLoading(false)
+    if (initialLoad && operatingResult.status === 'rejected') {
+      setErrorMessage(getErrorMessage(operatingResult.reason, '장소 운영 정보를 불러오지 못했습니다.'))
+    }
     return operatingResult.status === 'fulfilled'
-  }, [clearAuth])
+  }, [clearAuth, getErrorMessage])
 
   const fetchInitialData = useCallback(async () => {
     setStatus('loading')
     setErrorMessage('')
+    setSectionErrorMessage('')
 
     try {
       const nextProfile = await getMerchantOwnerProfile()
@@ -129,7 +133,7 @@ export function useMerchantPlaceOperations() {
         return
       }
 
-      const loaded = await fetchPlaceOperations(initialPlaceId)
+      const loaded = await fetchPlaceOperations(initialPlaceId, true)
       if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
     } catch (error) {
       if (!mountedRef.current) return

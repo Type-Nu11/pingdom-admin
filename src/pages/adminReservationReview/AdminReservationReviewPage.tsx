@@ -10,7 +10,8 @@ import { ListDetailPage, ListDetailWorkspace } from '../../components/common/Lis
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
-import { useAdminReservations } from '../../hooks/useAdminReservations'
+import { ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations } from '../../hooks/useAdminReservations'
+import { formatListRange } from '../../utils/listRange'
 import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminReservation,
@@ -207,8 +208,7 @@ function AdminReservationReviewPage() {
             <ListDetailWorkspace>
               <ListPane
                 title="예약 목록"
-                description="예약을 선택해 신청 정보와 심사 이력을 확인합니다."
-                count={hook.listState.hasResult ? `${hook.totalCount.toLocaleString()}건${hook.listState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                count={hook.listState.hasResult ? `${formatListRange({ page: hook.query.page, pageSize: ADMIN_RESERVATION_PAGE_SIZE, itemCount: hook.reservations.length, total: hook.totalCount })}${hook.listState.phase === 'error' || hook.isLoading ? ' (이전 결과)' : ''}` : undefined}
                 page={hook.listState.hasResult ? hook.query.page : undefined}
                 ariaLabel="예약 목록"
                 footer={hook.listState.hasResult && hook.totalPages > 1 ? (

@@ -10,7 +10,7 @@ import { ListPane } from '../../components/common/ListPane'
 import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
-import { useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
+import { APPLICATION_REVIEW_PAGE_SIZE, useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
 import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminMerchantPlaceApplication,
@@ -155,7 +155,6 @@ function MerchantPlaceApplicationReviewPage() {
   const admin = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const isHistoryView = hook.view === 'history'
   const listTitle = isHistoryView ? '처리 이력' : '심사 대기 신청'
-  const listDescription = isHistoryView ? '승인·완료·반려·취소된 장소 신청을 확인합니다.' : '심사 대기 중인 신청을 선택해 사업자 정보와 증빙을 검토합니다.'
   const emptyMessage = isHistoryView ? '처리된 장소 신청 이력이 없습니다.' : '심사 대기 중인 장소 신청이 없습니다.'
   const loadingMessage = isHistoryView ? '처리 이력을 불러오는 중입니다.' : '심사 대기 신청을 불러오는 중입니다.'
   const safeTotalPages = Math.max(hook.totalPages, 1)
@@ -270,7 +269,7 @@ function MerchantPlaceApplicationReviewPage() {
             </S.FilterField>
           </S.FilterBar>
           <ListDetailWorkspace>
-            <ListPane title={listTitle} description={listDescription} count={`${hook.total.toLocaleString()}건`} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
+            <ListPane title={listTitle} range={!hook.isLoading && !hook.errorMessage ? { page: hook.page, pageSize: APPLICATION_REVIEW_PAGE_SIZE, itemCount: hook.items.length, total: hook.total } : undefined} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}
               {!hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{emptyMessage}</strong></Shared.EmptyState> : null}
               {hook.items.length > 0 ? <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt ?? item.updatedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList> : null}

@@ -34,8 +34,28 @@ test('image opens dialog and disappears when target changes',async()=>{
   await render({placeDetail:{...place,imageUrl:'https://example.com/image.jpg'}})
   await act(async()=>document.querySelector('[aria-label="대표 이미지 확대"]').click())
   assert.ok(document.querySelector('[role="dialog"]'))
+  assert.equal(document.querySelector('aside [role="dialog"]'),null)
+  assert.equal(document.querySelector('[role="dialog"]').parentElement.parentElement,document.body)
   await render({selectedPlace:{...place,id:2}})
   assert.equal(document.querySelector('[role="dialog"]'),null)
+})
+test('portaled image dialog closes with Escape and restores thumbnail focus',async()=>{
+  await render({placeDetail:{...place,imageUrl:'https://example.com/image.jpg'}})
+  const trigger=document.querySelector('[aria-label="대표 이미지 확대"]')
+  trigger.focus()
+  await act(async()=>trigger.click())
+  await act(async()=>document.querySelector('[role="dialog"]').dispatchEvent(
+    new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}),
+  ))
+  assert.equal(document.querySelector('[role="dialog"]'),null)
+  assert.equal(document.activeElement,trigger)
+})
+test('expanded image failure removes the portal and shows the fallback',async()=>{
+  await render({placeDetail:{...place,imageUrl:'https://example.com/image.jpg'}})
+  await act(async()=>document.querySelector('[aria-label="대표 이미지 확대"]').click())
+  await act(async()=>document.querySelector('[role="dialog"] img').dispatchEvent(new window.Event('error')))
+  assert.equal(document.querySelector('[role="dialog"]'),null)
+  assert.ok(document.body.textContent.includes('대표 이미지 없음'))
 })
 test('image errors fall back to compact placeholder',async()=>{
   await render({placeDetail:{...place,imageUrl:'https://example.com/image.jpg'}})

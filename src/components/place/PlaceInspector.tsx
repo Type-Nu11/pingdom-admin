@@ -1,4 +1,5 @@
 import { forwardRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AppDialog } from '../common/AppDialog'
 import * as L from './PlaceInspector.styles'
 import type {
@@ -94,9 +95,12 @@ function RepresentativeImage({ imageUrl, placeName }: { imageUrl?: string | null
       <L.ImageButton type="button" aria-label="대표 이미지 확대" onClick={() => setExpanded(true)}>
         <L.Thumbnail src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => setIsUnavailable(true)} />
       </L.ImageButton>
-      {expanded ? <AppDialog title={`${placeName} 대표 이미지`} onClose={() => setExpanded(false)}>
-        <L.FullImage src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => { setExpanded(false); setIsUnavailable(true) }} />
-      </AppDialog> : null}
+      {expanded ? createPortal(
+        <AppDialog title={`${placeName} 대표 이미지`} onClose={() => setExpanded(false)}>
+          <L.FullImage src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => { setExpanded(false); setIsUnavailable(true) }} />
+        </AppDialog>,
+        document.body,
+      ) : null}
     </>
   )
 }

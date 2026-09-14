@@ -369,7 +369,7 @@ export const Section = styled.section`
   margin-top: 0;
 
   & + & {
-    margin-top: 40px;
+    margin-top: 24px;
   }
 `
 
@@ -379,6 +379,7 @@ export const PlaceholderSection = styled(Section)`
 
 export const SectionHeader = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
@@ -430,11 +431,11 @@ export const PlaceholderGrid = styled.div`
   gap: 8px;
 `
 
-export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action' }>`
+export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action'; $compact?: boolean }>`
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 18px;
+  padding: ${({ $compact }) => $compact ? '8px 12px' : '18px'};
   border: 0;
   border-radius: ${radius.lg};
   background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
@@ -597,7 +598,7 @@ export const ActivityItem = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 0;
+  padding: 8px 12px;
   border-bottom: 1px solid ${neutral.borderSoft};
 
   &:last-child {
@@ -904,7 +905,7 @@ export const SummarySupportingText = styled.span`
 
 export const OperationalMetricGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 
   @media (max-width: 960px) {
@@ -917,11 +918,10 @@ export const OperationalMetricGrid = styled.div`
 `
 
 export const OperationalEmptyState = styled.p`
-  min-height: 64px;
   display: flex;
   align-items: center;
   margin: 0;
-  padding: 0 14px;
+  padding: 8px 0;
   border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};

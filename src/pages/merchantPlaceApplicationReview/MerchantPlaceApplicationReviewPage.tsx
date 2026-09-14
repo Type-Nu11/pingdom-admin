@@ -253,7 +253,7 @@ function MerchantPlaceApplicationReviewPage() {
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>검토함</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchApplications(hook.page)}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton></Shell.TopActions></Shell.TopBar>
         <S.ReviewContent><S.ReviewPageStack>
-          <Shared.PageHeader><div><Shared.Eyebrow>검토함 &gt; 상점주 장소 신청 심사</Shared.Eyebrow><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.PageDescription>신규 장소 등록과 기존 장소 운영 신청을 한 곳에서 검토하고 승인 또는 반려합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
+          <Shared.PageHeader><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
           {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
           {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
@@ -272,7 +272,28 @@ function MerchantPlaceApplicationReviewPage() {
             <ListPane title={listTitle} range={!hook.isLoading && !hook.errorMessage ? { page: hook.page, pageSize: APPLICATION_REVIEW_PAGE_SIZE, itemCount: hook.items.length, total: hook.total } : undefined} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}
               {!hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{emptyMessage}</strong></Shared.EmptyState> : null}
-              {hook.items.length > 0 ? <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt ?? item.updatedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList> : null}
+              {hook.items.length > 0 ? (
+                <S.ApplicationList>
+                  {hook.items.map((item) => {
+                    const title = item.placeName || item.businessName || `장소 신청 #${item.id}`
+                    const applicant = item.merchantDisplayName || item.legalName
+                    return (
+                      <S.ApplicationButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}>
+                        <Form.RecordHeader>
+                          <S.ApplicationTitle>{title}</S.ApplicationTitle>
+                          <Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge>
+                        </Form.RecordHeader>
+                        <Form.RecordMeta>{TYPE_LABELS[item.applicationType]}</Form.RecordMeta>
+                        {item.businessName && item.businessName !== title ? <Form.RecordMeta>{item.businessName}</Form.RecordMeta> : null}
+                        <S.ApplicationMeta>
+                          <span>{applicant ? `${applicant} · ` : ''}신청자 #{item.applicantUserId}</span>
+                          <time>{formatDate(item.submittedAt ?? item.updatedAt)}</time>
+                        </S.ApplicationMeta>
+                      </S.ApplicationButton>
+                    )
+                  })}
+                </S.ApplicationList>
+              ) : null}
             </ListPane>
             <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>장소 신청 상세</Shared.PanelTitle><Shared.PanelDescription>신청자·장소·증빙을 확인한 뒤 심사 결과를 기록합니다.</Shared.PanelDescription></div></Shared.PanelHeader><Shared.CompareBody>
               {!selectedId ? <Shared.EmptyState><strong>{emptyDetailTitle}</strong><p>{emptyDetailDescription}</p></Shared.EmptyState> : null}

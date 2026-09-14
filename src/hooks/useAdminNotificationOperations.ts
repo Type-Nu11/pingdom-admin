@@ -86,9 +86,16 @@ export function useAdminNotificationOperations() {
     async (tab: "inbox" | "delivery" | "outbox", page = 1, status?: string) => {
       const requestId = ++requestRef.current[tab];
       const s = status ?? queryRef.current[tab].status;
+      const filterChanged = s !== queryRef.current[tab].status;
       queryRef.current[tab] = { page, status: s };
       const isCurrent = () => mountedRef.current && requestRef.current[tab] === requestId;
       setPages((p) => ({ ...p, [tab]: page }));
+      // 이전 페이지의 이동 가능 여부를 새 요청에 재사용하지 않습니다.
+      setHasNext((p) => ({ ...p, [tab]: false }));
+      if (filterChanged) {
+        setTotals((p) => ({ ...p, [tab]: 0 }));
+        setTotalPages((p) => ({ ...p, [tab]: 0 }));
+      }
       if (tab === "delivery") {
         setDeliveryStatus(s as AdminNotificationDeliveryStatus | "");
         setDeliveries([]);

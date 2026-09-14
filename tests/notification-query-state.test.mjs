@@ -8,13 +8,22 @@ for (const key of ['window', 'document', 'localStorage']) globalThis[key] = dom.
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
-const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { useAdminNotificationOperations } = await server.ssrLoadModule('/src/hooks/useAdminNotificationOperations.ts')
+const { AdminPagination } = await server.ssrLoadModule('/src/components/common/AdminPagination.tsx')
 let root, state, requests
+let paginationTab = 'outbox'
 const auth = { clearAuth() {} }
-function Probe() { state = useAdminNotificationOperations(); return null }
+function Probe() {
+  state = useAdminNotificationOperations()
+  return h(AdminPagination, {
+    page: state.pages[paginationTab], totalPages: state.totalPages[paginationTab],
+    hasNext: state.hasNext[paginationTab], disabled: state.isLoading,
+    onPageChange: page => state.fetchTab(paginationTab, page),
+  })
+}
 beforeEach(async () => {
   requests = []
   client.defaults.adapter = config => new Promise((resolve, reject) => requests.push({ config, resolve, reject }))
@@ -24,7 +33,7 @@ beforeEach(async () => {
 })
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
-async function finish(index, fail = false) {
+async function finish(index, fail = false, overrides = {}) {
   const { config, resolve, reject } = requests[index]
   await act(async () => {
     if (fail) { reject(new Error('mock failure')); return }
@@ -32,6 +41,7 @@ async function finish(index, fail = false) {
     resolve({ config, status: 200, statusText: 'OK', headers: {}, data: {
       notifications: [item], deliveries: [item], events: [item], page: config.params?.page ?? 1,
       totalCount: 100, totalPages: 10, hasNext: true,
+      ...overrides,
     } })
   })
 }
@@ -107,4 +117,45 @@ test('latest failure preserves chosen filter and can be retried', async () => {
   await fetch('delivery', 1); await finish(4)
   assert.equal(requests[4].config.params.status, 'SENT')
   assert.equal(state.errorMessage, '')
+})
+
+for (const tab of ['inbox', 'delivery', 'outbox']) {
+  test(`${tab} failed last-page query cannot navigate beyond the last page`, async () => {
+    paginationTab = tab
+    await initialized()
+    await fetch(tab, 2); await finish(3, false, { totalCount: 30, totalPages: 3 })
+    await fetch(tab, 3); await finish(4, true)
+    assert.equal(state.pages[tab], 3)
+    assert.equal(state.hasNext[tab], false)
+    const next = document.querySelector('[aria-label="다음 페이지로 이동"]')
+    assert.equal(next.disabled, true)
+    await act(async () => next.click())
+    assert.equal(requests.length, 5)
+    await act(async () => document.querySelector('[aria-label="3페이지로 이동"]').click())
+    assert.equal(requests[5].config.params.page, 3)
+    await finish(5, false, { totalCount: 30, totalPages: 3, hasNext: false })
+    assert.equal(state.errorMessage, '')
+    assert.equal(state.hasNext[tab], false)
+    await fetch(tab, 2); await finish(6, false, { totalCount: 30, totalPages: 3 })
+    assert.equal(document.querySelector('[aria-label="다음 페이지로 이동"]').disabled, false)
+  })
+}
+
+test('failed filter change discards old pagination metadata only for that tab', async () => {
+  await initialized()
+  await fetch('delivery', 1, 'SUCCEEDED')
+  await fetch('delivery', 1, '')
+  await finish(4, true)
+  await finish(3)
+  assert.equal(state.deliveryStatus, '')
+  assert.equal(state.pages.delivery, 1)
+  assert.equal(state.totalPages.delivery, 0)
+  assert.equal(state.totals.delivery, 0)
+  assert.equal(state.hasNext.delivery, false)
+  assert.equal(state.totalPages.outbox, 10)
+  assert.equal(state.hasNext.outbox, true)
+  await fetch('delivery', 1); await finish(5)
+  assert.equal(requests[5].config.params.status, undefined)
+  assert.equal(state.totalPages.delivery, 10)
+  assert.equal(state.hasNext.delivery, true)
 })

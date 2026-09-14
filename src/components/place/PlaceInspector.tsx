@@ -1,4 +1,5 @@
 import { forwardRef, useState } from 'react'
+import { AppDialog } from '../common/AppDialog'
 import * as L from './PlaceInspector.styles'
 import type {
   AdminPlaceDetail,
@@ -77,16 +78,34 @@ function getOperatingTone(status?: AdminPlaceOperatingStatus) {
 
 function RepresentativeImage({ imageUrl, placeName }: { imageUrl?: string | null; placeName: string }) {
   const [isUnavailable, setIsUnavailable] = useState(false)
-  return !imageUrl || isUnavailable
-    ? <L.ImagePlaceholder>대표 이미지 없음</L.ImagePlaceholder>
-    : <L.Thumbnail src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => setIsUnavailable(true)} />
+  const [expanded, setExpanded] = useState(false)
+
+  if (!imageUrl || isUnavailable) {
+    return (
+      <L.ImagePlaceholder role="status">
+        <S.MaterialIcon aria-hidden="true">image_not_supported</S.MaterialIcon>
+        <span>대표 이미지 없음</span>
+      </L.ImagePlaceholder>
+    )
+  }
+
+  return (
+    <>
+      <L.ImageButton type="button" aria-label="대표 이미지 확대" onClick={() => setExpanded(true)}>
+        <L.Thumbnail src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => setIsUnavailable(true)} />
+      </L.ImageButton>
+      {expanded ? <AppDialog title={`${placeName} 대표 이미지`} onClose={() => setExpanded(false)}>
+        <L.FullImage src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => { setExpanded(false); setIsUnavailable(true) }} />
+      </AppDialog> : null}
+    </>
+  )
 }
 
 export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
   function PlaceInspector(
     {
       selectedPlace,
-      placeDetail,
+      placeDetail: requestedDetail,
       isLoading,
       errorMessage,
       updatingPlaceIds,
@@ -100,6 +119,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
     },
     ref
   ) {
+    const placeDetail = !isLoading && !errorMessage && requestedDetail?.id === selectedPlace?.id ? requestedDetail : null
     const representativeImageUrl =
       placeDetail?.imageUrl ??
       placeDetail?.posts?.find((post) => post.imageUrl)?.imageUrl ??

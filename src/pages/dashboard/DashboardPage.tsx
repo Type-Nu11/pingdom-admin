@@ -631,15 +631,28 @@ function DashboardPage() {
                 조치가 필요한 운영 항목
               </S.SectionDescription>
             </S.SectionHeader>
-            {status === 'loading' ? <S.OperationalEmptyState role="status">운영 항목을 확인하는 중입니다.</S.OperationalEmptyState> : status === 'error' || status === 'unavailable' ? renderSectionError('운영 항목을 확인하지 못했습니다.') : !summary?.operationalMetrics ? <S.OperationalEmptyState>운영 항목 집계가 제공되지 않았습니다.</S.OperationalEmptyState> : visibleOperationalMetrics.length > 0 ? (
+            {status === 'loading' ? (
+              <S.ActivityPanelMeta role="status">
+                {summary?.operationalMetrics
+                  ? '운영 항목 업데이트 중 · 이전 조회 결과입니다.'
+                  : '운영 항목을 확인하는 중입니다.'}
+              </S.ActivityPanelMeta>
+            ) : status === 'error' || status === 'unavailable' ? (
+              renderSectionError(status === 'error' && summary?.operationalMetrics
+                ? '운영 항목을 새로 불러오지 못했습니다. 이전 조회 결과입니다.'
+                : '운영 항목을 확인하지 못했습니다.')
+            ) : null}
+            {status !== 'unavailable' && summary?.operationalMetrics && visibleOperationalMetrics.length > 0 ? (
               <S.OperationalMetricGrid>
                 {visibleOperationalMetrics.map(renderOperationalMetricCard)}
               </S.OperationalMetricGrid>
-            ) : (
+            ) : status === 'success' || status === 'empty' ? (
               <S.OperationalEmptyState>
-                조회된 운영 항목 중 확인할 항목이 없습니다.
+                {summary?.operationalMetrics
+                  ? '조회된 운영 항목 중 확인할 항목이 없습니다.'
+                  : '운영 항목 집계가 제공되지 않았습니다.'}
               </S.OperationalEmptyState>
-            )}
+            ) : null}
           </S.Section>
 
           <S.Section aria-labelledby="dashboard-summary-title">

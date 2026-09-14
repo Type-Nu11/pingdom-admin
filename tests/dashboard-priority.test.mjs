@@ -23,3 +23,43 @@ test('work sections precede summary and valid zero is concise',async()=>{await r
 for(const status of ['error','loading','unavailable']) test(status+' is never shown as zero work',async()=>{await render({status,pendingItemsStatus:status});assert.doesNotMatch(document.body.textContent,/조회된 운영 항목 중 확인할 항목이 없습니다|심사 대기 중인 상점주 장소 신청이 없습니다/)})
 test('pending application opens exact application and count is bounded',async()=>{await render({pendingItemsStatus:'success',pendingMerchantPlaceApplications:[{id:7,placeName:'합성 가게'}]});const b=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('합성 가게'));await act(async()=>b.click());assert.equal(location.pathname,'/merchant-place-applications');assert.equal(location.state.applicationId,7);assert.match(document.body.textContent,/최대 10건/)})
 test('missing metrics are not zero',async()=>{await render({summary:{placeCount:10,bannedUserCount:0}});assert.match(document.body.textContent,/운영 항목 집계가 제공되지 않았습니다/)})
+
+const operationalSection=()=>document.querySelector('[aria-labelledby="dashboard-operational-metrics-title"]')
+test('operational card and focus survive refresh, failure and recovery',async()=>{
+  const summary={placeCount:10,bannedUserCount:0,operationalMetrics:{...metrics,missingLocationPlaceCount:4}}
+  await render({summary})
+  const card=operationalSection().querySelector('button')
+  card.focus()
+  for(const status of ['loading','error','success']) {
+    await render({status,isLoading:status==='loading'})
+    assert.ok(card.isConnected)
+    assert.equal(document.activeElement,card)
+    if(status!=='success') assert.match(operationalSection().textContent,/이전 조회 결과/)
+  }
+  assert.doesNotMatch(operationalSection().textContent,/이전 조회 결과/)
+  await act(async()=>card.click())
+  assert.equal(location.pathname,'/places')
+})
+test('previous zero never reports no work during refresh or failure',async()=>{
+  await render()
+  for(const status of ['loading','error']) {
+    await render({status,isLoading:status==='loading'})
+    assert.doesNotMatch(operationalSection().textContent,/확인할 항목이 없습니다/)
+    assert.match(operationalSection().textContent,/이전 조회 결과/)
+  }
+})
+test('initial loading and failure show no operational cards',async()=>{
+  for(const status of ['loading','error']) {
+    await render({summary:null,status,isLoading:status==='loading'})
+    assert.equal(operationalSection().querySelector('[aria-label$="관리 화면으로 이동"]'),null)
+    assert.doesNotMatch(operationalSection().textContent,/이전 조회 결과|확인할 항목이 없습니다/)
+  }
+})
+test('successful zero replaces old cards but unavailable never exposes cached cards',async()=>{
+  await render({summary:{placeCount:10,bannedUserCount:0,operationalMetrics:{...metrics,missingLocationPlaceCount:4}}})
+  await render({status:'unavailable'})
+  assert.equal(operationalSection().querySelector('[aria-label$="관리 화면으로 이동"]'),null)
+  await render({status:'success',summary:{placeCount:10,bannedUserCount:0,operationalMetrics:metrics}})
+  assert.match(operationalSection().textContent,/확인할 항목이 없습니다/)
+  assert.equal(operationalSection().querySelector('button'),null)
+})

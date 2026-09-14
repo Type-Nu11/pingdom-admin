@@ -68,6 +68,7 @@ function ApplicationForm({
   isSearching,
   activeAction,
   onSearch,
+  onResetSearch,
   onSave,
   onSubmit,
   onReopen,
@@ -82,6 +83,7 @@ function ApplicationForm({
   isSearching: boolean
   activeAction: ReturnType<typeof useMerchantPlaceApplications>['activeAction']
   onSearch: (keyword: string) => void
+  onResetSearch: () => void
   onSave: (applicationId: number | null, request: MerchantPlaceApplicationRequest) => Promise<MerchantPlaceApplication | null>
   onSubmit: (applicationId: number) => Promise<MerchantPlaceApplication | null>
   onReopen: (applicationId: number) => Promise<MerchantPlaceApplication | null>
@@ -123,8 +125,8 @@ function ApplicationForm({
 
   useEffect(() => {
     const timer = window.setTimeout(() => onSearch(keyword), 250)
-    return () => window.clearTimeout(timer)
-  }, [keyword, onSearch])
+    return () => { window.clearTimeout(timer); onResetSearch() }
+  }, [keyword, onSearch, onResetSearch])
 
   const buildRequest = (): MerchantPlaceApplicationRequest | null => {
     const requestBusinessName = activeBusinessName ?? businessName.trim()
@@ -170,6 +172,7 @@ function ApplicationForm({
 
   const choosePlace = (place: MerchantPlaceSearchItem) => {
     setSelectedPlace(place)
+    onResetSearch()
     setKeyword('')
     setFormError('')
   }
@@ -245,7 +248,7 @@ function ApplicationForm({
       <Store.Field $wide>
         운영할 장소
         <S.SearchWrap>
-          <Store.Input value={keyword} placeholder="가게명 또는 주소로 검색" disabled={!editable || activeAction !== null} onChange={(event) => setKeyword(event.target.value)} />
+          <Store.Input value={keyword} placeholder="가게명 또는 주소로 검색" disabled={!editable || activeAction !== null} onChange={(event) => { onResetSearch(); setKeyword(event.target.value) }} />
           {editable && keyword.trim().length >= 2 && (isSearching || suggestions.length > 0) ? <S.SearchResults>{isSearching ? <S.SearchResult type="button" disabled><strong>검색 중</strong></S.SearchResult> : suggestions.map((place) => <S.SearchResult type="button" key={place.id} onClick={() => choosePlace(place)}><strong>{place.name}</strong><span>{place.address} · {place.category}</span></S.SearchResult>)}</S.SearchResults> : null}
         </S.SearchWrap>
         <S.SearchHint>등록된 장소만 선택할 수 있습니다. 이름이 비슷한 경우 주소와 카테고리를 함께 확인해주세요.</S.SearchHint>
@@ -376,7 +379,7 @@ function MerchantPlaceApplicationPage() {
           </S.Panel>
           <S.Panel>
             <S.PanelHeading><div><S.PanelTitle>{selectedApplication ? '운영 장소 신청 상세' : '새 운영 장소 신청'}</S.PanelTitle><S.PanelDescription>{selectedApplication ? `신청 번호 #${selectedApplication.id} · 마지막 수정 ${formatDate(selectedApplication.updatedAt)}` : '장소 검색부터 심사 요청까지 한 신청서에서 진행합니다.'}</S.PanelDescription></div>{selectedApplication ? <S.StatusBadge $tone={STATUS[selectedApplication.status].tone}>{STATUS[selectedApplication.status].label}</S.StatusBadge> : null}</S.PanelHeading>
-            <ApplicationForm key={selectedApplication?.id ?? `new-${newApplicationFormVersion}`} application={selectedApplication} profile={claim.profile} suggestions={claim.suggestions} isSearching={claim.isSearching} activeAction={claim.activeAction} onSearch={claim.searchPlaces} onSave={async (id, request) => { const next = await claim.saveApplication(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={claim.submitApplication} onReopen={claim.reopenApplication} onCancel={async (applicationId) => { const canceled = await claim.cancelApplication(applicationId); if (canceled) resetToNewApplication(); return canceled }} onUpload={claim.uploadAttachment} onDelete={claim.deleteAttachment} onReorder={claim.reorderAttachments} />
+            <ApplicationForm key={selectedApplication?.id ?? `new-${newApplicationFormVersion}`} application={selectedApplication} profile={claim.profile} suggestions={claim.suggestions} isSearching={claim.isSearching} activeAction={claim.activeAction} onSearch={claim.searchPlaces} onResetSearch={claim.resetSearch} onSave={async (id, request) => { const next = await claim.saveApplication(id, request); if (next) setSelectedId(next.id); return next }} onSubmit={claim.submitApplication} onReopen={claim.reopenApplication} onCancel={async (applicationId) => { const canceled = await claim.cancelApplication(applicationId); if (canceled) resetToNewApplication(); return canceled }} onUpload={claim.uploadAttachment} onDelete={claim.deleteAttachment} onReorder={claim.reorderAttachments} />
           </S.Panel>
         </S.Layout>
       </Store.Content>

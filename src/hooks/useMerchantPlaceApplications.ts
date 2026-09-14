@@ -65,6 +65,7 @@ export function useMerchantPlaceApplications() {
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<Action>(null)
   const mountedRef = useRef(true)
+  const searchRequestRef = useRef(0)
   const actionRef = useRef<Action>(null)
 
   const clearUnauthorizedSession = useCallback(
@@ -112,10 +113,17 @@ export function useMerchantPlaceApplications() {
   useEffect(() => {
     mountedRef.current = true
     void fetchApplications()
-    return () => { mountedRef.current = false }
+    return () => { mountedRef.current = false; searchRequestRef.current += 1 }
   }, [fetchApplications])
 
+  const resetSearch = useCallback(() => {
+    searchRequestRef.current += 1
+    setSuggestions([])
+    setIsSearching(false)
+  }, [])
+
   const searchPlaces = useCallback(async (keyword: string) => {
+    const requestId = ++searchRequestRef.current
     const trimmedKeyword = keyword.trim()
     if (trimmedKeyword.length < 2) {
       setSuggestions([])
@@ -126,15 +134,15 @@ export function useMerchantPlaceApplications() {
     setIsSearching(true)
     try {
       const result = await getMerchantPlaceSuggestions(trimmedKeyword)
-      if (mountedRef.current) setSuggestions(result.places)
+      if (mountedRef.current && requestId === searchRequestRef.current) setSuggestions(result.places)
     } catch (requestError) {
-      if (mountedRef.current) {
+      if (mountedRef.current && requestId === searchRequestRef.current) {
         setSuggestions([])
         clearUnauthorizedSession(requestError)
         logDebugError('상점주 장소 검색 실패', requestError)
       }
     } finally {
-      if (mountedRef.current) setIsSearching(false)
+      if (mountedRef.current && requestId === searchRequestRef.current) setIsSearching(false)
     }
   }, [clearUnauthorizedSession])
 
@@ -250,6 +258,7 @@ export function useMerchantPlaceApplications() {
     activeAction,
     fetchApplications,
     searchPlaces,
+    resetSearch,
     saveApplication,
     submitApplication,
     reopenApplication,

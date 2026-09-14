@@ -414,10 +414,14 @@ function DashboardPage() {
         return renderSectionError('심사 대기 항목을 불러오지 못했습니다.')
       }
 
-      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
+      return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
     }
 
     if (pendingMerchantPlaceApplications.length === 0) {
+      if (pendingItemsStatus === 'error' || pendingItemsStatus === 'loading') return null
+      if (pendingItemsStatus !== 'success' && pendingItemsStatus !== 'empty') {
+        return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
+      }
       return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
     }
 
@@ -590,7 +594,7 @@ function DashboardPage() {
               </S.PageDescription>
             </S.PageHeaderMain>
             <S.UpdateMeta aria-live="polite">
-              마지막 업데이트: {formatLastUpdated(lastUpdatedAt)}
+              마지막 수신: {formatLastUpdated(lastUpdatedAt)}
               {isLoading && summary ? (
                 <S.RefreshingText role="status">업데이트 중</S.RefreshingText>
               ) : null}
@@ -627,7 +631,7 @@ function DashboardPage() {
                 조치가 필요한 운영 항목
               </S.SectionDescription>
             </S.SectionHeader>
-            {visibleOperationalMetrics.length > 0 ? (
+            {status === 'loading' ? <S.OperationalEmptyState role="status">운영 항목을 확인하는 중입니다.</S.OperationalEmptyState> : status === 'error' || status === 'unavailable' ? renderSectionError('운영 항목을 확인하지 못했습니다.') : !summary?.operationalMetrics ? <S.OperationalEmptyState>운영 항목 집계가 제공되지 않았습니다.</S.OperationalEmptyState> : visibleOperationalMetrics.length > 0 ? (
               <S.OperationalMetricGrid>
                 {visibleOperationalMetrics.map(renderOperationalMetricCard)}
               </S.OperationalMetricGrid>

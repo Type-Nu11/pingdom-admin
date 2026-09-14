@@ -32,7 +32,7 @@ export const GroupTitle = styled.button<{ $active?: boolean }>`
   padding: 0 10px;
   border: 0;
   background: ${({ $active }) => $active ? adminColors.primaryTint : 'transparent'};
-  color: ${({ $active }) => $active ? adminColors.primary : adminColors.muted};
+  color: ${({ $active }) => $active ? adminColors.primaryForeground : adminColors.muted};
   border-radius: 6px;
   min-height: 32px;
   font-family: inherit;
@@ -43,10 +43,10 @@ export const GroupTitle = styled.button<{ $active?: boolean }>`
   cursor: pointer;
 
   &:hover {
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
 
-  &:focus-visible { outline: 2px solid ${adminColors.primary}; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid ${adminColors.primaryForeground}; outline-offset: 2px; }
 `
 
 export const ItemList = styled.div<{ $collapsed?: boolean }>`
@@ -98,14 +98,16 @@ export const ItemButton = styled.button<{ $active?: boolean }>`
 
   &:hover {
     background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
+
+  &:focus-visible { outline: 2px solid ${adminColors.primaryForeground}; outline-offset: 2px; }
 
   ${({ $active }) =>
     $active &&
     css`
       background: ${adminColors.primaryTint};
-      color: ${adminColors.primary};
+      color: ${adminColors.primaryForeground};
       font-weight: 700;
 
       ${MaterialIcon} {
@@ -168,8 +170,10 @@ export const PlaceToolbarToggle = styled.button`
 
   &:hover {
     background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
+
+  &:focus-visible { outline: 2px solid ${adminColors.primaryForeground}; outline-offset: 2px; }
 `
 
 export const ChildList = styled.div`

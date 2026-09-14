@@ -138,7 +138,7 @@ export const AttachmentButton = styled.button`
   border: 0;
   border-radius: ${radius.pill};
   background: ${colors.surfaceLow};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -154,6 +154,8 @@ export const AttachmentButton = styled.button`
   &:hover:not(:disabled) {
     background: ${colors.primaryTint};
   }
+
+  &:focus-visible { outline: 2px solid ${colors.primaryForeground}; outline-offset: 2px; }
 
   &:disabled {
     cursor: default;
@@ -230,15 +232,18 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   padding: 0 14px;
   border: 0;
   border-radius: 6px;
-  background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
+  background: ${({ $active }) => ($active ? colors.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? colors.primaryText : colors.muted)};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    color: ${({ $active }) => ($active ? colors.primaryText : colors.primary)};
+    color: ${({ $active }) => ($active ? colors.primaryText : colors.primaryForeground)};
+    background: ${({ $active }) => ($active ? colors.primaryForeground : colors.primaryTint)};
   }
+
+  &:focus-visible { outline: 2px solid ${colors.primaryForeground}; outline-offset: 2px; }
 
   &:disabled {
     cursor: default;

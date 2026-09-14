@@ -73,7 +73,7 @@ export function useMerchantReservationSetup() {
     })
   }, [clearAuth])
 
-  const fetchReservationSetup = useCallback(async () => {
+  const fetchReservationSetup = useCallback(async (initialLoad = false) => {
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsLoading(true)
@@ -100,12 +100,16 @@ export function useMerchantReservationSetup() {
     }
 
     setIsLoading(false)
+    if (initialLoad && availabilityResult.status === 'rejected') {
+      setErrorMessage(getErrorMessage(availabilityResult.reason, '예약 가능 시간을 불러오지 못했습니다.'))
+    }
     return availabilityResult.status === 'fulfilled'
-  }, [clearAuth])
+  }, [clearAuth, getErrorMessage])
 
   const fetchInitialData = useCallback(async () => {
     setStatus('loading')
     setErrorMessage('')
+    setSectionErrorMessage('')
     try {
       const nextProfile = await getMerchantOwnerProfile()
       if (!mountedRef.current) return
@@ -114,7 +118,7 @@ export function useMerchantReservationSetup() {
         setStatus('ready')
         return
       }
-      const loaded = await fetchReservationSetup()
+      const loaded = await fetchReservationSetup(true)
       if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
     } catch (error) {
       if (!mountedRef.current) return

@@ -104,7 +104,6 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
 ]
 
 const QUICK_ACTIONS = [
-  { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', route: '/merchant-place-applications' },
   { label: '장소 정보 검증', icon: 'fact_check', route: '/places/information-verification' },
 ]
 
@@ -415,10 +414,14 @@ function DashboardPage() {
         return renderSectionError('심사 대기 항목을 불러오지 못했습니다.')
       }
 
-      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
+      return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
     }
 
     if (pendingMerchantPlaceApplications.length === 0) {
+      if (pendingItemsStatus === 'error' || pendingItemsStatus === 'loading') return null
+      if (pendingItemsStatus !== 'success' && pendingItemsStatus !== 'empty') {
+        return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
+      }
       return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
     }
 
@@ -587,11 +590,11 @@ function DashboardPage() {
           <S.PageHeader>
             <S.PageHeaderMain>
               <S.PageDescription>
-                PingDom의 주요 운영 현황과 처리할 항목을 확인합니다.
+                처리할 업무
               </S.PageDescription>
             </S.PageHeaderMain>
             <S.UpdateMeta aria-live="polite">
-              마지막 업데이트: {formatLastUpdated(lastUpdatedAt)}
+              마지막 수신: {formatLastUpdated(lastUpdatedAt)}
               {isLoading && summary ? (
                 <S.RefreshingText role="status">업데이트 중</S.RefreshingText>
               ) : null}
@@ -600,14 +603,25 @@ function DashboardPage() {
 
           {renderStatusPanel()}
 
-          <S.Section aria-labelledby="dashboard-summary-title">
+          <S.Section aria-labelledby="dashboard-pending-review-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-summary-title">관리 요약</S.SectionTitle>
-              <S.SectionDescription>현재 운영 수치</S.SectionDescription>
+              <S.SectionTitle id="dashboard-pending-review-title">심사 대기</S.SectionTitle>
+              <S.SectionDescription>
+                {pendingItemsStatus === 'success'
+                  ? `조회된 상점주 장소 신청 ${(pendingMerchantPlaceApplications?.length ?? 0).toLocaleString()}건 · 최대 10건`
+                  : '처리 대기 중인 상점주 장소 신청'}
+              </S.SectionDescription>
+              <S.InlineRetryButton type="button" onClick={() => navigate('/merchant-place-applications')}>심사 목록 보기</S.InlineRetryButton>
             </S.SectionHeader>
-            <S.SummaryGrid>
-              {SERVICE_METRICS.map(renderMetricCard)}
-            </S.SummaryGrid>
+            <S.OperationsPanel $compact={pendingMerchantPlaceApplications?.length === 0}>
+              {pendingItemsStatus === 'loading' && pendingMerchantPlaceApplications ? (
+                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
+              ) : null}
+              {pendingItemsStatus === 'error' && pendingMerchantPlaceApplications
+                ? renderSectionError('심사 대기 항목을 새로 불러오지 못했습니다.')
+                : null}
+              {renderPendingReviewQueue()}
+            </S.OperationsPanel>
           </S.Section>
 
           <S.Section aria-labelledby="dashboard-operational-metrics-title">
@@ -617,35 +631,38 @@ function DashboardPage() {
                 조치가 필요한 운영 항목
               </S.SectionDescription>
             </S.SectionHeader>
-            {visibleOperationalMetrics.length > 0 ? (
+            {status === 'loading' ? (
+              <S.ActivityPanelMeta role="status">
+                {summary?.operationalMetrics
+                  ? '운영 항목 업데이트 중 · 이전 조회 결과입니다.'
+                  : '운영 항목을 확인하는 중입니다.'}
+              </S.ActivityPanelMeta>
+            ) : status === 'error' || status === 'unavailable' ? (
+              renderSectionError(status === 'error' && summary?.operationalMetrics
+                ? '운영 항목을 새로 불러오지 못했습니다. 이전 조회 결과입니다.'
+                : '운영 항목을 확인하지 못했습니다.')
+            ) : null}
+            {status !== 'unavailable' && summary?.operationalMetrics && visibleOperationalMetrics.length > 0 ? (
               <S.OperationalMetricGrid>
                 {visibleOperationalMetrics.map(renderOperationalMetricCard)}
               </S.OperationalMetricGrid>
-            ) : (
+            ) : status === 'success' || status === 'empty' ? (
               <S.OperationalEmptyState>
-                현재 처리할 항목이 없습니다.
+                {summary?.operationalMetrics
+                  ? '조회된 운영 항목 중 확인할 항목이 없습니다.'
+                  : '운영 항목 집계가 제공되지 않았습니다.'}
               </S.OperationalEmptyState>
-            )}
+            ) : null}
           </S.Section>
 
-          <S.Section aria-labelledby="dashboard-pending-review-title">
+          <S.Section aria-labelledby="dashboard-summary-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-pending-review-title">심사 대기</S.SectionTitle>
-              <S.SectionDescription>
-                {pendingItemsStatus === 'success'
-                  ? `상점주 장소 신청 ${(pendingMerchantPlaceApplications?.length ?? 0).toLocaleString()}건`
-                  : '처리 대기 중인 상점주 장소 신청'}
-              </S.SectionDescription>
+              <S.SectionTitle id="dashboard-summary-title">관리 요약</S.SectionTitle>
+              <S.SectionDescription>전체 현황</S.SectionDescription>
             </S.SectionHeader>
-            <S.OperationsPanel>
-              {pendingItemsStatus === 'loading' && pendingMerchantPlaceApplications ? (
-                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
-              ) : null}
-              {pendingItemsStatus === 'error' && pendingMerchantPlaceApplications
-                ? renderSectionError('심사 대기 항목을 새로 불러오지 못했습니다.')
-                : null}
-              {renderPendingReviewQueue()}
-            </S.OperationsPanel>
+            <S.SummaryGrid>
+              {SERVICE_METRICS.map(renderMetricCard)}
+            </S.SummaryGrid>
           </S.Section>
 
           <S.DashboardBottomGrid>

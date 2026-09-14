@@ -9,6 +9,9 @@ export const semanticColors = {
     normal: '#FF1956',
     alternative: '#FF4A75',
     assistive: '#FFC9D3',
+    // Web accessibility variants; keep the original Figma brand color above.
+    foreground: '#B80F40',
+    action: '#D41449',
   },
   secondary: {
     normal: '#BFC1C1',
@@ -94,6 +97,8 @@ export const adminColors = {
   primarySoft: semanticColors.primary.assistive,
   primaryTint: `${semanticColors.primary.normal}${alpha.a06}`,
   primaryText: semanticColors.static.white,
+  primaryForeground: semanticColors.primary.foreground,
+  primaryAction: semanticColors.primary.action,
   error: semanticColors.status.error,
   errorTint: `${semanticColors.status.error}${alpha.a08}`,
   errorHover: `${semanticColors.status.error}${alpha.a90}`,

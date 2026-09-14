@@ -171,12 +171,14 @@ export function useMerchantOffers() {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
     selectSharedPlace(placeId)
     detailRequestRef.current += 1
+    setIsDetailLoading(false)
     setSelectedOffer(null)
     setDetailErrorMessage('')
   }, [profile?.placeIds, selectSharedPlace, selectedPlaceId])
 
   const clearSelectedOffer = useCallback(() => {
     detailRequestRef.current += 1
+    setIsDetailLoading(false)
     setSelectedOffer(null)
     setDetailErrorMessage('')
   }, [])

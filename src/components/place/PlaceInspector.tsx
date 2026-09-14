@@ -1,4 +1,5 @@
 import { forwardRef, useState } from 'react'
+import * as L from './PlaceInspector.styles'
 import type {
   AdminPlaceDetail,
   AdminPlaceDiscoveryStatus,
@@ -76,23 +77,9 @@ function getOperatingTone(status?: AdminPlaceOperatingStatus) {
 
 function RepresentativeImage({ imageUrl, placeName }: { imageUrl?: string | null; placeName: string }) {
   const [isUnavailable, setIsUnavailable] = useState(false)
-
-  if (!imageUrl || isUnavailable) {
-    return (
-      <S.DetailImagePlaceholder role="status">
-        <S.MaterialIcon aria-hidden="true">image_not_supported</S.MaterialIcon>
-        <span>대표 이미지 없음</span>
-      </S.DetailImagePlaceholder>
-    )
-  }
-
-  return (
-    <S.DetailRepresentativeImage
-      src={imageUrl}
-      alt={`${placeName} 대표 이미지`}
-      onError={() => setIsUnavailable(true)}
-    />
-  )
+  return !imageUrl || isUnavailable
+    ? <L.ImagePlaceholder>대표 이미지 없음</L.ImagePlaceholder>
+    : <L.Thumbnail src={imageUrl} alt={`${placeName} 대표 이미지`} onError={() => setIsUnavailable(true)} />
 }
 
 export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
@@ -154,86 +141,13 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                 </S.DetailErrorState>
               ) : placeDetail ? (
                 <>
-                  <S.DetailSectionHeader>
-                    <S.DetailSectionTitle>장소 정보</S.DetailSectionTitle>
-                    <S.DetailInlineButton
-                      type="button"
-                      disabled={
-                        updatingPlaceIds['basic-information'] !== null ||
-                        updatingPlaceIds.geocoding !== null ||
-                        updatingPlaceIds.coordinates !== null ||
-                        updatingPlaceIds['kakao-place-id'] !== null
-                      }
-                      onClick={onOpenDataCorrection}
-                    >
-                      정보 보정
-                    </S.DetailInlineButton>
-                  </S.DetailSectionHeader>
-                  <RepresentativeImage
-                    key={representativeImageUrl ?? 'missing'}
-                    imageUrl={representativeImageUrl}
-                    placeName={placeDetail.name}
-                  />
-                  <S.DetailMetaList>
-                    <S.DetailMetaGroup>
-                      <S.DetailMetaRow>
-                        <span>장소 ID</span>
-                        <strong>{placeDetail.id}</strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>카테고리</span>
-                        <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>등록자</span>
-                        <strong>
-                          {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
-                        </strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>주소</span>
-                        <strong>{placeDetail.address || '주소 정보 없음'}</strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>좌표</span>
-                        <strong>{formatCoordinate(placeDetail)}</strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>좌표 출처</span>
-                        <strong>{placeDetail.geocodingSource || '출처 정보 없음'}</strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>Kakao place ID</span>
-                        <strong>{placeDetail.kakaoPlaceId || '연결 정보 없음'}</strong>
-                      </S.DetailMetaRow>
-                    </S.DetailMetaGroup>
-                  </S.DetailMetaList>
-
-                  <S.DetailSection>
-                    <S.DetailSectionHeader>
-                      <S.DetailSectionTitle>방문객 안내 정보</S.DetailSectionTitle>
-                      <S.DetailInlineButton
-                        type="button"
-                        disabled={updatingPlaceIds['tourist-info'] !== null}
-                        onClick={onOpenTouristInfo}
-                      >
-                        안내 정보 수정
-                      </S.DetailInlineButton>
-                    </S.DetailSectionHeader>
-                    <S.DetailMetaList>
-                      <S.DetailMetaGroup>
-                        <S.DetailMetaRow>
-                          <span>영문 이름</span>
-                          <strong>{placeDetail.englishName || '등록 정보 없음'}</strong>
-                        </S.DetailMetaRow>
-                        <S.DetailMetaRow>
-                          <span>방문객 안내</span>
-                          <strong>{placeDetail.touristSummary || '등록 정보 없음'}</strong>
-                        </S.DetailMetaRow>
-                      </S.DetailMetaGroup>
-                    </S.DetailMetaList>
-                  </S.DetailSection>
-
+                  <L.Summary>
+                    <RepresentativeImage key={`${placeDetail.id}:${representativeImageUrl ?? 'missing'}`} imageUrl={representativeImageUrl} placeName={placeDetail.name} />
+                    <L.SummaryText>
+                      <strong>{getPlaceCategoryLabel(placeDetail)}</strong>
+                      <p>{placeDetail.address || '주소 정보 없음'}</p>
+                    </L.SummaryText>
+                  </L.Summary>
                   <S.DetailSection>
                     <S.DetailSectionHeader>
                       <S.DetailSectionTitle>운영 및 탐색 관리</S.DetailSectionTitle>
@@ -342,6 +256,77 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       </S.OperatingSummaryRow>
                     </S.OperatingSummary>
                   </S.DetailSection>
+                  <S.DetailSection>
+                    <S.DetailSectionHeader>
+                      <S.DetailSectionTitle>방문객 안내 정보</S.DetailSectionTitle>
+                      <S.DetailInlineButton
+                        type="button"
+                        disabled={updatingPlaceIds['tourist-info'] !== null}
+                        onClick={onOpenTouristInfo}
+                      >
+                        안내 정보 수정
+                      </S.DetailInlineButton>
+                    </S.DetailSectionHeader>
+                    <S.DetailMetaList>
+                      <S.DetailMetaGroup>
+                        <S.DetailMetaRow>
+                          <span>영문 이름</span>
+                          <strong>{placeDetail.englishName || '등록 정보 없음'}</strong>
+                        </S.DetailMetaRow>
+                        <S.DetailMetaRow>
+                          <span>방문객 안내</span>
+                          <strong>{placeDetail.touristSummary || '등록 정보 없음'}</strong>
+                        </S.DetailMetaRow>
+                      </S.DetailMetaGroup>
+                    </S.DetailMetaList>
+                  </S.DetailSection>
+
+                  <L.Technical key={placeDetail.id}>
+                    <summary>기술 정보</summary>
+                  <S.DetailSectionHeader>
+                    <S.DetailInlineButton
+                      type="button"
+                      disabled={
+                        updatingPlaceIds['basic-information'] !== null ||
+                        updatingPlaceIds.geocoding !== null ||
+                        updatingPlaceIds.coordinates !== null ||
+                        updatingPlaceIds['kakao-place-id'] !== null
+                      }
+                      onClick={onOpenDataCorrection}
+                    >
+                      정보 보정
+                    </S.DetailInlineButton>
+                  </S.DetailSectionHeader>
+                  <S.DetailMetaList>
+                    <S.DetailMetaGroup>
+                      <S.DetailMetaRow>
+                        <span>장소 ID</span>
+                        <strong>{placeDetail.id}</strong>
+                      </S.DetailMetaRow>
+
+                      <S.DetailMetaRow>
+                        <span>등록자</span>
+                        <strong>
+                          {placeDetail.username || `사용자 ID: ${placeDetail.userId}`}
+                        </strong>
+                      </S.DetailMetaRow>
+
+                      <S.DetailMetaRow>
+                        <span>좌표</span>
+                        <strong>{formatCoordinate(placeDetail)}</strong>
+                      </S.DetailMetaRow>
+                      <S.DetailMetaRow>
+                        <span>좌표 출처</span>
+                        <strong>{placeDetail.geocodingSource || '출처 정보 없음'}</strong>
+                      </S.DetailMetaRow>
+                      <S.DetailMetaRow>
+                        <span>Kakao place ID</span>
+                        <strong>{placeDetail.kakaoPlaceId || '연결 정보 없음'}</strong>
+                      </S.DetailMetaRow>
+                    </S.DetailMetaGroup>
+                  </S.DetailMetaList>
+
+                  </L.Technical>
 
                 </>
               ) : (

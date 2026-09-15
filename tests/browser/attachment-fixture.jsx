@@ -5,7 +5,7 @@ import axios from 'axios'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { AdminNotificationContext } from '../../src/app/providers/AdminNotificationContext'
 import Page from '../../src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'
-import { GlobalStyle } from '../../src/styles/GlobalStyle'
+import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 
 const name = 'SyntheticEvidence'.repeat(14) + '.png'

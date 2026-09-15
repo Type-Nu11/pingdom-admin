@@ -17,8 +17,9 @@ const attachments = [
   { id: 5, originalFilename: 'unsupported.txt', contentType: 'text/plain' },
   { id: 6, originalFilename: 'broken.pdf', contentType: 'application/pdf' },
 ].map(item => ({ ...item, documentType: 'BUSINESS_LICENSE', fileSize: 100, uploadedAt: '2026-01-01T00:00:00' }))
-const application = id => ({ id, status: 'PENDING', version: 1, applicantUserId: 20,
-  businessName: '합성 테스트 상점', legalName: '합성 신청자', placeName: `합성 장소 ${id}`, applicationType: 'NEW_PLACE', attachments })
+const reviewMode = new URLSearchParams(location.search).has('review')
+const application = id => ({ id, status: reviewMode && id === 2 ? 'APPROVED' : 'PENDING', version: 1, applicantUserId: 20,
+  businessName: '합성 테스트 상점', legalName: '합성 신청자', placeName: `합성 장소 ${id}${reviewMode ? ' 긴 장소명'.repeat(45) : ''}`, applicationType: 'NEW_PLACE', attachments })
 const canvas = document.createElement('canvas')
 canvas.width = 640; canvas.height = 480
 const context = canvas.getContext('2d')

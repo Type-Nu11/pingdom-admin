@@ -114,3 +114,55 @@ test('external place change clears selected editor target', async () => {
   assert.ok(document.body.textContent.includes('시간 등록'))
   assert.ok(!document.body.textContent.includes('시간 저장'))
 })
+
+for (const explicitChoice of [false, true]) test(`delayed products use the displayed selection and preserve draft (explicit=${explicitChoice})`, async () => {
+  const gate = deferred()
+  const first = { id: 10, placeId: 1, name: 'First ticket', productType: 'TICKET', status: 'ACTIVE' }
+  const second = { ...first, id: 20, name: 'Second ticket' }
+  let products = [first, second]
+  let submitted
+  adapter = async config => {
+    if (config.method !== 'get') {
+      submitted = JSON.parse(config.data)
+      return response(config, { ...item, ...submitted, id: 99 })
+    }
+    if (config.url.endsWith('/reservable-products')) { await gate.promise; return response(config, products) }
+    return base(config)
+  }
+  await render(h(Page))
+  const capacity = document.querySelector('input[type="number"]')
+  assert.equal(capacity.disabled, true)
+  await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
+  const button = text => [...document.querySelectorAll('button')].find(el => el.textContent.trim() === text)
+  const click = async el => { assert.ok(el); await act(async () => el.click()) }
+  await click(document.querySelector('[aria-label="예약 대상"]'))
+  await click(button('등록한 예약 상품'))
+  assert.ok(document.querySelector('[aria-label="예약 상품 선택"]').textContent.includes(first.name))
+  if (explicitChoice) {
+    await click(document.querySelector('[aria-label="예약 상품 선택"]'))
+    await click(button('Second ticket · 티켓'))
+  }
+  for (const [label, day] of [['예약 시작 일시', 10], ['예약 종료 일시', 11]]) {
+    await click(document.querySelector(`[aria-label^="${label},"]`))
+    await click(document.querySelector('[aria-label="다음 달"]'))
+    const date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, day)
+    await click(document.querySelector(`[aria-label="${date.getFullYear()}년 ${date.getMonth() + 1}월 ${day}일"]`))
+    await click(button('적용'))
+  }
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(capacity, '17')
+    capacity.dispatchEvent(new window.Event('input', { bubbles: true }))
+  })
+  const startsLabel = document.querySelector('[aria-label^="예약 시작 일시,"]').getAttribute('aria-label')
+  if (explicitChoice) {
+    products = [second, first]
+    await click(button('새로고침'))
+    assert.ok(document.querySelector('[aria-label="예약 상품 선택"]').textContent.includes(second.name))
+  }
+  assert.equal(document.querySelector('input[type="number"]'), capacity)
+  assert.equal(capacity.value, '17')
+  assert.equal(document.querySelector('[aria-label^="예약 시작 일시,"]').getAttribute('aria-label'), startsLabel)
+  await click(button('시간 등록'))
+  assert.equal(submitted.productId, explicitChoice ? second.id : first.id)
+  assert.equal(submitted.totalCapacity, 17)
+})

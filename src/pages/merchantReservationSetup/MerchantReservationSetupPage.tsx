@@ -55,7 +55,8 @@ function AvailabilityEditor({
   const [totalCapacity, setTotalCapacity] = useState(String(availability?.totalCapacity ?? 1))
   const [formError, setFormError] = useState('')
   const isBusy = activeAction !== null || queryBlocked
-  const selectedProduct = products.find((product) => product.id === productId) ?? null
+  const effectiveProductId = productId ?? activeProducts[0]?.id ?? null
+  const selectedProduct = products.find((product) => product.id === effectiveProductId) ?? null
   const existingTargetLabel = availability?.productId
     ? `${selectedProduct?.name ?? `상품 #${availability.productId}`} · ${availability.productType === 'TICKET' ? '티켓' : '클래스'}`
     : '일반 장소 예약'
@@ -116,7 +117,8 @@ function AvailabilityEditor({
         </S.Field>
         {!availability && targetType === 'PRODUCT' ? <S.Field $wide>
           예약 상품
-          <AdminSelect aria-label="예약 상품 선택" width="100%" value={productId ?? ''} disabled={isBusy || activeProducts.length === 0} onChange={(event) => setProductId(Number(event.target.value))}>
+          <AdminSelect aria-label="예약 상품 선택" width="100%" value={effectiveProductId ?? ''} disabled={isBusy || activeProducts.length === 0} onChange={(event) => setProductId(Number(event.target.value))}>
+            {effectiveProductId !== null && !activeProducts.some((product) => product.id === effectiveProductId) ? <option value={effectiveProductId}>선택한 상품을 사용할 수 없습니다. 다시 선택해주세요.</option> : null}
             {activeProducts.length === 0 ? <option value="">활성 예약 상품 없음</option> : activeProducts.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.productType === 'TICKET' ? '티켓' : '클래스'}</option>)}
           </AdminSelect>
         </S.Field> : null}

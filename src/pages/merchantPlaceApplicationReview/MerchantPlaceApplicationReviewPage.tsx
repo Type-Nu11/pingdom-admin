@@ -304,7 +304,7 @@ function MerchantPlaceApplicationReviewPage() {
             {visibleDetail ? (
               <S.ReviewActions aria-label="장소 신청 심사 작업">
                 <S.ActionTarget>
-                  <strong>{visibleDetail.placeName || visibleDetail.newPlace?.placeName || visibleDetail.businessName || '장소명 정보 없음'}</strong>
+                  <strong title={visibleDetail.placeName || visibleDetail.newPlace?.placeName || visibleDetail.businessName || '장소명 정보 없음'}>{visibleDetail.placeName || visibleDetail.newPlace?.placeName || visibleDetail.businessName || '장소명 정보 없음'}</strong>
                   <span>신청 #{visibleDetail.id} · {STATUS_LABELS[visibleDetail.status]}</span>
                 </S.ActionTarget>
                 {visibleDetail.status === 'PENDING' ? <>

@@ -61,6 +61,7 @@ test('actions are outside scrolling content and open existing confirmation', asy
   await click(select(1))
   assert.ok(actions())
   assert.match(actions().textContent, /신청 #1/)
+  assert.equal(actions().querySelector('strong').title, '장소 1')
   assert.ok(actions().previousElementSibling.textContent.includes('제출 증빙'))
   assert.equal(actions().previousElementSibling.querySelector('button'), null)
   await click(button('승인', actions()))

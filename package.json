@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
+    "test:regression-history": "node scripts/verify-core-regressions.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

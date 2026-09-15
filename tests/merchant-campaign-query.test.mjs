@@ -7,10 +7,12 @@ for (const key of ['window','document','localStorage','HTMLElement','Node']) glo
 globalThis.IS_REACT_ACT_ENVIRONMENT=true
 const {createElement:h,act}=await import('react')
 const {createRoot}=await import('react-dom/client')
+const {MemoryRouter}=await import('react-router-dom')
 const server=await createServer({server:{middlewareMode:true,ws:false},appType:'custom',ssr:{noExternal:['styled-components']}})
 const {AuthContext}=await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const {useMerchantCampaigns}=await server.ssrLoadModule('/src/hooks/useMerchantCampaigns.ts')
 const {default:client}=await server.ssrLoadModule('/src/api/customAxios.ts')
+const {default:CampaignPage}=await server.ssrLoadModule('/src/pages/merchantCampaign/MerchantCampaignPage.tsx')
 let root,hook,adapter,clears
 const response=(config,data)=>({config,data,status:200,statusText:'OK',headers:{}})
 const base=async config=>response(config,config.url.endsWith('/me')?{placeIds:[1]}:{items:[{id:1}],totalPages:1})
@@ -65,3 +67,54 @@ test('unmount invalidates an outstanding brand request',async()=>{
  let result;await act(async()=>{gate.resolve();result=await pending})
  assert.equal(result,false)
 })
+
+for (const existing of [false, true]) {
+ for (const succeeds of [false, true]) {
+  test(`${existing ? 'existing' : 'new'} draft survives list retry ${succeeds ? 'success' : 'failure'}`, async () => {
+   const item = { id: 1, placeId: 1, brandId: 1, brandName: 'Test brand', title: 'Saved title', description: 'Saved description', status: 'DRAFT', startsAt: '2026-09-20T10:00', endsAt: '2026-09-21T10:00', updatedAt: '2026-09-15T10:00' }
+   const success = async config => response(config, config.url.endsWith('/me')
+    ? { placeIds: [1] }
+    : { items: config.url.endsWith('/brands') ? [{ id: 1, name: 'Test brand' }] : [item], totalPages: 1 })
+   adapter = success
+   const auth = { clearAuth() { clears++ }, user: { username: 'test' }, logout() {} }
+   await act(async () => root.render(h(AuthContext.Provider, { value: auth }, h(MemoryRouter, {}, h(CampaignPage)))))
+   const button = text => [...document.querySelectorAll('button')].find(el => el.textContent.trim() === text)
+   const click = async el => { assert.ok(el); await act(async () => el.click()) }
+   if (existing) await click([...document.querySelectorAll('button')].find(el => el.textContent.includes('Saved title')))
+   adapter = config => config.url === '/merchant-owner/campaigns' ? Promise.reject(new Error('list offline')) : success(config)
+   await click(button('새로고침'))
+   const title = document.querySelector('input[maxlength="120"]')
+   const description = document.querySelector('textarea[maxlength="3000"]')
+   await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(title, 'Unsaved title')
+    title.dispatchEvent(new window.Event('input', { bubbles: true }))
+    Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(description, 'Unsaved description')
+    description.dispatchEvent(new window.Event('input', { bubbles: true }))
+   })
+   const gate = deferred()
+   let mutations = 0
+   adapter = async config => {
+    if (config.method !== 'get') mutations++
+    if (config.url === '/merchant-owner/campaigns') {
+     await gate.promise
+     if (!succeeds) throw new Error('retry offline')
+    }
+    return success(config)
+   }
+   await click(button('목록 다시 시도'))
+   assert.equal(title.isConnected, true)
+   assert.equal(title.value, 'Unsaved title')
+   assert.equal(description.value, 'Unsaved description')
+   assert.equal(title.disabled, true)
+   assert.equal(button(existing ? '초안 저장' : '초안 등록').disabled, true)
+   await act(async () => title.closest('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })))
+   assert.equal(mutations, 0)
+   await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
+   assert.equal(document.querySelector('input[maxlength="120"]'), title)
+   assert.equal(title.value, 'Unsaved title')
+   assert.equal(description.value, 'Unsaved description')
+   assert.equal(title.disabled, false)
+   assert.equal(Boolean(button('목록 다시 시도')), !succeeds)
+  })
+ }
+}

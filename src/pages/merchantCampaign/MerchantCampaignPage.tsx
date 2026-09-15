@@ -47,6 +47,7 @@ function CampaignEditor({
   brands,
   preferredBrandId,
   activeAction,
+  isRefreshing,
   onCreate,
   onUpdate,
   onPublish,
@@ -59,6 +60,7 @@ function CampaignEditor({
   brands: MerchantBrand[]
   preferredBrandId: number | null
   activeAction: ReturnType<typeof useMerchantCampaigns>['activeAction']
+  isRefreshing: boolean
   onCreate: (request: MerchantCampaignRequest) => Promise<MerchantCampaign | null>
   onUpdate: (campaignId: number, request: MerchantCampaignRequest) => Promise<MerchantCampaign | null>
   onPublish: (campaignId: number) => Promise<MerchantCampaign | null>
@@ -76,7 +78,7 @@ function CampaignEditor({
   const [formError, setFormError] = useState('')
   const effectiveBrandId = brandId || campaign?.brandId || preferredBrandId || brands[0]?.id || 0
   const selectedBrand = brands.find((brand) => brand.id === effectiveBrandId) ?? null
-  const isBusy = activeAction !== null
+  const isBusy = activeAction !== null || isRefreshing
 
   const buildRequest = (): MerchantCampaignRequest | null => {
     if (!Number.isSafeInteger(placeId) || !profilePlaceIds.includes(placeId)) {
@@ -101,7 +103,7 @@ function CampaignEditor({
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!editable) return
+    if (!editable || isBusy) return
     const request = buildRequest()
     if (!request) return
     const next = campaign ? await onUpdate(campaign.id, request) : await onCreate(request)
@@ -109,20 +111,21 @@ function CampaignEditor({
   }
 
   const publish = async () => {
-    if (!campaign || campaign.status !== 'DRAFT') return
+    if (isBusy || !campaign || campaign.status !== 'DRAFT') return
     if (!window.confirm('이 이벤트를 공개할까요? 공개 후에는 내용을 수정할 수 없습니다.')) return
     const next = await onPublish(campaign.id)
     if (next) onSelect(next.id)
   }
 
   const close = async () => {
-    if (!campaign || campaign.status !== 'PUBLISHED') return
+    if (isBusy || !campaign || campaign.status !== 'PUBLISHED') return
     if (!window.confirm('공개 중인 이벤트를 종료할까요?')) return
     const next = await onClose(campaign.id)
     if (next) onSelect(next.id)
   }
 
   return <S.Editor>
+    {isRefreshing ? <S.ReadonlyNotice role="status">목록을 새로 불러오는 중입니다. 작성 중인 내용은 유지됩니다.</S.ReadonlyNotice> : null}
     {campaign && !editable ? <S.ReadonlyNotice>{campaign.status === 'PUBLISHED' ? '공개 중인 이벤트는 종료만 할 수 있습니다.' : '종료된 이벤트는 조회만 할 수 있습니다.'}</S.ReadonlyNotice> : null}
     <S.Form onSubmit={save}>
       <S.Field>연결 장소
@@ -248,7 +251,7 @@ function MerchantCampaignPage() {
     {campaign.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{campaign.actionErrorMessage}</Store.Notice> : null}
     {campaign.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{campaign.successMessage}</Store.Notice> : null}
     <S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>이벤트 목록</S.PanelTitle><S.PanelDescription>등록한 이벤트의 상태와 기간을 확인합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={campaign.status !== 'ready' || campaign.isListLoading || isBusy} onClick={startNew}>새 이벤트</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="이벤트 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} disabled={campaign.status !== 'ready' || campaign.isListLoading || isBusy} $selected={statusFilter === value} onClick={() => changeStatusFilter(value)}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>{campaign.hasListResult ? `총 ${filteredCampaigns.length}건 · 현재 ${campaign.page}/${filteredTotalPages}페이지${campaign.errorMessage ? ' (이전 결과)' : ''}` : '조회 결과 없음'}</S.ResultMeta>{campaign.status === 'loading' || campaign.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : !campaign.hasListResult ? <S.Empty><strong>{campaign.errorMessage || '이벤트 목록을 불러오지 못했습니다.'}</strong><Store.RetryButton type="button" onClick={() => void campaign.fetchCampaigns()}>목록 다시 시도</Store.RetryButton></S.Empty> : visibleCampaigns.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 이벤트가 없습니다. 첫 이벤트를 초안으로 등록해보세요.' : '선택한 상태의 이벤트가 없습니다.'}</S.Empty> : <S.CampaignList>{visibleCampaigns.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => setSelectedId(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.brandName} · 장소 #{item.placeId}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}{filteredTotalPages > 1 ? <AdminPagination ariaLabel="상점주 이벤트 목록 페이지네이션" page={campaign.page} totalPages={filteredTotalPages} disabled={isBusy || campaign.isListLoading} onPageChange={campaign.goToPage} /> : null}</S.Panel>
-      <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedCampaign ? '이벤트 상세' : '새 이벤트 등록'}</S.PanelTitle><S.PanelDescription>{selectedCampaign ? `이벤트 #${selectedCampaign.id} · 마지막 수정 ${formatDateTime(selectedCampaign.updatedAt)}` : '이벤트 정보를 입력한 뒤 초안으로 저장하세요.'}</S.PanelDescription></div>{selectedCampaign ? <S.StatusBadge $tone={STATUS[selectedCampaign.status].tone}>{STATUS[selectedCampaign.status].label}</S.StatusBadge> : null}</S.PanelHeader>{campaign.status === 'loading' || campaign.isListLoading ? <S.Empty>이벤트 관리 정보를 불러오는 중입니다.</S.Empty> : campaign.brandStatus === 'loading' ? <S.Empty role="status">브랜드 정보를 불러오는 중입니다.</S.Empty> : campaign.brandStatus === 'error' ? <S.Empty role="alert"><strong>{campaign.brandErrorMessage}</strong><Store.RetryButton type="button" onClick={() => void campaign.fetchBrands()}>브랜드 다시 시도</Store.RetryButton></S.Empty> : <CampaignEditor key={selectedCampaign?.id ?? `new-${preferredBrandId ?? 'none'}`} campaign={selectedCampaign} profilePlaceIds={campaign.profile?.placeIds ?? []} brands={campaign.brands} preferredBrandId={preferredBrandId} activeAction={campaign.activeAction} onCreate={campaign.createCampaign} onUpdate={campaign.updateCampaign} onPublish={campaign.publishCampaign} onClose={campaign.closeCampaign} onSelect={setSelectedId} onOpenBrand={(brand) => setBrandDialog({ brand })} />}</S.Panel></S.Workspace>
+      <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedCampaign ? '이벤트 상세' : '새 이벤트 등록'}</S.PanelTitle><S.PanelDescription>{selectedCampaign ? `이벤트 #${selectedCampaign.id} · 마지막 수정 ${formatDateTime(selectedCampaign.updatedAt)}` : '이벤트 정보를 입력한 뒤 초안으로 저장하세요.'}</S.PanelDescription></div>{selectedCampaign ? <S.StatusBadge $tone={STATUS[selectedCampaign.status].tone}>{STATUS[selectedCampaign.status].label}</S.StatusBadge> : null}</S.PanelHeader>{campaign.status === 'loading' ? <S.Empty>이벤트 관리 정보를 불러오는 중입니다.</S.Empty> : campaign.brandStatus === 'loading' ? <S.Empty role="status">브랜드 정보를 불러오는 중입니다.</S.Empty> : campaign.brandStatus === 'error' ? <S.Empty role="alert"><strong>{campaign.brandErrorMessage}</strong><Store.RetryButton type="button" onClick={() => void campaign.fetchBrands()}>브랜드 다시 시도</Store.RetryButton></S.Empty> : <CampaignEditor key={selectedCampaign?.id ?? `new-${preferredBrandId ?? 'none'}`} campaign={selectedCampaign} profilePlaceIds={campaign.profile?.placeIds ?? []} brands={campaign.brands} preferredBrandId={preferredBrandId} activeAction={campaign.activeAction} isRefreshing={campaign.isListLoading} onCreate={campaign.createCampaign} onUpdate={campaign.updateCampaign} onPublish={campaign.publishCampaign} onClose={campaign.closeCampaign} onSelect={setSelectedId} onOpenBrand={(brand) => setBrandDialog({ brand })} />}</S.Panel></S.Workspace>
     {brandDialog ? <BrandDialogForm brand={brandDialog.brand} activeAction={campaign.activeAction} onClose={() => setBrandDialog(null)} onCreate={campaign.createBrand} onUpdate={campaign.updateBrand} onCreated={(brandId) => { setPreferredBrandId(brandId); setBrandDialog(null) }} /> : null}
   </Store.Content></Store.Page>
 }

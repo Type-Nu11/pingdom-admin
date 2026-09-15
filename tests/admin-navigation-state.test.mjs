@@ -65,10 +65,13 @@ test('sidebar scroll position survives remount with saved group state', async ()
   await click(group('growth'))
   const container = document.getElementById('root')
   container.scrollTop = 120
+  container.scrollLeft = 160
   container.dispatchEvent(new window.Event('scroll'))
   await act(async () => root.render(null))
   container.scrollTop = 0
+  container.scrollLeft = 0
   await mount()
   assert.equal(container.scrollTop, 120)
+  assert.equal(container.scrollLeft, 160)
   assert.equal(group('growth').getAttribute('aria-expanded'), 'false')
 })

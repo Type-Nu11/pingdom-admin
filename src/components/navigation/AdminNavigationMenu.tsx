@@ -78,6 +78,7 @@ const isPlaceManagementPath = (pathname: string) =>
   pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
 
 let savedSideMenuScrollTop = 0
+let savedSideMenuScrollLeft = 0
 
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
@@ -95,9 +96,11 @@ export function AdminNavigationMenu() {
     if (!sideMenu) return
 
     sideMenu.scrollTop = savedSideMenuScrollTop
+    sideMenu.scrollLeft = savedSideMenuScrollLeft
 
     const saveScrollPosition = () => {
       savedSideMenuScrollTop = sideMenu.scrollTop
+      savedSideMenuScrollLeft = sideMenu.scrollLeft
     }
 
     sideMenu.addEventListener('scroll', saveScrollPosition, { passive: true })

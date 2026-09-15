@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:navigation-browser": "node tests/browser/navigation.mjs",
     "test:review-actions-browser": "node tests/browser/review-actions.mjs",
     "test:attachment-browser": "node tests/browser/attachment-preview.mjs",
     "test": "node --test tests/*.test.mjs",

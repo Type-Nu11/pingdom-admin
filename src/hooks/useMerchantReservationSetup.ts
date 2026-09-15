@@ -46,9 +46,12 @@ export function useMerchantReservationSetup() {
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [products, setProducts] = useState<MerchantReservableProduct[]>([])
   const [availabilities, setAvailabilities] = useState<MerchantAvailability[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [productStatus, setProductStatus] = useState<LoadStatus>('loading')
+  const [availabilityStatus, setAvailabilityStatus] = useState<LoadStatus>('loading')
+  const [productError, setProductError] = useState('')
+  const [availabilityError, setAvailabilityError] = useState('')
+  const [hasAvailabilityResult, setHasAvailabilityResult] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
   useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   const [successMessage, setSuccessMessage] = useState('')
@@ -57,6 +60,8 @@ export function useMerchantReservationSetup() {
   const mountedRef = useRef(true)
   const actionRef = useRef<ReservationSetupAction>(null)
   const requestRef = useRef(0)
+  const productRequestRef = useRef(0)
+  const initialRequestRef = useRef(0)
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
@@ -73,55 +78,82 @@ export function useMerchantReservationSetup() {
     })
   }, [clearAuth])
 
-  const fetchReservationSetup = useCallback(async (initialLoad = false) => {
-    const requestId = requestRef.current + 1
-    requestRef.current = requestId
-    setIsLoading(true)
-    setSectionErrorMessage('')
-
-    const [productResult, availabilityResult] = await Promise.allSettled([
-      getMerchantReservableProducts(),
-      getMerchantAvailabilities(),
-    ])
-
-    if (!mountedRef.current || requestId !== requestRef.current) return false
-    if (productResult.status === 'fulfilled') setProducts(productResult.value)
-    if (availabilityResult.status === 'fulfilled') setAvailabilities(sortAvailabilities(availabilityResult.value))
-
-    const failures = [productResult, availabilityResult].filter(
-      (result): result is PromiseRejectedResult => result.status === 'rejected',
-    )
-    if (failures.length > 0) {
-      failures.forEach((result) => {
-        if (shouldClearAuth(result.reason)) clearAuth()
-        logDebugError('상점주 예약 운영 정보 조회 실패', result.reason)
-      })
-      setSectionErrorMessage('일부 예약 운영 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.')
+  const fetchProducts = useCallback(async () => {
+    if (actionRef.current) return false
+    const requestId = ++productRequestRef.current
+    setProductStatus('loading')
+    setProductError('')
+    try {
+      const next = await getMerchantReservableProducts()
+      if (!mountedRef.current || requestId !== productRequestRef.current) return false
+      setProducts(next)
+      setProductStatus('ready')
+      return true
+    } catch (error) {
+      if (!mountedRef.current || requestId !== productRequestRef.current) return false
+      setProducts([])
+      setProductStatus('error')
+      setProductError(getErrorMessage(error, '예약 상품을 불러오지 못했습니다.'))
+      return false
     }
+  }, [getErrorMessage])
 
-    setIsLoading(false)
-    if (initialLoad && availabilityResult.status === 'rejected') {
-      setErrorMessage(getErrorMessage(availabilityResult.reason, '예약 가능 시간을 불러오지 못했습니다.'))
+  const fetchAvailabilities = useCallback(async () => {
+    if (actionRef.current) return false
+    const requestId = ++requestRef.current
+    setAvailabilityStatus('loading')
+    setAvailabilityError('')
+    try {
+      const next = await getMerchantAvailabilities()
+      if (!mountedRef.current || requestId !== requestRef.current) return false
+      setAvailabilities(sortAvailabilities(next))
+      setHasAvailabilityResult(true)
+      setAvailabilityStatus('ready')
+      return true
+    } catch (error) {
+      if (!mountedRef.current || requestId !== requestRef.current) return false
+      if (isApiError(error) && (shouldClearAuth(error) || error.category === 'forbidden')) {
+        setAvailabilities([])
+        setHasAvailabilityResult(false)
+      }
+      setAvailabilityStatus('error')
+      setAvailabilityError(getErrorMessage(error, '예약 가능 시간을 불러오지 못했습니다.'))
+      return false
     }
-    return availabilityResult.status === 'fulfilled'
-  }, [clearAuth, getErrorMessage])
+  }, [getErrorMessage])
+
+  const fetchReservationSetup = useCallback(async () => {
+    const results = await Promise.all([fetchProducts(), fetchAvailabilities()])
+    return results.every(Boolean)
+  }, [fetchProducts, fetchAvailabilities])
 
   const fetchInitialData = useCallback(async () => {
+    if (actionRef.current) return
+    const requestId = ++initialRequestRef.current
+    productRequestRef.current += 1
+    requestRef.current += 1
     setStatus('loading')
     setErrorMessage('')
-    setSectionErrorMessage('')
     try {
       const nextProfile = await getMerchantOwnerProfile()
-      if (!mountedRef.current) return
+      if (!mountedRef.current || requestId !== initialRequestRef.current) return
       setProfile(nextProfile)
       if (!syncPlaces(nextProfile.placeIds)) {
+        setProductError('')
+        setAvailabilityError('')
+        setProducts([])
+        setAvailabilities([])
+        setHasAvailabilityResult(false)
+        setProductStatus('ready')
+        setAvailabilityStatus('ready')
         setStatus('ready')
         return
       }
-      const loaded = await fetchReservationSetup(true)
-      if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
+      void fetchReservationSetup()
+      setStatus('ready')
     } catch (error) {
-      if (!mountedRef.current) return
+      if (!mountedRef.current || requestId !== initialRequestRef.current) return
+      setProfile(null)
       setStatus('error')
       setErrorMessage(getErrorMessage(error, '예약 운영 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 예약 운영 초기 조회 실패', error)
@@ -131,7 +163,12 @@ export function useMerchantReservationSetup() {
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
+    return () => {
+      mountedRef.current = false
+      initialRequestRef.current += 1
+      productRequestRef.current += 1
+      requestRef.current += 1
+    }
   }, [fetchInitialData])
 
   const selectPlace = useCallback((placeId: number) => {
@@ -146,7 +183,7 @@ export function useMerchantReservationSetup() {
     successText: string,
     fallbackMessage: string,
   ) => {
-    if (actionRef.current) return null
+    if (actionRef.current || status !== 'ready' || productStatus !== 'ready' || availabilityStatus !== 'ready') return null
     actionRef.current = action
     setActiveAction(action)
     setActionErrorMessage('')
@@ -168,7 +205,7 @@ export function useMerchantReservationSetup() {
       actionRef.current = null
       if (mountedRef.current) setActiveAction(null)
     }
-  }, [getErrorMessage])
+  }, [getErrorMessage, status, productStatus, availabilityStatus])
 
   const createAvailability = useCallback((request: MerchantAvailabilityUpsertRequest) => runAction(
     'create-availability',
@@ -200,15 +237,21 @@ export function useMerchantReservationSetup() {
     selectedPlaceId,
     products,
     availabilities,
-    isLoading,
+    isLoading: productStatus === 'loading' || availabilityStatus === 'loading',
+    productStatus,
+    availabilityStatus,
+    productError,
+    availabilityError,
+    hasAvailabilityResult,
     errorMessage,
-    sectionErrorMessage,
     actionErrorMessage,
     successMessage,
     activeAction,
     selectPlace,
     fetchInitialData,
     fetchReservationSetup,
+    fetchProducts,
+    fetchAvailabilities,
     createAvailability,
     saveAvailability,
     setAvailabilityActive,

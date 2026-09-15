@@ -87,3 +87,30 @@ test('successful save remains successful when later reload fails', async () => {
   assert.ok(hook.successMessage); assert.equal(hook.actionErrorMessage, '')
   assert.equal(hook.availabilities[0].totalCapacity, 9); assert.ok(hook.availabilityError)
 })
+test('draft survives retry and query loading prevents mutation', async () => {
+  await render(h(Page))
+  const capacity = document.querySelector('input[type="number"]')
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(capacity, '17')
+    capacity.dispatchEvent(new window.Event('input', { bubbles: true }))
+  })
+  const gate = deferred(); let mutations = 0
+  adapter = async config => { if (config.method !== 'get') mutations++; await gate.promise; return base(config) }
+  const refresh = [...document.querySelectorAll('button')].find(el => el.textContent === '새로고침')
+  await act(async () => refresh.click())
+  assert.equal(capacity.isConnected, true); assert.equal(capacity.value, '17'); assert.equal(capacity.disabled, true)
+  await act(async () => capacity.closest('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })))
+  assert.equal(mutations, 0)
+  await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
+  assert.equal(document.querySelector('input[type="number"]'), capacity); assert.equal(capacity.value, '17'); assert.equal(capacity.disabled, false)
+})
+test('external place change clears selected editor target', async () => {
+  adapter = config => config.url.endsWith('/availabilities') ? Promise.resolve(response(config, [item, { ...item, id: 2, placeId: 2 }])) : base(config)
+  await render(h(Page))
+  const entry = [...document.querySelectorAll('button')].find(el => el.textContent.includes('잔여 5'))
+  await act(async () => entry.click())
+  assert.ok(document.body.textContent.includes('시간 저장'))
+  await render(h(Page), { ...places, selectedPlaceId: 2 })
+  assert.ok(document.body.textContent.includes('시간 등록'))
+  assert.ok(!document.body.textContent.includes('시간 저장'))
+})

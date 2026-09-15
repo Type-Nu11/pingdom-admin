@@ -17,7 +17,8 @@ const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts'
 const { default: ScoutPage } = await server.ssrLoadModule('/src/pages/scout/ScoutPage.tsx')
 let root, hook, adapter
 const calls = []
-const auth = { clearAuth() {}, logout: async () => {}, user: { id: 99, username: 'admin', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }
+let authClears = 0
+const auth = { clearAuth() { authClears += 1 }, logout: async () => {}, user: { id: 99, username: 'admin', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }
 const profile = (userId, extra = {}) => ({ userId, displayName: `Scout ${userId}`, profileStatus: 'ACTIVE', activityEligibilityStatus: 'ELIGIBLE', ...extra })
 function deferred() {
   let resolve, reject
@@ -38,6 +39,7 @@ async function click(button) {
 function button(text, scope = document) { return [...scope.querySelectorAll('button')].find((item) => item.textContent.trim() === text) }
 function selectButton(id) { return [...document.querySelectorAll('button')].find((item) => item.textContent.includes(`Scout ${id}`) && item.textContent.includes('사용자 #')) }
 beforeEach(() => {
+  authClears = 0
   calls.length = 0
   adapter = async (config) => {
     if (config.url === '/admin/scout-profiles') return response(config, { profiles: [profile(1), profile(2)], page: 1, totalCount: 2, totalPages: 1, hasNext: false })
@@ -157,4 +159,103 @@ test('mutation finishing after selection change does not reload its old target',
   assert.equal(hook.selectedUserId, 2)
   assert.equal(hook.profile.userId, 2)
   assert.equal(calls.filter((config) => config.url === '/admin/scout-profiles/1').length, 1)
+})
+
+for (const [method, url, field, state] of [
+  ['fetchProfiles', '/admin/scout-profiles', 'profiles', 'profileListState'],
+  ['fetchReports', '/admin/scout-field-reports', 'reports', 'reportListState'],
+]) {
+  for (const outcome of ['success', 'failure']) test(`${method}: stale ${outcome} cannot overwrite current results`, async () => {
+    await mount()
+    const gate = deferred()
+    adapter = async (config) => {
+      if (config.url === url && config.params.page === 2) {
+        await gate.promise
+        if (outcome === 'failure') throw new Error('old failed request')
+      }
+      return response(config, { [field]: [{ id: config.params.page, userId: config.params.page }], page: config.params.page, totalCount: 30, totalElements: 30, totalPages: 3, hasNext: false })
+    }
+    let pending
+    await act(async () => { pending = hook[method]('', 2) })
+    await act(async () => { await hook[method]('', 3) })
+    await act(async () => { gate.resolve(); await pending })
+    assert.equal(hook[field][0].id, 3)
+    assert.equal(hook[state].phase, 'success')
+  })
+}
+test('profile completion does not stop report loading', async () => {
+  const gate = deferred()
+  const base = adapter
+  adapter = config => config.url === '/admin/scout-field-reports' ? gate.promise.then(() => base(config)) : base(config)
+  await mount()
+  assert.equal(hook.profileListState.phase, 'success')
+  assert.equal(hook.reportListState.phase, 'loading')
+  await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
+  assert.equal(hook.reportListState.phase, 'success')
+})
+test('same query failure preserves results, different query clears them, retry recovers', async () => {
+  await mount()
+  const base = adapter
+  adapter = async () => { throw new Error('offline') }
+  await act(async () => { await hook.fetchProfiles() })
+  assert.equal(hook.profileListState.hasResult, true)
+  assert.equal(hook.profiles.length, 2)
+  assert.ok(hook.profileError)
+  assert.equal(hook.reportError, '')
+  assert.equal(authClears, 0)
+  await act(async () => { await hook.fetchProfiles('ACTIVE', 1) })
+  assert.equal(hook.profileListState.hasResult, false)
+  assert.equal(hook.profiles.length, 0)
+  adapter = base
+  await act(async () => { await hook.fetchProfiles() })
+  assert.equal(hook.profileError, '')
+  assert.equal(hook.profileListState.phase, 'success')
+})
+test('successful mutation remains successful when following list refresh fails', async () => {
+  await mount()
+  const base = adapter
+  adapter = config => config.url === '/admin/scout-profiles' ? Promise.reject(new Error('refresh failed')) : base(config)
+  let result
+  await act(async () => { result = await hook.reviewProfile(1, 'approve', 'test') })
+  assert.ok(result)
+  assert.ok(hook.successMessage)
+  assert.equal(hook.actionErrorMessage, '')
+  assert.ok(hook.profileError)
+})
+test('unmount invalidates outstanding list responses', async () => {
+  await mount()
+  const gate = deferred()
+  adapter = config => gate.promise.then(() => response(config, { profiles: [profile(9)], page: 2, totalCount: 1, totalPages: 2 }))
+  let pending
+  await act(async () => { pending = hook.fetchProfiles('', 2) })
+  await act(async () => root.render(null))
+  let result
+  await act(async () => { gate.resolve(); result = await pending })
+  assert.equal(result, false)
+})
+test('initial list error offers retry instead of empty list message', async () => {
+  const base = adapter
+  adapter = config => config.url === '/admin/scout-profiles' ? Promise.reject(new Error('offline')) : base(config)
+  await mount(h(ScoutPage))
+  assert.ok(button('다시 시도'))
+  assert.doesNotMatch(document.body.textContent, /프로필이 없습니다/)
+  adapter = base
+  await click(button('다시 시도'))
+  assert.ok(selectButton(1))
+})
+
+for (const status of [401, 403, 500]) test(`HTTP ${status} applies the correct auth and visibility policy`, async () => {
+  await mount()
+  await act(async () => { await hook.fetchProfile(1) })
+  adapter = async config => {
+    throw Object.assign(new Error('request failed'), {
+      isAxiosError: true, config,
+      response: { status, data: { message: 'request failed' }, headers: {}, config },
+    })
+  }
+  await act(async () => { await hook.fetchProfiles() })
+  assert.equal(authClears > 0, status === 401)
+  assert.equal(hook.profileListState.restricted, status !== 500)
+  assert.equal(hook.profileListState.hasResult, status === 500)
+  if (status !== 500) assert.equal(hook.profile, null)
 })

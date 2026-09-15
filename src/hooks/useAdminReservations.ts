@@ -19,7 +19,8 @@ import type {
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 
-const LIMIT = 10
+export const ADMIN_RESERVATION_PAGE_SIZE = 10
+const LIMIT = ADMIN_RESERVATION_PAGE_SIZE
 export type AdminReservationAction = 'confirm' | 'reject'
 
 type ReservationQueryState = Required<Pick<AdminReservationQuery, 'page'>> & {

@@ -29,6 +29,7 @@ const CATEGORY_MESSAGES = {
 
 export type ApplicationReviewView = 'pending' | 'history'
 export type ApplicationTypeFilter = MerchantPlaceApplicationType | 'ALL'
+export const APPLICATION_REVIEW_PAGE_SIZE = 10
 
 const HISTORY_STATUSES: MerchantPlaceApplicationStatus[] = [
   'APPROVED',
@@ -87,7 +88,7 @@ export function useAdminMerchantPlaceApplications() {
         status: nextView === 'pending' ? 'PENDING' : HISTORY_STATUSES,
         applicationType: nextApplicationType === 'ALL' ? undefined : nextApplicationType,
         page: nextPage,
-        limit: 10,
+        limit: APPLICATION_REVIEW_PAGE_SIZE,
       })
       if (requestId !== listRequestRef.current) return false
       setItems(data.items)

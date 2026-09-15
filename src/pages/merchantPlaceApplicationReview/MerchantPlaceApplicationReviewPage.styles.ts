@@ -1,5 +1,7 @@
 import styled from 'styled-components'
 import { adminColors, radius } from '../../styles/theme'
+import * as Form from '../placeVerification/PlaceVerificationPage.styles'
+import { PageContent, PageStack } from '../../components/common/ListDetailWorkspace.styles'
 
 const colors = adminColors
 
@@ -51,34 +53,29 @@ export const ActionButtons = styled.div`
   }
 `
 
-export const ReviewContent = styled.main`
-  min-height: 0;
-  flex: 1;
-  overflow: hidden;
-  padding: 32px 32px 24px;
-  background: ${colors.background};
+export const ReviewContent = PageContent
+export const ReviewPageStack = PageStack
 
-  @media (max-width: 1080px) {
-    overflow-y: auto;
-  }
-
-  @media (max-width: 720px) {
-    padding: 24px 16px;
-  }
-`
-
-export const ReviewPageStack = styled.div`
-  width: min(1280px, 100%);
-  min-height: 0;
-  height: 100%;
-  margin: 0 auto;
+export const ApplicationList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+`
 
-  @media (max-width: 1080px) {
-    height: auto;
-  }
+export const ApplicationButton = styled(Form.RecordButton)`
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+`
+
+export const ApplicationTitle = styled(Form.RecordTitle)`
+  min-width: 0;
+  overflow-wrap: anywhere;
+`
+
+export const ApplicationMeta = styled(Form.RecordMeta)`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
 `
 
 export const AttachmentList = styled.div`
@@ -211,12 +208,12 @@ export const FilterBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px 16px;
   flex-wrap: wrap;
-  padding: 14px 16px;
+  padding: 4px 0;
   border: 0;
-  border-radius: ${radius.lg};
-  background: ${colors.surfaceLow};
+  border-radius: 0;
+  background: transparent;
 `
 
 export const FilterTabs = styled.div`
@@ -252,6 +249,8 @@ export const FilterTab = styled.button<{ $active: boolean }>`
 `
 
 export const FilterField = styled.label`
+  min-width: 0;
+  flex-wrap: wrap;
   display: inline-flex;
   align-items: center;
   gap: 8px;

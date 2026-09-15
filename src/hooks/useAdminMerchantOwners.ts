@@ -26,7 +26,8 @@ import type {
 import { logDebugError } from "../utils/debugLogger";
 import { useAuth } from "./useAuth";
 
-const LIMIT = 10;
+export const ADMIN_OWNER_PAGE_SIZE = 10;
+const LIMIT = ADMIN_OWNER_PAGE_SIZE;
 export type MerchantOwnerAction =
   | "approve"
   | "reject"

@@ -36,6 +36,11 @@ export const PageHeader = styled.header`
 
   @media (max-width: 720px) {
     flex-direction: column;
+    align-items: stretch;
+
+    > div:first-child {
+      flex: initial;
+    }
   }
 `
 

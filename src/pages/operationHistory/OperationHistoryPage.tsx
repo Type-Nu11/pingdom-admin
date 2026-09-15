@@ -7,6 +7,7 @@ import { AdminNavigationMenu } from '../../components/navigation/AdminNavigation
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { ListPane } from '../../components/common/ListPane'
+import { formatListRange } from '../../utils/listRange'
 import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminOperationHistories } from '../../hooks/useAdminOperationHistories'
@@ -444,8 +445,7 @@ function OperationHistoryPage() {
                 <ListDetailWorkspace constrained>
                   <ListPane
                     title="감사 로그"
-                    description="항목을 선택해 전후 상태를 확인합니다."
-                    count={hook.auditState.hasResult ? `${(hook.audit?.totalCount ?? 0).toLocaleString()}건${hook.auditState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                    count={hook.auditState.hasResult && hook.audit ? `${formatListRange({ page: hook.audit.page, pageSize: PAGE_LIMIT, itemCount: hook.audit.auditLogs.length, total: hook.audit.totalCount })}${hook.auditState.phase === 'error' || isLoading ? ' (이전 결과)' : ''}` : undefined}
                     page={hook.auditState.hasResult ? hook.audit?.page : undefined}
                     ariaLabel="감사 로그 목록"
                     footer={hook.auditState.hasResult && (hook.audit?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="감사 로그 페이지네이션" page={hook.audit?.page ?? 1} totalPages={hook.audit?.totalPages ?? 1} hasNext={hook.audit?.hasNext} disabled={isLoading} onPageChange={moveAudit} /> : null}
@@ -535,8 +535,7 @@ function OperationHistoryPage() {
                 <ListDetailWorkspace constrained>
                   <ListPane
                     title="개인정보 처리 이력"
-                    description="항목을 선택해 요청과 처리 결과를 확인합니다."
-                    count={hook.privacyState.hasResult ? `${(hook.privacy?.totalCount ?? 0).toLocaleString()}건${hook.privacyState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                    count={hook.privacyState.hasResult && hook.privacy ? `${formatListRange({ page: hook.privacy.page, pageSize: PAGE_LIMIT, itemCount: hook.privacy.histories.length, total: hook.privacy.totalCount })}${hook.privacyState.phase === 'error' || isLoading ? ' (이전 결과)' : ''}` : undefined}
                     page={hook.privacyState.hasResult ? hook.privacy?.page : undefined}
                     ariaLabel="개인정보 처리 이력 목록"
                     footer={hook.privacyState.hasResult && (hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}

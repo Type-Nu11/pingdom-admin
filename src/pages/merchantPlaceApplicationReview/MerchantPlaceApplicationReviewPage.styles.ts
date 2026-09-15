@@ -23,6 +23,10 @@ export const ActionTarget = styled.div`
   overflow-wrap: anywhere;
 
   strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
     font-size: 14px;
     line-height: 1.4;
     color: ${colors.strongText};

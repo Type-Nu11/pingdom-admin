@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getAdminDataQualityIssues } from '../api/adminDataQualityApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminDataQualityErrorResponse,
@@ -54,7 +54,7 @@ export function useAdminDataQualityIssues() {
 
   const message = useCallback((error: unknown, fallback: string) => {
     if (!isApiError<AdminDataQualityErrorResponse>(error)) return fallback
-    if (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized') {
+    if (shouldClearAuth(error)) {
       clearAuth()
     }
     return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES })

@@ -7,7 +7,7 @@ import {
   getAdminReservations,
   rejectAdminReservation,
 } from '../api/adminReservationApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminReservation,
@@ -49,11 +49,6 @@ function getErrorMessage(error: unknown, fallback: string) {
       INVALID_RESERVATION_STATUS: '현재 상태에서는 처리할 수 없는 예약입니다.',
     },
   })
-}
-
-function shouldClearAuth(error: unknown) {
-  return isApiError<AdminReservationErrorResponse>(error)
-    && (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
 }
 
 function normalizeQuery(query: ReservationQueryState): ReservationQueryState {

@@ -6,7 +6,7 @@ import {
   reviewAdminPlaceInformationDispute,
   reviewAdminPlaceInformationReport,
 } from '../api/adminPlaceVerificationApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminPlaceVerificationErrorResponse,
@@ -36,13 +36,6 @@ function getErrorMessage(error: unknown, fallbackMessage: string) {
     return fallbackMessage
   }
   return getAuthErrorMessage(error, { fallbackMessage, categoryMessages: CATEGORY_MESSAGES })
-}
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminPlaceVerificationErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
-  )
 }
 
 export type PlaceReportAction = 'review-report' | 'review-dispute'

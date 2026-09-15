@@ -13,7 +13,7 @@ import {
   updateAdminPlaceOperatingStatus,
   updateAdminPlaceTouristInfo,
 } from '../api/adminPlaceApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
 import { getPlaceCategoryLabel } from '../utils/placeCategory'
@@ -134,13 +134,6 @@ function getAdminPlaceErrorMessage(
     codeMessages: ADMIN_PLACE_CODE_MESSAGES,
     categoryMessages: ADMIN_PLACE_CATEGORY_MESSAGES,
   })
-}
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminPlaceApiErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
-  )
 }
 
 interface UseAdminPlacesOptions {

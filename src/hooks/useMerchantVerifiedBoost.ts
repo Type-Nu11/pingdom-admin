@@ -9,7 +9,7 @@ import {
   startMerchantVerifiedBoostExecution,
   stopMerchantVerifiedBoostExecution,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantStoreErrorResponse,
@@ -75,7 +75,7 @@ export function useMerchantVerifiedBoost() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,

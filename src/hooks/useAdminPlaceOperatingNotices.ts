@@ -5,7 +5,7 @@ import {
   expireAdminPlaceOperatingNotices,
   updateAdminPlaceOperatingNotice,
 } from '../api/adminPlaceOperatingNoticeApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminPlaceUpdateErrorResponse,
@@ -95,9 +95,7 @@ export function useAdminPlaceOperatingNotices() {
         }))
 
         if (
-          isApiError<AdminPlaceUpdateErrorResponse>(error) &&
-          (error.response?.data?.code === 'INVALID_TOKEN' ||
-            error.category === 'unauthorized')
+          shouldClearAuth(error)
         ) {
           clearAuth()
         }

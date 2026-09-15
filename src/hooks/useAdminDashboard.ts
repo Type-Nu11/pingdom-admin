@@ -4,8 +4,7 @@ import {
   getAdminDashboardSummary,
 } from '../api/adminDashboardApi'
 import { getAdminMerchantPlaceApplications } from '../api/adminMerchantPlaceApplicationApi'
-import { isApiError } from '../api/customAxios'
-import type { AuthErrorResponse } from '../types/auth.types'
+import { shouldClearAuth } from '../api/authError'
 import type {
   AdminDashboardLoadStatus,
   AdminDashboardRecentActivitiesResponse,
@@ -48,15 +47,6 @@ function hasPendingMerchantPlaceApplicationData(
   applications: AdminMerchantPlaceApplicationListItem[],
 ) {
   return applications.length > 0
-}
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AuthErrorResponse>(error) &&
-    (error.response?.status === 401 ||
-      error.response?.data?.code === 'INVALID_TOKEN' ||
-      error.category === 'unauthorized')
-  )
 }
 
 export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions = {}) {

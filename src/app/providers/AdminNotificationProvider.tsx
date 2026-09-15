@@ -16,7 +16,7 @@ import {
   type AdminPendingWorkItem,
 } from '../../api/adminPendingWorkApi'
 import { isApiError } from '../../api/customAxios'
-import type { AuthErrorResponse } from '../../types/auth.types'
+import { shouldClearAuth } from '../../api/authError'
 import type {
   AdminNotificationItem,
   AdminNotificationListRequest,
@@ -31,15 +31,6 @@ import {
 
 const ADMIN_NOTIFICATION_POLL_INTERVAL_MS = 30_000
 const ADMIN_PENDING_WORK_POLL_INTERVAL_MS = 60_000
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AuthErrorResponse>(error) &&
-    (error.response?.status === 401 ||
-      error.response?.data?.code === 'INVALID_TOKEN' ||
-      error.category === 'unauthorized')
-  )
-}
 
 function getNotificationErrorMessage(error: unknown) {
   if (isApiError(error)) {

@@ -5,7 +5,7 @@ import {
   getAdminReportAppeals,
   rejectAdminReportAppeal,
 } from '../api/adminReportAppealApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminReportAppealActionRequest,
@@ -31,11 +31,6 @@ const CATEGORY_MESSAGES = {
 function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (!isApiError<AdminReportAppealErrorResponse>(error)) return fallbackMessage
   return getAuthErrorMessage(error, { fallbackMessage, categoryMessages: CATEGORY_MESSAGES })
-}
-
-function shouldClearAuth(error: unknown) {
-  return isApiError<AdminReportAppealErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
 }
 
 export function useAdminReportAppeals() {

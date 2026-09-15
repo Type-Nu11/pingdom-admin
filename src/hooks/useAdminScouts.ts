@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { listQueryKey, useListQueryState } from './useListQueryState'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminScoutApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { AdminScoutErrorResponse, ScoutFieldReport, ScoutFieldReportStatus, ScoutProfile, ScoutProfileStatus } from '../types/adminScout.types'
 import { logDebugError } from '../utils/debugLogger'
@@ -45,7 +45,7 @@ export function useAdminScouts() {
   const reportRequestId = useRef(0)
   const [profileError, setProfileError] = useState('')
   const [reportError, setReportError] = useState('')
-  const fail = useCallback((error: unknown, fallback: string) => { if (isApiError<AdminScoutErrorResponse>(error)) { if (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized') clearAuth(); return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORIES }) } return fallback }, [clearAuth])
+  const fail = useCallback((error: unknown, fallback: string) => { if (isApiError<AdminScoutErrorResponse>(error)) { if (shouldClearAuth(error)) clearAuth(); return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORIES }) } return fallback }, [clearAuth])
   const fetchProfiles = useCallback(async (status: ScoutProfileStatus | '' = queries.current.profileStatus, page = queries.current.profilePage) => {
     const requestId = ++profileRequestId.current
     const key = listQueryKey({ status, page })

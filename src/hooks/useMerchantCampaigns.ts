@@ -11,7 +11,7 @@ import {
   updateMerchantBrand,
   updateMerchantCampaign,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantBrand,
@@ -107,7 +107,7 @@ export function useMerchantCampaigns() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -160,7 +160,7 @@ export function useMerchantCampaigns() {
     if (profileResult.status === 'rejected' || campaignResult.status === 'rejected') {
       ;[profileResult, campaignResult, brandResult].forEach((result) => {
         if (result.status === 'rejected') {
-          if (isApiError(result.reason) && result.reason.category === 'unauthorized') clearAuth()
+          if (shouldClearAuth(result.reason)) clearAuth()
           logDebugError('상점주 이벤트 초기 조회 실패', result.reason)
         }
       })

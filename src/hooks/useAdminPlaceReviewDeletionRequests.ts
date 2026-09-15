@@ -6,7 +6,7 @@ import {
   getAdminPlaceReviewDeletionRequests,
   reviewAdminPlaceReviewDeletionRequest,
 } from '../api/adminPlaceReviewDeletionApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminPlaceReviewDeletionErrorResponse,
@@ -33,12 +33,6 @@ const CATEGORY_MESSAGES = {
 function message(error: unknown, fallback: string) {
   if (!isApiError<AdminPlaceReviewDeletionErrorResponse>(error)) return fallback
   return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES })
-}
-
-function shouldClearAuth(error: unknown) {
-  return isApiError<AdminPlaceReviewDeletionErrorResponse>(error) && (
-    error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized'
-  )
 }
 
 export function useAdminPlaceReviewDeletionRequests() {

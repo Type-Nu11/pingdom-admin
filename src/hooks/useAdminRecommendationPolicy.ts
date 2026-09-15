@@ -4,7 +4,7 @@ import {
   resyncAdminRecommendationSnapshots,
   updateAdminRecommendationTraffic,
 } from '../api/adminRecommendationPolicyApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminRecommendationPolicyErrorResponse,
@@ -29,11 +29,6 @@ const CATEGORY_MESSAGES = {
 function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (!isApiError<AdminRecommendationPolicyErrorResponse>(error)) return fallbackMessage
   return getAuthErrorMessage(error, { fallbackMessage, categoryMessages: CATEGORY_MESSAGES })
-}
-
-function shouldClearAuth(error: unknown) {
-  return isApiError<AdminRecommendationPolicyErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
 }
 
 export function useAdminRecommendationPolicy() {

@@ -8,7 +8,7 @@ import {
   updateMerchantOwnerApplicationProfile,
   updateMerchantVerification,
 } from '../api/merchantOnboardingApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantOnboardingErrorResponse,
@@ -72,7 +72,7 @@ export function useMerchantOnboarding() {
 
   const clearUnauthorizedSession = useCallback(
     (error: unknown) => {
-      if (isApiError<MerchantOnboardingErrorResponse>(error) && error.category === 'unauthorized') {
+      if (shouldClearAuth(error)) {
         clearAuth()
       }
     },

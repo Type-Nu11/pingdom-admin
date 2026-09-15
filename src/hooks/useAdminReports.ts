@@ -6,7 +6,7 @@ import {
   getAdminReportedUser,
   getAdminReportedUsers,
 } from '../api/adminReportApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -59,13 +59,6 @@ function getAdminReportErrorMessage(
     codeMessages: ADMIN_REPORT_CODE_MESSAGES,
     categoryMessages: ADMIN_REPORT_CATEGORY_MESSAGES,
   })
-}
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminReportApiErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
-  )
 }
 
 interface UseAdminReportsOptions {

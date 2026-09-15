@@ -10,7 +10,7 @@ import {
   getMerchantPlaceInformation,
   updateMerchantPlaceInformation,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantCampaign,
@@ -79,7 +79,7 @@ export function useMerchantStore() {
 
   const clearUnauthorizedSession = useCallback(
     (error: unknown) => {
-      if (isApiError<MerchantStoreErrorResponse>(error) && error.category === 'unauthorized') {
+      if (shouldClearAuth(error)) {
         clearAuth()
       }
     },

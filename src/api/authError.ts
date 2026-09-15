@@ -1,8 +1,22 @@
-import type { ApiError, ApiErrorCategory } from './customAxios'
+import { isCancel } from 'axios'
+import { isApiError, type ApiError, type ApiErrorCategory } from './customAxios'
 import type { AuthErrorResponse } from '../types/auth.types'
 
 type ErrorMessageMap = Partial<Record<string, string>>
 type CategoryMessageMap = Partial<Record<ApiErrorCategory, string>>
+
+export function shouldClearAuth(error: unknown): boolean {
+  if (isCancel(error) || !isApiError(error)) return false
+
+  // HTTP status takes precedence over response codes and fallback categories.
+  const status = error.response?.status ?? error.status
+  if (status !== undefined) {
+    return status === 401 || (error.isRefreshFailure === true && status === 403)
+  }
+
+  return error.category === 'unauthorized'
+    || (error.isRefreshFailure === true && error.category === 'forbidden')
+}
 
 const DEFAULT_CATEGORY_MESSAGES: CategoryMessageMap = {
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',

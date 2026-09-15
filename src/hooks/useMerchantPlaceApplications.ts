@@ -14,7 +14,7 @@ import {
   uploadMerchantPlaceApplicationAttachment,
 } from '../api/merchantPlaceApplicationApi'
 import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantOwnerProfile } from '../types/merchantStore.types'
 import type {
@@ -70,7 +70,7 @@ export function useMerchantPlaceApplications() {
 
   const clearUnauthorizedSession = useCallback(
     (requestError: unknown) => {
-      if (isApiError(requestError) && requestError.category === 'unauthorized') clearAuth()
+      if (shouldClearAuth(requestError)) clearAuth()
     },
     [clearAuth],
   )

@@ -6,7 +6,7 @@ import {
   getMerchantReservations,
   getMerchantReservableProducts,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantAvailability,
@@ -55,7 +55,7 @@ export function useMerchantReservationOperations() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -86,7 +86,7 @@ export function useMerchantReservationOperations() {
     if (reservationResult.status === 'rejected') {
       setIsLoading(false)
       const nextMessage = getErrorMessage(reservationResult.reason, '예약 목록을 불러오지 못했습니다.')
-      if (isApiError(reservationResult.reason) && reservationResult.reason.category === 'unauthorized') {
+      if (shouldClearAuth(reservationResult.reason)) {
         clearAuth()
       }
       if (initial) {
@@ -115,7 +115,7 @@ export function useMerchantReservationOperations() {
     )
     if (referenceFailures.length > 0) {
       referenceFailures.forEach((result) => {
-        if (isApiError(result.reason) && result.reason.category === 'unauthorized') clearAuth()
+        if (shouldClearAuth(result.reason)) clearAuth()
         logDebugError('상점주 예약 참조 정보 조회 실패', result.reason)
       })
       setSectionErrorMessage('상품 또는 예약 시간 일부를 불러오지 못해 ID로 표시합니다. 새로고침 후 다시 시도해주세요.')

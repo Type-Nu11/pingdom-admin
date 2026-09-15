@@ -8,7 +8,7 @@ import {
   updateMerchantPlaceMenuOrder,
   updateMerchantPlaceMenuStatus,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { isApiError } from '../api/customAxios'
 import type {
@@ -57,7 +57,7 @@ export function useMerchantPlaceMenus() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,

@@ -8,7 +8,7 @@ import {
   markAllAdminNotificationsAsRead,
   retryAdminOutboxEvent,
 } from "../api/adminNotificationApi";
-import { getAuthErrorMessage } from "../api/authError";
+import { shouldClearAuth, getAuthErrorMessage } from "../api/authError";
 import { isApiError } from "../api/customAxios";
 import type {
   AdminNotificationDeliveryItem,
@@ -70,11 +70,7 @@ export function useAdminNotificationOperations() {
   const msg = useCallback(
     (e: unknown, f: string) => {
       if (!isApiError<AuthErrorResponse>(e)) return f;
-      if (
-        e.response?.data?.code === "INVALID_TOKEN" ||
-        e.category === "unauthorized"
-      )
-        clearAuth();
+      if (shouldClearAuth(e)) clearAuth();
       return getAuthErrorMessage(e, {
         fallbackMessage: f,
         categoryMessages: C,

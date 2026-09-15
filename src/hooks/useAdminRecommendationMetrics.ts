@@ -4,7 +4,7 @@ import {
   getAdminRecommendationExplanation,
   getAdminRecommendationMetrics,
 } from '../api/adminRecommendationMetricApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminRecommendationExplanationResponse,
@@ -30,11 +30,6 @@ const CATEGORY_MESSAGES = {
 function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (!isApiError<AdminRecommendationMetricErrorResponse>(error)) return fallbackMessage
   return getAuthErrorMessage(error, { fallbackMessage, categoryMessages: CATEGORY_MESSAGES })
-}
-
-function shouldClearAuth(error: unknown) {
-  return isApiError<AdminRecommendationMetricErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
 }
 
 export interface RecommendationMetricQuery {

@@ -7,7 +7,7 @@ import {
   mergeAdminPlaces,
   restoreAdminPlaceMerge,
 } from '../api/adminPlaceMergeApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminPlaceMergeErrorResponse,
@@ -58,13 +58,6 @@ function getAdminPlaceMergeErrorMessage(error: unknown) {
     codeMessages: ADMIN_PLACE_MERGE_CODE_MESSAGES,
     categoryMessages: ADMIN_PLACE_MERGE_CATEGORY_MESSAGES,
   })
-}
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminPlaceMergeErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
-  )
 }
 
 export type AdminPlaceMergeAction = 'merge' | 'restore' | null

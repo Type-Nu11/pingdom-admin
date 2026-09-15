@@ -9,7 +9,7 @@ import {
   publishMerchantOffer,
   redeemMerchantCoupon,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantCouponRedeemRequest,
@@ -68,7 +68,7 @@ export function useMerchantOffers() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -124,7 +124,7 @@ export function useMerchantOffers() {
     if (profileResult.status === 'rejected' || offerResult.status === 'rejected') {
       ;[profileResult, offerResult].forEach((result) => {
         if (result.status !== 'rejected') return
-        if (isApiError(result.reason) && result.reason.category === 'unauthorized') clearAuth()
+        if (shouldClearAuth(result.reason)) clearAuth()
         logDebugError('상점주 혜택 초기 조회 실패', result.reason)
       })
       setErrorMessage('혜택 관리 정보를 불러오지 못했습니다.')

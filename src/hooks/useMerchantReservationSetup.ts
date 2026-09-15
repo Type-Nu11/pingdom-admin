@@ -9,7 +9,7 @@ import {
   getMerchantReservableProducts,
   updateMerchantAvailability,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantAvailability,
@@ -60,7 +60,7 @@ export function useMerchantReservationSetup() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -93,7 +93,7 @@ export function useMerchantReservationSetup() {
     )
     if (failures.length > 0) {
       failures.forEach((result) => {
-        if (isApiError(result.reason) && result.reason.category === 'unauthorized') clearAuth()
+        if (shouldClearAuth(result.reason)) clearAuth()
         logDebugError('상점주 예약 운영 정보 조회 실패', result.reason)
       })
       setSectionErrorMessage('일부 예약 운영 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.')

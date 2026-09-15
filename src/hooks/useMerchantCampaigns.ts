@@ -93,6 +93,11 @@ export function useMerchantCampaigns() {
   const mountedRef = useRef(true)
   const actionRef = useRef<CampaignAction>(null)
   const listRequestRef = useRef(0)
+  const initialRequestRef = useRef(0)
+  const brandRequestRef = useRef(0)
+  const [brandStatus, setBrandStatus] = useState<LoadStatus>('loading')
+  const [brandErrorMessage, setBrandErrorMessage] = useState('')
+  const [hasListResult, setHasListResult] = useState(false)
 
   const applyCampaigns = useCallback((items: MerchantCampaign[], requestedPage = 1) => {
     const nextTotalPages = Math.max(1, Math.ceil(items.length / MERCHANT_CAMPAIGN_PAGE_LIMIT))
@@ -130,9 +135,14 @@ export function useMerchantCampaigns() {
       const items = await getAllMerchantCampaigns()
       if (!mountedRef.current || requestId !== listRequestRef.current) return false
       applyCampaigns(items, nextPage)
+      setHasListResult(true)
       return true
     } catch (error) {
       if (mountedRef.current && requestId === listRequestRef.current) {
+        if (isApiError(error) && (error.category === 'unauthorized' || error.category === 'forbidden')) {
+          applyCampaigns([])
+          setHasListResult(false)
+        }
         setErrorMessage(getErrorMessage(error, '이벤트 목록을 불러오지 못했습니다.'))
         logDebugError('상점주 이벤트 목록 조회 실패', error)
       }
@@ -142,46 +152,57 @@ export function useMerchantCampaigns() {
     }
   }, [applyCampaigns, getErrorMessage])
 
+  const fetchBrands = useCallback(async () => {
+    const requestId = ++brandRequestRef.current
+    setBrandStatus('loading')
+    setBrandErrorMessage('')
+    try {
+      const items = await getAllMerchantBrands()
+      if (!mountedRef.current || requestId !== brandRequestRef.current) return false
+      setBrands(items)
+      setBrandStatus('ready')
+      return true
+    } catch (error) {
+      if (!mountedRef.current || requestId !== brandRequestRef.current) return false
+      setBrands([])
+      setBrandStatus('error')
+      setBrandErrorMessage(getErrorMessage(error, '브랜드 목록을 불러오지 못했습니다.'))
+      return false
+    }
+  }, [getErrorMessage])
+
   const fetchInitialData = useCallback(async () => {
+    const requestId = ++initialRequestRef.current
     setStatus('loading')
-    setIsListLoading(true)
     setErrorMessage('')
-    const [profileResult, campaignResult, brandResult] = await Promise.allSettled([
-      getMerchantOwnerProfile(),
-      getAllMerchantCampaigns(),
-      getAllMerchantBrands(),
-    ])
-
-    if (!mountedRef.current) return
-    if (profileResult.status === 'fulfilled') setProfile(profileResult.value)
-    if (campaignResult.status === 'fulfilled') applyCampaigns(campaignResult.value, 1)
-    if (brandResult.status === 'fulfilled') setBrands(brandResult.value)
-
-    if (profileResult.status === 'rejected' || campaignResult.status === 'rejected') {
-      ;[profileResult, campaignResult, brandResult].forEach((result) => {
-        if (result.status === 'rejected') {
-          if (shouldClearAuth(result.reason)) clearAuth()
-          logDebugError('상점주 이벤트 초기 조회 실패', result.reason)
-        }
-      })
-      setIsListLoading(false)
+    void fetchCampaigns(1)
+    void fetchBrands()
+    try {
+      const next = await getMerchantOwnerProfile()
+      if (!mountedRef.current || requestId !== initialRequestRef.current) return
+      setProfile(next)
+      setStatus('ready')
+    } catch (error) {
+      if (!mountedRef.current || requestId !== initialRequestRef.current) return
+      setProfile(null)
       setStatus('error')
-      setErrorMessage('이벤트 관리 정보를 불러오지 못했습니다.')
-      return
+      setErrorMessage(getErrorMessage(error, '이벤트 관리 정보를 불러오지 못했습니다.'))
+      // Stop child requests from replacing the initial error.
+      listRequestRef.current += 1
+      brandRequestRef.current += 1
+      setIsListLoading(false)
     }
-
-    setStatus('ready')
-    setIsListLoading(false)
-    if (brandResult.status === 'rejected') {
-      logDebugError('상점주 브랜드 목록 조회 실패', brandResult.reason)
-      setErrorMessage('브랜드 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.')
-    }
-  }, [applyCampaigns, clearAuth])
+  }, [fetchCampaigns, fetchBrands, getErrorMessage])
 
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
+    return () => {
+      mountedRef.current = false
+      initialRequestRef.current += 1
+      listRequestRef.current += 1
+      brandRequestRef.current += 1
+    }
   }, [fetchInitialData])
 
   const runAction = useCallback(async <T,>(
@@ -274,7 +295,7 @@ export function useMerchantCampaigns() {
 
   return {
     status, profile, campaigns, brands, page, totalElements, totalPages, hasNext,
-    isListLoading, errorMessage, actionErrorMessage, successMessage, activeAction,
+    isListLoading, hasListResult, brandStatus, brandErrorMessage, fetchBrands, errorMessage, actionErrorMessage, successMessage, activeAction,
     fetchInitialData, fetchCampaigns, goToPage, createCampaign, updateCampaign, publishCampaign,
     closeCampaign, createBrand, updateBrand,
   }

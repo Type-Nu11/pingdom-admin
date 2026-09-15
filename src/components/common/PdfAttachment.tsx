@@ -11,6 +11,12 @@ export function PdfAttachment({ url, zoom, onError }: { url: string; zoom: numbe
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const errorRef = useRef(onError)
+  const changePage = (nextPage: number) => {
+    // Boundary navigation disables its button; keep keyboard focus inside the dialog.
+    viewportRef.current?.focus()
+    setRendering(true)
+    setPage(nextPage)
+  }
   useEffect(() => { errorRef.current = onError }, [onError])
   useEffect(() => {
     let active = true
@@ -46,9 +52,9 @@ export function PdfAttachment({ url, zoom, onError }: { url: string; zoom: numbe
   }, [pdf, page, zoom])
   return <>
     <S.Toolbar>
-      <S.IconButton type="button" aria-label="이전 페이지" title="이전 페이지" disabled={!pdf || page <= 1} onClick={() => { setRendering(true); setPage(value => value - 1) }}><span aria-hidden="true">chevron_left</span></S.IconButton>
+      <S.IconButton type="button" aria-label="이전 페이지" title="이전 페이지" disabled={!pdf || page <= 1} onClick={() => changePage(page - 1)}><span aria-hidden="true">chevron_left</span></S.IconButton>
       <output aria-live="polite">{pdf ? `${page} / ${pdf.numPages}` : 'PDF 로딩 중'}</output>
-      <S.IconButton type="button" aria-label="다음 페이지" title="다음 페이지" disabled={!pdf || page >= pdf.numPages} onClick={() => { setRendering(true); setPage(value => value + 1) }}><span aria-hidden="true">chevron_right</span></S.IconButton>
+      <S.IconButton type="button" aria-label="다음 페이지" title="다음 페이지" disabled={!pdf || page >= pdf.numPages} onClick={() => changePage(page + 1)}><span aria-hidden="true">chevron_right</span></S.IconButton>
     </S.Toolbar>
     <S.Viewport ref={viewportRef} tabIndex={0} role="region" aria-label="증빙 PDF" aria-busy={rendering}>
       <canvas ref={canvasRef} role="img" aria-label={`PDF ${page}페이지. 원본은 다운로드하여 확인할 수 있습니다.`} />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AppDialog } from './AppDialog'
 import { FeedbackMessage } from './FeedbackMessage'
 import { useApplicationAttachmentPreview } from '../../hooks/useApplicationAttachmentPreview'
@@ -23,6 +23,11 @@ export function AttachmentPreview(props: Props) {
 function PreviewContent({ applicationId, attachment, attempt, onDownload, onRetry }: Props & { attempt: number; onRetry: () => void }) {
   const state = useApplicationAttachmentPreview(applicationId, attachment.id, attempt)
   const [zoom, setZoom] = useState(100)
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const changeZoom = (next: number) => {
+    if (next === 50 || next === 200) toolbarRef.current?.focus()
+    setZoom(next)
+  }
   const [broken, setBroken] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState(false)
@@ -35,12 +40,12 @@ function PreviewContent({ applicationId, attachment, attempt, onDownload, onRetr
     finally { setDownloading(false) }
   }
   return <>
-    <S.Toolbar>
+    <S.Toolbar ref={toolbarRef} tabIndex={-1} role="group" aria-label="증빙 도구">
       <S.IconButton type="button" title="다운로드" aria-label="다운로드" disabled={downloading} onClick={() => void download()}><span aria-hidden="true">download</span></S.IconButton>
       {state.status === 'ready' && !broken ? <>
-        <S.IconButton type="button" title="축소" aria-label="축소" disabled={zoom <= 50} onClick={() => setZoom(value => value - 25)}><span aria-hidden="true">zoom_out</span></S.IconButton>
+        <S.IconButton type="button" title="축소" aria-label="축소" disabled={zoom <= 50} onClick={() => changeZoom(zoom - 25)}><span aria-hidden="true">zoom_out</span></S.IconButton>
         <output aria-label="확대 비율">{zoom}%</output>
-        <S.IconButton type="button" title="확대" aria-label="확대" disabled={zoom >= 200} onClick={() => setZoom(value => value + 25)}><span aria-hidden="true">zoom_in</span></S.IconButton>
+        <S.IconButton type="button" title="확대" aria-label="확대" disabled={zoom >= 200} onClick={() => changeZoom(zoom + 25)}><span aria-hidden="true">zoom_in</span></S.IconButton>
       </> : null}
       {state.status === 'error' || broken ? <S.IconButton type="button" title="다시 시도" aria-label="다시 시도" onClick={onRetry}><span aria-hidden="true">refresh</span></S.IconButton> : null}
     </S.Toolbar>

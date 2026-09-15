@@ -45,6 +45,7 @@ export const Title = styled.h2`
 
 export const Description = styled.p`
   margin: 6px 0 0;
+  overflow-wrap: anywhere;
   color: ${adminColors.muted};
   font-size: 13px;
   line-height: 1.5;

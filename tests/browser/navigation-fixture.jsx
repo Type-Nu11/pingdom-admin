@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { AdminNavigationMenu } from '../../src/components/navigation/AdminNavigationMenu'
-import { GlobalStyle } from '../../src/styles/GlobalStyle'
+import { GlobalStyle } from '../../src/styles/globalStyle'
 import * as Shell from '../../src/pages/place/PlaceManagePage.styles'
 
 function Fixture() {

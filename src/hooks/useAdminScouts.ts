@@ -197,5 +197,5 @@ export function useAdminScouts() {
       selectedUserRef.current = null
     }
   }, [fetchProfiles, fetchReports])
-  return { isLoading: profileListState.phase === "loading" || reportListState.phase === "loading", selectedUserId, clearProfile, profileStatus, reportStatus, profiles, profile, reports, profilePage, reportPage, profileTotal, reportTotal, profileTotalPages, reportTotalPages, profileHasNext, reportHasNext, profileListState, reportListState, profileError, reportError, isDetailLoading, activeAction, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchProfiles, fetchProfile, fetchReports, reviewProfile, grantEligibility, reviewEligibility, reviewReport }
+  return { selectedUserId, clearProfile, profileStatus, reportStatus, profiles, profile, reports, profilePage, reportPage, profileTotal, reportTotal, profileTotalPages, reportTotalPages, profileHasNext, reportHasNext, profileListState, reportListState, profileError, reportError, isDetailLoading, activeAction, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchProfiles, fetchProfile, fetchReports, reviewProfile, grantEligibility, reviewEligibility, reviewReport }
 }

@@ -1,0 +1,38 @@
+[
+  {
+    "method": "GET",
+    "path": "/admin/data-quality/issues",
+    "file": "src/api/adminDataQualityApi.ts",
+    "function": "getAdminDataQualityIssues",
+    "callers": [
+      "src/hooks/useAdminDataQualityIssues.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/users/me/merchant-verification",
+    "file": "src/api/merchantOnboardingApi.ts",
+    "function": "getMerchantVerification",
+    "callers": [
+      "src/hooks/useMerchantOnboarding.ts"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/users/me/merchant-verification",
+    "file": "src/api/merchantOnboardingApi.ts",
+    "function": "createMerchantVerification",
+    "callers": [
+      "src/hooks/useMerchantOnboarding.ts"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/users/me/merchant-verification",
+    "file": "src/api/merchantOnboardingApi.ts",
+    "function": "updateMerchantVerification",
+    "callers": [
+      "src/hooks/useMerchantOnboarding.ts"
+    ]
+  }
+]

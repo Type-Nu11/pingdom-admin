@@ -1,92 +1,59 @@
 # Web API 계약 매트릭스 운영 기준
 
-이 문서는 운영 Swagger의 `Web` 그룹 API를 실제 관리자 화면 구현과 연결해 추적하는 기준입니다. API 호출 도구나 Swagger 대체 화면을 만들기 위한 문서가 아닙니다.
+## 이번 확인 범위
 
-## 기준 스냅샷
+- 이슈: #207
+- Admin 136개, Merchant 82개, 총 218개 operation
+- 출처·수집 시각: [metadata.json](openapi/metadata.json)
+- 원본: [admin.json](openapi/admin.json), [merchant.json](openapi/merchant.json)
+- App, Common, Consulting은 이번 대조 대상에서 제외한다. 기존 범위 밖 CSV 행은 확인일을 갱신하지 않고 보존한다.
+- Swagger에 없는 경로는 문서에서 제거된 것으로만 판단한다. 서버 기능 삭제나 실제 404 응답을 확정하지 않는다.
+- 인증 API 실행·실서버 mutation·운영 QA는 수행하지 않았다.
 
-- 상위 이슈: #67
-- 매트릭스 이슈: #78
-- 운영 Swagger: `http://54.116.166.107:8080/v3/api-docs`
-- 확인일: 2026-08-20
-- Web operation: 143개
-- 기록 파일: [`web-api-contract-matrix.csv`](./web-api-contract-matrix.csv)
+## 상태
 
-2026-08-15 기준 로컬 백엔드 `src/test/resources/openapi-baseline/web.json`은 117개 operation입니다. 운영 Swagger와 비교하면 아래 26개 operation이 로컬 baseline에 없습니다.
-
-- 사용자 역할 3개
-- Scout 프로필 8개
-- Trust Score 2개
-- legacy 후보인 장소 등록 신청 3개
-- 광고 2개
-- 기간형 이벤트 2개
-- 상점주 신청·사업자 검증 6개
-
-따라서 운영 143개와 로컬 117개 중 어느 한쪽을 임의로 최신 계약으로 간주하지 않습니다. 배포 대상 백엔드의 canonical 계약을 확인한 뒤 차이를 해소해야 합니다.
-
-## 상태 규칙
-
-| 상태 | 판단 기준 |
+| 상태 | 의미 |
 | --- | --- |
-| `implemented` | route, API module, hook/page가 연결되어 실제 운영 흐름에서 호출할 수 있음 |
-| `partial` | canonical 후보 구현은 있으나 legacy 경로 관계 또는 일부 계약 확인이 남음 |
-| `missing` | 백엔드 계약은 있지만 프론트 route/API/page 구현이 없음 |
-| `blocked` | mutation만 있고 목록·상세 조회 등 안전한 운영에 필요한 선행 계약이 없음 |
+| implemented | 기존 구현 기록과 소스 참조가 일치하거나 이번에 직접 흐름을 확인함. 실서버 QA 완료 의미 아님 |
+| partial | API 함수 및 호출 참조는 있으나 이번 정적 대조만으로 화면 전체 동작·확인 절차까지 확정하지 않음 |
+| missing | 문서 계약은 있으나 직접 호출 근거 없음. 제품 범위 제외 여부는 별도 확인 |
+| alternative | 직접 호출 대신 기존 목록·상세 응답으로 화면에 필요한 정보 제공 |
+| blocked | 사용 중인 호출이 현재 그룹 문서에 없음. 서버 계약 확인 필요 |
+| removed | 과거 기록은 있지만 현재 그룹 문서와 호출 근거에서 제외됨 |
 
-제거된 path 또는 schema만 남은 API는 `implemented`로 기록하지 않습니다. path가 사라졌으면 관련 이슈를 연결한 뒤 `missing` 또는 `blocked`로 바꾸고, canonical 대체 경로가 확인된 경우에만 `partial`로 기록합니다.
+canonical_status의 documented는 해당 그룹 OpenAPI에 존재한다는 뜻이다. 기존 범위 밖 행은 out-of-scope로 표시한다.
+last_verified는 문서·소스 대조일이며 런타임 성공 확인일이 아니다. 기존 confirmation은 과거 기록을 보존한 것이므로 이번 실행으로 재검증한 것으로 해석하지 않는다.
 
-## 현재 상태
+## 주요 정리
 
-| 상태 | 개수 | 범위 |
-| --- | ---: | --- |
-| `implemented` | 140 | 실제 관리자 route/API/hook/page 연결 |
-| `partial` | 3 | `/admin/place-registration-applications/**` legacy 후보 |
-| `missing` | 0 | 현재 없음 |
-| `blocked` | 0 | 현재 없음 |
+- Claim 함수 8개와 전용 타입을 제거했다. 통합 장소 신청 호출과 사용 중인 온보딩은 유지한다.
+- 탐색 미디어 업로드 URL 발급 후 POST 완료 등록이 연결되어 있다. 순서 변경은 PATCH의 displayOrder에 이동 대상 인덱스를 보내며 서버가 중복 없는 연속 순서를 보장한다. targetIndex라는 요청 필드는 사용하지 않는다.
+- 메뉴 단건 조회는 메뉴 목록으로, 상점주 신청 첨부 목록 조회는 신청 상세 attachments로 대체한다. 직접 호출하지 않는다고 전체 기능 미구현으로 세지 않는다.
+- 대시보드 pending-items는 #206, 게시글 운영 미연동은 #205, 팀원 관리는 #204에 연결한다. 팀원 관리는 현재 제품 범위 제외 결정이며 서버 차단이 아니다.
+- 구형 merchant-verification은 호출이 남아 있지만 그룹 계약에 없다. #203의 정책 확인 대상으로 두며 이 작업에서 임의 전환하지 않는다.
 
-`/admin/ad`, `/admin/place-events`, `/users/me/merchant-owner-profile`, `/users/me/merchant-verification`은 목록·상세 조회와 운영 mutation을 모두 화면에 연결했습니다.
+## 재현
 
-## Swagger 변경 확인 절차
-
-아래 절차는 저장소 루트에서 실행합니다. 임시 파일만 `/tmp`에 만들며 저장소 파일은 자동 변경하지 않습니다.
-
-```bash
-curl -s -o /tmp/pingdom-openapi.json http://54.116.166.107:8080/v3/api-docs
-
-jq -r '
-  .paths | to_entries[] as $path
-  | $path.value | to_entries[]
-  | select(.key | IN("get", "post", "put", "patch", "delete"))
-  | select(.value.tags // [] | index("Web"))
-  | "\(.key | ascii_upcase) \($path.key)"
-' /tmp/pingdom-openapi.json | sort > /tmp/swagger-web-operations.txt
-
-tail -n +2 docs/web-api-contract-matrix.csv \
-  | awk -F',' '{ gsub(/"/, "", $2); gsub(/"/, "", $3); print $2 " " $3 }' \
-  | sort > /tmp/matrix-web-operations.txt
-
-comm -3 /tmp/matrix-web-operations.txt /tmp/swagger-web-operations.txt
-```
-
-`comm` 출력이 없으면 method + path 집합이 같습니다. 차이가 있으면 다음 순서로 처리합니다.
-
-1. 추가·변경·제거된 operation의 summary, request schema, success/error response schema를 Swagger에서 확인합니다.
-2. canonical/legacy 관계와 backend 선행 계약 여부를 확인합니다.
-3. 해당 operation을 담당할 GitHub issue를 연결합니다.
-4. 실제 route/API/hook/page 연결 상태에 맞춰 status를 기록합니다.
-5. 파괴적 mutation이면 확인 dialog, 사유 입력, 대상 재입력 등 보호 수준을 확인합니다.
-6. `last_verified`를 실제 확인일로 갱신합니다.
-
-행 수와 필수 추적값은 다음 명령으로 확인합니다.
+저장소 루트에서 실행한다. Python 3 표준 csv/json과 프로젝트 TypeScript 파서를 사용한다.
 
 ```bash
-test "$(($(wc -l < docs/web-api-contract-matrix.csv) - 1))" -eq 143
-awk -F',' 'NR > 1 && ($8 == "\"\"" || $9 == "\"\"") { print NR }' docs/web-api-contract-matrix.csv
+npm ci
+node scripts/api-source-inventory.mjs
+python3 scripts/refresh-api-contract-matrix.py
+node --test tests/api-contract-matrix.test.mjs
 ```
 
-두 번째 명령이 아무 행도 출력하지 않아야 합니다.
+갱신 스크립트는 저장된 두 OpenAPI와 현재 소스를 읽어 CSV 및 source-contract-gaps.json을 갱신한다. 네트워크 호출은 하지 않는다.
+원본의 parameters, schema, responses, security, description은 스냅샷에 보존되므로 이후 JSON 비교로 경로 이외의 변경도 추적할 수 있다.
 
-## PR 기록 규칙
+새 수집은 각 metadata.sources URL에서 성공 응답을 받아 JSON/OpenAPI paths를 확인한 뒤 스냅샷과 수집 시각을 함께 갱신한다. 실패 응답으로 기존 스냅샷을 덮어쓰지 않는다.
 
-Web API에 영향이 있는 PR은 PR 템플릿에 `METHOD path`를 모두 적습니다. 계약 변경이 없다면 `영향 없음`을 선택합니다. 계약이 바뀌면 매트릭스의 schema, status, issue, canonical 상태, 마지막 확인일을 같은 PR에서 갱신합니다.
+## 정적 분석 한계
 
-파괴 작업은 API 연결만으로 완료 처리하지 않습니다. 사용자에게 영향과 복구 가능성을 보여주고, 작업 위험도에 맞는 명시적 확인 수단이 실제 UI에 있어야 `implemented`로 기록할 수 있습니다.
+TypeScript AST로 문자열·템플릿·상수·간단한 경로 반환 함수를 읽고 API 함수의 참조 파일을 기록한다. 동적 작업명은 경로 패턴으로 대조한다. 중괄호 인자 이름 차이는 비교에서 무시하지만 CSV는 Swagger 원래 경로명을 보존한다.
+참조 파일이 있다는 사실만으로 실제 라우트 노출·권한·성공 응답을 보장하지 않는다. 새 연결은 partial로 보수적으로 기록하며, 불확실한 항목을 implemented로 자동 승격하지 않는다.
+[소스 계약 차이](openapi/source-contract-gaps.json)는 사용 중이지만 현재 대상 그룹에 없는 호출 후보로, 신규 서버 버그나 제거 확정 목록이 아니다.
+
+## PR 규칙
+
+API 계약 변경 여부와 관련 METHOD /path를 기록하고, 변경 작업의 확인 절차를 별도로 검증한다. 문서 갱신이나 프론트 코드 정리를 서버 배포 완료로 표현하지 않는다.

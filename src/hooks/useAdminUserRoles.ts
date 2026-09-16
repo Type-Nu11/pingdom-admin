@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminUserRoleApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
@@ -29,6 +29,13 @@ export function useAdminUserRoles() {
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const mutationRef = useRef(false)
+  const requestRef = useRef(0)
+  useEffect(() => () => { requestRef.current += 1 }, [])
+  const clearTarget = useCallback(() => {
+    requestRef.current += 1
+    setTargetUserId(null); setAssignments([]); setIsLoading(false)
+    setErrorMessage(''); setActionErrorMessage(''); setSuccessMessage('')
+  }, [])
 
   const errorText = useCallback((error: unknown, fallback: string) => {
     if (!isApiError<AdminUserRoleErrorResponse>(error)) return fallback
@@ -37,17 +44,22 @@ export function useAdminUserRoles() {
   }, [clearAuth])
 
   const fetchRoles = useCallback(async (userId: number) => {
+    if (mutationRef.current) return false
+    const request = ++requestRef.current
+    setTargetUserId(null); setAssignments([])
     setIsLoading(true); setErrorMessage(''); setActionErrorMessage(''); setSuccessMessage('')
     try {
       const data = await api.getAdminUserRoles(userId)
+      if (request !== requestRef.current) return false
       setTargetUserId(userId); setAssignments(data)
       return true
     } catch (error) {
+      if (request !== requestRef.current) return false
       setTargetUserId(null); setAssignments([])
       setErrorMessage(errorText(error, '관리자 역할 이력을 불러오지 못했습니다.'))
       logDebugError('관리자 역할 이력 조회 실패', error)
       return false
-    } finally { setIsLoading(false) }
+    } finally { if (request === requestRef.current) setIsLoading(false) }
   }, [errorText])
 
   const mutate = useCallback(async (role: AdminRole, action: 'assign' | 'revoke', reason: string) => {
@@ -67,5 +79,5 @@ export function useAdminUserRoles() {
     } finally { mutationRef.current = false; setIsMutating(false) }
   }, [errorText, targetUserId])
 
-  return { targetUserId, assignments, isLoading, isMutating, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchRoles, mutate }
+  return { targetUserId, assignments, isLoading, isMutating, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchRoles, mutate, clearTarget }
 }

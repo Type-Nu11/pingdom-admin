@@ -1,3 +1,5 @@
+import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
+import { searchAdminPlaces } from '../../api/adminTargetSearchApi'
 import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
@@ -52,7 +54,7 @@ function formatPerson(name: string | null, id: number | null) {
 function parsePlaceId(value: string) {
   if (!value.trim()) return undefined
   const placeId = Number(value)
-  return Number.isInteger(placeId) && placeId > 0 ? placeId : null
+  return Number.isSafeInteger(placeId) && placeId > 0 ? placeId : null
 }
 
 function AdminReservationReviewPage() {
@@ -62,6 +64,8 @@ function AdminReservationReviewPage() {
   const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null)
   const [status, setStatus] = useState<AdminReservationStatus | ''>('PENDING')
   const [placeId, setPlaceId] = useState('')
+  const [placeSearchOpen, setPlaceSearchOpen] = useState(false)
+  const [placeName, setPlaceName] = useState('')
   const [filterError, setFilterError] = useState('')
   const [dialog, setDialog] = useState<Dialog>(null)
   const [reason, setReason] = useState('')
@@ -84,6 +88,7 @@ function AdminReservationReviewPage() {
   const resetFilters = () => {
     setStatus('PENDING')
     setPlaceId('')
+    setPlaceName('')
     setFilterError('')
     setSelectedReservationId(null)
     hook.clearDetail()
@@ -187,21 +192,23 @@ function AdminReservationReviewPage() {
                   </AdminSelect>
                 </S.Field>
                 <S.Field>
-                  장소 ID
+                  {placeName ? `장소 ID · ${placeName}` : '장소 ID'}
                   <S.Input
                     value={placeId}
                     inputMode="numeric"
                     placeholder="예: 70069"
                     disabled={hook.isLoading || hook.activeAction !== null}
-                    onChange={(event) => { setPlaceId(event.target.value); setFilterError('') }}
+                    onChange={(event) => { setPlaceId(event.target.value); setPlaceName(''); setFilterError(''); setDialog(null); setSelectedReservationId(null); hook.clearDetail() }}
                   />
                 </S.Field>
+                <Shared.SecondaryButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => setPlaceSearchOpen(true)}>장소 검색</Shared.SecondaryButton>
                 <S.SearchFilterActions>
                   <Shared.SecondaryButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={resetFilters}>초기화</Shared.SecondaryButton>
                   <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.activeAction !== null}>조회</Shared.PrimaryButton>
                 </S.SearchFilterActions>
               </S.SearchFilterGrid>
             </S.SearchBar>
+            {placeSearchOpen ? <AdminTargetSearch title="장소명·주소 검색" load={searchAdminPlaces} onClose={() => setPlaceSearchOpen(false)} onSelect={place => { setPlaceId(String(place.id)); setPlaceName(place.name); setFilterError(''); setDialog(null); setSelectedReservationId(null); hook.clearDetail() }} /> : null}
             {filterError ? <Shared.Notice $variant="error" role="alert">{filterError}</Shared.Notice> : null}
 
 
@@ -230,6 +237,7 @@ function AdminReservationReviewPage() {
                   onReset={() => {
                     setStatus('')
                     setPlaceId('')
+                    setPlaceName('')
                     setFilterError('')
                     setSelectedReservationId(null)
                     hook.clearDetail()

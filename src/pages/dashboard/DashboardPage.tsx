@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import * as S from './DashboardPage.styles'
+import { getDashboardPendingRows } from '../../utils/dashboardPendingItems'
 
 type DashboardMetricKey =
   | 'placeCount'
@@ -113,7 +114,7 @@ function DashboardPage() {
   const {
     summary,
     recentActivities,
-    pendingMerchantPlaceApplications,
+    pendingItems,
     status,
     recentActivitiesStatus,
     pendingItemsStatus,
@@ -121,6 +122,7 @@ function DashboardPage() {
     lastUpdatedAt,
     fetchSummary,
   } = useAdminDashboard()
+  const pendingRows = getDashboardPendingRows(pendingItems?.items ?? [])
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
@@ -405,7 +407,7 @@ function DashboardPage() {
   }
 
   function renderPendingReviewQueue() {
-    if (!pendingMerchantPlaceApplications) {
+    if (!pendingItems || pendingItemsStatus === 'unavailable') {
       if (pendingItemsStatus === 'loading') {
         return <S.OperationalEmptyState>심사 대기 항목을 불러오는 중입니다.</S.OperationalEmptyState>
       }
@@ -417,33 +419,33 @@ function DashboardPage() {
       return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
     }
 
-    if (pendingMerchantPlaceApplications.length === 0) {
+    if (pendingRows.length === 0) {
       if (pendingItemsStatus === 'error' || pendingItemsStatus === 'loading') return null
       if (pendingItemsStatus !== 'success' && pendingItemsStatus !== 'empty') {
         return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
       }
-      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
+      return <S.OperationalEmptyState>{pendingItems.totalCount > 0 ? '대기 업무가 있지만 표시할 항목이 없습니다.' : '처리 대기 중인 게시글 신고·장소 신청이 없습니다.'}</S.OperationalEmptyState>
     }
 
     return (
       <S.PendingList>
-        {pendingMerchantPlaceApplications.map((item) => (
+        {pendingRows.map((item) => (
           <S.PendingItem
-            key={item.id}
+            key={item.key}
             type="button"
-            onClick={() => navigate('/merchant-place-applications', {
-              state: { applicationId: item.id },
-            })}
+            disabled={!item.destination}
+            onClick={() => item.destination && navigate(item.destination.path, { state: item.destination.state })}
           >
             <S.PendingItemMain>
-              <strong title={item.placeName || item.businessName || `장소 신청 #${item.id}`}>
-                {item.placeName || item.businessName || `장소 신청 #${item.id}`}
+              <strong title={item.title}>
+                {item.title}
               </strong>
-              <span>{formatActivityDate(item.submittedAt ?? item.updatedAt ?? undefined) ?? '접수 시각 정보 없음'}</span>
+              <span>{item.label} · {item.description}</span>
+              <span>{formatActivityDate(item.createdAt ?? undefined) ?? '접수 시각 정보 없음'}</span>
             </S.PendingItemMain>
             <S.PendingItemMeta>
-              심사하기
-              <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+              {item.destination ? '심사하기' : item.unavailableReason}
+              {item.destination ? <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon> : null}
             </S.PendingItemMeta>
           </S.PendingItem>
         ))}
@@ -605,19 +607,19 @@ function DashboardPage() {
 
           <S.Section aria-labelledby="dashboard-pending-review-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-pending-review-title">심사 대기</S.SectionTitle>
+              <S.SectionTitle id="dashboard-pending-review-title">처리 대기</S.SectionTitle>
               <S.SectionDescription>
-                {pendingItemsStatus === 'success'
-                  ? `조회된 상점주 장소 신청 ${(pendingMerchantPlaceApplications?.length ?? 0).toLocaleString()}건 · 최대 10건`
-                  : '처리 대기 중인 상점주 장소 신청'}
+                {pendingItems && pendingItemsStatus !== 'unavailable'
+                  ? `전체 대기 ${pendingItems.totalCount.toLocaleString()}건 · 표시 ${pendingRows.length}건 · 최대 10건${pendingItemsStatus === 'loading' || pendingItemsStatus === 'error' ? ' · 이전 조회 결과' : ''}`
+                  : '처리 대기 중인 게시글 신고·장소 신청'}
               </S.SectionDescription>
-              <S.InlineRetryButton type="button" onClick={() => navigate('/merchant-place-applications')}>심사 목록 보기</S.InlineRetryButton>
+              <S.InlineRetryButton type="button" onClick={() => navigate('/merchant-place-applications')}>장소 신청 목록 보기</S.InlineRetryButton>
             </S.SectionHeader>
-            <S.OperationsPanel $compact={pendingMerchantPlaceApplications?.length === 0}>
-              {pendingItemsStatus === 'loading' && pendingMerchantPlaceApplications ? (
+            <S.OperationsPanel $compact={pendingRows.length === 0}>
+              {pendingItemsStatus === 'loading' && pendingItems ? (
                 <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
               ) : null}
-              {pendingItemsStatus === 'error' && pendingMerchantPlaceApplications
+              {pendingItemsStatus === 'error' && pendingItems
                 ? renderSectionError('심사 대기 항목을 새로 불러오지 못했습니다.')
                 : null}
               {renderPendingReviewQueue()}

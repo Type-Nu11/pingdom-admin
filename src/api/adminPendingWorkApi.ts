@@ -3,7 +3,6 @@ import {
   getAdminPlaceDuplicateReviewCandidates,
 } from "./adminPlaceMergeApi";
 import { getAdminPlaceInformationReports } from "./adminPlaceVerificationApi";
-import { getAdminReportAppeals } from "./adminReportAppealApi";
 import {
   getAdminScoutFieldReports,
   getAdminScoutProfiles,
@@ -83,22 +82,6 @@ const checks: PendingWorkCheck[] = [
         "접수 후 검토되지 않은 장소 정보 신고",
         response.totalCount,
         "/places/information-verification",
-      ),
-    ];
-  },
-  async () => {
-    const response = await getAdminReportAppeals({
-      status: "SUBMITTED",
-      page: 1,
-      limit: 1,
-    });
-    return [
-      item(
-        "report-appeals",
-        "신고 이의제기",
-        "검토 대기 중인 신고 이의제기",
-        response.totalCount,
-        "/reports/appeals",
       ),
     ];
   },

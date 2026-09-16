@@ -424,7 +424,7 @@ function DashboardPage() {
       if (pendingItemsStatus !== 'success' && pendingItemsStatus !== 'empty') {
         return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
       }
-      return <S.OperationalEmptyState>{pendingItems.totalCount > 0 ? '대기 업무가 있지만 표시할 항목이 없습니다.' : '처리 대기 중인 게시글 신고·장소 신청이 없습니다.'}</S.OperationalEmptyState>
+      return <S.OperationalEmptyState>{pendingItems.totalCount > 0 ? '대기 업무가 있지만 표시할 항목이 없습니다.' : '처리 대기 중인 장소 신청이 없습니다.'}</S.OperationalEmptyState>
     }
 
     return (
@@ -607,11 +607,11 @@ function DashboardPage() {
 
           <S.Section aria-labelledby="dashboard-pending-review-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-pending-review-title">처리 대기</S.SectionTitle>
+              <S.SectionTitle id="dashboard-pending-review-title">장소 신청 처리 대기</S.SectionTitle>
               <S.SectionDescription>
                 {pendingItems && pendingItemsStatus !== 'unavailable'
                   ? `전체 대기 ${pendingItems.totalCount.toLocaleString()}건 · 표시 ${pendingRows.length}건 · 최대 10건${pendingItemsStatus === 'loading' || pendingItemsStatus === 'error' ? ' · 이전 조회 결과' : ''}`
-                  : '처리 대기 중인 게시글 신고·장소 신청'}
+                  : '처리 대기 중인 장소 신청'}
               </S.SectionDescription>
               <S.InlineRetryButton type="button" onClick={() => navigate('/merchant-place-applications')}>장소 신청 목록 보기</S.InlineRetryButton>
             </S.SectionHeader>

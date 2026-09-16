@@ -42,8 +42,6 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     id: 'safety',
     title: '사용자 · 안전',
     items: [
-      { label: '신고 사용자', icon: 'report', path: '/reports/reported-users' },
-      { label: '신고 이의제기', icon: 'gavel', path: '/reports/appeals' },
       { label: '사용자 밴', icon: 'block', path: '/bans' },
       { label: '사용자 역할', icon: 'manage_accounts', path: '/users/roles' },
     ],

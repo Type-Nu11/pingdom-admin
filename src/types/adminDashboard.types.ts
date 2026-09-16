@@ -7,8 +7,6 @@ export interface AdminDashboardSummary {
 export interface AdminDashboardPendingItem {
   type: string
   targetId: number
-  reportId?: number | null
-  postId?: number | null
   title?: string | null
   status: string
   createdAt?: string | null

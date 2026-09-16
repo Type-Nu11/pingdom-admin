@@ -1,5 +1,6 @@
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminPlaces } from '../../api/adminTargetSearchApi'
+import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
 import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
@@ -295,7 +296,7 @@ function AdminReservationReviewPage() {
                       </S.RecordHeader>
                       <S.DetailGrid>
                         <S.DetailItem><dt>예약자</dt><dd>{formatPerson(hook.reservation.touristUsername, hook.reservation.touristUserId)}</dd></S.DetailItem>
-                        <S.DetailItem><dt>장소</dt><dd>{hook.reservation.placeName || '정보 없음'} · #{hook.reservation.placeId}</dd></S.DetailItem>
+                        <S.DetailItem><dt>장소</dt><dd><PlaceDetailLink id={hook.reservation.placeId} name={hook.reservation.placeName} /></dd></S.DetailItem>
                         <S.DetailItem><dt>상점주</dt><dd>{formatPerson(hook.reservation.merchantOwnerUsername, hook.reservation.merchantOwnerUserId)}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 상품</dt><dd>{hook.reservation.productName || '정보 없음'}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 시간</dt><dd>{formatSchedule(hook.reservation)}</dd></S.DetailItem>

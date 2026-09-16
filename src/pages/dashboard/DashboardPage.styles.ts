@@ -702,7 +702,12 @@ export const PendingItem = styled.button`
     border-bottom: 0;
   }
 
-  &:hover {
+  &:disabled {
+    cursor: default;
+    opacity: 1;
+  }
+
+  &:hover:not(:disabled) {
     color: ${neutral.primary};
   }
 
@@ -739,6 +744,8 @@ export const PendingItemMain = styled.span`
 `
 
 export const PendingItemMeta = styled.span`
+  max-width: 45%;
+  overflow-wrap: anywhere;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -746,7 +753,7 @@ export const PendingItemMeta = styled.span`
   color: ${neutral.softText};
   font-size: 12px;
 
-  ${PendingItem}:hover & {
+  ${PendingItem}:hover:not(:disabled) & {
     color: ${neutral.primary};
   }
 

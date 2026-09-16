@@ -17,7 +17,8 @@ test('matrix covers each documented Admin and Merchant operation exactly once', 
 test('missing and alternate APIs are distinct from implemented flows', () => {
   const row = (method, path) => rows.find(r => key(r.method, r.path) === key(method, path))
   assert.equal(row('GET', '/admin/dashboard/pending-items').issue, '#206')
-  assert.equal(row('GET', '/admin/dashboard/pending-items').status, 'missing')
+  assert.equal(row('GET', '/admin/dashboard/pending-items').status, 'implemented')
+  assert.equal(row('DELETE', '/admin/posts/{id}/delete').status, 'missing')
   assert.equal(row('GET', '/merchant-owner/places/{placeId}/menus/{menuId}').status, 'alternative')
   assert.equal(row('PATCH', '/merchant-owner/places/{placeId}/media/{mediaId}').status, 'implemented')
   assert.match(row('PATCH', '/merchant-owner/places/{placeId}/media/{mediaId}').confirmation, /displayOrder/)

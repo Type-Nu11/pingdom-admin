@@ -23,13 +23,34 @@ try{
     const errors=[];page.on('pageerror',e=>errors.push(e.message))
     await page.route('**/*',route=>{const u=new URL(route.request().url());return (u.hostname==='127.0.0.1'&&!u.pathname.startsWith('/api'))||['fonts.googleapis.com','fonts.gstatic.com','cdn.jsdelivr.net'].includes(u.hostname)?route.continue():route.abort()})
     await page.goto(`${base}/roles`)
+    await page.evaluate(async () => {
+      const { default: client } = await import('/src/api/customAxios.ts')
+      const adapter = client.defaults.adapter
+      client.defaults.adapter = async config => {
+        if (config.url.endsWith('/roles')) {
+          await new Promise(resolve => { window.releaseRoleLookup = resolve })
+        }
+        return adapter(config)
+      }
+    })
     await page.getByRole('button',{name:'관리자 사용자명 검색',exact:true}).click()
     const dialog=page.getByRole('dialog')
     await dialog.getByRole('button',{name:'same_admin · #8',exact:true}).waitFor()
     assert.equal(await dialog.evaluate(el=>el.scrollWidth>el.clientWidth),false)
     await page.screenshot({path:join(output,`roles-search-${width}.png`)})
-    await dialog.getByRole('button',{name:'same_admin · #8',exact:true}).click()
+    await dialog.getByRole('button',{name:'same_admin · #8',exact:true}).focus()
+    await page.keyboard.press('Enter')
+    await page.waitForFunction(() => document.activeElement?.tagName === 'INPUT' && document.activeElement.value === '8')
+    assert.equal(await page.getByRole('button',{name:'관리자 사용자명 검색',exact:true}).isDisabled(),true)
+    await page.evaluate(() => window.releaseRoleLookup())
     await page.getByText('same_admin · 관리자 #8의 역할을 관리합니다.').waitFor()
+    assert.equal(await page.getByLabel('관리자 사용자 ID',{exact:true}).evaluate(el => el === document.activeElement),true)
+    await page.keyboard.press('Tab')
+    assert.equal(await page.getByRole('button',{name:'역할 조회',exact:true}).evaluate(el => el === document.activeElement),true)
+    await page.getByRole('button',{name:'관리자 사용자명 검색',exact:true}).click()
+    await dialog.waitFor()
+    await page.keyboard.press('Escape')
+    assert.equal(await page.getByRole('button',{name:'관리자 사용자명 검색',exact:true}).evaluate(el => el === document.activeElement),true)
     assert.ok(await page.evaluate(()=>window.qaRequests.some(r=>r.url==='/admin/users/8/roles')))
     await page.goto(`${base}/reservations/review`)
     await page.getByRole('button',{name:'장소 검색',exact:true}).click()

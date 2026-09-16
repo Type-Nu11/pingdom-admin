@@ -1,7 +1,7 @@
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminRoleTargets } from '../../api/adminTargetSearchApi'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
@@ -52,6 +52,17 @@ function UserRolePage() {
   const [userIdInput, setUserIdInput] = useState("");
   const [targetSearchOpen, setTargetSearchOpen] = useState(false);
   const [targetName, setTargetName] = useState<{ id: number; name: string } | null>(null);
+  const userIdInputRef = useRef<HTMLInputElement>(null);
+  const focusSelectedTargetRef = useRef(false);
+  useEffect(() => {
+    if (targetSearchOpen || !focusSelectedTargetRef.current) return;
+    // Wait until the search dialog has finished restoring its previous focus.
+    const frame = window.requestAnimationFrame(() => {
+      focusSelectedTargetRef.current = false;
+      userIdInputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [targetSearchOpen]);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [reason, setReason] = useState("");
   const [formError, setFormError] = useState("");
@@ -153,12 +164,13 @@ function UserRolePage() {
               </Shared.HeaderActions>
             </Shared.PageHeader>
             <Shared.SecondaryButton type="button" disabled={hook.isMutating || hook.isLoading} onClick={() => setTargetSearchOpen(true)}>관리자 사용자명 검색</Shared.SecondaryButton>
-            {targetSearchOpen ? <AdminTargetSearch title="관리자 사용자명 검색" load={searchAdminRoleTargets} onClose={() => setTargetSearchOpen(false)} onSelect={target => { setUserIdInput(String(target.id)); setTargetName(target); setDialog(null); setFormError(""); void hook.fetchRoles(target.id) }} /> : null}
+            {targetSearchOpen ? <AdminTargetSearch title="관리자 사용자명 검색" load={searchAdminRoleTargets} onClose={() => setTargetSearchOpen(false)} onSelect={target => { focusSelectedTargetRef.current = true; setUserIdInput(String(target.id)); setTargetName(target); setDialog(null); setFormError(""); void hook.fetchRoles(target.id) }} /> : null}
             <S.SearchBar as="form" onSubmit={search}>
               <S.InlineSearchControls>
                 <S.Field>
                   관리자 사용자 ID
                   <S.Input
+                    ref={userIdInputRef}
                     value={userIdInput}
                     disabled={hook.isMutating}
                     inputMode="numeric"

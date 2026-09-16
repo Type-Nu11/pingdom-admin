@@ -13,6 +13,7 @@ import {
   ProtectedRoute,
 } from './ProtectedRoute'
 import { MerchantLayout } from './MerchantLayout'
+import { MerchantApplicationLayout } from './MerchantApplicationLayout'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
@@ -165,8 +166,6 @@ export function Router() {
           <Route element={<MerchantProtectedRoute />}>
             <Route element={<MerchantLayout />}>
               <Route path="/merchant" element={<MerchantStorePage />} />
-              <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
-              <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
               <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
               <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
               <Route path="/merchant/offers" element={<MerchantOfferPage />} />
@@ -178,12 +177,16 @@ export function Router() {
               <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
               <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
               <Route path="/merchant/reviews" element={<MerchantPlaceReviewPage />} />
-              <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
               <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
             </Route>
           </Route>
           <Route element={<MerchantOnboardingRoute />}>
             <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />
+            <Route element={<MerchantApplicationLayout />}>
+              <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
+              <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
+              <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
+            </Route>
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />

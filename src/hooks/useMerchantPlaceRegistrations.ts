@@ -12,7 +12,7 @@ import {
   updateMerchantPlaceApplication,
   uploadMerchantPlaceApplicationAttachment,
 } from '../api/merchantPlaceApplicationApi'
-import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
+import { getOptionalMerchantApplicationProfile } from '../api/merchantOnboardingApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantOwnerProfile } from '../types/merchantStore.types'
@@ -177,7 +177,7 @@ export function useMerchantPlaceRegistrations() {
     setStatus((current) => (current === 'ready' ? 'ready' : 'loading'))
     setErrorMessage('')
     const [profileResult, applicationsResult] = await Promise.allSettled([
-      getMerchantOwnerProfile(),
+      getOptionalMerchantApplicationProfile(),
       getAllMerchantPlaceApplications(),
     ])
     if (!mountedRef.current) return
@@ -191,17 +191,13 @@ export function useMerchantPlaceRegistrations() {
     const failures = [profileResult, applicationsResult].filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
-    if (failures.length === 2) {
+    if (failures.length > 0) {
       failures.forEach((result) => clearUnauthorizedSession(result.reason))
       setStatus('error')
       setErrorMessage('신규 장소 등록 신청 정보를 불러오지 못했습니다.')
       return
     }
     setStatus('ready')
-    if (failures.length > 0) {
-      failures.forEach((result) => logDebugError('신규 장소 등록 신청 일부 조회 실패', result.reason))
-      setErrorMessage('일부 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
-    }
   }, [clearUnauthorizedSession])
 
   useEffect(() => {

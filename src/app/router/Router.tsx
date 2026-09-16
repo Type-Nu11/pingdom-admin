@@ -28,8 +28,6 @@ const PlaceVerificationPage = lazy(
   () => import('../../pages/placeVerification/PlaceVerificationPage'),
 )
 const UserBanPage = lazy(() => import('../../pages/userBan/UserBanPage'))
-const ReportedUsersPage = lazy(() => import('../../pages/reportedUsers/ReportedUsersPage'))
-const ReportAppealPage = lazy(() => import('../../pages/reportAppeal/ReportAppealPage'))
 const RecommendationMetricsPage = lazy(
   () => import('../../pages/recommendationMetrics/RecommendationMetricsPage'),
 )
@@ -202,8 +200,8 @@ export function Router() {
               element={<PlaceVerificationPage />}
             />
             <Route path="/bans" element={<UserBanPage />} />
-            <Route path="/reports/reported-users" element={<ReportedUsersPage />} />
-            <Route path="/reports/appeals" element={<ReportAppealPage />} />
+            <Route path="/reports/reported-users" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/reports/appeals" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/recommendations/metrics"
               element={<RecommendationMetricsPage />}

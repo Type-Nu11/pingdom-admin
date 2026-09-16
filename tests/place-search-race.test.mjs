@@ -19,7 +19,7 @@ function Probe() { state = useMerchantPlaceApplications(); return null }
 beforeEach(async () => {
   pending = new Map()
   client.defaults.adapter = async config => {
-    if (config.url === '/merchant-owner/me') return response(config, {})
+    if (config.url === '/users/me/merchant-owner-profile') return response(config, {})
     if (config.url === '/users/me/merchant-place-applications') return response(config, { items: [], hasNext: false })
     assert.equal(config.url, '/places/autocomplete')
     const keyword = config.params.keyword

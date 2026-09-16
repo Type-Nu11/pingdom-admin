@@ -74,41 +74,48 @@ test('initial refresh 404 is a load error, not an empty onboarding result', asyn
 test('refresh 404 preserves loaded onboarding data and allows retry', async () => {
   await mount()
   assert.deepEqual(latest.profile, profile)
-  assert.deepEqual(latest.verification, verification)
   failedPath = '/users/me/'
   await act(async () => latest.fetchOnboarding())
   assert.equal(latest.status, 'error')
   assert.ok(latest.errorMessage)
   assert.deepEqual(latest.profile, profile)
-  assert.deepEqual(latest.verification, verification)
   assert.equal(auth.getStoredAccessToken(), 'A')
   failedPath = null
   await act(async () => latest.fetchOnboarding())
   assert.equal(latest.status, 'ready')
   assert.equal(latest.errorMessage, '')
   assert.deepEqual(latest.profile, profile)
-  assert.deepEqual(latest.verification, verification)
 })
 
-for (const path of ['merchant-owner-profile', 'merchant-verification']) {
+for (const path of ['merchant-owner-profile']) {
   test(`${path} refresh 404 preserves data and reports a partial failure`, async () => {
     await mount()
     failedPath = path
     await act(async () => latest.fetchOnboarding())
-    assert.equal(latest.status, 'ready')
-    assert.match(latest.errorMessage, /일부 신청 정보/)
+    assert.equal(latest.status, 'error')
+    assert.ok(latest.errorMessage)
     assert.deepEqual(latest.profile, profile)
-    assert.deepEqual(latest.verification, verification)
   })
 }
 
-test('actual onboarding GET 404 still means no profile or verification', async () => {
+test('generic GET 404 is not treated as a new application', async () => {
   await mount()
   directNotFound = true
   await act(async () => latest.fetchOnboarding())
-  assert.equal(latest.status, 'ready')
-  assert.equal(latest.errorMessage, '')
-  assert.equal(latest.profile, null)
-  assert.equal(latest.verification, null)
+  assert.equal(latest.status, 'error')
+  assert.ok(latest.errorMessage)
+  assert.deepEqual(latest.profile, profile)
   assert.equal(refreshes, 0)
+})
+
+test('only PROFILE_NOT_FOUND allows a new application; legacy API is never requested', async () => {
+  client.defaults.adapter = async config => {
+    assert.equal(config.url, '/users/me/merchant-owner-profile')
+    const error = httpError(config, 404)
+    error.response.data = { code: 'PROFILE_NOT_FOUND' }
+    throw error
+  }
+  await mount()
+  assert.equal(latest.status, 'ready')
+  assert.equal(latest.profile, null)
 })

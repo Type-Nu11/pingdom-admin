@@ -281,8 +281,9 @@ export const SummaryRow = styled.div`
 
 export const FormActions = styled.div`
   display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   justify-content: flex-end;
-  margin-top: 20px;
 `
 
 export const FormHint = styled.p`

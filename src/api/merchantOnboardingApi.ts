@@ -1,9 +1,8 @@
 import customAxios from './customAxios'
+import { isApiError } from './customAxios'
 import type {
   MerchantOwnerApplicationProfile,
   MerchantOwnerApplicationRequest,
-  MerchantVerification,
-  MerchantVerificationRequest,
 } from '../types/merchantOnboarding.types'
 
 const MY_ACCOUNT_PATH = '/users/me'
@@ -35,25 +34,12 @@ export async function updateMerchantOwnerApplicationProfile(
   return data
 }
 
-export async function getMerchantVerification() {
-  const { data } = await customAxios.get<MerchantVerification>(
-    `${MY_ACCOUNT_PATH}/merchant-verification`,
-  )
-  return data
-}
-
-export async function createMerchantVerification(request: MerchantVerificationRequest) {
-  const { data } = await customAxios.post<MerchantVerification>(
-    `${MY_ACCOUNT_PATH}/merchant-verification`,
-    request,
-  )
-  return data
-}
-
-export async function updateMerchantVerification(request: MerchantVerificationRequest) {
-  const { data } = await customAxios.put<MerchantVerification>(
-    `${MY_ACCOUNT_PATH}/merchant-verification`,
-    request,
-  )
-  return data
+export async function getOptionalMerchantApplicationProfile() {
+  try {
+    return await getMerchantOwnerApplicationProfile()
+  } catch (error) {
+    if (isApiError<{ code?: string }>(error) && !error.isRefreshFailure
+      && error.response?.status === 404 && error.response.data?.code === 'PROFILE_NOT_FOUND') return null
+    throw error
+  }
 }

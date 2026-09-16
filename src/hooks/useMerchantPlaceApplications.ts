@@ -13,7 +13,7 @@ import {
   updateMerchantPlaceApplication,
   uploadMerchantPlaceApplicationAttachment,
 } from '../api/merchantPlaceApplicationApi'
-import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
+import { getOptionalMerchantApplicationProfile } from '../api/merchantOnboardingApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantOwnerProfile } from '../types/merchantStore.types'
@@ -80,7 +80,7 @@ export function useMerchantPlaceApplications() {
     setError('')
 
     const [profileResult, applicationsResult] = await Promise.allSettled([
-      getMerchantOwnerProfile(),
+      getOptionalMerchantApplicationProfile(),
       getAllMerchantPlaceApplications(),
     ])
 
@@ -93,7 +93,7 @@ export function useMerchantPlaceApplications() {
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
 
-    if (failures.length === 2) {
+    if (failures.length > 0) {
       failures.forEach((result) => clearUnauthorizedSession(result.reason))
       setStatus('error')
       setError('운영 장소 신청 정보를 불러오지 못했습니다.')
@@ -101,13 +101,6 @@ export function useMerchantPlaceApplications() {
     }
 
     setStatus('ready')
-    if (failures.length > 0) {
-      failures.forEach((result) => {
-        clearUnauthorizedSession(result.reason)
-        logDebugError('상점주 장소 신청 일부 조회 실패', result.reason)
-      })
-      setError('일부 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
-    }
   }, [clearUnauthorizedSession])
 
   useEffect(() => {

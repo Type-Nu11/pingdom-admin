@@ -9,10 +9,10 @@ import client from '../../src/api/customAxios'
 
 client.defaults.adapter = async config => {
   let data
-  if (config.url === '/admin/dashboard/pending-items') data = { totalCount: 32, items: [
-    { type: 'MERCHANT_PLACE_APPLICATION', targetId: 7, status: 'PENDING', title: '합성 장소 신청 '.repeat(15), createdAt: '2026-09-16T09:00:00', navigationPath: null },
-    { type: 'POST_REPORT', targetId: 8, reportId: 8, postId: 22, status: 'PENDING', title: '합성 게시글 신고 '.repeat(15) },
-    { type: 'FUTURE_TYPE', targetId: 9, status: 'PENDING', title: '미지원 업무 예시' },
+  if (config.url === '/admin/merchant-place-applications') data = { total: 32, items: [
+    { id: 7, status: 'PENDING', placeName: '합성 장소 신청 '.repeat(15), submittedAt: '2026-09-16T09:00:00' },
+    { id: -1, status: 'PENDING', placeName: '잘못된 신청 ID 예시' },
+    { id: null, status: 'PENDING', placeName: '신청 ID 누락 예시' },
   ] }
   else if (config.url === '/admin/dashboard/summary') data = { placeCount: 10, bannedUserCount: 0 }
   else if (config.url === '/admin/dashboard/recent-activities') data = { places: [], userSanctions: [] }

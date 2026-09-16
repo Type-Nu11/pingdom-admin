@@ -19,22 +19,21 @@ beforeEach(()=>{root=createRoot(document.getElementById('root'));globalThis.dash
 afterEach(async()=>{await act(async()=>root.unmount())})
 after(async()=>{delete globalThis.dashboardState;await server.close();dom.window.close()})
 async function render(extra={}){Object.assign(globalThis.dashboardState,extra);await act(async()=>root.render(h(AuthContext.Provider,{value:{user:{username:'admin'},logout(){}}},h(AdminNotificationContext.Provider,{value:{notifications:[],unreadCount:0,pendingWorkItems:[],pendingWorkCount:0,status:'success',pendingWorkStatus:'success'}},h(MemoryRouter,{},h(Page),h(Location))))))}
-test('work sections precede summary and valid zero is concise',async()=>{await render();const text=document.body.textContent;assert.ok(text.indexOf('처리 대기')<text.indexOf('관리 요약'));assert.ok(text.indexOf('우선 확인')<text.indexOf('관리 요약'));assert.match(text,/처리 대기 중인 게시글 신고·장소 신청이 없습니다/);assert.match(text,/전체 장소/);assert.match(text,/마지막 수신/)})
-for(const status of ['error','loading','unavailable']) test(status+' is never shown as zero work',async()=>{await render({status,pendingItemsStatus:status});assert.doesNotMatch(document.body.textContent,/조회된 운영 항목 중 확인할 항목이 없습니다|처리 대기 중인 게시글 신고·장소 신청이 없습니다/)})
+test('work sections precede summary and valid zero is concise',async()=>{await render();const text=document.body.textContent;assert.ok(text.indexOf('처리 대기')<text.indexOf('관리 요약'));assert.ok(text.indexOf('우선 확인')<text.indexOf('관리 요약'));assert.match(text,/처리 대기 중인 장소 신청이 없습니다/);assert.match(text,/전체 장소/);assert.match(text,/마지막 수신/)})
+for(const status of ['error','loading','unavailable']) test(status+' is never shown as zero work',async()=>{await render({status,pendingItemsStatus:status});assert.doesNotMatch(document.body.textContent,/조회된 운영 항목 중 확인할 항목이 없습니다|처리 대기 중인 장소 신청이 없습니다/)})
 test('pending application opens exact application and count is bounded',async()=>{await render({pendingItemsStatus:'success',pendingItems:{items:[{type:'MERCHANT_PLACE_APPLICATION',targetId:7,status:'PENDING',title:'합성 가게',navigationPath:'https://untrusted.example'}],totalCount:30}});const b=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('합성 가게'));await act(async()=>b.click());assert.equal(location.pathname,'/merchant-place-applications');assert.equal(location.state.applicationId,7);assert.match(document.body.textContent,/전체 대기 30건 · 표시 1건 · 최대 10건/)})
 test('missing metrics are not zero',async()=>{await render({summary:{placeCount:10,bannedUserCount:0}});assert.match(document.body.textContent,/운영 항목 집계가 제공되지 않았습니다/)})
 
 const pendingSection=()=>document.querySelector('[aria-labelledby="dashboard-pending-review-title"]')
-test('unsupported reports and invalid targets are visible without misleading navigation',async()=>{
-  await render({pendingItemsStatus:'success',pendingItems:{totalCount:3,items:[
-    {type:'POST_REPORT',targetId:8,reportId:8,postId:22,status:'PENDING',title:'게시글 신고',navigationPath:'/reports/reported-users'},
+test('unsupported types and invalid targets are visible without misleading navigation',async()=>{
+  await render({pendingItemsStatus:'success',pendingItems:{totalCount:2,items:[
     {type:'NEW_TYPE',targetId:9,status:'PENDING',title:'새 유형'},
     {type:'MERCHANT_PLACE_APPLICATION',targetId:-1,status:'PENDING',title:'잘못된 대상'},
   ]}})
   const rows=[...pendingSection().querySelectorAll('button')].filter(b=>b.disabled)
-  assert.equal(rows.length,3)
-  assert.match(pendingSection().textContent,/신고 #8 · 게시글 #22/)
-  assert.match(pendingSection().textContent,/게시글 신고 처리 화면 미지원/)
+  assert.equal(rows.length,2)
+  assert.match(pendingSection().textContent,/대상 또는 처리 경로 확인 필요/)
+  assert.doesNotMatch(pendingSection().textContent,/게시글 신고/)
 })
 test('duplicate items collapse and stable row retains focus through refresh and failure',async()=>{
   const item={type:'MERCHANT_PLACE_APPLICATION',targetId:7,status:'PENDING',title:'합성 가게'}

@@ -25,6 +25,22 @@ try {
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/review-qa`)
     await page.getByText('사진을 불러올 수 없습니다.').waitFor()
     assert.equal(await page.getByLabel('추천 이유').locator('span').count(), 7)
+    const contrast = await page.getByText('친절해요', { exact: true }).evaluate(element => {
+      const style = getComputedStyle(element)
+      const rgb = value => value.match(/[\d.]+/g).map(Number)
+      const fg = rgb(style.color), tint = rgb(style.backgroundColor)
+      const surface = rgb(getComputedStyle(element.closest('main')).backgroundColor)
+      const alpha = tint[3] ?? 1
+      const background = tint.slice(0, 3).map((v, i) => v * alpha + surface[i] * (1 - alpha))
+      const luminance = values => values.slice(0, 3).map(v => {
+        const s = v / 255
+        return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+      }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0)
+      const a = luminance(fg), b = luminance(background)
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+    })
+    assert.ok(contrast >= 4.5, `Reason contrast ${contrast.toFixed(2)}:1`)
+    console.log(`${width}px reason contrast: ${contrast.toFixed(2)}:1`)
     fail = false
     await page.getByRole('button', { name: '다음 리뷰' }).click()
     await page.waitForFunction(() => { const img = document.querySelector('img'); return img?.complete && img.naturalWidth > 0 })
@@ -53,5 +69,5 @@ try {
     assert.deepEqual(errors, [])
     await page.close()
   }
-  console.log(`PASS: legacy fallback, empty review, keyboard link, image failure and review change recovery; ${output}`)
+  console.log(`PASS: contrast, legacy fallback, empty review, keyboard link, image failure and review change recovery; ${output}`)
 } finally { await browser?.close(); await server.close() }

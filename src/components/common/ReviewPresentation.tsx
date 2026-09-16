@@ -6,7 +6,7 @@ import { adminColors as colors } from '../../styles/theme'
 
 const Reasons = styled.div`
   display: flex; flex-wrap: wrap; gap: 6px; min-width: 0;
-  span { padding: 4px 8px; border-radius: 6px; background: ${colors.primaryTint}; color: ${colors.primary}; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+  span { padding: 4px 8px; border-radius: 6px; background: ${colors.primaryTint}; color: ${colors.primaryForeground}; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 `
 const Grid = styled.div`
   display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; margin-top: 12px;

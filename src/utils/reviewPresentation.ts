@@ -7,8 +7,10 @@ const labels: Record<string, string> = {
 }
 
 export function reviewReasons(review: ReviewPresentation): string[] {
-  // An explicit empty array is authoritative; only absent fields use legacy data.
-  const reasons = review.recommendReasons ?? (review.recommendReason ? [review.recommendReason] : [])
+  // The server also returns empty new collections for legacy reviews.
+  const reasons = review.recommendReasons?.length
+    ? review.recommendReasons
+    : (review.recommendReason ? [review.recommendReason] : [])
   return [...new Set(reasons.filter(value => typeof value === 'string' && value.trim()).map(value => {
     const reason = value.trim()
     return Object.hasOwn(labels, reason) ? labels[reason] : /^[A-Z][A-Z_0-9]*$/.test(reason) ? '기타 추천 이유' : reason
@@ -16,7 +18,9 @@ export function reviewReasons(review: ReviewPresentation): string[] {
 }
 
 export function reviewImages(review: ReviewPresentation): string[] {
-  const media: ReviewMedia[] = review.reviewMedia ?? (review.imageUrls ?? []).map(imageUrl => ({ imageUrl }))
+  const media: ReviewMedia[] = review.reviewMedia?.length
+    ? review.reviewMedia
+    : (review.imageUrls ?? []).map(imageUrl => ({ imageUrl }))
   const urls = media.flatMap(item => {
     if (!item || typeof item.imageUrl !== 'string') return []
     if (item.contentType && !/^image\/(jpeg|png|webp|gif|avif)$/i.test(item.contentType)) return []

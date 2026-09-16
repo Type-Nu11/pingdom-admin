@@ -263,6 +263,26 @@ export const FilterField = styled.label`
   font-weight: 700;
 `
 
+export const HistoryFilters = styled.form`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  min-width: 0;
+  > label, > div { flex-direction: column; align-items: stretch; }
+  @media (max-width: 640px) {
+    > label, > div { width: 100%; }
+  }
+`
+
+export const AppliedFilters = styled.p`
+  flex-basis: 100%;
+  margin: 0;
+  color: ${colors.muted};
+  font-size: 12px;
+  overflow-wrap: anywhere;
+`
+
 export const DangerButton = styled.button`
   min-height: 40px;
   display: inline-flex;

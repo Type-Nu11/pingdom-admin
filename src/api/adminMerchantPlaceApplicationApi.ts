@@ -13,6 +13,9 @@ const PATH = '/admin/merchant-place-applications'
 export interface AdminMerchantPlaceApplicationListParams {
   status?: MerchantPlaceApplicationStatus | MerchantPlaceApplicationStatus[]
   applicationType?: MerchantPlaceApplicationType
+  keyword?: string
+  submittedFrom?: string
+  submittedTo?: string
   page?: number
   limit?: number
 }

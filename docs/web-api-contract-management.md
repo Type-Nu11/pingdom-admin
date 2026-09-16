@@ -3,7 +3,7 @@
 ## 이번 확인 범위
 
 - 이슈: #207
-- Admin 136개, Merchant 82개, 총 218개 operation
+- 정확한 수집 기준은 metadata.json과 그룹별 스냅샷을 참조한다. 현재 operation 수는 갱신 스크립트 출력과 테스트로 확인한다.
 - 출처·수집 시각: [metadata.json](openapi/metadata.json)
 - 원본: [admin.json](openapi/admin.json), [merchant.json](openapi/merchant.json)
 - App, Common, Consulting은 이번 대조 대상에서 제외한다. 기존 범위 밖 CSV 행은 확인일을 갱신하지 않고 보존한다.
@@ -20,6 +20,7 @@
 | alternative | 직접 호출 대신 기존 목록·상세 응답으로 화면에 필요한 정보 제공 |
 | blocked | 사용 중인 호출이 현재 그룹 문서에 없음. 서버 계약 확인 필요 |
 | removed | 과거 기록은 있지만 현재 그룹 문서와 호출 근거에서 제외됨 |
+| excluded | 서버 문서에는 존재하지만 현 제품 기획에서 제외하여 웹에서 호출하지 않음. 서버 API 삭제 의미 아님 |
 
 canonical_status의 documented는 해당 그룹 OpenAPI에 존재한다는 뜻이다. 기존 범위 밖 행은 out-of-scope로 표시한다.
 last_verified는 문서·소스 대조일이며 런타임 성공 확인일이 아니다. 기존 confirmation은 과거 기록을 보존한 것이므로 이번 실행으로 재검증한 것으로 해석하지 않는다.
@@ -29,7 +30,10 @@ last_verified는 문서·소스 대조일이며 런타임 성공 확인일이 �
 - Claim 함수 8개와 전용 타입을 제거했다. 통합 장소 신청 호출과 사용 중인 온보딩은 유지한다.
 - 탐색 미디어 업로드 URL 발급 후 POST 완료 등록이 연결되어 있다. 순서 변경은 PATCH의 displayOrder에 이동 대상 인덱스를 보내며 서버가 중복 없는 연속 순서를 보장한다. targetIndex라는 요청 필드는 사용하지 않는다.
 - 메뉴 단건 조회는 메뉴 목록으로, 상점주 신청 첨부 목록 조회는 신청 상세 attachments로 대체한다. 직접 호출하지 않는다고 전체 기능 미구현으로 세지 않는다.
-- 대시보드 pending-items는 #206, 게시글 운영 미연동은 #205, 팀원 관리는 #204에 연결한다. 팀원 관리는 현재 제품 범위 제외 결정이며 서버 차단이 아니다.
+- #207은 옛 MapImage 신고 사용자·이의제기 화면과 전용 API/훅/타입을 제거한다. #205의 일괄 신고·삭제 API도 missing이 아닌 excluded로 기록한다. 기존 운영 URL은 관리자 인증 가드 안에서 대시보드로 전환한다.
+- 대시보드는 혼합 pending-items 대신 통합 장소 신청 PENDING 목록과 서버 total을 사용한다. 알림 집계의 옛 이의제기 조회도 제거한다.
+- 리뷰·커뮤니티 계약, 사용자 밴·역할·감사 이력, 탐색 미디어 및 sourceMapImageId 역사 메타데이터, S3 고아 파일 정리 도구는 보존한다. posts가 포함된 경로 전체를 삭제하지 않는다.
+- 팀원 관리는 #204에 연결한다. 팀원 관리는 현재 제품 범위 제외 결정이며 서버 차단이 아니다.
 - #203: 구형 merchant-verification 호출과 별도 검증 폼을 제거하고 기존 통합 장소 신청 화면으로 연결했다. 직접 Owner 프로필 GET/POST/PUT 계약은 유지하며, 미신청은 GET의 PROFILE_NOT_FOUND만 인정한다. 일반 USER는 신청 경로만 접근하며 운영 경로는 기존 권한 가드를 유지한다. 승인 후에는 재로그인으로 서버가 발급한 최신 역할을 적용한다.
 
 ## 재현

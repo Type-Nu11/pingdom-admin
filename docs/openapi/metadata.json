@@ -1,10 +1,17 @@
 {
-  "collected_at": "2026-09-15T14:30:44Z",
+  "collected_at": "2026-09-16T10:57:26.133Z",
   "sources": {
     "admin": "https://www.typenull.xyz/v3/api-docs/admin",
     "merchant": "https://www.typenull.xyz/v3/api-docs/merchant"
   },
-  "scope": ["admin", "merchant"],
-  "excluded": ["app", "common", "consulting"],
+  "scope": [
+    "admin",
+    "merchant"
+  ],
+  "excluded": [
+    "app",
+    "common",
+    "consulting"
+  ],
   "verification": "Public OpenAPI retrieval and static source references only; no authenticated requests or mutations"
 }

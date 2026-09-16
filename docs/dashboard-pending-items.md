@@ -1,46 +1,34 @@
-# 대시보드 통합 처리 대기 (#206)
+# 대시보드 장소 신청 처리 대기 (#207)
 
 ## 계약과 범위
 
-2026-09-16 확인한 https://www.typenull.xyz/v3/api-docs 기준:
+#206에서는 게시글 신고와 장소 신청을 합친 대기 API를 연결했다.
+#207에서는 옛 MapImage 운영 기능을 제품에서 제외하므로 장소 신청 전용 조회로 전환한다.
 
-- `GET /admin/dashboard/pending-items?limit=10`
-- limit 기본 10, 서버 보정 범위 1~50
-- items 유형: POST_REPORT, MERCHANT_PLACE_APPLICATION
-- totalCount: 필터링 전 전체 PENDING 건수. items.length 또는 전체 관리자 업무 건수가 아님
-- navigationPath는 null 가능. 응답 예시의 `/admin/merchant-place-applications/12`는 웹 라우트와 다름
+- GET /admin/merchant-place-applications?status=PENDING&page=1&limit=10
+- items는 대기 신청 목록, total은 같은 필터의 서버 전체 건수다.
+- id → targetId, placeName(없으면 businessName) → 제목, submittedAt → 접수 시각으로 연결한다.
+- 서버가 반환한 정렬 순서를 보존한다. 표시 행 수와 전체 건수는 구분한다.
+- 혼합 pending-items API를 호출한 뒤 게시글만 필터링하지 않는다. 그렇게 하면 10건 안에 신청이 누락되거나 전체 건수가 달라질 수 있다.
+- total이 양수인데 목록이 비면 '대기 업무가 있지만 표시할 항목이 없습니다'로 안내한다.
 
-대시보드의 장소 신청 전용 10건 요청을 통합 요청으로 교체한다. 기존 요약·최근 활동은 유지한다.
-화면은 전체 대기 건수와 표시 행 수를 구분하며, 같은 type/targetId 중복 행은 첫 항목만 표시한다.
-서버 정렬을 그대로 보존하고 totalCount를 중복 제거한 목록 길이로 다시 계산하지 않는다.
-items가 비었지만 totalCount가 양수이면 업무 없음으로 표시하지 않는다.
+알림 공급자는 장소 병합·정보 검증·장소 신청·Scout 등 기존 집계를 유지하되 옛 신고 이의제기 호출을 제거한다.
+알림의 신청 건수 조회(limit=1)와 대시보드 목록 조회(limit=10)는 목적이 다르다. 대시보드에서 옛 혼합 API를 추가로 조회하지 않는다.
 
-알림 공급자의 `getAdminPendingWorkSummary`는 장소 병합·이의제기·Scout 등 다른 범위를 집계하므로 유지한다.
-통합 API에는 유형별 전체 건수가 없으므로 제한된 items로 장소 신청 전체 건수를 대체하지 않는다.
-알림용 신청 count 조회와 대시보드 목록 조회는 목적이 다르다. 이 두 요청의 완전 통합은 이번 범위가 아니다.
-대시보드 자체에서는 기존 신청 목록을 동시에 조회하지 않는다.
+## 이동과 복구
 
-## 이동 정책
+- PENDING 신청 + 양의 안전한 정수 ID: /merchant-place-applications의 state.applicationId로 해당 상세 선택.
+- 서버 navigationPath를 웹 경로로 신뢰하지 않는다.
+- 잘못된 ID는 이동 비활성화. PENDING이 아닌 목록 응답은 계약 오류로 처리한다.
+- 같은 type/targetId 중복 행은 첫 항목만 표시하되 서버 total은 임의 재계산하지 않는다.
+- 재조회 중·실패 시 이전 결과와 포커스를 유지한다. 실제 0건과 실패를 구분한다.
+- 중복 새로고침 차단, 세션 비활성화·언마운트 후 늦은 응답 무시, 401/403 구분을 유지한다.
 
-- PENDING 통합 신청 + 양의 안전한 정수 targetId: `/merchant-place-applications`, state.applicationId로 상세 선택
-- navigationPath는 외부 URL·미지원 경로·ID 불일치 위험을 피하기 위해 이동에 직접 사용하지 않음
-- 게시글 신고: 신고 ID와 게시글 ID 표시, 처리 화면 미지원 안내. 사용자 신고 화면으로 잘못 연결하지 않음
-- 미지원 유형·잘못된 ID·대기 상태가 아닌 항목: 표시하되 이동 비활성화
-- 게시글 신고 운영 화면 구현은 별도 #205 범위
+## 검증
 
-## 상태와 검증
+- tests/dashboard-pending-query.test.mjs: 필터·page/limit·서버 total·응답 매핑, 오류·0건·응답 역전.
+- tests/dashboard-priority.test.mjs: 정확한 상세 이동·잘못된 ID·중복 행·포커스·이전 결과 표시.
+- tests/legacy-post-cleanup.test.mjs: 옛 API 호출 제거 및 현행 기능 보존.
+- tests/browser/dashboard-pending.mjs 및 legacy-post-cleanup.mjs: PC/모바일 화면과 실제 Router 경로 이동을 합성 응답으로 확인.
 
-조회 실패와 실제 0건을 구분한다. 재조회 중·실패 시 이전 결과를 유지하고 이전 조회 결과임을 표시한다.
-중복 새로고침 요청을 막고, 비활성화·언마운트된 조회의 늦은 응답은 반영하지 않는다.
-401은 기존 인증 정리 정책을 따르며 403·500을 로그아웃으로 처리하지 않는다.
-
-- `npm test`: 전체 304개 통과
-- `npm run lint`, `npm run build` 통과
-- `npm run test:dashboard-pending-browser`: Chromium 1280×800, 390×800 합성 화면 검증
-- 계약 요청·중복 요청 차단·부분 실패·재시도·0건·잘못된 응답·비활성화 후 응답 역전 검증
-- 정확한 신청 이동·외부 경로 무시·중복 행·미지원 유형·ID 오류·포커스 유지 검증
-- 긴 제목·비활성 안내 표시와 가로 넘침 검사 및 화면 캡처 확인
-
-브라우저 검증은 실제 DashboardPage와 합성 API 응답을 사용한다. 실제 계정·개인정보·업무 처리는 사용하지 않는다.
-임시 서버·브라우저는 종료 시 정리하고 캡처 위치는 실행 로그에 출력한다.
-실서버 인증 조회·서버 정렬의 실제 데이터 결과·배포 및 Safari/Firefox는 미검증이다.
+모의 QA는 실서버 승인·반려·삭제 또는 운영 배포 검증이 아니다.

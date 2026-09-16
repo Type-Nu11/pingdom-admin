@@ -64,11 +64,14 @@ def main():
                 if connected and previous.get('status') == 'implemented':
                     row['status'] = 'implemented'
                 if path == '/admin/dashboard/pending-items':
-                    row['issue'] = '#206'
+                    row.update(status='alternative', issue='#207',
+                               frontend_target='대시보드는 /admin/merchant-place-applications?status=PENDING&page=1&limit=10 및 서버 total 사용',
+                               backend_prerequisite='옛 게시글 혼합 집계 대신 장소 신청 전용 조회; 서버 API 삭제 의미 아님')
                 if '/members' in path or '/invitations/' in path:
                     row.update(issue='#204', backend_prerequisite='팀원 관리는 현재 제품 범위 제외; 서버 차단 아님')
-                if path.startswith('/admin/posts/') and not '/s3/' in path:
-                    row['issue'] = '#205'
+                if (path.startswith('/admin/posts/') and '/s3/' not in path) or path.startswith(('/admin/reports/', '/admin/report-appeals')):
+                    row.update(status='excluded', issue='#207', confirmation='기획상 제외; 웹에서 처리하지 않음',
+                               backend_prerequisite='옛 MapImage 운영 기능 제외; 서버 API·데이터 삭제는 별도 결정')
                 if method == 'get' and (path == '/merchant-owner/places/{placeId}/menus/{menuId}' or path == '/users/me/merchant-place-applications/{applicationId}/attachments') and not connected:
                     row.update(status='alternative', frontend_target='메뉴 목록 또는 통합 신청 상세의 첨부 배열 사용; 단건 API 직접 호출 없음')
                 if connected and '/media' in path:

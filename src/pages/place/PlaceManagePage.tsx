@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import {
@@ -71,6 +71,8 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function PlaceManagePage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const linkedPlaceId = searchParams.get('placeId')
   const { logout, user } = useAuth()
   const mapRef = useRef<KakaoMapHandle | null>(null)
   const mapPanelRef = useRef<HTMLElement | null>(null)
@@ -131,6 +133,24 @@ function PlaceManagePage() {
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
+  useEffect(() => {
+    let active = true
+    const timer = window.setTimeout(() => {
+      setDeleteConfirmPlace(null); setPlaceOperation(null); setDataCorrectionPlace(null)
+      setTouristInfoEditPlace(null); setOperatingNoticePlace(null)
+      clearPlaceDetail()
+      const id = Number(linkedPlaceId)
+      if (!linkedPlaceId || !Number.isSafeInteger(id) || id <= 0) {
+        setSelectedPlace(null)
+        return
+      }
+      setSelectedPlace({ id, name: `장소 #${id}`, address: '', latitude: NaN, longitude: NaN, userId: 0 })
+      void fetchAdminPlaceDetail(id).then(detail => {
+        if (active && detail?.id === id) setSelectedPlace(detail)
+      })
+    }, 0)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [linkedPlaceId, fetchAdminPlaceDetail, clearPlaceDetail])
   const {
     runningActions: noticeRunningActions,
     actionErrors: noticeActionErrors,
@@ -213,7 +233,8 @@ function PlaceManagePage() {
   const handleClosePlaceDetail = useCallback(() => {
     setSelectedPlace(null)
     clearPlaceDetail()
-  }, [clearPlaceDetail])
+    setSearchParams(params => { const next = new URLSearchParams(params); next.delete('placeId'); return next }, { replace: true })
+  }, [clearPlaceDetail, setSearchParams])
 
   const getSelectedPlaceMapOffsetX = useCallback(() => {
     const mapPanel = mapPanelRef.current
@@ -300,10 +321,9 @@ function PlaceManagePage() {
 
   const handleSelectPlace = useCallback(
     (place: AdminPlaceItem) => {
-      setSelectedPlace(place)
-      void fetchAdminPlaceDetail(place.id)
+      setSearchParams(params => { const next = new URLSearchParams(params); next.set('placeId', String(place.id)); return next })
     },
-    [fetchAdminPlaceDetail]
+    [setSearchParams]
   )
 
   const handleSelectMapMarker = useCallback(
@@ -763,7 +783,7 @@ function PlaceManagePage() {
                 errorMessage={detailErrorMessage}
                 updatingPlaceIds={updatingPlaceIds}
                 onClose={handleClosePlaceDetail}
-                onRetry={(placeId) => void fetchAdminPlaceDetail(placeId)}
+                onRetry={(placeId) => { void fetchAdminPlaceDetail(placeId).then(detail => { if (detail?.id === placeId) setSelectedPlace(current => current?.id === placeId ? detail : current) }) }}
                 onFocusMap={focusPlaceOnVisibleMap}
                 onOpenOperation={handleOpenPlaceOperation}
                 onOpenTouristInfo={handleOpenTouristInfo}

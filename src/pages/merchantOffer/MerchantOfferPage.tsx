@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { useAuth } from '../../hooks/useAuth'
-import { MERCHANT_OFFER_PAGE_LIMIT, useMerchantOffers } from '../../hooks/useMerchantOffers'
+import { useMerchantOffers } from '../../hooks/useMerchantOffers'
 import type {
   MerchantCoupon,
   MerchantOffer,
@@ -13,8 +13,6 @@ import type {
 } from '../../types/merchantStore.types'
 import * as Store from '../merchantStore/MerchantStorePage.styles'
 import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
-
-type StatusFilter = 'ALL' | MerchantOfferStatus
 
 const STATUS: Record<MerchantOfferStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   DRAFT: { label: '초안', tone: 'draft' },
@@ -192,31 +190,14 @@ function MerchantOfferPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const offer = useMerchantOffers()
-  const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null)
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
-  const [page, setPage] = useState(1)
+  const { selectedOfferId, statusFilter, page: currentPage, totalPages, setPage, setStatusFilter } = offer
   const isBusy = offer.activeAction !== null
-  const fetchOfferDetail = offer.fetchOfferDetail
-  const visibleOffers = useMemo(() => offer.offers.filter((item) => (
-    item.placeId === offer.selectedPlaceId && (statusFilter === 'ALL' || item.status === statusFilter)
-  )), [offer.offers, offer.selectedPlaceId, statusFilter])
-  const totalPages = Math.max(1, Math.ceil(visibleOffers.length / MERCHANT_OFFER_PAGE_LIMIT))
-  const currentPage = Math.min(page, totalPages)
-  const pageOffers = useMemo(() => visibleOffers.slice(
-    (currentPage - 1) * MERCHANT_OFFER_PAGE_LIMIT,
-    currentPage * MERCHANT_OFFER_PAGE_LIMIT,
-  ), [currentPage, visibleOffers])
-
-  useEffect(() => {
-    if (selectedOfferId) void fetchOfferDetail(selectedOfferId)
-  }, [fetchOfferDetail, selectedOfferId])
+  const pageOffers = offer.offers
 
   const handleLogout = () => { void logout(); navigate('/login', { replace: true }) }
-  const startNew = () => { setSelectedOfferId(null); offer.clearSelectedOffer() }
+  const startNew = () => { offer.clearSelectedOffer() }
   const selectPlace = (placeId: number) => {
     offer.selectPlace(placeId)
-    setSelectedOfferId(null)
-    setPage(1)
   }
 
   if (offer.status === 'error') {
@@ -224,12 +205,12 @@ function MerchantOfferPage() {
   }
 
   return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{offer.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>혜택·쿠폰 관리</Store.PageTitle><Store.PageDescription>관광객 전용 혜택을 초안으로 등록하고 공개·종료하며, 현장에서 쿠폰을 사용 처리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={offer.status === 'loading' || isBusy} onClick={() => void offer.fetchInitialData()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
-    {offer.profile && offer.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="혜택을 관리할 장소 선택" value={offer.selectedPlaceId ?? ''} onChange={(event) => selectPlace(Number(event.target.value))}>{offer.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
+    {offer.profile && offer.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="혜택을 관리할 장소 선택" value={offer.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => selectPlace(Number(event.target.value))}>{offer.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
     {offer.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.errorMessage}</Store.Notice> : null}
     {offer.detailErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.detailErrorMessage}</Store.Notice> : null}
     {offer.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.actionErrorMessage}</Store.Notice> : null}
     {offer.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{offer.successMessage}</Store.Notice> : null}
-{!offer.selectedPlaceId && offer.status === 'ready' ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 혜택과 쿠폰을 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <><S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>혜택 목록</S.PanelTitle><S.PanelDescription>연결 장소에 등록한 관광객 전용 혜택입니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={offer.status !== 'ready' || isBusy} onClick={startNew}>새 혜택</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="혜택 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} disabled={isBusy} $selected={statusFilter === value} onClick={() => { setStatusFilter(value); setPage(1) }}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>총 {visibleOffers.length}건</S.ResultMeta>{offer.status === 'loading' || offer.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : pageOffers.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 혜택이 없습니다. 첫 혜택을 초안으로 등록해보세요.' : '선택한 상태의 혜택이 없습니다.'}</S.Empty> : <S.CampaignList>{pageOffers.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedOfferId} onClick={() => setSelectedOfferId(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.benefitDescription}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}{totalPages > 1 ? <AdminPagination ariaLabel="상점주 혜택 목록 페이지네이션" page={currentPage} totalPages={totalPages} disabled={isBusy} onPageChange={setPage} /> : null}</S.Panel><S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedOfferId ? '혜택 상세' : '새 혜택 등록'}</S.PanelTitle><S.PanelDescription>{selectedOfferId ? `혜택 #${selectedOfferId}의 정책과 상태를 확인합니다.` : '혜택을 저장하면 초안 상태로 등록됩니다.'}</S.PanelDescription></div>{offer.selectedOffer ? <S.StatusBadge $tone={STATUS[offer.selectedOffer.status].tone}>{STATUS[offer.selectedOffer.status].label}</S.StatusBadge> : null}</S.PanelHeader>{offer.isDetailLoading ? <S.Empty>혜택 상세를 불러오는 중입니다.</S.Empty> : <OfferEditor key={offer.selectedOffer?.id ?? `new-${offer.selectedPlaceId ?? 'none'}`} offer={offer.selectedOffer} preferredPlaceId={offer.selectedPlaceId} placeIds={offer.profile?.placeIds ?? []} activeAction={offer.activeAction} onCreate={offer.createOffer} onPublish={offer.publishOffer} onClose={offer.closeOffer} onCreated={setSelectedOfferId} />}</S.Panel></S.Workspace><div style={{ marginTop: 24 }}><CouponRedeemer activeAction={offer.activeAction} onRedeem={offer.redeemCoupon} /></div></>}
+{!offer.selectedPlaceId && offer.status === 'ready' ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 혜택과 쿠폰을 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <><S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>혜택 목록</S.PanelTitle><S.PanelDescription>연결 장소에 등록한 관광객 전용 혜택입니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={offer.status !== 'ready' || isBusy} onClick={startNew}>새 혜택</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="혜택 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} disabled={isBusy} $selected={statusFilter === value} onClick={() => { setStatusFilter(value) }}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>{offer.totalElements === undefined ? '건수 확인 중' : `총 ${offer.totalElements}건`}</S.ResultMeta>{offer.status === 'loading' || offer.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : offer.errorMessage ? <S.Empty><S.HeaderButton type="button" onClick={() => void offer.fetchOffers()}>목록 다시 조회</S.HeaderButton></S.Empty> : pageOffers.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 혜택이 없습니다. 첫 혜택을 초안으로 등록해보세요.' : '선택한 상태의 혜택이 없습니다.'}</S.Empty> : <S.CampaignList>{pageOffers.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedOfferId} disabled={isBusy} onClick={() => void offer.fetchOfferDetail(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.benefitDescription}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}{totalPages > 1 ? <AdminPagination ariaLabel="상점주 혜택 목록 페이지네이션" page={currentPage} totalPages={totalPages} disabled={isBusy || offer.isListLoading} onPageChange={setPage} /> : null}</S.Panel><S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedOfferId ? '혜택 상세' : '새 혜택 등록'}</S.PanelTitle><S.PanelDescription>{selectedOfferId ? `혜택 #${selectedOfferId}의 정책과 상태를 확인합니다.` : '혜택을 저장하면 초안 상태로 등록됩니다.'}</S.PanelDescription></div>{offer.selectedOffer ? <S.StatusBadge $tone={STATUS[offer.selectedOffer.status].tone}>{STATUS[offer.selectedOffer.status].label}</S.StatusBadge> : null}</S.PanelHeader>{offer.isDetailLoading ? <S.Empty>혜택 상세를 불러오는 중입니다.</S.Empty> : offer.detailErrorMessage ? <S.Empty><S.HeaderButton type="button" onClick={() => selectedOfferId && void offer.fetchOfferDetail(selectedOfferId)}>상세 다시 조회</S.HeaderButton></S.Empty> : <OfferEditor key={offer.selectedOffer?.id ?? `new-${offer.selectedPlaceId ?? 'none'}-${offer.editorVersion}`} offer={offer.selectedOffer} preferredPlaceId={offer.selectedPlaceId} placeIds={offer.profile?.placeIds ?? []} activeAction={offer.activeAction} onCreate={offer.createOffer} onPublish={offer.publishOffer} onClose={offer.closeOffer} onCreated={() => undefined} />}</S.Panel></S.Workspace><div style={{ marginTop: 24 }}><CouponRedeemer activeAction={offer.activeAction} onRedeem={offer.redeemCoupon} /></div></>}
   </Store.Content></Store.Page>
 }
 

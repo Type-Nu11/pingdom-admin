@@ -282,7 +282,7 @@ export async function updateMerchantBrand(brandId: number, request: MerchantBran
   return data
 }
 
-export async function getMerchantOffers(params: { page?: number; limit?: number } = {}) {
+export async function getMerchantOffers(params: { page?: number; limit?: number; placeId?: number; status?: MerchantOffer['status'] } = {}) {
   const { data } = await customAxios.get<MerchantOfferPageResponse>(
     `${MERCHANT_OWNER_PATH}/offers`,
     { params: { page: 1, limit: 20, ...params } }

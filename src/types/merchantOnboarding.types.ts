@@ -11,7 +11,6 @@ export type MerchantOnboardingStatus =
   | 'IN_PROGRESS'
   | 'COMPLETED'
 
-export type MerchantVerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 export interface MerchantOwnerApplicationProfile {
   userId: number
@@ -37,24 +36,6 @@ export interface MerchantOwnerApplicationRequest {
   description?: string | null
   contactEmail: string
   contactPhone: string
-}
-
-export interface MerchantVerification {
-  userId: number
-  legalName: string
-  businessName: string | null
-  maskedBusinessRegistrationNumber: string | null
-  identityStatus: MerchantVerificationStatus
-  businessStatus: MerchantVerificationStatus
-  reviewReason: string | null
-  reviewedAt: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface MerchantVerificationRequest {
-  legalName: string
-  businessRegistrationNumber: string
 }
 
 export type MerchantOnboardingErrorResponse = AuthErrorResponse<string>

@@ -30,6 +30,13 @@ const CATEGORY_MESSAGES = {
 export type ApplicationReviewView = 'pending' | 'history'
 export type ApplicationTypeFilter = MerchantPlaceApplicationType | 'ALL'
 export const APPLICATION_REVIEW_PAGE_SIZE = 10
+export interface ApplicationHistoryFilters {
+  result: 'ALL' | 'APPROVED' | 'COMPLETED' | 'REJECTED' | 'CANCELED'
+  keyword: string
+  submittedFrom: string
+  submittedTo: string
+}
+export const EMPTY_HISTORY_FILTERS: ApplicationHistoryFilters = { result: 'ALL', keyword: '', submittedFrom: '', submittedTo: '' }
 
 const HISTORY_STATUSES: MerchantPlaceApplicationStatus[] = [
   'APPROVED',
@@ -65,6 +72,8 @@ export function useAdminMerchantPlaceApplications() {
   const pageRef = useRef(1)
   const viewRef = useRef<ApplicationReviewView>('pending')
   const applicationTypeRef = useRef<ApplicationTypeFilter>('ALL')
+  const [historyFilters, setHistoryFilters] = useState(EMPTY_HISTORY_FILTERS)
+  const historyFiltersRef = useRef(EMPTY_HISTORY_FILTERS)
   const listRequestRef = useRef(0)
   const detailRequestRef = useRef(0)
 
@@ -85,7 +94,12 @@ export function useAdminMerchantPlaceApplications() {
     setErrorMessage('')
     try {
       const data = await api.getAdminMerchantPlaceApplications({
-        status: nextView === 'pending' ? 'PENDING' : HISTORY_STATUSES,
+        status: nextView === 'pending' ? 'PENDING' : historyFiltersRef.current.result === 'ALL' ? HISTORY_STATUSES : historyFiltersRef.current.result,
+        ...(nextView === 'history' ? {
+          keyword: historyFiltersRef.current.keyword || undefined,
+          submittedFrom: historyFiltersRef.current.submittedFrom || undefined,
+          submittedTo: historyFiltersRef.current.submittedTo || undefined,
+        } : {}),
         applicationType: nextApplicationType === 'ALL' ? undefined : nextApplicationType,
         page: nextPage,
         limit: APPLICATION_REVIEW_PAGE_SIZE,
@@ -119,6 +133,27 @@ export function useAdminMerchantPlaceApplications() {
     setTotalPages(0)
     setHasNext(false)
     void fetchApplications(1, nextView, applicationTypeRef.current)
+  }, [fetchApplications])
+
+  const applyHistoryFilters = useCallback((filters: ApplicationHistoryFilters, resetType = false) => {
+    const next = { ...filters, keyword: filters.keyword.trim() }
+    if (next.submittedFrom && next.submittedTo && next.submittedFrom > next.submittedTo) return false
+    historyFiltersRef.current = next
+    setHistoryFilters(next)
+    pageRef.current = 1
+    setPage(1)
+    setItems([])
+    setTotal(0)
+    setTotalPages(0)
+    setHasNext(false)
+    detailRequestRef.current += 1
+    setDetail(null)
+    if (resetType) {
+      applicationTypeRef.current = 'ALL'
+      setApplicationType('ALL')
+    }
+    void fetchApplications(1)
+    return true
   }, [fetchApplications])
 
   const changeApplicationType = useCallback((nextApplicationType: ApplicationTypeFilter) => {
@@ -246,7 +281,10 @@ export function useAdminMerchantPlaceApplications() {
     }
   }, [detail, fetchApplications, fetchDetail, message])
 
-  useEffect(() => { void fetchApplications(1) }, [fetchApplications])
+  useEffect(() => {
+    void fetchApplications(1)
+    return () => { listRequestRef.current += 1; detailRequestRef.current += 1 }
+  }, [fetchApplications])
 
   return {
     items,
@@ -260,6 +298,8 @@ export function useAdminMerchantPlaceApplications() {
     hasNext,
     view,
     applicationType,
+    historyFilters,
+    applyHistoryFilters,
     isLoading,
     isDetailLoading,
     downloadingAttachmentId,

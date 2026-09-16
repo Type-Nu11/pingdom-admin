@@ -8,12 +8,19 @@ import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 const offers = Array.from({ length: 65 }, (_, i) => ({ id: i + 1, placeId: i < 45 ? 1 : 2, status: 'DRAFT', title: `합성 혜택 ${i + 1}`, description: '합성 설명', benefitDescription: '합성 할인 혜택', startsAt: '2026-10-01T09:00:00', endsAt: '2026-10-31T18:00:00', eligibilityPolicy: 'PUBLIC', inventoryPolicy: 'UNLIMITED', expiryPolicy: 'OFFER_END', couponValidityDays: 7 }))
 window.qaRequests = []
+window.qaHoldList = false
+window.qaFailNextList = false
 client.defaults.adapter = async config => {
   window.qaRequests.push({ url: config.url, method: config.method, params: config.params })
   await new Promise(resolve => setTimeout(resolve, 20))
   let data
   if (config.url === '/merchant-owner/me') data = { placeIds: [1, 2], displayName: '합성 상점' }
   else if (config.url === '/merchant-owner/offers') {
+    if (window.qaHoldList) await new Promise(resolve => { window.qaReleaseList = resolve })
+    if (window.qaFailNextList) {
+      window.qaFailNextList = false
+      throw new Error('Synthetic list failure')
+    }
     const { page, limit, placeId, status } = config.params
     const filtered = offers.filter(item => (!placeId || item.placeId === placeId) && (!status || item.status === status))
     data = { offers: filtered.slice((page - 1) * limit, page * limit), totalElements: filtered.length, totalPages: Math.ceil(filtered.length / limit), page, limit, hasNext: page * limit < filtered.length }

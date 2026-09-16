@@ -39,6 +39,7 @@ export function useMerchantOffers() {
   const [query, setQuery] = useState<Query>({ placeId: null, page: 1, status: 'ALL' })
   const queryRef = useRef(query)
   const [result, setResult] = useState<MerchantOfferPageResponse | null>(null)
+  const [pagination, setPagination] = useState<{ placeId: number; status: OfferStatusFilter; totalPages: number } | null>(null)
   const [selectedOffer, setSelectedOffer] = useState<MerchantOffer | null>(null)
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null)
   const [editorVersion, setEditorVersion] = useState(0)
@@ -103,6 +104,7 @@ export function useMerchantOffers() {
         if (!current()) return false
       }
       setResult(next)
+      setPagination({ placeId: requested.placeId, status: requested.status, totalPages: next.totalPages })
       return true
     } catch (error) {
       if (current()) {
@@ -130,6 +132,7 @@ export function useMerchantOffers() {
     ++listRequestRef.current
     clearSelectedOffer()
     setResult(null)
+    setPagination(null)
     setStatus('loading')
     setErrorMessage('')
     try {
@@ -282,7 +285,7 @@ export function useMerchantOffers() {
     selectedPlaceId: query.placeId,
     offers: result?.offers ?? [],
     totalElements: result?.totalElements,
-    totalPages: result?.totalPages ?? 0,
+    totalPages: pagination?.placeId === query.placeId && pagination?.status === query.status ? pagination.totalPages : 0,
     page: query.page,
     statusFilter: query.status,
     setPage,

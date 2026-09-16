@@ -1,4 +1,5 @@
 import type { AuthErrorResponse } from './auth.types'
+import type { ReviewPresentation } from './reviewPresentation.types'
 
 export type MerchantOwnerProfileStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REVOKED'
 export type MerchantOnboardingStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
@@ -579,7 +580,7 @@ export interface MerchantPlaceMediaOrderUpdateRequest {
   displayOrder: number
 }
 
-export interface MerchantPlaceReview {
+export interface MerchantPlaceReview extends ReviewPresentation {
   reviewId: number
   placeId: number
   userId: number

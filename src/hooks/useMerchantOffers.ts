@@ -73,10 +73,10 @@ export function useMerchantOffers() {
     })
   }, [clearAuth])
 
-  const clearSelectedOffer = useCallback(() => {
+  const clearSelectedOffer = useCallback((resetEditor = true) => {
     ++detailRequestRef.current
     setSelectedOfferId(null)
-    setEditorVersion(value => value + 1)
+    if (resetEditor) setEditorVersion(value => value + 1)
     setSelectedOffer(null)
     setIsDetailLoading(false)
     setDetailErrorMessage('')
@@ -116,9 +116,11 @@ export function useMerchantOffers() {
   }, [getErrorMessage])
 
   const changeQuery = useCallback((next: Query) => {
+    const previous = queryRef.current
+    if (previous.placeId === next.placeId && previous.status === next.status && previous.page === next.page) return
     queryRef.current = next
     setQuery(next)
-    clearSelectedOffer()
+    clearSelectedOffer(previous.placeId !== next.placeId)
     void fetchOffers()
   }, [clearSelectedOffer, fetchOffers])
 
@@ -208,7 +210,7 @@ export function useMerchantOffers() {
     changeQuery({ ...queryRef.current, page })
   }, [changeQuery])
   const setStatusFilter = useCallback((filter: OfferStatusFilter) => {
-    if (actionRef.current) return
+    if (actionRef.current || filter === queryRef.current.status) return
     changeQuery({ ...queryRef.current, status: filter, page: 1 })
   }, [changeQuery])
 

@@ -49,6 +49,19 @@ test('no owned place does not issue an unfiltered offers query', async () => {
   profile = { placeIds: [] }; await render()
   assert.equal(lists().length, 0); assert.equal(hook.selectedPlaceId, null)
 })
+test('identical queries do not fetch or reset editor; list filters preserve draft version', async () => {
+  await render()
+  const version = hook.editorVersion
+  const count = lists().length
+  await act(async () => { hook.setStatusFilter('ALL'); hook.setPage(1) })
+  assert.equal(lists().length, count)
+  assert.equal(hook.editorVersion, version)
+  await act(async () => hook.setPage(2))
+  await act(async () => hook.setStatusFilter('DRAFT'))
+  assert.equal(hook.editorVersion, version)
+  await act(async () => hook.selectPlace(2))
+  assert.notEqual(hook.editorVersion, version)
+})
 test('reversed page and place responses cannot overwrite the latest query', async () => {
   await render()
   handler = config => new Promise(resolve => pending.push({ config, resolve }))

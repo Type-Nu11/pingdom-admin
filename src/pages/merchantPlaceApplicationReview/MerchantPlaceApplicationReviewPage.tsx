@@ -6,6 +6,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
+import { EMPTY_HISTORY_FILTERS, type ApplicationHistoryFilters } from '../../hooks/useAdminMerchantPlaceApplications'
 import { ListPane } from '../../components/common/ListPane'
 import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
@@ -143,6 +145,8 @@ function MerchantPlaceApplicationReviewPage() {
   const location = useLocation()
   const { logout, user } = useAuth()
   const hook = useAdminMerchantPlaceApplications()
+  const [draftFilters, setDraftFilters] = useState<ApplicationHistoryFilters>(EMPTY_HISTORY_FILTERS)
+  const [filterError, setFilterError] = useState('')
   const applicationIdFromNavigation = getApplicationIdFromNavigationState(location.state)
   const [preview, setPreview] = useState<{ applicationId: number; attachment: AdminMerchantPlaceApplicationAttachment } | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(applicationIdFromNavigation)
@@ -154,6 +158,19 @@ function MerchantPlaceApplicationReviewPage() {
   const fetchApplicationDetail = hook.fetchDetail
   const admin = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const isHistoryView = hook.view === 'history'
+  const applyFilters = (reset = false) => {
+    const filters = reset ? EMPTY_HISTORY_FILTERS : draftFilters
+    if (filters.submittedFrom && filters.submittedTo && filters.submittedFrom > filters.submittedTo) {
+      setFilterError('종료 일시는 시작 일시보다 빠를 수 없습니다.')
+      return
+    }
+    setFilterError('')
+    setDraftFilters({ ...filters, keyword: filters.keyword.trim() })
+    setSelectedId(null)
+    setDecision(null)
+    setPreview(null)
+    hook.applyHistoryFilters(filters, reset)
+  }
   const listTitle = isHistoryView ? '처리 이력' : '심사 대기 신청'
   const emptyMessage = isHistoryView ? '처리된 장소 신청 이력이 없습니다.' : '심사 대기 중인 장소 신청이 없습니다.'
   const loadingMessage = isHistoryView ? '처리 이력을 불러오는 중입니다.' : '심사 대기 신청을 불러오는 중입니다.'
@@ -268,10 +285,22 @@ function MerchantPlaceApplicationReviewPage() {
               </AdminSelect>
             </S.FilterField>
           </S.FilterBar>
+          {isHistoryView ? <S.HistoryFilters onSubmit={(event) => { event.preventDefault(); applyFilters() }} aria-label="처리 이력 검색">
+            <S.FilterField>처리 결과<AdminSelect aria-label="처리 결과" value={draftFilters.result} disabled={hook.isLoading || hook.isReviewing} onChange={(event) => setDraftFilters(current => ({ ...current, result: event.target.value as ApplicationHistoryFilters['result'] }))}>
+              <option value="ALL">전체</option><option value="APPROVED">승인</option><option value="COMPLETED">완료</option><option value="REJECTED">반려</option><option value="CANCELED">취소</option>
+            </AdminSelect></S.FilterField>
+            <S.FilterField>장소명·신청자 아이디<Form.Input value={draftFilters.keyword} disabled={hook.isLoading || hook.isReviewing} onChange={(event) => setDraftFilters(current => ({ ...current, keyword: event.target.value }))} /></S.FilterField>
+            <S.FilterField as="div">신청 시작 일시 (한국 시간)<AdminDateTimePicker ariaLabel="신청 시작 일시" value={draftFilters.submittedFrom} disabled={hook.isLoading || hook.isReviewing} onChange={(value) => setDraftFilters(current => ({ ...current, submittedFrom: value }))} /></S.FilterField>
+            <S.FilterField as="div">신청 종료 일시 (한국 시간)<AdminDateTimePicker ariaLabel="신청 종료 일시" value={draftFilters.submittedTo} disabled={hook.isLoading || hook.isReviewing} onChange={(value) => setDraftFilters(current => ({ ...current, submittedTo: value }))} /></S.FilterField>
+            <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.isReviewing}>조회</Shared.PrimaryButton>
+            <Shared.HeaderButton type="button" disabled={hook.isLoading || hook.isReviewing} onClick={() => applyFilters(true)}>초기화</Shared.HeaderButton>
+            {filterError ? <span role="alert">{filterError}</span> : null}
+            {hook.historyFilters ? <S.AppliedFilters role="status">적용 조건: {hook.historyFilters.result === 'ALL' ? '전체 결과' : STATUS_LABELS[hook.historyFilters.result]} · {hook.historyFilters.keyword || '전체 대상'} · {hook.historyFilters.submittedFrom || '시작 제한 없음'} ~ {hook.historyFilters.submittedTo || '종료 제한 없음'}</S.AppliedFilters> : null}
+          </S.HistoryFilters> : null}
           <ListDetailWorkspace>
             <ListPane title={listTitle} range={!hook.isLoading && !hook.errorMessage ? { page: hook.page, pageSize: APPLICATION_REVIEW_PAGE_SIZE, itemCount: hook.items.length, total: hook.total } : undefined} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}
-              {!hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{emptyMessage}</strong></Shared.EmptyState> : null}
+              {!hook.isLoading && !hook.errorMessage && hook.items.length === 0 ? <Shared.EmptyState><strong>{isHistoryView ? '조회 조건에 맞는 처리 이력이 없습니다.' : emptyMessage}</strong></Shared.EmptyState> : null}
               {hook.items.length > 0 ? (
                 <S.ApplicationList>
                   {hook.items.map((item) => {

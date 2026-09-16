@@ -1,3 +1,4 @@
+import { ReviewReasons, ReviewPhotos } from '../../components/common/ReviewPresentation'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useState } from 'react'
@@ -147,7 +148,7 @@ function PlaceReviewDeletionPage() {
                       <Form.DetailItem><dt>리뷰 작성 시각</dt><dd>{formatDate(hook.detail.reviewCreatedAt)}</dd></Form.DetailItem>
                       <Form.DetailItem><dt>처리 관리자</dt><dd>{hook.detail.reviewerAdminUserId ? `관리자 #${hook.detail.reviewerAdminUserId}` : '미처리'}</dd></Form.DetailItem>
                     </Form.DetailGrid>
-                    <Form.Section><Form.SectionTitle>리뷰 원문</Form.SectionTitle><Form.RecordMeta>추천 이유: {hook.detail.recommendReason || '입력 없음'}</Form.RecordMeta><S.RequestSummary>{hook.detail.content || '리뷰 내용이 없습니다.'}</S.RequestSummary>{hook.detail.imageUrls.length > 0 ? <S.ImageGrid>{hook.detail.imageUrls.map((imageUrl, index) => <S.ImageLink key={`${imageUrl}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" aria-label={`리뷰 이미지 ${index + 1} 원본 열기`}><img src={imageUrl} alt={`리뷰 첨부 이미지 ${index + 1}`} loading="lazy" /></S.ImageLink>)}</S.ImageGrid> : null}</Form.Section>
+                    <Form.Section><Form.SectionTitle>리뷰 원문</Form.SectionTitle><ReviewReasons review={hook.detail} /><S.RequestSummary>{hook.detail.content || '리뷰 내용이 없습니다.'}</S.RequestSummary><ReviewPhotos review={hook.detail} reviewId={hook.detail.reviewId} /></Form.Section>
                     <Form.Section><Form.SectionTitle>상점주 요청 사유</Form.SectionTitle><S.RequestSummary>{hook.detail.requestReason || '요청 사유가 입력되지 않았습니다.'}</S.RequestSummary></Form.Section>
                     {hook.detail.reviewedAt || hook.detail.reviewNote ? <Form.Section><Form.SectionTitle>심사 결과</Form.SectionTitle><Form.RecordMeta>{hook.detail.reviewedAt ? `${formatDate(hook.detail.reviewedAt)} 처리` : '처리 시각 정보 없음'}</Form.RecordMeta><S.ReviewNote>{hook.detail.reviewNote || '검토 메모가 입력되지 않았습니다.'}</S.ReviewNote></Form.Section> : null}
                     {hook.detail.status === 'PENDING' ? <Form.InlineActions><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => openReview('REJECTED')}>반려</Shared.SecondaryButton><S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => openReview('APPROVED')}>삭제 승인</S.DangerButton></Form.InlineActions> : null}

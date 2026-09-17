@@ -238,6 +238,9 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
 
   &:hover:not(:disabled) {
     color: ${({ $active }) => ($active ? colors.primaryText : colors.primaryForeground)};

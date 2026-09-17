@@ -17,6 +17,7 @@ import { MerchantApplicationLayout } from './MerchantApplicationLayout'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
+const CommunityContentPage = lazy(() => import('../../pages/community/CommunityContentPage'))
 const DashboardPage = lazy(() => import('../../pages/dashboard/DashboardPage'))
 const NotFoundPage = lazy(() => import('../../pages/notFound/NotFoundPage'))
 const PlaceManagePage = lazy(() => import('../../pages/place/PlaceManagePage'))
@@ -187,6 +188,7 @@ export function Router() {
             </Route>
           </Route>
           <Route element={<ProtectedRoute />}>
+            <Route path="/community" element={<CommunityContentPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/places" element={<PlaceManagePage />} />
             <Route path="/places/events" element={<PlaceEventPage />} />

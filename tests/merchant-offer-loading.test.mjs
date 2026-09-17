@@ -29,7 +29,7 @@ beforeEach(async () => {
     if (config.url === '/merchant-owner/offers') return response(config, { offers: [], totalPages: 1 })
     assert.match(config.url, /^\/merchant-owner\/offers\/\d+$/)
     return new Promise((resolve, reject) => pending.set(Number(config.url.split('/').at(-1)), {
-      resolve: () => resolve(response(config, { id: Number(config.url.split('/').at(-1)) })), reject,
+      resolve: () => resolve(response(config, { id: Number(config.url.split('/').at(-1)), placeId: 1 })), reject,
     }))
   }
   root = createRoot(document.getElementById('root'))

@@ -15,6 +15,7 @@ import type {
   MerchantCouponRedeemRequest,
   MerchantOffer,
   MerchantOfferCreateRequest,
+  MerchantOfferPageResponse,
   MerchantOwnerProfile,
   MerchantStoreErrorResponse,
 } from '../types/merchantStore.types'
@@ -27,31 +28,21 @@ export const MERCHANT_OFFER_PAGE_LIMIT = 20
 type LoadStatus = 'loading' | 'ready' | 'error'
 type OfferAction = 'create' | 'publish' | 'close' | 'redeem' | null
 
-function replaceById<T extends { id: number }>(items: T[], next: T) {
-  const index = items.findIndex((item) => item.id === next.id)
-  return index === -1 ? [next, ...items] : items.map((item) => item.id === next.id ? next : item)
-}
-
-async function getAllMerchantOffers() {
-  const firstPage = await getMerchantOffers({ page: 1, limit: 100 })
-  if (firstPage.totalPages <= 1) return firstPage.offers
-
-  const remainingPages = await Promise.all(
-    Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-      getMerchantOffers({ page: index + 2, limit: 100 })
-    )
-  )
-
-  return [firstPage.offers, ...remainingPages.map((page) => page.offers)].flat()
-}
+export type OfferStatusFilter = 'ALL' | MerchantOffer['status']
+type Query = { placeId: number | null; page: number; status: OfferStatusFilter }
 
 export function useMerchantOffers() {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
-  const [offers, setOffers] = useState<MerchantOffer[]>([])
+  const [query, setQuery] = useState<Query>({ placeId: null, page: 1, status: 'ALL' })
+  const queryRef = useRef(query)
+  const [result, setResult] = useState<MerchantOfferPageResponse | null>(null)
+  const [pagination, setPagination] = useState<{ placeId: number; status: OfferStatusFilter; totalPages: number } | null>(null)
   const [selectedOffer, setSelectedOffer] = useState<MerchantOffer | null>(null)
+  const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null)
+  const [editorVersion, setEditorVersion] = useState(0)
   const [isListLoading, setIsListLoading] = useState(false)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -65,6 +56,7 @@ export function useMerchantOffers() {
   const actionRef = useRef<OfferAction>(null)
   const listRequestRef = useRef(0)
   const detailRequestRef = useRef(0)
+  const profileRequestRef = useRef(0)
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
@@ -82,68 +74,111 @@ export function useMerchantOffers() {
     })
   }, [clearAuth])
 
-  const fetchOffers = useCallback(async () => {
-    const requestId = listRequestRef.current + 1
-    listRequestRef.current = requestId
-    setIsListLoading(true)
-    setErrorMessage('')
+  const clearSelectedOffer = useCallback((resetEditor = true) => {
+    ++detailRequestRef.current
+    setSelectedOfferId(null)
+    if (resetEditor) setEditorVersion(value => value + 1)
+    setSelectedOffer(null)
+    setIsDetailLoading(false)
+    setDetailErrorMessage('')
+  }, [])
 
+  const fetchOffers = useCallback(async () => {
+    const requestId = ++listRequestRef.current
+    const requested = queryRef.current
+    setResult(null)
+    setErrorMessage('')
+    if (requested.placeId === null) { setIsListLoading(false); return true }
+    setIsListLoading(true)
+    const current = () => mountedRef.current && requestId === listRequestRef.current
     try {
-      const next = await getAllMerchantOffers()
-      if (!mountedRef.current || requestId !== listRequestRef.current) return false
-      setOffers(next)
+      const params = { placeId: requested.placeId, page: requested.page, limit: MERCHANT_OFFER_PAGE_LIMIT, status: requested.status === 'ALL' ? undefined : requested.status }
+      let next = await getMerchantOffers(params)
+      if (!current()) return false
+      // Correct an emptied last page once instead of walking through all history.
+      const lastPage = Math.max(1, next.totalPages)
+      if (requested.page > lastPage) {
+        queryRef.current = { ...requested, page: lastPage }
+        setQuery(queryRef.current)
+        next = await getMerchantOffers({ ...params, page: lastPage })
+        if (!current()) return false
+      }
+      setResult(next)
+      setPagination({ placeId: requested.placeId, status: requested.status, totalPages: next.totalPages })
       return true
     } catch (error) {
-      if (mountedRef.current && requestId === listRequestRef.current) {
-        setErrorMessage(getErrorMessage(error, '혜택 목록을 불러오지 못했습니다.'))
+      if (current()) {
+        setErrorMessage(getErrorMessage(error, '혜택 목록을 불러오지 못했습니다. 다시 조회해주세요.'))
         logDebugError('상점주 혜택 목록 조회 실패', error)
       }
       return false
     } finally {
-      if (mountedRef.current && requestId === listRequestRef.current) setIsListLoading(false)
+      if (current()) setIsListLoading(false)
     }
   }, [getErrorMessage])
 
+  const changeQuery = useCallback((next: Query) => {
+    const previous = queryRef.current
+    if (previous.placeId === next.placeId && previous.status === next.status && previous.page === next.page) return
+    queryRef.current = next
+    setQuery(next)
+    clearSelectedOffer(previous.placeId !== next.placeId)
+    void fetchOffers()
+  }, [clearSelectedOffer, fetchOffers])
+
   const fetchInitialData = useCallback(async () => {
+    if (actionRef.current) return
+    const requestId = ++profileRequestRef.current
+    ++listRequestRef.current
+    clearSelectedOffer()
+    setResult(null)
+    setPagination(null)
     setStatus('loading')
     setErrorMessage('')
-    setIsListLoading(true)
-
-    const [profileResult, offerResult] = await Promise.allSettled([
-      getMerchantOwnerProfile(),
-      getAllMerchantOffers(),
-    ])
-
-    if (!mountedRef.current) return
-    if (profileResult.status === 'fulfilled') {
-      setProfile(profileResult.value)
-      syncPlaces(profileResult.value.placeIds)
-    }
-    if (offerResult.status === 'fulfilled') setOffers(offerResult.value)
-
-    if (profileResult.status === 'rejected' || offerResult.status === 'rejected') {
-      ;[profileResult, offerResult].forEach((result) => {
-        if (result.status !== 'rejected') return
-        if (shouldClearAuth(result.reason)) clearAuth()
-        logDebugError('상점주 혜택 초기 조회 실패', result.reason)
-      })
-      setErrorMessage('혜택 관리 정보를 불러오지 못했습니다.')
+    try {
+      const next = await getMerchantOwnerProfile()
+      if (!mountedRef.current || requestId !== profileRequestRef.current) return
+      const placeId = syncPlaces(next.placeIds)
+      setProfile(next)
+      const previous = queryRef.current
+      queryRef.current = { ...previous, placeId, page: previous.placeId === placeId ? previous.page : 1 }
+      setQuery(queryRef.current)
+      setStatus('ready')
+      await fetchOffers()
+    } catch (error) {
+      if (!mountedRef.current || requestId !== profileRequestRef.current) return
       setStatus('error')
-      setIsListLoading(false)
-      return
+      setErrorMessage(getErrorMessage(error, '혜택 관리 정보를 불러오지 못했습니다.'))
     }
+  }, [clearSelectedOffer, syncPlaces, fetchOffers, getErrorMessage])
 
-    setStatus('ready')
-    setIsListLoading(false)
-  }, [clearAuth, syncPlaces])
+  const invalidateRequests = useCallback(() => {
+    ++profileRequestRef.current
+    ++listRequestRef.current
+    ++detailRequestRef.current
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
-  }, [fetchInitialData])
+    return () => {
+      mountedRef.current = false
+      invalidateRequests()
+    }
+  }, [fetchInitialData, invalidateRequests])
+
+  useEffect(() => {
+    if (!profile || status !== 'ready' || selectedPlaceId === queryRef.current.placeId) return
+    const timer = window.setTimeout(() => {
+      changeQuery({ ...queryRef.current, placeId: selectedPlaceId, page: 1 })
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [profile, status, selectedPlaceId, changeQuery])
 
   const fetchOfferDetail = useCallback(async (offerId: number) => {
+    if (actionRef.current) return null
+    setSelectedOfferId(offerId)
+    const placeId = queryRef.current.placeId
     const requestId = detailRequestRef.current + 1
     detailRequestRef.current = requestId
     setIsDetailLoading(true)
@@ -153,8 +188,8 @@ export function useMerchantOffers() {
     try {
       const next = await getMerchantOffer(offerId)
       if (!mountedRef.current || requestId !== detailRequestRef.current) return null
+      if (next.id !== offerId || next.placeId !== placeId) throw new Error('혜택 대상이 일치하지 않습니다.')
       setSelectedOffer(next)
-      setOffers((current) => replaceById(current, next))
       return next
     } catch (error) {
       if (mountedRef.current && requestId === detailRequestRef.current) {
@@ -168,25 +203,23 @@ export function useMerchantOffers() {
   }, [getErrorMessage])
 
   const selectPlace = useCallback((placeId: number) => {
-    if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
+    if (actionRef.current || !profile?.placeIds.includes(placeId) || placeId === queryRef.current.placeId) return
     selectSharedPlace(placeId)
-    detailRequestRef.current += 1
-    setIsDetailLoading(false)
-    setSelectedOffer(null)
-    setDetailErrorMessage('')
-  }, [profile?.placeIds, selectSharedPlace, selectedPlaceId])
+    changeQuery({ ...queryRef.current, placeId, page: 1 })
+  }, [profile, selectSharedPlace, changeQuery])
 
-  const clearSelectedOffer = useCallback(() => {
-    detailRequestRef.current += 1
-    setIsDetailLoading(false)
-    setSelectedOffer(null)
-    setDetailErrorMessage('')
-  }, [])
+  const setPage = useCallback((page: number) => {
+    if (actionRef.current || !Number.isSafeInteger(page) || page < 1) return
+    changeQuery({ ...queryRef.current, page })
+  }, [changeQuery])
+  const setStatusFilter = useCallback((filter: OfferStatusFilter) => {
+    if (actionRef.current || filter === queryRef.current.status) return
+    changeQuery({ ...queryRef.current, status: filter, page: 1 })
+  }, [changeQuery])
 
   const runAction = useCallback(async <T,>(
     action: Exclude<OfferAction, null>,
     request: () => Promise<T>,
-    apply: (value: T) => void,
     successText: string,
     fallbackMessage: string,
   ) => {
@@ -196,11 +229,15 @@ export function useMerchantOffers() {
     setActionErrorMessage('')
     setSuccessMessage('')
 
+    const target = queryRef.current
     try {
       const result = await request()
       if (!mountedRef.current) return null
-      apply(result)
       setSuccessMessage(successText)
+      if (action !== 'redeem' && target === queryRef.current) {
+        clearSelectedOffer()
+        await fetchOffers()
+      }
       return result
     } catch (error) {
       if (mountedRef.current) {
@@ -212,27 +249,18 @@ export function useMerchantOffers() {
       actionRef.current = null
       if (mountedRef.current) setActiveAction(null)
     }
-  }, [getErrorMessage])
+  }, [getErrorMessage, clearSelectedOffer, fetchOffers])
 
   const createOffer = useCallback((request: MerchantOfferCreateRequest) => runAction(
     'create',
     () => createMerchantOffer(request),
-    (next) => {
-      setOffers((current) => replaceById(current, next))
-      setSelectedOffer(next)
-      void fetchOffers()
-    },
     '혜택 초안을 등록했습니다.',
     '혜택 초안을 등록하지 못했습니다.',
-  ), [fetchOffers, runAction])
+  ), [runAction])
 
   const publishOffer = useCallback((offerId: number) => runAction(
     'publish',
     () => publishMerchantOffer(offerId),
-    (next) => {
-      setOffers((current) => replaceById(current, next))
-      setSelectedOffer((current) => current?.id === next.id ? next : current)
-    },
     '혜택을 공개했습니다.',
     '혜택을 공개하지 못했습니다.',
   ), [runAction])
@@ -240,10 +268,6 @@ export function useMerchantOffers() {
   const closeOffer = useCallback((offerId: number) => runAction(
     'close',
     () => closeMerchantOffer(offerId),
-    (next) => {
-      setOffers((current) => replaceById(current, next))
-      setSelectedOffer((current) => current?.id === next.id ? next : current)
-    },
     '혜택을 종료했습니다.',
     '혜택을 종료하지 못했습니다.',
   ), [runAction])
@@ -251,7 +275,6 @@ export function useMerchantOffers() {
   const redeemCoupon = useCallback((request: MerchantCouponRedeemRequest) => runAction(
     'redeem',
     () => redeemMerchantCoupon(request),
-    () => undefined,
     '쿠폰을 사용 처리했습니다.',
     '쿠폰을 사용 처리하지 못했습니다.',
   ), [runAction])
@@ -259,9 +282,17 @@ export function useMerchantOffers() {
   return {
     status,
     profile,
-    selectedPlaceId,
-    offers,
+    selectedPlaceId: query.placeId,
+    offers: result?.offers ?? [],
+    totalElements: result?.totalElements,
+    totalPages: pagination?.placeId === query.placeId && pagination?.status === query.status ? pagination.totalPages : 0,
+    page: query.page,
+    statusFilter: query.status,
+    setPage,
+    setStatusFilter,
     selectedOffer,
+    selectedOfferId,
+    editorVersion,
     isListLoading,
     isDetailLoading,
     errorMessage,

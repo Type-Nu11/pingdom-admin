@@ -31,6 +31,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     id: 'reviews',
     title: '검토함',
     items: [
+      { label: '커뮤니티 신고 심사', icon: 'flag', path: '/community-reports' },
       { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
       { label: '예약 심사', icon: 'event_available', path: '/reservations/review' },
       { label: '리뷰 삭제 요청', icon: 'rate_review', path: '/review-deletion-requests' },
@@ -42,6 +43,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     id: 'safety',
     title: '사용자 · 안전',
     items: [
+      { label: '커뮤니티 조회', icon: 'forum', path: '/community' },
       { label: '사용자 밴', icon: 'block', path: '/bans' },
       { label: '사용자 역할', icon: 'manage_accounts', path: '/users/roles' },
     ],

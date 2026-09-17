@@ -19,6 +19,7 @@ const reports = [
   { reportId: 3, targetId: 2, postId: 2, targetType: 'POST', status: 'ACCEPTED' },
   { reportId: 4, targetId: 3, postId: 3, targetType: 'POST', status: 'PENDING' },
 ].map(item => ({ ...item, reason: 'SPAM', reporterUserId: 40, description: '신고 설명', targetHidden: false, createdAt: meta.createdAt, processedAt: null, processedByAdminUserId: null }))
+window.communityQA.seedPendingReports = count => reports.splice(0, reports.length, ...Array.from({ length: count }, (_, i) => ({ ...reports[3], reportId: 10 + i, targetId: 3, postId: 3, targetType: 'POST', status: 'PENDING' })))
 function paged(items, field, params = {}) {
   const page = params.page || 1, limit = params.limit || 10
   return { [field]: items.slice((page - 1) * limit, page * limit), page, limit, totalCount: items.length, totalPages: Math.ceil(items.length / limit), hasNext: page * limit < items.length }

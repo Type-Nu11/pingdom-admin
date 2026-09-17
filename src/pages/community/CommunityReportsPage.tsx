@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { getCommunityReports } from '../../api/adminCommunityApi'
-import { useCommunityQuery } from '../../hooks/useCommunityQuery'
+import { useCommunityListQuery } from '../../hooks/useCommunityListQuery'
 import { useCommunityReportDetail } from '../../hooks/useCommunityReportDetail'
 import { useCommunityReview } from '../../hooks/useCommunityReview'
 import { canReviewCommunityReport, COMMUNITY_STATUS_LABELS, COMMUNITY_TARGET_LABELS, COMMUNITY_REASON_LABELS, communityDate } from '../../utils/community'
@@ -18,11 +18,11 @@ import * as S from './Community.styles'
 export default function CommunityReportsPage() {
   const [status, setStatus] = useState<CommunityReportStatus | ''>('PENDING')
   const [targetType, setTargetType] = useState<CommunityTargetType | ''>('')
-  const [page, setPage] = useState(1)
   const [reportId, setReportId] = useState<number | null>(null)
   const [dialog, setDialog] = useState<{ reportId: number; targetId: number; targetType: CommunityTargetType; decision: CommunityDecision } | null>(null)
-  const load = useCallback((signal: AbortSignal) => getCommunityReports({ page, status: status || undefined, targetType: targetType || undefined }, signal), [page, status, targetType])
-  const query = useCommunityQuery(JSON.stringify({ page, status, targetType }), load)
+  const load = useCallback((page: number, signal: AbortSignal) => getCommunityReports({ page, status: status || undefined, targetType: targetType || undefined }, signal), [status, targetType])
+  const query = useCommunityListQuery(JSON.stringify({ status, targetType }), load)
+  const { page } = query
   const detail = useCommunityReportDetail(reportId)
   const action = useCommunityReview()
   const report = detail.data?.report
@@ -44,12 +44,12 @@ export default function CommunityReportsPage() {
     {action.warning ? <FeedbackMessage tone="warning">{action.warning}</FeedbackMessage> : null}
     {action.error && !dialog ? <FeedbackMessage tone="error" onDismiss={action.dismissError}>{action.error}</FeedbackMessage> : null}
     <S.Filters onSubmit={e => e.preventDefault()}>
-      <Form.Field>처리 상태<AdminSelect aria-label="신고 처리 상태" value={status} disabled={action.busy || !!dialog} onChange={e => { setStatus(e.target.value as CommunityReportStatus | ''); setPage(1); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></Form.Field>
-      <Form.Field>대상 유형<AdminSelect aria-label="신고 대상 유형" value={targetType} disabled={action.busy || !!dialog} onChange={e => { setTargetType(e.target.value as CommunityTargetType | ''); setPage(1); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_TARGET_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></Form.Field>
+      <Form.Field>처리 상태<AdminSelect aria-label="신고 처리 상태" value={status} disabled={action.busy || !!dialog} onChange={e => { setStatus(e.target.value as CommunityReportStatus | ''); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></Form.Field>
+      <Form.Field>대상 유형<AdminSelect aria-label="신고 대상 유형" value={targetType} disabled={action.busy || !!dialog} onChange={e => { setTargetType(e.target.value as CommunityTargetType | ''); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_TARGET_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></Form.Field>
       <Shared.SecondaryButton type="button" disabled={query.loading || action.busy || !!dialog} onClick={() => { resetSelection(); void query.refresh() }}>목록 새로고침</Shared.SecondaryButton>
     </S.Filters>
     <ListDetailWorkspace>
-      <ListPane title="신고 목록" count={query.data ? `${query.data.totalCount}건` : undefined} page={page} footer={<CommunityPagination data={query.data} page={page} label="신고 페이지네이션" disabled={action.busy || !!dialog} onChange={p => { setPage(p); resetSelection() }} />}>
+      <ListPane title="신고 목록" count={query.data ? `${query.data.totalCount}건` : undefined} page={page} footer={<CommunityPagination data={query.data} page={page} label="신고 페이지네이션" disabled={action.busy || !!dialog} onChange={p => { void query.changePage(p); resetSelection() }} />}>
         <QueryMessage {...query} empty={query.data?.reports.length === 0} onRetry={query.refresh} />
         <Form.CardList>{query.data?.reports.map(item => <Form.RecordButton key={item.reportId} $selected={reportId === item.reportId} disabled={action.busy || !!dialog} onClick={() => { setReportId(item.reportId); action.dismissError() }}>
           <Form.RecordTitle>신고 #{item.reportId} · {COMMUNITY_TARGET_LABELS[item.targetType] || '알 수 없는 대상'} #{item.targetId}</Form.RecordTitle>

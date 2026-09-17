@@ -13,6 +13,7 @@ const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthConte
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const api = await server.ssrLoadModule('/src/api/adminCommunityApi.ts')
 const { useCommunityQuery } = await server.ssrLoadModule('/src/hooks/useCommunityQuery.ts')
+const { useCommunityListQuery } = await server.ssrLoadModule('/src/hooks/useCommunityListQuery.ts')
 const { useCommunityReportDetail } = await server.ssrLoadModule('/src/hooks/useCommunityReportDetail.ts')
 const { useCommunityReview } = await server.ssrLoadModule('/src/hooks/useCommunityReview.ts')
 const { reportPostId, canReviewCommunityReport } = await server.ssrLoadModule('/src/utils/community.ts')
@@ -120,4 +121,60 @@ test('review refuses mismatched selected report or missing content before API ca
     assert.equal(await state.review({ ...bundle, target: null }, 1, 'accept', async () => [true]), false)
   })
   assert.equal(calls.length, 0)
+})
+
+const listResult = (page, totalCount = 11) => ({ page, limit: 10, totalCount, totalPages: Math.ceil(totalCount / 10), hasNext: page * 10 < totalCount, reports: page * 10 - 10 < totalCount ? [{ reportId: page }] : [] })
+test('list corrects emptied last page and refreshes the corrected page thereafter', async () => {
+  let count = 11
+  const pages = []
+  const loader = async page => { pages.push(page); return listResult(page, count) }
+  function Probe() { state = useCommunityListQuery('pending', loader); return null }
+  await render(Probe)
+  await act(async () => { await state.changePage(2) })
+  count = 10
+  await act(async () => { assert.equal(await state.refresh(), true) })
+  assert.equal(state.page, 1); assert.equal(state.data.totalCount, 10); assert.equal(state.pagination.totalPages, 1)
+  assert.deepEqual(pages, [1, 2, 2, 1])
+  await act(async () => { await state.refresh() })
+  assert.deepEqual(pages, [1, 2, 2, 1, 1])
+})
+test('list keeps pagination but no stale rows while loading and after failure', async () => {
+  const pending = defer()
+  const loader = page => page === 1 ? Promise.resolve(listResult(1)) : pending.promise
+  function Probe() { state = useCommunityListQuery('all', loader); return null }
+  await render(Probe)
+  let work
+  await act(async () => { work = state.changePage(2) })
+  assert.equal(state.data, null); assert.equal(state.loading, true); assert.equal(state.pagination.totalPages, 2)
+  await act(async () => { pending.reject(new Error('failed')); assert.equal(await work, false) })
+  assert.equal(state.data, null); assert.ok(state.error); assert.equal(state.pagination.totalPages, 2)
+})
+test('list correction failure returns false and retry uses corrected page', async () => {
+  let shrinking = false, fail = true
+  const loader = async page => {
+    if (shrinking && page === 1 && fail) throw new Error('failed')
+    return listResult(page, shrinking ? 0 : 11)
+  }
+  function Probe() { state = useCommunityListQuery('pending', loader); return null }
+  await render(Probe)
+  await act(async () => { await state.changePage(2) })
+  shrinking = true
+  await act(async () => { assert.equal(await state.refresh(), false) })
+  assert.equal(state.page, 1); assert.equal(state.data, null); assert.ok(state.error)
+  fail = false
+  await act(async () => { assert.equal(await state.refresh(), true) })
+  assert.equal(state.page, 1); assert.equal(state.data.totalCount, 0); assert.deepEqual(state.data.reports, [])
+})
+for (const fail of [false, true]) test(`list filter change clears old pagination and ignores late ${fail ? 'failure' : 'success'}`, async () => {
+  const old = defer(), fresh = defer()
+  const loaders = { old: page => page === 1 ? Promise.resolve(listResult(1)) : old.promise, fresh: () => fresh.promise }
+  let scope = 'old', work
+  function Probe() { state = useCommunityListQuery(scope, loaders[scope]); return null }
+  await render(Probe)
+  await act(async () => { work = state.changePage(2) })
+  scope = 'fresh'; await render(Probe)
+  assert.equal(state.page, 1); assert.equal(state.pagination, null); assert.equal(state.data, null)
+  await act(async () => fresh.resolve(listResult(1, 3)))
+  await act(async () => { if (fail) old.reject(new Error('late')); else old.resolve(listResult(2)); await work })
+  assert.equal(state.data.totalCount, 3); assert.equal(state.error, ''); assert.equal(state.pagination.totalPages, 1)
 })

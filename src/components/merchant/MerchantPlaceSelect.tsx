@@ -14,10 +14,19 @@ const Container = styled.div<{ $compact: boolean }>`
   margin-bottom: ${({ $compact }) => $compact ? '0' : '20px'};
 `
 
-export function MerchantPlaceSelect({ compact = false, ...props }: Props) {
+export function MerchantPlaceSelect({ compact = false, value, onChange, ...props }: Props) {
   return (
     <Container $compact={compact}>
-      <AdminSelect {...props} width="100%" />
+      <AdminSelect
+        {...props}
+        value={value}
+        width="100%"
+        onChange={event => {
+          // Match native select semantics: reselecting the current place is not a change.
+          if (String(value ?? props.defaultValue ?? '') === event.target.value) return
+          onChange?.(event)
+        }}
+      />
     </Container>
   )
 }

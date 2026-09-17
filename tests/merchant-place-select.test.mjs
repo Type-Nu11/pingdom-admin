@@ -50,6 +50,25 @@ test('keyboard selection and Escape preserve selection semantics', async () => {
   assert.equal(trigger().getAttribute('aria-expanded'), 'false')
 })
 
+for (const value of [70095, '70095']) {
+  test(`reselecting the current place preserves native change semantics (${typeof value})`, async () => {
+    await render({ value })
+    await act(async () => trigger().click())
+    await act(async () => document.querySelector('[aria-selected="true"]').click())
+    assert.equal(selected, null)
+    assert.equal(trigger().getAttribute('aria-expanded'), 'false')
+    assert.equal(document.activeElement, trigger())
+    await key('ArrowDown')
+    await key('Enter')
+    assert.equal(selected, null)
+    assert.equal(trigger().getAttribute('aria-expanded'), 'false')
+    await key('ArrowDown')
+    await key('ArrowDown')
+    await key('Enter')
+    assert.equal(selected, 70096)
+  })
+}
+
 test('disabled selector cannot change place; outside click dismisses the list', async () => {
   await render({ disabled: true })
   await act(async () => trigger().click())

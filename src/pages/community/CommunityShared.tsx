@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -39,9 +39,25 @@ export function QueryMessage({ loading, error, empty, onRetry }: { loading: bool
   return null
 }
 
-export function CommunityPagination({ data, page, onChange, label, disabled = false }: { data: CommunityPage | null; page: number; onChange: (page: number) => void; label: string; disabled?: boolean }) {
+export function CommunityPagination({ data, page, onChange, label, disabled = false, loading = false }: { data: CommunityPage | null; page: number; onChange: (page: number) => void; label: string; disabled?: boolean; loading?: boolean }) {
+  const container = useRef<HTMLDivElement>(null)
+  const hadFocus = useRef(false)
+  useLayoutEffect(() => {
+    if (!data) { hadFocus.current = false; return }
+    if (loading || disabled || !hadFocus.current) return
+    const active = document.activeElement
+    // The next/previous button can become disabled, or a numbered button disappear.
+    // Move to the current page only when focus was here, never steal it from a form.
+    if (active === document.body || (active instanceof HTMLButtonElement && active.disabled && container.current?.contains(active))) {
+      container.current?.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus()
+    }
+  }, [data, page, loading, disabled])
   if (!data) return null
-  return <AdminPagination page={page} totalPages={Math.max(data.totalPages, page)} hasNext={data.hasNext} onPageChange={onChange} ariaLabel={label} disabled={disabled} />
+  return <div ref={container} aria-busy={loading} aria-disabled={loading || disabled}
+    onFocusCapture={() => { hadFocus.current = true }}
+    onBlurCapture={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) hadFocus.current = false }}>
+    <AdminPagination page={loading ? data.page : page} totalPages={data.totalPages} hasNext={data.hasNext} onPageChange={next => { if (!loading && !disabled) onChange(next) }} ariaLabel={label} disabled={disabled} />
+  </div>
 }
 
 export function CommunityContentView({ content }: { content: AdminCommunityPost | AdminCommunityComment }) {

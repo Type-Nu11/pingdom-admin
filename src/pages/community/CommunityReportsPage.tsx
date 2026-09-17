@@ -49,7 +49,7 @@ export default function CommunityReportsPage() {
       <Shared.SecondaryButton type="button" disabled={query.loading || action.busy || !!dialog} onClick={() => { resetSelection(); void query.refresh() }}>목록 새로고침</Shared.SecondaryButton>
     </S.Filters>
     <ListDetailWorkspace>
-      <ListPane title="신고 목록" count={query.data ? `${query.data.totalCount}건` : undefined} page={page} footer={<CommunityPagination data={query.data} page={page} label="신고 페이지네이션" disabled={action.busy || !!dialog} onChange={p => { void query.changePage(p); resetSelection() }} />}>
+      <ListPane title="신고 목록" count={query.data ? `${query.data.totalCount}건` : undefined} page={page} footer={<CommunityPagination data={query.pagination} page={page} loading={query.loading} label="신고 페이지네이션" disabled={action.busy || !!dialog} onChange={p => { void query.changePage(p); resetSelection() }} />}>
         <QueryMessage {...query} empty={query.data?.reports.length === 0} onRetry={query.refresh} />
         <Form.CardList>{query.data?.reports.map(item => <Form.RecordButton key={item.reportId} $selected={reportId === item.reportId} disabled={action.busy || !!dialog} onClick={() => { setReportId(item.reportId); action.dismissError() }}>
           <Form.RecordTitle>신고 #{item.reportId} · {COMMUNITY_TARGET_LABELS[item.targetType] || '알 수 없는 대상'} #{item.targetId}</Form.RecordTitle>

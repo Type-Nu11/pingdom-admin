@@ -36,6 +36,8 @@ const PRIVACY_ACTION_LABELS: Record<PrivacyProcessingAction, string> = {
 }
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
+  COMMUNITY_REPORT_ACCEPTED: '커뮤니티 신고 수락',
+  COMMUNITY_REPORT_DECLINED: '커뮤니티 신고 반려',
   USER_BAN_APPLIED: '사용자 밴 처리',
   USER_BAN_RELEASED: '사용자 밴 해제',
   PLACE_CREATED: '장소 등록',
@@ -48,6 +50,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
 }
 
 const AUDIT_TARGET_TYPE_LABELS: Record<string, string> = {
+  COMMUNITY_REPORT: '커뮤니티 신고',
   USER: '사용자',
   PLACE: '장소',
   MERCHANT: '상점주',
@@ -381,9 +384,15 @@ function OperationHistoryPage() {
                         작업 유형
                         <S.Input
                           value={auditAction}
+                          list="community-audit-actions"
+                          aria-label="감사 로그 작업 유형"
                           placeholder="예: USER_BAN_APPLIED"
                           onChange={(event) => setAuditAction(event.target.value)}
                         />
+                        <datalist id="community-audit-actions">
+                          <option value="COMMUNITY_REPORT_ACCEPTED">커뮤니티 신고 수락</option>
+                          <option value="COMMUNITY_REPORT_DECLINED">커뮤니티 신고 반려</option>
+                        </datalist>
                       </S.Field>
                       <S.Field>
                         시작 시각
@@ -416,9 +425,12 @@ function OperationHistoryPage() {
                             대상 유형
                             <S.Input
                               value={targetType}
+                              list="community-audit-targets"
+                              aria-label="감사 로그 대상 유형"
                               placeholder="예: USER"
                               onChange={(event) => setTargetType(event.target.value)}
                             />
+                            <datalist id="community-audit-targets"><option value="COMMUNITY_REPORT">커뮤니티 신고</option></datalist>
                           </S.Field>
                           <S.Field>
                             대상 ID

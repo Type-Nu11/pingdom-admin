@@ -928,7 +928,7 @@ export const OperationalEmptyState = styled.p`
   display: flex;
   align-items: center;
   margin: 0;
-  padding: 8px 0;
+  padding: 12px 16px;
   border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};

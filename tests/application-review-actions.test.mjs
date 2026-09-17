@@ -55,6 +55,34 @@ function application(id, status = 'PENDING') {
 }
 function actions() { return document.querySelector('footer[aria-label="장소 신청 심사 작업"]') }
 function select(id) { return [...document.querySelectorAll('button')].find(b => b.textContent.includes('장소 ' + id) && b.textContent.includes('신청자 #')) }
+test('tabs remain interactive while loading and ignore stale results and repeated selection', async () => {
+  await mount()
+  const history = deferred(), previous = adapter
+  adapter = config => Array.isArray(config.params?.status)
+    ? history.promise.then(() => response(config, { items: [application(99, 'APPROVED')], page: 1, total: 1, totalPages: 1, hasNext: false }))
+    : previous(config)
+  await click(button('처리 이력'))
+  assert.equal(button('처리 이력').getAttribute('aria-selected'), 'true')
+  assert.equal(button('심사 대기').disabled, false)
+  const count = calls.length
+  await click(button('처리 이력'))
+  assert.equal(calls.length, count)
+  await click(button('심사 대기'))
+  await act(async () => history.resolve())
+  assert.equal(button('심사 대기').getAttribute('aria-selected'), 'true')
+  assert.ok(select(1))
+  assert.equal(select(99), undefined)
+})
+
+test('list errors appear after the tab controls', async () => {
+  adapter = async () => { throw new Error('test failure') }
+  await mount()
+  const tabs = document.querySelector('[aria-label="장소 신청 상태"]')
+  const error = [...document.querySelectorAll('[role="alert"]')].find(el => el.textContent.includes('장소 신청 목록'))
+  assert.ok(error)
+  assert.ok(tabs.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING)
+})
+
 test('actions are outside scrolling content and open existing confirmation', async () => {
   await mount()
   assert.equal(actions(), null)

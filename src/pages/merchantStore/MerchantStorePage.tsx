@@ -191,6 +191,7 @@ function MerchantStorePage() {
           </div>
           {store.profile && store.profile.placeIds.length > 1 ? (
             <S.PlaceSelect
+              compact
               aria-label="관리할 장소 선택"
               value={store.selectedPlaceId ?? ''}
               onChange={(event) => store.selectPlace(Number(event.target.value))}

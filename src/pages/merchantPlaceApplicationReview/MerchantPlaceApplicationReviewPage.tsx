@@ -272,13 +272,12 @@ function MerchantPlaceApplicationReviewPage() {
         <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>검토함</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchApplications(hook.page)}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton></Shell.TopActions></Shell.TopBar>
         <S.ReviewContent><S.ReviewPageStack>
           <Shared.PageHeader><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
-          {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
           {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
           {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
           <S.FilterBar>
             <S.FilterTabs role="tablist" aria-label="장소 신청 상태">
-              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'pending'} $active={hook.view === 'pending'} disabled={hook.isLoading || hook.isReviewing} onClick={() => { setSelectedId(null); setDecision(null); hook.changeView('pending') }}>심사 대기</S.FilterTab>
-              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'history'} $active={hook.view === 'history'} disabled={hook.isLoading || hook.isReviewing} onClick={() => { setSelectedId(null); setDecision(null); hook.changeView('history') }}>처리 이력</S.FilterTab>
+              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'pending'} $active={hook.view === 'pending'} disabled={hook.isReviewing} onClick={() => { if (hook.view === 'pending') return; setSelectedId(null); setDecision(null); hook.changeView('pending') }}>심사 대기</S.FilterTab>
+              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'history'} $active={hook.view === 'history'} disabled={hook.isReviewing} onClick={() => { if (hook.view === 'history') return; setSelectedId(null); setDecision(null); hook.changeView('history') }}>처리 이력</S.FilterTab>
             </S.FilterTabs>
             <S.FilterField>신청 유형
               <AdminSelect aria-label="신청 유형 필터" value={hook.applicationType} width="208px" disabled={hook.isLoading || hook.isReviewing} onChange={(event) => { setSelectedId(null); setDecision(null); hook.changeApplicationType(event.target.value as typeof hook.applicationType) }}>
@@ -298,6 +297,7 @@ function MerchantPlaceApplicationReviewPage() {
             {filterError ? <span role="alert">{filterError}</span> : null}
             {hook.historyFilters ? <S.AppliedFilters role="status">적용 조건: {hook.historyFilters.result === 'ALL' ? '전체 결과' : STATUS_LABELS[hook.historyFilters.result]} · {hook.historyFilters.keyword || '전체 대상'} · {hook.historyFilters.submittedFrom || '시작 제한 없음'} ~ {hook.historyFilters.submittedTo || '종료 제한 없음'}</S.AppliedFilters> : null}
           </S.HistoryFilters> : null}
+          {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
           <ListDetailWorkspace>
             <ListPane title={listTitle} range={!hook.isLoading && !hook.errorMessage ? { page: hook.page, pageSize: APPLICATION_REVIEW_PAGE_SIZE, itemCount: hook.items.length, total: hook.total } : undefined} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}

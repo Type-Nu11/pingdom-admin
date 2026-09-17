@@ -1,6 +1,7 @@
 import {
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -32,6 +33,7 @@ function SortDropdown({
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const selectedOption =
@@ -58,6 +60,21 @@ function SortDropdown({
       window.removeEventListener('mousedown', closeOnOutsideClick)
     }
   }, [isOpen])
+
+  useLayoutEffect(() => {
+    const list = listRef.current
+    const activeOption = list?.children[activeIndex]
+    if (!isOpen || !list || !(activeOption instanceof HTMLElement)) return
+
+    // Scroll only the options list, without moving the surrounding page.
+    const listTop = list.getBoundingClientRect().top + list.clientTop
+    const optionRect = activeOption.getBoundingClientRect()
+    if (optionRect.top < listTop) {
+      list.scrollTop += optionRect.top - listTop
+    } else if (optionRect.bottom > listTop + list.clientHeight) {
+      list.scrollTop += optionRect.bottom - listTop - list.clientHeight
+    }
+  }, [isOpen, activeIndex])
 
   function openDropdown() {
     setActiveIndex(selectedIndex)
@@ -180,6 +197,7 @@ function SortDropdown({
 
       {isOpen ? (
         <S.DropdownMenu
+          ref={listRef}
           id={listboxId}
           role="listbox"
           aria-label={ariaLabel}

@@ -36,7 +36,7 @@ export const ImagePlaceholder = styled.div`
   font-size: 11px; text-align: center;
 `;
 export const Technical = styled.details`
-  border-top: 1px solid ${c.border}; padding-top: 12px;
+  padding-top: 12px;
   > summary { cursor: pointer; font-size: 14px; font-weight: 700; padding: 8px 0; }
   > summary:focus-visible { outline: 2px solid ${c.primaryForeground}; outline-offset: 2px; }
 `;

@@ -145,8 +145,9 @@ export const SearchFilterGrid = styled.div`
   }
 `
 
-export const SearchFilterActions = styled.div`
-  grid-column: 1 / -1;
+export const SearchFilterActions = styled.div<{ $inline?: boolean }>`
+  grid-column: ${({ $inline }) => $inline ? 'auto' : '1 / -1'};
+  align-self: end;
   display: flex;
   justify-content: flex-end;
   gap: 8px;

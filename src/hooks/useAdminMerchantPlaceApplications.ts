@@ -125,8 +125,13 @@ export function useAdminMerchantPlaceApplications() {
   }, [message])
 
   const changeView = useCallback((nextView: ApplicationReviewView) => {
+    if (nextView === viewRef.current) return
     viewRef.current = nextView
     pageRef.current = 1
+    setPage(1)
+    detailRequestRef.current += 1
+    setDetail(null)
+    setIsDetailLoading(false)
     setView(nextView)
     setItems([])
     setTotal(0)

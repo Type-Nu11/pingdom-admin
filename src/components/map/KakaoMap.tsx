@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import type { MutableRefObject } from 'react'
+import type { MapHandle, MapMarker, MapProps } from './map.types'
 import styled from 'styled-components'
 import { adminColors } from '../../styles/theme'
 import { logDebugError } from '../../utils/debugLogger'
@@ -146,41 +147,13 @@ const DEFAULT_CENTER = {
 const neutral = adminColors
 let kakaoMapScriptPromise: Promise<void> | null = null
 
-interface KakaoMapProps {
-  className?: string
-  markers?: KakaoMapMarker[]
-  activeMarkerId?: number | null
-  fitBoundsKey?: string
-  onMarkerClick?: (markerId: number) => void
-  onMapClick?: (coordinate: { latitude: number; longitude: number }) => void
-  onMapReady?: () => void
-}
+type KakaoMapProps = MapProps
 
 type MarkerClickRef = MutableRefObject<KakaoMapProps['onMarkerClick']>
 
-export interface KakaoMapMarker {
-  id: number
-  latitude: number
-  longitude: number
-  label: string
-  category?: string | null
-  categoryName?: string | null
-  level?: number
-}
-
-export interface KakaoMapHandle {
-  zoomIn: () => void
-  zoomOut: () => void
-  relayout: () => void
-  moveTo: (
-    latitude: number,
-    longitude: number,
-    options?: {
-      offsetX?: number
-    }
-  ) => void
-  fitToMarkers: () => void
-}
+// Temporary compatibility exports until consumers migrate in #223/#224.
+export type KakaoMapMarker = MapMarker
+export type KakaoMapHandle = MapHandle
 
 function loadKakaoMapScript(appKey: string) {
   if (kakaoMapScriptPromise) {

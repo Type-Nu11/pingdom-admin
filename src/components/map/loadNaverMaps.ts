@@ -46,6 +46,7 @@ export function loadNaverMaps(clientId: string, timeoutMs = 15000): Promise<Nave
   script.async = true
   const url = new URL('https://oapi.map.naver.com/openapi/v3/maps.js')
   url.searchParams.set('ncpKeyId', key)
+  url.searchParams.set('submodules', 'geocoder')
   url.searchParams.set('callback', callbackName)
   script.src = url.href
   const attempt = new Promise<NaverMaps>((resolve, reject) => {

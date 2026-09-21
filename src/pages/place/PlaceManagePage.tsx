@@ -17,9 +17,10 @@ import { PlaceInspector } from '../../components/place/PlaceInspector'
 import { PlaceMapPanel } from '../../components/place/PlaceMapPanel'
 import { PlaceListPanel } from '../../components/place/PlaceListPanel'
 import type {
-  KakaoMapHandle,
-  KakaoMapMarker,
-} from '../../components/map/KakaoMap'
+  MapHandle,
+  MapMarker,
+} from '../../components/map/map.types'
+import { isValidMapCoordinate } from '../../components/map/map.types'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceOperatingNotices } from '../../hooks/useAdminPlaceOperatingNotices'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
@@ -45,8 +46,7 @@ function hasValidCoordinate(place: AdminPlaceItem) {
   return (
     typeof place.latitude === 'number' &&
     typeof place.longitude === 'number' &&
-    Number.isFinite(place.latitude) &&
-    Number.isFinite(place.longitude)
+    isValidMapCoordinate({ latitude: place.latitude, longitude: place.longitude })
   )
 }
 
@@ -74,7 +74,7 @@ function PlaceManagePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const linkedPlaceId = searchParams.get('placeId')
   const { logout, user } = useAuth()
-  const mapRef = useRef<KakaoMapHandle | null>(null)
+  const mapRef = useRef<MapHandle | null>(null)
   const mapPanelRef = useRef<HTMLElement | null>(null)
   const placeDetailPanelRef = useRef<HTMLElement | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
@@ -190,7 +190,7 @@ function PlaceManagePage() {
         : updatingPlaceIds['kakao-place-id'] !== null
           ? 'kakao-place-id'
           : null
-  const placeMapMarkers = useMemo<KakaoMapMarker[]>(
+  const placeMapMarkers = useMemo<MapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
         id: place.id,
@@ -272,6 +272,10 @@ function PlaceManagePage() {
     },
     [getSelectedPlaceMapOffsetX]
   )
+
+  const handleMapReady = useCallback(() => {
+    if (selectedPlace) focusPlaceOnVisibleMap(selectedPlace)
+  }, [focusPlaceOnVisibleMap, selectedPlace])
 
   useEffect(() => {
     latestSortParamRef.current = selectedSortParam
@@ -646,8 +650,17 @@ function PlaceManagePage() {
 
     const recenterAnimationFrame = window.requestAnimationFrame(recenterSelectedPlace)
     const recenterTimer = window.setTimeout(recenterSelectedPlace, 220)
+    let resizeFrame: number | null = null
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
+      resizeFrame = window.requestAnimationFrame(recenterSelectedPlace)
+    })
+    if (mapPanelRef.current) observer?.observe(mapPanelRef.current)
+    if (placeDetailPanelRef.current) observer?.observe(placeDetailPanelRef.current)
 
     return () => {
+      observer?.disconnect()
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
       window.cancelAnimationFrame(recenterAnimationFrame)
       window.clearTimeout(recenterTimer)
     }
@@ -768,11 +781,12 @@ function PlaceManagePage() {
             panelRef={mapPanelRef}
             mapRef={mapRef}
             markers={placeMapMarkers}
-            displayCount={places.length}
+            displayCount={placeMapMarkers.length}
             fitBoundsKey={placeMapFitBoundsKey}
             selectedPlaceId={selectedPlace?.id ?? null}
             isListCollapsed={isPlacePanelCollapsed}
             onMarkerSelect={handleSelectMapMarker}
+            onMapReady={handleMapReady}
             onOpenList={() => setIsPlacePanelCollapsed(false)}
             inspector={
               <PlaceInspector

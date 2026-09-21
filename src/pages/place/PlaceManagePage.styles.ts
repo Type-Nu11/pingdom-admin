@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import KakaoMap from '../../components/map/KakaoMap'
+import NaverMap from '../../components/map/NaverMap'
 import { adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
@@ -1641,15 +1641,14 @@ export const MapPanel = styled.section`
   }
 `
 
-export const AdminMap = styled(KakaoMap)`
+export const AdminMap = styled(NaverMap)`
   position: absolute;
+  isolation: isolate;
   inset: 0;
   min-height: 0;
 
-  > div {
-    border: 0;
-    border-radius: 0;
-  }
+  border: 0;
+  border-radius: 0;
 `
 
 export const MapMarkerLayer = styled.div`

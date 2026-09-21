@@ -18,7 +18,7 @@ try {
     server = await createServer({ cacheDir: join(output, mode), server: { host: '127.0.0.1', port: 0, open: false }, plugins: [{
       name: 'place-qa', enforce: 'pre',
       resolveId(source) {
-        if (source.endsWith('/map/KakaoMap')) return resolve('tests/browser/place-map-fixture.jsx')
+        if (source.endsWith('/map/NaverMap')) return resolve('tests/browser/place-map-fixture.jsx')
       },
       load(id) {
         if (mode === 'before' && id.endsWith('/src/components/place/PlaceInspector.tsx')) return baseline

@@ -6,7 +6,7 @@ import {createServer} from 'vite'
 import {chromium} from 'playwright'
 const output=await mkdtemp(join(tmpdir(),'pingdom-170-'))
 const server=await createServer({cacheDir:join(output,'cache'),server:{host:'127.0.0.1',port:0,open:false},plugins:[{
-  name:'target-fixture',enforce:'pre',resolveId(source){if(source.endsWith('/map/KakaoMap'))return resolve('tests/browser/place-map-fixture.jsx')},
+  name:'target-fixture',enforce:'pre',resolveId(source){if(source.endsWith('/map/NaverMap'))return resolve('tests/browser/place-map-fixture.jsx')},
   configureServer(vite){vite.middlewares.use(async(req,res,next)=>{
     if(!['/roles','/places','/reservations/review'].includes(req.url.split('?')[0]))return next()
     res.setHeader('Content-Type','text/html')

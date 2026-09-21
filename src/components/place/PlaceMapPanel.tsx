@@ -1,16 +1,17 @@
 import type { ReactNode, RefObject } from 'react'
-import type { KakaoMapHandle, KakaoMapMarker } from '../map/KakaoMap'
+import type { MapHandle, MapMarker } from '../map/map.types'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
 interface PlaceMapPanelProps {
   panelRef: RefObject<HTMLElement | null>
-  mapRef: RefObject<KakaoMapHandle | null>
-  markers: KakaoMapMarker[]
+  mapRef: RefObject<MapHandle | null>
+  markers: MapMarker[]
   displayCount: number
   fitBoundsKey: string
   selectedPlaceId: number | null
   isListCollapsed: boolean
   onMarkerSelect: (placeId: number) => void
+  onMapReady: () => void
   onOpenList: () => void
   inspector: ReactNode
 }
@@ -24,6 +25,7 @@ export function PlaceMapPanel({
   selectedPlaceId,
   isListCollapsed,
   onMarkerSelect,
+  onMapReady,
   onOpenList,
   inspector,
 }: PlaceMapPanelProps) {
@@ -35,6 +37,7 @@ export function PlaceMapPanel({
         fitBoundsKey={fitBoundsKey}
         markers={markers}
         onMarkerClick={onMarkerSelect}
+        onMapReady={onMapReady}
       />
       {inspector}
       {isListCollapsed ? (

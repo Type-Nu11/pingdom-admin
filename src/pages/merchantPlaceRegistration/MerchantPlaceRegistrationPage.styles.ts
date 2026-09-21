@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import KakaoMap from '../../components/map/KakaoMap'
+import NaverMap from '../../components/map/NaverMap'
 import { adminColors } from '../../styles/theme'
 
 const colors = adminColors
@@ -531,7 +531,7 @@ export const TagButton = styled.button<{ $selected: boolean }>`
   &:disabled { cursor: not-allowed; opacity: 0.55; }
 `
 
-export const LocationMap = styled(KakaoMap)<{ $active: boolean }>`
+export const LocationMap = styled(NaverMap)<{ $active: boolean }>`
   height: 100%;
   min-height: 0;
 `

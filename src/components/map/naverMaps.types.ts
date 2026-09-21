@@ -1,0 +1,42 @@
+// Narrow structural types for the SDK surface used by this adapter.
+export interface NaverLatLng { lat(): number; lng(): number }
+export interface NaverPoint { x: number; y: number }
+export interface NaverMapInstance {
+  getZoom(): number
+  setZoom(zoom: number, animate?: boolean): void
+  setCenter(center: NaverLatLng): void
+  fitBounds(bounds: NaverLatLng[]): void
+  setSize(size: { width: number; height: number }): void
+  getProjection(): {
+    fromCoordToOffset(coord: NaverLatLng): NaverPoint
+    fromOffsetToCoord(point: NaverPoint): NaverLatLng
+  }
+  destroy(): void
+}
+export interface NaverOverlay {
+  onAdd(): void
+  onRemove(): void
+  draw(): void
+  setMap(map: NaverMapInstance | null): void
+  getPanes(): { overlayLayer: HTMLElement }
+  getProjection(): { fromCoordToOffset(coord: NaverLatLng): NaverPoint }
+}
+export interface NaverMaps {
+  LatLng: new (latitude: number, longitude: number) => NaverLatLng
+  Point: new (x: number, y: number) => NaverPoint
+  Map: new (element: HTMLElement, options: {
+    center: NaverLatLng; zoom: number; minZoom: number; maxZoom: number
+    scrollWheel: boolean; keyboardShortcuts: boolean
+  }) => NaverMapInstance
+  OverlayView: new () => NaverOverlay
+  Event: {
+    addListener(target: object, event: string, handler: (event?: unknown) => void): object
+    removeListener(listener: object): void
+  }
+}
+declare global {
+  interface Window {
+    naver?: { maps: NaverMaps }
+    navermap_authFailure?: () => void
+  }
+}

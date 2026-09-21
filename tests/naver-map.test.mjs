@@ -1,0 +1,126 @@
+import assert from 'node:assert/strict'
+import { after, test } from 'node:test'
+import { JSDOM } from 'jsdom'
+import { createServer } from 'vite'
+import { installNaverSdk } from './helpers/naver-sdk.mjs'
+
+const dom = new JSDOM('<div id="viewport"><div id="map"></div></div>', { url: 'http://localhost/', pretendToBeVisual: true })
+for (const key of ['window', 'document', 'HTMLElement']) globalThis[key] = dom.window[key]
+globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window)
+globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window)
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
+const { loadNaverMaps, subscribeNaverAuthFailure } = await server.ssrLoadModule('/src/components/map/loadNaverMaps.ts')
+const { createNaverMapController } = await server.ssrLoadModule('/src/components/map/naverMapController.ts')
+const { isValidMapCoordinate } = await server.ssrLoadModule('/src/components/map/map.types.ts')
+after(async () => { await server.close(); dom.window.close() })
+
+test('loader validates configuration, shares requests, retries failures and handles late authentication errors', async () => {
+  await assert.rejects(loadNaverMaps(''), /Client ID/)
+  let promise = loadNaverMaps('test-public-id')
+  assert.equal(loadNaverMaps('test-public-id'), promise)
+  const script = () => document.getElementById('pingdom-naver-map-sdk')
+  const callback = element => new URL(element.src).searchParams.get('callback')
+  assert.equal(new URL(script().src).searchParams.get('ncpKeyId'), 'test-public-id')
+  assert.equal(document.querySelectorAll('script').length, 1)
+  await assert.rejects(loadNaverMaps('another-id'), /새로고침/)
+  const failedCallback = callback(script())
+  script().dispatchEvent(new dom.window.Event('error'))
+  await assert.rejects(promise, /네트워크/)
+  assert.equal(script(), null)
+  promise = loadNaverMaps('test-public-id', 5)
+  await assert.rejects(promise, /초과/)
+  promise = loadNaverMaps('test-public-id')
+  window[failedCallback]() // Old requests must not resolve a newer attempt.
+  let resolved = false
+  promise.then(() => { resolved = true })
+  await Promise.resolve()
+  assert.equal(resolved, false)
+  installNaverSdk()
+  window[callback(script())]()
+  assert.equal(await promise, window.naver.maps)
+  assert.equal(loadNaverMaps('test-public-id'), promise)
+  let authFailures = 0
+  const unsubscribe = subscribeNaverAuthFailure(() => authFailures++)
+  window.navermap_authFailure()
+  assert.equal(authFailures, 1)
+  promise = loadNaverMaps('test-public-id')
+  const rejection = assert.rejects(promise, /인증/)
+  window.navermap_authFailure()
+  await rejection
+  unsubscribe()
+  promise = loadNaverMaps('test-public-id')
+  installNaverSdk()
+  window[callback(script())]()
+  await promise
+})
+
+test('invalid coordinates are excluded without excluding zero coordinates', () => {
+  for (const coordinate of [{ latitude: NaN, longitude: 1 }, { latitude: 91, longitude: 1 }, { latitude: 0, longitude: 181 }]) assert.equal(isValidMapCoordinate(coordinate), false)
+  assert.equal(isValidMapCoordinate({ latitude: 0, longitude: 0 }), true)
+})
+
+test('controller preserves marker identity, data, callbacks, bounds, zoom direction and cleanup', () => {
+  const maps = installNaverSdk()
+  const container = document.getElementById('map')
+  const viewport = document.getElementById('viewport')
+  Object.defineProperties(viewport, { clientWidth: { value: 800, configurable: true }, clientHeight: { value: 400, configurable: true } })
+  Object.defineProperties(container, { clientWidth: { value: 800, configurable: true }, clientHeight: { value: 400, configurable: true } })
+  let selected, coordinate
+  const controller = createNaverMapController(maps, container, viewport, { onMarkerClick: id => { selected = id }, onMapClick: c => { coordinate = c } })
+  const a = { id: 1, latitude: 37.5665, longitude: 126.978, label: '<b>카페</b>', category: 'CAFE', level: 10 }
+  const b = { ...a, id: 2, longitude: 126.979, label: '다른 카페', level: 0 }
+  controller.update({ markers: [a, b, { ...a, id: 3, latitude: NaN }], fitBoundsKey: 'first' })
+  const { stats, emit } = window.naverTest
+  assert.equal(stats.fits.length, 1)
+  assert.equal(stats.fits[0].length, 2)
+  assert.equal(container.querySelectorAll('button').length, 2)
+  const button = container.querySelector('button')
+  assert.equal(button.querySelector('b'), null)
+  assert.match(decodeURI(button.querySelector('img').src), /불꽃/)
+  button.focus(); button.click()
+  assert.equal(selected, 1)
+  controller.update({ markers: [a, b], activeMarkerId: 1, fitBoundsKey: 'first' })
+  assert.equal(document.activeElement, button)
+  assert.equal(button.getAttribute('aria-pressed'), 'true')
+  assert.equal(stats.fits.length, 1)
+  const map = stats.maps[0]
+  controller.handle.zoomIn(); assert.equal(map.getZoom(), 17)
+  controller.handle.zoomOut(); assert.equal(map.getZoom(), 16)
+  for (let i = 0; i < 40; i++) controller.handle.zoomIn()
+  assert.equal(map.getZoom(), 21)
+  for (let i = 0; i < 40; i++) controller.handle.zoomOut()
+  assert.equal(map.getZoom(), 7)
+  controller.handle.moveTo(a.latitude, a.longitude, { offsetX: 120 })
+  assert.ok(Math.abs(map.getProjection().fromCoordToOffset(new maps.LatLng(a.latitude, a.longitude)).x - 520) < 0.01)
+  const centers = stats.centers.length
+  controller.handle.moveTo(999, 0)
+  assert.equal(stats.centers.length, centers)
+  emit(map, 'click', { coord: new maps.LatLng(37.5, 127) })
+  assert.deepEqual(coordinate, { latitude: 37.5, longitude: 127 })
+  controller.update({ markers: [a], fitBoundsKey: 'single' })
+  assert.equal(container.querySelectorAll('button').length, 1)
+  assert.equal(stats.centers.at(-1).lat(), a.latitude)
+  controller.update({ markers: [], fitBoundsKey: 'empty' })
+  controller.handle.fitToMarkers()
+  assert.equal(container.querySelectorAll('button').length, 0)
+  controller.handle.relayout()
+  assert.deepEqual(stats.sizes.at(-1), { width: 800, height: 400 })
+  assert.equal(stats.sizes.length, 1, 'unchanged relayout does not resize or refit')
+  Object.defineProperties(viewport, { clientWidth: { value: 360, configurable: true }, clientHeight: { value: 500, configurable: true } })
+  controller.handle.relayout()
+  assert.deepEqual(stats.sizes.at(-1), { width: 360, height: 500 })
+  assert.equal(container.style.width, '360px')
+  assert.equal(container.style.height, '500px')
+  Object.defineProperty(viewport, 'clientWidth', { value: 0, configurable: true })
+  controller.handle.relayout()
+  assert.equal(stats.sizes.length, 2, 'hidden viewport does not apply zero sizes')
+  Object.defineProperty(viewport, 'clientWidth', { value: 800, configurable: true })
+  controller.handle.relayout()
+  assert.deepEqual(stats.sizes.at(-1), { width: 800, height: 500 })
+  controller.destroy(); controller.destroy()
+  controller.handle.relayout()
+  assert.equal(stats.sizes.length, 3)
+  assert.equal(stats.listeners.size, 0)
+  assert.equal(stats.destroyed, 1)
+  assert.equal(container.children.length, 0)
+})

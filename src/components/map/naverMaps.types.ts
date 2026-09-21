@@ -22,6 +22,10 @@ export interface NaverOverlay {
   getProjection(): { fromCoordToOffset(coord: NaverLatLng): NaverPoint }
 }
 export interface NaverMaps {
+  Service?: {
+    Status: { OK: number }
+    geocode(options: { query: string }, callback: (status: number, response: { v2?: { addresses?: NaverAddress[] } }) => void): void
+  }
   LatLng: new (latitude: number, longitude: number) => NaverLatLng
   Point: new (x: number, y: number) => NaverPoint
   Map: new (element: HTMLElement, options: {
@@ -33,6 +37,13 @@ export interface NaverMaps {
     addListener(target: object, event: string, handler: (event?: unknown) => void): object
     removeListener(listener: object): void
   }
+}
+export interface NaverAddress {
+  roadAddress: string
+  jibunAddress: string
+  x: string
+  y: string
+  addressElements?: Array<{ types: string[]; longName: string }>
 }
 declare global {
   interface Window {

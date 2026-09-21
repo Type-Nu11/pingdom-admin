@@ -242,6 +242,7 @@ function RegistrationForm({
   const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
   const placeSearchRequestIdRef = useRef(0)
   const addressRequestId = useRef(0)
+  const pendingAddressSearch = useRef<{ query: string; requestId: number } | null>(null)
   const [addressQuery, setAddressQuery] = useState('')
   const [addressResults, setAddressResults] = useState<AddressCandidate[]>([])
   const [addressMessage, setAddressMessage] = useState('')
@@ -270,19 +271,24 @@ function RegistrationForm({
   }, [])
 
   const searchAddress = async () => {
+    const query = addressQuery.trim()
+    if (pendingAddressSearch.current?.query === query
+      && pendingAddressSearch.current.requestId === addressRequestId.current) return
     const requestId = ++addressRequestId.current
     setAddressResults([])
-    if (!addressQuery.trim()) { setAddressMessage('검색할 주소를 입력해주세요.'); return }
+    if (!query) { setAddressMessage('검색할 주소를 입력해주세요.'); return }
+    pendingAddressSearch.current = { query, requestId }
     setAddressLoading(true)
     setAddressMessage('')
     try {
-      const results = await searchNaverAddresses(addressQuery, import.meta.env.VITE_NAVER_MAP_CLIENT_ID ?? '')
+      const results = await searchNaverAddresses(query, import.meta.env.VITE_NAVER_MAP_CLIENT_ID ?? '')
       if (requestId !== addressRequestId.current) return
       setAddressResults(results)
       setAddressMessage(results.length ? '주소를 확인하고 적용할 항목을 선택하세요. 선택하면 좌표도 변경됩니다.' : '검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.')
     } catch (error) {
       if (requestId === addressRequestId.current) setAddressMessage(error instanceof Error ? error.message : '주소 검색에 실패했습니다. 직접 입력해주세요.')
     } finally {
+      if (pendingAddressSearch.current?.requestId === requestId) pendingAddressSearch.current = null
       if (requestId === addressRequestId.current) setAddressLoading(false)
     }
   }

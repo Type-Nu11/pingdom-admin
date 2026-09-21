@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:naver-map-browser": "node tests/browser/naver-map.mjs",
     "test:community-browser": "node tests/browser/community.mjs",
     "test:admin-target-browser": "node tests/browser/admin-target.mjs",
     "test:dashboard-pending-browser": "node tests/browser/dashboard-pending.mjs",

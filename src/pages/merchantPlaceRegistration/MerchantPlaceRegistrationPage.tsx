@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type Dispatch, type SetStateAction } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminTimePicker } from '../../components/common/AdminDateTimePicker'
-import type { KakaoPlaceSearchResult } from '../../components/map/KakaoMap'
-import { loadKakaoMapScript } from '../../components/map/loadKakaoMaps'
+import { searchMerchantNaverPlaces, getNaverPlaceSearchError, type NaverPlaceSearchItem } from '../../api/merchantNaverPlaceSearchApi'
 import type { MapHandle } from '../../components/map/map.types'
 import { searchNaverAddresses, type AddressCandidate } from '../../components/map/naverGeocoder'
 import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
@@ -59,13 +58,6 @@ const CATEGORIES: Array<{ value: MerchantPlaceCategory; label: string }> = [
   { value: 'CAFE', label: '카페' }, { value: 'CULTURAL_HERITAGE', label: '문화재' },
   { value: 'OTHER', label: '기타' },
 ]
-
-const KAKAO_CATEGORY_MAP: Partial<Record<string, MerchantPlaceCategory>> = {
-  FD6: 'RESTAURANT',
-  CE7: 'CAFE',
-  CT1: 'EXHIBITION',
-  AT4: 'CULTURAL_HERITAGE',
-}
 
 const TAGS: Array<{ value: MerchantPlaceTag; label: string }> = [
   { value: 'ENGLISH_SERVICE_AVAILABLE', label: '영어 서비스' },
@@ -228,7 +220,7 @@ function RegistrationForm({
   const [schedule, setSchedule] = useState<ScheduleDraft[]>(parseSchedule(registration?.operatingScheduleJson ?? null))
   const [formError, setFormError] = useState('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
-  const [placeSearchResults, setPlaceSearchResults] = useState<KakaoPlaceSearchResult[]>([])
+  const [placeSearchResults, setPlaceSearchResults] = useState<NaverPlaceSearchItem[]>([])
   const [placeSearchMessage, setPlaceSearchMessage] = useState('')
   const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false)
   const [isMapReady, setIsMapReady] = useState(false)
@@ -247,27 +239,29 @@ function RegistrationForm({
   const [addressResults, setAddressResults] = useState<AddressCandidate[]>([])
   const [addressMessage, setAddressMessage] = useState('')
   const [addressLoading, setAddressLoading] = useState(false)
-  const [isPlaceSearchReady, setIsPlaceSearchReady] = useState(false)
+  const placeSearchController = useRef<AbortController | null>(null)
+  const pendingPlaceQuery = useRef<string | null>(null)
 
-  const invalidateAddress = () => {
-    addressRequestId.current += 1
+  const cancelPlaceSearch = () => {
+    placeSearchController.current?.abort()
+    pendingPlaceQuery.current = null
     placeSearchRequestIdRef.current += 1
     setIsPlaceSearchLoading(false)
     setPlaceSearchResults([])
+  }
+
+  const invalidateAddress = () => {
+    addressRequestId.current += 1
+    cancelPlaceSearch()
     setAddressLoading(false)
     setAddressResults([])
     setAddressMessage('')
   }
 
-  useEffect(() => {
-    let mounted = true
-    const key = import.meta.env.VITE_KAKAO_MAP_APP_KEY
-    if (key) void loadKakaoMapScript(key).then(() => {
-      if (mounted) setIsPlaceSearchReady(Boolean(window.kakao?.maps.services))
-    }).catch(() => {
-      if (mounted) setPlaceSearchMessage('업체명 검색을 사용할 수 없습니다. 주소 검색 또는 직접 입력을 이용해주세요.')
-    })
-    return () => { mounted = false; addressRequestId.current += 1; placeSearchRequestIdRef.current += 1 }
+  useEffect(() => () => {
+    addressRequestId.current += 1
+    placeSearchRequestIdRef.current += 1
+    placeSearchController.current?.abort()
   }, [])
 
   const searchAddress = async () => {
@@ -345,48 +339,40 @@ function RegistrationForm({
     }
   }
 
-  const searchPlaces = useCallback(() => {
-    const requestId = placeSearchRequestIdRef.current + 1
-    placeSearchRequestIdRef.current = requestId
+  const searchPlaces = async () => {
     const keyword = placeSearchQuery.trim()
-    const services = window.kakao?.maps.services
-
-    if (!keyword) {
-      setPlaceSearchResults([])
-      setPlaceSearchMessage('장소명, 건물명 또는 주소를 입력해주세요.')
+    if (pendingPlaceQuery.current === keyword) return
+    cancelPlaceSearch()
+    if (!keyword || keyword.length > 100) {
+      setPlaceSearchMessage('검색어를 1~100자로 입력해주세요.')
       return
     }
-
-    if (!services) {
-      setPlaceSearchMessage('장소 검색 기능을 준비하고 있습니다. 잠시 후 다시 시도해주세요.')
-      return
-    }
-
+    const requestId = placeSearchRequestIdRef.current
+    const controller = new AbortController()
+    placeSearchController.current = controller
+    pendingPlaceQuery.current = keyword
     setIsPlaceSearchLoading(true)
     setPlaceSearchMessage('')
-
-    new services.Places().keywordSearch(keyword, (results, status) => {
-      if (requestId !== placeSearchRequestIdRef.current) {
-        return
+    try {
+      const results = await searchMerchantNaverPlaces(keyword, controller.signal)
+      if (requestId !== placeSearchRequestIdRef.current) return
+      setPlaceSearchResults(results)
+      if (!results.length) setPlaceSearchMessage('검색 결과가 없습니다. 지역명을 포함해 다시 검색하거나 직접 입력해주세요.')
+    } catch (error) {
+      if (requestId !== placeSearchRequestIdRef.current || controller.signal.aborted) return
+      setPlaceSearchMessage(getNaverPlaceSearchError(error))
+    } finally {
+      if (requestId === placeSearchRequestIdRef.current) {
+        pendingPlaceQuery.current = null
+        setIsPlaceSearchLoading(false)
       }
+    }
+  }
 
-      setIsPlaceSearchLoading(false)
+  const selectPlaceSearchResult = (place: NaverPlaceSearchItem) => {
+    const { latitude, longitude } = place
 
-      if (status === services.Status.OK) {
-        setPlaceSearchResults(results)
-        return
-      }
-
-      setPlaceSearchResults([])
-      setPlaceSearchMessage(status === services.Status.ZERO_RESULT ? '검색 결과가 없습니다.' : '장소를 검색하지 못했습니다. 다시 시도해주세요.')
-    }, { size: 8 })
-  }, [placeSearchQuery])
-
-  const selectPlaceSearchResult = (place: KakaoPlaceSearchResult) => {
-    const latitude = Number(place.y)
-    const longitude = Number(place.x)
-
-    if (!place.y.trim() || !place.x.trim() || !Number.isFinite(latitude) || !Number.isFinite(longitude)
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
       || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
       setPlaceSearchMessage('선택한 장소의 좌표를 확인하지 못했습니다.')
       return
@@ -395,23 +381,18 @@ function RegistrationForm({
     placeSearchRequestIdRef.current += 1
     invalidateAddress()
     setIsManualPlaceEntry(false)
-    setPlaceName(place.place_name)
-    setRoadAddress(place.road_address_name)
-    setJibunAddress(place.address_name)
+    setPlaceName(place.name)
+    setRoadAddress(place.roadAddress)
+    setJibunAddress(place.jibunAddress)
     setLatitude(latitude.toFixed(6))
     setLongitude(longitude.toFixed(6))
     setPostalCode('')
     setPlaceSearchResults([])
-    setPlaceSearchQuery(place.place_name)
+    setPlaceSearchQuery(place.name)
     setPlaceSearchMessage('')
     setFormError('')
 
-    const mappedCategory = KAKAO_CATEGORY_MAP[place.category_group_code]
-    if (mappedCategory) {
-      setCategory(mappedCategory)
-    }
-
-    setAddressQuery(place.road_address_name || place.address_name)
+    setAddressQuery(place.roadAddress || place.jibunAddress)
     setPlaceSearchMessage('우편번호는 아래 네이버 주소 검색 또는 직접 입력으로 보완해주세요.')
   }
 
@@ -559,8 +540,8 @@ function RegistrationForm({
         <Store.Field>상점주 연락 이메일<Store.Input type="email" value={merchantContactEmail} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactEmail(event.target.value)} /></Store.Field>
         <Store.Field>상점주 연락처<Store.Input type="tel" inputMode="tel" value={merchantContactPhone} maxLength={30} placeholder="+82-010-4997-7214" disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactPhone(formatPhoneInput(event.target.value))} /><S.SectionHint>국가번호를 포함한 형식으로 입력하세요. 예: +82-010-4997-7214</S.SectionHint></Store.Field>
           </S.Section>
-          <S.Section><S.SectionLegend>장소 검색</S.SectionLegend><S.SectionHint>장소명, 건물명 또는 주소를 검색해 등록할 장소를 선택하세요.</S.SectionHint>
-        <S.PlaceSearchField $wide><S.PlaceSearchLabel htmlFor="merchant-place-search">장소명, 건물명 또는 주소 검색</S.PlaceSearchLabel><S.PlaceSearchControl><Store.Input id="merchant-place-search" value={placeSearchQuery} placeholder="예: 성수 카페, 롯데월드, 서울시청" disabled={!editable || activeAction !== null || !isPlaceSearchReady} onChange={(event) => { const nextQuery = event.target.value; setPlaceSearchQuery(nextQuery); setPlaceSearchMessage(''); placeSearchRequestIdRef.current += 1; setIsPlaceSearchLoading(false); setPlaceSearchResults([]) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} /><S.PlaceSearchButton type="button" aria-label="장소 검색" title="장소 검색" disabled={!editable || activeAction !== null || !isPlaceSearchReady || isPlaceSearchLoading} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton></S.PlaceSearchControl>{isPlaceSearchLoading ? <S.PlaceSearchHint>장소를 검색하는 중입니다.</S.PlaceSearchHint> : null}{placeSearchMessage ? <S.PlaceSearchHint $error>{placeSearchMessage}</S.PlaceSearchHint> : null}{placeSearchResults.length > 0 ? <S.PlaceSearchResults role="listbox" aria-label="연관 장소"><S.PlaceSearchResultsTitle>연관 장소</S.PlaceSearchResultsTitle>{placeSearchResults.map((place) => <S.PlaceSearchResult type="button" role="option" key={place.id} aria-label={`${place.place_name}, ${place.road_address_name || place.address_name}`} onClick={() => selectPlaceSearchResult(place)}><S.PlaceSearchResultTop><strong>{place.place_name}</strong>{place.category_group_name ? <span>{place.category_group_name}</span> : null}</S.PlaceSearchResultTop>{place.category_name ? <S.PlaceSearchResultCategory>{place.category_name}</S.PlaceSearchResultCategory> : null}<S.PlaceSearchResultAddress><span aria-hidden="true">location_on</span>{place.road_address_name || place.address_name}</S.PlaceSearchResultAddress></S.PlaceSearchResult>)}</S.PlaceSearchResults> : null}{hasSelectedPlace ? <S.SelectedPlaceSummary><strong>선택한 장소</strong><S.SelectedPlaceNameField htmlFor="merchant-place-name">장소명<Store.Input id="merchant-place-name" value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setPlaceName(event.target.value)} /></S.SelectedPlaceNameField><S.SelectedPlaceAddress><span>{roadAddress || jibunAddress}</span>{jibunAddress && roadAddress ? <small>{jibunAddress}</small> : null}{postalCode ? <small>우편번호 {postalCode}</small> : null}</S.SelectedPlaceAddress></S.SelectedPlaceSummary> : null}</S.PlaceSearchField>
+          <S.Section><S.SectionLegend>장소 검색</S.SectionLegend><S.SectionHint>지역명과 업체명을 함께 검색하세요. 네이버 검색 결과는 최대 5개이며, 원하는 업체가 없으면 직접 입력할 수 있습니다.</S.SectionHint>
+        <S.PlaceSearchField $wide><S.PlaceSearchLabel htmlFor="merchant-place-search">장소명, 건물명 또는 주소 검색</S.PlaceSearchLabel><S.PlaceSearchControl><Store.Input id="merchant-place-search" maxLength={100} value={placeSearchQuery} placeholder="예: 성수 카페, 롯데월드, 서울시청" disabled={!editable || activeAction !== null} onChange={(event) => { const nextQuery = event.target.value; setPlaceSearchQuery(nextQuery); setPlaceSearchMessage(''); cancelPlaceSearch() }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} /><S.PlaceSearchButton type="button" aria-label="장소 검색" title="장소 검색" disabled={!editable || activeAction !== null || isPlaceSearchLoading} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton></S.PlaceSearchControl>{isPlaceSearchLoading ? <S.PlaceSearchHint>장소를 검색하는 중입니다.</S.PlaceSearchHint> : null}{placeSearchMessage ? <S.PlaceSearchHint $error>{placeSearchMessage}</S.PlaceSearchHint> : null}{placeSearchResults.length > 0 ? <S.PlaceSearchResults role="listbox" aria-label="연관 장소"><S.PlaceSearchResultsTitle>연관 장소</S.PlaceSearchResultsTitle>{placeSearchResults.map((place, index) => <S.PlaceSearchResult type="button" role="option" key={index} disabled={!editable || activeAction !== null} aria-label={`${place.name}, ${place.roadAddress || place.jibunAddress}`} onClick={() => selectPlaceSearchResult(place)}><S.PlaceSearchResultTop><strong>{place.name}</strong></S.PlaceSearchResultTop><S.PlaceSearchResultAddress><span aria-hidden="true">location_on</span>{place.roadAddress || place.jibunAddress}</S.PlaceSearchResultAddress></S.PlaceSearchResult>)}</S.PlaceSearchResults> : null}{hasSelectedPlace ? <S.SelectedPlaceSummary><strong>선택한 장소</strong><S.SelectedPlaceNameField htmlFor="merchant-place-name">장소명<Store.Input id="merchant-place-name" value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></S.SelectedPlaceNameField><S.SelectedPlaceAddress><span>{roadAddress || jibunAddress}</span>{jibunAddress && roadAddress ? <small>{jibunAddress}</small> : null}{postalCode ? <small>우편번호 {postalCode}</small> : null}</S.SelectedPlaceAddress></S.SelectedPlaceSummary> : null}</S.PlaceSearchField>
           </S.Section>
           <S.Section><S.SectionLegend>네이버 주소 검색</S.SectionLegend>
             <S.SectionHint>업체명 대신 도로명·지번 주소를 검색하세요. 장소명과 카테고리는 변경하지 않습니다.</S.SectionHint>
@@ -577,9 +558,9 @@ function RegistrationForm({
             </S.PlaceSearchField>
           </S.Section>
           {!isManualPlaceEntry ? <S.ManualEntryPrompt><span>검색 결과에 없거나 주소를 수정해야 하나요?</span><S.ManualEntryButton type="button" disabled={!editable || activeAction !== null} onClick={() => { invalidateAddress(); setPlaceSearchResults([]); setPlaceSearchMessage(''); setFormError(''); setIsManualPlaceEntry(true) }}>직접 입력</S.ManualEntryButton></S.ManualEntryPrompt> : null}
-          {isManualPlaceEntry ? <S.Section><S.SectionLegend>장소 직접 입력</S.SectionLegend><S.SectionHint>검색 결과에 없는 장소는 주소와 위치를 직접 등록할 수 있습니다.</S.SectionHint><Store.Field $wide>장소명<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setPlaceName(event.target.value)} /></Store.Field><Store.Field $wide>도로명 주소<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setRoadAddress(event.target.value) }} /></Store.Field><Store.Field $wide>지번 주소<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setJibunAddress(event.target.value) }} /></Store.Field><Store.Field>우편번호<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPostalCode(event.target.value) }} /></Store.Field></S.Section> : null}
+          {isManualPlaceEntry ? <S.Section><S.SectionLegend>장소 직접 입력</S.SectionLegend><S.SectionHint>검색 결과에 없는 장소는 주소와 위치를 직접 등록할 수 있습니다.</S.SectionHint><Store.Field $wide>장소명<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></Store.Field><Store.Field $wide>도로명 주소<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setRoadAddress(event.target.value) }} /></Store.Field><Store.Field $wide>지번 주소<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setJibunAddress(event.target.value) }} /></Store.Field><Store.Field>우편번호<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPostalCode(event.target.value) }} /></Store.Field></S.Section> : null}
           <S.Section><S.SectionLegend>장소 정보</S.SectionLegend><S.SectionHint>카테고리와 방문자에게 표시할 가게 소개를 입력하세요.</S.SectionHint>
-        <Store.Field $wide>카테고리<S.CategoryDropdown ref={categoryDropdownRef}><S.CategoryTrigger type="button" aria-haspopup="listbox" aria-expanded={isCategoryMenuOpen} disabled={!editable || activeAction !== null} onClick={() => setIsCategoryMenuOpen((open) => !open)} onKeyDown={(event) => { if (event.key === 'Escape') setIsCategoryMenuOpen(false); if (event.key === 'ArrowDown') { event.preventDefault(); setIsCategoryMenuOpen(true) } }}><span>{CATEGORIES.find((item) => item.value === category)?.label}</span><span aria-hidden="true">{isCategoryMenuOpen ? 'expand_less' : 'expand_more'}</span></S.CategoryTrigger>{isCategoryMenuOpen ? <S.CategoryMenu role="listbox" aria-label="장소 카테고리">{CATEGORIES.map((item) => <S.CategoryOption type="button" role="option" key={item.value} $selected={category === item.value} aria-selected={category === item.value} onClick={() => { setCategory(item.value); setIsCategoryMenuOpen(false) }}>{item.label}</S.CategoryOption>)}</S.CategoryMenu> : null}</S.CategoryDropdown><S.SectionHint>카카오 장소 카테고리와 일치하면 자동으로 선택됩니다.</S.SectionHint></Store.Field>
+        <Store.Field $wide>카테고리<S.CategoryDropdown ref={categoryDropdownRef}><S.CategoryTrigger type="button" aria-haspopup="listbox" aria-expanded={isCategoryMenuOpen} disabled={!editable || activeAction !== null} onClick={() => setIsCategoryMenuOpen((open) => !open)} onKeyDown={(event) => { if (event.key === 'Escape') setIsCategoryMenuOpen(false); if (event.key === 'ArrowDown') { event.preventDefault(); setIsCategoryMenuOpen(true) } }}><span>{CATEGORIES.find((item) => item.value === category)?.label}</span><span aria-hidden="true">{isCategoryMenuOpen ? 'expand_less' : 'expand_more'}</span></S.CategoryTrigger>{isCategoryMenuOpen ? <S.CategoryMenu role="listbox" aria-label="장소 카테고리">{CATEGORIES.map((item) => <S.CategoryOption type="button" role="option" key={item.value} $selected={category === item.value} aria-selected={category === item.value} onClick={() => { setCategory(item.value); setIsCategoryMenuOpen(false) }}>{item.label}</S.CategoryOption>)}</S.CategoryMenu> : null}</S.CategoryDropdown><S.SectionHint>업체명 검색으로 카테고리를 변경하지 않습니다. 알맞은 카테고리를 직접 선택해주세요.</S.SectionHint></Store.Field>
         <Store.Field $wide>장소 소개<Store.Textarea value={description} maxLength={1000} disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} /><S.SectionHint>{description.length}/1000</S.SectionHint></Store.Field>
           </S.Section>
           <S.Section><S.SectionLegend>연락처</S.SectionLegend><S.SectionHint>사업장 연락처는 방문자에게 표시되고, 신청자 연락처는 심사와 보완 요청에만 사용됩니다.</S.SectionHint>

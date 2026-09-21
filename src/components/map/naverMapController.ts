@@ -5,7 +5,7 @@ import { createNaverMarkerButton, updateNaverMarker } from './naverMarker'
 const MIN_ZOOM = 7
 const MAX_ZOOM = 21
 
-export function createNaverMapController(maps: NaverMaps, container: HTMLElement, callbacks: Pick<MapProps, 'onMarkerClick' | 'onMapClick'>) {
+export function createNaverMapController(maps: NaverMaps, container: HTMLElement, viewport: HTMLElement, callbacks: Pick<MapProps, 'onMarkerClick' | 'onMapClick'>) {
   const map = new maps.Map(container, {
     center: new maps.LatLng(37.5665, 126.978), zoom: 16,
     minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, scrollWheel: true, keyboardShortcuts: true,
@@ -14,6 +14,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
   let disposed = false
   let lastFitKey = ''
   let frame: number | null = null
+  let lastSize: { width: number; height: number } | null = null
   const entries = new Map<number, { overlay: NaverOverlay; button: HTMLButtonElement; marker: MapMarker }>()
   const validMarkers = () => (props.markers ?? []).filter(isValidMapCoordinate)
   const refreshMarkerStyles = () => {
@@ -25,8 +26,13 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
     else if (coordinates.length > 1) map.fitBounds(coordinates)
   }
   const resize = () => {
-    if (disposed || container.clientWidth === 0 || container.clientHeight === 0) return
-    map.setSize({ width: container.clientWidth, height: container.clientHeight })
+    if (disposed) return
+    const width = viewport.clientWidth
+    const height = viewport.clientHeight
+    if (width === 0 || height === 0) return
+    if (lastSize?.width === width && lastSize.height === height) return
+    map.setSize({ width, height })
+    lastSize = { width, height }
     refreshMarkerStyles()
     if (props.fitBoundsKey && props.activeMarkerId == null) fit()
   }
@@ -44,7 +50,8 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
     if (frame !== null) cancelAnimationFrame(frame)
     frame = requestAnimationFrame(() => { frame = null; resize() })
   })
-  observer?.observe(container)
+  observer?.observe(viewport)
+  resize()
 
   const handle: MapHandle = {
     zoomIn: () => { if (!disposed) map.setZoom(Math.min(MAX_ZOOM, map.getZoom() + 1), false) },

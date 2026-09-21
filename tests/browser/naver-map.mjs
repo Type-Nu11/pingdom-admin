@@ -42,6 +42,19 @@ try {
     await page.getByRole('region', { name: '보조 지도' }).getByRole('button', { name: '지도 다시 불러오기' }).click()
     await page.waitForFunction(() => window.naverTest.stats.maps.length === 2)
     assert.equal(attempts, 2, 'two maps share one successful SDK request')
+    const assertStableSize = async () => {
+      await page.waitForFunction(() => {
+        return [...document.querySelectorAll('[aria-label="네이버 지도"]')].every(canvas =>
+          canvas.clientWidth === canvas.parentElement.clientWidth && canvas.clientHeight === canvas.parentElement.clientHeight)
+      })
+      const before = await primary.locator('[aria-label="네이버 지도"]').boundingBox()
+      const count = await page.evaluate(() => window.naverTest.stats.sizes.length)
+      // Multiple observer deliveries must not feed SDK pixel sizes back into layout.
+      await page.waitForTimeout(500)
+      assert.deepEqual(await primary.locator('[aria-label="네이버 지도"]').boundingBox(), before)
+      assert.equal(await page.evaluate(() => window.naverTest.stats.sizes.length), count)
+    }
+    await assertStableSize()
     const marker = primary.getByRole('button', { name: '합성 카페 · 카페 위치 선택', exact: true })
     await marker.focus()
     await page.keyboard.press('Enter')
@@ -67,6 +80,14 @@ try {
     const sizes = await page.evaluate(() => window.naverTest.stats.sizes.length)
     await page.setViewportSize({ width: width - 20, height: 850 })
     await page.waitForFunction(count => window.naverTest.stats.sizes.length > count, sizes)
+    await assertStableSize()
+    await primary.evaluate(el => { el.style.width = '75%'; el.style.height = '500px' })
+    await assertStableSize()
+    await primary.evaluate(el => { el.style.display = 'none' })
+    await page.waitForTimeout(50)
+    await page.getByRole('region', { name: '주 지도', exact: true, includeHidden: true }).evaluate(el => { el.style.width = '100%'; el.style.height = '420px'; el.style.display = '' })
+    await page.setViewportSize({ width, height: 900 })
+    await assertStableSize()
     await page.getByRole('button', { name: '마커 비우기' }).click()
     assert.equal(await primary.locator('.pingdom-map-marker').count(), 0)
     await page.getByRole('button', { name: '마커 복원' }).click()

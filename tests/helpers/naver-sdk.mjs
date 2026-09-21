@@ -28,7 +28,13 @@ export function installNaverSdk() {
     redraw() { stats.overlays.filter(o => o.map === this).forEach(o => o.draw()) }
     setCenter(coord) { this.center = coord; stats.centers.push(coord); this.redraw() }
     fitBounds(coords) { stats.fits.push(coords); this.setCenter(coords[0]) }
-    setSize(size) { stats.sizes.push(size); this.redraw() }
+    setSize(size) {
+      stats.sizes.push(size)
+      // NAVER writes pixel dimensions to the SDK element, overriding percentages.
+      this.element.style.width = size.width + 'px'
+      this.element.style.height = size.height + 'px'
+      this.redraw()
+    }
     getProjection() {
       return {
         fromCoordToOffset: c => new Point(this.element.clientWidth / 2 + (c.lng() - this.center.lng()) * 10000, this.element.clientHeight / 2 - (c.lat() - this.center.lat()) * 10000),

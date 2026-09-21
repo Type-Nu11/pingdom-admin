@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom'
 import { createServer } from 'vite'
 import { installNaverSdk } from './helpers/naver-sdk.mjs'
 
-const dom = new JSDOM('<div id="map"></div>', { url: 'http://localhost/', pretendToBeVisual: true })
+const dom = new JSDOM('<div id="viewport"><div id="map"></div></div>', { url: 'http://localhost/', pretendToBeVisual: true })
 for (const key of ['window', 'document', 'HTMLElement']) globalThis[key] = dom.window[key]
 globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window)
 globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window)
@@ -62,9 +62,11 @@ test('invalid coordinates are excluded without excluding zero coordinates', () =
 test('controller preserves marker identity, data, callbacks, bounds, zoom direction and cleanup', () => {
   const maps = installNaverSdk()
   const container = document.getElementById('map')
+  const viewport = document.getElementById('viewport')
+  Object.defineProperties(viewport, { clientWidth: { value: 800, configurable: true }, clientHeight: { value: 400, configurable: true } })
   Object.defineProperties(container, { clientWidth: { value: 800, configurable: true }, clientHeight: { value: 400, configurable: true } })
   let selected, coordinate
-  const controller = createNaverMapController(maps, container, { onMarkerClick: id => { selected = id }, onMapClick: c => { coordinate = c } })
+  const controller = createNaverMapController(maps, container, viewport, { onMarkerClick: id => { selected = id }, onMapClick: c => { coordinate = c } })
   const a = { id: 1, latitude: 37.5665, longitude: 126.978, label: '<b>카페</b>', category: 'CAFE', level: 10 }
   const b = { ...a, id: 2, longitude: 126.979, label: '다른 카페', level: 0 }
   controller.update({ markers: [a, b, { ...a, id: 3, latitude: NaN }], fitBoundsKey: 'first' })
@@ -103,7 +105,21 @@ test('controller preserves marker identity, data, callbacks, bounds, zoom direct
   assert.equal(container.querySelectorAll('button').length, 0)
   controller.handle.relayout()
   assert.deepEqual(stats.sizes.at(-1), { width: 800, height: 400 })
+  assert.equal(stats.sizes.length, 1, 'unchanged relayout does not resize or refit')
+  Object.defineProperties(viewport, { clientWidth: { value: 360, configurable: true }, clientHeight: { value: 500, configurable: true } })
+  controller.handle.relayout()
+  assert.deepEqual(stats.sizes.at(-1), { width: 360, height: 500 })
+  assert.equal(container.style.width, '360px')
+  assert.equal(container.style.height, '500px')
+  Object.defineProperty(viewport, 'clientWidth', { value: 0, configurable: true })
+  controller.handle.relayout()
+  assert.equal(stats.sizes.length, 2, 'hidden viewport does not apply zero sizes')
+  Object.defineProperty(viewport, 'clientWidth', { value: 800, configurable: true })
+  controller.handle.relayout()
+  assert.deepEqual(stats.sizes.at(-1), { width: 800, height: 500 })
   controller.destroy(); controller.destroy()
+  controller.handle.relayout()
+  assert.equal(stats.sizes.length, 3)
   assert.equal(stats.listeners.size, 0)
   assert.equal(stats.destroyed, 1)
   assert.equal(container.children.length, 0)

@@ -10,6 +10,7 @@ interface Props extends MapProps { clientId?: string }
 const NaverMap = forwardRef<MapHandle, Props>(function NaverMap(props, ref) {
   const { className, clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID ?? '' } = props
   const canvas = useRef<HTMLDivElement>(null)
+  const viewport = useRef<HTMLDivElement>(null)
   const controller = useRef<NaverMapController | null>(null)
   const latest = useRef(props)
   const [attempt, setAttempt] = useState(0)
@@ -40,8 +41,8 @@ const NaverMap = forwardRef<MapHandle, Props>(function NaverMap(props, ref) {
       if (mounted) setStatus('지도 로딩이 지연되고 있습니다. 잠시 기다려주세요.')
     }, 3000)
     void loadNaverMaps(clientId).then(maps => {
-      if (!mounted || !canvas.current || hasNaverAuthFailure()) return
-      const next = createNaverMapController(maps, canvas.current, {
+      if (!mounted || !canvas.current || !viewport.current || hasNaverAuthFailure()) return
+      const next = createNaverMapController(maps, canvas.current, viewport.current, {
         onMarkerClick: id => latest.current.onMarkerClick?.(id),
         onMapClick: coordinate => latest.current.onMapClick?.(coordinate),
       })
@@ -61,7 +62,9 @@ const NaverMap = forwardRef<MapHandle, Props>(function NaverMap(props, ref) {
     }
   }, [clientId, attempt])
   return <Frame className={className}>
-    <Canvas ref={canvas} aria-label="네이버 지도" />
+    <Viewport ref={viewport}>
+      <Canvas ref={canvas} aria-label="네이버 지도" />
+    </Viewport>
     {status ? <Message role={error ? 'alert' : 'status'}>
       {status}
       {error ? <button type="button" onClick={() => {
@@ -79,20 +82,24 @@ const Frame = styled.div`
   height: 100%;
   min-height: 360px;
   max-width: 100%;
+  border: 1px solid ${adminColors.border};
+  border-radius: 8px;
+  overflow: hidden;
+  background: ${adminColors.surfaceLow};
   .pingdom-map-marker:focus-visible {
     outline: 3px solid ${adminColors.primary};
     outline-offset: 3px;
     border-radius: 6px;
   }
 `
+// The SDK writes inline pixel sizes to Canvas; layout must be owned separately.
+const Viewport = styled.div`
+  position: absolute;
+  inset: 0;
+`
 const Canvas = styled.div`
   width: 100%;
   height: 100%;
-  min-height: inherit;
-  border: 1px solid ${adminColors.border};
-  border-radius: 8px;
-  overflow: hidden;
-  background: ${adminColors.surfaceLow};
 `
 const Message = styled.div`
   position: absolute;

@@ -58,7 +58,7 @@
 
 | 리소스 | 코드 근거 및 고려사항 |
 | --- | --- |
-| Kakao 지도 | `KakaoMap.tsx`의 dapi.kakao.com SDK, daumcdn 지도 리소스. 동적으로 로드하는 전체 하위 출처는 실제 지도 QA로 추가 확인 |
+| NAVER 지도 | `loadNaverMaps.ts`의 `oapi.map.naver.com` SDK·인증 및 geocoder 서브모듈. `ncpKeyId`용 주소 조회 JSONP는 `maps.apigw.ntruss.com`이므로 script-src에도 허용. 카카오/다음 출처 제거 (#226) |
 | 폰트/CSS | index.html의 Google Fonts, fonts.gstatic.com, jsDelivr Pretendard |
 | 스타일 | styled-components와 inline style 사용으로 style-src에 unsafe-inline 유지. script-src에는 unsafe-inline/unsafe-eval 미허용 후보 |
 | 이미지/미디어 | 사용자가 입력한 공개 HTTPS URL, API/S3 이미지, data/blob 미리보기. 따라서 img/media의 https: 허용은 의도적이며 엄격한 출처 제한 완료가 아님 |

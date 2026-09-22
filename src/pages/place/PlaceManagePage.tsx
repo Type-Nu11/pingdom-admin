@@ -75,6 +75,7 @@ function PlaceManagePage() {
   const linkedPlaceId = searchParams.get('placeId')
   const { logout, user } = useAuth()
   const mapRef = useRef<MapHandle | null>(null)
+  const [mapRevision, setMapRevision] = useState(0)
   const mapPanelRef = useRef<HTMLElement | null>(null)
   const placeDetailPanelRef = useRef<HTMLElement | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
@@ -386,6 +387,7 @@ function PlaceManagePage() {
   const handleRefresh = () => {
     clearPendingPlaceSearch()
     handleClosePlaceDetail()
+    setMapRevision(revision => revision + 1)
 
     void fetchAdminPlaces({
       page,
@@ -778,6 +780,7 @@ function PlaceManagePage() {
           />
 
           <PlaceMapPanel
+            mapRevision={mapRevision}
             panelRef={mapPanelRef}
             mapRef={mapRef}
             markers={placeMapMarkers}

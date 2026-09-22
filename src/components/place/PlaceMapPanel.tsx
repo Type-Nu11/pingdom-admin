@@ -3,6 +3,7 @@ import type { MapHandle, MapMarker } from '../map/map.types'
 import * as S from '../../pages/place/PlaceManagePage.styles'
 
 interface PlaceMapPanelProps {
+  mapRevision: number
   panelRef: RefObject<HTMLElement | null>
   mapRef: RefObject<MapHandle | null>
   markers: MapMarker[]
@@ -17,6 +18,7 @@ interface PlaceMapPanelProps {
 }
 
 export function PlaceMapPanel({
+  mapRevision,
   panelRef,
   mapRef,
   markers,
@@ -32,6 +34,7 @@ export function PlaceMapPanel({
   return (
     <S.MapPanel ref={panelRef}>
       <S.AdminMap
+        key={mapRevision}
         ref={mapRef}
         activeMarkerId={selectedPlaceId}
         fitBoundsKey={fitBoundsKey}

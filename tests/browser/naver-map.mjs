@@ -66,9 +66,11 @@ try {
     assert.deepEqual(await page.evaluate(() => window.mapQa.selected), [1, 1])
     const zoom = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
     await page.getByRole('button', { name: '확대', exact: true }).click()
+    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z + 1, zoom)
     assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom + 1)
     await page.waitForTimeout(220)
     await page.getByRole('button', { name: '축소', exact: true }).click()
+    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z, zoom)
     assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom)
     await page.waitForTimeout(220)
     const pinch = await primary.locator('[aria-label="네이버 지도"]').evaluate(canvas => {
@@ -77,7 +79,8 @@ try {
       return { prevented: event.defaultPrevented, zoom: window.naverTest.stats.maps[0].getZoom() }
     })
     assert.equal(pinch.prevented, true, 'map pinch cancels browser page zoom')
-    assert.equal(pinch.zoom, zoom + 1)
+    assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].options.scrollWheel), true)
+    assert.equal(pinch.zoom, zoom, 'custom code does not double-apply SDK wheel zoom')
     await page.getByRole('button', { name: '중심 보정' }).click()
     assert.ok(await page.evaluate(() => {
       const map = window.naverTest.stats.maps[0]

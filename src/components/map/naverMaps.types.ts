@@ -4,6 +4,8 @@ export interface NaverPoint { x: number; y: number }
 export interface NaverMapInstance {
   getZoom(): number
   setZoom(zoom: number, animate?: boolean): void
+  zoomBy(delta: number, origin?: NaverLatLng, animate?: boolean): void
+  stop(): void
   setCenter(center: NaverLatLng): void
   fitBounds(bounds: NaverLatLng[]): void
   setSize(size: { width: number; height: number }): void
@@ -31,6 +33,7 @@ export interface NaverMaps {
   Map: new (element: HTMLElement, options: {
     center: NaverLatLng; zoom: number; minZoom: number; maxZoom: number
     scrollWheel: boolean; keyboardShortcuts: boolean
+    tileTransition: boolean
   }) => NaverMapInstance
   OverlayView: new () => NaverOverlay
   Event: {

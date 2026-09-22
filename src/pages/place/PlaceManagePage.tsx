@@ -205,10 +205,10 @@ function PlaceManagePage() {
   )
   const placeMapFitBoundsKey = useMemo(
     () =>
-      placeMapMarkers
+      `${mapRevision}:` + placeMapMarkers
         .map((marker) => `${marker.id}:${marker.latitude}:${marker.longitude}`)
         .join('|'),
-    [placeMapMarkers]
+    [placeMapMarkers, mapRevision]
   )
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
@@ -387,7 +387,6 @@ function PlaceManagePage() {
   const handleRefresh = () => {
     clearPendingPlaceSearch()
     handleClosePlaceDetail()
-    setMapRevision(revision => revision + 1)
 
     void fetchAdminPlaces({
       page,
@@ -396,6 +395,7 @@ function PlaceManagePage() {
       category: selectedCategory || undefined,
     }).then((isSuccess) => {
       if (isSuccess) {
+        setMapRevision(revision => revision + 1)
         handleClosePlaceDetail()
       }
     })
@@ -780,7 +780,6 @@ function PlaceManagePage() {
           />
 
           <PlaceMapPanel
-            mapRevision={mapRevision}
             panelRef={mapPanelRef}
             mapRef={mapRef}
             markers={placeMapMarkers}

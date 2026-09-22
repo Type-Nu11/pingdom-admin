@@ -24,7 +24,9 @@ export function installNaverSdk() {
       element.addEventListener('click', this.click)
     }
     getZoom() { return this.zoom }
-    setZoom(zoom) { this.zoom = zoom; emit(this, 'zoom_changed') }
+    setZoom(zoom, animate) { this.zoom = zoom; this.lastAnimate = animate; emit(this, 'zoom_changed'); emit(this, 'idle') }
+    zoomBy(delta, origin, animate) { this.lastZoomOrigin = origin; this.setZoom(this.zoom + delta, animate) }
+    stop() { emit(this, 'idle') }
     redraw() { stats.overlays.filter(o => o.map === this).forEach(o => o.draw()) }
     setCenter(coord) { this.center = coord; stats.centers.push(coord); this.redraw() }
     fitBounds(coords) { stats.fits.push(coords); this.setCenter(coords[0]) }

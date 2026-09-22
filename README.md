@@ -8,7 +8,7 @@
 이 저장소는 Pingdom 프로젝트의 **관리자 웹 애플리케이션**을 관리합니다.
 
 운영자가 Pingdom 서비스의 장소, 게시글, 신고, 사용자 제재, 장소 중복 데이터를 확인하고 관리할 수 있는 관리자 전용 웹 화면을 제공합니다.  
-프론트엔드 화면 구현뿐만 아니라 관리자 API 연동, 인증 상태 관리, Kakao Maps 기반 장소 시각화, 운영 데이터 조회 흐름을 담당합니다.
+프론트엔드 화면 구현뿐만 아니라 관리자 API 연동, 인증 상태 관리, NAVER Maps 기반 장소 시각화, 운영 데이터 조회 흐름을 담당합니다.
 
 ## Project Status
 
@@ -37,7 +37,7 @@
 
 - 관리자 로그인, 보호 라우팅, JWT 기반 인증 상태 관리
 - 장소, 게시글, 신고, 사용자 제재, 장소 중복 관리 화면
-- Kakao Maps 기반 장소 목록 시각화 및 마커 상호작용
+- NAVER Maps 기반 장소 목록 시각화 및 마커 상호작용
 - 관리자 API 연동, 목록 조회, 검색, 정렬, 페이지네이션 처리
 
 ### Not Included
@@ -51,7 +51,7 @@
 
 - **관리자 인증**: 로그인, 로그아웃, 보호 라우팅, access token 자동 재발급을 처리합니다.
 - **대시보드 조회**: 관리자 홈에서 주요 운영 현황과 최근 활동 정보를 확인합니다.
-- **장소 관리**: 장소 목록 조회, 검색, 정렬, 상세 조회, 삭제, Kakao Maps 위치 확인을 제공합니다.
+- **장소 관리**: 장소 목록 조회, 검색, 정렬, 상세 조회, 삭제, NAVER Maps 위치 확인을 제공합니다.
 - **게시글 및 신고 관리**: 게시글 목록, 상세 정보, 신고 이력, 삭제 및 신고 처리 흐름을 제공합니다.
 - **사용자 제재 관리**: 사용자 검색, 제재 등록, 제재 해제, 제재 이력 조회를 지원합니다.
 - **장소 중복 관리**: 중복 장소 후보 확인, 병합 영향 조회, 장소 병합 처리를 지원합니다.
@@ -64,7 +64,7 @@
 | Framework | Vite, React Router |
 | Styling | styled-components |
 | API | Axios |
-| Map | Kakao Maps JavaScript SDK |
+| Map | NAVER Maps JavaScript SDK |
 | Build | npm, Vite |
 | Quality | ESLint, TypeScript |
 | Delivery | 정적 웹 애플리케이션 빌드 결과물 |
@@ -78,7 +78,7 @@
 - Node.js
 - npm
 - 관리자 API 서버 접근 권한
-- Kakao Maps JavaScript API Key
+- NAVER Maps 공개 Client ID 및 사용할 웹 서비스 URL 등록
 
 ### Setup
 
@@ -98,11 +98,14 @@ HTTPS `VITE_PUBLIC_API_BASE_URL`을 사용합니다.
 ```dotenv
 VITE_PUBLIC_API_BASE_URL=https://api.example.com
 VITE_PROXY_TARGET=http://localhost:8080
-VITE_KAKAO_MAP_APP_KEY=
+VITE_NAVER_MAP_CLIENT_ID=
 ```
 
 원격 개발 API를 사용할 때는 `VITE_PROXY_TARGET`만 해당 주소로 변경합니다.
 실제 인증정보, API Key, 비밀 값 및 운영 환경 정보는 저장소에 커밋하지 않습니다.
+지도에는 공개 Client ID만 사용합니다. Client Secret은 `VITE_*`에 넣지 않습니다.
+로컬 `http://localhost:5173`과 실제 프론트 도메인을 네이버 웹 서비스 URL에 등록해야 합니다.
+환경·CSP 및 실환경 검증 범위는 [지도 전환 정리](docs/naver-map-cleanup.md)를 참고합니다.
 Verification
 저장소 변경사항은 다음 방법으로 검증합니다.
 Verification	Purpose

@@ -4,6 +4,8 @@ import {
   getPlaceCategoryLabel,
 } from '../../utils/placeCategory'
 
+const renderedStyles = new WeakMap<HTMLButtonElement, string>()
+
 export function updateNaverMarker(button: HTMLButtonElement, marker: MapMarker, active: boolean, zoom: number, width: number) {
   const widthScale = width > 0 ? Math.min(1.08, Math.max(0.82, width / 960)) : 1
   // Preserve the existing marker hierarchy; NAVER zoom increases when zooming in.
@@ -15,6 +17,10 @@ export function updateNaverMarker(button: HTMLButtonElement, marker: MapMarker, 
   const h = Math.round((active ? 67 : 59) * scale)
   const category = getPlaceCategoryLabel(marker)
   const label = category === '카테고리 없음' ? marker.label : marker.label + ' · ' + category
+  const imageUrl = level >= 10 ? getPlaceCategoryFlameMarkerImageUrl(marker) : getPlaceCategoryMarkerImageUrl(marker)
+  const styleKey = JSON.stringify([label, active, w, h, imageUrl])
+  if (renderedStyles.get(button) === styleKey) return
+  renderedStyles.set(button, styleKey)
   button.setAttribute('aria-label', label + ' 위치 선택')
   button.setAttribute('aria-pressed', String(active))
   button.title = label
@@ -23,7 +29,7 @@ export function updateNaverMarker(button: HTMLButtonElement, marker: MapMarker, 
   button.style.zIndex = active ? '30' : '20'
   button.style.filter = active ? 'drop-shadow(0 4px 8px rgba(255,25,86,.4))' : 'drop-shadow(0 3px 6px rgba(255,25,86,.2))'
   const image = button.firstElementChild as HTMLImageElement
-  image.src = level >= 10 ? getPlaceCategoryFlameMarkerImageUrl(marker) : getPlaceCategoryMarkerImageUrl(marker)
+  image.src = imageUrl
   image.width = w
   image.height = h
 }

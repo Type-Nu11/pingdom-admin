@@ -24,6 +24,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
   viewport.addEventListener('wheel', onWheel, { passive: false, capture: true })
   let lastFitKey = ''
   let frame: number | null = null
+  let markerFrame: number | null = null
   let lastSize: { width: number; height: number } | null = null
   const entries = new Map<number, { overlay: NaverOverlay; button: HTMLButtonElement; marker: MapMarker }>()
   const validMarkers = () => (props.markers ?? []).filter(isValidMapCoordinate)
@@ -48,7 +49,12 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
     if (props.fitBoundsKey && props.activeMarkerId == null) fit()
   }
   const listeners = [
-    maps.Event.addListener(map, 'zoom_changed', refreshMarkerStyles),
+    maps.Event.addListener(map, 'zoom_changed', () => {
+      if (markerFrame === null) markerFrame = requestAnimationFrame(() => {
+        markerFrame = null
+        if (!disposed) refreshMarkerStyles()
+      })
+    }),
     maps.Event.addListener(map, 'idle', () => zoom.idle()),
     maps.Event.addListener(map, 'dragstart', () => zoom.cancel()),
     maps.Event.addListener(map, 'click', event => {
@@ -129,6 +135,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
       if (disposed) return
       disposed = true
       zoom.destroy()
+      if (markerFrame !== null) cancelAnimationFrame(markerFrame)
       viewport.removeEventListener('wheel', onWheel, true)
       observer?.disconnect()
       if (frame !== null) cancelAnimationFrame(frame)

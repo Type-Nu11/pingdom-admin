@@ -4,14 +4,33 @@ import { createNaverMarkerButton, updateNaverMarker } from './naverMarker'
 
 const MIN_ZOOM = 7
 const MAX_ZOOM = 21
+const ZOOM_INTERVAL_MS = 200
 
 export function createNaverMapController(maps: NaverMaps, container: HTMLElement, viewport: HTMLElement, callbacks: Pick<MapProps, 'onMarkerClick' | 'onMapClick'>) {
   const map = new maps.Map(container, {
     center: new maps.LatLng(37.5665, 126.978), zoom: 16,
-    minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, scrollWheel: true, keyboardShortcuts: true,
+    minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, scrollWheel: false, keyboardShortcuts: true,
   })
   let props: MapProps = {}
   let disposed = false
+  let lastZoomAt = -Infinity
+  const zoomBy = (step: number) => {
+    if (disposed) return
+    const now = performance.now()
+    if (now - lastZoomAt < ZOOM_INTERVAL_MS) return
+    const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, map.getZoom() + step))
+    if (next === map.getZoom()) return
+    lastZoomAt = now
+    map.setZoom(next, false)
+  }
+  const onWheel = (event: WheelEvent) => {
+    // Trackpad pinch is delivered as ctrl+wheel: contain it within the map.
+    // The listener is scoped to the viewport, so browser zoom elsewhere is unchanged.
+    if (event.deltaY === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+    event.preventDefault()
+    zoomBy(event.deltaY < 0 ? 1 : -1)
+  }
+  viewport.addEventListener('wheel', onWheel, { passive: false })
   let lastFitKey = ''
   let frame: number | null = null
   let lastSize: { width: number; height: number } | null = null
@@ -54,8 +73,8 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
   resize()
 
   const handle: MapHandle = {
-    zoomIn: () => { if (!disposed) map.setZoom(Math.min(MAX_ZOOM, map.getZoom() + 1), false) },
-    zoomOut: () => { if (!disposed) map.setZoom(Math.max(MIN_ZOOM, map.getZoom() - 1), false) },
+    zoomIn: () => zoomBy(1),
+    zoomOut: () => zoomBy(-1),
     relayout: resize,
     moveTo(latitude, longitude, options) {
       if (disposed || !isValidMapCoordinate({ latitude, longitude })) return
@@ -114,6 +133,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
     destroy() {
       if (disposed) return
       disposed = true
+      viewport.removeEventListener('wheel', onWheel)
       observer?.disconnect()
       if (frame !== null) cancelAnimationFrame(frame)
       listeners.forEach(listener => maps.Event.removeListener(listener))

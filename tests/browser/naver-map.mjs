@@ -67,8 +67,17 @@ try {
     const zoom = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
     await page.getByRole('button', { name: '확대', exact: true }).click()
     assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom + 1)
+    await page.waitForTimeout(220)
     await page.getByRole('button', { name: '축소', exact: true }).click()
     assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom)
+    await page.waitForTimeout(220)
+    const pinch = await primary.locator('[aria-label="네이버 지도"]').evaluate(canvas => {
+      const event = new WheelEvent('wheel', { deltaY: -80, ctrlKey: true, bubbles: true, cancelable: true })
+      canvas.dispatchEvent(event)
+      return { prevented: event.defaultPrevented, zoom: window.naverTest.stats.maps[0].getZoom() }
+    })
+    assert.equal(pinch.prevented, true, 'map pinch cancels browser page zoom')
+    assert.equal(pinch.zoom, zoom + 1)
     await page.getByRole('button', { name: '중심 보정' }).click()
     assert.ok(await page.evaluate(() => {
       const map = window.naverTest.stats.maps[0]

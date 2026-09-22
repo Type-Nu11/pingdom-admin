@@ -59,7 +59,9 @@ test('invalid coordinates are excluded without excluding zero coordinates', () =
   assert.equal(isValidMapCoordinate({ latitude: 0, longitude: 0 }), true)
 })
 
-test('controller preserves marker identity, data, callbacks, bounds, zoom direction and cleanup', () => {
+test('controller preserves marker identity, data, callbacks, bounds, zoom direction and cleanup', t => {
+  let time = 0
+  t.mock.method(performance, 'now', () => time)
   const maps = installNaverSdk()
   const container = document.getElementById('map')
   const viewport = document.getElementById('viewport')
@@ -85,11 +87,31 @@ test('controller preserves marker identity, data, callbacks, bounds, zoom direct
   assert.equal(stats.fits.length, 1)
   const map = stats.maps[0]
   controller.handle.zoomIn(); assert.equal(map.getZoom(), 17)
-  controller.handle.zoomOut(); assert.equal(map.getZoom(), 16)
   for (let i = 0; i < 40; i++) controller.handle.zoomIn()
+  assert.equal(map.getZoom(), 17, 'rapid clicks do not queue zoom work')
+  time += 200
+  controller.handle.zoomOut(); assert.equal(map.getZoom(), 16)
+  for (let i = 0; i < 40; i++) { time += 200; controller.handle.zoomIn() }
   assert.equal(map.getZoom(), 21)
-  for (let i = 0; i < 40; i++) controller.handle.zoomOut()
+  for (let i = 0; i < 40; i++) { time += 200; controller.handle.zoomOut() }
   assert.equal(map.getZoom(), 7)
+  time += 200
+  const wheel = () => new dom.window.WheelEvent('wheel', { deltaY: -100, cancelable: true })
+  const event = wheel()
+  viewport.dispatchEvent(event)
+  assert.equal(event.defaultPrevented, true)
+  assert.equal(map.getZoom(), 8)
+  viewport.dispatchEvent(wheel())
+  controller.handle.zoomIn()
+  assert.equal(map.getZoom(), 8, 'wheel and buttons share the rate limit')
+  const browserZoom = new dom.window.WheelEvent('wheel', { deltaY: -100, ctrlKey: true, cancelable: true })
+  time += 200
+  viewport.dispatchEvent(browserZoom)
+  assert.equal(browserZoom.defaultPrevented, true, 'trackpad pinch must not zoom the entire page')
+  assert.equal(map.getZoom(), 9)
+  const outsideZoom = new dom.window.WheelEvent('wheel', { deltaY: -100, ctrlKey: true, cancelable: true })
+  document.body.dispatchEvent(outsideZoom)
+  assert.equal(outsideZoom.defaultPrevented, false, 'browser zoom outside the map is unchanged')
   controller.handle.moveTo(a.latitude, a.longitude, { offsetX: 120 })
   assert.ok(Math.abs(map.getProjection().fromCoordToOffset(new maps.LatLng(a.latitude, a.longitude)).x - 520) < 0.01)
   const centers = stats.centers.length
@@ -118,6 +140,10 @@ test('controller preserves marker identity, data, callbacks, bounds, zoom direct
   controller.handle.relayout()
   assert.deepEqual(stats.sizes.at(-1), { width: 800, height: 500 })
   controller.destroy(); controller.destroy()
+  time += 200
+  const afterDestroy = wheel()
+  viewport.dispatchEvent(afterDestroy)
+  assert.equal(afterDestroy.defaultPrevented, false, 'destroy removes the wheel handler')
   controller.handle.relayout()
   assert.equal(stats.sizes.length, 3)
   assert.equal(stats.listeners.size, 0)

@@ -29,7 +29,7 @@ export function installNaverSdk() {
     stop() { emit(this, 'idle') }
     redraw() { stats.overlays.filter(o => o.map === this).forEach(o => o.draw()) }
     setCenter(coord) { this.center = coord; stats.centers.push(coord); this.redraw() }
-    fitBounds(coords) { stats.fits.push(coords); this.setCenter(coords[0]) }
+    fitBounds(coords, options) { this.lastFitOptions = options; stats.fits.push(coords); this.setCenter(coords[0]) }
     setSize(size) {
       stats.sizes.push(size)
       // NAVER writes pixel dimensions to the SDK element, overriding percentages.

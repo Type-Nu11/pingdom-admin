@@ -1,25 +1,29 @@
 import { isValidMapCoordinate, type MapHandle, type MapProps, type MapMarker } from './map.types'
 import type { NaverMaps, NaverOverlay } from './naverMaps.types'
 import { createNaverMarkerButton, updateNaverMarker } from './naverMarker'
-import { createNaverZoomController } from './naverZoomController'
+import { createNaverGlZoomController, glWheelStep } from './naverGlZoomController'
 
-const MIN_ZOOM = 7
-const MAX_ZOOM = 21
+const MIN_ZOOM = 6
+const MAX_ZOOM = 20
 
 export function createNaverMapController(maps: NaverMaps, container: HTMLElement, viewport: HTMLElement, callbacks: Pick<MapProps, 'onMarkerClick' | 'onMapClick'>) {
   const map = new maps.Map(container, {
-    center: new maps.LatLng(37.5665, 126.978), zoom: 16,
-    minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, scrollWheel: true, keyboardShortcuts: true,
+    center: new maps.LatLng(37.5665, 126.978), zoom: 15,
+    minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, scrollWheel: false, keyboardShortcuts: true,
     tileTransition: false,
+    gl: true,
   })
   let props: MapProps = {}
   let disposed = false
-  const zoom = createNaverZoomController(map, MIN_ZOOM, MAX_ZOOM)
+  const zoom = createNaverGlZoomController(map, MIN_ZOOM, MAX_ZOOM)
   const onWheel = (event: WheelEvent) => {
-    // Trackpad pinch is delivered as ctrl+wheel: contain it within the map.
-    // The listener is scoped to the viewport, so browser zoom elsewhere is unchanged.
-    zoom.discardPending()
-    if (event.ctrlKey) event.preventDefault()
+    // Scope wheel/pinch handling to this viewport; browser zoom outside is unchanged.
+    event.preventDefault()
+    const { clientX, clientY } = event
+    zoom.wheel(glWheelStep(event.deltaY, event.deltaMode, viewport.clientHeight), () => {
+      const rect = container.getBoundingClientRect()
+      return map.getProjection().fromOffsetToCoord(new maps.Point(clientX - rect.left, clientY - rect.top))
+    })
   }
   viewport.addEventListener('wheel', onWheel, { passive: false, capture: true })
   let lastFitKey = ''
@@ -29,13 +33,16 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
   const entries = new Map<number, { overlay: NaverOverlay; button: HTMLButtonElement; marker: MapMarker }>()
   const validMarkers = () => (props.markers ?? []).filter(isValidMapCoordinate)
   const refreshMarkerStyles = () => {
-    entries.forEach(entry => updateNaverMarker(entry.button, entry.marker, entry.marker.id === props.activeMarkerId, map.getZoom(), container.clientWidth))
+    entries.forEach(entry => updateNaverMarker(entry.button, entry.marker, entry.marker.id === props.activeMarkerId, map.getZoom() + 1, container.clientWidth))
   }
   const fit = () => {
     zoom.cancel()
     const coordinates = validMarkers().map(marker => new maps.LatLng(marker.latitude, marker.longitude))
     if (coordinates.length === 1) map.setCenter(coordinates[0])
-    else if (coordinates.length > 1) map.fitBounds(coordinates)
+    else if (coordinates.length > 1) {
+      // Leave room for large level markers, not only their coordinate anchors.
+      map.fitBounds(coordinates, { top: 160, right: 120, bottom: 100, left: 120, maxZoom: 18 })
+    }
   }
   const resize = () => {
     if (disposed) return

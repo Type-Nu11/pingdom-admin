@@ -29,6 +29,7 @@ try {
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
       if (url.hostname === 'oapi.map.naver.com') {
+        assert.equal(url.searchParams.get('submodules'), 'gl')
         attempts++
         if (attempts === 1) return route.abort()
         return route.fulfill({ contentType: 'application/javascript', body: '(' + installNaverSdk.toString() + ')();window[' + JSON.stringify(url.searchParams.get('callback')) + ']();' })
@@ -66,8 +67,9 @@ try {
     assert.deepEqual(await page.evaluate(() => window.mapQa.selected), [1, 1])
     const zoom = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
     await page.getByRole('button', { name: '확대', exact: true }).click()
-    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z + 1, zoom)
-    assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom + 1)
+    const step = 0.5
+    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z, zoom + step)
+    assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom + step)
     await page.waitForTimeout(220)
     await page.getByRole('button', { name: '축소', exact: true }).click()
     await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z, zoom)
@@ -79,8 +81,15 @@ try {
       return { prevented: event.defaultPrevented, zoom: window.naverTest.stats.maps[0].getZoom() }
     })
     assert.equal(pinch.prevented, true, 'map pinch cancels browser page zoom')
-    assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].options.scrollWheel), true)
+    assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].options.scrollWheel), false)
     assert.equal(pinch.zoom, zoom, 'custom code does not double-apply SDK wheel zoom')
+    {
+      await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() > z, zoom)
+      const after = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
+      assert.ok(after <= zoom + 0.5)
+      await page.waitForTimeout(250)
+      assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), after, 'no GL input backlog')
+    }
     await page.getByRole('button', { name: '중심 보정' }).click()
     assert.ok(await page.evaluate(() => {
       const map = window.naverTest.stats.maps[0]
@@ -105,7 +114,7 @@ try {
     await page.getByRole('button', { name: '마커 복원' }).click()
     await marker.waitFor()
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
-    await page.screenshot({ path: join(output, 'map-' + width + '.png'), fullPage: true })
+    await page.screenshot({ path: join(output, 'map-' + 'gl-' + width + '.png'), fullPage: true })
     await page.getByRole('button', { name: '주 지도 전환' }).click()
     assert.equal(await page.evaluate(() => window.naverTest.stats.destroyed), 1)
     await page.getByRole('button', { name: '보조 지도 전환' }).click()
@@ -120,7 +129,7 @@ try {
     await marker.waitFor()
     assert.equal(attempts, 3)
     assert.deepEqual(errors, [])
-    console.log('PASS NAVER mocked SDK browser ' + width + 'px')
+    console.log('PASS NAVER mocked SDK browser ' + 'GL ' + width + 'px')
     await page.close()
   }
   console.log('Screenshots: ' + output)

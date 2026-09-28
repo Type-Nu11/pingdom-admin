@@ -67,7 +67,7 @@ try {
     assert.deepEqual(await page.evaluate(() => window.mapQa.selected), [1, 1])
     const zoom = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
     await page.getByRole('button', { name: '확대', exact: true }).click()
-    const step = 0.5
+    const step = 0.55
     await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z, zoom + step)
     assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom + step)
     await page.waitForTimeout(220)
@@ -86,7 +86,7 @@ try {
     {
       await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() > z, zoom)
       const after = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
-      assert.ok(after <= zoom + 0.5)
+      assert.ok(after <= zoom + 0.55)
       await page.waitForTimeout(250)
       assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), after, 'no GL input backlog')
     }

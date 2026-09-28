@@ -41,7 +41,7 @@ test('GL input is fractional, frame-bounded, anchored and has no idle backlog', 
   for (let i = 0; i < 100; i++) control.button(1)
   assert.equal(frames.size, 1)
   paint()
-  assert.equal(zoom, 15.5)
+  assert.equal(zoom, 15.55)
   assert.equal(calls[0].animate, false)
   control.idle(); paint(); assert.equal(calls.length, 1)
   control.button(1); control.button(-1); paint()
@@ -62,10 +62,10 @@ test('GL input is fractional, frame-bounded, anchored and has no idle backlog', 
 })
 
 test('GL wheel normalizes devices and bounds extreme/nonfinite deltas', () => {
-  assert.equal(glWheelStep(-100, 0, 480), 0.5)
-  assert.equal(glWheelStep(-1, 1, 480), 0.08)
-  assert.equal(glWheelStep(1, 2, 480), -0.5)
-  assert.equal(glWheelStep(-10000, 0, 480), 0.5)
+  assert.equal(glWheelStep(-100, 0, 480), 0.55)
+  assert.ok(Math.abs(glWheelStep(-1, 1, 480) - 0.088) < 1e-12)
+  assert.equal(glWheelStep(1, 2, 480), -0.55)
+  assert.equal(glWheelStep(-10000, 0, 480), 0.55)
   assert.equal(glWheelStep(NaN, 0, 480), 0)
 })
 
@@ -101,14 +101,15 @@ test('image fallback accumulates small wheel input and clears stale intent', () 
   let mode = 1
   const map = { get: () => mode, getZoom: () => zoom, stop() {}, zoomBy(delta) { zoom += mode === 2 ? delta : Math.round(delta) } }
   const control = createNaverGlZoomController(map, 6, 20)
-  const wheel = step => { control.wheel(step, () => ({})); paint() }
+  // Keep the same physical half-notch input when GL sensitivity changes.
+  const wheel = step => { control.wheel(glWheelStep(-step * 200, 0, 480), () => ({})); paint() }
   wheel(-0.25); assert.equal(zoom, 15)
   wheel(-0.25); assert.equal(zoom, 14)
   wheel(-0.25); wheel(0.25); assert.equal(zoom, 14, 'reversal replaces partial intent')
   wheel(0.25); assert.equal(zoom, 15)
   wheel(-0.25); control.cancel(); wheel(-0.25); assert.equal(zoom, 15)
   control.button(1); paint(); wheel(-0.25); assert.equal(zoom, 16, 'button clears wheel remainder')
-  mode = 2; wheel(-0.25); assert.equal(zoom, 15.75, 'actual mode is read at execution time')
+  mode = 2; wheel(-0.25); assert.equal(zoom, 16 + glWheelStep(50, 0, 480), 'actual mode is read at execution time')
   mode = 1; zoom = 15; wheel(-0.25); assert.equal(zoom, 15, 'GL transition clears raster remainder')
   control.wheel(-0.5, () => ({})); control.destroy(); paint(); assert.equal(zoom, 15)
 })
@@ -146,7 +147,7 @@ test('GL adapter preserves markers, panel positioning, refresh and scoped wheel 
   const wheel = new dom.window.WheelEvent('wheel', { deltaY: -100, clientX: 200, clientY: 120, cancelable: true, ctrlKey: true })
   viewport.dispatchEvent(wheel); paint()
   assert.equal(wheel.defaultPrevented, true)
-  assert.equal(map.getZoom(), 15.5)
+  assert.equal(map.getZoom(), 15.55)
   assert.deepEqual(map.lastZoomOrigin, anchorBefore)
   const outside = new dom.window.WheelEvent('wheel', { deltaY: -100, cancelable: true, ctrlKey: true })
   document.body.dispatchEvent(outside); assert.equal(outside.defaultPrevented, false)

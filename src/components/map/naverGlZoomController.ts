@@ -1,9 +1,9 @@
 import type { NaverLatLng, NaverMapInstance } from './naverMaps.types'
 
 // Trial values for the public GL SDK, not NAVER service's internal settings.
-export const GL_BUTTON_STEP = 0.5
-const MAX_FRAME_STEP = 0.5
-const WHEEL_PIXEL_SCALE = 0.005
+export const GL_BUTTON_STEP = 0.55
+const MAX_FRAME_STEP = GL_BUTTON_STEP
+const WHEEL_PIXEL_SCALE = GL_BUTTON_STEP / 100
 
 export function glWheelStep(deltaY: number, deltaMode: number, height: number) {
   if (!Number.isFinite(deltaY)) return 0

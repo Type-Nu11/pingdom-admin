@@ -29,15 +29,22 @@ try {
     const errors = []
     const searchRequests = []
     const pendingSearches = []
+    const addressRequests = []
+    const waitForAddresses = async count => {
+      const deadline = Date.now() + 3000
+      while (addressRequests.length !== count && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 10))
+      assert.equal(addressRequests.length, count)
+    }
     let searchMode = 'normal'
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
       if (url.hostname === 'oapi.map.naver.com') return route.fulfill({ contentType: 'application/javascript', body:
-        '(' + installNaverSdk.toString() + ')();window.geocodeQueue=[];window.naver.maps.Service={Status:{OK:200},geocode:(options,callback)=>window.geocodeQueue.push({options,callback})};window[' + JSON.stringify(url.searchParams.get('callback')) + ']();' })
+        '(' + installNaverSdk.toString() + ')();window[' + JSON.stringify(url.searchParams.get('callback')) + ']();' })
       if (url.hostname === 'dapi.kakao.com') throw new Error('Kakao SDK must not be requested')
       if (url.pathname.startsWith('/api/')) {
         assert.equal(route.request().method(), 'GET', 'No real writes')
+        if (url.pathname.endsWith('/naver-address-search')) return new Promise(resolve => addressRequests.push({ route, resolve }))
         if (url.pathname.endsWith('/naver-place-search')) {
           searchRequests.push(url.searchParams.get('query'))
           if (searchMode === 'delay') return new Promise(resolve => pendingSearches.push(async () => {
@@ -58,13 +65,17 @@ try {
     const query = page.getByLabel('도로명·지번 주소 검색', { exact: true })
     await query.fill('도로')
     await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await page.waitForFunction(() => window.geocodeQueue?.length === 1)
+    await waitForAddresses(1)
     await query.press('Enter')
     await query.press('Enter')
-    assert.equal(await page.evaluate(() => window.geocodeQueue.length), 1, 'Enter must not duplicate the pending query')
-    const respond = async (roads, status = 200) => page.evaluate(({ roads, status }) => {
-      window.geocodeQueue.shift().callback(status, { v2: { addresses: roads.map((roadAddress, i) => ({ roadAddress, jibunAddress: '지번 ' + i, x: '127', y: '37', addressElements: [] })) } })
-    }, { roads, status })
+    assert.equal(addressRequests.length, 1, 'Enter must not duplicate the pending query')
+    const respond = async (roads, status = 200) => {
+      const { route, resolve } = addressRequests.shift()
+      try {
+        await route.fulfill({ status, json: status === 200 ? { items: roads.map((roadAddress, i) => ({ roadAddress, jibunAddress: '지번 ' + i, latitude: 37, longitude: 127, postalCode: null })) } : { code: 'NAVER_ADDRESS_SEARCH_FAILED' } })
+      } finally { resolve() }
+      await page.waitForTimeout(40)
+    }
     await respond(['도로 A', '도로 B'])
     assert.equal(await page.locator('.pingdom-map-marker').count(), 0)
     await page.getByRole('button', { name: /도로 B.*우편번호/ }).click()
@@ -75,18 +86,18 @@ try {
     // Late results must not undo manual edits.
     await query.fill('늦은 주소')
     await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await page.waitForFunction(() => window.geocodeQueue.length === 1)
+    await waitForAddresses(1)
     await page.getByLabel('도로명 주소', { exact: true }).fill('직접 수정')
     await respond(['늦은 도로'])
     assert.equal(await page.getByRole('button', { name: /늦은 도로.*우편번호/ }).count(), 0)
     assert.equal(await page.getByLabel('도로명 주소', { exact: true }).inputValue(), '직접 수정')
     await query.fill('오류')
     await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await page.waitForFunction(() => window.geocodeQueue.length === 1)
+    await waitForAddresses(1)
     await respond([], 500)
     await page.getByText('주소를 조회하지 못했습니다. 다시 검색하거나 직접 입력해주세요.', { exact: true }).waitFor()
     await query.press('Enter')
-    await page.waitForFunction(() => window.geocodeQueue.length === 1)
+    await waitForAddresses(1)
     await respond([])
     await page.getByText('검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.', { exact: true }).waitFor()
     const map = page.getByLabel('네이버 지도', { exact: true })
@@ -101,15 +112,15 @@ try {
     await page.waitForFunction(() => window.naverTest.stats.centers.at(-1)?.lat() === 36.2)
     await query.fill('재검색')
     await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await page.waitForFunction(() => window.geocodeQueue.length === 1)
+    await waitForAddresses(1)
     await query.fill('새 주소')
     await query.press('Enter')
-    await page.waitForFunction(() => window.geocodeQueue.length === 2)
+    await waitForAddresses(2)
     await respond(['이전 쿼리 결과'])
     assert.equal(await page.getByRole('button', { name: /이전 쿼리 결과.*우편번호/ }).count(), 0)
     assert.equal(await page.getByRole('button', { name: '주소 검색', exact: true }).isDisabled(), true)
     await query.press('Enter')
-    assert.equal(await page.evaluate(() => window.geocodeQueue.length), 1, 'An older completion must not unlock the newer request')
+    assert.equal(addressRequests.length, 1, 'An older completion must not unlock the newer request')
     await respond([])
     await page.getByText('검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.', { exact: true }).waitFor()
     // Server keyword search is independent of the map SDK.
@@ -162,7 +173,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
     await query.fill('이전 신청 검색')
     await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await page.waitForFunction(() => window.geocodeQueue.length === 1)
+    await waitForAddresses(1)
     await page.getByRole('button', { name: '새로고침', exact: true }).click()
     await respond(['이전 신청 주소'])
     assert.equal(await query.inputValue(), '')

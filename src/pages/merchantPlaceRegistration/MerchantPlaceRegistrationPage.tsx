@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AdminTimePicker } from '../../components/common/AdminDateTimePicker'
 import { searchMerchantNaverPlaces, getNaverPlaceSearchError, type NaverPlaceSearchItem } from '../../api/merchantNaverPlaceSearchApi'
 import type { MapHandle } from '../../components/map/map.types'
-import { searchNaverAddresses, type AddressCandidate } from '../../components/map/naverGeocoder'
+import { searchNaverAddresses, getNaverAddressSearchError, type AddressCandidate } from '../../api/merchantNaverAddressSearchApi'
 import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
 import { useAuth } from '../../hooks/useAuth'
@@ -275,12 +275,12 @@ function RegistrationForm({
     setAddressLoading(true)
     setAddressMessage('')
     try {
-      const results = await searchNaverAddresses(query, import.meta.env.VITE_NAVER_MAP_CLIENT_ID ?? '')
+      const results = await searchNaverAddresses(query)
       if (requestId !== addressRequestId.current) return
       setAddressResults(results)
       setAddressMessage(results.length ? '주소를 확인하고 적용할 항목을 선택하세요. 선택하면 좌표도 변경됩니다.' : '검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.')
     } catch (error) {
-      if (requestId === addressRequestId.current) setAddressMessage(error instanceof Error ? error.message : '주소 검색에 실패했습니다. 직접 입력해주세요.')
+      if (requestId === addressRequestId.current) setAddressMessage(getNaverAddressSearchError(error))
     } finally {
       if (pendingAddressSearch.current?.requestId === requestId) pendingAddressSearch.current = null
       if (requestId === addressRequestId.current) setAddressLoading(false)

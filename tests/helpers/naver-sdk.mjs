@@ -23,13 +23,14 @@ export function installNaverSdk() {
       }
       element.addEventListener('click', this.click)
     }
+    get(key) { return key === 'renderMode' ? 2 : undefined }
     getZoom() { return this.zoom }
     setZoom(zoom, animate) { this.zoom = zoom; this.lastAnimate = animate; emit(this, 'zoom_changed'); emit(this, 'idle') }
     zoomBy(delta, origin, animate) { this.lastZoomOrigin = origin; this.setZoom(this.zoom + delta, animate) }
     stop() { emit(this, 'idle') }
     redraw() { stats.overlays.filter(o => o.map === this).forEach(o => o.draw()) }
     setCenter(coord) { this.center = coord; stats.centers.push(coord); this.redraw() }
-    fitBounds(coords) { stats.fits.push(coords); this.setCenter(coords[0]) }
+    fitBounds(coords, options) { this.lastFitOptions = options; stats.fits.push(coords); this.setCenter(coords[0]) }
     setSize(size) {
       stats.sizes.push(size)
       // NAVER writes pixel dimensions to the SDK element, overriding percentages.

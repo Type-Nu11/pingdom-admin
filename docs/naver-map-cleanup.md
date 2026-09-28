@@ -10,7 +10,8 @@
 
 ## 출처 근거 (2026-09-22)
 
-- [공식 시작 문서](https://navermaps.github.io/maps.js.ncp/docs/tutorial-2-Getting-Started.html)와 현행 `loadNaverMaps.ts`: `https://oapi.map.naver.com/openapi/v3/maps.js`, `ncpKeyId`, geocoder 서브모듈.
+- 아래 내용은 #226 당시의 기록이다. #237에서 raster 및 geocoder를 제거하고 GL + 서버 주소 검색으로 전환했다. 현재 상태는 `naver-gl-preview.md` 참고.
+- [공식 시작 문서](https://navermaps.github.io/maps.js.ncp/docs/tutorial-2-Getting-Started.html)와 #226 당시 `loadNaverMaps.ts`: `https://oapi.map.naver.com/openapi/v3/maps.js`, `ncpKeyId`, geocoder 서브모듈.
 - 공개 SDK 3.10.3 및 geocoder 1.3.1 소스 조회: SDK/인증은 `oapi.map.naver.com`, 현재 ncpKeyId용 주소·역주소 JSONP는 `maps.apigw.ntruss.com`. 따라서 둘을 script-src 및 connect-src 후보에 반영한다. 이전 ncpClientId용 출처는 추가하지 않는다.
 - SDK 이미지 자산은 `ssl.pstatic.net`, `map.pstatic.net`, `nrbe.pstatic.net` 등을 참조한다. 기존 img-src의 HTTPS 허용 범위에 포함되므로 스크립트 와일드카드로 확대하지 않는다.
 - SDK 코드 내 모든 URL이 현재 화면에서 실제 요청되는 것은 아니다. 다른 지도 기능·계정·버전의 출처는 실제 네트워크/CSP 위반을 확인한 후 판단한다. 현재 정책이 모든 외부 SDK 리소스를 검증한 최종 allowlist라는 의미는 아니다.

@@ -36,7 +36,7 @@ test('GL loader shares a single GL request and retries', async () => {
 test('GL input is fractional, frame-bounded, anchored and has no idle backlog', () => {
   let zoom = 15
   const calls = []
-  const map = { getZoom: () => zoom, stop() {}, zoomBy(delta, origin, animate) { zoom += delta; calls.push({ delta, origin, animate }) } }
+  const map = { get: () => 2, getZoom: () => zoom, stop() {}, zoomBy(delta, origin, animate) { zoom += delta; calls.push({ delta, origin, animate }) } }
   const control = createNaverGlZoomController(map, 6, 20)
   for (let i = 0; i < 100; i++) control.button(1)
   assert.equal(frames.size, 1)
@@ -67,6 +67,50 @@ test('GL wheel normalizes devices and bounds extreme/nonfinite deltas', () => {
   assert.equal(glWheelStep(1, 2, 480), -0.5)
   assert.equal(glWheelStep(-10000, 0, 480), 0.5)
   assert.equal(glWheelStep(NaN, 0, 480), 0)
+})
+
+test('image fallback uses symmetric integer button and wheel zoom with limits', () => {
+  let zoom = 15
+  const calls = []
+  const map = {
+    get: key => { assert.equal(key, 'renderMode'); return 1 },
+    getZoom: () => zoom, stop() {},
+    // Real image-tile SDK rounds deltas, unlike the GL test double.
+    zoomBy(delta, origin, animate) { zoom += Math.round(delta); calls.push({ delta, origin, animate }) },
+  }
+  const control = createNaverGlZoomController(map, 6, 20)
+  control.button(-1); paint(); assert.equal(zoom, 14)
+  control.button(1); paint(); assert.equal(zoom, 15)
+  const anchor = { lat: () => 37.5, lng: () => 127 }
+  control.wheel(glWheelStep(100, 0, 480), () => anchor); paint()
+  assert.equal(zoom, 14)
+  assert.equal(calls.at(-1).origin, anchor)
+  control.wheel(glWheelStep(-100, 0, 480), () => anchor); paint()
+  assert.equal(zoom, 15)
+  for (let i = 0; i < 100; i++) control.button(-1)
+  paint(); assert.equal(zoom, 14, 'a burst still applies at most one step per frame')
+  control.idle(); paint(); assert.equal(zoom, 14)
+  zoom = 6; control.button(-1); paint(); assert.equal(zoom, 6)
+  zoom = 20; control.button(1); paint(); assert.equal(zoom, 20)
+  assert.ok(calls.every(call => Number.isInteger(call.delta) && call.animate === false))
+  control.destroy()
+})
+
+test('image fallback accumulates small wheel input and clears stale intent', () => {
+  let zoom = 15
+  let mode = 1
+  const map = { get: () => mode, getZoom: () => zoom, stop() {}, zoomBy(delta) { zoom += mode === 2 ? delta : Math.round(delta) } }
+  const control = createNaverGlZoomController(map, 6, 20)
+  const wheel = step => { control.wheel(step, () => ({})); paint() }
+  wheel(-0.25); assert.equal(zoom, 15)
+  wheel(-0.25); assert.equal(zoom, 14)
+  wheel(-0.25); wheel(0.25); assert.equal(zoom, 14, 'reversal replaces partial intent')
+  wheel(0.25); assert.equal(zoom, 15)
+  wheel(-0.25); control.cancel(); wheel(-0.25); assert.equal(zoom, 15)
+  control.button(1); paint(); wheel(-0.25); assert.equal(zoom, 16, 'button clears wheel remainder')
+  mode = 2; wheel(-0.25); assert.equal(zoom, 15.75, 'actual mode is read at execution time')
+  mode = 1; zoom = 15; wheel(-0.25); assert.equal(zoom, 15, 'GL transition clears raster remainder')
+  control.wheel(-0.5, () => ({})); control.destroy(); paint(); assert.equal(zoom, 15)
 })
 
 test('GL adapter preserves markers, panel positioning, refresh and scoped wheel cleanup', () => {

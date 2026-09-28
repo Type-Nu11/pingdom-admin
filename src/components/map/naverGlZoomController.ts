@@ -18,14 +18,17 @@ export function createNaverGlZoomController(map: NaverMapInstance, min: number, 
   let delta = 0
   let origin: (() => NaverLatLng) | undefined
   let disposed = false
+  let rasterWheelDelta = 0
   const discardPending = () => {
     if (frame !== null) cancelAnimationFrame(frame)
     frame = null
     delta = 0
     origin = undefined
+    rasterWheelDelta = 0
   }
   const request = (step: number, anchor?: () => NaverLatLng) => {
     if (disposed || !Number.isFinite(step) || step === 0) return
+    if (!anchor || Math.sign(rasterWheelDelta) !== Math.sign(step)) rasterWheelDelta = 0
     // A new direction supersedes old intent; wheel/button origins never mix.
     if (Math.sign(delta) !== Math.sign(step) || Boolean(origin) !== Boolean(anchor)) delta = 0
     delta = Math.max(-MAX_FRAME_STEP, Math.min(MAX_FRAME_STEP, delta + step))
@@ -39,8 +42,19 @@ export function createNaverGlZoomController(map: NaverMapInstance, min: number, 
       origin = undefined
       if (disposed) return
       map.stop()
+      // Read the actual renderer, not the requested `gl` option: the SDK can
+      // fall back to image tiles, whose zoomBy rounds fractional deltas.
+      let zoomDelta = step
+      if (map.get('renderMode') !== 2) {
+        if (anchor) {
+          rasterWheelDelta += step
+          if (Math.abs(rasterWheelDelta) < GL_BUTTON_STEP) return
+          zoomDelta = Math.sign(rasterWheelDelta)
+          rasterWheelDelta -= zoomDelta * GL_BUTTON_STEP
+        } else zoomDelta = Math.sign(step)
+      } else rasterWheelDelta = 0
       const current = map.getZoom()
-      const next = Math.max(min, Math.min(max, current + step))
+      const next = Math.max(min, Math.min(max, current + zoomDelta))
       if (!Number.isFinite(current) || next === current) return
       map.zoomBy(next - current, anchor?.(), false)
     })

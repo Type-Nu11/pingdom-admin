@@ -23,6 +23,7 @@ export function installNaverSdk() {
       }
       element.addEventListener('click', this.click)
     }
+    get(key) { return key === 'renderMode' ? 2 : undefined }
     getZoom() { return this.zoom }
     setZoom(zoom, animate) { this.zoom = zoom; this.lastAnimate = animate; emit(this, 'zoom_changed'); emit(this, 'idle') }
     zoomBy(delta, origin, animate) { this.lastZoomOrigin = origin; this.setZoom(this.zoom + delta, animate) }

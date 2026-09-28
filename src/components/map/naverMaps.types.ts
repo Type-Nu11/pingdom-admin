@@ -2,6 +2,8 @@
 export interface NaverLatLng { lat(): number; lng(): number }
 export interface NaverPoint { x: number; y: number }
 export interface NaverMapInstance {
+  // GL SDK KVO state: 2 = vector, 1 = image-tile fallback.
+  get(key: 'renderMode'): unknown
   getZoom(): number
   setZoom(zoom: number, animate?: boolean): void
   zoomBy(delta: number, origin?: NaverLatLng, animate?: boolean): void

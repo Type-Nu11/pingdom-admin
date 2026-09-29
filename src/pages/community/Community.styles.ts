@@ -12,6 +12,37 @@ export const Filters = styled.form`
   > label { min-width: 0; }
   @media (max-width: 600px) { > label { flex: 1 1 160px; } }
 `
+
+export const ReportFilters = styled(Filters)`
+  border: 1px solid ${adminColors.border};
+  background: ${adminColors.surface};
+
+  > button { margin-left: auto; }
+`
+
+// Custom comboboxes already have accessible names. Avoid a wrapping label:
+// its implicit activation forwards clicks from empty space to the trigger.
+export const ReportFilterField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 200px;
+  max-width: 100%;
+  min-width: 0;
+  color: ${adminColors.text};
+  font-size: 12px;
+  font-weight: 700;
+
+  [role='combobox'] {
+    border: 1px solid ${adminColors.border};
+    border-radius: 8px;
+    background: ${adminColors.surface};
+
+    &:hover:not(:disabled) { border-color: ${adminColors.primary}; }
+  }
+
+  @media (max-width: 600px) { flex: 1 1 160px; }
+`
 export const Body = styled.div`
   display: flex;
   flex-direction: column;

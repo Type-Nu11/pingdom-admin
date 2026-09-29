@@ -43,11 +43,11 @@ export default function CommunityReportsPage() {
     {action.success ? <FeedbackMessage tone="success">{action.success}</FeedbackMessage> : null}
     {action.warning ? <FeedbackMessage tone="warning">{action.warning}</FeedbackMessage> : null}
     {action.error && !dialog ? <FeedbackMessage tone="error" onDismiss={action.dismissError}>{action.error}</FeedbackMessage> : null}
-    <S.Filters onSubmit={e => e.preventDefault()}>
-      <Form.Field>처리 상태<AdminSelect aria-label="신고 처리 상태" value={status} disabled={action.busy || !!dialog} onChange={e => { setStatus(e.target.value as CommunityReportStatus | ''); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></Form.Field>
-      <Form.Field>대상 유형<AdminSelect aria-label="신고 대상 유형" value={targetType} disabled={action.busy || !!dialog} onChange={e => { setTargetType(e.target.value as CommunityTargetType | ''); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_TARGET_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></Form.Field>
+    <S.ReportFilters onSubmit={e => e.preventDefault()}>
+      <S.ReportFilterField><span>처리 상태</span><AdminSelect aria-label="신고 처리 상태" width="100%" value={status} disabled={action.busy || !!dialog} onChange={e => { setStatus(e.target.value as CommunityReportStatus | ''); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></S.ReportFilterField>
+      <S.ReportFilterField><span>대상 유형</span><AdminSelect aria-label="신고 대상 유형" width="100%" value={targetType} disabled={action.busy || !!dialog} onChange={e => { setTargetType(e.target.value as CommunityTargetType | ''); resetSelection() }}><option value="">전체</option>{Object.entries(COMMUNITY_TARGET_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AdminSelect></S.ReportFilterField>
       <Shared.SecondaryButton type="button" disabled={query.loading || action.busy || !!dialog} onClick={() => { resetSelection(); void query.refresh() }}>목록 새로고침</Shared.SecondaryButton>
-    </S.Filters>
+    </S.ReportFilters>
     <ListDetailWorkspace>
       <ListPane title="신고 목록" count={query.data ? `${query.data.totalCount}건` : undefined} page={page} footer={<CommunityPagination data={query.pagination} page={page} loading={query.loading} label="신고 페이지네이션" disabled={action.busy || !!dialog} onChange={p => { void query.changePage(p); resetSelection() }} />}>
         <QueryMessage {...query} empty={query.data?.reports.length === 0} onRetry={query.refresh} />

@@ -36,6 +36,7 @@ export function useMerchantOperatingNotices() {
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [notices, setNotices] = useState<MerchantOperatingNotice[]>([])
   const [currentlyOperating, setCurrentlyOperating] = useState<boolean | null>(null)
+  const [checkedAt, setCheckedAt] = useState<string | null>(null)
   const [isListLoading, setIsListLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
@@ -65,6 +66,8 @@ export function useMerchantOperatingNotices() {
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsListLoading(true)
+    setCurrentlyOperating(null)
+    setCheckedAt(null)
     setErrorMessage('')
 
     try {
@@ -72,7 +75,8 @@ export function useMerchantOperatingNotices() {
       if (!mountedRef.current || requestId !== requestRef.current) return false
 
       setNotices(response.notices)
-      setCurrentlyOperating(response.currentlyOperating)
+      setCurrentlyOperating(typeof response.currentlyOperating === 'boolean' ? response.currentlyOperating : null)
+      setCheckedAt(response.checkedAt ?? null)
       return true
     } catch (error) {
       if (mountedRef.current && requestId === requestRef.current) {
@@ -115,7 +119,7 @@ export function useMerchantOperatingNotices() {
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
+    return () => { mountedRef.current = false; requestRef.current += 1 }
   }, [fetchInitialData])
 
   const selectPlace = useCallback((placeId: number) => {
@@ -196,6 +200,7 @@ export function useMerchantOperatingNotices() {
     selectedPlaceId,
     notices,
     currentlyOperating,
+    checkedAt,
     isListLoading,
     errorMessage,
     actionErrorMessage,

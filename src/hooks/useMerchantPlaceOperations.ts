@@ -54,6 +54,7 @@ export function useMerchantPlaceOperations() {
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [place, setPlace] = useState<MerchantPlaceDetail | null>(null)
   const [operating, setOperating] = useState<MerchantPlaceOperating | null>(null)
+  const [operatingFailed, setOperatingFailed] = useState(false)
   const [media, setMedia] = useState<MerchantPlaceMediaResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -85,6 +86,8 @@ export function useMerchantPlaceOperations() {
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsLoading(true)
+    setOperating(null)
+    setOperatingFailed(false)
     setSectionErrorMessage('')
 
     const [placeResult, operatingResult, mediaResult] = await Promise.allSettled([
@@ -97,6 +100,7 @@ export function useMerchantPlaceOperations() {
 
     if (placeResult.status === 'fulfilled') setPlace(placeResult.value)
     if (operatingResult.status === 'fulfilled') setOperating(operatingResult.value)
+    setOperatingFailed(operatingResult.status === 'rejected')
     if (mediaResult.status === 'fulfilled') setMedia(sortMedia(mediaResult.value))
 
     const failures = [placeResult, operatingResult, mediaResult].filter(
@@ -146,7 +150,7 @@ export function useMerchantPlaceOperations() {
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
+    return () => { mountedRef.current = false; requestRef.current += 1 }
   }, [fetchInitialData])
 
   const selectPlace = useCallback((placeId: number) => {
@@ -196,6 +200,7 @@ export function useMerchantPlaceOperations() {
       () => updateMerchantPlaceOperatingStatus(selectedPlaceId, { operatingStatus }),
       (next) => {
         setOperating(next)
+        setOperatingFailed(false)
         setPlace((current) => current ? { ...current, operatingStatus: next.operatingStatus, operatingStatusCheckedAt: next.operatingStatusCheckedAt } : current)
       },
       '장소 운영 상태를 변경했습니다.',
@@ -215,11 +220,12 @@ export function useMerchantPlaceOperations() {
           operatingExceptions: next.operatingExceptions,
         } : current)
         setPlace((current) => current ? { ...current, regularHours: next.regularHours, operatingExceptions: next.operatingExceptions } : current)
+        void fetchPlaceOperations(selectedPlaceId)
       },
       '영업시간을 저장했습니다.',
       '영업시간을 저장하지 못했습니다.',
     )
-  }, [runAction, selectedPlaceId])
+  }, [fetchPlaceOperations, runAction, selectedPlaceId])
 
   const updateRepresentativeMedia = useCallback((mediaId: number) => {
     if (!selectedPlaceId) return Promise.resolve(null)
@@ -320,6 +326,7 @@ export function useMerchantPlaceOperations() {
     selectedPlaceId,
     place,
     operating,
+    operatingFailed,
     media,
     isLoading,
     errorMessage,

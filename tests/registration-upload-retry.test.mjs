@@ -58,6 +58,7 @@ function scenario(existing) {
       activeAction: null, canEdit: () => true,
       registration: selectedId === null ? null : saved,
       editable: saved.attachments.length === 0,
+      draft: { isDirty: false },
       buildRequest: () => ({ placeName: 'Test' }),
       stagedAttachments: pending,
       REQUIRED_ATTACHMENT_TYPES: ['BUSINESS_REGISTRATION', 'IDENTITY_DOCUMENT', 'REPRESENTATIVE_IMAGE'],

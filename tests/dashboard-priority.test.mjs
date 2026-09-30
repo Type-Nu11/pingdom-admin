@@ -19,7 +19,27 @@ const metrics={duplicatePlaceGroupCount:0,expiringBannedUserCount:0,missingLocat
 beforeEach(()=>{work=[{...emptyWork}];root=createRoot(document.getElementById('root'));globalThis.dashboardState={summary:{placeCount:10,bannedUserCount:0,operationalMetrics:metrics},recentActivities:null,pendingItems:{items:[],totalCount:0},status:'success',recentActivitiesStatus:'empty',pendingItemsStatus:'empty',isLoading:false,lastUpdatedAt:1,fetchSummary(){}}})
 afterEach(async()=>{await act(async()=>root.unmount())})
 after(async()=>{delete globalThis.dashboardState;await server.close();dom.window.close()})
-async function render(extra={}){Object.assign(globalThis.dashboardState,extra);await act(async()=>root.render(h(AuthContext.Provider,{value:{user:{username:'admin'},logout(){}}},h(AdminNotificationContext.Provider,{value:{notifications:[],unreadCount:0,pendingWorkEntries:work,refreshPendingWork(){},pendingWorkItems:[],pendingWorkCount:0,status:'success',pendingWorkStatus:'success'}},h(MemoryRouter,{},h(Page),h(Location))))))}
+async function render(extra={},notifications={}){Object.assign(globalThis.dashboardState,extra);await act(async()=>root.render(h(AuthContext.Provider,{value:{user:{username:'admin'},logout(){}}},h(AdminNotificationContext.Provider,{value:{notifications:[],unreadCount:0,pendingWorkEntries:work,refreshPendingWork(){},pendingWorkItems:[],pendingWorkCount:0,status:'success',pendingWorkStatus:'success',...notifications}},h(MemoryRouter,{},h(Page),h(Location))))))}
+test('header refresh reloads both summary and shared pending work',async()=>{
+  let summaryCalls=0,workCalls=0
+  await render({fetchSummary(){summaryCalls++}},{refreshPendingWork(){workCalls++}})
+  await act(async()=>document.querySelector('[aria-label="대시보드 새로고침"]').click())
+  assert.equal(summaryCalls,1)
+  assert.equal(workCalls,1)
+})
+test('header stays busy until both queries finish and unlocks after failure',async()=>{
+  for(const [isLoading,pendingWorkStatus] of [[true,'success'],[false,'loading'],[false,'idle']]) {
+    await render({isLoading},{pendingWorkStatus})
+    assert.equal(document.querySelector('[aria-label="대시보드 새로고침 중"]').disabled,true)
+    assert.match(document.body.textContent,/업데이트 중/)
+  }
+  for(const pendingWorkStatus of ['success','error']) {
+    await render({isLoading:false},{pendingWorkStatus})
+    assert.equal(document.querySelector('[aria-label="대시보드 새로고침"]').disabled,false)
+    assert.match(document.body.textContent,/요약·최근 활동 수신:/)
+    assert.doesNotMatch(document.body.textContent,/업데이트 중/)
+  }
+})
 test('work sections precede summary and valid zero is concise',async()=>{
   await render();const text=document.body.textContent
   assert.ok(text.indexOf('처리 대기 업무')<text.indexOf('관리 요약'))

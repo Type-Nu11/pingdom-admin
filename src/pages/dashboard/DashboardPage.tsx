@@ -124,7 +124,12 @@ function DashboardPage() {
     lastUpdatedAt,
     fetchSummary,
   } = useAdminDashboard()
-  const { refreshPendingWork } = useAdminNotifications()
+  const { refreshPendingWork, pendingWorkStatus } = useAdminNotifications()
+  const isDashboardRefreshing = isLoading || pendingWorkStatus === 'loading' || pendingWorkStatus === 'idle'
+  const refreshDashboard = () => {
+    void fetchSummary()
+    void refreshPendingWork()
+  }
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
@@ -175,7 +180,7 @@ function DashboardPage() {
           <strong>대시보드 정보를 불러오지 못했습니다.</strong>
           <span>잠시 후 다시 시도해 주세요.</span>
         </S.StatusText>
-        <S.RetryButton type="button" onClick={() => { void fetchSummary(); void refreshPendingWork() }}>
+        <S.RetryButton type="button" onClick={refreshDashboard}>
           다시 시도
         </S.RetryButton>
       </S.StatusPanel>
@@ -531,11 +536,11 @@ function DashboardPage() {
             <S.TopActions>
             <S.RefreshButton
               type="button"
-              aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}
-              title={isLoading ? '새로고침 중' : '대시보드 새로고침'}
-              $isLoading={isLoading}
-              disabled={isLoading}
-              onClick={() => void fetchSummary()}
+              aria-label={isDashboardRefreshing ? '대시보드 새로고침 중' : '대시보드 새로고침'}
+              title={isDashboardRefreshing ? '새로고침 중' : '대시보드 새로고침'}
+              $isLoading={isDashboardRefreshing}
+              disabled={isDashboardRefreshing}
+              onClick={refreshDashboard}
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
@@ -551,8 +556,8 @@ function DashboardPage() {
               </S.PageDescription>
             </S.PageHeaderMain>
             <S.UpdateMeta aria-live="polite">
-              마지막 수신: {formatLastUpdated(lastUpdatedAt)}
-              {isLoading && summary ? (
+              요약·최근 활동 수신: {formatLastUpdated(lastUpdatedAt)}
+              {isDashboardRefreshing && summary ? (
                 <S.RefreshingText role="status">업데이트 중</S.RefreshingText>
               ) : null}
             </S.UpdateMeta>

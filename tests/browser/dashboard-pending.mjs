@@ -25,7 +25,7 @@ try {
       return (u.hostname==='127.0.0.1'&&!u.pathname.startsWith('/api'))||['fonts.googleapis.com','fonts.gstatic.com','cdn.jsdelivr.net'].includes(u.hostname)?route.continue():route.abort()
     })
     const url='http://127.0.0.1:'+server.httpServer.address().port+'/dashboard-qa'
-    for (const scenario of ['success','zero','partial','all-error','retry','loading']) {
+    for (const scenario of ['success','zero','partial','all-error','retry','loading','refresh-work-slow','refresh-summary-slow']) {
       await page.goto(url+'?scenario='+scenario)
       const section=page.getByRole('region',{name:'처리 대기 업무'}).first()
       if(scenario==='loading') await section.getByText('업무 현황을 확인하고 있습니다.').waitFor()
@@ -38,6 +38,18 @@ try {
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
       assert.ok(await section.locator('button').evaluateAll(buttons=>buttons.filter(button=>button.getClientRects().length).every(button=>button.scrollWidth<=button.clientWidth+1)))
       await page.screenshot({path:join(output,'dashboard-'+width+'-'+scenario+'.png')})
+      if (scenario.startsWith('refresh-')) {
+        await page.getByRole('button',{name:'대시보드 새로고침',exact:true}).click()
+        const fastPath=scenario==='refresh-work-slow'?'/admin/dashboard/summary':'/admin/reservations'
+        await page.waitForFunction(path=>window.qaCompletedRequests.filter(url=>url===path).length===2,fastPath)
+        await page.waitForFunction(()=>window.qaHeldRequests.length>0)
+        assert.equal(await page.getByRole('button',{name:'대시보드 새로고침 중',exact:true}).isDisabled(),true)
+        await page.getByRole('button',{name:'검증 요청 수'}).click()
+        assert.equal(await page.getByRole('button',{name:'검증 요청 수'}).textContent(),'2')
+        await page.evaluate(()=>window.qaHeldRequests.splice(0).forEach(resolve=>resolve()))
+        await section.getByText(/확인된 대기 2건/).waitFor()
+        assert.equal(await page.getByRole('button',{name:'대시보드 새로고침',exact:true}).isEnabled(),true)
+      }
       if (scenario==='retry') {
         await section.getByRole('button',{name:'대기 업무 새로고침'}).click()
         await section.getByText(/이전 조회 6건/).waitFor()

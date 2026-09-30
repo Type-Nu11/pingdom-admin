@@ -233,7 +233,7 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   padding: 0 14px;
   border: 0;
   border-radius: 6px;
-  background: ${({ $active }) => ($active ? colors.primaryAction : 'transparent')};
+  background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
   color: ${({ $active }) => ($active ? colors.primaryText : colors.muted)};
   font-size: 12px;
   font-weight: 700;
@@ -243,11 +243,11 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   @media (prefers-reduced-motion: reduce) { transition: none; }
 
   &:hover:not(:disabled) {
-    color: ${({ $active }) => ($active ? colors.primaryText : colors.primaryForeground)};
-    background: ${({ $active }) => ($active ? colors.primaryForeground : colors.primaryTint)};
+    color: ${({ $active }) => ($active ? colors.primaryText : colors.primary)};
+    background: ${({ $active }) => ($active ? colors.primaryHover : colors.primaryTint)};
   }
 
-  &:focus-visible { outline: 2px solid ${colors.primaryForeground}; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
   &:disabled {
     cursor: default;

@@ -23,6 +23,7 @@ import type {
 import * as Shell from '../place/PlaceManagePage.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
+import * as ReviewUI from './AdminReservationReviewPage.styles'
 
 const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 'warning' | 'danger' }> = {
   PENDING: { label: '심사 대기', tone: 'warning' },
@@ -202,7 +203,7 @@ function AdminReservationReviewPage() {
                     onChange={(event) => { setPlaceId(event.target.value); setPlaceName(''); setFilterError(''); setDialog(null); setSelectedReservationId(null); hook.clearDetail() }}
                   />
                 </S.Field>
-                <Shared.SecondaryButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => setPlaceSearchOpen(true)}>장소 검색</Shared.SecondaryButton>
+                <ReviewUI.PlaceSearchButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => setPlaceSearchOpen(true)}>장소 검색</ReviewUI.PlaceSearchButton>
                 <S.SearchFilterActions>
                   <Shared.SecondaryButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={resetFilters}>초기화</Shared.SecondaryButton>
                   <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.activeAction !== null}>조회</Shared.PrimaryButton>

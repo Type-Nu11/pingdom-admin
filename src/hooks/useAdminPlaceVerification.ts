@@ -247,7 +247,25 @@ export function useAdminPlaceVerification() {
     setActionSuccessMessage('')
   }, [])
 
+  const clearPlace = useCallback(() => {
+    latestEvidenceRequestIdRef.current += 1
+    latestReverificationRequestIdRef.current += 1
+    setPlaceId(null)
+    setEvidences([])
+    setReverificationRequests([])
+    setReverificationTotalCount(0)
+    setReverificationPage(1)
+    setReverificationTotalPages(0)
+    setReverificationHasNext(false)
+    setIsEvidenceLoading(false)
+    setIsReverificationLoading(false)
+    setEvidenceErrorMessage('')
+    setReverificationErrorMessage('')
+    clearActionMessages()
+  }, [clearActionMessages])
+
   return {
+    clearPlace,
     placeId,
     evidences,
     reverificationRequests,

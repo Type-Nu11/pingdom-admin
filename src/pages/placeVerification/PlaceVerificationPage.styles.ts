@@ -45,6 +45,15 @@ export const SearchBar = styled.form`
   background: ${neutral.surface};
 `
 
+export const PlaceLookupRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  > div { flex: 1 1 240px; max-width: 480px; }
+  > button { flex: 0 0 auto; }
+`
+
 export const Field = styled.label`
   min-width: 0;
   display: flex;

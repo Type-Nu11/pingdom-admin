@@ -1,4 +1,5 @@
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
@@ -364,7 +365,7 @@ function PlaceEventPage() {
           <Shared.ModalHeader><Shared.ModalTitle id="place-event-dialog-title">{dialogTitle}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
           <Shared.ModalBody>
             {dialog.type === 'create' || dialog.type === 'edit' ? <S.FormGrid>
-              <S.Field>장소 ID *<S.Input inputMode="numeric" value={formPlaceId} disabled={isBusy || dialog.type === 'edit'} placeholder="예: 42" onChange={(event) => { setFormPlaceId(event.target.value); setFormError(''); hook.dismissActionError() }} /></S.Field>
+              <S.WideField as="div">장소 *{dialog.type === 'edit' ? <div>{dialog.event.placeName} · #{dialog.event.placeId}<small>{dialog.event.placeAddress}</small></div> : <AdminPlacePicker value={formPlaceId} disabled={isBusy} onChange={value => { setFormPlaceId(value); setFormError(''); hook.dismissActionError() }} />}</S.WideField>
               <S.Field>이벤트 유형 *<AdminSelect aria-label="등록 이벤트 유형" width="100%" value={formEventType} disabled={isBusy} onChange={(event) => { setFormEventType(event.target.value as AdminPlaceEventType); setFormError(''); hook.dismissActionError() }}>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
               <S.WideField>이벤트 제목 *<S.Input maxLength={150} value={title} disabled={isBusy} onChange={(event) => { setTitle(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{title.length}/150</small></S.WideField>
               <S.Field>시작 일시 *<AdminDateTimePicker ariaLabel="이벤트 시작 일시" value={startAt} disabled={isBusy} onChange={(value) => { setStartAt(value); setFormError(''); hook.dismissActionError() }} /></S.Field>

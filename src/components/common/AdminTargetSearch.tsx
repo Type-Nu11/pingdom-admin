@@ -40,7 +40,8 @@ export function AdminTargetSearch({ title, load, onSelect, onClose }: Props) {
     return () => { active = false }
   }, [load, query, clearAuth])
   const search = () => setQuery({ keyword: input.trim(), page: 1, attempt: query.attempt + 1 })
-  return createPortal(<AppDialog title={title} onClose={onClose} footer={current?.data ? <AdminPagination page={query.page} totalPages={current.data.totalPages} hasNext={current.data.hasNext} onPageChange={page => setQuery({ ...query, page })} /> : null}>
+  // Portal events still bubble through the parent form or modal in the React tree.
+  return createPortal(<div onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}><AppDialog title={title} onClose={onClose} footer={current?.data ? <AdminPagination page={query.page} totalPages={current.data.totalPages} hasNext={current.data.hasNext} onPageChange={page => setQuery({ ...query, page })} /> : null}>
     <SearchControls>
       <Form.Input aria-label={title} value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); search() } }} />
       <Shared.PrimaryButton type="button" onClick={search}>검색</Shared.PrimaryButton>
@@ -53,5 +54,5 @@ export function AdminTargetSearch({ title, load, onSelect, onClose }: Props) {
         </Result>)}
       </> : null}
     </Results>
-  </AppDialog>, document.body)
+  </AppDialog></div>, document.body)
 }

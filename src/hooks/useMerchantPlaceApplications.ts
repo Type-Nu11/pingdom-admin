@@ -38,7 +38,9 @@ function errorMessage(error: unknown, fallbackMessage: string) {
       ACCESS_DENIED: '상점주 권한이 필요합니다.',
       INVALID_TOKEN: '로그인이 만료되었습니다. 다시 로그인해주세요.',
       PLACE_NOT_FOUND: '선택한 장소를 찾을 수 없습니다. 다시 검색해주세요.',
+      INVALID_STATE: '신청 상태가 변경되어 저장할 수 없습니다. 입력 내용을 확인한 뒤 신청 내역을 새로고침해주세요.',
     },
+    categoryMessages: { conflict: '다른 곳에서 신청이 변경되었습니다. 입력 내용을 확인한 뒤 신청 내역을 새로고침해주세요.' },
   })
 }
 

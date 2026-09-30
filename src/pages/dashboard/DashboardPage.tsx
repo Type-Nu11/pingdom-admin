@@ -6,7 +6,8 @@ import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import * as S from './DashboardPage.styles'
-import { getDashboardPendingRows } from '../../utils/dashboardPendingItems'
+import { AdminPendingWork } from '../../components/adminNotification/AdminPendingWork'
+import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
 type DashboardMetricKey =
   | 'placeCount'
@@ -105,6 +106,9 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
 ]
 
 const QUICK_ACTIONS = [
+  { label: '예약 심사', icon: 'event_available', route: '/reservations/review' },
+  { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', route: '/merchant-place-applications' },
+  { label: '커뮤니티 신고 심사', icon: 'flag', route: '/community-reports' },
   { label: '장소 정보 검증', icon: 'fact_check', route: '/places/information-verification' },
 ]
 
@@ -114,15 +118,18 @@ function DashboardPage() {
   const {
     summary,
     recentActivities,
-    pendingItems,
     status,
     recentActivitiesStatus,
-    pendingItemsStatus,
     isLoading,
     lastUpdatedAt,
     fetchSummary,
   } = useAdminDashboard()
-  const pendingRows = getDashboardPendingRows(pendingItems?.items ?? [])
+  const { refreshPendingWork, pendingWorkStatus } = useAdminNotifications()
+  const isDashboardRefreshing = isLoading || pendingWorkStatus === 'loading' || pendingWorkStatus === 'idle'
+  const refreshDashboard = () => {
+    void fetchSummary()
+    void refreshPendingWork()
+  }
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
@@ -173,7 +180,7 @@ function DashboardPage() {
           <strong>대시보드 정보를 불러오지 못했습니다.</strong>
           <span>잠시 후 다시 시도해 주세요.</span>
         </S.StatusText>
-        <S.RetryButton type="button" onClick={() => void fetchSummary()}>
+        <S.RetryButton type="button" onClick={refreshDashboard}>
           다시 시도
         </S.RetryButton>
       </S.StatusPanel>
@@ -406,53 +413,6 @@ function DashboardPage() {
     )
   }
 
-  function renderPendingReviewQueue() {
-    if (!pendingItems || pendingItemsStatus === 'unavailable') {
-      if (pendingItemsStatus === 'loading') {
-        return <S.OperationalEmptyState>심사 대기 항목을 불러오는 중입니다.</S.OperationalEmptyState>
-      }
-
-      if (pendingItemsStatus === 'error') {
-        return renderSectionError('심사 대기 항목을 불러오지 못했습니다.')
-      }
-
-      return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
-    }
-
-    if (pendingRows.length === 0) {
-      if (pendingItemsStatus === 'error' || pendingItemsStatus === 'loading') return null
-      if (pendingItemsStatus !== 'success' && pendingItemsStatus !== 'empty') {
-        return <S.OperationalEmptyState>심사 대기 항목이 아직 조회되지 않았습니다.</S.OperationalEmptyState>
-      }
-      return <S.OperationalEmptyState>{pendingItems.totalCount > 0 ? '대기 업무가 있지만 표시할 항목이 없습니다.' : '처리 대기 중인 장소 신청이 없습니다.'}</S.OperationalEmptyState>
-    }
-
-    return (
-      <S.PendingList>
-        {pendingRows.map((item) => (
-          <S.PendingItem
-            key={item.key}
-            type="button"
-            disabled={!item.destination}
-            onClick={() => item.destination && navigate(item.destination.path, { state: item.destination.state })}
-          >
-            <S.PendingItemMain>
-              <strong title={item.title}>
-                {item.title}
-              </strong>
-              <span>{item.label} · {item.description}</span>
-              <span>{formatActivityDate(item.createdAt ?? undefined) ?? '접수 시각 정보 없음'}</span>
-            </S.PendingItemMain>
-            <S.PendingItemMeta>
-              {item.destination ? '심사하기' : item.unavailableReason}
-              {item.destination ? <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon> : null}
-            </S.PendingItemMeta>
-          </S.PendingItem>
-        ))}
-      </S.PendingList>
-    )
-  }
-
   function renderOperationalMetricCard(metric: DashboardOperationalMetric) {
     const value = getOperationalMetricValue(metric.key)
     const isZeroValue = value === 0
@@ -576,11 +536,11 @@ function DashboardPage() {
             <S.TopActions>
             <S.RefreshButton
               type="button"
-              aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}
-              title={isLoading ? '새로고침 중' : '대시보드 새로고침'}
-              $isLoading={isLoading}
-              disabled={isLoading}
-              onClick={() => void fetchSummary()}
+              aria-label={isDashboardRefreshing ? '대시보드 새로고침 중' : '대시보드 새로고침'}
+              title={isDashboardRefreshing ? '새로고침 중' : '대시보드 새로고침'}
+              $isLoading={isDashboardRefreshing}
+              disabled={isDashboardRefreshing}
+              onClick={refreshDashboard}
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
@@ -596,8 +556,8 @@ function DashboardPage() {
               </S.PageDescription>
             </S.PageHeaderMain>
             <S.UpdateMeta aria-live="polite">
-              마지막 수신: {formatLastUpdated(lastUpdatedAt)}
-              {isLoading && summary ? (
+              요약·최근 활동 수신: {formatLastUpdated(lastUpdatedAt)}
+              {isDashboardRefreshing && summary ? (
                 <S.RefreshingText role="status">업데이트 중</S.RefreshingText>
               ) : null}
             </S.UpdateMeta>
@@ -605,26 +565,7 @@ function DashboardPage() {
 
           {renderStatusPanel()}
 
-          <S.Section aria-labelledby="dashboard-pending-review-title">
-            <S.SectionHeader>
-              <S.SectionTitle id="dashboard-pending-review-title">장소 신청 처리 대기</S.SectionTitle>
-              <S.SectionDescription>
-                {pendingItems && pendingItemsStatus !== 'unavailable'
-                  ? `전체 대기 ${pendingItems.totalCount.toLocaleString()}건 · 표시 ${pendingRows.length}건 · 최대 10건${pendingItemsStatus === 'loading' || pendingItemsStatus === 'error' ? ' · 이전 조회 결과' : ''}`
-                  : '처리 대기 중인 장소 신청'}
-              </S.SectionDescription>
-              <S.InlineRetryButton type="button" onClick={() => navigate('/merchant-place-applications')}>장소 신청 목록 보기</S.InlineRetryButton>
-            </S.SectionHeader>
-            <S.OperationsPanel $compact={pendingRows.length === 0}>
-              {pendingItemsStatus === 'loading' && pendingItems ? (
-                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
-              ) : null}
-              {pendingItemsStatus === 'error' && pendingItems
-                ? renderSectionError('심사 대기 항목을 새로 불러오지 못했습니다.')
-                : null}
-              {renderPendingReviewQueue()}
-            </S.OperationsPanel>
-          </S.Section>
+          <AdminPendingWork />
 
           <S.Section aria-labelledby="dashboard-operational-metrics-title">
             <S.SectionHeader>

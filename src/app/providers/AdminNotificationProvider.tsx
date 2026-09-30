@@ -13,6 +13,9 @@ import {
 } from '../../api/adminNotificationApi'
 import {
   getAdminPendingWorkSummary,
+  initialPendingWorkEntries,
+  mergePendingWorkEntries,
+  type AdminPendingWorkEntry,
   type AdminPendingWorkItem,
 } from '../../api/adminPendingWorkApi'
 import { isApiError } from '../../api/customAxios'
@@ -62,6 +65,7 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
   const [notifications, setNotifications] = useState<AdminNotificationItem[] | null>(null)
   const [unreadCount, setUnreadCount] = useState<number | null>(null)
   const [pendingWorkItems, setPendingWorkItems] = useState<AdminPendingWorkItem[] | null>(null)
+  const [pendingWorkEntries, setPendingWorkEntries] = useState<AdminPendingWorkEntry[]>(initialPendingWorkEntries)
   const [pendingWorkCount, setPendingWorkCount] = useState<number | null>(null)
   const [pendingWorkStatus, setPendingWorkStatus] = useState<NotificationLoadStatus>('idle')
   const [pendingWorkErrorMessage, setPendingWorkErrorMessage] = useState('')
@@ -151,6 +155,8 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
     isPendingWorkRequestInFlightRef.current = true
     setPendingWorkStatus('loading')
     setPendingWorkErrorMessage('')
+    setPendingWorkEntries(previous => previous.map(entry => ({ ...entry, status: 'loading' })))
+    setPendingWorkCount(null)
 
     try {
       const summary = await getAdminPendingWorkSummary()
@@ -164,8 +170,16 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
       })
 
       if (summary.failures.some(shouldClearAuth)) {
+        setPendingWorkEntries(initialPendingWorkEntries())
+        setPendingWorkItems(null)
+        setPendingWorkCount(null)
         clearAuth()
+        return
       }
+
+      setPendingWorkEntries(previous => mergePendingWorkEntries(previous, summary.entries))
+      setPendingWorkItems(summary.items)
+      setPendingWorkCount(summary.failedCount === summary.checkedCount ? null : summary.totalCount)
 
       if (summary.failedCount === summary.checkedCount) {
         setPendingWorkStatus('error')
@@ -173,8 +187,6 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
         return
       }
 
-      setPendingWorkItems(summary.items)
-      setPendingWorkCount(summary.totalCount)
       setPendingWorkStatus('success')
       setPendingWorkErrorMessage(
         summary.failedCount > 0 ? '일부 업무 현황을 불러오지 못했습니다.' : '',
@@ -183,6 +195,7 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
       logDebugError('관리자 처리 필요 업무 조회 실패', error)
 
       if (requestId === pendingWorkRequestIdRef.current) {
+        setPendingWorkEntries(previous => previous.map(entry => ({ ...entry, status: 'error' })))
         setPendingWorkStatus('error')
         setPendingWorkErrorMessage('처리 필요 업무를 불러오지 못했습니다.')
       }
@@ -191,7 +204,7 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
         clearAuth()
       }
     } finally {
-      isPendingWorkRequestInFlightRef.current = false
+      if (requestId === pendingWorkRequestIdRef.current) isPendingWorkRequestInFlightRef.current = false
     }
   }, [clearAuth, isAuthReady, isAuthenticated])
 
@@ -263,9 +276,11 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
       notificationRequestIdRef.current += 1
       unreadRequestIdRef.current += 1
       pendingWorkRequestIdRef.current += 1
+      isPendingWorkRequestInFlightRef.current = false
       setNotifications(null)
       setUnreadCount(null)
       setPendingWorkItems(null)
+      setPendingWorkEntries(initialPendingWorkEntries())
       setPendingWorkCount(null)
       setPendingWorkStatus('idle')
       setPendingWorkErrorMessage('')
@@ -320,6 +335,8 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
     startPolling()
 
     return () => {
+      pendingWorkRequestIdRef.current += 1
+      isPendingWorkRequestInFlightRef.current = false
       stopPolling()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
@@ -329,6 +346,7 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
     notifications,
     unreadCount,
     pendingWorkItems,
+    pendingWorkEntries,
     pendingWorkCount,
     pendingWorkStatus,
     pendingWorkErrorMessage,

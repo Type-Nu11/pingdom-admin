@@ -4,20 +4,6 @@ export interface AdminDashboardSummary {
   operationalMetrics?: AdminDashboardOperationalMetrics
 }
 
-export interface AdminDashboardPendingItem {
-  type: string
-  targetId: number
-  title?: string | null
-  status: string
-  createdAt?: string | null
-  navigationPath?: string | null
-}
-
-export interface AdminDashboardPendingItemsResponse {
-  items: AdminDashboardPendingItem[]
-  totalCount: number
-}
-
 export type AdminDashboardMetricPeriod = 'TODAY' | 'LAST_7_DAYS'
 
 export interface AdminDashboardMetricWindow {

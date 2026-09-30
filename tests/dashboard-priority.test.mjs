@@ -12,45 +12,69 @@ const server=await createServer({server:{middlewareMode:true,ws:false},appType:'
 const {AuthContext}=await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const {AdminNotificationContext}=await server.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
 const {default:Page}=await server.ssrLoadModule('/src/pages/dashboard/DashboardPage.tsx')
-let root,location
+let root,location,work
+const emptyWork = {key:'reservations',title:'예약 심사',description:'심사 대기 예약',path:'/reservations/review',status:'success',count:0,updatedAt:1}
 function Location(){location=useLocation();return null}
 const metrics={duplicatePlaceGroupCount:0,expiringBannedUserCount:0,missingLocationPlaceCount:0,today:{placeRegistrationCount:0},last7Days:{placeRegistrationCount:0}}
-beforeEach(()=>{root=createRoot(document.getElementById('root'));globalThis.dashboardState={summary:{placeCount:10,bannedUserCount:0,operationalMetrics:metrics},recentActivities:null,pendingItems:{items:[],totalCount:0},status:'success',recentActivitiesStatus:'empty',pendingItemsStatus:'empty',isLoading:false,lastUpdatedAt:1,fetchSummary(){}}})
+beforeEach(()=>{work=[{...emptyWork}];root=createRoot(document.getElementById('root'));globalThis.dashboardState={summary:{placeCount:10,bannedUserCount:0,operationalMetrics:metrics},recentActivities:null,pendingItems:{items:[],totalCount:0},status:'success',recentActivitiesStatus:'empty',pendingItemsStatus:'empty',isLoading:false,lastUpdatedAt:1,fetchSummary(){}}})
 afterEach(async()=>{await act(async()=>root.unmount())})
 after(async()=>{delete globalThis.dashboardState;await server.close();dom.window.close()})
-async function render(extra={}){Object.assign(globalThis.dashboardState,extra);await act(async()=>root.render(h(AuthContext.Provider,{value:{user:{username:'admin'},logout(){}}},h(AdminNotificationContext.Provider,{value:{notifications:[],unreadCount:0,pendingWorkItems:[],pendingWorkCount:0,status:'success',pendingWorkStatus:'success'}},h(MemoryRouter,{},h(Page),h(Location))))))}
-test('work sections precede summary and valid zero is concise',async()=>{await render();const text=document.body.textContent;assert.ok(text.indexOf('처리 대기')<text.indexOf('관리 요약'));assert.ok(text.indexOf('우선 확인')<text.indexOf('관리 요약'));assert.match(text,/처리 대기 중인 장소 신청이 없습니다/);assert.match(text,/전체 장소/);assert.match(text,/마지막 수신/)})
-for(const status of ['error','loading','unavailable']) test(status+' is never shown as zero work',async()=>{await render({status,pendingItemsStatus:status});assert.doesNotMatch(document.body.textContent,/조회된 운영 항목 중 확인할 항목이 없습니다|처리 대기 중인 장소 신청이 없습니다/)})
-test('pending application opens exact application and count is bounded',async()=>{await render({pendingItemsStatus:'success',pendingItems:{items:[{type:'MERCHANT_PLACE_APPLICATION',targetId:7,status:'PENDING',title:'합성 가게',navigationPath:'https://untrusted.example'}],totalCount:30}});const b=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('합성 가게'));await act(async()=>b.click());assert.equal(location.pathname,'/merchant-place-applications');assert.equal(location.state.applicationId,7);assert.match(document.body.textContent,/전체 대기 30건 · 표시 1건 · 최대 10건/)})
-test('missing metrics are not zero',async()=>{await render({summary:{placeCount:10,bannedUserCount:0}});assert.match(document.body.textContent,/운영 항목 집계가 제공되지 않았습니다/)})
-
-const pendingSection=()=>document.querySelector('[aria-labelledby="dashboard-pending-review-title"]')
-test('unsupported types and invalid targets are visible without misleading navigation',async()=>{
-  await render({pendingItemsStatus:'success',pendingItems:{totalCount:2,items:[
-    {type:'NEW_TYPE',targetId:9,status:'PENDING',title:'새 유형'},
-    {type:'MERCHANT_PLACE_APPLICATION',targetId:-1,status:'PENDING',title:'잘못된 대상'},
-  ]}})
-  const rows=[...pendingSection().querySelectorAll('button')].filter(b=>b.disabled)
-  assert.equal(rows.length,2)
-  assert.match(pendingSection().textContent,/대상 또는 처리 경로 확인 필요/)
-  assert.doesNotMatch(pendingSection().textContent,/게시글 신고/)
+async function render(extra={},notifications={}){Object.assign(globalThis.dashboardState,extra);await act(async()=>root.render(h(AuthContext.Provider,{value:{user:{username:'admin'},logout(){}}},h(AdminNotificationContext.Provider,{value:{notifications:[],unreadCount:0,pendingWorkEntries:work,refreshPendingWork(){},pendingWorkItems:[],pendingWorkCount:0,status:'success',pendingWorkStatus:'success',...notifications}},h(MemoryRouter,{},h(Page),h(Location))))))}
+test('header refresh reloads both summary and shared pending work',async()=>{
+  let summaryCalls=0,workCalls=0
+  await render({fetchSummary(){summaryCalls++}},{refreshPendingWork(){workCalls++}})
+  await act(async()=>document.querySelector('[aria-label="대시보드 새로고침"]').click())
+  assert.equal(summaryCalls,1)
+  assert.equal(workCalls,1)
 })
-test('duplicate items collapse and stable row retains focus through refresh and failure',async()=>{
-  const item={type:'MERCHANT_PLACE_APPLICATION',targetId:7,status:'PENDING',title:'합성 가게'}
-  await render({pendingItemsStatus:'success',pendingItems:{items:[item,item],totalCount:20}})
-  const row=[...pendingSection().querySelectorAll('button')].find(b=>b.textContent.includes('합성 가게'))
-  row.focus()
-  assert.match(pendingSection().textContent,/표시 1건/)
-  for(const pendingItemsStatus of ['loading','error','success']){
-    await render({pendingItemsStatus})
-    assert.ok(row.isConnected);assert.equal(document.activeElement,row)
+test('header stays busy until both queries finish and unlocks after failure',async()=>{
+  for(const [isLoading,pendingWorkStatus] of [[true,'success'],[false,'loading'],[false,'idle']]) {
+    await render({isLoading},{pendingWorkStatus})
+    assert.equal(document.querySelector('[aria-label="대시보드 새로고침 중"]').disabled,true)
+    assert.match(document.body.textContent,/업데이트 중/)
   }
-  await render({pendingItemsStatus:'unavailable'})
-  assert.equal(row.isConnected,false)
+  for(const pendingWorkStatus of ['success','error']) {
+    await render({isLoading:false},{pendingWorkStatus})
+    assert.equal(document.querySelector('[aria-label="대시보드 새로고침"]').disabled,false)
+    assert.match(document.body.textContent,/요약·최근 활동 수신:/)
+    assert.doesNotMatch(document.body.textContent,/업데이트 중/)
+  }
 })
-test('positive total with empty slice is not reported as zero pending work',async()=>{
-  await render({pendingItemsStatus:'success',pendingItems:{items:[],totalCount:30}})
-  assert.match(pendingSection().textContent,/대기 업무가 있지만 표시할 항목이 없습니다/)
+test('work sections precede summary and valid zero is concise',async()=>{
+  await render();const text=document.body.textContent
+  assert.ok(text.indexOf('처리 대기 업무')<text.indexOf('관리 요약'))
+  assert.ok(text.indexOf('우선 확인')<text.indexOf('관리 요약'))
+  assert.match(text,/조회한 1개 업무에 처리 대기 항목이 없습니다/)
+})
+test('pending reservation opens the review route and uses the server count',async()=>{
+  work=[{...emptyWork,count:6}]
+  await render()
+  const b=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('예약 심사'))
+  await act(async()=>b.click())
+  assert.equal(location.pathname,'/reservations/review')
+  assert.match(document.body.textContent,/확인된 대기 6건/)
+})
+for(const status of ['error','loading']) test(status+' never reports no work and labels cached counts',async()=>{
+  work=[{...emptyWork,status,count:6}]
+  await render()
+  assert.doesNotMatch(document.body.textContent,/처리 대기 항목이 없습니다/)
+  assert.match(document.body.textContent,/이전 조회 6건/)
+})
+test('partial failure is not zero and only successful counts are totalled',async()=>{
+  work=[{...emptyWork,count:6},{...emptyWork,key:'other',title:'다른 업무',status:'error',count:4}]
+  await render()
+  assert.match(document.body.textContent,/확인된 대기 6건/)
+  assert.match(document.body.textContent,/1개 업무 조회에 실패/)
+  assert.match(document.body.textContent,/이전 조회 4건/)
+})
+test('missing metrics are not zero',async()=>{await render({summary:{placeCount:10,bannedUserCount:0}});assert.match(document.body.textContent,/운영 항목 집계가 제공되지 않았습니다/)})
+test('previous zero remains collapsed while reloading without claiming current zero',async()=>{
+  work=[{...emptyWork,status:'loading'}]
+  await render()
+  const section=document.querySelector('[aria-label="처리 대기 업무"]')
+  assert.ok(section.querySelector('details button'))
+  assert.equal(section.querySelector('details').open,false)
+  assert.doesNotMatch(section.textContent,/처리 대기 항목이 없습니다/)
 })
 
 const operationalSection=()=>document.querySelector('[aria-labelledby="dashboard-operational-metrics-title"]')

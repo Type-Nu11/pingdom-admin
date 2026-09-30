@@ -33,7 +33,7 @@ test('no legacy post processing clients remain; shared media and S3 maintenance 
 
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 after(() => server.close())
-test('notification pending checks never query retired reports, preserving seven current checks', async () => {
+test('notification pending checks never query retired reports, preserving supported current checks', async () => {
   const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
   const { getAdminPendingWorkSummary } = await server.ssrLoadModule('/src/api/adminPendingWorkApi.ts')
   const requests = []
@@ -42,7 +42,7 @@ test('notification pending checks never query retired reports, preserving seven 
     return { config, status: 200, statusText: 'OK', headers: {}, data: { totalCount: 0, totalElements: 0, total: 0 } }
   }
   const result = await getAdminPendingWorkSummary()
-  assert.equal(result.checkedCount, 7)
+  assert.equal(result.checkedCount, 12)
   assert.equal(result.failedCount, 0)
   assert.equal(result.totalCount, 0)
   assert.ok(requests.includes('/admin/merchant-place-applications'))

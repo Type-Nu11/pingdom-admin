@@ -20,7 +20,7 @@ function declaration(name) {
 const code = ts.transpileModule([
   'canEdit', 'normalizeE164Phone', 'toTime', 'E164_PHONE_PATTERN',
   'ATTACHMENT_DOCUMENT_LABELS', 'ATTACHMENT_DOCUMENT_OPTIONS', 'REQUIRED_ATTACHMENT_TYPES',
-  'hasExistingAttachments', 'editable', 'numericLatitude', 'numericLongitude', 'hasValidCoordinate',
+  'editable', 'numericLatitude', 'numericLongitude', 'hasValidCoordinate',
   'buildRequest', 'requestReview',
 ].map(declaration).join('\n'), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
 
@@ -29,6 +29,7 @@ function form(overrides = {}) {
   let error = ''
   const values = {
     registration: { id: 1, status: 'DRAFT', attachments: [] }, activeAction: null,
+    draft: { isDirty: true },
     activeBusinessName: null, legalName: 'Test', businessName: 'Test shop',
     businessRegistrationNumber: '1234567890', merchantDisplayName: 'Shop',
     merchantContactEmail: 'test@example.com', merchantContactPhone: '+82-010-1234-5678',
@@ -77,10 +78,11 @@ for (const existing of [false, true]) {
     assert.equal(attachments.length, 3)
   })
 }
-test('attachment-locked draft submits saved content without revalidating disabled fields', async () => {
+test('unchanged attached draft submits saved content without resending a masked business number', async () => {
   const scenario = form({
     registration: { id: 1, status: 'DRAFT', attachments: ['BUSINESS_REGISTRATION', 'IDENTITY_DOCUMENT', 'REPRESENTATIVE_IMAGE'].map(documentType => ({ documentType })) },
     stagedAttachments: [], businessRegistrationNumber: '',
+    draft: { isDirty: false },
   })
   await scenario.run()
   assert.equal(scenario.calls.length, 1)

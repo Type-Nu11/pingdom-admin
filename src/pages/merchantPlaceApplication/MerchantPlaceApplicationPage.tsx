@@ -93,7 +93,7 @@ function ApplicationForm({
   onReorder: (applicationId: number, attachmentIds: number[]) => Promise<unknown>
 }) {
   const hasExistingAttachments = (application?.attachments.length ?? 0) > 0
-  const editable = canEdit(application) && !hasExistingAttachments
+  const editable = canEdit(application)
   const canSubmitExistingAttachments = application?.status === 'DRAFT' && hasExistingAttachments
   const activeBusinessName = profile?.status === 'ACTIVE' && profile.businessName.trim()
     ? profile.businessName.trim()
@@ -118,6 +118,7 @@ function ApplicationForm({
       : null,
   )
   const [formError, setFormError] = useState('')
+  const draft = useSavedDraft(JSON.stringify([legalName, businessName, businessRegistrationNumber, displayName, email, phone, description, reason, selectedPlace?.id]))
   const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceApplicationAttachment['documentType']>('BUSINESS_REGISTRATION')
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
@@ -165,9 +166,10 @@ function ApplicationForm({
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!editable || activeAction !== null) return
     const request = buildRequest()
     if (!request) return
-    await onSave(application?.id ?? null, request)
+    if (await onSave(application?.id ?? null, request)) draft.markSaved()
   }
 
   const choosePlace = (place: MerchantPlaceSearchItem) => {
@@ -215,7 +217,7 @@ function ApplicationForm({
     <Store.Form onSubmit={save}>
       {application && !editable ? <S.ReadonlyBlock>
         <strong>{STATUS[application.status].label}</strong><br />
-        {hasExistingAttachments ? '기존 증빙 서류를 보존하기 위해 이 화면에서는 신청서를 수정할 수 없습니다.' : application.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
+        {application.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : application.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : '처리 완료된 신청서입니다.'}
         {application.reviewReason ? <><br />검토 의견: {application.reviewReason}</> : null}
       </S.ReadonlyBlock> : null}
       {hasBusinessNameMismatch ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>현재 신청서의 사업자명이 활성 상점주 정보와 달라 승인할 수 없습니다. 신청을 취소한 뒤 현재 사업자명으로 다시 작성해주세요.</Store.Notice> : null}
@@ -269,7 +271,7 @@ function ApplicationForm({
           <span aria-hidden="true">attach_file</span>
           <div>
             <strong>증빙 파일</strong>
-            <p>사업자등록증, 신분증, 대표 이미지를 첨부하세요. 파일을 첨부하면 신청 내용은 더 이상 수정할 수 없고 심사 요청만 가능합니다.</p>
+            <p>사업자등록증, 신분증, 대표 이미지를 첨부하세요. 심사 요청 전까지 신청 내용을 수정할 수 있으며 기존 첨부는 유지됩니다.</p>
           </div>
         </S.AttachmentHeading>
         {!application ? <S.AttachmentPending>신청서를 임시 저장한 뒤 증빙 파일을 첨부할 수 있습니다.</S.AttachmentPending> : null}
@@ -301,10 +303,11 @@ function ApplicationForm({
       </S.AttachmentNotice>
       {formError ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{formError}</Store.Notice> : null}
       <S.FormActions>
+        {editable && draft.isDirty ? <S.SearchHint>변경한 내용을 임시 저장한 뒤 심사를 요청해주세요.</S.SearchHint> : null}
         {application?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(application.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
         {application && (application.status === 'DRAFT' || application.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => setIsCancelDialogOpen(true)}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
         {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
-        {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void onSubmit(application.id)}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
+        {canSubmitExistingAttachments ? <Store.SaveButton type="button" disabled={activeAction !== null || draft.isDirty} onClick={() => { if (!draft.isDirty && activeAction === null) void onSubmit(application.id) }}>{activeAction === 'submit' ? '제출 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
       {application && isCancelDialogOpen ? <MerchantConfirmationDialog title="운영 장소 신청을 취소할까요?" description="취소한 신청은 심사 대상에서 제외되며 다시 되돌릴 수 없습니다." confirmLabel="신청 취소" isPending={activeAction === 'cancel'} onClose={() => setIsCancelDialogOpen(false)} onConfirm={() => void confirmCancellation()} /> : null}
     </Store.Form>
@@ -388,3 +391,4 @@ function MerchantPlaceApplicationPage() {
 }
 
 export default MerchantPlaceApplicationPage
+import { useSavedDraft } from '../../hooks/useSavedDraft'

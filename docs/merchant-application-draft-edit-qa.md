@@ -1,0 +1,29 @@
+# 상점주 첨부 후 초안 수정 (#246)
+
+## 구현
+
+- 기존 장소 Claim 및 신규 장소 등록에서 DRAFT이면 첨부 유무와 관계없이 내용을 수정할 수 있다.
+- 신청 유형, 활성 사업자명 제한과 DRAFT 외 상태 제한은 유지한다.
+- 기존 장소 신청은 미저장 변경이 있으면 심사 요청을 막고 임시 저장을 안내한다.
+- 신규 신청은 변경된 입력이 있으면 기존 저장→첨부→제출 흐름을 사용한다. 변경 없는 초안은 마스킹 사업자번호를 재전송하지 않는다.
+- 저장 시 사업자등록번호 직접 재입력 검증은 유지한다. 민감정보를 저장소에 보관하지 않는다.
+- 수정 API 응답의 첨부를 유지하며 내용 수정 때문에 첨부를 삭제하거나 재업로드하지 않는다.
+- INVALID_STATE/409 오류는 상태 재확인을 안내한다. 실패 시 폼 입력을 초기화하지 않는다.
+
+## 서버 확인
+
+2026-09-30 서버 develop의 MerchantPlaceApplicationService.update와
+PlaceRegistrationService.updateForUnifiedApplication/updateDraft를 확인했다.
+기존 장소·NEW_PLACE 모두 유형/상태 검증을 유지한 채 수정하며, 해당 경로에서 첨부를 교체/삭제하지 않는다.
+
+기존 PUT /users/me/merchant-place-applications/{id} 및
+POST /users/me/merchant-place-applications/{id}/submit 계약을 사용한다. 신규 API 없음.
+
+## 검증
+
+- 전체 자동 테스트 399개 통과. 신규 등록의 필수 항목/첨부 검증과 부분 업로드 재시도 회귀 포함.
+- node tests/browser/merchant-draft.mjs: 실제 두 페이지 + 합성 API 응답.
+- 1920x1080 / 1366x768에서 첨부된 초안 편집, 409 오류 후 입력 보존, Enter 저장, 첨부 ID·순서 보존, 제출 후 PENDING 입력 잠금, 가로 넘침 확인.
+- lint/build/diff-check 검증 수행.
+- 실서버 신청 수정·제출, 실제 파일 업로드, 인증 만료와 네이버 지도 SDK는 이번 브라우저 검증에서 실행하지 않았다. 지도 Client ID가 없는 fixture이므로 지도 영역은 로딩 오류 안내 상태다.
+- 임시 서버/브라우저 종료. 다른 작업의 기본 디렉터리는 수정하지 않음.

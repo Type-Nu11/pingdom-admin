@@ -188,8 +188,7 @@ function RegistrationForm({
   onDelete: (applicationId: number, attachmentId: number) => Promise<unknown>
   onReorder: (applicationId: number, attachmentIds: number[]) => Promise<unknown>
 }) {
-  const hasExistingAttachments = (registration?.attachments.length ?? 0) > 0
-  const editable = canEdit(registration) && !hasExistingAttachments
+  const editable = canEdit(registration)
   const canStageAttachments = !registration || registration.status === 'DRAFT'
   const activeBusinessName = profile?.status === 'ACTIVE' && profile.businessName.trim()
     ? profile.businessName.trim()
@@ -218,6 +217,7 @@ function RegistrationForm({
   const [isApplicantPhoneSame, setIsApplicantPhoneSame] = useState(false)
   const [tags, setTags] = useState<MerchantPlaceTag[]>(registration?.tags ?? [])
   const [schedule, setSchedule] = useState<ScheduleDraft[]>(parseSchedule(registration?.operatingScheduleJson ?? null))
+  const draft = useSavedDraft(JSON.stringify([placeName, category, roadAddress, jibunAddress, postalCode, latitude, longitude, description, businessPhone, applicantPhone, legalName, businessName, businessRegistrationNumber, merchantDisplayName, merchantContactEmail, merchantContactPhone, isApplicantPhoneSame, tags, schedule]))
   const [formError, setFormError] = useState('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
   const [placeSearchResults, setPlaceSearchResults] = useState<NaverPlaceSearchItem[]>([])
@@ -440,12 +440,13 @@ function RegistrationForm({
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!editable || activeAction !== null) return
     if (stagedAttachments.length > 0) {
       setFormError('선택한 증빙 파일은 심사 요청을 누르면 함께 제출됩니다.')
       return
     }
     const request = buildRequest()
-    if (request) await onSave(registration?.id ?? null, request)
+    if (request && await onSave(registration?.id ?? null, request)) draft.markSaved()
   }
 
   const addStagedAttachment = () => {
@@ -481,8 +482,9 @@ function RegistrationForm({
       return
     }
 
-    const request = editable ? buildRequest() : null
-    if (editable && !request) return
+    const needsSave = !registration || draft.isDirty
+    const request = needsSave ? buildRequest() : null
+    if (needsSave && !request) return
     if (!editable && !registration) return
     const next = await onRequestReview(
       registration?.id ?? null,
@@ -528,7 +530,7 @@ function RegistrationForm({
 
   return (
     <S.RegistrationForm onSubmit={save}>
-      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{hasExistingAttachments ? '증빙 파일이 첨부된 신청서는 심사 내용의 일관성을 위해 수정할 수 없습니다.' : registration.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '승인이 완료되어 장소 생성과 상점주 연결이 자동으로 처리되었습니다.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
+      {registration && !editable ? <S.ReadonlyBlock><strong>{STATUS[registration.status].label}</strong><br />{registration.status === 'PENDING' ? '심사 대기 중인 신청서는 수정할 수 없습니다.' : registration.status === 'REJECTED' ? '반려 사유를 확인하고 신청서를 다시 열어 내용을 보완해주세요.' : registration.status === 'APPROVED' ? '승인이 완료되어 장소 생성과 상점주 연결이 자동으로 처리되었습니다.' : '처리 완료된 신청서입니다.'}{registration.reviewReason ? <><br />검토 의견: {registration.reviewReason}</> : null}</S.ReadonlyBlock> : null}
       {hasBusinessNameMismatch ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>현재 신청서의 사업자명이 활성 상점주 정보와 달라 승인할 수 없습니다. 신청을 취소한 뒤 현재 사업자명으로 다시 작성해주세요.</Store.Notice> : null}
       <S.FormWorkspace>
         <S.FormSections>
@@ -714,3 +716,4 @@ function MerchantPlaceRegistrationPage() {
 }
 
 export default MerchantPlaceRegistrationPage
+import { useSavedDraft } from '../../hooks/useSavedDraft'

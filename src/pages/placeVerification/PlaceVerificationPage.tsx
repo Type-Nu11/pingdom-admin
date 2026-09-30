@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import type { AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { PlaceInformationEvidencePanel } from '../../components/placeVerification/PlaceInformationEvidencePanel'
 import { PlaceInformationReportPanel } from '../../components/placeVerification/PlaceInformationReportPanel'
@@ -18,7 +20,7 @@ type VerificationTab = 'reports' | 'evidence' | 'reverification'
 function parsePlaceId(value: string | null) {
   if (!value) return null
   const placeId = Number(value)
-  return Number.isInteger(placeId) && placeId > 0 ? placeId : null
+  return Number.isSafeInteger(placeId) && placeId > 0 ? placeId : null
 }
 
 function PlaceVerificationPage() {
@@ -31,6 +33,7 @@ function PlaceVerificationPage() {
   const initialTab = (searchParams.get('tab') === 'reverification' ? 'reverification' : initialPlaceId ? 'evidence' : 'reports') as VerificationTab
   const [activeTab, setActiveTab] = useState<VerificationTab>(initialTab)
   const [placeIdInput, setPlaceIdInput] = useState(initialPlaceId ? String(initialPlaceId) : '')
+  const [selectedPlace, setSelectedPlace] = useState<AdminTarget | null>(null)
   const [loadedPlaceId, setLoadedPlaceId] = useState<number | null>(initialPlaceId)
   const [searchError, setSearchError] = useState('')
   const adminIdentifier =
@@ -66,7 +69,7 @@ function PlaceVerificationPage() {
   const handlePlaceSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const nextPlaceId = Number(placeIdInput)
-    if (!Number.isInteger(nextPlaceId) || nextPlaceId <= 0) {
+    if (!Number.isSafeInteger(nextPlaceId) || nextPlaceId <= 0) {
       setSearchError('장소 ID는 1 이상의 정수로 입력해주세요.')
       return
     }
@@ -129,20 +132,26 @@ function PlaceVerificationPage() {
 
             {activeTab !== 'reports' ? (
               <S.SearchBar onSubmit={handlePlaceSearch}>
-                <S.Field>장소 ID
-                  <S.SearchInputRow>
-                    <S.Input inputMode="numeric" value={placeIdInput} placeholder="예: 123" onChange={(event) => { setPlaceIdInput(event.target.value); setSearchError('') }} />
-                    <Shared.PrimaryButton type="submit" disabled={verificationHook.activeAction !== null}>장소 조회</Shared.PrimaryButton>
-                  </S.SearchInputRow>
-                  <small>장소 관리 화면에서 확인한 ID를 입력하세요.</small>
+                <S.PlaceLookupRow>
+                <S.Field as="div">장소
+                    <AdminPlacePicker value={placeIdInput} selectedPlace={selectedPlace} disabled={verificationHook.activeAction !== null} onChange={(value, place) => {
+                      setPlaceIdInput(value)
+                      setSelectedPlace(place)
+                      setSearchError('')
+                      setLoadedPlaceId(null)
+                      verificationHook.clearPlace()
+                      setSearchParams({ tab: activeTab }, { replace: true })
+                    }} />
                 </S.Field>
+                <Shared.PrimaryButton type="submit" disabled={verificationHook.activeAction !== null}>장소 조회</Shared.PrimaryButton>
+                </S.PlaceLookupRow>
               </S.SearchBar>
             ) : null}
             {searchError ? <Shared.Notice $variant="error">{searchError}</Shared.Notice> : null}
 
             {activeTab === 'reports' ? <PlaceInformationReportPanel reportHook={reportHook} /> : null}
-            {activeTab === 'evidence' ? <PlaceInformationEvidencePanel verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
-            {activeTab === 'reverification' ? <PlaceInformationReverificationPanel verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
+            {activeTab === 'evidence' ? <PlaceInformationEvidencePanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
+            {activeTab === 'reverification' ? <PlaceInformationReverificationPanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
           </Shared.PageStack>
         </Shared.Content>
       </Shell.MainArea>

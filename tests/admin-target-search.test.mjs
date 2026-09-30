@@ -10,6 +10,8 @@ const {createRoot}=await import('react-dom/client')
 const server=await createServer({server:{middlewareMode:true,ws:false},appType:'custom',ssr:{noExternal:['styled-components']}})
 const {AuthContext}=await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const {AdminTargetSearch}=await server.ssrLoadModule('/src/components/common/AdminTargetSearch.tsx')
+const {AdminPlacePicker}=await server.ssrLoadModule('/src/components/common/AdminPlacePicker.tsx')
+const {useAdminPlaceVerification}=await server.ssrLoadModule('/src/hooks/useAdminPlaceVerification.ts')
 const {useAdminUserRoles}=await server.ssrLoadModule('/src/hooks/useAdminUserRoles.ts')
 const {default:client}=await server.ssrLoadModule('/src/api/customAxios.ts')
 const {searchAdminPlaces,searchAdminRoleTargets}=await server.ssrLoadModule('/src/api/adminTargetSearchApi.ts')
@@ -68,4 +70,65 @@ test('changing role target clears old authority and ignores reversed results',as
   await resolve(1);await resolve(0)
   assert.equal(roles.targetUserId,2)
   await act(async()=>roles.clearTarget());assert.equal(roles.targetUserId,null)
+})
+
+test('place picker selects an ID, shows its address, and clears selection',async()=>{
+  client.defaults.adapter=async config=>({config,status:200,statusText:'OK',headers:{},data:{places:[{id:8,name:'선택 장소',address:'서울 주소'}],totalCount:1,totalPages:1,hasNext:false}})
+  function Picker(){const [value,setValue]=React.useState('');return h(AdminPlacePicker,{value,onChange:setValue})}
+  const React=await import('react')
+  await act(async()=>root.render(h(AuthContext.Provider,{value:auth},h(Picker))))
+  await click('장소 검색');await click('선택 장소 · #8 · 서울 주소')
+  assert.match(document.body.textContent,/선택 장소 · #8서울 주소/)
+  assert.equal(document.querySelector('input').value,'8')
+  await click('선택 해제')
+  assert.equal(document.querySelector('input').value,'')
+  assert.doesNotMatch(document.body.textContent,/서울 주소/)
+})
+
+test('controlled place selection survives picker remount and clears parent metadata',async()=>{
+  const React=await import('react')
+  client.defaults.adapter=async config=>({config,status:200,statusText:'OK',headers:{},data:{places:[{id:8,name:'선택 장소',address:'서울 주소'}],totalCount:1,totalPages:1,hasNext:false}})
+  let selection
+  function PickerPage(){
+    const [visible,setVisible]=React.useState(true)
+    const [value,setValue]=React.useState('')
+    const [place,setPlace]=React.useState(null)
+    selection={value,place}
+    return h('div',null,
+      h('button',{onClick:()=>setVisible(current=>!current)},'탭 전환'),
+      visible?h(AdminPlacePicker,{value,selectedPlace:place,onChange:(next,target)=>{setValue(next);setPlace(target)}}):null)
+  }
+  await act(async()=>root.render(h(AuthContext.Provider,{value:auth},h(PickerPage))))
+  await click('장소 검색');await click('선택 장소 · #8 · 서울 주소')
+  await click('탭 전환');await click('탭 전환')
+  assert.match(document.body.textContent,/선택 장소 · #8서울 주소/)
+  assert.equal(selection.value,'8')
+  assert.deepEqual(selection.place,{id:8,name:'선택 장소',description:'서울 주소'})
+  await click('선택 해제')
+  assert.deepEqual(selection,{value:'',place:null})
+  await click('탭 전환');await click('탭 전환')
+  assert.match(document.body.textContent,/선택한 장소 없음/)
+  assert.doesNotMatch(document.body.textContent,/서울 주소/)
+})
+
+test('clearing verification target invalidates in-flight evidence and reverification',async()=>{
+  let verification
+  function Probe(){verification=useAdminPlaceVerification();return null}
+  client.defaults.adapter=config=>new Promise(resolve=>requests.push({config,resolve}))
+  await act(async()=>root.render(h(AuthContext.Provider,{value:auth},h(Probe))))
+  await act(async()=>{void verification.fetchEvidence(1);void verification.fetchReverificationRequests(1)})
+  await act(async()=>verification.clearPlace())
+  for(const request of requests)await act(async()=>request.resolve({config:request.config,status:200,statusText:'OK',headers:{},data:{evidences:[{id:99}],requests:[{id:99}],totalCount:1,page:1,totalPages:1,hasNext:false}}))
+  assert.equal(verification.placeId,null)
+  assert.deepEqual(verification.evidences,[])
+  assert.deepEqual(verification.reverificationRequests,[])
+  assert.equal(verification.isEvidenceLoading,false)
+})
+
+test('401 search expires authentication instead of showing an empty result',async()=>{
+  let cleared=false
+  await act(async()=>root.render(h(AuthContext.Provider,{value:{clearAuth(){cleared=true}}},h(AdminTargetSearch,{title:'대상 검색',load,onSelect(){},onClose(){}}))))
+  await act(async()=>requests[0].reject({isAxiosError:true,response:{status:401}}))
+  assert.equal(cleared,true)
+  assert.ok(document.querySelector('[role="alert"]'))
 })

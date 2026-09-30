@@ -68,14 +68,6 @@ function toApiTime(value: string) {
   return value.length === 5 ? `${value}:00` : value
 }
 
-function formatDateTime(value: string | null) {
-  if (!value) return '확인 시각 없음'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
 function createRegularHours(hours: MerchantPlaceRegularOperatingHour[] = []): RegularDayDraft[] {
   return DAY_OPTIONS.map(({ value }) => ({
     dayOfWeek: value,
@@ -252,7 +244,7 @@ function MerchantPlaceOperationsPage() {
   const [dialog, setDialog] = useState<{ kind: 'permanent-close' } | { kind: 'delete-media'; media: MerchantPlaceMediaItem } | null>(null)
   const mediaInputRef = useRef<HTMLInputElement>(null)
   const isBusy = operations.activeAction !== null
-  const currentStatus = operations.operating?.operatingStatus ?? operations.place?.operatingStatus ?? 'OPERATING'
+  const currentStatus = operations.operating?.operatingStatus ?? operations.place?.operatingStatus
   const nextStatus = selectedStatus ?? currentStatus
   const mediaItems = operations.media?.media ?? []
   const representativeMediaId = operations.media?.representativeMediaId ?? null
@@ -264,7 +256,7 @@ function MerchantPlaceOperationsPage() {
     if (file) void operations.uploadMedia(file)
   }
   const saveStatus = async () => {
-    if (nextStatus === currentStatus) return
+    if (!nextStatus || nextStatus === currentStatus) return
     if (nextStatus === 'PERMANENTLY_CLOSED') {
       setDialog({ kind: 'permanent-close' })
       return
@@ -278,7 +270,7 @@ function MerchantPlaceOperationsPage() {
 
   return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{operations.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>장소 운영 정보</Store.PageTitle><Store.PageDescription>방문자에게 보이는 영업 상태, 영업시간과 탐색 이미지를 최신 정보로 관리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={operations.status === 'loading' || isBusy || !operations.selectedPlaceId} onClick={() => operations.selectedPlaceId && void operations.fetchPlaceOperations(operations.selectedPlaceId)}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
     {operations.profile && operations.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="운영 정보를 관리할 장소 선택" value={operations.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => operations.selectPlace(Number(event.target.value))}>{operations.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
-    {operations.selectedPlaceId ? <S.StateSummary $operating={operations.operating?.currentlyOperating ?? null}><S.StateIcon aria-hidden="true">storefront</S.StateIcon><span><strong>{operations.operating?.currentlyOperating === false ? '현재 영업시간 외입니다.' : '현재 영업시간입니다.'}</strong> 마지막 운영 상태 확인: {formatDateTime(operations.operating?.checkedAt ?? operations.place?.operatingStatusCheckedAt ?? null)}</span></S.StateSummary> : null}
+    {operations.selectedPlaceId ? <MerchantOperatingSummary loading={operations.status === 'loading' || operations.isLoading} failed={operations.operatingFailed} value={operations.operating?.currentlyOperating} checkedAt={operations.operating?.checkedAt} disabled={operations.activeAction !== null} onRetry={() => { if (operations.selectedPlaceId) void operations.fetchPlaceOperations(operations.selectedPlaceId) }} /> : null}
     {operations.sectionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{operations.sectionErrorMessage}</Store.Notice> : null}
     {operations.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{operations.actionErrorMessage}</Store.Notice> : null}
     {operations.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{operations.successMessage}</Store.Notice> : null}
@@ -288,3 +280,4 @@ function MerchantPlaceOperationsPage() {
 }
 
 export default MerchantPlaceOperationsPage
+import { MerchantOperatingSummary } from '../../components/common/MerchantOperatingSummary'

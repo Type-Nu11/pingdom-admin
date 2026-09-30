@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import type { AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
@@ -32,6 +33,7 @@ function PlaceVerificationPage() {
   const initialTab = (searchParams.get('tab') === 'reverification' ? 'reverification' : initialPlaceId ? 'evidence' : 'reports') as VerificationTab
   const [activeTab, setActiveTab] = useState<VerificationTab>(initialTab)
   const [placeIdInput, setPlaceIdInput] = useState(initialPlaceId ? String(initialPlaceId) : '')
+  const [selectedPlace, setSelectedPlace] = useState<AdminTarget | null>(null)
   const [loadedPlaceId, setLoadedPlaceId] = useState<number | null>(initialPlaceId)
   const [searchError, setSearchError] = useState('')
   const adminIdentifier =
@@ -132,8 +134,9 @@ function PlaceVerificationPage() {
               <S.SearchBar onSubmit={handlePlaceSearch}>
                 <S.PlaceLookupRow>
                 <S.Field as="div">장소
-                    <AdminPlacePicker value={placeIdInput} disabled={verificationHook.activeAction !== null} onChange={value => {
+                    <AdminPlacePicker value={placeIdInput} selectedPlace={selectedPlace} disabled={verificationHook.activeAction !== null} onChange={(value, place) => {
                       setPlaceIdInput(value)
+                      setSelectedPlace(place)
                       setSearchError('')
                       setLoadedPlaceId(null)
                       verificationHook.clearPlace()

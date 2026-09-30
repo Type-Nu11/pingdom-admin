@@ -85,6 +85,32 @@ test('place picker selects an ID, shows its address, and clears selection',async
   assert.doesNotMatch(document.body.textContent,/서울 주소/)
 })
 
+test('controlled place selection survives picker remount and clears parent metadata',async()=>{
+  const React=await import('react')
+  client.defaults.adapter=async config=>({config,status:200,statusText:'OK',headers:{},data:{places:[{id:8,name:'선택 장소',address:'서울 주소'}],totalCount:1,totalPages:1,hasNext:false}})
+  let selection
+  function PickerPage(){
+    const [visible,setVisible]=React.useState(true)
+    const [value,setValue]=React.useState('')
+    const [place,setPlace]=React.useState(null)
+    selection={value,place}
+    return h('div',null,
+      h('button',{onClick:()=>setVisible(current=>!current)},'탭 전환'),
+      visible?h(AdminPlacePicker,{value,selectedPlace:place,onChange:(next,target)=>{setValue(next);setPlace(target)}}):null)
+  }
+  await act(async()=>root.render(h(AuthContext.Provider,{value:auth},h(PickerPage))))
+  await click('장소 검색');await click('선택 장소 · #8 · 서울 주소')
+  await click('탭 전환');await click('탭 전환')
+  assert.match(document.body.textContent,/선택 장소 · #8서울 주소/)
+  assert.equal(selection.value,'8')
+  assert.deepEqual(selection.place,{id:8,name:'선택 장소',description:'서울 주소'})
+  await click('선택 해제')
+  assert.deepEqual(selection,{value:'',place:null})
+  await click('탭 전환');await click('탭 전환')
+  assert.match(document.body.textContent,/선택한 장소 없음/)
+  assert.doesNotMatch(document.body.textContent,/서울 주소/)
+})
+
 test('clearing verification target invalidates in-flight evidence and reverification',async()=>{
   let verification
   function Probe(){verification=useAdminPlaceVerification();return null}

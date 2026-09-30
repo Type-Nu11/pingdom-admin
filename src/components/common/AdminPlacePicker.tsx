@@ -13,16 +13,21 @@ const Direct = styled.details`font-size: 13px; summary { cursor: pointer; } inpu
 
 interface Props {
   value: string
-  onChange: (value: string) => void
+  selectedPlace?: AdminTarget | null
+  onChange: (value: string, place: AdminTarget | null) => void
   disabled?: boolean
 }
 
-export function AdminPlacePicker({ value, onChange, disabled = false }: Props) {
+export function AdminPlacePicker({ value, selectedPlace, onChange, disabled = false }: Props) {
   const id = useId()
   const [open, setOpen] = useState(false)
-  const [selected, setSelected] = useState<AdminTarget | null>(null)
+  const [localSelected, setLocalSelected] = useState<AdminTarget | null>(null)
+  const selected = selectedPlace === undefined ? localSelected : selectedPlace
   const target = selected && String(selected.id) === value ? selected : null
-  const change = (next: string) => { setSelected(null); onChange(next) }
+  const change = (next: string, place: AdminTarget | null = null) => {
+    if (selectedPlace === undefined) setLocalSelected(place)
+    onChange(next, place)
+  }
 
   return <Root>
     <Selection aria-live="polite">
@@ -38,6 +43,6 @@ export function AdminPlacePicker({ value, onChange, disabled = false }: Props) {
       <label htmlFor={id}>장소 ID</label>
       <Form.Input id={id} inputMode="numeric" value={value} disabled={disabled} onChange={event => change(event.target.value)} />
     </Direct>
-    {open ? <AdminTargetSearch title="장소명·주소 검색" load={searchAdminPlaces} onClose={() => setOpen(false)} onSelect={place => { setSelected(place); onChange(String(place.id)) }} /> : null}
+    {open ? <AdminTargetSearch title="장소명·주소 검색" load={searchAdminPlaces} onClose={() => setOpen(false)} onSelect={place => change(String(place.id), place)} /> : null}
   </Root>
 }

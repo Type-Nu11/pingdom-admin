@@ -2,14 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getAdminDashboardRecentActivities,
   getAdminDashboardSummary,
-  getAdminDashboardPendingItems,
 } from '../api/adminDashboardApi'
 import { shouldClearAuth } from '../api/authError'
 import type {
   AdminDashboardLoadStatus,
   AdminDashboardRecentActivitiesResponse,
   AdminDashboardSummary,
-  AdminDashboardPendingItemsResponse,
 } from '../types/adminDashboard.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -48,12 +46,8 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   const [summary, setSummary] = useState<AdminDashboardSummary | null>(null)
   const [recentActivities, setRecentActivities] =
     useState<AdminDashboardRecentActivitiesResponse | null>(null)
-  const [pendingItems, setPendingItems] =
-    useState<AdminDashboardPendingItemsResponse | null>(null)
   const [status, setStatus] = useState<AdminDashboardLoadStatus>('loading')
   const [recentActivitiesStatus, setRecentActivitiesStatus] =
-    useState<AdminDashboardLoadStatus>('loading')
-  const [pendingItemsStatus, setPendingItemsStatus] =
     useState<AdminDashboardLoadStatus>('loading')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null)
@@ -65,10 +59,8 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       requestIdRef.current += 1
       setSummary(null)
       setRecentActivities(null)
-      setPendingItems(null)
       setStatus('unavailable')
       setRecentActivitiesStatus('unavailable')
-      setPendingItemsStatus('unavailable')
       setIsRefreshing(false)
       setLastUpdatedAt(null)
 
@@ -85,12 +77,10 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
     setIsRefreshing(true)
     setStatus('loading')
     setRecentActivitiesStatus('loading')
-    setPendingItemsStatus('loading')
 
     const results = await Promise.allSettled([
       getAdminDashboardSummary(),
       getAdminDashboardRecentActivities(),
-      getAdminDashboardPendingItems(),
     ])
 
     if (requestId !== requestIdRef.current) {
@@ -129,25 +119,6 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       }
     }
 
-    const pendingResult = results[2]
-    if (pendingResult.status === 'fulfilled') {
-      setPendingItems(pendingResult.value)
-      setPendingItemsStatus(
-        pendingResult.value.totalCount > 0 || pendingResult.value.items.length > 0 ? 'success' : 'empty'
-      )
-      hasSuccessfulResponse = true
-    } else {
-      logDebugError(
-        '관리자 대시보드 처리 대기 목록 조회 실패',
-        pendingResult.reason,
-      )
-      setPendingItemsStatus('error')
-
-      if (shouldClearAuth(pendingResult.reason)) {
-        clearAuth()
-      }
-    }
-
     if (hasSuccessfulResponse) {
       setLastUpdatedAt(Date.now())
     }
@@ -162,10 +133,8 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
       const resetTimer = window.setTimeout(() => {
         setSummary(null)
         setRecentActivities(null)
-        setPendingItems(null)
         setStatus('unavailable')
         setRecentActivitiesStatus('unavailable')
-        setPendingItemsStatus('unavailable')
         setIsRefreshing(false)
         setLastUpdatedAt(null)
       }, 0)
@@ -223,10 +192,8 @@ export function useAdminDashboard({ enabled = true }: UseAdminDashboardOptions =
   return {
     summary,
     recentActivities,
-    pendingItems,
     status,
     recentActivitiesStatus,
-    pendingItemsStatus,
     isLoading: isRefreshing,
     lastUpdatedAt,
     fetchSummary,

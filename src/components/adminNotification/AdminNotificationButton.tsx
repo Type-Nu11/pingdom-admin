@@ -1,3 +1,4 @@
+import { AdminPendingWork } from './AdminPendingWork'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled, { css, keyframes } from 'styled-components'
@@ -97,10 +98,8 @@ export function AdminNotificationButton() {
   const {
     notifications,
     unreadCount,
-    pendingWorkItems,
     pendingWorkCount,
     pendingWorkStatus,
-    pendingWorkErrorMessage,
     status,
     errorMessage,
     isActionLoading,
@@ -137,6 +136,7 @@ export function AdminNotificationButton() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsOpen(false)
+        rootRef.current?.querySelector('button')?.focus()
       }
     }
 
@@ -177,11 +177,7 @@ export function AdminNotificationButton() {
         title="알림"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => {
-          const next = !current
-          if (next) void refreshPendingWork()
-          return next
-        })}
+        onClick={() => setIsOpen(current => !current)}
       >
         <MaterialIcon aria-hidden="true">notifications</MaterialIcon>
         {visibleAttentionCount ? <UnreadCount>{visibleAttentionCount}</UnreadCount> : null}
@@ -192,7 +188,7 @@ export function AdminNotificationButton() {
           <NotificationPanelHeader>
             <NotificationPanelHeading>
               <strong>알림</strong>
-              {attentionCount ? <NotificationPanelCount>{attentionCount}건 확인 필요</NotificationPanelCount> : null}
+              {attentionCount ? <NotificationPanelCount>확인된 {attentionCount}건</NotificationPanelCount> : null}
             </NotificationPanelHeading>
             <NotificationPanelActions>
               <MarkAllButton type="button" onClick={() => { navigate('/operations/notifications'); setIsOpen(false) }}>
@@ -217,57 +213,7 @@ export function AdminNotificationButton() {
           </NotificationPanelHeader>
 
           <NotificationContent>
-            {pendingWorkStatus === 'loading' && pendingWorkItems === null ? (
-              <PendingWorkSection aria-label="처리 필요 업무 불러오는 중">
-                <NotificationSectionHeader><strong>처리 필요</strong></NotificationSectionHeader>
-                <PendingWorkLoading>업무 현황을 확인하고 있습니다.</PendingWorkLoading>
-              </PendingWorkSection>
-            ) : pendingWorkItems && pendingWorkItems.length > 0 ? (
-              <PendingWorkSection>
-                <NotificationSectionHeader>
-                  <strong>처리 필요</strong>
-                  <span>{pendingWorkCount?.toLocaleString()}건</span>
-                </NotificationSectionHeader>
-                {pendingWorkErrorMessage ? (
-                  <InlineError role="alert">
-                    <span>{pendingWorkErrorMessage}</span>
-                    <RetryButton type="button" onClick={() => void refreshPendingWork()}>
-                      다시 확인
-                    </RetryButton>
-                  </InlineError>
-                ) : null}
-                {pendingWorkItems.map((pendingWork) => (
-                  <PendingWorkButton
-                    key={pendingWork.key}
-                    type="button"
-                    onClick={() => {
-                      navigate(
-                        pendingWork.path,
-                        pendingWork.state ? { state: pendingWork.state } : undefined,
-                      )
-                      setIsOpen(false)
-                    }}
-                  >
-                    <PendingWorkText>
-                      <strong>{pendingWork.title}</strong>
-                      <span>{pendingWork.description}</span>
-                    </PendingWorkText>
-                    <PendingWorkCount>{pendingWork.count.toLocaleString()}</PendingWorkCount>
-                    <MaterialIcon aria-hidden="true">chevron_right</MaterialIcon>
-                  </PendingWorkButton>
-                ))}
-              </PendingWorkSection>
-            ) : pendingWorkStatus === 'error' ? (
-              <PendingWorkSection>
-                <NotificationSectionHeader><strong>처리 필요</strong></NotificationSectionHeader>
-                <InlineError role="alert">
-                  <span>{pendingWorkErrorMessage}</span>
-                  <RetryButton type="button" onClick={() => void refreshPendingWork()}>
-                    다시 확인
-                  </RetryButton>
-                </InlineError>
-              </PendingWorkSection>
-            ) : null}
+            <AdminPendingWork compact onNavigate={() => setIsOpen(false)} />
 
             <NotificationSectionHeader><strong>새 알림</strong></NotificationSectionHeader>
             {status === 'loading' && !notifications ? (
@@ -538,82 +484,6 @@ const NotificationSectionHeader = styled.div`
     font-size: 12px;
     font-weight: 700;
   }
-`
-
-const PendingWorkSection = styled.section`
-  border-bottom: 1px solid ${adminColors.border};
-`
-
-const PendingWorkButton = styled.button`
-  width: 100%;
-  min-height: 58px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 20px;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px 10px 16px;
-  border: 0;
-  border-bottom: 1px solid ${adminColors.borderSoft};
-  background: ${adminColors.surface};
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover {
-    background: ${adminColors.primaryTint};
-  }
-
-  ${MaterialIcon} {
-    color: ${adminColors.muted};
-    font-size: 18px;
-  }
-
-  ${focusStyle}
-`
-
-const PendingWorkText = styled.span`
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-
-  strong,
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  strong {
-    color: ${adminColors.strongText};
-    font-size: 14px;
-  }
-
-  span {
-    color: ${adminColors.muted};
-    font-size: 12px;
-  }
-`
-
-const PendingWorkCount = styled.span`
-  min-width: 28px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 7px;
-  border-radius: 999px;
-  background: ${adminColors.primaryTint};
-  color: ${adminColors.primary};
-  font-size: 12px;
-  font-weight: 700;
-`
-
-const PendingWorkLoading = styled.p`
-  margin: 0;
-  padding: 14px 16px;
-  color: ${adminColors.muted};
-  font-size: 12px;
 `
 
 const NotificationList = styled.div`

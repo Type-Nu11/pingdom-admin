@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { MerchantPlaceProvider } from '../../src/app/providers/MerchantPlaceProvider'
+import { Router } from '../../src/app/router/Router'
 import MerchantStorePage from '../../src/pages/merchantStore/MerchantStorePage'
 import MerchantMenuPage from '../../src/pages/merchantMenu/MerchantMenuPage'
 import MerchantPlaceReviewPage from '../../src/pages/merchantPlaceReview/MerchantPlaceReviewPage'
@@ -11,6 +12,11 @@ import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 
 const count = Number(new URLSearchParams(location.search).get('count') ?? 2)
+const nameCase = new URLSearchParams(location.search).get('name')
+const placeName = nameCase === 'latin'
+  ? 'InternationalPremiumOutdoorClothingAndEquipmentFlagshipStoreForAdventureAndTravel'
+  : nameCase === 'korean' ? '아주긴상점이름'.repeat(12) : '동일한 매장 이름'
+window.qaPlaceName = placeName
 window.qaRequests = []
 window.qaFail = new URLSearchParams(location.search).has('fail')
 const profile = { id: 1, placeIds: Array.from({ length: count }, (_, i) => i + 1), status: 'ACTIVE', displayName: '상점주 표시명', businessName: '사업자 상호', contactEmail: 'synthetic@example.com' }
@@ -23,7 +29,7 @@ client.defaults.adapter = async config => {
   if (config.url.endsWith('/me')) data = profile
   else if (/^\/merchant-owner\/places\/\d+$/.test(config.url)) {
     if (window.qaFail && id === 2) throw new Error('Synthetic identity failure')
-    data = { id, name: '동일한 매장 이름', roadAddress: `서울특별시 테스트로 ${id}` }
+    data = { id, name: placeName, roadAddress: `서울특별시 테스트로 ${id}` }
   } else if (config.url.endsWith('/performance')) data = { placeCount: count, exposureCount: 100, clickCount: 20, bookmarkCount: 10, clickThroughRate: 20, reservationCount: 5, confirmedReservationCount: 2, reservationConversionRate: 10 }
   else if (config.url.endsWith('/information')) data = { placeId: id, description: `매장 ${id} 소개` }
   else if (config.url.endsWith('/campaigns')) data = { items: [] }
@@ -35,4 +41,7 @@ client.defaults.adapter = async config => {
   return { config, data, status: 200, statusText: 'OK', headers: {} }
 }
 const auth = { clearAuth() {}, logout() {}, user: { id: 1, username: 'synthetic', role: 'MERCHANT_OWNER' }, isAuthenticated: true, isAuthReady: true }
-createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><MerchantPlaceProvider><BrowserRouter><GlobalStyle/><nav>{['home', 'menu', 'reviews', 'reservation'].map(path => <Link key={path} style={{ marginRight: 20 }} to={`/identity-qa/${path}`}>{path}</Link>)}</nav><Routes><Route path="/identity-qa/home" element={<MerchantStorePage/>}/><Route path="/identity-qa/menu" element={<MerchantMenuPage/>}/><Route path="/identity-qa/reviews" element={<MerchantPlaceReviewPage/>}/><Route path="/identity-qa/reservation" element={<MerchantReservationSetupPage/>}/></Routes></BrowserRouter></MerchantPlaceProvider></AuthContext.Provider>)
+createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}>{location.pathname === '/merchant'
+  ? <><GlobalStyle/><Router/></>
+  : <MerchantPlaceProvider><BrowserRouter><GlobalStyle/><nav>{['home', 'menu', 'reviews', 'reservation'].map(path => <Link key={path} style={{ marginRight: 20 }} to={`/identity-qa/${path}`}>{path}</Link>)}</nav><Routes><Route path="/identity-qa/home" element={<MerchantStorePage/>}/><Route path="/identity-qa/menu" element={<MerchantMenuPage/>}/><Route path="/identity-qa/reviews" element={<MerchantPlaceReviewPage/>}/><Route path="/identity-qa/reservation" element={<MerchantReservationSetupPage/>}/></Routes></BrowserRouter></MerchantPlaceProvider>}
+</AuthContext.Provider>)

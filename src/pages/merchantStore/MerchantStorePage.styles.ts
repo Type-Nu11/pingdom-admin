@@ -608,18 +608,24 @@ export const StatusList = styled.div`
 `
 
 export const StatusRow = styled.div`
+  min-width: 0;
   min-height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 12px 0;
   border-bottom: 1px solid ${colors.borderSoft};
 
+  > div { min-width: 0; flex: 1; }
   strong { display: block; color: ${colors.text}; font-size: 14px; font-weight: 700; }
   span { display: block; margin-top: 4px; color: ${colors.muted}; font-size: 12px; line-height: 1.45; }
 `
 
 export const StateText = styled.span<{ $tone?: 'active' | 'pending' | 'neutral' }>`
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
   margin: 0 !important;
   color: ${({ $tone = 'neutral' }) =>
     $tone === 'active' ? colors.successText : $tone === 'pending' ? colors.warningText : colors.muted} !important;

@@ -6,9 +6,9 @@ import { createServer } from 'vite'
 import { chromium } from 'playwright'
 
 const output = await mkdtemp(join(tmpdir(), 'pingdom-place-identity-'))
-const server = await createServer({ cacheDir: join(output, 'cache'), server: { host: '127.0.0.1', port: 0, open: false }, plugins: [{ name: 'identity-fixture', configureServer(vite) {
+const server = await createServer({ envDir: false, cacheDir: join(output, 'cache'), server: { host: '127.0.0.1', port: 0, open: false }, plugins: [{ name: 'identity-fixture', configureServer(vite) {
   vite.middlewares.use(async (req, res, next) => {
-    if (!req.url.startsWith('/identity-qa/')) return next()
+    if (!req.url.startsWith('/identity-qa/') && req.url.split('?')[0] !== '/merchant') return next()
     res.setHeader('Content-Type', 'text/html')
     res.end(await vite.transformIndexHtml(req.url, (await readFile('index.html', 'utf8')).replace('/src/main.tsx', '/tests/browser/merchant-place-identity-fixture.jsx')))
   })
@@ -55,6 +55,41 @@ try {
     assert.equal(await page.getByRole('listbox').count(), 0)
     assert.deepEqual(errors, [])
     console.log(`PASS identity screens, 0/1/2 places and retry ${width}x${height}`)
+    await page.close()
+  }
+  for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
+    const page = await browser.newPage({ viewport: { width, height } })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    await page.route('**/*', route => {
+      const url = new URL(route.request().url())
+      return ['127.0.0.1', 'fonts.googleapis.com', 'fonts.gstatic.com'].includes(url.hostname) && !url.pathname.startsWith('/api') ? route.continue() : route.abort()
+    })
+    for (const nameCase of ['normal', 'latin', 'korean']) {
+      await page.goto(`${base}/merchant?name=${nameCase}`)
+      const name = await page.evaluate(() => window.qaPlaceName)
+      await page.getByRole('heading', { name: `${name} · #1`, exact: true }).waitFor()
+      await page.evaluate(() => document.fonts.ready)
+      const row = page.getByText('장소 연결', { exact: true }).locator('../..')
+      const value = row.locator(':scope > span')
+      assert.equal(await value.textContent(), `${name} · #1`, 'full name and ID remain available')
+      const bounds = await row.evaluate(element => {
+        const rowRect = element.getBoundingClientRect()
+        const description = element.querySelector(':scope > div').getBoundingClientRect()
+        const value = element.querySelector(':scope > span')
+        const textRect = value.getBoundingClientRect()
+        return { rowWidth: rowRect.width, descriptionWidth: description.width, inside: textRect.left >= rowRect.left && textRect.right <= rowRect.right + 1, wrapped: value.scrollWidth <= value.clientWidth + 1 }
+      })
+      assert.equal(bounds.inside, true, `${nameCase} value stays inside its row at ${width}px`)
+      assert.equal(bounds.wrapped, true, `${nameCase} value has no horizontal text overflow`)
+      assert.ok(bounds.descriptionWidth >= bounds.rowWidth * 0.35, 'description is not squeezed into a narrow column')
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+      assert.equal(await page.locator('#merchant-main-scroll-area').evaluate(element => element.scrollWidth > element.clientWidth), false)
+      await row.scrollIntoViewIfNeeded()
+      await page.screenshot({ path: join(output, `identity-row-${nameCase}-${width}.png`) })
+    }
+    assert.deepEqual(errors, [])
+    console.log(`PASS full merchant layout, normal/long Latin/Korean names ${width}x${height}`)
     await page.close()
   }
   console.log(`Screenshots: ${output}`)

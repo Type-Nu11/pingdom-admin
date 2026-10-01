@@ -188,7 +188,7 @@ function MerchantMenuPage() {
     const currentIndex = menu.menus.findIndex((menuItem) => menuItem.id === item.id)
     const target = menu.menus[currentIndex + direction]
     if (!target) return
-    void menu.moveMenu(item, target.displayOrder)
+    requestTransition(() => { void menu.moveMenu(item, target.displayOrder) })
   }
   const confirmDeactivation = async () => {
     if (!pendingDeactivation) return

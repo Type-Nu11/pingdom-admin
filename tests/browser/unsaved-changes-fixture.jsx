@@ -14,11 +14,18 @@ const report = { reportId: 1, placeId: 1, reporterUserId: 5, targetType: 'NAME',
 client.defaults.adapter = async config => {
   window.qaRequests.push({ url: config.url, method: config.method, params: config.params })
   const isMenuWrite = ['post', 'patch'].includes(config.method) && /^\/merchant-owner\/places\/\d+\/menus(?:\/\d+)?$/.test(config.url)
+  const isMenuOrder = config.method === 'patch' && /^\/merchant-owner\/places\/\d+\/menus\/\d+\/order$/.test(config.url)
   const isBrandWrite = config.method === 'post' && config.url === '/merchant-owner/campaigns/brands'
-  if (config.method !== 'get' && !isMenuWrite && !isBrandWrite) throw new Error('Only synthetic menu and brand saves are allowed')
-  if (isMenuWrite && window.qaMode !== 'success') throw new AxiosError('Synthetic failure', 'ERR_BAD_RESPONSE', config, undefined, { config, status: window.qaMode === 'unauthorized' ? 401 : 500, data: { message: '합성 저장 실패' }, headers: {} })
+  if (config.method !== 'get' && !isMenuWrite && !isMenuOrder && !isBrandWrite) throw new Error('Only synthetic menu and brand saves are allowed')
+  if ((isMenuWrite || isMenuOrder) && window.qaMode !== 'success') throw new AxiosError('Synthetic failure', 'ERR_BAD_RESPONSE', config, undefined, { config, status: window.qaMode === 'unauthorized' ? 401 : 500, data: { message: '합성 저장 실패' }, headers: {} })
   let data
-  if (isMenuWrite) {
+  if (isMenuOrder) {
+    const input = typeof config.data === 'string' ? JSON.parse(config.data) : config.data
+    const id = Number(config.url.split('/').at(-2))
+    const moved = menus.find(menu => menu.id === id)
+    data = { ...moved, displayOrder: input.displayOrder }
+    menus = menus.map(menu => menu.id === id ? data : menu.displayOrder === input.displayOrder ? { ...menu, displayOrder: moved.displayOrder } : menu)
+  } else if (isMenuWrite) {
     const input = typeof config.data === 'string' ? JSON.parse(config.data) : config.data
     data = { ...menus[0], ...input, id: config.method === 'post' ? 3 : Number(config.url.split('/').at(-1)) }
     menus = [...menus.filter(menu => menu.id !== data.id), data]

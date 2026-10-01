@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -24,6 +25,7 @@ function parsePlaceId(value: string | null) {
 }
 
 function PlaceVerificationPage() {
+  const requestTransition = useUnsavedNavigation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { logout, user } = useAuth()
@@ -51,19 +53,22 @@ function PlaceVerificationPage() {
   }, [])
 
   const selectTab = (tab: VerificationTab) => {
-    setActiveTab(tab)
-    verificationHook.clearActionMessages()
-    if (tab === 'reports') {
-      setSearchParams({ tab: 'reports' })
-      return
-    }
+    if (tab === activeTab) return
+    requestTransition(() => {
+      setActiveTab(tab)
+      verificationHook.clearActionMessages()
+      if (tab === 'reports') {
+        setSearchParams({ tab: 'reports' })
+        return
+      }
 
-    const nextParams: Record<string, string> = { tab }
-    if (loadedPlaceId) nextParams.placeId = String(loadedPlaceId)
-    setSearchParams(nextParams)
-    if (!loadedPlaceId) return
-    if (tab === 'evidence') void verificationHook.fetchEvidence(loadedPlaceId)
-    else void verificationHook.fetchReverificationRequests(loadedPlaceId, 1)
+      const nextParams: Record<string, string> = { tab }
+      if (loadedPlaceId) nextParams.placeId = String(loadedPlaceId)
+      setSearchParams(nextParams)
+      if (!loadedPlaceId) return
+      if (tab === 'evidence') void verificationHook.fetchEvidence(loadedPlaceId)
+      else void verificationHook.fetchReverificationRequests(loadedPlaceId, 1)
+    })
   }
 
   const handlePlaceSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -74,10 +79,12 @@ function PlaceVerificationPage() {
       return
     }
     setSearchError('')
-    setLoadedPlaceId(nextPlaceId)
-    setSearchParams({ tab: activeTab, placeId: String(nextPlaceId) })
-    if (activeTab === 'evidence') void verificationHook.fetchEvidence(nextPlaceId)
-    else void verificationHook.fetchReverificationRequests(nextPlaceId, 1)
+    requestTransition(() => {
+      setLoadedPlaceId(nextPlaceId)
+      setSearchParams({ tab: activeTab, placeId: String(nextPlaceId) })
+      if (activeTab === 'evidence') void verificationHook.fetchEvidence(nextPlaceId)
+      else void verificationHook.fetchReverificationRequests(nextPlaceId, 1)
+    })
   }
 
   return (
@@ -135,12 +142,14 @@ function PlaceVerificationPage() {
                 <S.PlaceLookupRow>
                 <S.Field as="div">장소
                     <AdminPlacePicker value={placeIdInput} selectedPlace={selectedPlace} disabled={verificationHook.activeAction !== null} onChange={(value, place) => {
-                      setPlaceIdInput(value)
-                      setSelectedPlace(place)
-                      setSearchError('')
-                      setLoadedPlaceId(null)
-                      verificationHook.clearPlace()
-                      setSearchParams({ tab: activeTab }, { replace: true })
+                      requestTransition(() => {
+                        setPlaceIdInput(value)
+                        setSelectedPlace(place)
+                        setSearchError('')
+                        setLoadedPlaceId(null)
+                        verificationHook.clearPlace()
+                        setSearchParams({ tab: activeTab }, { replace: true })
+                      })
                     }} />
                 </S.Field>
                 <Shared.PrimaryButton type="submit" disabled={verificationHook.activeAction !== null}>장소 조회</Shared.PrimaryButton>

@@ -1,5 +1,6 @@
 import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { AdminSelect } from '../common/AdminStatusSelect'
 import { AdminStatusFilter } from '../common/AdminStatusFilter'
 import { AdminPagination } from '../common/AdminPagination'
@@ -65,6 +66,8 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
     useState<PlaceInformationReportReviewRequest['status']>('UNDER_REVIEW')
   const [reviewReason, setReviewReason] = useState('')
   const [formError, setFormError] = useState('')
+  const guard = useUnsavedChanges(Boolean(dialog) && (reviewReason !== '' || (dialog?.type === 'report' && reportStatus !== (reportDetail?.status === 'SUBMITTED' ? 'UNDER_REVIEW' : 'RESOLVED'))), Boolean(dialog) && activeAction !== null)
+  const closeDialog = () => guard.request(() => setDialog(null))
 
   const handleStatusChange = (nextStatus: PlaceInformationReportStatus | '') => {
     setSelectedReportId(null)
@@ -105,7 +108,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               reviewReason: reason,
             })
           : null
-    if (result) setDialog(null)
+    if (result) { guard.markClean(); setDialog(null) }
   }
 
   return (
@@ -243,11 +246,11 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
       )}
 
       {dialog && reportDetail ? (
-        <Shared.ModalOverlay role="presentation" onMouseDown={() => activeAction === null && setDialog(null)}>
+        <Shared.ModalOverlay role="presentation" onKeyDown={(event) => { if (event.key === 'Escape' && activeAction === null) { event.stopPropagation(); closeDialog() } }} onMouseDown={() => activeAction === null && closeDialog()}>
           <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="report-review-title" onMouseDown={(event) => event.stopPropagation()}>
             <Shared.ModalHeader>
               <Shared.ModalTitle id="report-review-title">{dialog.type === 'report' ? '신고 검토' : `반박 #${dialog.dispute.disputeId} 검토`}</Shared.ModalTitle>
-              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
+              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>
               <S.FormGrid>
@@ -269,7 +272,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>
-              <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>
+              <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</Shared.SecondaryButton>
               {dialog.type === 'report' ? (
                 <Shared.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => void submitReview()}>{activeAction ? '저장 중' : '검토 결과 저장'}</Shared.PrimaryButton>
               ) : (

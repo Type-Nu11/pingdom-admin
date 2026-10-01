@@ -209,6 +209,7 @@ export const SummaryTitleRow = styled.div`
 `
 
 export const StoreName = styled.h2`
+  overflow-wrap: anywhere;
   margin: 0;
   color: ${colors.strongText};
   font-size: 24px;

@@ -129,9 +129,9 @@ function CampaignEditor({
     {campaign && !editable ? <S.ReadonlyNotice>{campaign.status === 'PUBLISHED' ? '공개 중인 이벤트는 종료만 할 수 있습니다.' : '종료된 이벤트는 조회만 할 수 있습니다.'}</S.ReadonlyNotice> : null}
     <S.Form onSubmit={save}>
       <S.Field>연결 장소
-        <AdminSelect aria-label="이벤트 연결 장소" width="100%" value={placeId} disabled={!editable || isBusy} onChange={(event) => setPlaceId(Number(event.target.value))}>
+        <Store.PlaceSelect compact aria-label="이벤트 연결 장소" value={placeId} disabled={!editable || isBusy} onChange={(event) => setPlaceId(Number(event.target.value))}>
           {profilePlaceIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}
-        </AdminSelect>
+        </Store.PlaceSelect>
       </S.Field>
       <S.Field>브랜드
         <S.BrandField>

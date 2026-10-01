@@ -117,9 +117,9 @@ function NoticeEditor({
     {notice && !editable ? <S.ReadonlyNotice>{notice.status === 'EXPIRED' ? '만료된 공지는 조회만 할 수 있습니다.' : '취소된 공지는 조회만 할 수 있습니다.'}</S.ReadonlyNotice> : null}
     <S.Form onSubmit={submit}>
       <S.Field>연결 장소
-        <AdminSelect aria-label="운영 공지 연결 장소" width="100%" value={selectedPlaceId ?? ''} disabled>
+        <Store.PlaceSelect compact aria-label="운영 공지 연결 장소" value={selectedPlaceId ?? ''} disabled>
           {placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}
-        </AdminSelect>
+        </Store.PlaceSelect>
       </S.Field>
       <S.Field>공지 유형
         <AdminSelect aria-label="운영 공지 유형" width="100%" value={noticeType} disabled={Boolean(notice) || !editable || isBusy} onChange={(event) => setNoticeType(event.target.value as MerchantOperatingNoticeType)}>
@@ -206,7 +206,7 @@ function MerchantOperatingNoticePage() {
   }
 
   return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{notices.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>운영 공지 관리</Store.PageTitle><Store.PageDescription>임시 휴업, 영업시간 변경처럼 방문 전 알아야 할 운영 정보를 기간에 맞춰 안내합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={notices.status === 'loading' || isBusy || !notices.selectedPlaceId} onClick={() => notices.selectedPlaceId && void notices.fetchNotices(notices.selectedPlaceId)}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
-    {notices.profile && notices.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="운영 공지를 관리할 장소 선택" value={notices.selectedPlaceId ?? ''} onChange={(event) => notices.selectPlace(Number(event.target.value))}>{notices.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
+    {notices.profile && notices.profile.placeIds.length > 0 ? <Store.PlaceSelect aria-label="운영 공지를 관리할 장소 선택" value={notices.selectedPlaceId ?? ''} onChange={(event) => notices.selectPlace(Number(event.target.value))}>{notices.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
     {notices.selectedPlaceId ? <MerchantOperatingSummary loading={notices.status === 'loading' || notices.isListLoading} failed={Boolean(notices.errorMessage)} value={notices.currentlyOperating} checkedAt={notices.checkedAt} disabled={notices.activeAction !== null} onRetry={() => { if (notices.selectedPlaceId) void notices.fetchNotices(notices.selectedPlaceId) }} /> : null}
     {notices.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{notices.errorMessage}</Store.Notice> : null}
     {notices.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{notices.actionErrorMessage}</Store.Notice> : null}

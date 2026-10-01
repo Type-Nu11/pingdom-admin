@@ -9,6 +9,7 @@ import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 window.qaOperating = null
 window.qaFail = false
+window.qaCheckedAt = '2026-09-30T15:00:00'
 window.qaRequests = []
 client.defaults.adapter = async config => {
   window.qaRequests.push(config.method)
@@ -19,7 +20,7 @@ client.defaults.adapter = async config => {
   else if (config.url.endsWith('/media')) data = { media: [] }
   else {
     if (window.qaFail) throw new Error('Synthetic failure')
-    data = { placeId: 1, name: '테스트 매장', currentlyOperating: window.qaOperating, checkedAt: '2026-09-30T12:00:00', operatingStatus: 'OPERATING', regularHours: [], operatingExceptions: [], notices: [] }
+    data = { placeId: 1, name: '테스트 매장', currentlyOperating: window.qaOperating, checkedAt: window.qaCheckedAt, operatingStatus: 'OPERATING', regularHours: [], operatingExceptions: [], notices: [] }
   }
   return { config, data, status: 200, statusText: 'OK', headers: {} }
 }

@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { adminColors as colors } from '../../styles/theme'
+import { formatMerchantOperatingTime } from '../../utils/merchantOperatingTime'
 
 const Summary = styled.div`
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
@@ -20,10 +21,11 @@ export function MerchantOperatingSummary({ loading, failed, value, checkedAt, di
   onRetry: () => void
 }) {
   const known = !loading && !failed && typeof value === 'boolean'
+  const confirmationTime = known ? formatMerchantOperatingTime(checkedAt) : null
   const label = loading ? '영업 상태를 확인하는 중입니다.' : !known ? '현재 영업 상태를 확인할 수 없습니다.' : value ? '현재 영업시간입니다.' : '현재 영업시간 외입니다.'
   return <Summary aria-label="현재 영업 상태">
     <div role="status"><strong>{label}</strong>
-      {known && checkedAt ? <small>서버 확인 시각: <time dateTime={checkedAt}>{checkedAt.replace('T', ' ')}</time></small> : null}
+      {known ? <small>{confirmationTime ? <>서버 확인 시각 (한국): <time dateTime={confirmationTime.dateTime}>{confirmationTime.label}</time></> : '확인 시각 정보 없음'}</small> : null}
       {!loading && failed ? <small>조회에 실패했습니다. 다시 시도해주세요.</small> : null}
       {!loading && !failed && !known ? <small>서버에서 영업 여부를 확인하지 못했습니다.</small> : null}
     </div>

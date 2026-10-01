@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer } from 'vite'
 import { chromium } from 'playwright'
-const output = await mkdtemp(join(tmpdir(), 'pingdom-245-'))
-const server = await createServer({ server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'operating-fixture', configureServer(vite) {
+const output = await mkdtemp(join(tmpdir(), 'pingdom-operating-'))
+const server = await createServer({ cacheDir: join(output, 'vite-cache'), server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'operating-fixture', configureServer(vite) {
   vite.middlewares.use(async (req, res, next) => {
     if (!req.url.startsWith('/operating-qa')) return next()
     res.setHeader('Content-Type', 'text/html')
@@ -18,7 +18,7 @@ try {
   browser = await chromium.launch()
   for (const [width, height] of [[1920, 1080], [1366, 768]]) {
     for (const kind of ['operations', 'notices']) {
-      const page = await browser.newPage({ viewport: { width, height } })
+      const page = await browser.newPage({ viewport: { width, height }, timezoneId: 'America/Los_Angeles' })
       const errors = []
       page.on('pageerror', e => errors.push(e.message))
       await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/operating-qa?${kind}`)
@@ -31,6 +31,14 @@ try {
       await summary.getByRole('button').focus()
       await page.keyboard.press('Enter')
       await summary.getByText('현재 영업시간 외입니다.').waitFor()
+      await summary.getByText('2026-10-01 00:00:00 (KST)').waitFor()
+      assert.equal(await summary.locator('time').getAttribute('datetime'), '2026-09-30T15:00:00.000Z')
+      const fits = await summary.evaluate(element => {
+        const parent = element.getBoundingClientRect()
+        const time = element.querySelector('time').getBoundingClientRect()
+        return time.left >= parent.left && time.right <= parent.right && time.bottom <= parent.bottom
+      })
+      assert.equal(fits, true)
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
       assert.ok((await page.evaluate(() => window.qaRequests)).every(method => method === 'get'))
       assert.deepEqual(errors, [])
@@ -38,5 +46,5 @@ try {
       await page.close()
     }
   }
-  console.log('PASS actual pages: missing, failure, keyboard retry, false, desktop/laptop; ' + output)
+  console.log('PASS actual pages: missing, failure, keyboard retry, false, KST in a US timezone, desktop/laptop; ' + output)
 } finally { await browser?.close(); await server.close() }

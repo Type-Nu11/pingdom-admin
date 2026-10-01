@@ -14,7 +14,7 @@ const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthConte
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { useMerchantReservationOperations } = await server.ssrLoadModule('/src/hooks/useMerchantReservationOperations.ts')
 const { default: Page } = await server.ssrLoadModule('/src/pages/merchantReservationOperations/MerchantReservationOperationsPage.tsx')
-const { reservationAmount, reservationConditionTime, reservationCancellationRestriction } = await server.ssrLoadModule('/src/utils/reservationConditions.ts')
+const { reservationAmount, reservationConditionTime, reservationCancellationRestriction, reservationCancellationDeadlineNotice } = await server.ssrLoadModule('/src/utils/reservationConditions.ts')
 const { ReservationConditions } = await server.ssrLoadModule('/src/components/merchant/ReservationConditions.tsx')
 const conditions = {
   placeId: 1, placeName: '수락 당시 매장', productId: 3, productName: '수락 당시 상품', productType: 'TICKET', availabilityId: 2,
@@ -57,11 +57,12 @@ test('condition dates use offset and explicit timezone, not client local time', 
   assert.equal(reservationConditionTime('2026-10-01T00:00:00', 'Asia/Seoul'), '시각 정보 없음')
   assert.equal(reservationConditionTime('2026-10-01T00:00:00Z', 'invalid'), '시각 정보 없음')
 })
-test('policy blocks from deadline inclusively, but legacy and missing deadline are not guessed', () => {
+test('accepted policy blocks locally, but deadline and missing conditions need server judgment', () => {
   const deadline = Date.parse(conditions.cancellationDeadline)
-  assert.equal(reservationCancellationRestriction(conditions, deadline - 1), null)
-  assert.match(reservationCancellationRestriction(conditions, deadline), /기한/)
-  assert.match(reservationCancellationRestriction({ ...conditions, cancellable: false }, 0), /정책/)
+  assert.equal(reservationCancellationRestriction(conditions), null)
+  assert.equal(reservationCancellationDeadlineNotice(conditions, deadline - 1), null)
+  assert.match(reservationCancellationDeadlineNotice(conditions, deadline), /기기 시각.*서버/)
+  assert.match(reservationCancellationRestriction({ ...conditions, cancellable: false }), /정책/)
   for (const confirmation of [null, { ...conditions, cancellationDeadline: null }, { ...conditions, cancellationDeadline: 'invalid' }]) assert.equal(reservationCancellationRestriction(confirmation), null)
 })
 test('null conditions and explicit free/noncancellable conditions remain distinct', async () => {
@@ -111,14 +112,52 @@ test('pending request is single flight, commits only after success and refresh f
   await act(async () => state.fetchReservations())
   assert.equal(state.reservations[0].status, 'CANCELED')
 })
-test('request-time guard blocks expired policies and stale confirmed targets', async () => {
-  rows = [{ ...reservation, confirmation: { ...conditions, cancellationDeadline: '2000-01-01T00:00:00Z' } }]
+test('request-time guard blocks noncancellable policies and stale confirmed targets', async () => {
+  rows = [{ ...reservation, confirmation: { ...conditions, cancellable: false } }]
   await mount()
   await act(async () => state.cancelReservation(reservation))
   assert.equal(calls.filter(config => config.method === 'post').length, 0)
-  assert.match(state.actionErrorMessage, /기한/)
+  assert.match(state.actionErrorMessage, /정책/)
   rows = [{ ...reservation, status: 'CANCELED' }]
   await act(async () => state.fetchReservations())
   await act(async () => state.cancelReservation(reservation))
   assert.equal(calls.filter(config => config.method === 'post').length, 0)
+})
+
+test('a fast device clock cannot block a cancellation that the server accepts', async () => {
+  const serverNow = Date.now()
+  const confirmation = { ...conditions, cancellationDeadline: new Date(serverNow + 60_000).toISOString() }
+  rows = [{ ...reservation, confirmation }]
+  const originalNow = Date.now
+  Date.now = () => serverNow + 120_000
+  try {
+    await mount(h(Page))
+    assert.match(document.body.textContent, /기기 시각.*서버/)
+    const button = [...document.querySelectorAll('button')].find(button => button.textContent === '예약 취소')
+    assert.equal(button.disabled, false)
+    await act(async () => button.click())
+    const dialog = document.querySelector('[role="dialog"]')
+    const confirm = [...dialog.querySelectorAll('button')].find(button => button.textContent === '예약 취소')
+    assert.equal(confirm.disabled, false)
+    await act(async () => confirm.click())
+    assert.equal(calls.filter(config => config.method === 'post').length, 1)
+    assert.equal(document.querySelector('[role="dialog"]'), null)
+    assert.match(document.body.textContent, /예약을 취소했습니다/)
+  } finally { Date.now = originalNow }
+})
+
+test('deadline rejection from the server retains the reservation even when the device is behind', async () => {
+  const serverNow = Date.now()
+  rows = [{ ...reservation, confirmation: { ...conditions, cancellationDeadline: new Date(serverNow - 60_000).toISOString() } }]
+  const originalNow = Date.now
+  Date.now = () => serverNow - 120_000
+  try {
+    await mount()
+    handler = async config => { throw Object.assign(new Error('server deadline'), { isAxiosError: true, response: { status: 409, data: { code: 'CANCELLATION_NOT_ALLOWED' }, config, headers: {} }, config }) }
+    await act(async () => state.cancelReservation(reservation))
+    assert.equal(calls.filter(config => config.method === 'post').length, 1)
+    assert.equal(state.reservations[0].status, 'CONFIRMED')
+    assert.equal(state.actionErrorKind, 'policy')
+    assert.match(state.actionErrorMessage, /취소 정책 또는 기한/)
+  } finally { Date.now = originalNow }
 })

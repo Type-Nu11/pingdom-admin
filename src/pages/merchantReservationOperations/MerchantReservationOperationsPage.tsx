@@ -45,7 +45,7 @@ function MerchantReservationOperationsPage() {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
-  const cancellationRestriction = reservationCancellationRestriction(cancelTarget?.confirmation, now)
+  const cancellationRestriction = reservationCancellationRestriction(cancelTarget?.confirmation)
   const isPending = operations.activeAction !== null
   const closeCancelDialog = () => { if (!isPending) setCancelTarget(null) }
 
@@ -87,7 +87,7 @@ function MerchantReservationOperationsPage() {
           const status = STATUS[reservation.status]
           const productLabel = reservation.confirmation?.productName ?? product?.name ?? (reservation.productType === 'GENERAL' ? '일반 예약' : `상품 #${reservation.productId ?? '-'}`)
           const isCanceling = operations.activeReservationId === reservation.id
-          const restriction = reservationCancellationRestriction(reservation.confirmation, now)
+          const restriction = reservationCancellationRestriction(reservation.confirmation)
 
           return <S.CampaignItem as="div" key={reservation.id} $selected={false}>
             <S.CampaignTop><S.CampaignTitle>{productLabel}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop>

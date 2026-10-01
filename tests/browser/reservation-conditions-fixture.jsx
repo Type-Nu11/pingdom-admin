@@ -10,7 +10,7 @@ const confirmation = {
   placeId: 1, placeName: '테스트 매장', availabilityId: 2, productId: 3, productName: '수락 당시 클래스', productType: 'CLASS',
   quantity: 2, startsAt: '2099-10-01T00:00:00Z', endsAt: '2099-10-01T01:00:00Z', timezone: 'Asia/Seoul',
   unitAmountMinor: 1000, additionalAmountMinor: 50, totalAmountMinor: 2050, currency: 'USD', currencyFractionDigits: 2,
-  paymentRequired: true, cancellable: true, cancellationDeadline: '2099-09-30T23:00:00Z', cancellationFeeMinor: 0,
+  paymentRequired: true, cancellable: true, cancellationDeadline: window.qaDeadline ?? '2099-09-30T23:00:00Z', cancellationFeeMinor: 0,
   refundableAmountMinor: 2050, conditionsVersion: 1, productVersion: 2, expiresAt: '2020-01-01T00:00:00Z',
 }
 const base = { productId: 3, availabilityId: 2, productType: 'CLASS', quantity: 2, status: 'CONFIRMED', createdAt: '2026-10-01T00:00:00Z' }

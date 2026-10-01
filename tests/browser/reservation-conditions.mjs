@@ -31,7 +31,8 @@ try {
     assert.equal(await page.getByText('수락 당시 클래스', { exact: true }).count(), 1)
     const cancel = page.getByRole('button', { name: '예약 취소', exact: true })
     assert.equal(await cancel.nth(3).isDisabled(), true)
-    assert.equal(await cancel.nth(4).isDisabled(), true)
+    assert.equal(await cancel.nth(4).isDisabled(), false)
+    await page.getByText(/기기 시각 기준.*서버/).waitFor()
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
     await page.screenshot({ path: join(output, `list-${width}.png`), fullPage: true })
     await cancel.first().click()
@@ -72,5 +73,34 @@ try {
     assert.deepEqual(errors, [])
     await page.close()
   }
-  console.log('PASS reservation conditions, conflicts, pending dialog guards, success and refund navigation; ' + output)
+  for (const [skew, deadlineOffset, mode] of [[120_000, 60_000, 'success'], [-120_000, -60_000, 'policy']]) {
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } })
+    await page.addInitScript(({ skew, deadline }) => {
+      const originalNow = Date.now.bind(Date)
+      Date.now = () => originalNow() + skew
+      window.qaDeadline = deadline
+    }, { skew, deadline: new Date(Date.now() + deadlineOffset).toISOString() })
+    await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort())
+    await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/reservation-qa`)
+    const cancel = page.getByRole('button', { name: '예약 취소', exact: true }).first()
+    await cancel.waitFor()
+    assert.equal(await cancel.isDisabled(), false)
+    await cancel.click()
+    const dialog = page.getByRole('dialog')
+    if (skew > 0) await dialog.getByText(/기기 시각 기준.*서버/).waitFor()
+    else assert.equal(await dialog.getByText(/기기 시각 기준/).count(), 0)
+    await page.evaluate(mode => { window.qaMode = mode }, mode)
+    await dialog.getByRole('button', { name: '예약 취소', exact: true }).click()
+    if (mode === 'success') {
+      await dialog.waitFor({ state: 'hidden' })
+      await page.getByRole('status').filter({ hasText: '예약을 취소했습니다.' }).waitFor()
+    } else {
+      await dialog.getByRole('alert').filter({ hasText: '수락한 취소 정책' }).waitFor()
+      assert.equal(await page.getByText('관리자 승인', { exact: true }).count(), 5)
+      await page.screenshot({ path: join(output, 'server-deadline-1366.png'), fullPage: true })
+    }
+    assert.equal(await page.evaluate(() => window.qaWrites.length), 1)
+    await page.close()
+  }
+  console.log('PASS reservation conditions, conflicts, pending dialog guards, success, refund navigation and clock skew; ' + output)
 } finally { await browser?.close(); await server.close() }

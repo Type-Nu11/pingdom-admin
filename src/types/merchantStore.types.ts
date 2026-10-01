@@ -276,6 +276,32 @@ export interface MerchantAvailabilityUpsertRequest {
   totalCapacity?: number
 }
 
+export interface MerchantReservationConfirmation {
+  placeId: number
+  placeName: string
+  availabilityId: number
+  productType: MerchantReservableProductType
+  productId: number | null
+  productName: string | null
+  startsAt: string
+  endsAt: string
+  quantity: number
+  timezone: string
+  unitAmountMinor: number
+  additionalAmountMinor: number
+  totalAmountMinor: number
+  currency: string
+  currencyFractionDigits: number
+  paymentRequired: boolean
+  cancellable: boolean
+  cancellationDeadline: string | null
+  cancellationFeeMinor: number
+  refundableAmountMinor: number
+  conditionsVersion: number
+  productVersion: number | null
+  expiresAt: string
+}
+
 export interface MerchantReservation {
   id: number
   touristUserId: number
@@ -293,6 +319,7 @@ export interface MerchantReservation {
   canceledAt: string | null
   canceledBy: number | null
   updatedAt: string
+  confirmation: MerchantReservationConfirmation | null
 }
 
 export interface MerchantReservationPageResponse {

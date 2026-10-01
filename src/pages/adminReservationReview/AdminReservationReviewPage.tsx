@@ -74,7 +74,7 @@ function AdminReservationReviewPage() {
   const [formError, setFormError] = useState('')
   const adminIdentifier = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
 
-  const search = (page = 1) => {
+  const search = () => {
     const nextPlaceId = parsePlaceId(placeId)
     if (nextPlaceId === null) {
       setFilterError('장소 ID는 1 이상의 정수로 입력해주세요.')
@@ -84,7 +84,14 @@ function AdminReservationReviewPage() {
     setDialog(null)
     setSelectedReservationId(null)
     hook.clearDetail()
-    void hook.fetchReservations({ status, placeId: nextPlaceId, page })
+    void hook.fetchReservations({ status, placeId: nextPlaceId, page: 1 })
+  }
+
+  const changePage = (page: number) => {
+    setDialog(null)
+    setSelectedReservationId(null)
+    hook.clearDetail()
+    void hook.fetchReservations({ ...hook.query, page })
   }
 
   const resetFilters = () => {
@@ -92,6 +99,7 @@ function AdminReservationReviewPage() {
     setPlaceId('')
     setPlaceName('')
     setFilterError('')
+    setDialog(null)
     setSelectedReservationId(null)
     hook.clearDetail()
     void hook.fetchReservations({ status: 'PENDING', placeId: undefined, page: 1 })
@@ -178,7 +186,7 @@ function AdminReservationReviewPage() {
             {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
             {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
 
-            <S.SearchBar onSubmit={(event) => { event.preventDefault(); search(1) }}>
+            <S.SearchBar onSubmit={(event) => { event.preventDefault(); search() }}>
               <S.SearchFilterGrid>
                 <S.Field>
                   예약 상태
@@ -210,6 +218,10 @@ function AdminReservationReviewPage() {
                 </S.SearchFilterActions>
               </S.SearchFilterGrid>
             </S.SearchBar>
+            <Shared.QuerySummary aria-label="예약 조회 조건">
+              조회 조건: {hook.query.status ? STATUS[hook.query.status].label : '전체 상태'} · {hook.query.placeId ? `장소 #${hook.query.placeId}` : '전체 장소'}
+              {status !== hook.query.status || parsePlaceId(placeId) !== hook.query.placeId ? ' · 미적용 변경 있음' : ''}
+            </Shared.QuerySummary>
             {placeSearchOpen ? <AdminTargetSearch title="장소명·주소 검색" load={searchAdminPlaces} onClose={() => setPlaceSearchOpen(false)} onSelect={place => { setPlaceId(String(place.id)); setPlaceName(place.name); setFilterError(''); setDialog(null); setSelectedReservationId(null); hook.clearDetail() }} /> : null}
             {filterError ? <Shared.Notice $variant="error" role="alert">{filterError}</Shared.Notice> : null}
 
@@ -226,7 +238,7 @@ function AdminReservationReviewPage() {
                     totalPages={hook.totalPages}
                     hasNext={hook.hasNext}
                     disabled={hook.isLoading || hook.activeAction !== null}
-                    onPageChange={search}
+                    onPageChange={changePage}
                     ariaLabel="예약 목록 페이지네이션"
                   />
                 ) : null}

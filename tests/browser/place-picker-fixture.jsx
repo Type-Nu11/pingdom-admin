@@ -14,7 +14,7 @@ client.defaults.adapter=async config=>{
   if(config.method!=='get')throw new Error('Mutations forbidden')
   let data
   if(config.url==='/admin/places')data={places:[{id:8,name:'합성 장소',address:'서울 테스트 주소'}],totalCount:1,totalPages:1,hasNext:false}
-  else if(config.url==='/admin/place-events')data={events:[draft],page:1,totalCount:1,totalPages:1,hasNext:false}
+  else if(config.url==='/admin/place-events')data={events:[draft],page:config.params.page,totalCount:21,totalPages:3,hasNext:config.params.page<3}
   else if(config.url==='/admin/place-events/1')data=draft
   else if(config.url==='/admin/place-information-reports')data={reports:[],page:1,totalCount:0,totalPages:0,hasNext:false}
   else if(config.url.endsWith('/information-evidence'))data={evidences:[]}

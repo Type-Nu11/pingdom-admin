@@ -305,6 +305,10 @@ function PlaceEventPage() {
                 <S.SearchFilterActions $inline><Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton></S.SearchFilterActions>
               </S.SearchFilterGrid>
             </S.SearchBar>
+            <Shared.QuerySummary aria-label="이벤트 조회 조건">
+              조회 조건: {hook.query.keyword ? `검색어 ${hook.query.keyword}` : '전체 검색어'} · {hook.query.placeId ? `장소 #${hook.query.placeId}` : '전체 장소'} · {hook.query.eventType ? EVENT_TYPES[hook.query.eventType] : '전체 유형'} · {hook.query.publicationStatus ? PUBLICATION_STATUS[hook.query.publicationStatus] : '전체 공개 상태'} · {hook.query.scheduleStatus ? SCHEDULE_STATUS[hook.query.scheduleStatus] : '전체 일정'}
+              {keyword.trim() !== (hook.query.keyword ?? '') || (placeId.trim() ? Number(placeId) : undefined) !== hook.query.placeId || eventType !== (hook.query.eventType ?? '') || publicationStatus !== (hook.query.publicationStatus ?? '') || scheduleStatus !== (hook.query.scheduleStatus ?? '') ? ' · 미적용 변경 있음' : ''}
+            </Shared.QuerySummary>
 
             {formError ? <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice> : null}
             {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}

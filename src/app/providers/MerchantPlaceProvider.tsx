@@ -1,7 +1,10 @@
 import { useCallback, useMemo, useRef, useState, type PropsWithChildren } from 'react'
 import { MerchantPlaceContext } from './MerchantPlaceContext'
+import { MerchantPlaceIdentityProvider } from './MerchantPlaceIdentityProvider'
+import { useAuth } from '../../hooks/useAuth'
+import { getAuthSessionId } from '../../utils/authStorage'
 
-export function MerchantPlaceProvider({ children }: PropsWithChildren) {
+function MerchantPlaceSelectionProvider({ children }: PropsWithChildren) {
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
   const selectedPlaceIdRef = useRef<number | null>(null)
 
@@ -25,5 +28,10 @@ export function MerchantPlaceProvider({ children }: PropsWithChildren) {
     [selectedPlaceId, selectPlace, syncPlaces],
   )
 
-  return <MerchantPlaceContext.Provider value={value}>{children}</MerchantPlaceContext.Provider>
+  return <MerchantPlaceContext.Provider value={value}><MerchantPlaceIdentityProvider>{children}</MerchantPlaceIdentityProvider></MerchantPlaceContext.Provider>
+}
+
+export function MerchantPlaceProvider({ children }: PropsWithChildren) {
+  const { user } = useAuth()
+  return <MerchantPlaceSelectionProvider key={`${getAuthSessionId()}:${user?.id ?? ''}:${user?.username ?? ''}`}>{children}</MerchantPlaceSelectionProvider>
 }

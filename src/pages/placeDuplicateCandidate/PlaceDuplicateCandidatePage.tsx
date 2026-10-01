@@ -339,7 +339,7 @@ function PlaceDuplicateCandidatePage() {
             <S.PageHeader>
               <div>
                 <S.Eyebrow>장소 관리 &gt; 중복 후보 검토</S.Eyebrow>
-                <S.PageTitle>중복 장소 후보 검토</S.PageTitle>
+                <S.PageTitle>중복 후보 검토</S.PageTitle>
                 <S.PageDescription>
                   서버가 탐지한 두 장소를 비교해 중복 여부를 판정하고, 확정된 후보만
                   병합합니다.
@@ -347,7 +347,7 @@ function PlaceDuplicateCandidatePage() {
               </div>
               <S.HeaderActions>
                 <S.HeaderButton type="button" onClick={() => navigate('/places/duplicates')}>
-                  기존 병합·복구 이력
+                  장소 병합·복구
                 </S.HeaderButton>
                 <S.HeaderButton type="button" onClick={() => navigate('/places')}>
                   장소 관리

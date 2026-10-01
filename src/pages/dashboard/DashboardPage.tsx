@@ -81,7 +81,7 @@ const SERVICE_METRICS: DashboardMetric[] = [
 const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
   {
     key: 'duplicatePlaceGroupCount',
-    label: '중복 장소 후보',
+    label: '중복 후보 검토',
     unit: '건',
     icon: 'content_copy',
     route: '/places/duplicates',

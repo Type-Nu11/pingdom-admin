@@ -67,6 +67,11 @@ export const PageDescription = styled.p`
   line-height: 1.3;
 `
 
+export const QuerySummary = styled(PageDescription)`
+  max-width: none;
+  overflow-wrap: anywhere;
+`
+
 export const HeaderActions = styled.div`
   display: flex;
   align-items: center;

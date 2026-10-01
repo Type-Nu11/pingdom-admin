@@ -23,7 +23,7 @@ client.defaults.adapter = async config => {
   }
   if ((scenario === 'all-error' && work) || ((scenario === 'partial' || (scenario === 'retry' && attempt === 2)) && config.url === '/admin/reservations')) throw new Error('Synthetic query failure')
   let data
-  if (config.url === '/admin/dashboard/summary') data = { placeCount: 10, bannedUserCount: 0, operationalMetrics: { duplicatePlaceGroupCount: 0, expiringBannedUserCount: 0, missingLocationPlaceCount: 0, today: { placeRegistrationCount: 0 }, last7Days: { placeRegistrationCount: 0 } } }
+  if (config.url === '/admin/dashboard/summary') data = { placeCount: 10, bannedUserCount: 0, operationalMetrics: { duplicatePlaceGroupCount: scenario === 'duplicate-groups' ? 3 : 0, expiringBannedUserCount: 0, missingLocationPlaceCount: 0, today: { placeRegistrationCount: 0 }, last7Days: { placeRegistrationCount: 0 } } }
   else if (config.url === '/admin/dashboard/recent-activities') data = { places: [], userSanctions: [] }
   else if (config.url.includes('/notifications')) data = { unreadCount: 0, count: 0, notifications: [] }
   else data = { total: 0, totalCount: 0, totalElements: config.url === '/admin/reservations' && scenario !== 'zero' && !(scenario === 'retry' && attempt > 2) ? (scenario.startsWith('refresh-') && attempt > 1 ? 2 : 6) : 0 }

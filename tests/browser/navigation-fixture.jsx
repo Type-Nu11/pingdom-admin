@@ -11,7 +11,7 @@ function Fixture() {
   return <Shell.AppShell><GlobalStyle />
     <Shell.SideNav key={`${pathname}:${generation}`} aria-label="관리자 메뉴">
       <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src="/pingdom-logo.png" alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
-      <Shell.SideMenu data-testid="side-scroll"><AdminNavigationMenu /></Shell.SideMenu>
+      <Shell.SideMenu data-testid="side-scroll" data-generation={generation}><AdminNavigationMenu /></Shell.SideMenu>
       <Shell.SideFooter>합성 테스트 관리자</Shell.SideFooter>
     </Shell.SideNav>
     <div style={{ marginLeft: 260, padding: 16 }}>

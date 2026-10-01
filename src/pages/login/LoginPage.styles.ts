@@ -289,6 +289,18 @@ export const SubmitButton = styled.button`
   }
 `
 
+export const SessionNotice = styled.p`
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: ${adminColors.surfaceLow};
+  color: ${adminColors.text};
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+`
+
 export const FooterText = styled.p`
   margin: 28px 0 0;
   color: ${adminColors.softText};

@@ -1,9 +1,11 @@
 import { lazy, Suspense, useLayoutEffect } from 'react'
 import {
-  BrowserRouter,
+  createBrowserRouter,
+  createRoutesFromElements,
+  RouterProvider,
+  Outlet,
   Navigate,
   Route,
-  Routes,
   useLocation,
 } from 'react-router-dom'
 import { ADMIN_MAIN_SCROLL_AREA_ID, MERCHANT_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -15,6 +17,7 @@ import {
 import { MerchantLayout } from './MerchantLayout'
 import { MerchantApplicationLayout } from './MerchantApplicationLayout'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
+import { UnsavedChangesProvider } from '../../components/common/UnsavedChangesProvider'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
 const CommunityContentPage = lazy(() => import('../../pages/community/CommunityContentPage'))
@@ -155,12 +158,19 @@ function ScrollToTopOnRouteChange() {
 }
 
 // 관리자 인증과 보호 라우팅 구조를 관리합니다.
-export function Router() {
+function RouteRoot() {
   return (
-    <BrowserRouter>
+    <UnsavedChangesProvider>
       <ScrollToTopOnRouteChange />
       <Suspense fallback={<RouteLoadingFallback />}>
-        <Routes>
+        <Outlet />
+      </Suspense>
+    </UnsavedChangesProvider>
+  )
+}
+
+const router = createBrowserRouter(createRoutesFromElements(
+        <Route element={<RouteRoot />}>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<MerchantProtectedRoute />}>
@@ -249,8 +259,9 @@ export function Router() {
             <Route path="/data-quality" element={<DataQualityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
-  )
+        </Route>
+))
+
+export function Router() {
+  return <RouterProvider router={router} />
 }

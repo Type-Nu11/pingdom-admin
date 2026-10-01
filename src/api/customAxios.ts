@@ -267,7 +267,8 @@ customAxios.interceptors.response.use(
         assertCurrentSession(originalRequest._authSessionId!)
         if (axios.isCancel(refreshError)) return Promise.reject(refreshError)
         if (shouldClearAuthAfterRefreshFailure(refreshError)) {
-          clearStoredAuth(refreshError instanceof AuthSessionMismatchError ? SESSION_MISMATCH_MESSAGE : undefined)
+          clearStoredAuth(refreshError instanceof AuthSessionMismatchError ? SESSION_MISMATCH_MESSAGE : undefined,
+            refreshError instanceof AuthSessionMismatchError ? 'session-changed' : 'expired')
         }
         if (refreshError instanceof AuthSessionMismatchError) return Promise.reject(apiError)
         const refreshApiError = enrichApiError(

@@ -1,5 +1,6 @@
 import { AUTH_STORAGE_KEYS } from '../constants/auth'
 import { getAccessTokenSubject } from './accessTokenSubject'
+import { clearLoginReturn, getLoginReturnNotice, rememberAuthExit, type AuthExitReason } from './authReturn'
 import type { LoginResponse, RefreshTokenResponse } from '../types/auth.types'
 import type { AuthState, AuthUser } from '../app/providers/AuthContext'
 
@@ -16,7 +17,12 @@ export interface AuthStorageSnapshot {
 }
 
 export function getAuthSessionNotice() {
-  return authSessionNotice
+  return getLoginReturnNotice() || authSessionNotice
+}
+
+export function dismissAuthSessionNotice() {
+  authSessionNotice = ''
+  clearLoginReturn()
 }
 
 export function getAuthSessionId() {
@@ -207,8 +213,15 @@ export function saveRefreshedAuthTokens(data: RefreshTokenResponse, sessionId: s
   return true
 }
 
-export function clearStoredAuth(notice?: string) {
-  if (notice) authSessionNotice = notice
+export function clearStoredAuth(notice?: string, reason: AuthExitReason = 'expired') {
+  const user = getStoredAuthState()?.user ?? null
+  if (reason === 'logout') {
+    authSessionNotice = ''
+    rememberAuthExit(null, reason)
+  } else if (user) {
+    authSessionNotice = notice ?? '로그인 인증이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.'
+    rememberAuthExit(user, reason)
+  }
   const sessionId = rotateAuthSession()
   Object.values(AUTH_STORAGE_KEYS).forEach(removeStoredValue)
   removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
@@ -273,7 +286,7 @@ export function updateStoredAuthUser(user: Partial<AuthUser>) {
   notifyAuthStorageChange({ ...snapshot, authState: { ...snapshot.authState, user: nextUser } })
 }
 
-export function subscribeAuthStorageChange(listener: () => void) {
+export function subscribeAuthStorageChange(listener: (source?: 'local' | 'remote') => void) {
   if (!canUseWindow()) {
     return () => {}
   }
@@ -281,7 +294,7 @@ export function subscribeAuthStorageChange(listener: () => void) {
   let lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
   const handleLocalChange = () => {
     lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
-    listener()
+    listener('local')
   }
   const handleStorage = (event: StorageEvent) => {
     if (event.storageArea !== localStorage) return
@@ -289,7 +302,7 @@ export function subscribeAuthStorageChange(listener: () => void) {
     const commit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
     if (event.key !== null && commit === lastCommit) return
     lastCommit = commit
-    listener()
+    listener('remote')
   }
   window.addEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
   window.addEventListener('storage', handleStorage)

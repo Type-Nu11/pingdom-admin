@@ -11,6 +11,7 @@ const isNew = location.search.includes('new')
 const base = '/users/me/merchant-place-applications'
 window.qaCalls = []
 window.qaFailSave = false
+window.qaFailSubmit = false
 window.qaApplication = {
   id: 1, applicantUserId: 1, status: 'DRAFT', applicationType: isNew ? 'NEW_PLACE' : 'EXISTING_PLACE_CLAIM',
   legalName: '테스트 신청자', businessName: '테스트 사업자', merchantDisplayName: '테스트 매장',
@@ -31,6 +32,7 @@ client.defaults.adapter = async config => {
     window.qaApplication = { ...window.qaApplication, ...payload }
     data = window.qaApplication
   } else if (config.url === base + '/1/submit') {
+    if (window.qaFailSubmit) throw new Error('Synthetic submit failure')
     window.qaApplication = { ...window.qaApplication, status: 'PENDING' }; data = window.qaApplication
   } else if (config.url === base + '/1') data = window.qaApplication
   else throw new Error('Unexpected fixture request: ' + config.url)

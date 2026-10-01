@@ -46,6 +46,37 @@ try {
       assert.equal(await name.isDisabled(), true)
       assert.ok((await page.evaluate(() => window.qaCalls)).every(c => !c.url.includes('/attachments')))
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+      if (kind === 'new') {
+        for (const restoreInitialInput of [true, false]) {
+          await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/draft-qa?new`)
+          await page.getByRole('button', { name: /합성 신청 장소/ }).click()
+          await name.fill('저장된 수정 신청자')
+          const businessNumber = page.getByLabel('사업자등록번호', { exact: true })
+          await businessNumber.fill('1234567890')
+          await page.evaluate(() => { window.qaFailSubmit = true })
+          await page.getByRole('button', { name: '심사 요청', exact: true }).click()
+          await page.getByRole('alert').filter({ hasText: '신청서를 저장했지만' }).waitFor()
+          await name.waitFor()
+          assert.equal(await name.inputValue(), '저장된 수정 신청자')
+          if (restoreInitialInput) {
+            await name.fill('테스트 신청자')
+            await businessNumber.fill('')
+            await page.getByRole('button', { name: '심사 요청', exact: true }).click()
+            await page.getByRole('alert').filter({ hasText: '필수 항목을 모두 입력해주세요.' }).waitFor()
+            assert.equal(await page.evaluate(() => window.qaApplication.status), 'DRAFT')
+            assert.equal(await page.evaluate(() => window.qaCalls.filter(c => c.url.endsWith('/submit')).length), 1)
+            await businessNumber.fill('1234567890')
+          }
+          await page.evaluate(() => { window.qaFailSubmit = false })
+          await page.getByRole('button', { name: '심사 요청', exact: true }).click()
+          await page.waitForFunction(() => window.qaApplication.status === 'PENDING')
+          const expectedName = restoreInitialInput ? '테스트 신청자' : '저장된 수정 신청자'
+          assert.equal(await name.inputValue(), expectedName)
+          assert.equal(await page.evaluate(() => window.qaApplication.legalName), expectedName)
+          assert.equal(await page.evaluate(() => window.qaCalls.filter(c => c.method === 'put').length), restoreInitialInput ? 2 : 1)
+          assert.deepEqual(await page.evaluate(() => window.qaApplication.attachments), before)
+        }
+      }
       assert.deepEqual(errors, [])
       await page.close()
     }

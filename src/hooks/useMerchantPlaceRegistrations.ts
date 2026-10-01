@@ -262,6 +262,7 @@ export function useMerchantPlaceRegistrations() {
     request: MerchantPlaceRegistrationRequest | null,
     stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
     onAttachmentUploaded?: (attachment: MerchantPlaceRegistrationStagedAttachment) => void,
+    onDraftSaved?: () => void,
   ) => {
     if (actionRef.current) return null
     actionRef.current = 'request'
@@ -282,6 +283,8 @@ export function useMerchantPlaceRegistrations() {
 
       if (!mountedRef.current) return null
       applyApplication(application)
+      // Saving is complete even if a later upload, submission or recovery GET fails.
+      if (request) onDraftSaved?.()
 
       for (const attachment of stagedAttachments) {
         await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)

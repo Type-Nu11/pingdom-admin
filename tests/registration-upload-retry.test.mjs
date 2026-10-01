@@ -21,22 +21,25 @@ function compile(code, scope) {
   const js = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
   return new Function(...Object.keys(scope), js)(...Object.values(scope))
 }
-function scenario(existing) {
+function scenario(existing, dirty = false) {
   let saved = { id: 7, status: 'DRAFT', attachments: [] }
   let pending = ['BUSINESS_REGISTRATION', 'IDENTITY_DOCUMENT', 'REPRESENTATIVE_IMAGE'].map(documentType => ({ documentType, file: { name: documentType } }))
   const uploads = []
   let submissions = 0
   let failFile = 'IDENTITY_DOCUMENT'
   let failSubmit = false
+  let failSave = false
+  let failRecovery = false
+  let markedSaved = 0
   let selectedId = existing ? 7 : null
   const requestReview = compile(`const ${hookExpression}; return requestRegistrationReview`, {
     useCallback: fn => fn, actionRef: { current: null }, mountedRef: { current: true },
     setActiveAction() {}, setActionErrorMessage() {}, setSuccessMessage() {},
     applyApplication: data => { saved = data }, clearUnauthorizedSession() {},
     toRequest: x => x, toRegistration: x => x, getErrorMessage: () => 'failure', logDebugError() {},
-    updateMerchantPlaceApplication: async () => saved,
-    getMerchantPlaceApplication: async () => ({ ...saved }),
-    createMerchantPlaceApplication: async () => saved,
+    updateMerchantPlaceApplication: async () => { if (failSave) throw new Error('save failure'); return saved },
+    getMerchantPlaceApplication: async () => { if (failRecovery) throw new Error('recovery failure'); return { ...saved } },
+    createMerchantPlaceApplication: async () => { if (failSave) throw new Error('save failure'); return saved },
     uploadMerchantPlaceApplicationAttachment: async (id, type) => {
       uploads.push(type)
       if (failFile === type) throw new Error('upload failure')
@@ -58,7 +61,7 @@ function scenario(existing) {
       activeAction: null, canEdit: () => true,
       registration: selectedId === null ? null : saved,
       editable: saved.attachments.length === 0,
-      draft: { isDirty: false },
+      draft: { isDirty: dirty, markSaved() { markedSaved++ } },
       buildRequest: () => ({ placeName: 'Test' }),
       stagedAttachments: pending,
       REQUIRED_ATTACHMENT_TYPES: ['BUSINESS_REGISTRATION', 'IDENTITY_DOCUMENT', 'REPRESENTATIVE_IMAGE'],
@@ -70,8 +73,33 @@ function scenario(existing) {
     await runHandler()
   }
   return { run, uploads, pending: () => pending, submissions: () => submissions, selectedId: () => selectedId,
+    markedSaved: () => markedSaved,
+    failSave: value => { failSave = value }, failRecovery: value => { failRecovery = value },
     failFile: value => { failFile = value }, failSubmit: value => { failSubmit = value } }
 }
+test('saved baseline advances before an upload fails', async () => {
+  const s = scenario(true, true)
+  await s.run()
+  assert.equal(s.markedSaved(), 1)
+  assert.equal(s.submissions(), 0)
+})
+test('saved baseline advances even when submission and recovery both fail', async () => {
+  const s = scenario(true, true)
+  s.failFile(null); s.failSubmit(true); s.failRecovery(true)
+  await s.run()
+  assert.equal(s.markedSaved(), 1)
+  assert.equal(s.submissions(), 1)
+})
+test('failed save and read-only retry do not advance the saved baseline', async () => {
+  const failed = scenario(true, true)
+  failed.failSave(true)
+  await failed.run()
+  assert.equal(failed.markedSaved(), 0)
+  assert.equal(failed.uploads.length, 0)
+  const unchanged = scenario(true)
+  await unchanged.run()
+  assert.equal(unchanged.markedSaved(), 0)
+})
 for (const existing of [true, false]) {
   test(`${existing ? 'existing' : 'new'} draft retries only remaining files after partial failure`, async () => {
     const s = scenario(existing)

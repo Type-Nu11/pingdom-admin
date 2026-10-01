@@ -25,7 +25,7 @@ try {
       return (u.hostname==='127.0.0.1'&&!u.pathname.startsWith('/api'))||['fonts.googleapis.com','fonts.gstatic.com','cdn.jsdelivr.net'].includes(u.hostname)?route.continue():route.abort()
     })
     const url='http://127.0.0.1:'+server.httpServer.address().port+'/dashboard-qa'
-    for (const scenario of ['success','zero','partial','all-error','retry','loading','refresh-work-slow','refresh-summary-slow']) {
+    for (const scenario of ['success','zero','partial','all-error','retry','loading','refresh-work-slow','refresh-summary-slow','duplicate-groups']) {
       await page.goto(url+'?scenario='+scenario)
       const section=page.getByRole('region',{name:'처리 대기 업무'}).first()
       if(scenario==='loading') await section.getByText('업무 현황을 확인하고 있습니다.').waitFor()
@@ -38,6 +38,16 @@ try {
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
       assert.ok(await section.locator('button').evaluateAll(buttons=>buttons.filter(button=>button.getClientRects().length).every(button=>button.scrollWidth<=button.clientWidth+1)))
       await page.screenshot({path:join(output,'dashboard-'+width+'-'+scenario+'.png')})
+      if (scenario === 'duplicate-groups') {
+        const card = page.getByRole('button', { name: '장소 병합·복구 3 관리 화면으로 이동', exact: true })
+        await card.waitFor()
+        assert.match(await card.textContent(), /장소 병합·복구.*3건/)
+        assert.equal(await page.getByRole('button', { name: /^중복 후보 검토 .*관리 화면으로 이동$/ }).count(), 0)
+        await card.focus()
+        await page.keyboard.press('Enter')
+        await page.waitForFunction(() => document.querySelector('[aria-label="검증 경로"]').textContent === '/places/duplicates')
+        assert.equal(await page.getByLabel('검증 경로').textContent(), '/places/duplicates')
+      }
       if (scenario.startsWith('refresh-')) {
         await page.getByRole('button',{name:'대시보드 새로고침',exact:true}).click()
         const fastPath=scenario==='refresh-work-slow'?'/admin/dashboard/summary':'/admin/reservations'

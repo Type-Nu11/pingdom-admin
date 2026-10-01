@@ -84,7 +84,12 @@ export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const navigationRef = useRef<HTMLDivElement | null>(null)
-  const [navigationState, setNavigationState] = useState(readNavigationState)
+  const [navigationState, setNavigationState] = useState(() => readNavigationState({
+    closedGroups: NAVIGATION_GROUPS.filter(group => !(group.id === 'places'
+      ? isPlaceManagementPath(pathname)
+      : group.items.some(item => isCurrentPath(pathname, item.path)))).map(group => group.id),
+    placeManagementOpen: isPlaceManagementPath(pathname),
+  }))
   const isPlaceManagementOpen = navigationState.placeManagementOpen
   useEffect(() => { saveNavigationState(navigationState) }, [navigationState])
 
@@ -106,7 +111,7 @@ export function AdminNavigationMenu() {
     sideMenu.addEventListener('scroll', saveScrollPosition, { passive: true })
 
     return () => {
-      saveScrollPosition()
+      // Removal can reset geometry before cleanup; keep the last scroll event's position.
       sideMenu.removeEventListener('scroll', saveScrollPosition)
     }
   }, [])
@@ -125,13 +130,17 @@ export function AdminNavigationMenu() {
       {NAVIGATION_GROUPS.map((group) => {
         const isGroupOpen = !navigationState.closedGroups.includes(group.id)
         const groupActive = group.id === 'places' ? placeManagementActive : group.items.some(item => isCurrentPath(pathname, item.path))
+        const currentLabel = group.id === 'places'
+          ? PLACE_MANAGEMENT_CHILDREN.find(item => isCurrentPath(pathname, item.path))?.label ?? '장소 관리'
+          : group.items.find(item => isCurrentPath(pathname, item.path))?.label
 
         return (
           <S.Group key={group.id}>
             <S.GroupTitle
               type="button"
               $active={groupActive && !isGroupOpen}
-              aria-label={groupActive && !isGroupOpen ? `${group.title}, 현재 페이지 포함` : group.title}
+              aria-label={groupActive && !isGroupOpen ? `${group.title}, 현재 페이지 포함: ${currentLabel}` : group.title}
+              title={groupActive && !isGroupOpen ? currentLabel : undefined}
               aria-expanded={isGroupOpen}
               aria-controls={`admin-navigation-group-${group.id}`}
               onClick={() => setNavigationState(current => ({ ...current, closedGroups: current.closedGroups.includes(group.id)
@@ -162,6 +171,7 @@ export function AdminNavigationMenu() {
                     aria-label={`장소 관리 하위 메뉴 ${isPlaceManagementOpen ? '접기' : '펼치기'}`}
                     aria-expanded={isPlaceManagementOpen}
                     aria-controls="place-management-submenu"
+                    title={!isPlaceManagementOpen ? PLACE_MANAGEMENT_CHILDREN.find(item => isCurrentPath(pathname, item.path))?.label : undefined}
                     onClick={() => setNavigationState(current => ({ ...current, placeManagementOpen: !current.placeManagementOpen }))}
                   >
                     <S.MaterialIcon aria-hidden="true">

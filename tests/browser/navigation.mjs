@@ -19,8 +19,8 @@ let browser, page
 try {
   await server.listen()
   browser = await chromium.launch()
-  for (const width of [1280, 390]) {
-    page = await browser.newPage({ viewport: { width, height: 650 } })
+  for (const [width, height] of [[1920, 1080], [1366, 768], [390, 650]]) {
+    page = await browser.newPage({ viewport: { width, height } })
     page.setDefaultTimeout(10000)
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
@@ -29,6 +29,12 @@ try {
       return (url.hostname === '127.0.0.1' && !url.pathname.startsWith('/api')) || ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(url.hostname) ? route.continue() : route.abort()
     })
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/navigation-qa`)
+    for (const id of ['places', 'reviews', 'safety', 'growth', 'system']) {
+      const group = page.locator(`[aria-controls="admin-navigation-group-${id}"]`)
+      assert.equal(await group.getAttribute('aria-expanded'), 'false', 'fresh visit has no unrelated expanded group')
+      await group.click()
+    }
+    await page.getByRole('button', { name: '장소 관리 하위 메뉴 펼치기' }).click()
     const growth = page.locator('[aria-controls="admin-navigation-group-growth"]')
     await growth.focus()
     await page.keyboard.press('Enter')
@@ -55,13 +61,16 @@ try {
     await page.keyboard.press('Space')
     await page.getByRole('button', { name: '장소 관리', exact: true }).focus()
     await page.keyboard.press('Enter')
+    await page.waitForFunction(() => document.querySelector('[data-testid="route"]').textContent === '/places')
     assert.equal(await page.getByRole('button', { name: '장소 관리 하위 메뉴 펼치기' }).getAttribute('aria-expanded'), 'false')
     const scroll = page.getByTestId('side-scroll')
     const axis = width > 900 ? 'scrollTop' : 'scrollLeft'
     const before = await scroll.evaluate((el, axis) => { el[axis] = 160; el.dispatchEvent(new Event('scroll')); return el[axis] }, axis)
     assert.ok(before > 0, 'fixture must actually overflow on the tested axis')
     // Trigger remount without moving focus or automatically scrolling the sidebar.
+    const generation = await scroll.getAttribute('data-generation')
     await page.getByRole('button', { name: '재마운트' }).dispatchEvent('click')
+    await page.waitForFunction(previous => document.querySelector('[data-testid="side-scroll"]').dataset.generation !== previous, generation)
     const after = await scroll.evaluate((el, axis) => el[axis], axis)
     assert.equal(after, before, `${width}px scroll survives remount`)
     assert.equal(await growth.getAttribute('aria-expanded'), 'false')

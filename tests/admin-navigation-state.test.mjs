@@ -21,13 +21,25 @@ const button = label => [...document.querySelectorAll('button')].find(el => el.g
 async function click(el) { await act(async () => el.click()) }
 const group = id => document.querySelector(`[aria-controls="admin-navigation-group-${id}"]`)
 
-test('first visit expands every group', async () => {
+test('dashboard first visit keeps navigation groups collapsed', async () => {
   await mount()
+  for (const el of document.querySelectorAll('[aria-controls^="admin-navigation-group-"]')) assert.equal(el.getAttribute('aria-expanded'), 'false')
+})
+for (const [path, currentGroup] of [['/places/events', 'places'], ['/places/information-verification', 'reviews'], ['/reservations/review', 'reviews'], ['/community', 'safety'], ['/merchant-owners', 'growth'], ['/s3-orphans', 'system']]) {
+  test(`first visit to ${path} expands only ${currentGroup}`, async () => {
+    await mount(path)
+    for (const id of ['places', 'reviews', 'safety', 'growth', 'system']) assert.equal(group(id).getAttribute('aria-expanded'), String(id === currentGroup))
+  })
+}
+test('explicit all-open preference is preserved', async () => {
+  saveNavigationState({ closedGroups: [], placeManagementOpen: true })
+  await mount('/reservations/review')
   for (const el of document.querySelectorAll('[aria-expanded]')) assert.equal(el.getAttribute('aria-expanded'), 'true')
 })
 test('collapsed group persists through route changes and remount', async () => {
-  await mount()
+  await mount('/merchant-owners')
   await click(group('growth'))
+  await click(group('system'))
   await click(button('운영 이력'))
   assert.equal(group('growth').getAttribute('aria-expanded'), 'false')
   await act(async () => root.render(null))
@@ -37,7 +49,7 @@ test('collapsed group persists through route changes and remount', async () => {
   assert.equal(document.getElementById(group('growth').getAttribute('aria-controls')).children.length > 0, true)
 })
 test('place link does not expand a deliberately collapsed submenu', async () => {
-  await mount()
+  await mount('/places/events')
   await click(button('장소 관리 하위 메뉴 접기'))
   await click(button('장소 관리'))
   assert.equal(button('장소 관리 하위 메뉴 펼치기').getAttribute('aria-expanded'), 'false')
@@ -51,6 +63,14 @@ test('malformed stored values fall back safely', () => {
   window.sessionStorage.setItem(key, JSON.stringify({ closedGroups: [null, 1, 'growth'], placeManagementOpen: 'false' }))
   assert.deepEqual(readNavigationState(), { closedGroups: ['growth'], placeManagementOpen: true })
 })
+test('missing and corrupt preferences use the supplied current-route defaults', () => {
+  const fallback = { closedGroups: ['places', 'safety', 'growth', 'system'], placeManagementOpen: false }
+  assert.deepEqual(readNavigationState(fallback), fallback)
+  window.sessionStorage.setItem(key, '{')
+  assert.deepEqual(readNavigationState(fallback), fallback)
+  window.sessionStorage.setItem(key, JSON.stringify({ placeManagementOpen: true }))
+  assert.deepEqual(readNavigationState(fallback), { ...fallback, placeManagementOpen: true })
+})
 test('unavailable storage does not block navigation', () => {
   const descriptor = Object.getOwnPropertyDescriptor(window, 'sessionStorage')
   Object.defineProperty(window, 'sessionStorage', { configurable: true, get() { throw Error('blocked') } })
@@ -61,7 +81,7 @@ test('unavailable storage does not block navigation', () => {
 })
 
 test('sidebar scroll position survives remount with saved group state', async () => {
-  await mount()
+  await mount('/merchant-owners')
   await click(group('growth'))
   const container = document.getElementById('root')
   container.scrollTop = 120
@@ -74,4 +94,20 @@ test('sidebar scroll position survives remount with saved group state', async ()
   assert.equal(container.scrollTop, 120)
   assert.equal(container.scrollLeft, 160)
   assert.equal(group('growth').getAttribute('aria-expanded'), 'false')
+})
+
+test('detached sidebar cleanup does not overwrite the last observed scroll with zero', async () => {
+  await mount('/merchant-owners')
+  const container = document.getElementById('root')
+  container.scrollTop = 120
+  container.scrollLeft = 160
+  container.dispatchEvent(new window.Event('scroll'))
+  container.remove()
+  container.scrollTop = 0
+  container.scrollLeft = 0
+  await act(async () => root.render(null))
+  document.body.append(container)
+  await mount('/merchant-owners')
+  assert.equal(container.scrollTop, 120)
+  assert.equal(container.scrollLeft, 160)
 })

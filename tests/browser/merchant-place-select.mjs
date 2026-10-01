@@ -27,7 +27,7 @@ try {
     })
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/merchant/menus`)
     await page.getByRole('button').filter({ hasText: '합성 메뉴' }).click()
-    const name = page.getByRole('textbox', { name: '메뉴명', exact: true })
+    const name = page.getByRole('textbox', { name: '메뉴명 (필수)', exact: true })
     await name.fill('저장 전 수정 내용')
     const select = page.getByRole('combobox', { name: '메뉴를 관리할 장소 선택' })
     const requestCount = await page.evaluate(() => window.qaRequests.length)

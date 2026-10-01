@@ -1,5 +1,6 @@
 import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { AdminSelect } from '../common/AdminStatusSelect'
 import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
 import type {
@@ -65,6 +66,10 @@ export function PlaceInformationEvidencePanel({
     useState<Extract<PlaceInformationVerificationStatus, 'ADMIN_VERIFIED' | 'REJECTED'>>('ADMIN_VERIFIED')
   const [reviewReason, setReviewReason] = useState('')
   const [formError, setFormError] = useState('')
+  const guard = useUnsavedChanges(Boolean(dialog) && (dialog?.type === 'create'
+    ? sourceType !== 'ADMIN' || evidenceType !== 'ADMIN_REVIEW' || [externalReference, referenceUrl, description, submittedByUserId].some(value => value !== '')
+    : verificationStatus !== 'ADMIN_VERIFIED' || reviewReason !== ''), Boolean(dialog) && activeAction !== null)
+  const closeDialog = () => guard.request(() => setDialog(null))
 
   const openCreate = () => {
     setSourceType('ADMIN')
@@ -106,7 +111,7 @@ export function PlaceInformationEvidencePanel({
         description: description.trim() || undefined,
         submittedByUserId: parsedUserId,
       })
-      if (result) setDialog(null)
+      if (result) { guard.markClean(); setDialog(null) }
       return
     }
 
@@ -119,7 +124,7 @@ export function PlaceInformationEvidencePanel({
       verificationStatus,
       reviewReason: reason,
     })
-    if (result) setDialog(null)
+    if (result) { guard.markClean(); setDialog(null) }
   }
 
   return (
@@ -183,11 +188,11 @@ export function PlaceInformationEvidencePanel({
       )}
 
       {dialog ? (
-        <Shared.ModalOverlay role="presentation" onMouseDown={() => activeAction === null && setDialog(null)}>
+        <Shared.ModalOverlay role="presentation" onKeyDown={(event) => { if (event.key === 'Escape' && activeAction === null) { event.stopPropagation(); closeDialog() } }} onMouseDown={() => activeAction === null && closeDialog()}>
           <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="evidence-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
             <Shared.ModalHeader>
               <Shared.ModalTitle id="evidence-dialog-title">{dialog.type === 'create' ? '정보 증빙 등록' : `증빙 #${dialog.evidence.evidenceId} 검토`}</Shared.ModalTitle>
-              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
+              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>
               {dialog.type === 'create' ? (
@@ -229,7 +234,7 @@ export function PlaceInformationEvidencePanel({
               {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
             </Shared.ModalBody>
             <Shared.ModalFooter>
-              <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>
+              <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</Shared.SecondaryButton>
               <Shared.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => void submit()}>{activeAction ? '저장 중' : dialog.type === 'create' ? '증빙 등록' : '검토 결과 저장'}</Shared.PrimaryButton>
             </Shared.ModalFooter>
           </Shared.Modal>

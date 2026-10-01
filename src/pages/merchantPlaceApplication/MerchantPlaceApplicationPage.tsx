@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useUnsavedChanges, useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useNavigate } from 'react-router-dom'
 import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
@@ -118,9 +119,10 @@ function ApplicationForm({
       : null,
   )
   const [formError, setFormError] = useState('')
-  const draft = useSavedDraft(JSON.stringify([legalName, businessName, businessRegistrationNumber, displayName, email, phone, description, reason, selectedPlace?.id]))
+  const draft = useSavedDraft(JSON.stringify([legalName, businessName, businessRegistrationNumber, displayName, email, phone, description, reason, selectedPlace?.id]), { enabled: editable, busy: activeAction !== null })
   const [attachmentDocumentType, setAttachmentDocumentType] = useState<MerchantPlaceApplicationAttachment['documentType']>('BUSINESS_REGISTRATION')
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  useUnsavedChanges(editable && Boolean(attachmentFile), editable && activeAction !== null)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const attachmentInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -142,7 +144,7 @@ function ApplicationForm({
     }
     const normalizedPhone = normalizeE164Phone(phone)
     if (!E164_PHONE_PATTERN.test(normalizedPhone)) {
-      setFormError('연락처는 국가번호를 포함한 국제 형식으로 입력해주세요. 예: +821012345678')
+      setFormError('연락처는 국가번호를 포함한 국제 형식으로 입력해주세요. 예: +82-10-4997-7214')
       return null
     }
     if (!selectedPlace || !reason.trim()) {
@@ -222,33 +224,33 @@ function ApplicationForm({
       </S.ReadonlyBlock> : null}
       {hasBusinessNameMismatch ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>현재 신청서의 사업자명이 활성 상점주 정보와 달라 승인할 수 없습니다. 신청을 취소한 뒤 현재 사업자명으로 다시 작성해주세요.</Store.Notice> : null}
       <Store.Field>
-        법적 성명
+        법적 성명 (필수)
         <Store.Input value={legalName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setLegalName(event.target.value)} />
       </Store.Field>
       <Store.Field>
-        사업자명
+        사업자명 (필수)
         <Store.Input value={activeBusinessName ?? businessName} maxLength={100} disabled={!editable || activeAction !== null || Boolean(activeBusinessName)} onChange={(event) => setBusinessName(event.target.value)} />
         {activeBusinessName ? <S.SearchHint>활성 상점주의 사업자명은 장소 신청에서 변경할 수 없습니다.</S.SearchHint> : null}
       </Store.Field>
       <Store.Field>
-        사업자등록번호
+        사업자등록번호 (필수)
         <Store.Input value={businessRegistrationNumber} inputMode="numeric" maxLength={30} placeholder={application ? '수정·재신청 시 다시 입력하세요.' : '사업자등록번호를 입력하세요.'} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessRegistrationNumber(event.target.value)} />
       </Store.Field>
       <Store.Field>
-        상점주 노출명
+        상점주 노출명 (필수)
         <Store.Input value={displayName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setDisplayName(event.target.value)} />
       </Store.Field>
       <Store.Field>
-        연락 이메일
+        연락 이메일 (필수)
         <Store.Input type="email" value={email} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setEmail(event.target.value)} />
       </Store.Field>
       <Store.Field>
-        연락처
-        <Store.Input type="tel" value={phone} inputMode="tel" maxLength={30} placeholder="+821012345678" disabled={!editable || activeAction !== null} onChange={(event) => setPhone(event.target.value)} />
-        <S.SearchHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +821012345678</S.SearchHint>
+        연락처 (필수)
+        <Store.Input type="tel" value={phone} inputMode="tel" maxLength={30} placeholder="+82-10-4997-7214" disabled={!editable || activeAction !== null} onChange={(event) => setPhone(event.target.value)} />
+        <S.SearchHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +82-10-4997-7214</S.SearchHint>
       </Store.Field>
       <Store.Field $wide>
-        운영할 장소
+        운영할 장소 (필수)
         <S.SearchWrap>
           <Store.Input value={keyword} placeholder="가게명 또는 주소로 검색" disabled={!editable || activeAction !== null} onChange={(event) => { onResetSearch(); setKeyword(event.target.value) }} />
           {editable && keyword.trim().length >= 2 && (isSearching || suggestions.length > 0) ? <S.SearchResults>{isSearching ? <S.SearchResult type="button" disabled><strong>검색 중</strong></S.SearchResult> : suggestions.map((place) => <S.SearchResult type="button" key={place.id} onClick={() => choosePlace(place)}><strong>{place.name}</strong><span>{place.address} · {place.category}</span></S.SearchResult>)}</S.SearchResults> : null}
@@ -257,12 +259,12 @@ function ApplicationForm({
         {selectedPlace ? <S.SelectedPlace><span aria-hidden="true">storefront</span><div><strong>{selectedPlace.name}</strong><p>{selectedPlace.address || `장소 ID ${selectedPlace.id}`}{selectedPlace.category ? ` · ${selectedPlace.category}` : ''}</p></div></S.SelectedPlace> : null}
       </Store.Field>
       <Store.Field $wide>
-        운영 권한 신청 사유
+        운영 권한 신청 사유 (필수)
         <Store.Textarea value={reason} maxLength={500} placeholder="해당 장소를 운영하는 근거와 관리 권한을 신청하는 이유를 입력하세요." disabled={!editable || activeAction !== null} onChange={(event) => setReason(event.target.value)} />
         <S.SearchHint>{reason.length}/500</S.SearchHint>
       </Store.Field>
       <Store.Field $wide>
-        상점 소개
+        상점 소개 (선택)
         <Store.Textarea value={description} maxLength={1000} placeholder="방문자에게 보여줄 가게 소개를 입력하세요. 선택 항목입니다." disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} />
         <S.SearchHint>{description.length}/1000</S.SearchHint>
       </Store.Field>
@@ -316,6 +318,7 @@ function ApplicationForm({
 
 function MerchantPlaceApplicationPage() {
   const navigate = useNavigate()
+  const requestTransition = useUnsavedNavigation()
   const { logout, user } = useAuth()
   const claim = useMerchantPlaceApplications()
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -370,15 +373,15 @@ function MerchantPlaceApplicationPage() {
     <Store.Page>
       <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{claim.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
-        <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={refreshApplications}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
+        <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={() => requestTransition(refreshApplications)}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
         {claim.error ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice> : null}
         {claim.actionError ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.actionError}</Store.Notice> : null}
         {claim.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{claim.successMessage}</Store.Notice> : null}
         <S.Layout>
           <S.Panel>
-            <S.PanelHeading><div><S.PanelTitle>신청 내역</S.PanelTitle><S.PanelDescription>제출 후에는 심사 상태와 검토 의견을 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs role="tablist" aria-label="운영 장소 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'applications'} $active={applicationListView === 'applications'} onClick={() => changeApplicationListView('applications')}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'canceled'} $active={applicationListView === 'canceled'} onClick={() => changeApplicationListView('canceled')}>취소 내역 ({canceledApplicationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>
-            {claim.status === 'loading' ? <Store.Empty>신청 내역을 불러오는 중입니다.</Store.Empty> : applications.length === 0 ? <S.Empty>{applicationListView === 'canceled' ? '취소한 기존 장소 운영 권한 신청이 없습니다.' : '아직 기존 장소 운영 권한 신청이 없습니다. 등록된 장소를 검색해 첫 신청서를 작성하세요.'}</S.Empty> : <S.ApplicationList>{applications.map((application) => <S.ApplicationItem type="button" key={application.id} $selected={application.id === selectedId} onClick={() => setSelectedId(application.id)}><S.ApplicationTop><S.ApplicationName>{application.placeName || `장소 #${application.existingPlaceId ?? '-'}`}</S.ApplicationName><S.StatusBadge $tone={STATUS[application.status].tone}>{STATUS[application.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{application.businessName} · {formatDate(application.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList>}
-            <S.NewApplicationButton type="button" onClick={startNewApplication}>새 운영 장소 신청</S.NewApplicationButton>
+            <S.PanelHeading><div><S.PanelTitle>신청 내역</S.PanelTitle><S.PanelDescription>제출 후에는 심사 상태와 검토 의견을 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs role="tablist" aria-label="운영 장소 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'applications'} $active={applicationListView === 'applications'} onClick={() => { if (applicationListView !== 'applications') requestTransition(() => changeApplicationListView('applications')) }}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={applicationListView === 'canceled'} $active={applicationListView === 'canceled'} onClick={() => { if (applicationListView !== 'canceled') requestTransition(() => changeApplicationListView('canceled')) }}>취소 내역 ({canceledApplicationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>
+            {claim.status === 'loading' ? <Store.Empty>신청 내역을 불러오는 중입니다.</Store.Empty> : applications.length === 0 ? <S.Empty>{applicationListView === 'canceled' ? '취소한 기존 장소 운영 권한 신청이 없습니다.' : '아직 기존 장소 운영 권한 신청이 없습니다. 등록된 장소를 검색해 첫 신청서를 작성하세요.'}</S.Empty> : <S.ApplicationList>{applications.map((application) => <S.ApplicationItem type="button" key={application.id} $selected={application.id === selectedId} onClick={() => { if (selectedId !== application.id) requestTransition(() => setSelectedId(application.id)) }}><S.ApplicationTop><S.ApplicationName>{application.placeName || `장소 #${application.existingPlaceId ?? '-'}`}</S.ApplicationName><S.StatusBadge $tone={STATUS[application.status].tone}>{STATUS[application.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{application.businessName} · {formatDate(application.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList>}
+            <S.NewApplicationButton type="button" onClick={() => requestTransition(startNewApplication)}>새 운영 장소 신청</S.NewApplicationButton>
           </S.Panel>
           <S.Panel>
             <S.PanelHeading><div><S.PanelTitle>{selectedApplication ? '운영 장소 신청 상세' : '새 운영 장소 신청'}</S.PanelTitle><S.PanelDescription>{selectedApplication ? `신청 번호 #${selectedApplication.id} · 마지막 수정 ${formatDate(selectedApplication.updatedAt)}` : '장소 검색부터 심사 요청까지 한 신청서에서 진행합니다.'}</S.PanelDescription></div>{selectedApplication ? <S.StatusBadge $tone={STATUS[selectedApplication.status].tone}>{STATUS[selectedApplication.status].label}</S.StatusBadge> : null}</S.PanelHeading>

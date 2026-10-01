@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantOffers } from '../../hooks/useMerchantOffers'
@@ -66,6 +67,7 @@ function OfferEditor({
   onCreated: (offerId: number) => void
 }) {
   const [placeId, setPlaceId] = useState(preferredPlaceId ?? placeIds[0] ?? 0)
+  const identity = useMerchantPlaceIdentity(placeIds)
   const [title, setTitle] = useState(offer?.title ?? '')
   const [description, setDescription] = useState(offer?.description ?? '')
   const [benefitDescription, setBenefitDescription] = useState(offer?.benefitDescription ?? '')
@@ -121,7 +123,7 @@ function OfferEditor({
 
   if (offer) {
     return <S.Editor><S.ReadonlyNotice>현재 서버 계약에는 Offer 수정 API가 없습니다. 초안은 공개할 수 있고, 공개된 혜택은 종료할 수 있습니다.</S.ReadonlyNotice><S.Form>
-      <S.Field>연결 장소<S.Input value={`장소 #${offer.placeId}`} disabled /></S.Field>
+      <S.Field>연결 장소<S.Input value={identity.label(offer.placeId, true)} disabled /></S.Field>
       <S.Field>상태<S.Input value={STATUS[offer.status].label} disabled /></S.Field>
       <S.Field $wide>혜택 제목<S.Input value={offer.title} disabled /></S.Field>
       <S.Field $wide>혜택 설명<S.Textarea value={offer.description} disabled /></S.Field>
@@ -139,7 +141,7 @@ function OfferEditor({
   }
 
   return <S.Editor><S.Form onSubmit={create}>
-    <S.Field>연결 장소<AdminSelect aria-label="혜택 연결 장소" width="100%" value={placeId} disabled={isBusy || placeIds.length === 0} onChange={(event) => setPlaceId(Number(event.target.value))}>{placeIds.length === 0 ? <option value="">연결된 장소 없음</option> : placeIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}</AdminSelect></S.Field>
+    <S.Field>연결 장소<Store.PlaceSelect compact aria-label="혜택 연결 장소" value={placeId} disabled={isBusy || placeIds.length === 0} onChange={(event) => setPlaceId(Number(event.target.value))}>{placeIds.length === 0 ? <option value="">연결된 장소 없음</option> : placeIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}</Store.PlaceSelect></S.Field>
     <S.Field>쿠폰 유효기간<S.Input type="number" min="1" max="365" value={couponValidityDays} disabled={isBusy} onChange={(event) => setCouponValidityDays(event.target.value)} /><S.FieldHint>쿠폰 발급일 기준 1~365일</S.FieldHint></S.Field>
     <S.Field $wide>혜택 제목<S.Input value={title} maxLength={100} disabled={isBusy} onChange={(event) => setTitle(event.target.value)} /></S.Field>
     <S.Field $wide>혜택 설명<S.Textarea value={description} maxLength={1000} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} /><S.FieldHint>{description.length}/1000</S.FieldHint></S.Field>
@@ -227,7 +229,7 @@ function MerchantOfferPage() {
   }
 
   return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{offer.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>혜택·쿠폰 관리</Store.PageTitle><Store.PageDescription>관광객 전용 혜택을 초안으로 등록하고 공개·종료하며, 현장에서 쿠폰을 사용 처리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={offer.status === 'loading' || isBusy} onClick={() => void offer.fetchInitialData()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
-    {offer.profile && offer.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="혜택을 관리할 장소 선택" value={offer.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => selectPlace(Number(event.target.value))}>{offer.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
+    {offer.profile && offer.profile.placeIds.length > 0 ? <Store.PlaceSelect aria-label="혜택을 관리할 장소 선택" value={offer.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => selectPlace(Number(event.target.value))}>{offer.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
     {offer.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.errorMessage}</Store.Notice> : null}
     {offer.detailErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.detailErrorMessage}</Store.Notice> : null}
     {offer.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.actionErrorMessage}</Store.Notice> : null}

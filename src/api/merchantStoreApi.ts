@@ -1,4 +1,5 @@
 import customAxios from './customAxios'
+import { getAuthSessionId } from '../utils/authStorage'
 import type {
   MerchantCampaignPageResponse,
   MerchantCampaign,
@@ -111,11 +112,17 @@ export async function updateMerchantPlaceInformation(
   return data
 }
 
-export async function getMerchantPlaceDetail(placeId: number) {
-  const { data } = await customAxios.get<MerchantPlaceDetail>(
-    `${MERCHANT_OWNER_PATH}/places/${placeId}`
-  )
-  return data
+const pendingPlaceDetails = new Map<string, Promise<MerchantPlaceDetail>>()
+
+export function getMerchantPlaceDetail(placeId: number) {
+  const key = `${getAuthSessionId()}:${placeId}`
+  const pending = pendingPlaceDetails.get(key)
+  if (pending) return pending
+  const request = customAxios.get<MerchantPlaceDetail>(`${MERCHANT_OWNER_PATH}/places/${placeId}`)
+    .then(({ data }) => data)
+    .finally(() => { if (pendingPlaceDetails.get(key) === request) pendingPlaceDetails.delete(key) })
+  pendingPlaceDetails.set(key, request)
+  return request
 }
 
 export async function getMerchantPlaceOperating(placeId: number) {

@@ -14,6 +14,9 @@ client.defaults.adapter = async config => {
   let data
   if (config.url === '/merchant-owner/me') {
     data = { placeIds: Array.from({ length: 30 }, (_, i) => i + 1), displayName: '합성 상점' }
+  } else if (/^\/merchant-owner\/places\/\d+$/.test(config.url)) {
+    const id = Number(config.url.split('/').at(-1))
+    data = { id, name: `합성 매장 ${id}`, roadAddress: `주소 ${id}` }
   } else {
     const match = config.url.match(/^\/merchant-owner\/places\/(\d+)\/menus$/)
     if (!match) throw new Error(`Unexpected request: ${config.url}`)

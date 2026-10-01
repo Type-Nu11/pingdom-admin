@@ -76,6 +76,9 @@ export function useMerchantStore() {
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const mountedRef = useRef(true)
   const saveInFlightRef = useRef(false)
+  const placeRequestRef = useRef(0)
+  const selectedPlaceRef = useRef(selectedPlaceId)
+  selectedPlaceRef.current = selectedPlaceId
 
   const clearUnauthorizedSession = useCallback(
     (error: unknown) => {
@@ -135,6 +138,7 @@ export function useMerchantStore() {
 
   const fetchPlaceData = useCallback(
     async (placeId: number) => {
+      const requestId = ++placeRequestRef.current
       setPlaceInformation(null)
       setCampaigns([])
       setOffers([])
@@ -151,6 +155,8 @@ export function useMerchantStore() {
       ])
 
       if (!mountedRef.current) return
+
+      if (requestId !== placeRequestRef.current || selectedPlaceRef.current !== placeId) return
 
       const failures = [informationResult, campaignsResult, offersResult, availabilitiesResult, noticesResult].filter(
         (result): result is PromiseRejectedResult =>
@@ -196,6 +202,13 @@ export function useMerchantStore() {
   useEffect(() => {
     if (selectedPlaceId) {
       void fetchPlaceData(selectedPlaceId)
+    } else {
+      placeRequestRef.current++
+      setPlaceInformation(null)
+      setCampaigns([])
+      setOffers([])
+      setOperatingNotices([])
+      setReservationAvailabilities([])
     }
   }, [fetchPlaceData, selectedPlaceId])
 
@@ -222,13 +235,13 @@ export function useMerchantStore() {
 
       try {
         const nextInformation = await updateMerchantPlaceInformation(selectedPlaceId, request)
-        if (!mountedRef.current) return false
+        if (!mountedRef.current || selectedPlaceRef.current !== selectedPlaceId) return false
 
         setPlaceInformation(nextInformation)
         setSuccessMessage('가게 정보를 저장했습니다.')
         return true
       } catch (error) {
-        if (mountedRef.current) {
+        if (mountedRef.current && selectedPlaceRef.current === selectedPlaceId) {
           clearUnauthorizedSession(error)
           setSectionErrorMessage(
             getMerchantStoreErrorMessage(error, '가게 정보를 저장하지 못했습니다.')

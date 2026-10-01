@@ -31,6 +31,10 @@ client.defaults.adapter = async config => {
     menus = [...menus.filter(menu => menu.id !== data.id), data]
   } else if (isBrandWrite) data = { id: 2, ...JSON.parse(config.data) }
   else if (config.url === '/merchant-owner/me') data = { userId: 99, status: 'ACTIVE', businessName: '합성 사업자', displayName: '합성 상점주', placeIds: [1, 2] }
+  else if (/^\/merchant-owner\/places\/\d+$/.test(config.url)) {
+    const id = Number(config.url.split('/').at(-1))
+    data = { id, name: `합성 매장 ${id}`, roadAddress: `합성 주소 ${id}` }
+  }
   else if (/^\/merchant-owner\/places\/\d+\/menus$/.test(config.url)) data = menus
   else if (config.url === '/merchant-owner/campaigns') data = { items: [], page: 1, totalCount: 0, totalPages: 1, hasNext: false }
   else if (config.url === '/merchant-owner/campaigns/brands') data = { items: [{ id: 1, name: '합성 브랜드' }], page: 1, totalPages: 1, hasNext: false }

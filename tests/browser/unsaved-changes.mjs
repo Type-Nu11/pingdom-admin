@@ -67,7 +67,7 @@ try {
     assert.equal(await warning.count(), 0, 'pristine reorder needs no confirmation')
     await name.fill('매장 이동 전 수정')
     await page.getByRole('combobox', { name: '메뉴를 관리할 장소 선택', exact: true }).click()
-    await page.getByRole('option', { name: '연결 장소 #2', exact: true }).click()
+    await page.getByRole('option', { name: '합성 매장 2 · 합성 주소 2 · #2', exact: true }).click()
     await warning.getByRole('button', { name: '계속 작성', exact: true }).click()
     assert.equal(await name.inputValue(), '매장 이동 전 수정')
     await page.getByRole('button', { name: '새로고침', exact: true }).click()

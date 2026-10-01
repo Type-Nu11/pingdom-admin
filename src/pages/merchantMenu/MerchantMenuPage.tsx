@@ -215,7 +215,7 @@ function MerchantMenuPage() {
     description="연결된 장소의 메뉴, 판매 상태, 고객 노출 순서를 관리합니다."
     actions={<S.HeaderActions><S.HeaderButton type="button" disabled={menu.status === 'loading' || isBusy} onClick={() => requestTransition(() => { void menu.fetchMenus() })}>새로고침</S.HeaderButton></S.HeaderActions>}
   >
-    {menu.profile && menu.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="메뉴를 관리할 장소 선택" value={menu.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => { const id = Number(event.target.value); if (id !== menu.selectedPlaceId) requestTransition(() => { setSelectedId(null); menu.selectPlace(id) }) }}>{menu.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
+    {menu.profile && menu.profile.placeIds.length > 0 ? <Store.PlaceSelect aria-label="메뉴를 관리할 장소 선택" value={menu.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => { const id = Number(event.target.value); if (id !== menu.selectedPlaceId) requestTransition(() => { setSelectedId(null); menu.selectPlace(id) }) }}>{menu.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
     {menu.sectionErrorMessage ? <FeedbackMessage tone="error" style={{ marginBottom: 16 }}>{menu.sectionErrorMessage}</FeedbackMessage> : null}
     {menu.actionErrorMessage ? <FeedbackMessage tone="error" style={{ marginBottom: 16 }}>{menu.actionErrorMessage}</FeedbackMessage> : null}
     {menu.successMessage ? <FeedbackMessage tone="success" style={{ marginBottom: 16 }}>{menu.successMessage}</FeedbackMessage> : null}

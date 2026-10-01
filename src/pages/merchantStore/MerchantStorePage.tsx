@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantStore } from '../../hooks/useMerchantStore'
+import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import type {
   MerchantOfferStatus,
   MerchantOwnerProfileStatus,
@@ -139,6 +140,7 @@ function MerchantStorePage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const store = useMerchantStore()
+  const identity = useMerchantPlaceIdentity(store.profile?.placeIds ?? [])
   const ownerStatus = store.profile ? OWNER_STATUS[store.profile.status] : null
   const activeCampaignCount = store.campaigns.filter((campaign) => campaign.status === 'PUBLISHED').length
   const activeOfferCount = store.offers.filter((offer) => offer.status === 'PUBLISHED').length
@@ -189,7 +191,7 @@ function MerchantStorePage() {
             <S.PageTitle>내 가게 관리</S.PageTitle>
             <S.PageDescription>가게 정보와 운영 현황을 관리합니다.</S.PageDescription>
           </div>
-          {store.profile && store.profile.placeIds.length > 1 ? (
+          {store.profile && store.profile.placeIds.length > 0 ? (
             <S.PlaceSelect
               compact
               aria-label="관리할 장소 선택"
@@ -213,11 +215,17 @@ function MerchantStorePage() {
                 <S.StoreSummary>
                   <div>
                     <S.SummaryTitleRow>
-                      <S.StoreName>사업자 상호: {store.profile.businessName}</S.StoreName>
+                      <S.StoreName>{identity.label(store.selectedPlaceId)}</S.StoreName>
                       {ownerStatus ? <S.StatusBadge $tone={ownerStatus.tone}>{ownerStatus.label}</S.StatusBadge> : null}
                     </S.SummaryTitleRow>
                     <S.StoreMeta>
-                      연결 장소: {store.profile.displayName} (#{store.selectedPlaceId})
+                      {identity.places[store.selectedPlaceId]?.status === 'ready'
+                        ? identity.places[store.selectedPlaceId].address || '주소 정보 없음'
+                        : identity.places[store.selectedPlaceId]?.status === 'error' ? '매장 정보를 불러오지 못했습니다.' : '매장 정보를 확인하고 있습니다.'}
+                    </S.StoreMeta>
+                    {identity.places[store.selectedPlaceId]?.status === 'error' ? <S.RetryButton type="button" onClick={() => identity.retry(store.selectedPlaceId!)}>매장 정보 다시 조회</S.RetryButton> : null}
+                    <S.StoreMeta>
+                      사업자 상호: {store.profile.businessName || '등록 정보 없음'} · 상점주 표시명: {store.profile.displayName || '등록 정보 없음'}
                       {store.profile.contactEmail ? ` · ${store.profile.contactEmail}` : ''}
                     </S.StoreMeta>
                   </div>
@@ -232,8 +240,8 @@ function MerchantStorePage() {
                 <S.PerformanceSection aria-labelledby="merchant-performance-title">
                   <S.PerformanceHeading>
                     <div>
-                      <S.SectionTitle id="merchant-performance-title">성과 요약</S.SectionTitle>
-                      <S.SectionDescription>연결된 전체 장소의 탐색 노출과 예약 전환 성과입니다.</S.SectionDescription>
+                      <S.SectionTitle id="merchant-performance-title">전체 매장 성과</S.SectionTitle>
+                      <S.SectionDescription>전체 연결 장소 · 기간 제한 없는 집계입니다. 위에서 선택한 매장만의 성과가 아닙니다.</S.SectionDescription>
                     </div>
                     {store.performance ? <S.PerformanceScope>{formatCount(store.performance.placeCount)}개 장소 기준</S.PerformanceScope> : null}
                   </S.PerformanceHeading>
@@ -295,7 +303,7 @@ function MerchantStorePage() {
                       <S.SectionHeading><div><S.SectionTitle>운영 상태</S.SectionTitle><S.SectionDescription>점주 프로필과 연결 장소 상태를 확인합니다.</S.SectionDescription></div></S.SectionHeading>
                       <S.StatusList>
                         <S.StatusRow><div><strong>상점주 계정</strong><span>승인된 계정만 장소 정보를 수정할 수 있습니다.</span></div><S.StateText $tone={ownerStatus?.tone === 'active' ? 'active' : ownerStatus?.tone === 'pending' ? 'pending' : 'neutral'}>{ownerStatus?.label ?? '확인 중'}</S.StateText></S.StatusRow>
-                        <S.StatusRow><div><strong>장소 연결</strong><span>현재 관리 권한이 연결된 장소입니다.</span></div><S.StateText $tone={store.selectedPlaceId ? 'active' : 'neutral'}>{store.selectedPlaceId ? `장소 #${store.selectedPlaceId}` : '연결 없음'}</S.StateText></S.StatusRow>
+                        <S.StatusRow><div><strong>장소 연결</strong><span>현재 관리 권한이 연결된 장소입니다.</span></div><S.StateText $tone={store.selectedPlaceId ? 'active' : 'neutral'}>{store.selectedPlaceId ? identity.label(store.selectedPlaceId) : '연결 없음'}</S.StateText></S.StatusRow>
                         <S.StatusRow><div><strong>운영 공지</strong><span>방문자에게 현재 노출 중인 운영 안내입니다.</span></div><S.StateText $tone={visibleNoticeCount > 0 ? 'pending' : 'neutral'}>{visibleNoticeCount > 0 ? `${visibleNoticeCount}건 노출 중` : '노출 공지 없음'}</S.StateText></S.StatusRow>
                       </S.StatusList>
                     </S.Section>

@@ -14,6 +14,7 @@ const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts'
 const { useMerchantPlaceOperations } = await server.ssrLoadModule('/src/hooks/useMerchantPlaceOperations.ts')
 const { useMerchantOperatingNotices } = await server.ssrLoadModule('/src/hooks/useMerchantOperatingNotices.ts')
 const { MerchantOperatingSummary } = await server.ssrLoadModule('/src/components/common/MerchantOperatingSummary.tsx')
+const { formatMerchantOperatingTime } = await server.ssrLoadModule('/src/utils/merchantOperatingTime.ts')
 let root, state, handler, cleared
 const auth = { clearAuth() { cleared++ } }
 const result = (value) => ({ currentlyOperating: value, checkedAt: '2026-09-30T10:00:00', notices: [], regularHours: [], operatingExceptions: [] })
@@ -73,5 +74,40 @@ test('summary distinguishes missing, loading, failed and server values', async (
   ]) {
     await act(async () => root.render(h(MerchantOperatingSummary, { loading: false, failed: false, onRetry() {}, ...props })))
     assert.equal(document.querySelector('strong').textContent, text)
+  }
+})
+
+test('operating UTC timestamps use KST once, including midnight and year boundaries', () => {
+  for (const [input, expected] of [
+    ['2026-09-30T10:00:00', '2026-09-30 19:00:00 (KST)'],
+    ['2026-09-30T15:00:00', '2026-10-01 00:00:00 (KST)'],
+    ['2026-12-31T23:59:59Z', '2027-01-01 08:59:59 (KST)'],
+    ['2026-10-01T00:00:00+09:00', '2026-10-01 00:00:00 (KST)'],
+    ['2026-09-30T10:00:00-05:00', '2026-10-01 00:00:00 (KST)'],
+    ['2024-02-29T15:00:00.123456789', '2024-03-01 00:00:00 (KST)'],
+  ]) assert.equal(formatMerchantOperatingTime(input)?.label, expected)
+  assert.equal(formatMerchantOperatingTime('2026-10-01T00:00:00+09:00').dateTime, '2026-09-30T15:00:00.000Z')
+})
+
+test('invalid and absent checkedAt do not produce misleading confirmation times', () => {
+  for (const input of [null, undefined, '', 'invalid', '2026-09-30', '2026-02-29T10:00:00',
+    '2026-02-30T10:00:00Z', '2026-13-01T10:00:00', '2026-10-01T24:00:00',
+    '2026-10-01T10:60:00', '2026-10-01T10:00:60', '2026-10-01T10:00:00+24:00',
+    '2026-10-01T10:00:00+09:60']) assert.equal(formatMerchantOperatingTime(input), null)
+})
+
+test('summary keeps server status and exposes normalized time or missing metadata', async () => {
+  for (const value of [true, false]) {
+    await act(async () => root.render(h(MerchantOperatingSummary, {
+      loading: false, failed: false, value, checkedAt: '2026-09-30T15:00:00', onRetry() {},
+    })))
+    assert.equal(document.querySelector('time').textContent, '2026-10-01 00:00:00 (KST)')
+    assert.equal(document.querySelector('time').getAttribute('datetime'), '2026-09-30T15:00:00.000Z')
+    assert.equal(document.querySelector('strong').textContent, value ? '현재 영업시간입니다.' : '현재 영업시간 외입니다.')
+  }
+  for (const checkedAt of [null, 'invalid']) {
+    await act(async () => root.render(h(MerchantOperatingSummary, { loading: false, failed: false, value: true, checkedAt, onRetry() {} })))
+    assert.equal(document.querySelector('time'), null)
+    assert.equal(document.querySelector('small').textContent, '확인 시각 정보 없음')
   }
 })

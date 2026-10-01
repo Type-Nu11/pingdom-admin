@@ -32,7 +32,7 @@ try {
     const select = page.getByRole('combobox', { name: '메뉴를 관리할 장소 선택' })
     const requestCount = await page.evaluate(() => window.qaRequests.length)
     await select.click()
-    await page.getByRole('option', { name: '연결 장소 #1', exact: true }).click()
+    await page.getByRole('option', { name: '합성 매장 1 · 주소 1 · #1', exact: true }).click()
     assert.equal(await name.inputValue(), '저장 전 수정 내용')
     await select.press('ArrowDown')
     await select.press('Enter')

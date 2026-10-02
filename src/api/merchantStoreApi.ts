@@ -44,6 +44,7 @@ import type {
   MerchantSettlementLedgerPageResponse,
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
+  MerchantReservationTerms,
   MerchantReservableProduct,
   MerchantReservableProductCreateRequest,
   MerchantReservation,
@@ -428,6 +429,13 @@ export async function deactivateMerchantReservableProduct(productId: number) {
 export async function getMerchantAvailabilities() {
   const { data } = await customAxios.get<MerchantAvailability[]>(
     `${MERCHANT_OWNER_PATH}/availabilities`,
+  )
+  return data
+}
+
+export async function updateMerchantReservationTerms(availabilityId: number, request: MerchantReservationTerms) {
+  const { data } = await customAxios.put<MerchantReservationTerms>(
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/reservation-terms`, request,
   )
   return data
 }

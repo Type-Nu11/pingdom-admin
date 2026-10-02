@@ -164,6 +164,7 @@ function SortDropdown({
 
     if (event.key === 'Escape' && isOpen) {
       event.preventDefault()
+      event.stopPropagation()
       closeDropdown(true)
 
       return

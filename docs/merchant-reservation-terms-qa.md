@@ -12,6 +12,7 @@
 
 - `node --test tests/merchant-reservation-terms.test.mjs`: unset versus free/noncancellable, exact payload, invalid amounts/currency/timezone/cutoff, saved-value/version reload, HTTP 400/401/403/500, single-flight mutation, stale/wrong-place target, account switch, input retention, and schedule/status preservation.
 - `node tests/browser/reservation-terms.mjs`: 1920x1080, 1366x768 and 390x844; modal bounds, input retention after failed writes, unsaved dismissal confirmation, pending dismissal guard, reload persistence and recovery after a successful write followed by a failed query.
+- With the cancellation dropdown open, the first Escape closes only its options and restores trigger focus, without closing the editor or showing the unsaved confirmation. A second Escape closes an unchanged editor or prompts before discarding edited input; ordinary dismissal restores focus to the editor opener.
 - Browser fixture replaces the Axios adapter and blocks non-local network access. Its saved rows are synthetic sessionStorage data, not real reservations.
 - A successful PUT followed by a failed GET remains a successful save. Returned terms remain visible, but further edits are blocked until the authoritative list/version is fetched again. Auth errors clear or hide inaccessible results.
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type Dispatch, type SetStateAction } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUnsavedChanges, useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { AdminTimePicker } from '../../components/common/AdminDateTimePicker'
@@ -662,6 +662,15 @@ function MerchantPlaceRegistrationPage() {
   const registration = useMerchantPlaceRegistrations()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [newFormVersion, setNewFormVersion] = useState(0)
+  const [screen, setScreen] = useState<'history' | 'form'>('history')
+  const screenRef = useRef<HTMLDivElement>(null)
+  const moveFocusRef = useRef(false)
+  useLayoutEffect(() => {
+    if (!moveFocusRef.current) return
+    moveFocusRef.current = false
+    screenRef.current?.scrollIntoView({ block: 'start' })
+    screenRef.current?.focus({ preventScroll: true })
+  }, [screen, selectedId, newFormVersion])
   const [registrationListView, setRegistrationListView] = useState<'applications' | 'canceled'>('applications')
   const visibleRegistrations = useMemo(
     () => registration.registrations.filter((item) => registrationListView === 'canceled'
@@ -670,7 +679,7 @@ function MerchantPlaceRegistrationPage() {
     [registration.registrations, registrationListView],
   )
   const canceledRegistrationCount = registration.registrations.length - registration.registrations.filter((item) => item.status !== 'CANCELED').length
-  const selectedRegistration = useMemo(() => visibleRegistrations.find((item) => item.id === selectedId) ?? null, [visibleRegistrations, selectedId])
+  const selectedRegistration = useMemo(() => registration.registrations.find((item) => item.id === selectedId) ?? null, [registration.registrations, selectedId])
   const isConnectedPlace = Boolean(
     selectedRegistration?.registeredPlaceId && registration.profile?.placeIds.includes(selectedRegistration.registeredPlaceId),
   )
@@ -695,7 +704,17 @@ function MerchantPlaceRegistrationPage() {
     setRegistrationListView('applications')
     setSelectedId(null)
     setNewFormVersion(version => version + 1)
+    setScreen('form')
+    moveFocusRef.current = true
   }
+
+  const showHistory = () => requestTransition(() => {
+    if (registration.activeAction !== null) return
+    setStagedAttachments([])
+    setNewFormVersion(version => version + 1)
+    setScreen('history')
+    moveFocusRef.current = true
+  })
 
   if (registration.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void registration.fetchRegistrations()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
@@ -705,16 +724,17 @@ function MerchantPlaceRegistrationPage() {
     {registration.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice> : null}
     {registration.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.actionErrorMessage}</Store.Notice> : null}
     {registration.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{registration.successMessage}</Store.Notice> : null}
-    {isConnectedPlace ? <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}><Store.SaveButton type="button" onClick={() => navigate('/merchant')}>연결된 가게 관리</Store.SaveButton></div> : null}
-    <S.Layout>
-      <S.RegistrationPanel>
+    {screen === 'form' && isConnectedPlace ? <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}><Store.SaveButton type="button" onClick={() => navigate('/merchant')}>연결된 가게 관리</Store.SaveButton></div> : null}
+    <S.ScreenActions aria-label="장소 등록 작업"><S.SecondaryButton type="button" disabled={registration.activeAction !== null || screen === 'history'} onClick={showHistory}>신청 내역 보기</S.SecondaryButton><S.NewApplicationButton type="button" disabled={registration.status === 'loading' || registration.activeAction !== null} onClick={() => requestTransition(startNewRegistration)}>새 장소 등록 신청</S.NewApplicationButton></S.ScreenActions>
+    <S.Layout ref={screenRef} tabIndex={-1} aria-label={screen === 'history' ? '신청 내역' : '신청서'}>
+      {screen === 'form' ? <S.RegistrationPanel>
         <S.PanelHeading><div><S.PanelTitle>{selectedRegistration ? '등록 신청 상세' : '장소 정보 입력'}</S.PanelTitle><S.PanelDescription>{selectedRegistration ? `신청 번호 #${selectedRegistration.id} · 마지막 수정 ${formatDate(selectedRegistration.updatedAt)}` : '기본 정보, 위치, 영업시간을 입력한 뒤 심사를 요청하세요.'}</S.PanelDescription></div>{selectedRegistration ? <S.StatusBadge $tone={STATUS[selectedRegistration.status].tone}>{STATUS[selectedRegistration.status].label}</S.StatusBadge> : null}</S.PanelHeading>
-        <RegistrationForm stagedAttachments={stagedAttachments} setStagedAttachments={setStagedAttachments} key={selectedRegistration?.id ?? `new-${newFormVersion}`} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onRequestReview={async (id, request, attachments, onAttachmentUploaded, onDraftSaved) => { const next = await registration.requestRegistrationReview(id, request, attachments, onAttachmentUploaded, onDraftSaved); if (next) setSelectedId(next.id); return next }} onReopen={registration.reopenRegistration} onCancel={async (applicationId) => { const canceled = await registration.cancelRegistration(applicationId); if (canceled) { setStagedAttachments([]); setSelectedId(null) }; return canceled }} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} />
-      </S.RegistrationPanel>
-      {registration.registrations.length > 0 ? <S.HistoryPanel>
+        <RegistrationForm stagedAttachments={stagedAttachments} setStagedAttachments={setStagedAttachments} key={selectedRegistration?.id ?? `new-${newFormVersion}`} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onRequestReview={async (id, request, attachments, onAttachmentUploaded, onDraftSaved) => { const next = await registration.requestRegistrationReview(id, request, attachments, onAttachmentUploaded, onDraftSaved); if (next) setSelectedId(next.id); return next }} onReopen={registration.reopenRegistration} onCancel={async (applicationId) => { const canceled = await registration.cancelRegistration(applicationId); if (canceled) { setStagedAttachments([]); setSelectedId(null); setScreen('history'); moveFocusRef.current = true }; return canceled }} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} />
+      </S.RegistrationPanel> : null}
+      {screen === 'history' ? <S.HistoryPanel aria-label="등록 신청 내역">
         <S.PanelHeading><div><S.PanelTitle>등록 신청 내역</S.PanelTitle><S.PanelDescription>작성 중이거나 처리된 신청서를 선택해 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs role="tablist" aria-label="신규 장소 등록 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={registrationListView === 'applications'} $active={registrationListView === 'applications'} onClick={() => { if (registrationListView !== 'applications') requestTransition(() => changeRegistrationListView('applications')) }}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={registrationListView === 'canceled'} $active={registrationListView === 'canceled'} onClick={() => { if (registrationListView !== 'canceled') requestTransition(() => changeRegistrationListView('canceled')) }}>취소 내역 ({canceledRegistrationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>
-        {visibleRegistrations.length > 0 ? <S.ApplicationList>{visibleRegistrations.map((item) => <S.ApplicationItem type="button" key={item.id} $selected={item.id === selectedId} disabled={registration.activeAction !== null} onClick={() => { if (registration.activeAction !== null || item.id === selectedId) return; requestTransition(() => { setStagedAttachments([]); setSelectedId(item.id); void registration.selectRegistration(item.id) }) }}><S.ApplicationTop><S.ApplicationName>{item.placeName}</S.ApplicationName><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{CATEGORIES.find((categoryItem) => categoryItem.value === item.category)?.label ?? item.category} · {formatDate(item.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList> : <S.Empty>{registrationListView === 'canceled' ? '취소한 신규 장소 등록 신청이 없습니다.' : '작성 중이거나 처리된 신규 장소 등록 신청이 없습니다.'}</S.Empty>}
-        <S.NewApplicationButton type="button" onClick={() => requestTransition(startNewRegistration)}>새 장소 등록 신청</S.NewApplicationButton>
+        {registration.status === 'loading' ? <S.Empty role="status">신청 내역을 불러오는 중입니다.</S.Empty> : visibleRegistrations.length > 0 ? <S.ApplicationList>{visibleRegistrations.map((item) => <S.ApplicationItem type="button" key={item.id} $selected={item.id === selectedId} disabled={registration.activeAction !== null} onClick={() => { if (registration.activeAction !== null) return; requestTransition(() => { void registration.selectRegistration(item.id).then(next => { if (next) { setStagedAttachments([]); setSelectedId(next.id); moveFocusRef.current = true; setScreen('form') } }) }) }}><S.ApplicationTop><S.ApplicationName>{item.placeName}</S.ApplicationName><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.ApplicationTop><S.ApplicationMeta>{CATEGORIES.find((categoryItem) => categoryItem.value === item.category)?.label ?? item.category} · {formatDate(item.updatedAt)}</S.ApplicationMeta></S.ApplicationItem>)}</S.ApplicationList> : <S.Empty>{registrationListView === 'canceled' ? '취소한 신규 장소 등록 신청이 없습니다.' : '작성 중이거나 처리된 신규 장소 등록 신청이 없습니다.'}</S.Empty>}
+
       </S.HistoryPanel> : null}
     </S.Layout>
   </Store.Content></Store.Page>

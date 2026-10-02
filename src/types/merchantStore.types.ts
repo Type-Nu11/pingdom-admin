@@ -260,11 +260,23 @@ export interface MerchantAvailability {
   placeId: number
   productId: number | null
   productType: MerchantReservableProductType
+  productName: string | null
+  reservationTerms: MerchantReservationTerms | null
+  conditionsVersion: number
   startsAt: string
   endsAt: string
   totalCapacity: number
   remainingCapacity: number
   status: ReservableProductStatus
+}
+
+export interface MerchantReservationTerms {
+  unitAmountMinor: number
+  additionalAmountMinor: number
+  currency: string
+  timezone: string
+  cancellable: boolean
+  cancellationCutoffMinutes: number | null
 }
 
 export interface MerchantAvailabilityUpsertRequest {

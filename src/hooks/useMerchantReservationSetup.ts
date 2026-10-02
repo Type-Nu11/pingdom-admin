@@ -8,12 +8,14 @@ import {
   getMerchantOwnerProfile,
   getMerchantReservableProducts,
   updateMerchantAvailability,
+  updateMerchantReservationTerms,
 } from '../api/merchantStoreApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
+  MerchantReservationTerms,
   MerchantOwnerProfile,
   MerchantReservableProduct,
   MerchantStoreErrorResponse,
@@ -21,6 +23,7 @@ import type {
 import { logDebugError } from '../utils/debugLogger'
 import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
+import { getAuthSessionId } from '../utils/authStorage'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type ReservationSetupAction =
@@ -28,6 +31,7 @@ type ReservationSetupAction =
   | 'update-availability'
   | 'activate-availability'
   | 'deactivate-availability'
+  | 'update-terms'
   | null
 
 function replaceById<T extends { id: number }>(items: T[], next: T) {
@@ -188,15 +192,16 @@ export function useMerchantReservationSetup() {
     setActiveAction(action)
     setActionErrorMessage('')
     setSuccessMessage('')
+    const sessionId = getAuthSessionId()
 
     try {
       const result = await request()
-      if (!mountedRef.current) return null
+      if (!mountedRef.current || sessionId !== getAuthSessionId()) return null
       apply(result)
       setSuccessMessage(successText)
       return result
     } catch (error) {
-      if (mountedRef.current) {
+      if (mountedRef.current && sessionId === getAuthSessionId()) {
         setActionErrorMessage(getErrorMessage(error, fallbackMessage))
         logDebugError(`상점주 예약 운영 ${action} 실패`, error)
       }
@@ -231,6 +236,38 @@ export function useMerchantReservationSetup() {
     active ? '예약 가능 시간을 활성화하지 못했습니다.' : '예약 가능 시간을 비활성화하지 못했습니다.',
   ), [runAction])
 
+  const saveReservationTerms = useCallback(async (availabilityId: number, request: MerchantReservationTerms) => {
+    const target = availabilities.find(item => item.id === availabilityId && item.placeId === selectedPlaceId)
+    if (!target) return null
+    return runAction('update-terms', async () => {
+      const sessionId = getAuthSessionId()
+      requestRef.current += 1
+      const terms = await updateMerchantReservationTerms(availabilityId, request)
+      if (!mountedRef.current || sessionId !== getAuthSessionId()) throw new Error('Reservation terms session changed')
+      // A successful write must not become a failed write when its follow-up query fails.
+      try {
+        const items = await getMerchantAvailabilities()
+        if (!items.some(item => item.id === availabilityId)) throw new Error('Saved availability missing from reload')
+        return { terms, items, refreshError: null }
+      } catch (refreshError) {
+        return { terms, items: null, refreshError }
+      }
+    }, result => {
+      if (result.items) {
+        setAvailabilities(sortAvailabilities(result.items))
+        setAvailabilityError('')
+      } else {
+        setAvailabilities(current => current.map(item => item.id === availabilityId ? { ...item, reservationTerms: result.terms } : item))
+        setAvailabilityStatus('error')
+        if (isApiError(result.refreshError) && (shouldClearAuth(result.refreshError) || result.refreshError.category === 'forbidden')) {
+          setAvailabilities([])
+          setHasAvailabilityResult(false)
+        }
+        setAvailabilityError(getErrorMessage(result.refreshError, '조건은 저장됐지만 최신 버전을 불러오지 못했습니다. 시간 목록을 다시 조회해주세요.'))
+      }
+    }, '예약 가격·취소 조건을 저장했습니다.', '예약 가격·취소 조건을 저장하지 못했습니다.')
+  }, [availabilities, selectedPlaceId, runAction, getErrorMessage])
+
   return {
     status,
     profile,
@@ -255,5 +292,7 @@ export function useMerchantReservationSetup() {
     createAvailability,
     saveAvailability,
     setAvailabilityActive,
+    saveReservationTerms,
+    clearActionMessages: () => { setActionErrorMessage(''); setSuccessMessage('') },
   }
 }

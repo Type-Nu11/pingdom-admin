@@ -303,12 +303,37 @@ export const Metrics = styled.section`
   }
 `
 
+export const WorkflowNav = styled.nav`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 20px;
+  margin-bottom: 24px;
+
+  @media (max-width: 680px) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+`
+
+export const WorkflowLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 60px;
+  border-bottom: 1px solid ${colors.borderSoft};
+  color: ${colors.text};
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover { color: ${colors.primary}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+`
+
 export const Metric = styled.article`
-  min-height: 112px;
+  min-height: 80px;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 20px;
+  padding: 14px 16px;
   border-radius: 8px;
   background: ${colors.surfaceContainer};
 `

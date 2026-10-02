@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantStore } from '../../hooks/useMerchantStore'
 import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
+import { useSavedDraft } from '../../hooks/useSavedDraft'
+import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import type {
   MerchantOfferStatus,
   MerchantOwnerProfileStatus,
@@ -77,10 +79,11 @@ function StoreInformationForm({
   const [contactPhone, setContactPhone] = useState(initialValues?.contactPhone ?? '')
   const [websiteUrl, setWebsiteUrl] = useState(initialValues?.websiteUrl ?? '')
   const [reservationUrl, setReservationUrl] = useState(initialValues?.reservationUrl ?? '')
+  const draft = useSavedDraft(JSON.stringify([description, contactPhone, websiteUrl, reservationUrl]), { busy: isSaving })
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    await onSave({ description, contactPhone, websiteUrl, reservationUrl })
+    if (await onSave({ description, contactPhone, websiteUrl, reservationUrl })) draft.markSaved()
   }
 
   return (
@@ -138,6 +141,7 @@ function StoreInformationForm({
 
 function MerchantStorePage() {
   const navigate = useNavigate()
+  const requestTransition = useUnsavedNavigation()
   const { logout, user } = useAuth()
   const store = useMerchantStore()
   const identity = useMerchantPlaceIdentity(store.profile?.placeIds ?? [])
@@ -196,12 +200,24 @@ function MerchantStorePage() {
               compact
               aria-label="관리할 장소 선택"
               value={store.selectedPlaceId ?? ''}
-              onChange={(event) => store.selectPlace(Number(event.target.value))}
+              onChange={(event) => { const id = Number(event.target.value); if (id !== store.selectedPlaceId) requestTransition(() => store.selectPlace(id)) }}
             >
               {store.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}
             </S.PlaceSelect>
           ) : null}
         </S.PageIntro>
+
+        <S.WorkflowNav aria-label="가게 주요 업무">
+          {[
+            ['/merchant/place-operations', 'storefront', '운영 정보'],
+            ['/merchant/menus', 'restaurant_menu', '메뉴 관리'],
+            ['/merchant/reviews', 'rate_review', '리뷰 관리'],
+            ['/merchant/campaigns', 'campaign', '이벤트 관리'],
+            ['/merchant/reservations/setup', 'calendar_month', '예약 설정'],
+            ['/merchant/reservations', 'event_available', '예약 내역'],
+            ['/merchant/offers', 'local_offer', '혜택·쿠폰'],
+          ].map(([path, icon, label]) => <S.WorkflowLink as={Link} to={path} key={path}><S.MetricIcon aria-hidden="true">{icon}</S.MetricIcon>{label}</S.WorkflowLink>)}
+        </S.WorkflowNav>
 
         {store.status === 'loading' || !store.profile ? (
           <S.LoadingSummary aria-label="가게 정보를 불러오는 중">
@@ -236,36 +252,6 @@ function MerchantStorePage() {
                   <S.Metric><S.MetricIcon aria-hidden="true">local_offer</S.MetricIcon><S.MetricContent><span>공개 중인 혜택</span><strong>{activeOfferCount}개</strong></S.MetricContent></S.Metric>
                   <S.Metric><S.MetricIcon aria-hidden="true">calendar_month</S.MetricIcon><S.MetricContent><span>예약 가능한 시간</span><strong>{activeAvailabilityCount}개</strong></S.MetricContent></S.Metric>
                 </S.Metrics>
-
-                <S.PerformanceSection aria-labelledby="merchant-performance-title">
-                  <S.PerformanceHeading>
-                    <div>
-                      <S.SectionTitle id="merchant-performance-title">전체 매장 성과</S.SectionTitle>
-                      <S.SectionDescription>전체 연결 장소 · 기간 제한 없는 집계입니다. 위에서 선택한 매장만의 성과가 아닙니다.</S.SectionDescription>
-                    </div>
-                    {store.performance ? <S.PerformanceScope>{formatCount(store.performance.placeCount)}개 장소 기준</S.PerformanceScope> : null}
-                  </S.PerformanceHeading>
-
-                  {store.isLoadingPerformance ? (
-                    <S.PerformanceGrid aria-label="성과 요약을 불러오는 중">
-                      {Array.from({ length: 6 }, (_, index) => <S.Skeleton key={index} $height={96} />)}
-                    </S.PerformanceGrid>
-                  ) : store.performance ? (
-                    <S.PerformanceGrid>
-                      <S.PerformanceMetric><span>추천 노출</span><strong>{formatCount(store.performance.exposureCount)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>추천 카드 클릭</span><strong>{formatCount(store.performance.clickCount)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>장소 북마크</span><strong>{formatCount(store.performance.bookmarkCount)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>예약</span><strong>{formatCount(store.performance.reservationCount)}</strong><small>확정 {formatCount(store.performance.confirmedReservationCount)}</small></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>클릭률</span><strong>{formatRate(store.performance.clickThroughRate)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>예약 전환율</span><strong>{formatRate(store.performance.reservationConversionRate)}</strong></S.PerformanceMetric>
-                    </S.PerformanceGrid>
-                  ) : (
-                    <S.PerformanceError role="alert">
-                      <span>{store.performanceErrorMessage || '성과 요약을 불러오지 못했습니다.'}</span>
-                      <S.PerformanceRetry type="button" onClick={() => void store.fetchPerformance()}>다시 시도</S.PerformanceRetry>
-                    </S.PerformanceError>
-                  )}
-                </S.PerformanceSection>
 
                 {store.sectionErrorMessage ? <div style={{ marginTop: 16 }}><S.Notice $tone="error" role="alert"><S.NoticeIcon aria-hidden="true">error_outline</S.NoticeIcon>{store.sectionErrorMessage}</S.Notice></div> : null}
                 {store.successMessage ? <div style={{ marginTop: 16 }}><S.Notice $tone="success" role="status"><S.NoticeIcon aria-hidden="true">check_circle</S.NoticeIcon>{store.successMessage}</S.Notice></div> : null}
@@ -309,6 +295,36 @@ function MerchantStorePage() {
                     </S.Section>
                   </S.Column>
                 </S.Workspace>
+
+                <S.PerformanceSection aria-labelledby="merchant-performance-title">
+                  <S.PerformanceHeading>
+                    <div>
+                      <S.SectionTitle id="merchant-performance-title">전체 매장 성과</S.SectionTitle>
+                      <S.SectionDescription>전체 연결 장소 · 기간 제한 없는 집계입니다. 위에서 선택한 매장만의 성과가 아닙니다.</S.SectionDescription>
+                    </div>
+                    {store.performance ? <S.PerformanceScope>{formatCount(store.performance.placeCount)}개 장소 기준</S.PerformanceScope> : null}
+                  </S.PerformanceHeading>
+
+                  {store.isLoadingPerformance ? (
+                    <S.PerformanceGrid aria-label="성과 요약을 불러오는 중">
+                      {Array.from({ length: 6 }, (_, index) => <S.Skeleton key={index} $height={96} />)}
+                    </S.PerformanceGrid>
+                  ) : store.performance ? (
+                    <S.PerformanceGrid>
+                      <S.PerformanceMetric><span>추천 노출</span><strong>{formatCount(store.performance.exposureCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>추천 카드 클릭</span><strong>{formatCount(store.performance.clickCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>장소 북마크</span><strong>{formatCount(store.performance.bookmarkCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>예약</span><strong>{formatCount(store.performance.reservationCount)}</strong><small>확정 {formatCount(store.performance.confirmedReservationCount)}</small></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>클릭률</span><strong>{formatRate(store.performance.clickThroughRate)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>예약 전환율</span><strong>{formatRate(store.performance.reservationConversionRate)}</strong></S.PerformanceMetric>
+                    </S.PerformanceGrid>
+                  ) : (
+                    <S.PerformanceError role="alert">
+                      <span>{store.performanceErrorMessage || '성과 요약을 불러오지 못했습니다.'}</span>
+                      <S.PerformanceRetry type="button" onClick={() => void store.fetchPerformance()}>다시 시도</S.PerformanceRetry>
+                    </S.PerformanceError>
+                  )}
+                </S.PerformanceSection>
               </>
             ) : (
               <S.EmptyStoreState>

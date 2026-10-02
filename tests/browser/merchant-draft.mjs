@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { createServer } from 'vite'
 import { chromium } from 'playwright'
 const output = await mkdtemp(join(tmpdir(), 'pingdom-246-'))
-const server = await createServer({ server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'draft-fixture', configureServer(vite) {
+const server = await createServer({ cacheDir: join(output, 'cache'), server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'draft-fixture', configureServer(vite) {
   vite.middlewares.use(async (req, res, next) => {
     if (!req.url.startsWith('/draft-qa')) return next()
     res.setHeader('Content-Type', 'text/html')
@@ -23,11 +23,23 @@ try {
       page.on('pageerror', e => errors.push(e.message))
       await page.route('**/*', route => ['127.0.0.1', 'fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
       await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/draft-qa?${kind}`)
+      if (kind === 'new') {
+        assert.equal(await page.getByLabel(/법적 성명/).count(), 0)
+        await page.getByRole('button', { name: /합성 신청 장소/ }).waitFor()
+        assert.ok((await page.getByRole('button', { name: /합성 신청 장소/ }).boundingBox()).y < height)
+        await page.screenshot({ path: join(output, `history-${width}.png`) })
+      }
       await page.getByRole('button', { name: /합성 신청 장소/ }).click()
-      const name = page.getByLabel('법적 성명', { exact: true })
+      const name = page.getByLabel(/법적 성명/)
+      if (kind === 'new') {
+        await page.getByRole('button', { name: '신청 내역 보기', exact: true }).click()
+        await page.getByRole('button', { name: /합성 신청 장소/ }).click()
+        await name.waitFor()
+        assert.equal(await name.inputValue(), '테스트 신청자', 'the same application can be reopened after returning to history')
+      }
       await name.fill('수정 신청자')
       if (kind === 'claim') assert.equal(await page.getByRole('button', { name: '심사 요청', exact: true }).isDisabled(), true)
-      await page.getByLabel('사업자등록번호', { exact: true }).fill('1234567890')
+      await page.getByLabel(/사업자등록번호/).fill('1234567890')
       const before = await page.evaluate(() => window.qaApplication.attachments)
       await page.evaluate(() => { window.qaFailSave = true })
       await page.getByRole('button', { name: '임시 저장', exact: true }).click()
@@ -51,7 +63,7 @@ try {
           await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/draft-qa?new`)
           await page.getByRole('button', { name: /합성 신청 장소/ }).click()
           await name.fill('저장된 수정 신청자')
-          const businessNumber = page.getByLabel('사업자등록번호', { exact: true })
+          const businessNumber = page.getByLabel(/사업자등록번호/)
           await businessNumber.fill('1234567890')
           await page.evaluate(() => { window.qaFailSubmit = true })
           await page.getByRole('button', { name: '심사 요청', exact: true }).click()

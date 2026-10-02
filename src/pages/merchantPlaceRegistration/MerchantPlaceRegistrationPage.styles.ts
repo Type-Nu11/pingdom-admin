@@ -10,6 +10,16 @@ export const Layout = styled.div`
   gap: 20px;
 `
 
+export const ScreenActions = styled.nav`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  button { width: auto; margin: 0; }
+  button:disabled { cursor: default; opacity: 0.55; }
+`
+
 const surfacePanel = css`
   min-width: 0;
   padding: 26px 28px;
@@ -34,6 +44,11 @@ export const PanelHeading = styled.div`
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    > div:first-child { flex: 1 1 100%; min-width: 0; }
+  }
 `
 
 export const PanelTitle = styled.h2`
@@ -80,6 +95,9 @@ export const ApplicationList = styled.div`
   display: flex;
   flex-direction: column;
   border-top: 1px solid ${colors.borderSoft};
+  max-height: min(520px, 60vh);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 `
 
 export const ApplicationItem = styled.button<{ $selected: boolean }>`

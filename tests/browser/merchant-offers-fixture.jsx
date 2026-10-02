@@ -15,6 +15,10 @@ client.defaults.adapter = async config => {
   await new Promise(resolve => setTimeout(resolve, 20))
   let data
   if (config.url === '/merchant-owner/me') data = { placeIds: [1, 2], displayName: '합성 상점' }
+  else if (/^\/merchant-owner\/places\/\d+$/.test(config.url)) {
+    const id = Number(config.url.split('/').at(-1))
+    data = { id, name: `합성 매장 ${id}`, roadAddress: `주소 ${id}` }
+  }
   else if (config.url === '/merchant-owner/offers') {
     if (window.qaHoldList) await new Promise(resolve => { window.qaReleaseList = resolve })
     if (window.qaFailNextList) {

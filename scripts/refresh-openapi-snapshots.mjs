@@ -9,6 +9,7 @@ const groups = ['admin', 'merchant']
 const methods = new Set(['get', 'post', 'put', 'patch', 'delete'])
 const presentation = new Set(['description', 'summary', 'title', 'example', 'examples', 'tags', 'operationId', 'externalDocs'])
 const digest = text => createHash('sha256').update(text).digest('hex')
+const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 
 export function operations(doc) {
   return Object.fromEntries(Object.entries(doc.paths).flatMap(([path, item]) =>
@@ -22,9 +23,18 @@ export function validateOpenApi(doc) {
   if (!doc || !/^3\./.test(doc.openapi ?? '') || !doc.paths || Array.isArray(doc.paths)
     || typeof doc.paths !== 'object' || !Object.keys(doc.paths).length) throw new Error('Expected a nonempty OpenAPI 3 document')
   for (const [path, item] of Object.entries(doc.paths)) {
-    if (!path.startsWith('/') || !item || typeof item !== 'object') throw new Error('Invalid OpenAPI path')
+    if (!path.startsWith('/') || !isObject(item)) throw new Error('Invalid OpenAPI path')
     for (const [method, operation] of Object.entries(item)) {
-      if (methods.has(method) && (!operation || Array.isArray(operation) || typeof operation !== 'object' || !operation.responses)) throw new Error('Invalid OpenAPI operation')
+      if (!methods.has(method)) continue
+      if (!isObject(operation) || !isObject(operation.responses)) throw new Error('Invalid OpenAPI operation responses')
+      const responses = Object.entries(operation.responses).filter(([status]) => !status.startsWith('x-'))
+      if (!responses.length) throw new Error('Empty OpenAPI operation responses')
+      for (const [status, response] of responses) {
+        if (!(status === 'default' || /^[1-5](?:\d{2}|XX)$/.test(status)) || !isObject(response)) throw new Error('Invalid OpenAPI response entry')
+        if ('$ref' in response) {
+          if (typeof response.$ref !== 'string' || !response.$ref.trim()) throw new Error('Invalid OpenAPI response reference')
+        } else if (typeof response.description !== 'string') throw new Error('Missing OpenAPI response description')
+      }
     }
   }
   if (!Object.keys(operations(doc)).length) throw new Error('No supported HTTP operations')

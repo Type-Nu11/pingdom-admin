@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { collectSnapshots, compareDocuments, operations, validateOpenApi } from '../scripts/refresh-openapi-snapshots.mjs'
 
-const document = () => ({ openapi: '3.0.1', paths: { '/test': { get: { tags: ['old'], operationId: 'old', responses: { 200: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Item' } } } } } } } }, components: { schemas: { Item: { type: 'object', properties: { id: { type: 'integer' } } } } } })
+const document = () => ({ openapi: '3.0.1', paths: { '/test': { get: { tags: ['old'], operationId: 'old', responses: { 200: { description: 'OK', content: { 'application/json': { schema: { $ref: '#/components/schemas/Item' } } } } } } } }, components: { schemas: { Item: { type: 'object', properties: { id: { type: 'integer' } } } } } })
 test('renamed tags/operationIds do not masquerade as contract changes', () => {
   const before = document(), after = document()
   after.paths['/test'].get.tags = ['new']
@@ -61,4 +66,56 @@ test('schema properties named like documentation fields remain contract changes'
   const before = document(), after = document()
   after.components.schemas.Item.properties.tags = { type: 'string' }
   assert.equal(compareDocuments(before, after).schemas.changed[0].contract.length, 1)
+})
+
+test('response maps reject malformed shapes and accept references, ranges and default responses', async () => {
+  const sources = { admin: 'https://example.test/admin', merchant: 'https://example.test/merchant' }
+  for (const responses of ['invalid', [], {}, null, { 200: null }, { 200: [] }, { 200: {} }, { 200: { $ref: '' } }, { invalid: { description: 'OK' } }, { 'x-note': 'only extension' }]) {
+    const invalid = document()
+    invalid.paths['/test'].get.responses = responses
+    assert.throws(() => validateOpenApi(invalid), /OpenAPI/)
+    await assert.rejects(collectSnapshots(sources, async () => ({ status: 200, text: async () => JSON.stringify(invalid) })), /OpenAPI/)
+  }
+  const valid = document()
+  valid.paths['/test'].get.responses = {
+    200: { $ref: '#/components/responses/Success' },
+    '4XX': { description: 'Client error' },
+    default: { description: 'Other responses' },
+    'x-note': 'extension',
+  }
+  valid.components.responses = { Success: { description: 'OK' } }
+  assert.equal(validateOpenApi(valid), valid)
+})
+
+test('CLI leaves both snapshots, metadata and report unchanged when either group has invalid responses', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'pingdom-openapi-rejection-'))
+  try {
+    mkdirSync(join(directory, 'docs/openapi'), { recursive: true })
+    const original = {
+      'admin.json': JSON.stringify(document()),
+      'merchant.json': JSON.stringify(document()),
+      'metadata.json': JSON.stringify({ sources: { admin: 'https://example.test/admin', merchant: 'https://example.test/merchant' } }),
+      'contract-changes.json': '{"original":true}\n',
+    }
+    for (const [name, raw] of Object.entries(original)) writeFileSync(join(directory, 'docs/openapi', name), raw)
+    const git = args => execFileSync('git', args, { cwd: directory, encoding: 'utf8' })
+    git(['init', '-q'])
+    git(['add', 'docs/openapi'])
+    git(['-c', 'user.name=Contract test', '-c', 'user.email=contract@example.test', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'test baseline'])
+    const script = fileURLToPath(new URL('../scripts/refresh-openapi-snapshots.mjs', import.meta.url))
+    for (const group of ['admin', 'merchant']) for (const responses of ['invalid', [], {}]) {
+      const invalid = document()
+      invalid.paths['/test'].get.responses = responses
+      const runner = `process.argv = [process.execPath, ${JSON.stringify(script)}, '--refresh', '--baseline', 'HEAD'];
+        globalThis.fetch = async url => ({ status: 200, text: async () => JSON.stringify(url.endsWith('/${group}') ? ${JSON.stringify(invalid)} : ${JSON.stringify(document())}) });
+        await import(${JSON.stringify(new URL('../scripts/refresh-openapi-snapshots.mjs', import.meta.url).href)});`
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', runner], { cwd: directory, encoding: 'utf8', timeout: 10000 })
+      assert.equal(result.error, undefined)
+      assert.notEqual(result.status, 0)
+      assert.match(result.stderr, /OpenAPI.*responses/)
+      for (const [name, raw] of Object.entries(original)) assert.equal(readFileSync(join(directory, 'docs/openapi', name), 'utf8'), raw)
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
 })

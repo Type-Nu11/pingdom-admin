@@ -56,7 +56,7 @@ def main():
                            success_response_schema='|'.join(f'{s}:{content(v)}' for s, v in operation.get('responses', {}).items() if s.startswith('2')) or '-',
                            error_response_schemas='|'.join(f'{s}:{content(v)}' for s, v in operation.get('responses', {}).items() if not s.startswith('2')) or '-',
                            last_verified=metadata['collected_at'], canonical_status=f'{group}: documented',
-                           issue='#207', backend_prerequisite='계약 존재; 실서버 QA 미수행')
+                           issue=previous.get('issue') or '#254', backend_prerequisite='계약 존재; 실서버 QA 미수행')
                 row['frontend_target'] = '; '.join(f"{c['file']}::{c['function']} -> {','.join(c['callers']) or 'no callers'}" for c in calls) or '호출 근거 없음'
                 row['status'] = 'partial' if connected else 'missing'
                 row['destructive'] = previous.get('destructive') or ('no' if method == 'get' else 'review-required')
@@ -65,10 +65,11 @@ def main():
                     row['status'] = 'implemented'
                 if path == '/admin/dashboard/pending-items':
                     row.update(status='alternative', issue='#207',
-                               frontend_target='대시보드는 /admin/merchant-place-applications?status=PENDING&page=1&limit=10 및 서버 total 사용',
+                               frontend_target='src/api/adminPendingWorkApi.ts: 예약·장소 신청·리뷰 삭제·커뮤니티 신고·검증·중복·Scout·Trust Score의 개별 API 집계',
                                backend_prerequisite='옛 게시글 혼합 집계 대신 장소 신청 전용 조회; 서버 API 삭제 의미 아님')
                 if '/members' in path or '/invitations/' in path:
-                    row.update(issue='#204', backend_prerequisite='팀원 관리는 현재 제품 범위 제외; 서버 차단 아님')
+                    if not connected:
+                        row.update(status='excluded', issue='#204', confirmation='기획상 보류; 웹에서 처리하지 않음', backend_prerequisite='팀원 관리는 현재 제품 범위 제외; 서버 차단 아님')
                 if (path.startswith('/admin/posts/') and '/s3/' not in path) or path.startswith(('/admin/reports/', '/admin/report-appeals')):
                     row.update(status='excluded', issue='#207', confirmation='기획상 제외; 웹에서 처리하지 않음',
                                backend_prerequisite='옛 MapImage 운영 기능 제외; 서버 API·데이터 삭제는 별도 결정')
@@ -76,6 +77,10 @@ def main():
                     row.update(status='alternative', frontend_target='메뉴 목록 또는 통합 신청 상세의 첨부 배열 사용; 단건 API 직접 호출 없음')
                 if connected and '/media' in path:
                     row.update(status='implemented', confirmation='useMerchantPlaceOperations; displayOrder 이동 위치/업로드 후 완료 등록', backend_prerequisite='없음; 현재 문서 계약과 요청 필드 연결 확인')
+                if connected and path.endswith('/naver-place-search'):
+                    row.update(status='implemented', issue='#225', confirmation='업체명 검색 후보 선택; 수동 카테고리 유지; 실환경 QA는 #220', backend_prerequisite='공개 검색 계약과 호출 연결 존재; 인증된 실검색 QA 미수행')
+                if connected and (path.endswith('/reservation-terms') or path == '/merchant-owner/availabilities' and method == 'get'):
+                    row.update(status='implemented', issue='#256', confirmation='PR #265 / docs/merchant-reservation-terms-qa.md: 조건 편집·저장·재조회 모의 검증; 실환경 QA #220', backend_prerequisite='nullable reservationTerms·conditionsVersion 조회 및 PUT 연동 완료; 실서버 QA 미수행')
                 rows.append(row)
     for previous in old:
         key = (previous['method'], normalize(previous['path']))

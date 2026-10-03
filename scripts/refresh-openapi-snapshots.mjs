@@ -14,7 +14,7 @@ const isObject = value => value !== null && typeof value === 'object' && !Array.
 export function operations(doc) {
   return Object.fromEntries(Object.entries(doc.paths).flatMap(([path, item]) =>
     Object.entries(item).filter(([method]) => methods.has(method)).map(([method, operation]) =>
-      [`${method.toUpperCase()} ${path}`, { ...operation, ...(item.parameters ? { pathParameters: item.parameters } : {}), effectiveSecurity: operation.security ?? doc.security ?? [] }],
+      [`${method.toUpperCase()} ${path}`, { ...operation, ...(item.parameters ? { pathParameters: item.parameters } : {}), ...(item.servers !== undefined ? { pathServers: item.servers } : {}), effectiveSecurity: operation.security ?? doc.security ?? [] }],
     ),
   ))
 }

@@ -119,3 +119,34 @@ test('CLI leaves both snapshots, metadata and report unchanged when either group
     rmSync(directory, { recursive: true, force: true })
   }
 })
+
+test('path server additions, URL changes and removals remain visible as contract differences', () => {
+  const before = document(), after = document()
+  after.paths['/test'].servers = [{ url: 'https://old.example' }]
+  let change = compareDocuments(before, after).operations.changed[0]
+  assert.equal(change.contract[0].pointer, '/pathServers')
+  assert.equal(change.contract[0].kind, 'added')
+  assert.equal(change.documentation.length, 0)
+  const next = structuredClone(after)
+  next.paths['/test'].servers[0].url = 'https://new.example'
+  change = compareDocuments(after, next).operations.changed[0]
+  assert.equal(change.contract[0].kind, 'changed')
+  assert.deepEqual(change.contract[0].after, [{ url: 'https://new.example' }])
+  change = compareDocuments(next, before).operations.changed[0]
+  assert.equal(change.contract[0].kind, 'removed')
+  assert.deepEqual(change.contract[0].before, [{ url: 'https://new.example' }])
+})
+
+test('root, path and operation servers are compared without masking overrides', () => {
+  const before = document()
+  before.servers = [{ url: 'https://root.example' }]
+  before.paths['/test'].servers = [{ url: 'https://path.example' }]
+  before.paths['/test'].get.servers = [{ url: 'https://operation.example' }]
+  const after = structuredClone(before)
+  after.servers[0].url = 'https://root-new.example'
+  after.paths['/test'].servers[0].url = 'https://path-new.example'
+  after.paths['/test'].get.servers[0].url = 'https://operation-new.example'
+  const diff = compareDocuments(before, after)
+  assert.deepEqual(diff.operations.changed[0].contract.map(c => c.pointer), ['/pathServers', '/servers'])
+  assert.equal(diff.document[0].pointer, '/servers')
+})

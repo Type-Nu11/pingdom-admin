@@ -64,5 +64,6 @@ git diff --check
 
 - 지적 1: `responses`의 문자열·배열·빈 객체, 잘못된 상태 코드/응답 객체/참조 및 설명 누락을 수집 전에 거부한다. 유효한 응답 참조·상태 범위·default·확장 필드는 유지한다. 전체 OpenAPI 명세 검증기로 확장한 것은 아니다.
 - 임시 Git 저장소에서 실제 CLI에 두 그룹 각각의 잘못된 HTTP 200 문서를 주입하여 실패 종료와 두 스냅샷·metadata·diff 원본 유지까지 확인했다. 실제 문서 URL은 호출하지 않는다.
+- 지적 2: 경로별 `servers`의 추가·URL 변경·제거를 operation 계약 차이로 포함했다. root/path/operation 서버 선언이 함께 있을 때도 각각의 변화를 보존한다.
 - 기존 공개 스냅샷과 고정 baseline의 구조 diff 재계산은 그대로 통과하며 원본·수집 시각은 변경하지 않았다.
-- 보완 후 계약/수집 검사 14개, 전체 테스트 489개 및 lint·TypeScript 포함 build·`git diff --check` 통과. UI·실계정 QA 범위는 기존과 동일하다.
+- 보완 후 계약/수집 검사 16개, 전체 테스트 491개 및 lint·TypeScript 포함 build·`git diff --check` 통과. UI·실계정 QA 범위는 기존과 동일하다.

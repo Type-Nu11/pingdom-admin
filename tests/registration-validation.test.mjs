@@ -115,3 +115,28 @@ test('an active action blocks submission', async () => {
   await scenario.run()
   assert.equal(scenario.calls.length, 0)
 })
+
+test('pin confirmation cancellation resets search without changing saved location input', () => {
+  let onClose
+  function visit(node) {
+    if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(ast) === 'MerchantConfirmationDialog') {
+      const attributes = node.attributes.properties
+      if (attributes.some(attribute => ts.isJsxAttribute(attribute) && attribute.name.getText(ast) === 'cancelLabel'
+        && attribute.initializer?.getText(ast) === '"기존 위치 유지"')) {
+        onClose = attributes.find(attribute => ts.isJsxAttribute(attribute) && attribute.name.getText(ast) === 'onClose').initializer.expression.getText(ast)
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(ast)
+  assert.ok(onClose, 'the actual pin confirmation exposes a cancellation handler')
+  const currentLocation = { placeName: '기존 업체', roadAddress: '합성로 1', jibunAddress: '합성동 1', postalCode: '12345', latitude: '36.2', longitude: '127', pinAdjusted: true }
+  const original = { ...currentLocation }
+  const search = { message: '우편번호가 없는 주소입니다.', reset() { this.message = '' } }
+  let pending = { candidate: { roadAddress: '다른로 2', postalCode: '' } }
+  const handler = ts.transpileModule(declaration('cancelPlaceSearch'), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
+  new Function('placeSearch', 'setPendingSelection', 'currentLocation', `${handler}\nreturn ${onClose};`)(search, value => { pending = value }, currentLocation)()
+  assert.equal(search.message, '')
+  assert.equal(pending, null)
+  assert.deepEqual(currentLocation, original)
+})

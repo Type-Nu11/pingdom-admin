@@ -590,7 +590,7 @@ function RegistrationForm({
         {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null || placeSearch.phase !== 'idle' || pendingSelection !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
         {(canStageAttachments || registration?.status === 'DRAFT') ? <Store.SaveButton type="button" disabled={activeAction !== null || placeSearch.phase !== 'idle' || pendingSelection !== null} onClick={() => void requestReview()}>{activeAction === 'request' ? '심사 요청 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
-      {pendingSelection ? <MerchantConfirmationDialog title="직접 조정한 핀 위치를 변경할까요?" description={`선택한 ${pendingSelection.candidate.kind === 'place' ? pendingSelection.candidate.name : '주소'}의 주소와 검색 좌표를 적용합니다. 직접 조정한 핀 위치가 바뀝니다.`} cancelLabel="기존 위치 유지" confirmLabel="검색 위치 적용" onClose={() => setPendingSelection(null)} onConfirm={() => applySearchSelection(pendingSelection.candidate)} /> : null}
+      {pendingSelection ? <MerchantConfirmationDialog title="직접 조정한 핀 위치를 변경할까요?" description={`선택한 ${pendingSelection.candidate.kind === 'place' ? pendingSelection.candidate.name : '주소'}의 주소와 검색 좌표를 적용합니다. 직접 조정한 핀 위치가 바뀝니다.`} cancelLabel="기존 위치 유지" confirmLabel="검색 위치 적용" onClose={cancelPlaceSearch} onConfirm={() => applySearchSelection(pendingSelection.candidate)} /> : null}
       {registration && isCancelDialogOpen ? <MerchantConfirmationDialog title="신규 장소 등록 신청을 취소할까요?" description="취소한 신청은 심사 대상에서 제외되며 다시 되돌릴 수 없습니다." confirmLabel="신청 취소" isPending={activeAction === 'cancel'} onClose={() => setIsCancelDialogOpen(false)} onConfirm={() => void confirmCancellation()} /> : null}
     </S.RegistrationForm>
   )

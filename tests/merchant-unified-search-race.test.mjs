@@ -65,3 +65,17 @@ test('unmount invalidates selection and search responses', async () => {
   await act(async () => pending[0].resolve())
   assert.deepEqual(state.results, [])
 })
+
+test('canceling a prepared address clears its unapplied postal warning', async () => {
+  let selection
+  await act(async () => {
+    selection = await state.prepareSelection({ ...item, kind: 'address', postalCode: '' })
+  })
+  assert.ok(selection)
+  assert.match(state.message, /우편번호가 없는 주소/)
+  await act(async () => state.reset())
+  assert.equal(state.message, '')
+  assert.equal(state.isError, false)
+  assert.equal(state.phase, 'idle')
+  assert.deepEqual(state.results, [])
+})

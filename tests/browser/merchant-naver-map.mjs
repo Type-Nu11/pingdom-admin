@@ -72,6 +72,15 @@ try {
     assert.equal(await search.count(), 1)
     assert.equal(await page.locator('vite-error-overlay').count(), 0)
     assert.equal(await page.locator('#naver-address-query').count(), 0)
+    // Closing is only a visibility change: a manually written name survives reopen before any search.
+    await page.getByRole('button', { name: '직접 입력', exact: true }).click()
+    await page.getByLabel(/^장소명(?: \(필수\))?$/).fill('직접 작성한 장소')
+    await page.getByRole('button', { name: '장소 직접 입력 닫기', exact: true }).click()
+    assert.equal(await page.locator('#merchant-manual-place-fields').count(), 0)
+    await page.waitForFunction(() => document.activeElement?.getAttribute('aria-controls') === 'merchant-manual-place-fields')
+    await page.getByRole('button', { name: '직접 입력', exact: true }).click()
+    assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '직접 작성한 장소')
+    await page.getByRole('button', { name: '장소 직접 입력 닫기', exact: true }).click()
     await page.screenshot({ path: join(output, 'initial-' + width + '.png'), fullPage: true })
     const run = async value => { await query.fill(value); await query.press('Enter') }
 
@@ -94,7 +103,14 @@ try {
     assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '합성 업체')
     assert.equal(await page.getByLabel(/^우편번호/).inputValue(), '12345')
     assert.equal(await page.getByRole('dialog').count(), 0)
-
+    await page.getByRole('button', { name: '장소 직접 입력 닫기', exact: true }).click()
+    assert.equal(await page.getByLabel(/^도로명 주소/).count(), 0)
+    assert.equal(await page.getByLabel('위도', { exact: true }).inputValue(), '36.2', 'closing direct input must keep marker coordinates visible')
+    await page.getByRole('button', { name: '직접 입력', exact: true }).click()
+    assert.equal(await page.getByLabel(/^도로명 주소/).inputValue(), place.roadAddress)
+    assert.equal(await page.getByLabel(/^우편번호/).inputValue(), '12345')
+    assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '합성 업체')
+    await page.locator('#merchant-manual-place-fields').screenshot({ path: join(output, 'manual-fields-' + width + '.png') })
 
     // A different address must not silently move a hand-adjusted pin. Cancel preserves the whole selection.
     await run('서울 다른로 20')

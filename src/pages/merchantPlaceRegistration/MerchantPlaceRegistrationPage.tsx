@@ -235,11 +235,17 @@ function RegistrationForm({
   const attachmentInputRef = useRef<HTMLInputElement | null>(null)
   const mapRef = useRef<MapHandle | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
+  const manualEntryToggleRef = useRef<HTMLButtonElement | null>(null)
   const cancelPlaceSearch = () => {
     placeSearch.reset()
     setPendingSelection(null)
   }
   const invalidateAddress = cancelPlaceSearch
+  const closeManualPlaceEntry = () => {
+    invalidateAddress()
+    setIsManualPlaceEntry(false)
+    window.requestAnimationFrame(() => manualEntryToggleRef.current?.focus())
+  }
 
   const numericLatitude = Number(latitude)
   const numericLongitude = Number(longitude)
@@ -248,7 +254,7 @@ function RegistrationForm({
     && numericLatitude >= -90 && numericLatitude <= 90 && numericLongitude >= -180 && numericLongitude <= 180
   const marker = hasValidCoordinate ? [{ id: 1, latitude: numericLatitude, longitude: numericLongitude, label: placeName || '새 장소 위치', category, categoryName: CATEGORIES.find((item) => item.value === category)?.label }] : []
   const hasSelectedPlace = Boolean(roadAddress || jibunAddress)
-  const isLocationEntryActive = hasSelectedPlace || isManualPlaceEntry
+  const isLocationEntryActive = hasSelectedPlace || isManualPlaceEntry || hasValidCoordinate
 
   useEffect(() => {
     if (isMapReady && hasValidCoordinate) {
@@ -498,8 +504,8 @@ function RegistrationForm({
               </S.SelectedPlaceSummary> : null}
             </S.PlaceSearchField>
           </S.Section>
-          {!isManualPlaceEntry ? <S.ManualEntryPrompt><span>검색 결과에 없거나 주소를 수정해야 하나요?</span><S.ManualEntryButton type="button" disabled={!editable || activeAction !== null} onClick={() => { invalidateAddress(); setFormError(''); setIsManualPlaceEntry(true) }}>직접 입력</S.ManualEntryButton></S.ManualEntryPrompt> : null}
-          {isManualPlaceEntry ? <S.Section><S.SectionLegend>장소 직접 입력·보완</S.SectionLegend><S.SectionHint>누락된 주소·우편번호를 보완할 수 있습니다. 주소를 바꾸면 우편번호도 다시 확인해주세요.</S.SectionHint><Store.Field $wide>장소명 (필수)<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></Store.Field><Store.Field $wide>도로명 주소 (필수)<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setRoadAddress(event.target.value); setPostalCode('') }} /></Store.Field><Store.Field $wide>지번 주소 (필수)<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setJibunAddress(event.target.value); setPostalCode('') }} /></Store.Field><Store.Field>우편번호 (필수)<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPostalCode(event.target.value) }} /></Store.Field></S.Section> : null}
+          {!isManualPlaceEntry ? <S.ManualEntryPrompt><span>검색 결과에 없거나 주소를 수정해야 하나요?</span><S.ManualEntryButton ref={manualEntryToggleRef} type="button" aria-expanded={false} aria-controls="merchant-manual-place-fields" disabled={!editable || activeAction !== null} onClick={() => { invalidateAddress(); setFormError(''); setIsManualPlaceEntry(true) }}>직접 입력</S.ManualEntryButton></S.ManualEntryPrompt> : null}
+          {isManualPlaceEntry ? <S.Section id="merchant-manual-place-fields"><S.SectionLegend><S.ManualEntryHeading><span>장소 직접 입력·보완</span><S.ManualEntryButton type="button" aria-label="장소 직접 입력 닫기" aria-expanded={true} aria-controls="merchant-manual-place-fields" disabled={activeAction !== null} onClick={closeManualPlaceEntry}>닫기</S.ManualEntryButton></S.ManualEntryHeading></S.SectionLegend><S.SectionHint>누락된 주소·우편번호를 보완할 수 있습니다. 주소를 바꾸면 우편번호도 다시 확인해주세요.</S.SectionHint><Store.Field $wide>장소명 (필수)<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></Store.Field><Store.Field $wide>도로명 주소 (필수)<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setRoadAddress(event.target.value); setPostalCode('') }} /></Store.Field><Store.Field $wide>지번 주소 (필수)<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setJibunAddress(event.target.value); setPostalCode('') }} /></Store.Field><Store.Field>우편번호 (필수)<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPostalCode(event.target.value) }} /></Store.Field></S.Section> : null}
           <S.Section><S.SectionLegend>장소 정보</S.SectionLegend><S.SectionHint>카테고리와 방문자에게 표시할 가게 소개를 입력하세요.</S.SectionHint>
         <Store.Field $wide>카테고리 (필수)<S.CategoryDropdown ref={categoryDropdownRef}><S.CategoryTrigger type="button" aria-haspopup="listbox" aria-expanded={isCategoryMenuOpen} disabled={!editable || activeAction !== null} onClick={() => setIsCategoryMenuOpen((open) => !open)} onKeyDown={(event) => { if (event.key === 'Escape') setIsCategoryMenuOpen(false); if (event.key === 'ArrowDown') { event.preventDefault(); setIsCategoryMenuOpen(true) } }}><span>{CATEGORIES.find((item) => item.value === category)?.label}</span><span aria-hidden="true">{isCategoryMenuOpen ? 'expand_less' : 'expand_more'}</span></S.CategoryTrigger>{isCategoryMenuOpen ? <S.CategoryMenu role="listbox" aria-label="장소 카테고리">{CATEGORIES.map((item) => <S.CategoryOption type="button" role="option" key={item.value} $selected={category === item.value} aria-selected={category === item.value} onClick={() => { setCategory(item.value); setIsCategoryMenuOpen(false) }}>{item.label}</S.CategoryOption>)}</S.CategoryMenu> : null}</S.CategoryDropdown><S.SectionHint>업체명 검색으로 카테고리를 변경하지 않습니다. 알맞은 카테고리를 직접 선택해주세요.</S.SectionHint></Store.Field>
         <Store.Field $wide>장소 소개 (필수)<Store.Textarea value={description} maxLength={1000} disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} /><S.SectionHint>{description.length}/1000</S.SectionHint></Store.Field>

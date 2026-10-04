@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { getAdminPlace } from '../../api/adminPlaceApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import {
@@ -122,6 +123,7 @@ function PlaceDuplicateCandidatePage() {
     status,
     candidates,
     totalCount,
+    pageInfo,
     candidateDetail,
     isLoading,
     isDetailLoading,
@@ -198,11 +200,24 @@ function PlaceDuplicateCandidatePage() {
     }
   }, [activeAction, dialogState])
 
-  const handleStatusChange = (nextStatus: AdminPlaceDuplicateCandidateStatus) => {
+  const clearSelection = () => {
+    latestPlacesRequestIdRef.current += 1
     setSelectedCandidateId(null)
     setPlaceDetails({})
+    setIsPlacesLoading(false)
+    setPlacesErrorMessage('')
+    setTargetPlaceId(null)
     clearCandidateDetail()
-    void fetchCandidates(nextStatus)
+  }
+
+  const handleStatusChange = (nextStatus: AdminPlaceDuplicateCandidateStatus) => {
+    clearSelection()
+    void fetchCandidates(nextStatus, 1)
+  }
+
+  const handlePageChange = (page: number) => {
+    clearSelection()
+    void fetchCandidates(status, page)
   }
 
   const handleSelectCandidate = (candidateId: number) => {
@@ -403,6 +418,7 @@ function PlaceDuplicateCandidatePage() {
                           type="button"
                           $selected={selectedCandidateId === candidate.candidateId}
                           aria-pressed={selectedCandidateId === candidate.candidateId}
+                          disabled={isLoading || activeAction !== null}
                           onClick={() => handleSelectCandidate(candidate.candidateId)}
                         >
                           <S.GroupTopLine>
@@ -416,6 +432,16 @@ function PlaceDuplicateCandidatePage() {
                       ))}
                     </S.GroupList>
                   </S.ScrollArea>
+                  {pageInfo.totalPages > 1 ? (
+                    <AdminPagination
+                      page={pageInfo.page}
+                      totalPages={pageInfo.totalPages}
+                      hasNext={pageInfo.hasNext}
+                      disabled={isLoading || activeAction !== null}
+                      onPageChange={handlePageChange}
+                      ariaLabel="중복 후보 목록 페이지"
+                    />
+                  ) : null}
                 </S.Panel>
 
                 <S.Panel>

@@ -59,6 +59,7 @@ function scenario(existing, dirty = false) {
     // Recreate the form handler as React does on render, retaining parent-owned files.
     const runHandler = compile(`const ${handler}; return requestReview`, {
       activeAction: null, canEdit: () => true,
+      placeSearch: { phase: 'idle' }, pendingSelection: null,
       registration: selectedId === null ? null : saved,
       editable: saved.attachments.length === 0,
       draft: { isDirty: dirty, markSaved() { markedSaved++ } },

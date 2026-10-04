@@ -33,7 +33,7 @@ beforeEach(async()=>{
 })
 afterEach(async()=>{await act(async()=>root.unmount())})
 after(async()=>{await server.close();dom.window.close()})
-async function finish(start=0,{fail,code=500,count=6,invalid}={}){
+async function finish(start=0,{fail,code=500,count=6,invalid,duplicateTotal=0}={}){
   const batch=requests.slice(start)
   await act(async()=>{
     for(const {config,resolve,reject} of batch){
@@ -41,13 +41,32 @@ async function finish(start=0,{fail,code=500,count=6,invalid}={}){
         reject(new AxiosError('Synthetic failure','ERR_BAD_RESPONSE',config,null,{config,status:code,statusText:'Error',headers:{},data:{}}));continue
       }
       const n=config.url==='/admin/reservations'?count:0
-      const data=config.url.endsWith('/summary')?{placeCount:1,bannedUserCount:0}:config.url.endsWith('/recent-activities')?{places:[],userSanctions:[]}:
+      const duplicate=config.url==='/admin/places/duplicates'||config.url==='/admin/places/duplicate-candidates'
+      const data=duplicate?{groups:[],candidates:[],page:1,limit:1,total:duplicateTotal,totalPages:Math.ceil(duplicateTotal),hasNext:duplicateTotal>1}:config.url.endsWith('/summary')?{placeCount:1,bannedUserCount:0}:config.url.endsWith('/recent-activities')?{places:[],userSanctions:[]}:
         {count:0,unreadCount:0,totalElements:invalid!==undefined?invalid:n,totalCount:0,total:0}
       resolve({config,status:200,statusText:'OK',headers:{},data})
     }
   })
 }
 const reservation=()=>state.pendingWorkEntries.find(x=>x.key==='reservations')
+test('duplicate checks use server total and request only one item',async()=>{
+  assert.deepEqual(requests.find(x=>x.config.url==='/admin/places/duplicates').config.params,{page:1,limit:1})
+  assert.deepEqual(requests.find(x=>x.config.url==='/admin/places/duplicate-candidates').config.params,{status:'PENDING',page:1,limit:1})
+  await finish(0,{duplicateTotal:25})
+  for(const key of ['duplicate-place-groups','duplicate-place-candidates']) {
+    assert.equal(state.pendingWorkEntries.find(x=>x.key===key).count,25)
+    assert.equal(state.pendingWorkEntries.find(x=>x.key===key).status,'success')
+  }
+  assert.equal(state.pendingWorkCount,56)
+})
+for(const duplicateTotal of [-1,1.5,'6',NaN]) test('invalid duplicate total '+duplicateTotal+' remains a failed check',async()=>{
+  await finish(0,{duplicateTotal})
+  for(const key of ['duplicate-place-groups','duplicate-place-candidates']) {
+    assert.equal(state.pendingWorkEntries.find(x=>x.key===key).status,'error')
+    assert.equal(state.pendingWorkEntries.find(x=>x.key===key).count,null)
+  }
+  assert.equal(state.pendingWorkCount,6)
+})
 test('dashboard and notifications share twelve checks, reservation filter and overlap guard',async()=>{
   assert.equal(requests.filter(x=>x.config.url==='/admin/merchant-place-applications').length,1)
   const r=requests.find(x=>x.config.url==='/admin/reservations')

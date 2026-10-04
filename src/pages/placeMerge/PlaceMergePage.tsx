@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
 import { useAuth } from '../../hooks/useAuth'
@@ -141,6 +142,7 @@ function PlaceMergePage() {
   const {
     duplicateGroups,
     duplicateTotalCount,
+    duplicatePageInfo,
     duplicateDetail,
     mergeHistories,
     isGroupsLoading,
@@ -269,6 +271,14 @@ function PlaceMergePage() {
 
   const handleRefresh = () => {
     void Promise.all([fetchDuplicateGroups(), fetchMergeHistories()])
+  }
+
+  const handlePageChange = (page: number) => {
+    setSelectedGroup(null)
+    setSelectedSourceId(null)
+    setConfirmation(null)
+    clearDuplicateDetail()
+    void fetchDuplicateGroups(page)
   }
 
   const handleSelectSource = (candidateId: number) => {
@@ -417,6 +427,7 @@ function PlaceMergePage() {
                             group.representativePlaceId
                           }
                           onClick={() => handleSelectGroup(group)}
+                          disabled={isGroupsLoading || activeAction !== null}
                         >
                           <S.GroupTopLine>
                             <S.GroupLabel>{getGroupLabel(group)}</S.GroupLabel>
@@ -437,6 +448,16 @@ function PlaceMergePage() {
                       ))}
                     </S.GroupList>
                   </S.ScrollArea>
+                  {duplicatePageInfo.totalPages > 1 ? (
+                    <AdminPagination
+                      page={duplicatePageInfo.page}
+                      totalPages={duplicatePageInfo.totalPages}
+                      hasNext={duplicatePageInfo.hasNext}
+                      disabled={isGroupsLoading || activeAction !== null}
+                      onPageChange={handlePageChange}
+                      ariaLabel="중복 장소 목록 페이지"
+                    />
+                  ) : null}
                 </S.Panel>
 
                 {activeGroup ? (

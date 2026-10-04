@@ -2,9 +2,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, 
 import { useNavigate } from 'react-router-dom'
 import { useUnsavedChanges, useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { AdminTimePicker } from '../../components/common/AdminDateTimePicker'
-import { searchMerchantNaverPlaces, getNaverPlaceSearchError, type NaverPlaceSearchItem } from '../../api/merchantNaverPlaceSearchApi'
+import { getMerchantSearchSelection, type MerchantSearchCandidate } from '../../api/merchantUnifiedPlaceSearchApi'
+import { useMerchantUnifiedPlaceSearch } from '../../hooks/useMerchantUnifiedPlaceSearch'
 import type { MapHandle } from '../../components/map/map.types'
-import { searchNaverAddresses, getNaverAddressSearchError, type AddressCandidate } from '../../api/merchantNaverAddressSearchApi'
 import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
 import { useAuth } from '../../hooks/useAuth'
@@ -222,9 +222,9 @@ function RegistrationForm({
   const draft = useSavedDraft(JSON.stringify([placeName, category, roadAddress, jibunAddress, postalCode, latitude, longitude, description, businessPhone, applicantPhone, legalName, businessName, businessRegistrationNumber, merchantDisplayName, merchantContactEmail, merchantContactPhone, isApplicantPhoneSame, tags, schedule]), { enabled: editable, busy: activeAction !== null })
   const [formError, setFormError] = useState('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
-  const [placeSearchResults, setPlaceSearchResults] = useState<NaverPlaceSearchItem[]>([])
-  const [placeSearchMessage, setPlaceSearchMessage] = useState('')
-  const [isPlaceSearchLoading, setIsPlaceSearchLoading] = useState(false)
+  const placeSearch = useMerchantUnifiedPlaceSearch()
+  const [pinAdjusted, setPinAdjusted] = useState(false)
+  const [pendingSelection, setPendingSelection] = useState<Awaited<ReturnType<typeof placeSearch.prepareSelection>>>(null)
   const [isMapReady, setIsMapReady] = useState(false)
   const [isManualPlaceEntry, setIsManualPlaceEntry] = useState(false)
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false)
@@ -235,59 +235,16 @@ function RegistrationForm({
   const attachmentInputRef = useRef<HTMLInputElement | null>(null)
   const mapRef = useRef<MapHandle | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
-  const placeSearchRequestIdRef = useRef(0)
-  const addressRequestId = useRef(0)
-  const pendingAddressSearch = useRef<{ query: string; requestId: number } | null>(null)
-  const [addressQuery, setAddressQuery] = useState('')
-  const [addressResults, setAddressResults] = useState<AddressCandidate[]>([])
-  const [addressMessage, setAddressMessage] = useState('')
-  const [addressLoading, setAddressLoading] = useState(false)
-  const placeSearchController = useRef<AbortController | null>(null)
-  const pendingPlaceQuery = useRef<string | null>(null)
-
+  const manualEntryToggleRef = useRef<HTMLButtonElement | null>(null)
   const cancelPlaceSearch = () => {
-    placeSearchController.current?.abort()
-    pendingPlaceQuery.current = null
-    placeSearchRequestIdRef.current += 1
-    setIsPlaceSearchLoading(false)
-    setPlaceSearchResults([])
+    placeSearch.reset()
+    setPendingSelection(null)
   }
-
-  const invalidateAddress = () => {
-    addressRequestId.current += 1
-    cancelPlaceSearch()
-    setAddressLoading(false)
-    setAddressResults([])
-    setAddressMessage('')
-  }
-
-  useEffect(() => () => {
-    addressRequestId.current += 1
-    placeSearchRequestIdRef.current += 1
-    placeSearchController.current?.abort()
-  }, [])
-
-  const searchAddress = async () => {
-    const query = addressQuery.trim()
-    if (pendingAddressSearch.current?.query === query
-      && pendingAddressSearch.current.requestId === addressRequestId.current) return
-    const requestId = ++addressRequestId.current
-    setAddressResults([])
-    if (!query) { setAddressMessage('검색할 주소를 입력해주세요.'); return }
-    pendingAddressSearch.current = { query, requestId }
-    setAddressLoading(true)
-    setAddressMessage('')
-    try {
-      const results = await searchNaverAddresses(query)
-      if (requestId !== addressRequestId.current) return
-      setAddressResults(results)
-      setAddressMessage(results.length ? '주소를 확인하고 적용할 항목을 선택하세요. 선택하면 좌표도 변경됩니다.' : '검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.')
-    } catch (error) {
-      if (requestId === addressRequestId.current) setAddressMessage(getNaverAddressSearchError(error))
-    } finally {
-      if (pendingAddressSearch.current?.requestId === requestId) pendingAddressSearch.current = null
-      if (requestId === addressRequestId.current) setAddressLoading(false)
-    }
+  const invalidateAddress = cancelPlaceSearch
+  const closeManualPlaceEntry = () => {
+    invalidateAddress()
+    setIsManualPlaceEntry(false)
+    window.requestAnimationFrame(() => manualEntryToggleRef.current?.focus())
   }
 
   const numericLatitude = Number(latitude)
@@ -297,7 +254,7 @@ function RegistrationForm({
     && numericLatitude >= -90 && numericLatitude <= 90 && numericLongitude >= -180 && numericLongitude <= 180
   const marker = hasValidCoordinate ? [{ id: 1, latitude: numericLatitude, longitude: numericLongitude, label: placeName || '새 장소 위치', category, categoryName: CATEGORIES.find((item) => item.value === category)?.label }] : []
   const hasSelectedPlace = Boolean(roadAddress || jibunAddress)
-  const isLocationEntryActive = hasSelectedPlace || isManualPlaceEntry
+  const isLocationEntryActive = hasSelectedPlace || isManualPlaceEntry || hasValidCoordinate
 
   useEffect(() => {
     if (isMapReady && hasValidCoordinate) {
@@ -342,61 +299,35 @@ function RegistrationForm({
     }
   }
 
-  const searchPlaces = async () => {
-    const keyword = placeSearchQuery.trim()
-    if (pendingPlaceQuery.current === keyword) return
-    cancelPlaceSearch()
-    if (!keyword || keyword.length > 100) {
-      setPlaceSearchMessage('검색어를 1~100자로 입력해주세요.')
-      return
-    }
-    const requestId = placeSearchRequestIdRef.current
-    const controller = new AbortController()
-    placeSearchController.current = controller
-    pendingPlaceQuery.current = keyword
-    setIsPlaceSearchLoading(true)
-    setPlaceSearchMessage('')
-    try {
-      const results = await searchMerchantNaverPlaces(keyword, controller.signal)
-      if (requestId !== placeSearchRequestIdRef.current) return
-      setPlaceSearchResults(results)
-      if (!results.length) setPlaceSearchMessage('검색 결과가 없습니다. 지역명을 포함해 다시 검색하거나 직접 입력해주세요.')
-    } catch (error) {
-      if (requestId !== placeSearchRequestIdRef.current || controller.signal.aborted) return
-      setPlaceSearchMessage(getNaverPlaceSearchError(error))
-    } finally {
-      if (requestId === placeSearchRequestIdRef.current) {
-        pendingPlaceQuery.current = null
-        setIsPlaceSearchLoading(false)
-      }
-    }
+  const currentLocation = { placeName, roadAddress, jibunAddress, postalCode, latitude, longitude, pinAdjusted }
+
+  const applySearchSelection = (candidate: MerchantSearchCandidate) => {
+    const next = getMerchantSearchSelection(candidate, currentLocation)
+    setPlaceName(next.placeName)
+    setRoadAddress(next.roadAddress)
+    setJibunAddress(next.jibunAddress)
+    setPostalCode(next.postalCode)
+    setLatitude(next.latitude)
+    setLongitude(next.longitude)
+    setPinAdjusted(next.pinAdjusted)
+    setIsManualPlaceEntry(candidate.kind === 'address' || !next.postalCode || !next.roadAddress || !next.jibunAddress)
+    setPendingSelection(null)
+    setFormError('')
   }
 
-  const selectPlaceSearchResult = (place: NaverPlaceSearchItem) => {
-    const { latitude, longitude } = place
+  const searchPlaces = () => {
+    setPendingSelection(null)
+    void placeSearch.search(placeSearchQuery)
+  }
 
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
-      || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      setPlaceSearchMessage('선택한 장소의 좌표를 확인하지 못했습니다.')
-      return
+  const selectPlaceSearchResult = async (candidate: MerchantSearchCandidate) => {
+    const next = await placeSearch.prepareSelection(candidate)
+    if (!next) return
+    if (getMerchantSearchSelection(next.candidate, currentLocation).needsPinConfirmation) {
+      setPendingSelection(next)
+    } else {
+      applySearchSelection(next.candidate)
     }
-
-    placeSearchRequestIdRef.current += 1
-    invalidateAddress()
-    setIsManualPlaceEntry(false)
-    setPlaceName(place.name)
-    setRoadAddress(place.roadAddress)
-    setJibunAddress(place.jibunAddress)
-    setLatitude(latitude.toFixed(6))
-    setLongitude(longitude.toFixed(6))
-    setPostalCode('')
-    setPlaceSearchResults([])
-    setPlaceSearchQuery(place.name)
-    setPlaceSearchMessage('')
-    setFormError('')
-
-    setAddressQuery(place.roadAddress || place.jibunAddress)
-    setPlaceSearchMessage('우편번호는 아래 네이버 주소 검색 또는 직접 입력으로 보완해주세요.')
   }
 
   const buildRequest = (): MerchantPlaceRegistrationRequest | null => {
@@ -443,7 +374,7 @@ function RegistrationForm({
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!editable || activeAction !== null) return
+    if (!editable || activeAction !== null || placeSearch.phase !== 'idle' || pendingSelection) return
     if (stagedAttachments.length > 0) {
       setFormError('선택한 증빙 파일은 심사 요청을 누르면 함께 제출됩니다.')
       return
@@ -471,7 +402,7 @@ function RegistrationForm({
   }
 
   const requestReview = async () => {
-    if (activeAction !== null || !canEdit(registration)) return
+    if (activeAction !== null || !canEdit(registration) || placeSearch.phase !== 'idle' || pendingSelection) return
     const attachmentTypes = [
       ...(registration?.attachments.map((attachment) => attachment.documentType) ?? []),
       ...stagedAttachments.map((attachment) => attachment.documentType),
@@ -546,25 +477,35 @@ function RegistrationForm({
         <Store.Field>상점주 연락 이메일 (필수)<Store.Input type="email" value={merchantContactEmail} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactEmail(event.target.value)} /></Store.Field>
         <Store.Field>상점주 연락처 (필수)<Store.Input type="tel" inputMode="tel" value={merchantContactPhone} maxLength={30} placeholder="+82-010-4997-7214" disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactPhone(formatPhoneInput(event.target.value))} /><S.SectionHint>국가번호를 포함한 형식으로 입력하세요. 예: +82-010-4997-7214</S.SectionHint></Store.Field>
           </S.Section>
-          <S.Section><S.SectionLegend>장소 검색</S.SectionLegend><S.SectionHint>지역명과 업체명을 함께 검색하세요. 네이버 검색 결과는 최대 5개이며, 원하는 업체가 없으면 직접 입력할 수 있습니다.</S.SectionHint>
-        <S.PlaceSearchField $wide><S.PlaceSearchLabel htmlFor="merchant-place-search">장소명, 건물명 또는 주소 검색</S.PlaceSearchLabel><S.PlaceSearchControl><Store.Input id="merchant-place-search" maxLength={100} value={placeSearchQuery} placeholder="예: 성수 카페, 롯데월드, 서울시청" disabled={!editable || activeAction !== null} onChange={(event) => { const nextQuery = event.target.value; setPlaceSearchQuery(nextQuery); setPlaceSearchMessage(''); cancelPlaceSearch() }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} /><S.PlaceSearchButton type="button" aria-label="장소 검색" title="장소 검색" disabled={!editable || activeAction !== null || isPlaceSearchLoading} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton></S.PlaceSearchControl>{isPlaceSearchLoading ? <S.PlaceSearchHint>장소를 검색하는 중입니다.</S.PlaceSearchHint> : null}{placeSearchMessage ? <S.PlaceSearchHint $error>{placeSearchMessage}</S.PlaceSearchHint> : null}{placeSearchResults.length > 0 ? <S.PlaceSearchResults role="listbox" aria-label="연관 장소"><S.PlaceSearchResultsTitle>연관 장소</S.PlaceSearchResultsTitle>{placeSearchResults.map((place, index) => <S.PlaceSearchResult type="button" role="option" key={index} disabled={!editable || activeAction !== null} aria-label={`${place.name}, ${place.roadAddress || place.jibunAddress}`} onClick={() => selectPlaceSearchResult(place)}><S.PlaceSearchResultTop><strong>{place.name}</strong></S.PlaceSearchResultTop><S.PlaceSearchResultAddress><span aria-hidden="true">location_on</span>{place.roadAddress || place.jibunAddress}</S.PlaceSearchResultAddress></S.PlaceSearchResult>)}</S.PlaceSearchResults> : null}{hasSelectedPlace ? <S.SelectedPlaceSummary><strong>선택한 장소</strong><S.SelectedPlaceNameField htmlFor="merchant-place-name">장소명<Store.Input id="merchant-place-name" value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></S.SelectedPlaceNameField><S.SelectedPlaceAddress><span>{roadAddress || jibunAddress}</span>{jibunAddress && roadAddress ? <small>{jibunAddress}</small> : null}{postalCode ? <small>우편번호 {postalCode}</small> : null}</S.SelectedPlaceAddress></S.SelectedPlaceSummary> : null}</S.PlaceSearchField>
-          </S.Section>
-          <S.Section><S.SectionLegend>네이버 주소 검색</S.SectionLegend>
-            <S.SectionHint>업체명 대신 도로명·지번 주소를 검색하세요. 장소명과 카테고리는 변경하지 않습니다.</S.SectionHint>
-            <S.PlaceSearchField $wide><S.PlaceSearchLabel htmlFor="naver-address-query">도로명·지번 주소 검색</S.PlaceSearchLabel>
-              <S.PlaceSearchControl><Store.Input id="naver-address-query" value={addressQuery} disabled={!editable || activeAction !== null} onChange={event => { invalidateAddress(); setAddressQuery(event.target.value) }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void searchAddress() } }} />
-              <S.PlaceSearchButton type="button" aria-label="주소 검색" disabled={!editable || activeAction !== null || addressLoading} onClick={() => void searchAddress()}><span aria-hidden="true">search</span></S.PlaceSearchButton></S.PlaceSearchControl>
-              <S.PlaceSearchHint role="status">{addressLoading ? '주소를 검색하는 중입니다.' : addressMessage}</S.PlaceSearchHint>
-              {addressResults.map((candidate, index) => <S.PlaceSearchResult type="button" key={index} disabled={!editable || activeAction !== null} onClick={() => {
-                invalidateAddress()
-                setRoadAddress(candidate.roadAddress); setJibunAddress(candidate.jibunAddress); setPostalCode(candidate.postalCode)
-                setLatitude(String(candidate.latitude)); setLongitude(String(candidate.longitude)); setIsManualPlaceEntry(true)
-                setAddressMessage('주소와 좌표를 적용했습니다. 누락된 필수 항목은 직접 입력해주세요.')
-              }}><strong>{candidate.roadAddress || candidate.jibunAddress}</strong><span>{candidate.jibunAddress} · 우편번호 {candidate.postalCode || '없음 (직접 입력)'}</span></S.PlaceSearchResult>)}
+          <S.Section>
+            <S.SectionLegend>장소·주소 검색</S.SectionLegend>
+            <S.SectionHint>업체명이나 도로명·지번 주소를 입력하세요. 검색어에 맞춰 네이버 장소 또는 주소 후보를 찾습니다.</S.SectionHint>
+            <S.PlaceSearchField $wide>
+              <S.PlaceSearchLabel htmlFor="merchant-place-search">업체명 또는 주소</S.PlaceSearchLabel>
+              <S.PlaceSearchControl>
+                <Store.Input id="merchant-place-search" maxLength={100} value={placeSearchQuery} placeholder="예: 성수 카페, 서울 중구 세종대로 110" disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceSearchQuery(event.target.value) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} />
+                <S.PlaceSearchButton type="button" aria-label="장소·주소 검색" title="장소·주소 검색" disabled={!editable || activeAction !== null || placeSearch.phase !== 'idle'} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton>
+              </S.PlaceSearchControl>
+              <S.PlaceSearchHint role="status" $error={placeSearch.isError}>
+                {placeSearch.phase === 'search' ? '장소·주소를 검색하는 중입니다.' : placeSearch.phase === 'complete' ? '선택한 업체의 주소·우편번호를 확인하는 중입니다.' : placeSearch.message}
+              </S.PlaceSearchHint>
+              {placeSearch.results.length > 0 ? <S.PlaceSearchResults aria-label="검색 후보">
+                <S.PlaceSearchResultsTitle>검색 결과 · 주소를 확인하고 선택하세요</S.PlaceSearchResultsTitle>
+                {placeSearch.results.map((candidate, index) => <S.PlaceSearchResult type="button" key={index} disabled={!editable || activeAction !== null} onClick={() => void selectPlaceSearchResult(candidate)}>
+                  <S.PlaceSearchResultTop><strong>{candidate.kind === 'place' ? candidate.name : candidate.roadAddress || candidate.jibunAddress}</strong><small>{candidate.kind === 'place' ? '업체' : '주소'}</small></S.PlaceSearchResultTop>
+                  <S.PlaceSearchResultAddress><span aria-hidden="true">location_on</span>{candidate.kind === 'place' ? candidate.roadAddress || candidate.jibunAddress : candidate.jibunAddress || candidate.roadAddress}</S.PlaceSearchResultAddress>
+                  {candidate.postalCode ? <small>우편번호 {candidate.postalCode}</small> : null}
+                </S.PlaceSearchResult>)}
+              </S.PlaceSearchResults> : null}
+              {hasSelectedPlace ? <S.SelectedPlaceSummary>
+                <strong>선택한 장소</strong>
+                {!isManualPlaceEntry ? <S.SelectedPlaceNameField htmlFor="merchant-place-name">장소명<Store.Input id="merchant-place-name" value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></S.SelectedPlaceNameField> : <strong>{placeName || '장소명을 아래에서 입력해주세요.'}</strong>}
+                <S.SelectedPlaceAddress><span>{roadAddress || jibunAddress}</span>{jibunAddress && roadAddress ? <small>{jibunAddress}</small> : null}<small>{postalCode ? `우편번호 ${postalCode}` : '우편번호를 직접 입력해주세요.'}</small></S.SelectedPlaceAddress>
+              </S.SelectedPlaceSummary> : null}
             </S.PlaceSearchField>
           </S.Section>
-          {!isManualPlaceEntry ? <S.ManualEntryPrompt><span>검색 결과에 없거나 주소를 수정해야 하나요?</span><S.ManualEntryButton type="button" disabled={!editable || activeAction !== null} onClick={() => { invalidateAddress(); setPlaceSearchResults([]); setPlaceSearchMessage(''); setFormError(''); setIsManualPlaceEntry(true) }}>직접 입력</S.ManualEntryButton></S.ManualEntryPrompt> : null}
-          {isManualPlaceEntry ? <S.Section><S.SectionLegend>장소 직접 입력</S.SectionLegend><S.SectionHint>검색 결과에 없는 장소는 주소와 위치를 직접 등록할 수 있습니다.</S.SectionHint><Store.Field $wide>장소명 (필수)<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></Store.Field><Store.Field $wide>도로명 주소 (필수)<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setRoadAddress(event.target.value) }} /></Store.Field><Store.Field $wide>지번 주소 (필수)<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setJibunAddress(event.target.value) }} /></Store.Field><Store.Field>우편번호 (필수)<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPostalCode(event.target.value) }} /></Store.Field></S.Section> : null}
+          {!isManualPlaceEntry ? <S.ManualEntryPrompt><span>검색 결과에 없거나 주소를 수정해야 하나요?</span><S.ManualEntryButton ref={manualEntryToggleRef} type="button" aria-expanded={false} aria-controls="merchant-manual-place-fields" disabled={!editable || activeAction !== null} onClick={() => { invalidateAddress(); setFormError(''); setIsManualPlaceEntry(true) }}>직접 입력</S.ManualEntryButton></S.ManualEntryPrompt> : null}
+          {isManualPlaceEntry ? <S.Section id="merchant-manual-place-fields"><S.SectionLegend><S.ManualEntryHeading><span>장소 직접 입력·보완</span><S.ManualEntryButton type="button" aria-label="장소 직접 입력 닫기" aria-expanded={true} aria-controls="merchant-manual-place-fields" disabled={activeAction !== null} onClick={closeManualPlaceEntry}>닫기</S.ManualEntryButton></S.ManualEntryHeading></S.SectionLegend><S.SectionHint>누락된 주소·우편번호를 보완할 수 있습니다. 주소를 바꾸면 우편번호도 다시 확인해주세요.</S.SectionHint><Store.Field $wide>장소명 (필수)<Store.Input value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></Store.Field><Store.Field $wide>도로명 주소 (필수)<Store.Input value={roadAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setRoadAddress(event.target.value); setPostalCode('') }} /></Store.Field><Store.Field $wide>지번 주소 (필수)<Store.Input value={jibunAddress} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setJibunAddress(event.target.value); setPostalCode('') }} /></Store.Field><Store.Field>우편번호 (필수)<Store.Input value={postalCode} maxLength={20} disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPostalCode(event.target.value) }} /></Store.Field></S.Section> : null}
           <S.Section><S.SectionLegend>장소 정보</S.SectionLegend><S.SectionHint>카테고리와 방문자에게 표시할 가게 소개를 입력하세요.</S.SectionHint>
         <Store.Field $wide>카테고리 (필수)<S.CategoryDropdown ref={categoryDropdownRef}><S.CategoryTrigger type="button" aria-haspopup="listbox" aria-expanded={isCategoryMenuOpen} disabled={!editable || activeAction !== null} onClick={() => setIsCategoryMenuOpen((open) => !open)} onKeyDown={(event) => { if (event.key === 'Escape') setIsCategoryMenuOpen(false); if (event.key === 'ArrowDown') { event.preventDefault(); setIsCategoryMenuOpen(true) } }}><span>{CATEGORIES.find((item) => item.value === category)?.label}</span><span aria-hidden="true">{isCategoryMenuOpen ? 'expand_less' : 'expand_more'}</span></S.CategoryTrigger>{isCategoryMenuOpen ? <S.CategoryMenu role="listbox" aria-label="장소 카테고리">{CATEGORIES.map((item) => <S.CategoryOption type="button" role="option" key={item.value} $selected={category === item.value} aria-selected={category === item.value} onClick={() => { setCategory(item.value); setIsCategoryMenuOpen(false) }}>{item.label}</S.CategoryOption>)}</S.CategoryMenu> : null}</S.CategoryDropdown><S.SectionHint>업체명 검색으로 카테고리를 변경하지 않습니다. 알맞은 카테고리를 직접 선택해주세요.</S.SectionHint></Store.Field>
         <Store.Field $wide>장소 소개 (필수)<Store.Textarea value={description} maxLength={1000} disabled={!editable || activeAction !== null} onChange={(event) => setDescription(event.target.value)} /><S.SectionHint>{description.length}/1000</S.SectionHint></Store.Field>
@@ -631,13 +572,13 @@ function RegistrationForm({
             </div>
             <S.MapStatus $hasLocation={isLocationEntryActive && hasValidCoordinate}>{isLocationEntryActive && hasValidCoordinate ? '위치 선택됨' : '장소 선택 필요'}</S.MapStatus>
           </S.MapHeading>
-          <S.MapViewport $active={isLocationEntryActive}><S.LocationMap $active={isLocationEntryActive} ref={mapRef} markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapReady={() => { setIsMapReady(true); if (hasValidCoordinate) mapRef.current?.moveTo(numericLatitude, numericLongitude) }} onMapClick={editable && activeAction === null && isLocationEntryActive ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { invalidateAddress(); setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} />{!isLocationEntryActive ? <S.MapIdleOverlay><span aria-hidden="true">search</span><strong>장소 검색 또는 직접 입력 후 위치 선택</strong></S.MapIdleOverlay> : null}</S.MapViewport>
+          <S.MapViewport $active={isLocationEntryActive}><S.LocationMap $active={isLocationEntryActive} ref={mapRef} markers={marker} activeMarkerId={marker.length ? 1 : null} fitBoundsKey={hasValidCoordinate ? `${numericLatitude}:${numericLongitude}` : ''} onMapReady={() => { setIsMapReady(true); if (hasValidCoordinate) mapRef.current?.moveTo(numericLatitude, numericLongitude) }} onMapClick={editable && activeAction === null && isLocationEntryActive ? ({ latitude: nextLatitude, longitude: nextLongitude }) => { invalidateAddress(); setPinAdjusted(true); setLatitude(nextLatitude.toFixed(6)); setLongitude(nextLongitude.toFixed(6)); setFormError('') } : undefined} />{!isLocationEntryActive ? <S.MapIdleOverlay><span aria-hidden="true">search</span><strong>장소 검색 또는 직접 입력 후 위치 선택</strong></S.MapIdleOverlay> : null}</S.MapViewport>
           <S.CoordinateText>{isLocationEntryActive && hasValidCoordinate ? `선택 위치: ${numericLatitude.toFixed(6)}, ${numericLongitude.toFixed(6)}` : isLocationEntryActive ? '지도를 클릭해 핀 위치를 선택하세요.' : '장소를 먼저 검색하거나 직접 입력하세요.'}</S.CoordinateText>
           {isLocationEntryActive ? <S.CoordinateDetails>
             <summary>좌표 직접 입력</summary>
             <S.CoordinateFields>
-              <Store.Field>위도<Store.Input inputMode="decimal" value={latitude} placeholder="예: 37.566500" disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setLatitude(event.target.value) }} /></Store.Field>
-              <Store.Field>경도<Store.Input inputMode="decimal" value={longitude} placeholder="예: 126.978000" disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setLongitude(event.target.value) }} /></Store.Field>
+              <Store.Field>위도<Store.Input inputMode="decimal" value={latitude} placeholder="예: 37.566500" disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPinAdjusted(true); setLatitude(event.target.value) }} /></Store.Field>
+              <Store.Field>경도<Store.Input inputMode="decimal" value={longitude} placeholder="예: 126.978000" disabled={!editable || activeAction !== null} onChange={(event) => { invalidateAddress(); setPinAdjusted(true); setLongitude(event.target.value) }} /></Store.Field>
             </S.CoordinateFields>
           </S.CoordinateDetails> : null}
         </S.MapPanel>
@@ -646,9 +587,10 @@ function RegistrationForm({
       <S.FormActions>
         {registration?.status === 'REJECTED' ? <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void onReopen(registration.id)}>{activeAction === 'reopen' ? '다시 여는 중' : '신청서 다시 열기'}</S.SecondaryButton> : null}
         {registration && (registration.status === 'DRAFT' || registration.status === 'PENDING') ? <S.DangerButton type="button" disabled={activeAction !== null} onClick={() => setIsCancelDialogOpen(true)}>{activeAction === 'cancel' ? '취소 중' : '신청 취소'}</S.DangerButton> : null}
-        {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
-        {(canStageAttachments || registration?.status === 'DRAFT') ? <Store.SaveButton type="button" disabled={activeAction !== null} onClick={() => void requestReview()}>{activeAction === 'request' ? '심사 요청 중' : '심사 요청'}</Store.SaveButton> : null}
+        {editable ? <S.SecondaryButton type="submit" disabled={activeAction !== null || placeSearch.phase !== 'idle' || pendingSelection !== null}>{activeAction === 'save' ? '저장 중' : '임시 저장'}</S.SecondaryButton> : null}
+        {(canStageAttachments || registration?.status === 'DRAFT') ? <Store.SaveButton type="button" disabled={activeAction !== null || placeSearch.phase !== 'idle' || pendingSelection !== null} onClick={() => void requestReview()}>{activeAction === 'request' ? '심사 요청 중' : '심사 요청'}</Store.SaveButton> : null}
       </S.FormActions>
+      {pendingSelection ? <MerchantConfirmationDialog title="직접 조정한 핀 위치를 변경할까요?" description={`선택한 ${pendingSelection.candidate.kind === 'place' ? pendingSelection.candidate.name : '주소'}의 주소와 검색 좌표를 적용합니다. 직접 조정한 핀 위치가 바뀝니다.`} cancelLabel="기존 위치 유지" confirmLabel="검색 위치 적용" onClose={cancelPlaceSearch} onConfirm={() => applySearchSelection(pendingSelection.candidate)} /> : null}
       {registration && isCancelDialogOpen ? <MerchantConfirmationDialog title="신규 장소 등록 신청을 취소할까요?" description="취소한 신청은 심사 대상에서 제외되며 다시 되돌릴 수 없습니다." confirmLabel="신청 취소" isPending={activeAction === 'cancel'} onClose={() => setIsCancelDialogOpen(false)} onConfirm={() => void confirmCancellation()} /> : null}
     </S.RegistrationForm>
   )

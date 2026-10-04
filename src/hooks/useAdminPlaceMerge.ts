@@ -13,6 +13,7 @@ import type {
   AdminPlaceMergeErrorResponse,
   AdminPlaceDuplicateDetailResponse,
   AdminPlaceDuplicateGroupItem,
+  AdminPlaceDuplicatePagination,
   AdminPlaceMergeHistoryItem,
   AdminPlaceMergeRequest,
   AdminPlaceMergeResponse,
@@ -66,6 +67,10 @@ export function useAdminPlaceMerge() {
   const { clearAuth } = useAuth()
   const [duplicateGroups, setDuplicateGroups] = useState<AdminPlaceDuplicateGroupItem[]>([])
   const [duplicateTotalCount, setDuplicateTotalCount] = useState(0)
+  const [duplicatePageInfo, setDuplicatePageInfo] = useState<AdminPlaceDuplicatePagination>({
+    page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false,
+  })
+  const pageRef = useRef(1)
   const [duplicateDetail, setDuplicateDetail] =
     useState<AdminPlaceDuplicateDetailResponse | null>(null)
   const [mergeHistories, setMergeHistories] = useState<AdminPlaceMergeHistoryItem[]>([])
@@ -84,18 +89,26 @@ export function useAdminPlaceMerge() {
   const latestHistoriesRequestIdRef = useRef(0)
   const activeActionRef = useRef<AdminPlaceMergeAction>(null)
 
-  const fetchDuplicateGroups = useCallback(async () => {
+  const fetchDuplicateGroups = useCallback(async (nextPage = pageRef.current) => {
     const requestId = latestGroupsRequestIdRef.current + 1
     latestGroupsRequestIdRef.current = requestId
+    pageRef.current = nextPage
     setIsGroupsLoading(true)
     setErrorMessage('')
 
     try {
-      const data = await getAdminPlaceDuplicateGroups()
+      let data = await getAdminPlaceDuplicateGroups(nextPage)
+      if (requestId !== latestGroupsRequestIdRef.current) return false
+      if (data.page > Math.max(1, data.totalPages)) {
+        data = await getAdminPlaceDuplicateGroups(Math.max(1, data.totalPages))
+      }
 
       if (requestId === latestGroupsRequestIdRef.current) {
         setDuplicateGroups(data.groups)
-        setDuplicateTotalCount(data.totalCount)
+        setDuplicateTotalCount(data.total)
+        const { page, limit, total, totalPages, hasNext } = data
+        setDuplicatePageInfo({ page, limit, total, totalPages, hasNext })
+        pageRef.current = data.page
       }
 
       return true
@@ -287,6 +300,7 @@ export function useAdminPlaceMerge() {
   const clearDuplicateDetail = useCallback(() => {
     latestDetailRequestIdRef.current += 1
     setDuplicateDetail(null)
+    setIsDetailLoading(false)
     setDetailErrorMessage('')
   }, [])
 
@@ -297,6 +311,7 @@ export function useAdminPlaceMerge() {
   return {
     duplicateGroups,
     duplicateTotalCount,
+    duplicatePageInfo,
     duplicateDetail,
     mergeHistories,
     isGroupsLoading,

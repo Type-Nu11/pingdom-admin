@@ -6,19 +6,21 @@ const colors = adminColors
 export const ReviewList = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: ${colors.surfaceLow};
+
+  @media (max-width: 560px) {
+    gap: 12px;
+    padding: 12px;
+  }
 `
 
 export const ReviewItem = styled.article`
-  padding: 20px 24px;
-  border-bottom: 1px solid ${colors.borderSoft};
-
-  &:last-child {
-    border-bottom: 0;
-  }
-
-  @media (max-width: 560px) {
-    padding: 18px;
-  }
+  min-width: 0;
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
+  background: ${colors.surface};
 `
 
 export const ReviewTop = styled.div`
@@ -26,27 +28,83 @@ export const ReviewTop = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid ${colors.borderSoft};
+
+  @media (max-width: 560px) {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 16px;
+  }
 `
 
-export const ReviewReason = styled.strong`
+export const ReviewIdentity = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   min-width: 0;
+`
+
+export const ReviewTitle = styled.h3`
+  margin: 0;
   color: ${colors.strongText};
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.45;
+`
+
+export const VisibilityBadge = styled.span<{ $visibility: 'VISIBLE' | 'HIDDEN' | 'DELETED' }>`
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: ${({ $visibility }) => $visibility === 'VISIBLE' ? colors.successTint : colors.surfaceContainer};
+  color: ${({ $visibility }) => $visibility === 'VISIBLE' ? colors.successText : colors.muted};
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
 `
 
 export const ReviewDate = styled.time`
   flex: 0 0 auto;
-  color: ${colors.softText};
+  color: ${colors.muted};
   font-size: 12px;
   line-height: 1.45;
 `
 
+export const ReviewBody = styled.div`
+  padding: 20px;
+
+  > [aria-label='리뷰 사진'] {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 104px));
+    margin-top: 16px;
+  }
+
+  @media (max-width: 560px) {
+    padding: 16px;
+  }
+`
+
+export const ReasonSection = styled.div`
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+`
+
+export const SectionLabel = styled.span`
+  flex: 0 0 auto;
+  padding-top: 4px;
+  color: ${colors.muted};
+  font-size: 12px;
+  line-height: 1.5;
+`
+
 export const ReviewContent = styled.p`
-  margin: 12px 0 0;
+  max-width: 80ch;
+  margin: 16px 0 0;
   color: ${colors.text};
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: 15px;
+  line-height: 1.75;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 `
@@ -73,12 +131,39 @@ export const ReviewFooter = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 16px;
+  padding: 12px 20px;
+  border-top: 1px solid ${colors.borderSoft};
+  background: ${colors.surfaceHighest};
+  border-radius: 0 0 12px 12px;
 
-  @media (max-width: 480px) {
-    align-items: flex-start;
-    flex-direction: column;
+  @media (max-width: 560px) {
+    flex-wrap: wrap;
+    padding: 12px 16px;
   }
+`
+
+export const RequestActions = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+`
+
+export const RejectionNote = styled.div`
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 3px solid ${colors.error};
+  border-radius: 6px;
+  background: ${colors.errorTint};
+  color: ${colors.text};
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+
+  strong { display: block; margin-bottom: 4px; }
+  p { margin: 0; }
 `
 
 export const ReviewMeta = styled.span`

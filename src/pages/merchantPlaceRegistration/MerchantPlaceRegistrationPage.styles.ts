@@ -476,6 +476,13 @@ export const ManualEntryPrompt = styled.div`
   line-height: 1.5;
 `
 
+export const ManualEntryHeading = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`
+
 export const ManualEntryButton = styled.button`
   min-height: 34px;
   flex: 0 0 auto;

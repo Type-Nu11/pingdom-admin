@@ -8,6 +8,7 @@ import { AdminNavigationMenu } from '../../components/navigation/AdminNavigation
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminDataQualityIssues } from '../../hooks/useAdminDataQualityIssues'
 import { useAuth } from '../../hooks/useAuth'
+import { formatLocalDateTime as formatDate } from '../../utils/displayFormat'
 import type {
   AdminDataQualityIssue,
   DataQualityIssueSeverity,
@@ -31,13 +32,6 @@ const STATUS_LABELS: Record<DataQualityIssueStatus, string> = {
 
 function issueKey(issue: AdminDataQualityIssue) {
   return [issue.entityType, issue.entityId, issue.ruleCode, issue.detectedAt].join(':')
-}
-
-function formatDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function entityLabel(entityType: string) {

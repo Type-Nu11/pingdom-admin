@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { useMerchantPayments } from '../../hooks/useMerchantPayments'
+import { formatLocalDateTime as formatDateTime, formatMinorAmount as formatAmountMinor } from '../../utils/displayFormat'
 import type {
   MerchantPayment,
   MerchantPaymentStatus,
@@ -31,21 +32,6 @@ const SETTLEMENT_STATUS: Record<MerchantSettlementStatus, { label: string; tone:
 const SETTLEMENT_TYPE: Record<MerchantSettlementEntryType, string> = {
   PAYMENT: '결제',
   REFUND: '환불',
-}
-
-function formatDateTime(value: string | null) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
-function formatAmountMinor(amountMinor: number | null, currency: string | null) {
-  if (amountMinor === null || !currency) return '-'
-
-  return `${new Intl.NumberFormat('ko-KR').format(amountMinor)} ${currency}`
 }
 
 function MerchantPaymentsPage() {
@@ -118,7 +104,7 @@ function MerchantPaymentsPage() {
               <S.PanelHeader>
                 <div>
                   <S.PanelTitle>결제 내역</S.PanelTitle>
-                  <S.PanelDescription>결제 완료 건만 전액 환불할 수 있습니다.</S.PanelDescription>
+                  <S.PanelDescription>결제 완료 건만 전액 환불할 수 있습니다. 금액은 서버가 제공한 최소 통화 단위이며, 일시는 서버 기록 기준입니다.</S.PanelDescription>
                 </div>
               </S.PanelHeader>
               {payments.paymentErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ margin: '16px 24px 0' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.paymentErrorMessage}</Store.Notice> : null}
@@ -137,7 +123,7 @@ function MerchantPaymentsPage() {
               <S.PanelHeader>
                 <div>
                   <S.PanelTitle>정산 원장</S.PanelTitle>
-                  <S.PanelDescription>결제·환불별 수수료와 정산 금액을 확인합니다.</S.PanelDescription>
+                  <S.PanelDescription>결제·환불별 수수료와 정산 금액을 확인합니다. 금액은 서버가 제공한 최소 통화 단위이며, 일시는 서버 기록 기준입니다.</S.PanelDescription>
                 </div>
               </S.PanelHeader>
               {payments.settlementErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ margin: '16px 24px 0' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.settlementErrorMessage}</Store.Notice> : null}

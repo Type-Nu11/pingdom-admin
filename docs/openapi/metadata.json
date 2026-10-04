@@ -1,5 +1,5 @@
 {
-  "collected_at": "2026-09-16T10:57:26.133Z",
+  "collected_at": "2026-10-03T16:42:24.907Z",
   "sources": {
     "admin": "https://www.typenull.xyz/v3/api-docs/admin",
     "merchant": "https://www.typenull.xyz/v3/api-docs/merchant"
@@ -13,5 +13,24 @@
     "common",
     "consulting"
   ],
-  "verification": "Public OpenAPI retrieval and static source references only; no authenticated requests or mutations"
+  "verification": "Public GET retrieval and static source comparison only; no login, authenticated requests or mutations",
+  "source_commit": "bbe199b0bc8666ae7571760c6c20b17d934ea3fa",
+  "issue": "#254",
+  "comparison_baseline": "bbe199b0bc8666ae7571760c6c20b17d934ea3fa",
+  "snapshots": {
+    "admin": {
+      "collected_at": "2026-10-03T16:42:24.907Z",
+      "url": "https://www.typenull.xyz/v3/api-docs/admin",
+      "sha256": "c12dcfa62a983ecb1acf9a25275b3ebb188d19cbf78a10daf73974bb82d81372",
+      "baseline_sha256": "e954557df391d59e7e0bc1e6b79775f3a300e8a0a30b94f98a389b5802507c64",
+      "operations": 145
+    },
+    "merchant": {
+      "collected_at": "2026-10-03T16:42:24.879Z",
+      "url": "https://www.typenull.xyz/v3/api-docs/merchant",
+      "sha256": "17a02f54a5ca7a92ea5dab5f3667f94f4a52efe4a0ad8d0c030912b0acd0990e",
+      "baseline_sha256": "ca70da5164f3f673c4d39a5100e865d6a09f1383d2cfc52c3de81f07a6968689",
+      "operations": 85
+    }
+  }
 }

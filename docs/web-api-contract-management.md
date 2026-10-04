@@ -2,7 +2,7 @@
 
 ## 이번 확인 범위
 
-- 이슈: #207
+- 최신 갱신 이슈: #254 (2026-10-04 KST). #207은 레거시 정리의 과거 근거로 보존합니다.
 - 정확한 수집 기준은 metadata.json과 그룹별 스냅샷을 참조한다. 현재 operation 수는 갱신 스크립트 출력과 테스트로 확인한다.
 - 출처·수집 시각: [metadata.json](openapi/metadata.json)
 - 원본: [admin.json](openapi/admin.json), [merchant.json](openapi/merchant.json)
@@ -31,7 +31,7 @@ last_verified는 문서·소스 대조일이며 런타임 성공 확인일이 �
 - 탐색 미디어 업로드 URL 발급 후 POST 완료 등록이 연결되어 있다. 순서 변경은 PATCH의 displayOrder에 이동 대상 인덱스를 보내며 서버가 중복 없는 연속 순서를 보장한다. targetIndex라는 요청 필드는 사용하지 않는다.
 - 메뉴 단건 조회는 메뉴 목록으로, 상점주 신청 첨부 목록 조회는 신청 상세 attachments로 대체한다. 직접 호출하지 않는다고 전체 기능 미구현으로 세지 않는다.
 - #207은 옛 MapImage 신고 사용자·이의제기 화면과 전용 API/훅/타입을 제거한다. #205의 일괄 신고·삭제 API도 missing이 아닌 excluded로 기록한다. 기존 운영 URL은 관리자 인증 가드 안에서 대시보드로 전환한다.
-- 대시보드는 혼합 pending-items 대신 통합 장소 신청 PENDING 목록과 서버 total을 사용한다. 알림 집계의 옛 이의제기 조회도 제거한다.
+- 대시보드는 혼합 pending-items 대신 `adminPendingWorkApi.ts`의 예약·장소 신청·리뷰 삭제·커뮤니티 신고·검증·중복·Scout·Trust Score 개별 API 집계를 사용한다. 카테고리별 실패와 0건을 구분한다. 알림 집계의 옛 이의제기 조회는 제거 상태를 유지한다.
 - 리뷰·커뮤니티 계약, 사용자 밴·역할·감사 이력, 탐색 미디어 및 sourceMapImageId 역사 메타데이터, S3 고아 파일 정리 도구는 보존한다. posts가 포함된 경로 전체를 삭제하지 않는다.
 - 팀원 관리는 #204에 연결한다. 팀원 관리는 현재 제품 범위 제외 결정이며 서버 차단이 아니다.
 - #203: 구형 merchant-verification 호출과 별도 검증 폼을 제거하고 기존 통합 장소 신청 화면으로 연결했다. 직접 Owner 프로필 GET/POST/PUT 계약은 유지하며, 미신청은 GET의 PROFILE_NOT_FOUND만 인정한다. 일반 USER는 신청 경로만 접근하며 운영 경로는 기존 권한 가드를 유지한다. 승인 후에는 재로그인으로 서버가 발급한 최신 역할을 적용한다.
@@ -43,14 +43,21 @@ last_verified는 문서·소스 대조일이며 런타임 성공 확인일이 �
 ```bash
 npm ci
 node scripts/api-source-inventory.mjs
+node scripts/refresh-openapi-snapshots.mjs --refresh --baseline <갱신_전_스냅샷이_있는_커밋>
 python3 scripts/refresh-api-contract-matrix.py
-node --test tests/api-contract-matrix.test.mjs
+node --test tests/api-contract-matrix.test.mjs tests/openapi-refresh.test.mjs
 ```
 
 갱신 스크립트는 저장된 두 OpenAPI와 현재 소스를 읽어 CSV 및 source-contract-gaps.json을 갱신한다. 네트워크 호출은 하지 않는다.
 원본의 parameters, schema, responses, security, description은 스냅샷에 보존되므로 이후 JSON 비교로 경로 이외의 변경도 추적할 수 있다.
 
 새 수집은 각 metadata.sources URL에서 성공 응답을 받아 JSON/OpenAPI paths를 확인한 뒤 스냅샷과 수집 시각을 함께 갱신한다. 실패 응답으로 기존 스냅샷을 덮어쓰지 않는다.
+
+수집 스크립트는 두 그룹의 HTTP 200·OpenAPI 검증과 기준 커밋 비교가 모두 성공한 뒤 생성 파일을 갱신한다. 리다이렉트는 따라가지 않으며 인증 헤더나 환경변수의 토큰을 사용하지 않는다. 원본 응답 문자열을 변경하지 않고 저장하며 그룹별 조회 시각·SHA-256·소스 커밋을 기록한다. 원본 baseline은 `metadata.comparison_baseline` 커밋에 보존한다.
+
+`contract-changes.json`은 고정 baseline과 최신 스냅샷의 오프라인 비교 결과다. 추가/삭제 operation과 schema, 기존 항목의 contract/documentation 변경을 구분한다. `$ref`가 같아도 component의 required/nullable/property 변화는 별도로 추적한다. 이름·설명·예시 분류는 자동 보조이며 breaking change 판정이나 서버 런타임 검증을 대신하지 않는다.
+
+상세 최신 결과와 제한: [#254 갱신 기록](api-contract-refresh-254.md). 매트릭스의 새 호출은 기본 partial이며, 명시적으로 검토한 #225·#256의 연동 근거만 implemented로 기록한다. 기존 implemented 상태도 과거 구현 근거를 보존하는 것으로, 이번 실행의 실제 서버 성공을 의미하지 않는다.
 
 ## 정적 분석 한계
 

@@ -81,7 +81,7 @@ export function useAdminPlaceDuplicateCandidates() {
 
         if (requestId === latestListRequestIdRef.current) {
           setCandidates(data.candidates)
-          setTotalCount(data.totalCount)
+          setTotalCount(data.total)
         }
 
         return true

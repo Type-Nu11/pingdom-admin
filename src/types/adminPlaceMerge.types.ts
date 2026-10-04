@@ -6,9 +6,16 @@ export interface AdminPlaceDuplicateGroupItem {
   reasons: string[]
 }
 
-export interface AdminPlaceDuplicateGroupResponse {
+export interface AdminPlaceDuplicatePagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNext: boolean
+}
+
+export interface AdminPlaceDuplicateGroupResponse extends AdminPlaceDuplicatePagination {
   groups: AdminPlaceDuplicateGroupItem[]
-  totalCount: number
 }
 
 export interface AdminPlaceDuplicateCandidateItem {
@@ -92,9 +99,8 @@ export interface AdminPlaceDuplicateReviewCandidate {
   updatedAt: string
 }
 
-export interface AdminPlaceDuplicateReviewCandidateListResponse {
+export interface AdminPlaceDuplicateReviewCandidateListResponse extends AdminPlaceDuplicatePagination {
   candidates: AdminPlaceDuplicateReviewCandidate[]
-  totalCount: number
 }
 
 export interface AdminPlaceDuplicateDecisionRequest {

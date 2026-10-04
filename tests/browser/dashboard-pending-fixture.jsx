@@ -26,6 +26,7 @@ client.defaults.adapter = async config => {
   if (config.url === '/admin/dashboard/summary') data = { placeCount: 10, bannedUserCount: 0, operationalMetrics: { duplicatePlaceGroupCount: scenario === 'duplicate-groups' ? 3 : 0, expiringBannedUserCount: 0, missingLocationPlaceCount: 0, today: { placeRegistrationCount: 0 }, last7Days: { placeRegistrationCount: 0 } } }
   else if (config.url === '/admin/dashboard/recent-activities') data = { places: [], userSanctions: [] }
   else if (config.url.includes('/notifications')) data = { unreadCount: 0, count: 0, notifications: [] }
+  else if (config.url === '/admin/places/duplicates' || config.url === '/admin/places/duplicate-candidates') data = { groups: [], candidates: [], total: 0, page: 1, limit: 1, totalPages: 0, hasNext: false }
   else data = { total: 0, totalCount: 0, totalElements: config.url === '/admin/reservations' && scenario !== 'zero' && !(scenario === 'retry' && attempt > 2) ? (scenario.startsWith('refresh-') && attempt > 1 ? 2 : 6) : 0 }
   window.qaCompletedRequests.push(config.url)
   return { config, data, status: 200, statusText: 'OK', headers: {} }

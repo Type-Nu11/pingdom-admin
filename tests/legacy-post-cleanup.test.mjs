@@ -39,7 +39,7 @@ test('notification pending checks never query retired reports, preserving suppor
   const requests = []
   client.defaults.adapter = async config => {
     requests.push(config.url)
-    return { config, status: 200, statusText: 'OK', headers: {}, data: { totalCount: 0, totalElements: 0, total: 0 } }
+    return { config, status: 200, statusText: 'OK', headers: {}, data: { totalCount: 0, totalElements: 0, total: 0, groups: [], candidates: [], page: 1, limit: 1, totalPages: 0, hasNext: false } }
   }
   const result = await getAdminPendingWorkSummary()
   assert.equal(result.checkedCount, 12)

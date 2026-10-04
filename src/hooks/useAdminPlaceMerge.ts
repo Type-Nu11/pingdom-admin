@@ -95,7 +95,7 @@ export function useAdminPlaceMerge() {
 
       if (requestId === latestGroupsRequestIdRef.current) {
         setDuplicateGroups(data.groups)
-        setDuplicateTotalCount(data.totalCount)
+        setDuplicateTotalCount(data.total)
       }
 
       return true

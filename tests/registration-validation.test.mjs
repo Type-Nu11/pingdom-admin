@@ -30,6 +30,7 @@ function form(overrides = {}) {
   const values = {
     registration: { id: 1, status: 'DRAFT', attachments: [] }, activeAction: null,
     draft: { isDirty: true },
+    placeSearch: { phase: 'idle' }, pendingSelection: null,
     activeBusinessName: null, legalName: 'Test', businessName: 'Test shop',
     businessRegistrationNumber: '1234567890', merchantDisplayName: 'Shop',
     merchantContactEmail: 'test@example.com', merchantContactPhone: '+82-010-1234-5678',
@@ -58,6 +59,13 @@ const invalid = [
   ['merchant phone', { merchantContactPhone: 'invalid' }, '연락처'],
   ['email', { merchantContactEmail: 'invalid' }, '이메일'],
 ]
+for (const state of [{ placeSearch: { phase: 'search' } }, { placeSearch: { phase: 'complete' } }, { pendingSelection: {} }]) {
+  test('in-flight search or unresolved pin confirmation blocks submission', async () => {
+    const scenario = form(state)
+    await scenario.run()
+    assert.equal(scenario.calls.length, 0)
+  })
+}
 for (const existing of [false, true]) {
   for (const [label, values, message] of invalid) {
     test(`${existing ? 'existing draft' : 'new application'} blocks submission for ${label}`, async () => {

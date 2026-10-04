@@ -6,7 +6,7 @@ import { createServer } from 'vite'
 import { chromium } from 'playwright'
 import { installNaverSdk } from '../helpers/naver-sdk.mjs'
 
-const output = await mkdtemp(join(tmpdir(), 'pingdom-merchant-naver-'))
+const output = await mkdtemp(join(tmpdir(), 'pingdom-unified-search-'))
 const server = await createServer({
   cacheDir: join(output, 'cache'),
   define: { 'import.meta.env.VITE_NAVER_MAP_CLIENT_ID': JSON.stringify('test-id') },
@@ -23,37 +23,40 @@ let browser
 try {
   await server.listen()
   browser = await chromium.launch()
-  for (const width of [1280, 390]) {
-    const page = await browser.newPage({ viewport: { width, height: 800 } })
+  for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
+    const page = await browser.newPage({ viewport: { width, height } })
     page.setDefaultTimeout(10000)
     const errors = []
-    const searchRequests = []
-    const pendingSearches = []
-    const addressRequests = []
-    const waitForAddresses = async count => {
-      const deadline = Date.now() + 3000
-      while (addressRequests.length !== count && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 10))
-      assert.equal(addressRequests.length, count)
-    }
-    let searchMode = 'normal'
+    const calls = []
+    const pending = []
+    let markDelayedStarted
+    const delayedStarted = new Promise(resolve => { markDelayedStarted = resolve })
+    const place = { name: '합성 업체', roadAddress: '서울 합성로 10', jibunAddress: '서울 합성동 20', latitude: 37, longitude: 127 }
+    const address = { roadAddress: place.roadAddress, jibunAddress: place.jibunAddress, postalCode: '12345', latitude: 37.6, longitude: 127.1 }
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
       if (url.hostname === 'oapi.map.naver.com') return route.fulfill({ contentType: 'application/javascript', body:
         '(' + installNaverSdk.toString() + ')();window[' + JSON.stringify(url.searchParams.get('callback')) + ']();' })
-      if (url.hostname === 'dapi.kakao.com') throw new Error('Kakao SDK must not be requested')
       if (url.pathname.startsWith('/api/')) {
         assert.equal(route.request().method(), 'GET', 'No real writes')
-        if (url.pathname.endsWith('/naver-address-search')) return new Promise(resolve => addressRequests.push({ route, resolve }))
-        if (url.pathname.endsWith('/naver-place-search')) {
-          searchRequests.push(url.searchParams.get('query'))
-          if (searchMode === 'delay') return new Promise(resolve => pendingSearches.push(async () => {
-            try { await route.fulfill({ json: { items: [{ name: '늦은 업체', roadAddress: '늦은 도로', jibunAddress: '', latitude: 37, longitude: 127 }] } }) } finally { resolve() }
-          }))
-          if (searchMode === 'empty') return route.fulfill({ json: { items: [] } })
-          if (searchMode === 'forbidden') return route.fulfill({ status: 403, json: { code: 'ACCESS_DENIED', message: '접근 권한이 없습니다.' } })
-          if (searchMode === 'unavailable') return route.fulfill({ status: 503, json: { code: 'NAVER_PLACE_SEARCH_UNAVAILABLE' } })
-          return route.fulfill({ json: { items: [{ name: '합성 업체', roadAddress: '기존 도로', jibunAddress: '기존 지번', latitude: 37, longitude: 127 }] } })
+        const query = url.searchParams.get('query')
+        if (url.pathname.endsWith('/naver-address-search') || url.pathname.endsWith('/naver-place-search')) {
+          calls.push({ path: url.pathname, query })
+          if (query === '늦은 업체') return new Promise(resolve => {
+            pending.push(async () => {
+              try { await route.fulfill({ json: { items: [{ ...place, name: '늦은 결과' }] } }) } finally { resolve() }
+            })
+            markDelayedStarted()
+          })
+          if (query === '오류') return route.fulfill({ status: 503, json: { code: 'NAVER_PLACE_SEARCH_UNAVAILABLE' } })
+          if (query === '권한오류') return route.fulfill({ status: 403, json: { code: 'ACCESS_DENIED', message: '접근 권한이 없습니다.' } })
+          if (query === '빈 검색') return route.fulfill({ json: { items: [] } })
+          if (url.pathname.endsWith('/naver-address-search')) {
+            if (query === '서울 다른로 20') return route.fulfill({ json: { items: [{ ...address, roadAddress: '서울 다른로 20', jibunAddress: '서울 다른동 20', postalCode: null, latitude: 37.9 }] } })
+            return route.fulfill({ json: { items: [{ ...address, roadAddress: '틀린로 10', postalCode: '99999' }, address] } })
+          }
+          return route.fulfill({ json: { items: [place] } })
         }
         if (url.pathname.endsWith('/merchant-owner-profile')) return route.fulfill({ status: 404, json: { code: 'PROFILE_NOT_FOUND' } })
         if (url.pathname.endsWith('/merchant-place-applications')) return route.fulfill({ json: { items: [], hasNext: false } })
@@ -62,126 +65,87 @@ try {
       return url.hostname === '127.0.0.1' || ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(url.hostname) ? route.continue() : route.abort()
     })
     await page.goto('http://127.0.0.1:' + server.httpServer.address().port + '/merchant/place-registration')
-    const query = page.getByLabel('도로명·지번 주소 검색', { exact: true })
-    await query.fill('도로')
-    await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await waitForAddresses(1)
-    await query.press('Enter')
-    await query.press('Enter')
-    assert.equal(addressRequests.length, 1, 'Enter must not duplicate the pending query')
-    const respond = async (roads, status = 200) => {
-      const { route, resolve } = addressRequests.shift()
-      try {
-        await route.fulfill({ status, json: status === 200 ? { items: roads.map((roadAddress, i) => ({ roadAddress, jibunAddress: '지번 ' + i, latitude: 37, longitude: 127, postalCode: null })) } : { code: 'NAVER_ADDRESS_SEARCH_FAILED' } })
-      } finally { resolve() }
-      await page.waitForTimeout(40)
-    }
-    await respond(['도로 A', '도로 B'])
-    assert.equal(await page.locator('.pingdom-map-marker').count(), 0)
-    await page.getByRole('button', { name: /도로 B.*우편번호/ }).click()
-    assert.equal(await page.getByLabel('도로명 주소', { exact: true }).inputValue(), '도로 B')
-    assert.equal(await page.getByLabel('우편번호', { exact: true }).inputValue(), '')
-    await page.locator('.pingdom-map-marker').waitFor()
-    assert.equal(await page.getByLabel('장소명', { exact: true }).last().inputValue(), '')
-    // Late results must not undo manual edits.
-    await query.fill('늦은 주소')
-    await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await waitForAddresses(1)
-    await page.getByLabel('도로명 주소', { exact: true }).fill('직접 수정')
-    await respond(['늦은 도로'])
-    assert.equal(await page.getByRole('button', { name: /늦은 도로.*우편번호/ }).count(), 0)
-    assert.equal(await page.getByLabel('도로명 주소', { exact: true }).inputValue(), '직접 수정')
-    await query.fill('오류')
-    await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await waitForAddresses(1)
-    await respond([], 500)
-    await page.getByText('주소를 조회하지 못했습니다. 다시 검색하거나 직접 입력해주세요.', { exact: true }).waitFor()
-    await query.press('Enter')
-    await waitForAddresses(1)
-    await respond([])
-    await page.getByText('검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.', { exact: true }).waitFor()
-    const map = page.getByLabel('네이버 지도', { exact: true })
-    await map.click({ position: { x: 25, y: 25 } })
+    await page.getByRole('button', { name: '새 장소 등록 신청', exact: true }).click()
+    const query = page.getByLabel('업체명 또는 주소', { exact: true })
+    const search = page.getByRole('button', { name: '장소·주소 검색', exact: true })
+    await query.waitFor()
+    assert.equal(await search.count(), 1)
+    assert.equal(await page.locator('vite-error-overlay').count(), 0)
+    assert.equal(await page.locator('#naver-address-query').count(), 0)
+    await page.screenshot({ path: join(output, 'initial-' + width + '.png'), fullPage: true })
+    const run = async value => { await query.fill(value); await query.press('Enter') }
+
+    await run('합성 업체')
+    await page.getByRole('button', { name: /합성 업체.*업체/ }).click()
+    await page.getByLabel(/^장소명(?: \(필수\))?$/).waitFor()
+    assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '합성 업체')
+    await page.getByText('우편번호 12345', { exact: true }).waitFor()
+    assert.ok(calls[0].path.endsWith('/naver-place-search'))
+    assert.ok(calls[1].path.endsWith('/naver-address-search'))
     await page.getByText('좌표 직접 입력', { exact: true }).click()
-    assert.equal(await page.getByLabel('위도', { exact: true }).inputValue(), '37.570000')
+    assert.equal(await page.getByLabel('위도', { exact: true }).inputValue(), '37.000000', 'postal lookup must not move business marker')
+    await page.getByLabel('위도', { exact: true }).fill('36.2')
+
+    // Same-address supplementation preserves name, category and the manually adjusted marker.
+    await run('서울 합성로 10')
+    await page.getByRole('button', { name: /서울 합성로 10.*주소/ }).click()
+    await page.getByLabel(/^도로명 주소/).waitFor()
+    assert.equal(await page.getByLabel('위도', { exact: true }).inputValue(), '36.2')
+    assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '합성 업체')
+    assert.equal(await page.getByLabel(/^우편번호/).inputValue(), '12345')
+    assert.equal(await page.getByRole('dialog').count(), 0)
+
+
+    // A different address must not silently move a hand-adjusted pin. Cancel preserves the whole selection.
+    await run('서울 다른로 20')
+    await page.getByRole('button', { name: /서울 다른로 20.*주소/ }).click()
+    await page.getByRole('dialog').waitFor()
+    assert.equal(await page.getByLabel('위도', { exact: true }).inputValue(), '36.2')
+    await page.getByRole('button', { name: '기존 위치 유지', exact: true }).click()
+    assert.equal(await page.getByLabel(/^도로명 주소/).inputValue(), place.roadAddress)
+    await run('서울 다른로 20')
+    await page.getByRole('button', { name: /서울 다른로 20.*주소/ }).click()
+    await page.getByRole('button', { name: '검색 위치 적용', exact: true }).click()
+    assert.equal(await page.getByLabel('위도', { exact: true }).inputValue(), '37.900000')
+    assert.equal(await page.getByLabel(/^우편번호/).inputValue(), '', 'old postal must not follow a different address')
+    assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '합성 업체')
+    await page.getByLabel(/^우편번호/).fill('99999')
+    await page.getByLabel(/^도로명 주소/).fill('직접 수정 주소')
+    assert.equal(await page.getByLabel(/^우편번호/).inputValue(), '')
+
+    // Failures do not fall through to the other provider or alter entered values.
+    for (const [value, message] of [['오류', '업체명 검색 서비스를 사용할 수 없습니다.'], ['권한오류', '접근 권한이 없습니다.']]) {
+      const count = calls.length
+      await run(value)
+      await page.getByText(message, { exact: false }).waitFor()
+      assert.equal(calls.length, count + 1)
+      assert.equal(await page.getByLabel(/^도로명 주소/).inputValue(), '직접 수정 주소')
+    }
+    const count = calls.length
+    await run('빈 검색')
+    await page.getByText('검색 결과가 없습니다. 지역명을 포함해 다시 검색하거나 직접 입력해주세요.', { exact: true }).waitFor()
+    assert.equal(calls.length, count + 2, 'valid empty results trigger the alternate search only once')
+
+    await run('늦은 업체'); await delayedStarted
+    const duplicates = calls.length
+    await query.press('Enter'); await query.press('Enter')
+    assert.equal(calls.length, duplicates)
+    await run('새 검색')
+    await page.getByRole('button', { name: /합성 업체.*업체/ }).waitFor()
+    await pending.shift()()
+    assert.equal(await page.getByRole('button', { name: /늦은 결과/ }).count(), 0)
+
+    // Map remains independent of server search and retries with the last entered coordinates.
     await page.getByLabel('위도', { exact: true }).fill('36.2')
     await page.waitForFunction(() => window.naverTest.stats.centers.at(-1)?.lat() === 36.2)
-    // SDK retry must restore the latest manually entered coordinate.
     await page.evaluate(() => window.navermap_authFailure())
     await page.getByRole('button', { name: '지도 다시 불러오기' }).click()
     await page.waitForFunction(() => window.naverTest.stats.centers.at(-1)?.lat() === 36.2)
-    await query.fill('재검색')
-    await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await waitForAddresses(1)
-    await query.fill('새 주소')
-    await query.press('Enter')
-    await waitForAddresses(2)
-    await respond(['이전 쿼리 결과'])
-    assert.equal(await page.getByRole('button', { name: /이전 쿼리 결과.*우편번호/ }).count(), 0)
-    assert.equal(await page.getByRole('button', { name: '주소 검색', exact: true }).isDisabled(), true)
-    await query.press('Enter')
-    assert.equal(addressRequests.length, 1, 'An older completion must not unlock the newer request')
-    await respond([])
-    await page.getByText('검색 결과가 없습니다. 주소와 좌표를 직접 입력해주세요.', { exact: true }).waitFor()
-    // Server keyword search is independent of the map SDK.
-    await page.getByLabel('장소명, 건물명 또는 주소 검색', { exact: true }).fill('업체')
-    await page.getByRole('button', { name: '장소 검색', exact: true }).click()
-    await page.getByRole('option', { name: '합성 업체, 기존 도로' }).click()
-    assert.equal(await page.getByLabel('장소명', { exact: true }).inputValue(), '합성 업체')
-    const keyword = page.getByLabel('장소명, 건물명 또는 주소 검색', { exact: true })
-    const keywordButton = page.getByRole('button', { name: '장소 검색', exact: true })
-    // Failures and empty results preserve the selected form values.
-    for (const [mode, message] of [['empty', '검색 결과가 없습니다. 지역명을 포함해 다시 검색하거나 직접 입력해주세요.'], ['forbidden', '접근 권한이 없습니다.'], ['unavailable', '업체명 검색 서비스를 사용할 수 없습니다. 잠시 후 다시 시도하거나 직접 입력해주세요.']]) {
-      searchMode = mode
-      await keyword.fill(mode)
-      await keywordButton.click()
-      await page.getByText(message, { exact: true }).waitFor()
-      assert.equal(await page.getByLabel('장소명', { exact: true }).inputValue(), '합성 업체')
-    }
-    searchMode = 'delay'
-    const before = searchRequests.length
-    await keyword.fill('성수 카페')
-    const started = page.waitForRequest(request => request.url().includes('/naver-place-search'))
-    await keyword.press('Enter')
-    await started
-    await keyword.press('Enter')
-    await keyword.press('Enter')
-    assert.equal(searchRequests.length, before + 1)
-    searchMode = 'normal'
-    await keyword.fill('새 검색어')
-    await keyword.press('Enter')
-    await page.getByRole('option', { name: '합성 업체, 기존 도로' }).waitFor()
-    await pendingSearches.shift()()
-    assert.equal(await page.getByRole('option', { name: /늦은 업체/ }).count(), 0)
-    await page.getByRole('option', { name: '합성 업체, 기존 도로' }).click()
-    searchMode = 'delay'
-    await keyword.fill('수동 수정 전 검색')
-    const manualStarted = page.waitForRequest(request => request.url().includes('/naver-place-search'))
-    await keyword.press('Enter')
-    await manualStarted
-    await page.getByRole('button', { name: '직접 입력', exact: true }).click()
-    await page.getByLabel('도로명 주소', { exact: true }).fill('보존할 주소')
-    await pendingSearches.shift()()
-    assert.equal(await page.getByRole('option', { name: /늦은 업체/ }).count(), 0)
-    assert.equal(await page.getByLabel('도로명 주소', { exact: true }).inputValue(), '보존할 주소')
-    searchMode = 'normal'
-    await keyword.press('Enter')
-    await page.getByRole('option', { name: '합성 업체, 기존 도로' }).click()
-    // Category remains the manually chosen/default value, not an inferred provider category.
-    assert.equal(await page.getByRole('button', { name: /음식점/ }).count(), 1)
+    assert.equal(await page.locator('button[aria-haspopup="listbox"]').filter({ hasText: '음식점' }).count(), 1)
     await page.screenshot({ path: join(output, 'registration-' + width + '.png'), fullPage: true })
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
-    await query.fill('이전 신청 검색')
-    await page.getByRole('button', { name: '주소 검색', exact: true }).click()
-    await waitForAddresses(1)
-    await page.getByRole('button', { name: '새로고침', exact: true }).click()
-    await respond(['이전 신청 주소'])
-    assert.equal(await query.inputValue(), '')
-    assert.equal(await page.getByRole('button', { name: /이전 신청 주소.*우편번호/ }).count(), 0)
-    await page.reload()
-    assert.equal(await query.inputValue(), '')
     assert.deepEqual(errors, [])
     await page.close()
   }
-  console.log('PASS: merchant NAVER map/address selection, manual edit races, errors, coordinates, keyword compatibility, refresh at 1280/390; ' + output)
+  console.log('PASS unified search: single input, business postal supplement, address routing, pin confirmation/cancel, manual preservation, failures, empty fallback, request races, map retry; 1920/1366/390; ' + output)
 } finally { await browser?.close(); await server.close() }

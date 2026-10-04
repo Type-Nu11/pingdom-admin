@@ -14,6 +14,7 @@ import type {
   AdminPlaceDuplicateCandidateStatus,
   AdminPlaceDuplicateDecisionRequest,
   AdminPlaceDuplicateReviewCandidate,
+  AdminPlaceDuplicatePagination,
   AdminPlaceMergeErrorResponse,
 } from '../types/adminPlaceMerge.types'
 import { logDebugError } from '../utils/debugLogger'
@@ -51,6 +52,10 @@ export function useAdminPlaceDuplicateCandidates() {
   const [candidates, setCandidates] =
     useState<AdminPlaceDuplicateReviewCandidate[]>([])
   const [totalCount, setTotalCount] = useState(0)
+  const [pageInfo, setPageInfo] = useState<AdminPlaceDuplicatePagination>({
+    page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false,
+  })
+  const pageRef = useRef(1)
   const [candidateDetail, setCandidateDetail] =
     useState<AdminPlaceDuplicateReviewCandidate | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -68,20 +73,31 @@ export function useAdminPlaceDuplicateCandidates() {
   const statusRef = useRef(status)
 
   const fetchCandidates = useCallback(
-    async (nextStatus: AdminPlaceDuplicateCandidateStatus = statusRef.current) => {
+    async (
+      nextStatus: AdminPlaceDuplicateCandidateStatus = statusRef.current,
+      nextPage = nextStatus === statusRef.current ? pageRef.current : 1
+    ) => {
       const requestId = latestListRequestIdRef.current + 1
       latestListRequestIdRef.current = requestId
       statusRef.current = nextStatus
+      pageRef.current = nextPage
       setStatusState(nextStatus)
       setIsLoading(true)
       setErrorMessage('')
 
       try {
-        const data = await getAdminPlaceDuplicateReviewCandidates(nextStatus)
+        let data = await getAdminPlaceDuplicateReviewCandidates(nextStatus, nextPage)
+        if (requestId !== latestListRequestIdRef.current) return false
+        if (data.page > Math.max(1, data.totalPages)) {
+          data = await getAdminPlaceDuplicateReviewCandidates(nextStatus, Math.max(1, data.totalPages))
+        }
 
         if (requestId === latestListRequestIdRef.current) {
           setCandidates(data.candidates)
           setTotalCount(data.total)
+          const { page, limit, total, totalPages, hasNext } = data
+          setPageInfo({ page, limit, total, totalPages, hasNext })
+          pageRef.current = data.page
         }
 
         return true
@@ -225,6 +241,7 @@ export function useAdminPlaceDuplicateCandidates() {
   const clearCandidateDetail = useCallback(() => {
     latestDetailRequestIdRef.current += 1
     setCandidateDetail(null)
+    setIsDetailLoading(false)
     setDetailErrorMessage('')
     setActionErrorMessage('')
   }, [])
@@ -237,6 +254,7 @@ export function useAdminPlaceDuplicateCandidates() {
     status,
     candidates,
     totalCount,
+    pageInfo,
     candidateDetail,
     isLoading,
     isDetailLoading,

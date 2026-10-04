@@ -46,6 +46,7 @@ interface PlaceListPanelProps {
   totalPages: number
   hasNext: boolean
   isLoading: boolean
+  hasListResult: boolean
   isError: boolean
   errorMessage: string
   pageRangeLabel: string
@@ -90,6 +91,7 @@ export function PlaceListPanel({
   totalPages,
   hasNext,
   isLoading,
+  hasListResult,
   isError,
   errorMessage,
   pageRangeLabel,
@@ -115,7 +117,7 @@ export function PlaceListPanel({
         <S.PanelSummary>
           <S.PanelCount>
             {hasActiveFilter ? '필터 결과' : '전체 장소'}{' '}
-            <strong>{totalCount.toLocaleString()}</strong>개
+            {hasListResult ? <><strong>{totalCount.toLocaleString()}</strong>개</> : isLoading ? '조회 중' : '조회 결과 없음'}
           </S.PanelCount>
           <S.PanelCollapseButton
             type="button"
@@ -177,7 +179,7 @@ export function PlaceListPanel({
         </S.PanelActionGroup>
 
         <S.PanelResultSummary>
-          <span>{pageRangeLabel}</span>
+          <span>{pageRangeLabel}{hasListResult && (isLoading || isError) ? ' (이전 결과)' : ''}</span>
           {hasActiveFilter ? (
             <S.ClearFilterButton type="button" onClick={onClearFilters}>
               필터 초기화
@@ -186,7 +188,7 @@ export function PlaceListPanel({
         </S.PanelResultSummary>
       </S.PanelControls>
 
-      {isError && places.length > 0 ? (
+      {isError && hasListResult ? (
         <S.ListInlineNotice role="alert">
           <span>{errorMessage} 기존 결과를 표시합니다.</span>
           <S.RetryButton type="button" disabled={isLoading} onClick={onRefresh}>
@@ -215,7 +217,7 @@ export function PlaceListPanel({
               </S.PlaceSkeletonItem>
             ))}
           </S.PlaceListSkeleton>
-        ) : isError && places.length === 0 ? (
+        ) : isError && !hasListResult ? (
           <S.EmptyState>
             {errorMessage}
             <S.RetryButton type="button" disabled={isLoading} onClick={onRefresh}>

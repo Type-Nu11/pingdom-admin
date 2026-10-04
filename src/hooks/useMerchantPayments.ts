@@ -43,8 +43,8 @@ export function useMerchantPayments() {
   })
   const [hasLoadedPayments, setHasLoadedPayments] = useState(false)
   const [hasLoadedSettlements, setHasLoadedSettlements] = useState(false)
-  const [isLoadingPayments, setIsLoadingPayments] = useState(false)
-  const [isLoadingSettlements, setIsLoadingSettlements] = useState(false)
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true)
+  const [isLoadingSettlements, setIsLoadingSettlements] = useState(true)
   const [paymentErrorMessage, setPaymentErrorMessage] = useState('')
   const [settlementErrorMessage, setSettlementErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
@@ -82,6 +82,7 @@ export function useMerchantPayments() {
       if (!mountedRef.current || requestId !== paymentRequestRef.current) return
 
       setPayments(data.payments)
+      setHasLoadedPayments(true)
       setPaymentPageInfo({
         page: data.page,
         limit: data.limit,
@@ -96,7 +97,6 @@ export function useMerchantPayments() {
       logDebugError('상점주 결제 목록 조회 실패', error)
     } finally {
       if (mountedRef.current && requestId === paymentRequestRef.current) {
-        setHasLoadedPayments(true)
         setIsLoadingPayments(false)
       }
     }
@@ -113,6 +113,7 @@ export function useMerchantPayments() {
       if (!mountedRef.current || requestId !== settlementRequestRef.current) return
 
       setSettlements(data.entries)
+      setHasLoadedSettlements(true)
       setSettlementPageInfo({
         page: data.page,
         limit: data.limit,
@@ -127,7 +128,6 @@ export function useMerchantPayments() {
       logDebugError('상점주 정산 원장 조회 실패', error)
     } finally {
       if (mountedRef.current && requestId === settlementRequestRef.current) {
-        setHasLoadedSettlements(true)
         setIsLoadingSettlements(false)
       }
     }

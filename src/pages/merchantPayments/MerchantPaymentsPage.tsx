@@ -109,7 +109,7 @@ function MerchantPaymentsPage() {
               </S.PanelHeader>
               {payments.paymentErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ margin: '16px 24px 0' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.paymentErrorMessage}</Store.Notice> : null}
               {isPaymentInitialLoading ? <Store.LoadingSummary aria-label="결제 목록을 불러오는 중" style={{ padding: 24 }}><Store.Skeleton $height={360} /></Store.LoadingSummary> : !payments.hasLoadedPayments ? <S.Empty>결제 목록을 불러오지 못했습니다.</S.Empty> : <>
-                <S.ResultMeta>총 {payments.paymentPageInfo.totalElements.toLocaleString()}건</S.ResultMeta>
+                <S.ResultMeta>총 {payments.paymentPageInfo.totalElements.toLocaleString()}건{payments.isLoadingPayments || payments.paymentErrorMessage ? ' (이전 결과)' : ''}</S.ResultMeta>
                 {payments.payments.length === 0 ? <S.Empty>조회할 결제 내역이 없습니다.</S.Empty> : <S.CampaignList>{payments.payments.map((payment) => {
                   const status = PAYMENT_STATUS[payment.status]
                   const isRefunding = payments.refundingPaymentId === payment.id
@@ -128,7 +128,7 @@ function MerchantPaymentsPage() {
               </S.PanelHeader>
               {payments.settlementErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ margin: '16px 24px 0' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.settlementErrorMessage}</Store.Notice> : null}
               {isSettlementInitialLoading ? <Store.LoadingSummary aria-label="정산 원장을 불러오는 중" style={{ padding: 24 }}><Store.Skeleton $height={360} /></Store.LoadingSummary> : !payments.hasLoadedSettlements ? <S.Empty>정산 원장을 불러오지 못했습니다.</S.Empty> : <>
-                <S.ResultMeta>총 {payments.settlementPageInfo.totalElements.toLocaleString()}건</S.ResultMeta>
+                <S.ResultMeta>총 {payments.settlementPageInfo.totalElements.toLocaleString()}건{payments.isLoadingSettlements || payments.settlementErrorMessage ? ' (이전 결과)' : ''}</S.ResultMeta>
                 {payments.settlements.length === 0 ? <S.Empty>조회할 정산 내역이 없습니다.</S.Empty> : <S.CampaignList>{payments.settlements.map((entry) => {
                   const status = SETTLEMENT_STATUS[entry.status]
                   return <S.CampaignItem as="article" key={entry.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{SETTLEMENT_TYPE[entry.entryType]} 정산 #{entry.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>결제 #{entry.paymentTransactionId} · 총액 {formatAmountMinor(entry.grossAmountMinor, entry.currency)}</S.CampaignMeta><S.CampaignMeta>수수료 {formatAmountMinor(entry.feeAmountMinor, entry.currency)} · 정산액 {formatAmountMinor(entry.netAmountMinor, entry.currency)}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(entry.createdAt)} · 정산 {formatDateTime(entry.settledAt)}</S.CampaignMeta></S.CampaignItem>

@@ -108,6 +108,7 @@ function PlaceManagePage() {
     totalPages,
     hasNext,
     isLoading,
+    hasListResult,
     isError,
     errorMessage,
     deleteErrorMessage,
@@ -168,7 +169,7 @@ function PlaceManagePage() {
   const pageStart = totalCount > 0 ? (page - 1) * ADMIN_PLACE_PAGE_SIZE + 1 : 0
   const pageEnd = totalCount > 0 ? pageStart + places.length - 1 : 0
   const pageRangeLabel =
-    totalCount > 0
+    !hasListResult ? (isLoading ? '조회 중' : '조회 결과 없음') : totalCount > 0
       ? `${pageStart.toLocaleString()}–${pageEnd.toLocaleString()} / ${totalCount.toLocaleString()}개`
       : '0개'
   const isPlaceDetailOpen = selectedPlace !== null
@@ -763,6 +764,7 @@ function PlaceManagePage() {
             totalPages={safeTotalPages}
             hasNext={hasNext}
             isLoading={isLoading}
+            hasListResult={hasListResult}
             isError={isError}
             errorMessage={errorMessage}
             pageRangeLabel={pageRangeLabel}

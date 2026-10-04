@@ -68,7 +68,28 @@ function MerchantPlaceReviewPage() {
       const deletionRequest = review.deletionRequest
       const isSubmitting = reviewStore.activeReviewId === review.reviewId
       const canRequestDeletion = deletionRequest === null || deletionRequest.status === 'REJECTED'
-      return <S.ReviewItem key={review.reviewId}><S.ReviewTop><ReviewReasons review={review} /><S.ReviewDate dateTime={review.createdAt}>{formatDateTime(review.createdAt)}</S.ReviewDate></S.ReviewTop><S.ReviewContent>{review.content || '작성된 리뷰 내용이 없습니다.'}</S.ReviewContent><ReviewPhotos review={review} reviewId={review.reviewId} /><S.ReviewFooter><S.ReviewMeta>리뷰 #{review.reviewId} · {VISIBILITY_LABELS[review.visibilityStatus]}</S.ReviewMeta><div>{deletionRequest ? <S.RequestedBadge $status={deletionRequest.status}>{DELETION_REQUEST_LABELS[deletionRequest.status]}</S.RequestedBadge> : null}{canRequestDeletion ? <S.RequestButton type="button" disabled={isSubmitting || reviewStore.activeReviewId !== null} onClick={() => openRequestDialog(review)}>{isSubmitting ? '요청 중' : deletionRequest ? '다시 요청' : '삭제 요청'}</S.RequestButton> : null}</div></S.ReviewFooter>{deletionRequest?.status === 'REJECTED' && deletionRequest.reviewNote ? <S.ReviewContent>반려 사유: {deletionRequest.reviewNote}</S.ReviewContent> : null}</S.ReviewItem>
+      return <S.ReviewItem key={review.reviewId} aria-labelledby={`merchant-review-${review.reviewId}`}>
+        <S.ReviewTop>
+          <S.ReviewIdentity>
+            <S.ReviewTitle id={`merchant-review-${review.reviewId}`}>리뷰 #{review.reviewId}</S.ReviewTitle>
+            <S.VisibilityBadge $visibility={review.visibilityStatus}>{VISIBILITY_LABELS[review.visibilityStatus]}</S.VisibilityBadge>
+          </S.ReviewIdentity>
+          <S.ReviewDate dateTime={review.createdAt}>작성일 {formatDateTime(review.createdAt)}</S.ReviewDate>
+        </S.ReviewTop>
+        <S.ReviewBody>
+          <S.ReasonSection><S.SectionLabel>추천 이유</S.SectionLabel><ReviewReasons review={review} /></S.ReasonSection>
+          <S.ReviewContent>{review.content || '작성된 리뷰 내용이 없습니다.'}</S.ReviewContent>
+          <ReviewPhotos review={review} reviewId={review.reviewId} />
+          {deletionRequest?.status === 'REJECTED' && deletionRequest.reviewNote ? <S.RejectionNote><strong>관리자 반려 사유</strong><p>{deletionRequest.reviewNote}</p></S.RejectionNote> : null}
+        </S.ReviewBody>
+        <S.ReviewFooter>
+          <S.ReviewMeta>삭제 요청</S.ReviewMeta>
+          <S.RequestActions>
+            {deletionRequest ? <S.RequestedBadge $status={deletionRequest.status}>{DELETION_REQUEST_LABELS[deletionRequest.status]}</S.RequestedBadge> : <S.ReviewMeta>요청 없음</S.ReviewMeta>}
+            {canRequestDeletion ? <S.RequestButton type="button" disabled={isSubmitting || reviewStore.activeReviewId !== null} aria-label={`리뷰 #${review.reviewId} ${deletionRequest ? '삭제 다시 요청' : '삭제 요청'}`} onClick={() => openRequestDialog(review)}>{isSubmitting ? '요청 중' : deletionRequest ? '다시 요청' : '삭제 요청'}</S.RequestButton> : null}
+          </S.RequestActions>
+        </S.ReviewFooter>
+      </S.ReviewItem>
     })}</S.ReviewList>}{reviewStore.pageInfo.totalPages > 1 ? <AdminPagination ariaLabel="상점주 리뷰 목록 페이지네이션" page={reviewStore.pageInfo.page} totalPages={reviewStore.pageInfo.totalPages} hasNext={reviewStore.pageInfo.hasNext} disabled={reviewStore.isLoading} onPageChange={(nextPage) => { if (reviewStore.selectedPlaceId) void reviewStore.fetchReviews(reviewStore.selectedPlaceId, nextPage) }} /> : null}</Campaign.Panel>}
   </Store.Content>{pendingReview ? <Campaign.ModalOverlay role="presentation" onMouseDown={() => setPendingReview(null)}><Campaign.Modal role="dialog" aria-modal="true" aria-labelledby="review-deletion-request-title" onMouseDown={(event) => event.stopPropagation()}><Campaign.ModalHeader><div><Campaign.ModalTitle id="review-deletion-request-title">리뷰 삭제 요청</Campaign.ModalTitle></div><Campaign.CloseButton type="button" aria-label="닫기" onClick={() => setPendingReview(null)}>close</Campaign.CloseButton></Campaign.ModalHeader><Campaign.ModalBody><S.ModalDescription>요청을 제출하면 리뷰가 즉시 숨김 처리되고, 관리자가 최종 삭제 여부를 검토합니다.</S.ModalDescription><S.Field>요청 사유<S.Textarea value={requestReason} maxLength={MAX_REASON_LENGTH} placeholder="운영 정책 위반 사유를 구체적으로 입력해주세요." onChange={(event) => setRequestReason(event.target.value)} autoFocus /><S.CharacterCount>{requestReason.length} / {MAX_REASON_LENGTH}</S.CharacterCount></S.Field><Campaign.FormActions><Campaign.ActionButton type="button" disabled={reviewStore.activeReviewId !== null} onClick={() => setPendingReview(null)}>취소</Campaign.ActionButton><Campaign.ActionButton type="button" $variant="danger" disabled={requestReason.trim().length === 0 || reviewStore.activeReviewId !== null} onClick={() => void submitRequest()}>{reviewStore.activeReviewId ? '제출 중' : '삭제 요청 제출'}</Campaign.ActionButton></Campaign.FormActions></Campaign.ModalBody></Campaign.Modal></Campaign.ModalOverlay> : null}</Store.Page>
 }

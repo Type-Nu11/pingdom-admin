@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import { JSDOM } from 'jsdom'
 import { createServer } from 'vite'
+import { paymentFixture, settlementFixture } from './browser/display-consistency-data.mjs'
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/' })
 for (const key of ['window', 'document', 'localStorage']) globalThis[key] = dom.window[key]
@@ -61,6 +62,41 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
+
+for (const [fixture, listKey, otherKey] of [[paymentFixture, 'payments', 'entries'], [settlementFixture, 'entries', 'payments']]) {
+  for (const scenario of ['complete', 'empty']) test(`${listKey} browser fixture ${scenario} has endpoint-specific rows and matching pagination`, () => {
+    const data = fixture(scenario)
+    const count = scenario === 'empty' ? 0 : 1
+    assert.equal(data[listKey].length, count)
+    assert.equal(otherKey in data, false)
+    assert.deepEqual({ page: data.page, limit: data.limit, totalElements: data.totalElements, totalPages: data.totalPages, hasNext: data.hasNext }, { page: 1, limit: 20, totalElements: count, totalPages: count, hasNext: false })
+  })
+}
+for (const scenario of ['complete', 'empty']) test(`browser fixture ${scenario} renders matching payment and settlement counts after tab switch and refresh`, async () => {
+  adapter = config => {
+    assert.equal(config.method, 'get', 'QA must not mutate real payment state')
+    if (config.url === '/merchant-owner/payments') return Promise.resolve(response(config, paymentFixture(scenario)))
+    if (config.url === '/merchant-owner/payments/settlements') return Promise.resolve(response(config, settlementFixture(scenario)))
+    return base(config)
+  }
+  await mount(h(PaymentPage))
+  const assertRows = (kind) => {
+    assert.match(document.body.textContent, scenario === 'empty' ? /총 0건/ : /총 1건/)
+    assert.equal(document.querySelectorAll('article').length, scenario === 'empty' ? 0 : 1)
+    const emptyMessage = `조회할 ${kind === 'payments' ? '결제' : '정산'} 내역이 없습니다.`
+    assert.equal(document.body.textContent.includes(emptyMessage), scenario === 'empty')
+  }
+  assertRows('payments')
+  await call(async () => [...document.querySelectorAll('[role="tab"]')].find(x => x.textContent === '정산 원장').click())
+  assertRows('settlements')
+  if (scenario === 'complete') {
+    for (const text of ['결제 정산 #1', '정산 완료', '총액 2,050 USD (최소 단위)', '수수료 50 USD (최소 단위)', '정산액 2,000 USD (최소 단위)', '생성 2026.10.05 12:30 · 정산 2026.10.05 12:31']) assert.ok(document.body.textContent.includes(text), text)
+  }
+  const ledgerCalls = calls.filter(c => c.url === '/merchant-owner/payments/settlements').length
+  await call(async () => [...document.querySelectorAll('button')].find(x => x.textContent === '새로고침').click())
+  assert.equal(calls.filter(c => c.url === '/merchant-owner/payments/settlements').length, ledgerCalls + 1)
+  assertRows('settlements')
+})
 
 test('minor units require explicit precision; signed ledger values and null are distinct', () => {
   for (const [amount, currency, digits, expected] of [[2050, 'KRW', 0, '2,050 KRW'], [2050, 'USD', 2, '20.50 USD'], [2050, 'KWD', 3, '2.050 KWD'], [-5, 'USD', 2, '-0.05 USD'], [0, 'USD', 2, '0.00 USD']]) assert.equal(formatMinorAmount(amount, currency, digits), expected)

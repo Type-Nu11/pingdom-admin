@@ -50,6 +50,7 @@
 - `tests/display-consistency.test.mjs`: 날짜 유효성·브라우저 시간대 차이·통화 정밀도·null/부호/안전 정수·리포트 부재와 오류 분리·경합·이전 결과·조회 상태 DOM 검사.
 - `tests/reservation-conditions.test.mjs`: 기존 수락 조건·금액·취소 기한 회귀.
 - `node tests/browser/display-consistency-server.mjs`: 격리된 합성 QA 서버. 출력된 URL에 `scenario=empty|error|complete|running|failed|loading`, `screen=payments`로 확인. 원본 페이지/훅을 사용하되 모든 API 요청을 합성 adapter로 대체하고 mutation을 차단합니다. 실제 상점주/관리자 전체 QA와 구분합니다.
+- PR #276 리뷰 후 결제·정산 합성 응답을 `tests/browser/display-consistency-data.mjs`로 분리했습니다. 결제는 `payments`, 정산은 `entries`만 제공하고 건수·페이지 수를 해당 배열에서 계산합니다. 정상 1건(정산 총액/수수료/순액/일시)과 성공한 0건을 탭 전환·GET 새로고침으로 1920×1080·1366×768에서 다시 확인했습니다. 응답 계약·화면 회귀 테스트 6개를 추가했으며, 이 후속 수정은 제품 코드나 실데이터를 변경하지 않습니다.
 - 1920×1080·1366×768 합성 화면에서 빈 상태·조회 실패·생성 중·생성 실패·완료 후보·결제 표시를 확인했습니다. 가로 넘침이 없었으며 삭제 확인 모달의 배치와 최종 확인 전 비활성 상태를 검증했습니다. 실제 삭제는 실행하지 않았습니다.
 - 실제 로그인된 로컬 `s3-orphans` 화면에서 파일 비교 GET 성공과 최신 리포트 부재 안내를 확인했습니다. 부재를 오류나 후보 0건으로 표시하지 않았고, 해당 검증 탭의 콘솔 오류는 없었습니다. 실제 리포트 생성·삭제·환불·승인 등의 쓰기 요청은 하지 않았습니다. 실제 완료 리포트·만료 ID 경계 사례는 합성 테스트로만 검증했습니다.
 - Chrome DevTools의 `startTime` 예외는 앱 예외를 숨기는 코드로 대응하지 않습니다. Chrome 153 이상으로 재시작 후 원래 상호작용에서 재발 확인은 별도 미수행입니다.

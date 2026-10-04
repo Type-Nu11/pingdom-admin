@@ -7,6 +7,7 @@ import S3Page from '../../src/pages/s3Orphan/S3OrphanPage'
 import PaymentPage from '../../src/pages/merchantPayments/MerchantPaymentsPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
+import { paymentFixture, settlementFixture } from './display-consistency-data.mjs'
 
 // Entirely synthetic adapter: no request (including mutations) reaches a real API.
 const params = new URLSearchParams(location.search)
@@ -25,7 +26,7 @@ client.defaults.adapter = async config => {
   } else if (config.url === '/admin/posts/s3/orphans/report') data = report
   else if (config.url === '/merchant-owner/payments' || config.url === '/merchant-owner/payments/settlements') {
     if (scenario === 'error') throw new Error('Synthetic payment query failure')
-    data = { payments: scenario === 'empty' ? [] : [{ id: 1, reservationId: 2, status: 'PAID', amountMinor: 2050, currency: 'USD', provider: 'SYNTHETIC', providerPaymentId: 'synthetic-only', createdAt: '2026-10-05T12:30:00', paidAt: '2026-10-05T12:30:00', refundedAt: null }], entries: [], page: 1, totalElements: scenario === 'empty' ? 0 : 1, totalPages: 1, hasNext: false }
+    data = config.url === '/merchant-owner/payments' ? paymentFixture(scenario) : settlementFixture(scenario)
   } else throw new Error(`Unexpected synthetic request ${config.url}`)
   return { config, data, status: 200, statusText: 'OK', headers: {} }
 }

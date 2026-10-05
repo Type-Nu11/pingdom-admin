@@ -4,6 +4,7 @@ import {
   useRef,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import * as S from './AppDialog.styles'
 
@@ -23,6 +24,7 @@ interface AppDialogProps {
   description?: ReactNode
   descriptionId?: string
   isDismissible?: boolean
+  fallbackFocusRef?: RefObject<HTMLElement | null>
   onClose: () => void
 }
 
@@ -33,6 +35,7 @@ export function AppDialog({
   description,
   descriptionId,
   isDismissible = true,
+  fallbackFocusRef,
   onClose,
 }: AppDialogProps) {
   const titleId = useId()
@@ -44,6 +47,7 @@ export function AppDialog({
     previousActiveElementRef.current = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null
+    const fallbackElement = fallbackFocusRef?.current
 
     const focusFirstElement = window.requestAnimationFrame(() => {
       const firstFocusableElement = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
@@ -52,9 +56,11 @@ export function AppDialog({
 
     return () => {
       window.cancelAnimationFrame(focusFirstElement)
-      previousActiveElementRef.current?.focus()
+      const previous = previousActiveElementRef.current
+      if (previous?.isConnected && !previous.matches(':disabled')) previous.focus()
+      else fallbackElement?.focus()
     }
-  }, [])
+  }, [fallbackFocusRef])
 
   useEffect(() => {
     if (isDismissible) return
@@ -73,13 +79,15 @@ export function AppDialog({
   }, [isDismissible])
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === 'Escape' && isDismissible) {
+    if (event.key === 'Escape') {
       event.preventDefault()
-      onClose()
+      event.stopPropagation()
+      if (isDismissible) onClose()
       return
     }
 
     if (event.key !== 'Tab') return
+    event.stopPropagation()
 
     const focusableElements = Array.from(
       dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? [],
@@ -108,7 +116,10 @@ export function AppDialog({
     <S.Overlay
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && isDismissible) onClose()
+        if (event.target !== event.currentTarget) return
+        // A blocked backdrop click must not move focus to the page underneath.
+        event.preventDefault()
+        if (isDismissible) onClose()
       }}
     >
       <S.Dialog

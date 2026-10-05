@@ -131,6 +131,34 @@ for (const scenario of scenarios) {
     } finally { window.setTimeout = originalTimer }
   })
 }
+test('selection: long description keeps server failure in the non-scrolling action footer', async () => {
+  await open(scenarios[3]); failureStatus = 500
+  const current = dialog(), form = current.querySelector('form'), submit = button('선택 완료', current)
+  assert.ok(form.textContent.length > 500, 'exercise the long product description fixture')
+  const selected = [...form.querySelectorAll('select')].map(element => element.value)
+  await click(submit)
+  const alert = current.querySelector('[role="alert"]'), footer = submit.closest('footer')
+  assert.match(alert.textContent, /합성 처리 실패/)
+  assert.ok(footer.contains(alert), 'failure feedback stays outside the scrollable description body')
+  assert.equal(form.contains(alert), false)
+  assert.ok(alert.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING)
+  assert.deepEqual([...form.querySelectorAll('select')].map(element => element.value), selected)
+  assert.equal(submit.disabled, false)
+})
+test('selection: duplicate pair validation is shown beside actions without a request', async () => {
+  await open(scenarios[3])
+  const current = dialog(), product = current.querySelector('select')
+  await act(async () => {
+    product.value = '1'
+    product.dispatchEvent(new window.Event('change', { bubbles: true }))
+  })
+  const submit = button('선택 완료', current)
+  await click(submit)
+  const alert = current.querySelector('[role="alert"]')
+  assert.match(alert.textContent, /이미 선택된 상품과 장소 조합/)
+  assert.ok(submit.closest('footer').contains(alert))
+  assert.equal(calls.filter(config => config.method === 'post').length, 0)
+})
 for (const code of [401, 403, 409]) test(`refund HTTP ${code} keeps target visible and existing auth/permission handling`, async () => {
   await open(scenarios[0]); failureStatus = code
   await click(button('전액 환불', dialog()))

@@ -89,6 +89,8 @@ function BoostSelectionDialog({
 
   return <AppDialog title="Verified Boost 상품 선택" description="상품과 적용 장소를 확인해주세요." isDismissible={!isBusy} fallbackFocusRef={fallbackFocusRef} onClose={closeDialog}
     footer={<>
+      {formError ? <S.FormError role="alert" style={{ width: '100%' }}>{formError}</S.FormError> : null}
+      {errorMessage ? <Store.Notice $tone="error" role="alert" style={{ width: '100%' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{errorMessage}</Store.Notice> : null}
       <S.ActionButton type="button" disabled={isBusy} onClick={closeDialog}>취소</S.ActionButton>
       <S.ActionButton type="submit" form={formId} disabled={isBusy} $variant="primary">{isBusy ? '선택 중' : '선택 완료'}</S.ActionButton>
     </>}>
@@ -96,9 +98,7 @@ function BoostSelectionDialog({
       <S.Field>상품<S.Select value={productId} disabled={isBusy} onChange={(event) => { setProductId(Number(event.target.value)); resetRequest() }}>{products.map((item) => <option value={item.productId} key={item.productId}>{item.name} · {item.durationDays}일 · {formatCurrency(item.priceAmount, item.currency)}</option>)}</S.Select></S.Field>
       <S.Field>적용 장소<S.Select value={placeId} disabled={isBusy} onChange={(event) => { setPlaceId(Number(event.target.value)); resetRequest() }}>{placeIds.map((id) => <option value={id} key={id}>장소 #{id}</option>)}</S.Select></S.Field>
       {product ? <S.ReadonlyNotice style={{ gridColumn: '1 / -1', margin: 0 }}>{product.description || '상품 설명이 없습니다.'}</S.ReadonlyNotice> : null}
-      {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}
     </S.Form>
-    {errorMessage ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{errorMessage}</Store.Notice> : null}
   </AppDialog>
 }
 

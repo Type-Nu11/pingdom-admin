@@ -567,7 +567,7 @@ function DashboardPage() {
 
           <AdminPendingWork />
 
-          <S.Section aria-labelledby="dashboard-operational-metrics-title">
+          <S.OperationalSection aria-labelledby="dashboard-operational-metrics-title">
             <S.SectionHeader>
               <S.SectionTitle id="dashboard-operational-metrics-title">우선 확인</S.SectionTitle>
               <S.SectionDescription>
@@ -596,7 +596,7 @@ function DashboardPage() {
                   : '운영 항목 집계가 제공되지 않았습니다.'}
               </S.OperationalEmptyState>
             ) : null}
-          </S.Section>
+          </S.OperationalSection>
 
           <S.Section aria-labelledby="dashboard-summary-title">
             <S.SectionHeader>

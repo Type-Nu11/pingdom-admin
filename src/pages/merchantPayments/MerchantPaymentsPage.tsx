@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { useMerchantPayments } from '../../hooks/useMerchantPayments'
+import { formatLocalDateTime as formatDateTime, formatMinorAmount as formatAmountMinor } from '../../utils/displayFormat'
 import type {
   MerchantPayment,
   MerchantPaymentStatus,
@@ -31,21 +32,6 @@ const SETTLEMENT_STATUS: Record<MerchantSettlementStatus, { label: string; tone:
 const SETTLEMENT_TYPE: Record<MerchantSettlementEntryType, string> = {
   PAYMENT: '결제',
   REFUND: '환불',
-}
-
-function formatDateTime(value: string | null) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
-function formatAmountMinor(amountMinor: number | null, currency: string | null) {
-  if (amountMinor === null || !currency) return '-'
-
-  return `${new Intl.NumberFormat('ko-KR').format(amountMinor)} ${currency}`
 }
 
 function MerchantPaymentsPage() {
@@ -118,12 +104,12 @@ function MerchantPaymentsPage() {
               <S.PanelHeader>
                 <div>
                   <S.PanelTitle>결제 내역</S.PanelTitle>
-                  <S.PanelDescription>결제 완료 건만 전액 환불할 수 있습니다.</S.PanelDescription>
+                  <S.PanelDescription>결제 완료 건만 전액 환불할 수 있습니다. 금액은 서버가 제공한 최소 통화 단위이며, 일시는 서버 기록 기준입니다.</S.PanelDescription>
                 </div>
               </S.PanelHeader>
               {payments.paymentErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ margin: '16px 24px 0' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.paymentErrorMessage}</Store.Notice> : null}
               {isPaymentInitialLoading ? <Store.LoadingSummary aria-label="결제 목록을 불러오는 중" style={{ padding: 24 }}><Store.Skeleton $height={360} /></Store.LoadingSummary> : !payments.hasLoadedPayments ? <S.Empty>결제 목록을 불러오지 못했습니다.</S.Empty> : <>
-                <S.ResultMeta>총 {payments.paymentPageInfo.totalElements.toLocaleString()}건</S.ResultMeta>
+                <S.ResultMeta>총 {payments.paymentPageInfo.totalElements.toLocaleString()}건{payments.isLoadingPayments || payments.paymentErrorMessage ? ' (이전 결과)' : ''}</S.ResultMeta>
                 {payments.payments.length === 0 ? <S.Empty>조회할 결제 내역이 없습니다.</S.Empty> : <S.CampaignList>{payments.payments.map((payment) => {
                   const status = PAYMENT_STATUS[payment.status]
                   const isRefunding = payments.refundingPaymentId === payment.id
@@ -137,12 +123,12 @@ function MerchantPaymentsPage() {
               <S.PanelHeader>
                 <div>
                   <S.PanelTitle>정산 원장</S.PanelTitle>
-                  <S.PanelDescription>결제·환불별 수수료와 정산 금액을 확인합니다.</S.PanelDescription>
+                  <S.PanelDescription>결제·환불별 수수료와 정산 금액을 확인합니다. 금액은 서버가 제공한 최소 통화 단위이며, 일시는 서버 기록 기준입니다.</S.PanelDescription>
                 </div>
               </S.PanelHeader>
               {payments.settlementErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ margin: '16px 24px 0' }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.settlementErrorMessage}</Store.Notice> : null}
               {isSettlementInitialLoading ? <Store.LoadingSummary aria-label="정산 원장을 불러오는 중" style={{ padding: 24 }}><Store.Skeleton $height={360} /></Store.LoadingSummary> : !payments.hasLoadedSettlements ? <S.Empty>정산 원장을 불러오지 못했습니다.</S.Empty> : <>
-                <S.ResultMeta>총 {payments.settlementPageInfo.totalElements.toLocaleString()}건</S.ResultMeta>
+                <S.ResultMeta>총 {payments.settlementPageInfo.totalElements.toLocaleString()}건{payments.isLoadingSettlements || payments.settlementErrorMessage ? ' (이전 결과)' : ''}</S.ResultMeta>
                 {payments.settlements.length === 0 ? <S.Empty>조회할 정산 내역이 없습니다.</S.Empty> : <S.CampaignList>{payments.settlements.map((entry) => {
                   const status = SETTLEMENT_STATUS[entry.status]
                   return <S.CampaignItem as="article" key={entry.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{SETTLEMENT_TYPE[entry.entryType]} 정산 #{entry.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>결제 #{entry.paymentTransactionId} · 총액 {formatAmountMinor(entry.grossAmountMinor, entry.currency)}</S.CampaignMeta><S.CampaignMeta>수수료 {formatAmountMinor(entry.feeAmountMinor, entry.currency)} · 정산액 {formatAmountMinor(entry.netAmountMinor, entry.currency)}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(entry.createdAt)} · 정산 {formatDateTime(entry.settledAt)}</S.CampaignMeta></S.CampaignItem>

@@ -66,7 +66,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
       { label: '데이터 품질', icon: 'rule', path: '/data-quality' },
       { label: '알림 발송 현황', icon: 'notifications_active', path: '/operations/notifications' },
       { label: '운영 이력', icon: 'history', path: '/operations/history' },
-      { label: '미연결 파일', icon: 'cloud_off', path: '/s3-orphans' },
+      { label: '미연결 파일 관리', icon: 'cloud_off', path: '/s3-orphans' },
     ],
   },
 ]

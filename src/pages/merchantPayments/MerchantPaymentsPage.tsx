@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminPagination } from '../../components/common/AdminPagination'
+import { AppDialog } from '../../components/common/AppDialog'
 import { useMerchantPayments } from '../../hooks/useMerchantPayments'
 import { formatLocalDateTime as formatDateTime, formatMinorAmount as formatAmountMinor } from '../../utils/displayFormat'
 import type {
@@ -37,9 +38,10 @@ const SETTLEMENT_TYPE: Record<MerchantSettlementEntryType, string> = {
 function MerchantPaymentsPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
-  const payments = useMerchantPayments()
+  const payments = useMerchantPayments({ persistActionError: true })
   const [activeTab, setActiveTab] = useState<Tab>('payments')
   const [refundTarget, setRefundTarget] = useState<MerchantPayment | null>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
 
   const handleLogout = () => {
     void logout()
@@ -50,6 +52,11 @@ function MerchantPaymentsPage() {
     if (!refundTarget) return
     const result = await payments.refundPayment(refundTarget)
     if (result) setRefundTarget(null)
+  }
+
+  const closeRefundDialog = () => {
+    if (payments.refundingPaymentId !== null) return
+    setRefundTarget(null)
   }
 
   const isPaymentInitialLoading = payments.isLoadingPayments && !payments.hasLoadedPayments
@@ -70,7 +77,7 @@ function MerchantPaymentsPage() {
         <Store.PageIntro>
           <div>
 
-            <Store.PageTitle>결제·정산</Store.PageTitle>
+            <Store.PageTitle ref={headingRef} tabIndex={-1}>결제·정산</Store.PageTitle>
             <Store.PageDescription>소유 장소에서 발생한 결제와 정산 상태를 확인합니다.</Store.PageDescription>
           </div>
           <S.HeaderActions>
@@ -90,7 +97,7 @@ function MerchantPaymentsPage() {
           </S.HeaderActions>
         </Store.PageIntro>
 
-        {payments.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.actionErrorMessage}</Store.Notice> : null}
+        {!refundTarget && payments.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.actionErrorMessage}</Store.Notice> : null}
         {payments.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{payments.successMessage}</Store.Notice> : null}
 
         <S.Panel>
@@ -113,7 +120,7 @@ function MerchantPaymentsPage() {
                 {payments.payments.length === 0 ? <S.Empty>조회할 결제 내역이 없습니다.</S.Empty> : <S.CampaignList>{payments.payments.map((payment) => {
                   const status = PAYMENT_STATUS[payment.status]
                   const isRefunding = payments.refundingPaymentId === payment.id
-                  return <S.CampaignItem as="article" key={payment.id} $selected={false}><S.CampaignTop><S.CampaignTitle title={`결제 #${payment.id}`}>결제 #{payment.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>예약 #{payment.reservationId} · {formatAmountMinor(payment.amountMinor, payment.currency)}</S.CampaignMeta><S.CampaignMeta title={payment.providerPaymentId ?? undefined}>결제 수단 {payment.provider} · 승인 번호 {payment.providerPaymentId ?? '-'}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(payment.createdAt)} · 결제 {formatDateTime(payment.paidAt)}{payment.refundedAt ? ` · 환불 ${formatDateTime(payment.refundedAt)}` : ''}</S.CampaignMeta>{payment.failureCode ? <S.CampaignMeta>실패 코드 {payment.failureCode}</S.CampaignMeta> : null}{payment.status === 'PAID' ? <S.FormActions><S.ActionButton type="button" $variant="danger" disabled={isRefunding || payments.refundingPaymentId !== null} onClick={() => setRefundTarget(payment)}>전액 환불</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
+                  return <S.CampaignItem as="article" key={payment.id} $selected={false}><S.CampaignTop><S.CampaignTitle title={`결제 #${payment.id}`}>결제 #{payment.id}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>예약 #{payment.reservationId} · {formatAmountMinor(payment.amountMinor, payment.currency)}</S.CampaignMeta><S.CampaignMeta title={payment.providerPaymentId ?? undefined}>결제 수단 {payment.provider} · 승인 번호 {payment.providerPaymentId ?? '-'}</S.CampaignMeta><S.CampaignMeta>생성 {formatDateTime(payment.createdAt)} · 결제 {formatDateTime(payment.paidAt)}{payment.refundedAt ? ` · 환불 ${formatDateTime(payment.refundedAt)}` : ''}</S.CampaignMeta>{payment.failureCode ? <S.CampaignMeta>실패 코드 {payment.failureCode}</S.CampaignMeta> : null}{payment.status === 'PAID' ? <S.FormActions><S.ActionButton type="button" $variant="danger" disabled={isRefunding || payments.refundingPaymentId !== null} onClick={() => { payments.clearActionError(); setRefundTarget(payment) }}>전액 환불</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
                 })}</S.CampaignList>}
                 {payments.paymentPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="결제 내역 페이지네이션" page={payments.paymentPageInfo.page} totalPages={payments.paymentPageInfo.totalPages} hasNext={payments.paymentPageInfo.hasNext} disabled={payments.isLoadingPayments} onPageChange={(nextPage) => void payments.fetchPayments(nextPage)} /> : null}
               </>}
@@ -140,7 +147,20 @@ function MerchantPaymentsPage() {
         </S.Panel>
       </Store.Content>
 
-      {refundTarget ? <S.ModalOverlay role="presentation" onMouseDown={() => setRefundTarget(null)}><S.Modal role="dialog" aria-modal="true" aria-labelledby="refund-payment-title" onMouseDown={(event) => event.stopPropagation()}><S.ModalHeader><S.ModalTitle id="refund-payment-title">결제 전액 환불</S.ModalTitle><S.CloseButton type="button" aria-label="닫기" onClick={() => setRefundTarget(null)}>close</S.CloseButton></S.ModalHeader><S.ModalBody><S.ReadonlyNotice>결제 #{refundTarget.id} · 예약 #{refundTarget.reservationId} · {formatAmountMinor(refundTarget.amountMinor, refundTarget.currency)}을(를) 전액 환불합니다. 이 작업은 되돌릴 수 없습니다.</S.ReadonlyNotice><S.FormActions><S.ActionButton type="button" disabled={payments.refundingPaymentId !== null} onClick={() => setRefundTarget(null)}>닫기</S.ActionButton><S.ActionButton type="button" $variant="danger" disabled={payments.refundingPaymentId !== null} onClick={() => void handleRefund()}>{payments.refundingPaymentId ? '환불 처리 중' : '전액 환불'}</S.ActionButton></S.FormActions></S.ModalBody></S.Modal></S.ModalOverlay> : null}
+      {refundTarget ? <AppDialog
+        title="결제 전액 환불"
+        description="결제 정보를 확인한 뒤 환불을 확정해주세요. 이 작업은 되돌릴 수 없습니다."
+        isDismissible={payments.refundingPaymentId === null}
+        fallbackFocusRef={headingRef}
+        onClose={closeRefundDialog}
+        footer={<>
+          <S.ActionButton type="button" disabled={payments.refundingPaymentId !== null} onClick={closeRefundDialog}>닫기</S.ActionButton>
+          <S.ActionButton type="button" $variant="danger" disabled={payments.refundingPaymentId !== null} onClick={() => void handleRefund()}>{payments.refundingPaymentId !== null ? '환불 처리 중' : '전액 환불'}</S.ActionButton>
+        </>}
+      >
+        <S.ReadonlyNotice>결제 #{refundTarget.id} · 예약 #{refundTarget.reservationId} · {formatAmountMinor(refundTarget.amountMinor, refundTarget.currency)}을(를) 전액 환불합니다.</S.ReadonlyNotice>
+        {payments.actionErrorMessage ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{payments.actionErrorMessage}</Store.Notice> : null}
+      </AppDialog> : null}
     </Store.Page>
   )
 }

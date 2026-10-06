@@ -8,14 +8,15 @@ for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node'])
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
-const { MemoryRouter } = await import('react-router-dom')
+const { MemoryRouter, createMemoryRouter, RouterProvider } = await import('react-router-dom')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { MerchantPlaceContext } = await server.ssrLoadModule('/src/app/providers/MerchantPlaceContext.ts')
+const { UnsavedChangesProvider } = await server.ssrLoadModule('/src/components/common/UnsavedChangesProvider.tsx')
 const { useMerchantReservationSetup } = await server.ssrLoadModule('/src/hooks/useMerchantReservationSetup.ts')
 const { default: Page } = await server.ssrLoadModule('/src/pages/merchantReservationSetup/MerchantReservationSetupPage.tsx')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
-let root, hook, adapter, clears
+let root, router, hook, adapter, clears
 const item = { id: 1, placeId: 1, productId: null, productType: 'GENERAL', startsAt: '2027-10-01T10:00', endsAt: '2027-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE' }
 const response = (config, data) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 const base = async config => response(config, config.url.endsWith('/me') ? { placeIds: [1, 2] } : config.url.endsWith('/availabilities') ? [item] : [])
@@ -23,10 +24,13 @@ const deferred = () => { let resolve; const promise = new Promise(r => { resolve
 const places = { selectedPlaceId: 1, selectPlace() {}, syncPlaces(ids) { return ids[0] ?? null } }
 function Probe() { hook = useMerchantReservationSetup(); return null }
 async function render(child = h(Probe), value = places) {
-  await act(async () => root.render(h(AuthContext.Provider, { value: { clearAuth() { clears++ }, user: { username: 'test' }, logout() {} } }, h(MerchantPlaceContext.Provider, { value }, h(MemoryRouter, {}, child)))))
+  const content = child.type === Page
+    ? h(RouterProvider, { router: (router = createMemoryRouter([{ path: '/', element: h(UnsavedChangesProvider, {}, child) }])) })
+    : h(MemoryRouter, {}, child)
+  await act(async () => root.render(h(AuthContext.Provider, { value: { clearAuth() { clears++ }, user: { username: 'test' }, logout() {} } }, h(MerchantPlaceContext.Provider, { value }, content))))
 }
 beforeEach(() => { clears = 0; adapter = base; client.defaults.adapter = config => adapter(config); root = createRoot(document.getElementById('root')) })
-afterEach(async () => { await act(async () => root.unmount()) })
+afterEach(async () => { await act(async () => root.unmount()); router?.dispose(); router = null })
 after(async () => { await server.close(); dom.window.close() })
 
 test('product failure leaves time results available and retries independently', async () => {
@@ -87,7 +91,7 @@ test('successful save remains successful when later reload fails', async () => {
   assert.ok(hook.successMessage); assert.equal(hook.actionErrorMessage, '')
   assert.equal(hook.availabilities[0].totalCapacity, 9); assert.ok(hook.availabilityError)
 })
-test('draft survives retry and query loading prevents mutation', async () => {
+test('approved refresh locks writes during loading and resets only after success', async () => {
   await render(h(Page))
   const capacity = document.querySelector('input[type="number"]')
   await act(async () => {
@@ -98,11 +102,15 @@ test('draft survives retry and query loading prevents mutation', async () => {
   adapter = async config => { if (config.method !== 'get') mutations++; await gate.promise; return base(config) }
   const refresh = [...document.querySelectorAll('button')].find(el => el.textContent === '새로고침')
   await act(async () => refresh.click())
+  assert.ok(document.body.textContent.includes('저장하지 않은 변경'))
+  await act(async () => [...document.querySelectorAll('button')].find(el => el.textContent === '변경 버리고 이동').click())
   assert.equal(capacity.isConnected, true); assert.equal(capacity.value, '17'); assert.equal(capacity.disabled, true)
   await act(async () => capacity.closest('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })))
   assert.equal(mutations, 0)
   await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
-  assert.equal(document.querySelector('input[type="number"]'), capacity); assert.equal(capacity.value, '17'); assert.equal(capacity.disabled, false)
+  assert.notEqual(document.querySelector('input[type="number"]'), capacity)
+  assert.equal(document.querySelector('input[type="number"]').value, '1')
+  assert.equal(document.querySelector('input[type="number"]').disabled, false)
 })
 test('external place change clears selected editor target', async () => {
   adapter = config => config.url.endsWith('/availabilities') ? Promise.resolve(response(config, [item, { ...item, id: 2, placeId: 2 }])) : base(config)
@@ -157,6 +165,7 @@ for (const explicitChoice of [false, true]) test(`delayed products use the displ
   if (explicitChoice) {
     products = [second, first]
     await click(button('새로고침'))
+    await click(button('계속 작성'))
     assert.ok(document.querySelector('[aria-label="예약 상품 선택"]').textContent.includes(second.name))
   }
   assert.equal(document.querySelector('input[type="number"]'), capacity)

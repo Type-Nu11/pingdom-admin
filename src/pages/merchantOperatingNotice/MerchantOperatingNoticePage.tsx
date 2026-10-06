@@ -1,7 +1,10 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useId, useMemo, useState, type FormEvent } from 'react'
+import { AppDialog } from '../../components/common/AppDialog'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { useSavedDraft } from '../../hooks/useSavedDraft'
+import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantOperatingNotices } from '../../hooks/useMerchantOperatingNotices'
 import type {
@@ -57,6 +60,7 @@ function NoticeEditor({
   placeIds,
   selectedPlaceId,
   activeAction,
+  queryBlocked,
   onCreate,
   onUpdate,
   onRequestCancel,
@@ -65,6 +69,7 @@ function NoticeEditor({
   placeIds: number[]
   selectedPlaceId: number | null
   activeAction: ReturnType<typeof useMerchantOperatingNotices>['activeAction']
+  queryBlocked: boolean
   onCreate: (request: MerchantOperatingNoticeRequest) => Promise<MerchantOperatingNotice | null>
   onUpdate: (noticeId: number, request: MerchantOperatingNoticeUpdateRequest) => Promise<MerchantOperatingNotice | null>
   onRequestCancel: (notice: MerchantOperatingNotice) => void
@@ -76,11 +81,12 @@ function NoticeEditor({
   const [startsAt, setStartsAt] = useState(notice ? toPickerValue(notice.startsAt) : '')
   const [expiresAt, setExpiresAt] = useState(notice ? toPickerValue(notice.expiresAt) : '')
   const [formError, setFormError] = useState('')
-  const isBusy = activeAction !== null
+  const isBusy = activeAction !== null || queryBlocked
+  const draft = useSavedDraft(JSON.stringify(notice ? { severity, message } : { noticeType, severity, message, startsAt, expiresAt }), { enabled: editable, busy: isBusy })
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!editable || !selectedPlaceId) return
+    if (isBusy || !editable || !selectedPlaceId) return
     if (!message.trim()) {
       setFormError('방문자에게 보여줄 공지 내용을 입력해주세요.')
       return
@@ -88,7 +94,7 @@ function NoticeEditor({
 
     if (notice) {
       const next = await onUpdate(notice.id, { severity, message: message.trim() })
-      if (next) setFormError('')
+      if (next) { draft.markSaved(); setFormError('') }
       return
     }
 
@@ -110,7 +116,7 @@ function NoticeEditor({
       startsAt,
       expiresAt,
     })
-    if (next) setFormError('')
+    if (next) { draft.markSaved(); setFormError('') }
   }
 
   return <S.Editor>
@@ -164,25 +170,40 @@ function CancelDialog({
   onCancel: (noticeId: number, cancelReason: string) => Promise<MerchantOperatingNotice | null>
 }) {
   const [cancelReason, setCancelReason] = useState('')
+  const formId = useId()
+  const draft = useSavedDraft(cancelReason, { busy: isBusy })
+  const close = () => draft.request(onClose)
   const [formError, setFormError] = useState('')
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (isBusy) return
     if (!cancelReason.trim()) {
       setFormError('공지 취소 사유를 입력해주세요.')
       return
     }
     const next = await onCancel(notice.id, cancelReason.trim())
-    if (next) onClose()
+    if (next) { draft.markSaved(); onClose() }
   }
 
-  return <S.ModalOverlay role="presentation" onMouseDown={() => !isBusy && onClose()}><S.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-notice-cancel-title" onMouseDown={(event) => event.stopPropagation()}><S.ModalHeader><div><S.ModalTitle id="merchant-notice-cancel-title">운영 공지 취소</S.ModalTitle><S.PanelDescription>취소한 공지는 즉시 방문자에게 노출되지 않습니다.</S.PanelDescription></div><S.CloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={onClose}>close</S.CloseButton></S.ModalHeader><S.ModalBody><S.Form onSubmit={submit}><S.Field $wide>취소 사유<S.Textarea value={cancelReason} maxLength={500} disabled={isBusy} placeholder="예: 영업시간 변경 계획이 취소되었습니다." onChange={(event) => { setCancelReason(event.target.value); setFormError('') }} /><S.FieldHint>{cancelReason.length}/500</S.FieldHint></S.Field>{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions><S.ActionButton type="button" disabled={isBusy} onClick={onClose}>돌아가기</S.ActionButton><S.ActionButton type="submit" disabled={isBusy} $variant="danger">{isBusy ? '취소 중' : '공지 취소'}</S.ActionButton></S.FormActions></S.Form></S.ModalBody></S.Modal></S.ModalOverlay>
+  return <AppDialog title="운영 공지 취소" description="취소한 공지는 즉시 방문자에게 노출되지 않습니다." isDismissible={!isBusy} onClose={close} footer={<>
+    <S.ActionButton type="button" disabled={isBusy} onClick={close}>돌아가기</S.ActionButton>
+    <S.ActionButton type="submit" form={formId} disabled={isBusy} $variant="danger">{isBusy ? '취소 중' : '공지 취소'}</S.ActionButton>
+  </>}>
+    <S.Form id={formId} onSubmit={submit}>
+      <S.Field $wide>취소 사유<S.Textarea value={cancelReason} maxLength={500} disabled={isBusy} placeholder="예: 영업시간 변경 계획이 취소되었습니다." onChange={(event) => { setCancelReason(event.target.value); setFormError('') }} /><S.FieldHint>{cancelReason.length}/500</S.FieldHint></S.Field>
+      {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}
+    </S.Form>
+  </AppDialog>
 }
 
 function MerchantOperatingNoticePage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const notices = useMerchantOperatingNotices()
+  const requestNavigation = useUnsavedNavigation()
+  const [editorRevision, setEditorRevision] = useState(0)
+  const refresh = () => requestNavigation(() => { if (notices.selectedPlaceId) void notices.fetchNotices(notices.selectedPlaceId).then(success => { if (success) setEditorRevision(value => value + 1) }) })
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [cancelTarget, setCancelTarget] = useState<MerchantOperatingNotice | null>(null)
@@ -194,7 +215,7 @@ function MerchantOperatingNoticePage() {
   const isBusy = notices.activeAction !== null
 
   const handleLogout = () => { void logout(); navigate('/login', { replace: true }) }
-  const handleCreate = () => setSelectedId(null)
+  const handleCreate = () => requestNavigation(() => { setSelectedId(null); setEditorRevision(value => value + 1) })
   const handleCancel = async (noticeId: number, cancelReason: string) => {
     const next = await notices.cancelNotice(noticeId, { cancelReason })
     if (next) setSelectedId(next.id)
@@ -205,13 +226,13 @@ function MerchantOperatingNoticePage() {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>운영 공지 관리</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{notices.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void notices.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
-  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{notices.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>운영 공지 관리</Store.PageTitle><Store.PageDescription>임시 휴업, 영업시간 변경처럼 방문 전 알아야 할 운영 정보를 기간에 맞춰 안내합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={notices.status === 'loading' || isBusy || !notices.selectedPlaceId} onClick={() => notices.selectedPlaceId && void notices.fetchNotices(notices.selectedPlaceId)}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
-    {notices.profile && notices.profile.placeIds.length > 0 ? <Store.PlaceSelect aria-label="운영 공지를 관리할 장소 선택" value={notices.selectedPlaceId ?? ''} onChange={(event) => notices.selectPlace(Number(event.target.value))}>{notices.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
-    {notices.selectedPlaceId ? <MerchantOperatingSummary loading={notices.status === 'loading' || notices.isListLoading} failed={Boolean(notices.errorMessage)} value={notices.currentlyOperating} checkedAt={notices.checkedAt} disabled={notices.activeAction !== null} onRetry={() => { if (notices.selectedPlaceId) void notices.fetchNotices(notices.selectedPlaceId) }} /> : null}
+  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{notices.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>운영 공지 관리</Store.PageTitle><Store.PageDescription>임시 휴업, 영업시간 변경처럼 방문 전 알아야 할 운영 정보를 기간에 맞춰 안내합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={notices.status === 'loading' || notices.isListLoading || isBusy || !notices.selectedPlaceId} onClick={refresh}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
+    {notices.profile && notices.profile.placeIds.length > 0 ? <Store.PlaceSelect aria-label="운영 공지를 관리할 장소 선택" value={notices.selectedPlaceId ?? ''} disabled={isBusy || notices.isListLoading} onChange={(event) => { const id = Number(event.target.value); if (id !== notices.selectedPlaceId) requestNavigation(() => { setSelectedId(null); notices.selectPlace(id) }) }}>{notices.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
+    {notices.selectedPlaceId ? <MerchantOperatingSummary loading={notices.status === 'loading' || notices.isListLoading} failed={Boolean(notices.errorMessage)} value={notices.currentlyOperating} checkedAt={notices.checkedAt} disabled={notices.activeAction !== null} onRetry={refresh} /> : null}
     {notices.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{notices.errorMessage}</Store.Notice> : null}
     {notices.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{notices.actionErrorMessage}</Store.Notice> : null}
     {notices.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{notices.successMessage}</Store.Notice> : null}
-{notices.status === 'loading' ? <Store.LoadingSummary aria-label="운영 공지를 불러오는 중"><Store.Skeleton $height={400} /><Store.Skeleton $height={400} /></Store.LoadingSummary> : !notices.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 운영 공지를 등록할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>운영 공지 목록</S.PanelTitle><S.PanelDescription>노출 상태와 기간을 빠르게 확인하세요.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy || notices.isListLoading} onClick={handleCreate}>새 공지</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="운영 공지 상태 필터">{([['ALL', '전체'], ['ACTIVE', '노출 중'], ['SCHEDULED', '예약됨'], ['EXPIRED', '만료됨'], ['CANCELED', '취소됨']] as const).map(([value, label]) => <S.FilterButton key={value} type="button" disabled={isBusy || notices.isListLoading} $selected={statusFilter === value} onClick={() => setStatusFilter(value)}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>총 {visibleNotices.length}건</S.ResultMeta>{notices.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : visibleNotices.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 운영 공지가 없습니다. 필요한 안내를 새로 등록해보세요.' : '선택한 상태의 운영 공지가 없습니다.'}</S.Empty> : <S.NoticeList>{visibleNotices.map((notice) => <S.NoticeItem type="button" key={notice.id} $selected={notice.id === selectedId} onClick={() => setSelectedId(notice.id)}><S.NoticeTop><S.NoticeMessage title={notice.message}>{notice.message}</S.NoticeMessage><S.StatusBadge $tone={STATUSES[notice.status].tone}>{STATUSES[notice.status].label}</S.StatusBadge></S.NoticeTop><S.NoticeMeta>{NOTICE_TYPES[notice.noticeType]} · {SEVERITIES[notice.severity]} · {formatDateTime(notice.startsAt)} - {formatDateTime(notice.expiresAt)}</S.NoticeMeta></S.NoticeItem>)}</S.NoticeList>}</S.Panel><S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedNotice ? '운영 공지 상세' : '새 운영 공지'}</S.PanelTitle><S.PanelDescription>{selectedNotice ? '공지 내용과 중요도를 수정하거나 노출을 취소할 수 있습니다.' : '방문자에게 노출할 공지와 기간을 등록합니다.'}</S.PanelDescription></div></S.PanelHeader><NoticeEditor key={selectedNotice?.id ?? 'new'} notice={selectedNotice} placeIds={notices.profile?.placeIds ?? []} selectedPlaceId={notices.selectedPlaceId} activeAction={notices.activeAction} onCreate={async (request) => { const next = await notices.createNotice(request); if (next) setSelectedId(next.id); return next }} onUpdate={notices.updateNotice} onRequestCancel={setCancelTarget} /></S.Panel></S.Workspace>}
+{notices.status === 'loading' ? <Store.LoadingSummary aria-label="운영 공지를 불러오는 중"><Store.Skeleton $height={400} /><Store.Skeleton $height={400} /></Store.LoadingSummary> : !notices.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 운영 공지를 등록할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>운영 공지 목록</S.PanelTitle><S.PanelDescription>노출 상태와 기간을 빠르게 확인하세요.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy || notices.isListLoading} onClick={handleCreate}>새 공지</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="운영 공지 상태 필터">{([['ALL', '전체'], ['ACTIVE', '노출 중'], ['SCHEDULED', '예약됨'], ['EXPIRED', '만료됨'], ['CANCELED', '취소됨']] as const).map(([value, label]) => <S.FilterButton key={value} type="button" disabled={isBusy || notices.isListLoading} $selected={statusFilter === value} onClick={() => setStatusFilter(value)}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>총 {visibleNotices.length}건</S.ResultMeta>{notices.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : visibleNotices.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 운영 공지가 없습니다. 필요한 안내를 새로 등록해보세요.' : '선택한 상태의 운영 공지가 없습니다.'}</S.Empty> : <S.NoticeList>{visibleNotices.map((notice) => <S.NoticeItem type="button" key={notice.id} $selected={notice.id === selectedId} disabled={isBusy || notices.isListLoading} onClick={() => { if (notice.id !== selectedId) requestNavigation(() => setSelectedId(notice.id)) }}><S.NoticeTop><S.NoticeMessage title={notice.message}>{notice.message}</S.NoticeMessage><S.StatusBadge $tone={STATUSES[notice.status].tone}>{STATUSES[notice.status].label}</S.StatusBadge></S.NoticeTop><S.NoticeMeta>{NOTICE_TYPES[notice.noticeType]} · {SEVERITIES[notice.severity]} · {formatDateTime(notice.startsAt)} - {formatDateTime(notice.expiresAt)}</S.NoticeMeta></S.NoticeItem>)}</S.NoticeList>}</S.Panel><S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedNotice ? '운영 공지 상세' : '새 운영 공지'}</S.PanelTitle><S.PanelDescription>{selectedNotice ? '공지 내용과 중요도를 수정하거나 노출을 취소할 수 있습니다.' : '방문자에게 노출할 공지와 기간을 등록합니다.'}</S.PanelDescription></div></S.PanelHeader><NoticeEditor key={`${notices.selectedPlaceId}-${selectedNotice?.id ?? 'new'}-${editorRevision}`} notice={selectedNotice} placeIds={notices.profile?.placeIds ?? []} selectedPlaceId={notices.selectedPlaceId} activeAction={notices.activeAction} queryBlocked={notices.isListLoading} onCreate={async (request) => { const next = await notices.createNotice(request); if (next) setSelectedId(next.id); return next }} onUpdate={notices.updateNotice} onRequestCancel={setCancelTarget} /></S.Panel></S.Workspace>}
     {cancelTarget ? <CancelDialog notice={cancelTarget} isBusy={isBusy} onClose={() => setCancelTarget(null)} onCancel={handleCancel} /> : null}
   </Store.Content></Store.Page>
 }

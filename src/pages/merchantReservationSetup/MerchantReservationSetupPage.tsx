@@ -2,6 +2,8 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { useSavedDraft } from '../../hooks/useSavedDraft'
+import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantReservationSetup } from '../../hooks/useMerchantReservationSetup'
 import { ReservationTermsEditor } from '../../components/merchant/ReservationTermsEditor'
@@ -59,6 +61,7 @@ function AvailabilityEditor({
   const [formError, setFormError] = useState('')
   const isBusy = activeAction !== null || queryBlocked
   const effectiveProductId = productId ?? activeProducts[0]?.id ?? null
+  const draft = useSavedDraft(JSON.stringify({ targetType, productId: targetType === 'PRODUCT' ? effectiveProductId : null, startsAt, endsAt, totalCapacity }), { busy: activeAction !== null })
   const selectedProduct = products.find((product) => product.id === effectiveProductId) ?? null
   const existingTargetLabel = availability?.productId
     ? `${selectedProduct?.name ?? `상품 #${availability.productId}`} · ${availability.productType === 'TICKET' ? '티켓' : '클래스'}`
@@ -108,7 +111,10 @@ function AvailabilityEditor({
       totalCapacity: capacity,
     }
     const next = availability ? await onSave(availability.id, request) : await onCreate(request)
-    if (next) onCreated(next.id)
+    if (next) {
+      draft.markSaved()
+      onCreated(next.id)
+    }
   }
 
   return (
@@ -161,6 +167,9 @@ function MerchantReservationSetupPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const reservation = useMerchantReservationSetup()
+  const requestNavigation = useUnsavedNavigation()
+  const [editorRevision, setEditorRevision] = useState(0)
+  const refresh = (load = reservation.fetchReservationSetup) => requestNavigation(() => { void load().then(success => { if (success) setEditorRevision(value => value + 1) }) })
   const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<number | null>(null)
   const [termsTarget, setTermsTarget] = useState<MerchantAvailability | null>(null)
   const isBusy = reservation.activeAction !== null
@@ -179,10 +188,16 @@ function MerchantReservationSetupPage() {
     navigate('/login', { replace: true })
   }
   const selectPlace = (placeId: number) => {
-    reservation.selectPlace(placeId)
-    setSelectedAvailabilityId(null)
+    if (placeId === reservation.selectedPlaceId) return
+    requestNavigation(() => {
+      reservation.selectPlace(placeId)
+      setSelectedAvailabilityId(null)
+    })
   }
-  const startNewAvailability = () => setSelectedAvailabilityId(null)
+  const startNewAvailability = () => requestNavigation(() => {
+    setSelectedAvailabilityId(null)
+    setEditorRevision(value => value + 1)
+  })
 
   if (reservation.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>예약 가능 시간</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{reservation.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void reservation.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
@@ -192,14 +207,14 @@ function MerchantReservationSetupPage() {
     <Store.Page>
       <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{reservation.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
-        <Store.PageIntro><div><Store.PageTitle>예약 가능 시간</Store.PageTitle><Store.PageDescription>고객이 예약 신청할 수 있는 시간과 수용 인원을 등록합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={reservation.status === 'loading' || isBusy} onClick={() => void reservation.fetchReservationSetup()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
+        <Store.PageIntro><div><Store.PageTitle>예약 가능 시간</Store.PageTitle><Store.PageDescription>고객이 예약 신청할 수 있는 시간과 수용 인원을 등록합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={reservation.status === 'loading' || reservation.isLoading || isBusy} onClick={() => refresh()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
         {reservation.profile && reservation.profile.placeIds.length > 0 ? <Store.PlaceSelect disabled={isBusy} aria-label="예약을 관리할 장소 선택" value={reservation.selectedPlaceId ?? ''} onChange={(event) => selectPlace(Number(event.target.value))}>{reservation.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
         {reservation.productError ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16, gap: 12 }}>{reservation.productError}<Store.RetryButton type="button" disabled={isBusy} onClick={() => void reservation.fetchProducts()}>상품 다시 시도</Store.RetryButton></Store.Notice> : null}
-        {reservation.availabilityError ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16, gap: 12 }}>{reservation.availabilityError}<Store.RetryButton type="button" disabled={isBusy} onClick={() => void reservation.fetchAvailabilities()}>시간 목록 다시 시도</Store.RetryButton></Store.Notice> : null}
+        {reservation.availabilityError ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16, gap: 12 }}>{reservation.availabilityError}<Store.RetryButton type="button" disabled={isBusy} onClick={() => refresh(reservation.fetchAvailabilities)}>시간 목록 다시 시도</Store.RetryButton></Store.Notice> : null}
         {reservation.isLoading && reservation.status === 'ready' ? <p role="status">예약 정보를 불러오는 중입니다.</p> : null}
         {reservation.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{reservation.actionErrorMessage}</Store.Notice> : null}
         {reservation.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{reservation.successMessage}</Store.Notice> : null}
-        {reservation.status === 'loading' ? <Store.LoadingSummary aria-label="예약 가능 시간을 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : !reservation.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 예약 시간을 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedAvailability ? '예약 가능 시간 수정' : '예약 가능 시간 등록'}</S.PanelTitle><S.PanelDescription>고객이 예약 신청할 시작·종료 일시와 총 수용 인원을 설정합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy || reservation.isLoading} onClick={startNewAvailability}>새 시간</S.CreateButton></S.PanelHeader><AvailabilityEditor key={`${reservation.selectedPlaceId}-${selectedAvailability?.id ?? 'new'}`} availability={selectedAvailability} placeId={reservation.selectedPlaceId} products={products} activeAction={reservation.activeAction} queryBlocked={reservation.productStatus !== 'ready' || reservation.availabilityStatus !== 'ready'} onCreate={reservation.createAvailability} onSave={reservation.saveAvailability} onToggleActive={reservation.setAvailabilityActive} onCreated={setSelectedAvailabilityId} onEditTerms={() => { if (selectedAvailability) { reservation.clearActionMessages(); setTermsTarget(selectedAvailability) } }} /><S.ResultMeta>{reservation.hasAvailabilityResult ? `등록된 예약 가능 시간 ${availabilities.length}개${reservation.availabilityStatus !== 'ready' ? ' (이전 결과)' : ''}` : '조회 결과 없음'}</S.ResultMeta>{!reservation.hasAvailabilityResult ? <S.Empty>{reservation.availabilityStatus === 'loading' ? '예약 가능 시간을 불러오는 중입니다.' : '예약 가능 시간 조회를 다시 시도해주세요.'}</S.Empty> : availabilities.length === 0 ? <S.Empty>등록된 예약 가능 시간이 없습니다.</S.Empty> : <S.CampaignList>{availabilities.map((availability) => { const product = availability.productId === null ? null : products.find((item) => item.id === availability.productId); const targetLabel = product?.name ?? (availability.productType === 'GENERAL' ? '일반 장소 예약' : `상품 #${availability.productId}`); return <S.CampaignItem type="button" key={availability.id} disabled={isBusy || reservation.isLoading} $selected={availability.id === selectedAvailabilityId} onClick={() => setSelectedAvailabilityId(availability.id)}><S.CampaignTop><S.CampaignTitle>{targetLabel}</S.CampaignTitle><S.StatusBadge $tone={availability.status === 'ACTIVE' ? 'published' : 'closed'}>{availability.status === 'ACTIVE' ? '예약 가능' : '비활성'}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{formatDateTime(availability.startsAt)} - {formatDateTime(availability.endsAt)}</S.CampaignMeta><S.CampaignMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.CampaignMeta></S.CampaignItem>})}</S.CampaignList>}</S.Panel>}
+        {reservation.status === 'loading' ? <Store.LoadingSummary aria-label="예약 가능 시간을 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : !reservation.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 예약 시간을 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedAvailability ? '예약 가능 시간 수정' : '예약 가능 시간 등록'}</S.PanelTitle><S.PanelDescription>고객이 예약 신청할 시작·종료 일시와 총 수용 인원을 설정합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy || reservation.isLoading} onClick={startNewAvailability}>새 시간</S.CreateButton></S.PanelHeader><AvailabilityEditor key={`${reservation.selectedPlaceId}-${selectedAvailability?.id ?? 'new'}-${editorRevision}`} availability={selectedAvailability} placeId={reservation.selectedPlaceId} products={products} activeAction={reservation.activeAction} queryBlocked={reservation.productStatus !== 'ready' || reservation.availabilityStatus !== 'ready'} onCreate={reservation.createAvailability} onSave={reservation.saveAvailability} onToggleActive={reservation.setAvailabilityActive} onCreated={setSelectedAvailabilityId} onEditTerms={() => { if (selectedAvailability) { reservation.clearActionMessages(); setTermsTarget(selectedAvailability) } }} /><S.ResultMeta>{reservation.hasAvailabilityResult ? `등록된 예약 가능 시간 ${availabilities.length}개${reservation.availabilityStatus !== 'ready' ? ' (이전 결과)' : ''}` : '조회 결과 없음'}</S.ResultMeta>{!reservation.hasAvailabilityResult ? <S.Empty>{reservation.availabilityStatus === 'loading' ? '예약 가능 시간을 불러오는 중입니다.' : '예약 가능 시간 조회를 다시 시도해주세요.'}</S.Empty> : availabilities.length === 0 ? <S.Empty>등록된 예약 가능 시간이 없습니다.</S.Empty> : <S.CampaignList>{availabilities.map((availability) => { const product = availability.productId === null ? null : products.find((item) => item.id === availability.productId); const targetLabel = product?.name ?? (availability.productType === 'GENERAL' ? '일반 장소 예약' : `상품 #${availability.productId}`); return <S.CampaignItem type="button" key={availability.id} disabled={isBusy || reservation.isLoading} $selected={availability.id === selectedAvailabilityId} onClick={() => { if (availability.id !== selectedAvailabilityId) requestNavigation(() => setSelectedAvailabilityId(availability.id)) }}><S.CampaignTop><S.CampaignTitle>{targetLabel}</S.CampaignTitle><S.StatusBadge $tone={availability.status === 'ACTIVE' ? 'published' : 'closed'}>{availability.status === 'ACTIVE' ? '예약 가능' : '비활성'}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{formatDateTime(availability.startsAt)} - {formatDateTime(availability.endsAt)}</S.CampaignMeta><S.CampaignMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.CampaignMeta></S.CampaignItem>})}</S.CampaignList>}</S.Panel>}
       </Store.Content>
       {termsTarget ? <ReservationTermsEditor availability={termsTarget} busy={isBusy} error={reservation.actionErrorMessage} onSave={reservation.saveReservationTerms} onClose={() => setTermsTarget(null)} /> : null}
     </Store.Page>

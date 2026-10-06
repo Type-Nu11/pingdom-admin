@@ -34,7 +34,7 @@ export const TabButton = styled.button<{ $active?: boolean }>`
     $active &&
     css`
       background: ${neutral.primaryTint};
-      color: ${neutral.primary};
+      color: ${neutral.primaryForeground};
     `}
 `
 
@@ -346,10 +346,10 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
     $tone === 'success'
       ? neutral.successText
       : $tone === 'danger'
-        ? neutral.error
+        ? neutral.errorText
         : $tone === 'warning'
           ? neutral.warningText
-            : neutral.primary};
+            : neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
@@ -433,7 +433,7 @@ export const FormBody = styled.div`
 `
 
 export const Link = styled.a`
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-weight: 700;
   text-decoration: none;
 

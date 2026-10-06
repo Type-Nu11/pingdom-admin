@@ -21,7 +21,7 @@ export const HeaderButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { border-color: ${colors.primary}; color: ${colors.primary}; background: ${colors.primaryTint}; }
+  &:hover { border-color: ${colors.primary}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -72,14 +72,14 @@ export const CreateButton = styled.button`
   height: 40px;
   border: 1px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
+  background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { border-color: ${colors.primaryHover}; background: ${colors.primaryHover}; }
+  &:hover { border-color: ${colors.primaryHover}; background: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -99,13 +99,13 @@ export const FilterButton = styled.button<{ $selected: boolean }>`
   border: 1px solid transparent;
   border-radius: 7px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primary}; }
+  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -167,7 +167,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'published' | 'closed'
   border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'published' ? colors.successTint : $tone === 'closed' ? colors.warningTint : colors.primaryTint)};
-  color: ${({ $tone }) => ($tone === 'published' ? colors.successText : $tone === 'closed' ? colors.warningText : colors.primary)};
+  color: ${({ $tone }) => ($tone === 'published' ? colors.successText : $tone === 'closed' ? colors.warningText : colors.primaryForeground)};
   font-size: 11px;
   font-weight: 700;
 `
@@ -217,7 +217,7 @@ export const PaginationButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primary}; }
+  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primaryForeground}; }
   &:disabled { opacity: 0.45; cursor: not-allowed; }
 `
 
@@ -323,7 +323,7 @@ export const BrandButton = styled.button`
   border: 1px solid ${colors.border};
   border-radius: 6px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -344,7 +344,7 @@ export const FieldHint = styled.p`
 export const FormError = styled.p`
   grid-column: 1 / -1;
   margin: 0;
-  color: ${colors.error};
+  color: ${colors.errorText};
   font-size: 13px;
   font-weight: 700;
 `
@@ -371,16 +371,16 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
 
   ${({ $variant = 'secondary' }) => {
     if ($variant === 'primary') return css`
-      border-color: ${colors.primary}; background: ${colors.primary}; color: ${colors.primaryText};
-      &:hover:not(:disabled) { border-color: ${colors.primaryHover}; background: ${colors.primaryHover}; }
+      border-color: ${colors.primary}; background: ${colors.primaryAction}; color: ${colors.primaryText};
+      &:hover:not(:disabled) { border-color: ${colors.primaryHover}; background: ${colors.primaryForeground}; }
     `
     if ($variant === 'danger') return css`
-      border-color: ${colors.error}; background: ${colors.surface}; color: ${colors.error};
+      border-color: ${colors.error}; background: ${colors.surface}; color: ${colors.errorText};
       &:hover:not(:disabled) { background: ${colors.errorTint}; }
     `
     return css`
       border-color: ${colors.border}; background: ${colors.surface}; color: ${colors.text};
-      &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primary}; }
+      &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primaryForeground}; }
     `
   }}
 

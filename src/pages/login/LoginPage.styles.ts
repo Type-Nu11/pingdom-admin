@@ -133,7 +133,7 @@ export const RoleSwitch = styled.button<{ $active: boolean }>`
   border: 0;
   border-radius: 9px;
   background: ${({ $active }) => ($active ? adminColors.surface : 'transparent')};
-  color: ${({ $active }) => ($active ? adminColors.text : adminColors.softText)};
+  color: ${({ $active }) => ($active ? adminColors.text : adminColors.muted)};
   font-size: ${typography.label.bold.fontSize}px;
   font-weight: ${typography.label.bold.fontWeight};
   line-height: ${typography.label.bold.lineHeight};
@@ -199,7 +199,7 @@ export const Input = styled.input<{ $hasEndAction?: boolean }>`
     background 160ms ease;
 
   &::placeholder {
-    color: ${adminColors.placeholder};
+    color: ${adminColors.muted};
   }
 
   &:focus {
@@ -240,7 +240,7 @@ export const ErrorMessage = styled.p`
   border: 1px solid ${adminColors.error};
   border-radius: 10px;
   background: ${adminColors.errorTint};
-  color: ${adminColors.error};
+  color: ${adminColors.errorText};
   font-size: 14px;
   line-height: 1.4;
 `
@@ -263,7 +263,7 @@ export const SubmitButton = styled.button`
   gap: 8px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${adminColors.primary};
+  background: ${adminColors.primaryAction};
   color: ${adminColors.primaryText};
   font-size: ${typography.label.bold.fontSize}px;
   font-weight: ${typography.label.bold.fontWeight};
@@ -276,11 +276,16 @@ export const SubmitButton = styled.button`
     transform 120ms ease;
 
   &:hover:not(:disabled) {
-    background: ${adminColors.primaryHover};
+    background: ${adminColors.primaryForeground};
   }
 
   &:active:not(:disabled) {
     transform: scale(0.985);
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${adminColors.primaryForeground};
+    outline-offset: 3px;
   }
 
   &:disabled {
@@ -303,7 +308,7 @@ export const SessionNotice = styled.p`
 
 export const FooterText = styled.p`
   margin: 28px 0 0;
-  color: ${adminColors.softText};
+  color: ${adminColors.muted};
   font-size: ${typography.label.regular.fontSize}px;
   font-weight: ${typography.label.regular.fontWeight};
   line-height: ${typography.label.regular.lineHeight};

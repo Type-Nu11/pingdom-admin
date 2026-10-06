@@ -123,7 +123,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -142,7 +142,7 @@ export const MenuButton = styled.button<{ $active?: boolean }>`
     css`
       border-right-color: ${neutral.primary};
       background: ${neutral.primaryTint};
-      color: ${neutral.primary};
+      color: ${neutral.primaryForeground};
       font-weight: 700;
 
       ${MaterialIcon} {
@@ -214,7 +214,7 @@ export const AdminProfileIcon = styled.div`
   border: 0;
   border-radius: 8px;
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
 
   ${MaterialIcon} {
     font-size: 18px;
@@ -268,7 +268,7 @@ export const LogoutButton = styled.button`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   @media (max-width: 900px) {
@@ -348,7 +348,7 @@ export const IconButton = styled.button`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -369,7 +369,7 @@ export const TopActionButton = styled.button`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -468,7 +468,7 @@ export const DetailTitleGroup = styled.div`
 
 export const DetailEyebrow = styled.p`
   margin: 0 0 4px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
 `
@@ -499,7 +499,7 @@ export const DetailCloseButton = styled.button`
 
   &:hover {
     background: ${neutral.surfaceLow};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -527,7 +527,7 @@ export const DetailNotice = styled.p`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
@@ -542,7 +542,7 @@ export const DetailErrorState = styled.div`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
 
   p {
     margin: 0;
@@ -674,7 +674,7 @@ export const DetailInlineButton = styled.button`
   border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -780,11 +780,11 @@ export const OperatingStatusBadge = styled.span<{
           : neutral.successSurface};
   color: ${({ $tone }) =>
     $tone === 'danger'
-      ? neutral.error
+      ? neutral.errorText
       : $tone === 'notice'
         ? neutral.warningText
         : $tone === 'muted'
-          ? neutral.primary
+          ? neutral.primaryForeground
           : neutral.successText};
   font-size: 12px;
   font-weight: 700;
@@ -927,7 +927,7 @@ export const DetailActionButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -938,10 +938,10 @@ export const DetailActionButton = styled.button`
 
 export const DetailDeleteButton = styled(DetailActionButton)`
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
 
   &:hover:not(:disabled) {
-    background: ${neutral.error};
+    background: ${neutral.errorAction};
     color: ${neutral.primaryText};
   }
 `
@@ -975,13 +975,13 @@ export const PanelCollapseButton = styled.button`
   border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   cursor: pointer;
   transition: background 160ms ease, color 160ms ease;
 
   &:hover {
     background: ${neutral.primarySoft};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -1001,7 +1001,7 @@ export const PanelCount = styled.p`
   line-height: 1.3;
 
   strong {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
     font-weight: 700;
   }
 `
@@ -1016,7 +1016,7 @@ export const SearchIcon = styled(MaterialIcon)`
   top: 50%;
   left: 12px;
   z-index: 1;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   transform: translateY(-50%);
   pointer-events: none;
 `
@@ -1079,7 +1079,7 @@ export const SearchClearButton = styled.button`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:focus-visible {
@@ -1110,7 +1110,7 @@ export const ListInlineNotice = styled.div`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -1120,7 +1120,7 @@ export const ListInlineNotice = styled.div`
     flex: 0 0 auto;
     padding: 0 9px;
     border-color: ${neutral.error};
-    color: ${neutral.error};
+    color: ${neutral.errorText};
     font-size: 12px;
   }
 `
@@ -1129,7 +1129,7 @@ export const ClearFilterButton = styled.button`
   flex-shrink: 0;
   border: 0;
   background: transparent;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -1137,7 +1137,7 @@ export const ClearFilterButton = styled.button`
   text-underline-offset: 3px;
 
   &:hover {
-    color: ${neutral.primaryHover};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -1218,7 +1218,7 @@ export const IconFilterButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -1357,7 +1357,7 @@ export const PlaceThumb = styled.div`
   border: 1px solid ${neutral.primarySoft};
   border-radius: 8px;
   background: ${neutral.surface};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
 
   @media (max-width: 520px) {
     width: 40px;
@@ -1411,7 +1411,7 @@ export const PlaceCategoryBadge = styled.span`
   border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 500;
   line-height: 1.3;
@@ -1427,7 +1427,7 @@ export const PlaceDiscoveryStatusBadge = styled.span`
   border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -1440,7 +1440,7 @@ export const ReportBadge = styled.span`
   border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 12px;
   font-weight: 500;
   line-height: 1.3;
@@ -1529,7 +1529,7 @@ export const RetryButton = styled.button`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -1565,7 +1565,7 @@ export const PageButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:focus-visible {
@@ -1601,7 +1601,7 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
   justify-content: center;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${({ $active }) => ($active ? neutral.primary : 'transparent')};
+  background: ${({ $active }) => ($active ? neutral.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
   font-size: 14px;
   font-weight: 500;
@@ -1612,8 +1612,8 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
 
   &:hover:not(:disabled) {
     background: ${({ $active }) =>
-      $active ? neutral.primary : neutral.primaryTint};
-    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primary)};
+      $active ? neutral.primaryAction : neutral.primaryTint};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primaryForeground)};
   }
 
   &:focus-visible {
@@ -1667,7 +1667,7 @@ export const MapMarker = styled.button<{ $active?: boolean }>`
   height: 42px;
   border: 0;
   background: transparent;
-  color: ${({ $active }) => ($active ? neutral.primary : neutral.muted)};
+  color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.muted)};
   cursor: pointer;
   opacity: ${({ $active }) => ($active ? 1 : 0.74)};
   pointer-events: auto;
@@ -1713,7 +1713,7 @@ export const MarkerTooltip = styled.span`
   margin-bottom: 6px;
   padding: 5px 8px;
   border-radius: 4px;
-  background: ${neutral.primary};
+  background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
   font-size: 12px;
   white-space: nowrap;
@@ -1861,7 +1861,7 @@ export const OperatingDialogHeader = styled.header`
 
 export const OperatingDialogEyebrow = styled.p`
   margin: 0 0 4px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
 `
@@ -1890,7 +1890,7 @@ export const OperatingDialogCloseButton = styled.button`
   &:hover:not(:disabled) {
     border-color: ${neutral.border};
     background: ${neutral.surfaceLow};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:focus-visible {
@@ -1989,7 +1989,7 @@ export const OperatingOption = styled.label<{
 
   strong {
     color: ${({ $selected, $tone }) =>
-      $selected && $tone === 'danger' ? neutral.error : neutral.strongText};
+      $selected && $tone === 'danger' ? neutral.errorText : neutral.strongText};
     font-size: 14px;
     font-weight: 700;
     line-height: 1.3;
@@ -2098,7 +2098,7 @@ export const OperatingCategoryOption = styled.label<{ $selected?: boolean }>`
   border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
   border-radius: 8px;
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
-  color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
+  color: ${({ $selected }) => ($selected ? neutral.primaryForeground : neutral.text)};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -2189,7 +2189,7 @@ export const OperatingCoordinateComparison = styled.div`
   font-weight: 700;
 
   strong {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   ${MaterialIcon} {
@@ -2205,14 +2205,14 @@ export const OperatingActionTab = styled.button<{ $active?: boolean; $danger?: b
   border-radius: 7px;
   background: ${({ $active }) => ($active ? neutral.surface : 'transparent')};
   color: ${({ $active, $danger }) =>
-    $active && $danger ? neutral.error : $active ? neutral.primary : neutral.muted};
+    $active && $danger ? neutral.errorText : $active ? neutral.primaryForeground : neutral.muted};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    color: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+    color: ${({ $danger }) => ($danger ? neutral.errorText : neutral.primaryForeground)};
   }
 
   &:focus-visible {
@@ -2240,7 +2240,7 @@ export const OperatingResultNotice = styled.div`
   line-height: 1.3;
 
   strong {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
     font-weight: 700;
   }
 `
@@ -2280,7 +2280,7 @@ export const OperatingDangerNotice = styled.p`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -2304,7 +2304,7 @@ export const OperatingFormNotice = styled.p`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -2518,7 +2518,7 @@ export const OperatingIconButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.errorTint};
-    color: ${neutral.error};
+    color: ${neutral.errorText};
   }
 
   &:focus-visible {
@@ -2541,7 +2541,7 @@ export const OperatingTextButton = styled.button`
   padding: 0;
   border: 0;
   background: transparent;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -2590,7 +2590,7 @@ export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
   padding: 0 18px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${({ $danger }) => ($danger ? neutral.error : neutral.primary)};
+  background: ${({ $danger }) => ($danger ? neutral.errorAction : neutral.primaryAction)};
   color: ${neutral.primaryText};
   font: inherit;
   font-size: 14px;
@@ -2700,7 +2700,7 @@ export const ReportNotice = styled.div`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
 
   ${MaterialIcon} {
     flex-shrink: 0;
@@ -2710,7 +2710,7 @@ export const ReportNotice = styled.div`
 
 export const ReportTitle = styled.p`
   margin: 0 0 4px;
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 14px;
   font-weight: 700;
 `
@@ -2729,13 +2729,13 @@ export const PhotoLink = styled.button`
   gap: 8px;
   border: 0;
   background: transparent;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    color: ${neutral.primaryHover};
+    color: ${neutral.primaryForeground};
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -2772,7 +2772,7 @@ export const DeleteWarning = styled.div`
   gap: 10px;
   padding: 14px;
   border-radius: 8px;
-  background: ${neutral.error};
+  background: ${neutral.errorAction};
   color: ${neutral.primaryText};
   font-size: 14px;
   font-weight: 700;
@@ -2814,7 +2814,7 @@ export const DangerOutlineButton = styled.button`
   border: 1px solid ${neutral.error};
   border-radius: ${radius.pill};
   background: ${neutral.surface};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -2829,7 +2829,7 @@ export const DangerButton = styled.button`
   padding: 0 18px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.error};
+  background: ${neutral.errorAction};
   color: ${neutral.primaryText};
   font-size: 14px;
   font-weight: 700;
@@ -2900,7 +2900,7 @@ export const DeleteConfirmIcon = styled.div`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
 
   ${MaterialIcon} {
     font-size: 24px;
@@ -2976,7 +2976,7 @@ export const DeleteConfirmNotice = styled.p`
   border: 0;
   border-radius: 8px;
   background: ${neutral.errorTint};
-  color: ${neutral.error};
+  color: ${neutral.errorText};
   font-size: 14px;
   font-weight: 700;
   line-height: 1.3;

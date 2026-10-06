@@ -100,6 +100,9 @@ export const adminColors = {
   primaryForeground: semanticColors.primary.foreground,
   primaryAction: semanticColors.primary.action,
   error: semanticColors.status.error,
+  // Borders/icons keep the status accent; text and white-label actions need AA contrast.
+  errorText: '#B42323',
+  errorAction: '#C42525',
   errorTint: `${semanticColors.status.error}${alpha.a08}`,
   errorHover: `${semanticColors.status.error}${alpha.a90}`,
   info: semanticColors.status.info,

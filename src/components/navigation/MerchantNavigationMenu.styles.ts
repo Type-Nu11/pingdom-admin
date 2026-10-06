@@ -81,7 +81,7 @@ export const ItemButton = styled.button<{ $active?: boolean }>`
 
   &:hover {
     background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
 
   &:focus-visible {
@@ -92,7 +92,7 @@ export const ItemButton = styled.button<{ $active?: boolean }>`
   ${({ $active }) =>
     $active && css`
       background: ${adminColors.primaryTint};
-      color: ${adminColors.primary};
+      color: ${adminColors.primaryForeground};
       font-weight: 700;
 
       ${MaterialIcon} {

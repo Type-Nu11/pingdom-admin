@@ -14,19 +14,16 @@ import type {
   AdminReservationErrorResponse,
   AdminReservationQuery,
   AdminReservationReviewRequest,
-  AdminReservationStatus,
 } from '../types/adminReservation.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
+import { DEFAULT_RESERVATION_QUERY, type ReservationReviewQuery } from '../utils/reservationReviewContext'
 
 export const ADMIN_RESERVATION_PAGE_SIZE = 10
 const LIMIT = ADMIN_RESERVATION_PAGE_SIZE
 export type AdminReservationAction = 'confirm' | 'reject'
 
-type ReservationQueryState = Required<Pick<AdminReservationQuery, 'page'>> & {
-  status: AdminReservationStatus | ''
-  placeId: number | undefined
-}
+type ReservationQueryState = ReservationReviewQuery
 
 const CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',
@@ -64,17 +61,14 @@ function toReservationQueryParams(query: ReservationQueryState): AdminReservatio
   }
 }
 
-export function useAdminReservations() {
+export function useAdminReservations(initialQuery = DEFAULT_RESERVATION_QUERY) {
   const { clearAuth } = useAuth()
   const listState = useListQueryState()
   const { begin, succeed, fail } = listState
   const [reservations, setReservations] = useState<AdminReservation[]>([])
   const [reservation, setReservation] = useState<AdminReservation | null>(null)
-  const [query, setQuery] = useState<ReservationQueryState>({
-    status: 'PENDING',
-    placeId: undefined,
-    page: 1,
-  })
+  const [query, setQuery] = useState<ReservationQueryState>(initialQuery)
+  const [resultRequestKey, setResultRequestKey] = useState('')
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [hasNext, setHasNext] = useState(false)
@@ -83,6 +77,8 @@ export function useAdminReservations() {
   const [activeAction, setActiveAction] = useState<AdminReservationAction | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
+  const [detailUnavailable, setDetailUnavailable] = useState(false)
+  const [detailReservationId, setDetailReservationId] = useState<number | null>(null)
   const [actionErrorMessage, setActionErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
@@ -108,6 +104,8 @@ export function useAdminReservations() {
       let data = await getAdminReservations(toReservationQueryParams(normalizedQuery))
       let resolvedQuery = normalizedQuery
 
+      if (data.totalPages === 0 && data.reservations.length === 0) resolvedQuery = { ...normalizedQuery, page: 1 }
+
       if (data.totalPages > 0 && normalizedQuery.page > data.totalPages) {
         resolvedQuery = { ...normalizedQuery, page: data.totalPages }
 
@@ -118,6 +116,7 @@ export function useAdminReservations() {
 
       if (requestId === listRef.current) {
         succeed(listQueryKey(resolvedQuery))
+        setResultRequestKey(listQueryKey(normalizedQuery))
         queryRef.current = resolvedQuery
         setQuery(resolvedQuery)
         setReservations(data.reservations)
@@ -143,6 +142,9 @@ export function useAdminReservations() {
     const requestId = ++detailRef.current
     setIsDetailLoading(true)
     setDetailErrorMessage('')
+    setDetailUnavailable(false)
+    setReservation(null)
+    setDetailReservationId(reservationId)
     setActionErrorMessage('')
     try {
       const data = await getAdminReservation(reservationId)
@@ -152,6 +154,7 @@ export function useAdminReservations() {
       if (requestId === detailRef.current) {
         setReservation(null)
         setDetailErrorMessage(getErrorMessage(error, '예약 상세를 불러오지 못했습니다.'))
+        setDetailUnavailable(isApiError(error) && (error.category === 'not-found' || error.category === 'forbidden'))
         if (shouldClearAuth(error)) clearAuth()
       }
       logDebugError('관리자 예약 상세 조회 실패', error)
@@ -165,6 +168,9 @@ export function useAdminReservations() {
     ++detailRef.current
     setReservation(null)
     setDetailErrorMessage('')
+    setDetailUnavailable(false)
+    setIsDetailLoading(false)
+    setDetailReservationId(null)
   }, [])
 
   const runAction = useCallback(async (
@@ -202,14 +208,19 @@ export function useAdminReservations() {
   }, [clearAuth, fetchDetail, fetchReservations])
 
   useEffect(() => {
-    void fetchReservations({ status: 'PENDING', placeId: undefined, page: 1 })
-  }, [fetchReservations])
+    const requests = listRef
+    void fetchReservations({ status: initialQuery.status, placeId: initialQuery.placeId, page: initialQuery.page })
+    return () => { ++requests.current }
+  }, [fetchReservations, initialQuery.status, initialQuery.placeId, initialQuery.page])
+
+  useEffect(() => () => { ++detailRef.current }, [])
 
   return {
     listState,
     reservations,
     reservation,
     query,
+    resultRequestKey,
     totalCount,
     totalPages,
     hasNext,
@@ -218,6 +229,8 @@ export function useAdminReservations() {
     activeAction,
     errorMessage,
     detailErrorMessage,
+    detailUnavailable,
+    detailReservationId,
     actionErrorMessage,
     dismissActionError: () => setActionErrorMessage(''),
     successMessage,

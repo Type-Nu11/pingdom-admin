@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
 import { AttachmentPreview } from '../../components/common/AttachmentPreview'
 import { AppDialog } from '../../components/common/AppDialog'
@@ -275,7 +276,7 @@ function MerchantPlaceApplicationReviewPage() {
           {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
           {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
           <S.FilterBar>
-            <S.FilterTabs role="tablist" aria-label="장소 신청 상태">
+            <S.FilterTabs as={AccessibleTabList} panelId="application-review-panel" role="tablist" aria-label="장소 신청 상태">
               <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'pending'} $active={hook.view === 'pending'} disabled={hook.isReviewing} onClick={() => { if (hook.view === 'pending') return; setSelectedId(null); setDecision(null); hook.changeView('pending') }}>심사 대기</S.FilterTab>
               <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'history'} $active={hook.view === 'history'} disabled={hook.isReviewing} onClick={() => { if (hook.view === 'history') return; setSelectedId(null); setDecision(null); hook.changeView('history') }}>처리 이력</S.FilterTab>
             </S.FilterTabs>
@@ -285,6 +286,7 @@ function MerchantPlaceApplicationReviewPage() {
               </AdminSelect>
             </S.FilterField>
           </S.FilterBar>
+          <div id="application-review-panel" role="tabpanel" aria-labelledby={`application-review-panel-tab-${hook.view === 'pending' ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 'inherit', minWidth: 0, minHeight: 0 }}>
           {isHistoryView ? <S.HistoryFilters onSubmit={(event) => { event.preventDefault(); applyFilters() }} aria-label="처리 이력 검색">
             <S.FilterField>처리 결과<AdminSelect aria-label="처리 결과" value={draftFilters.result} disabled={hook.isLoading || hook.isReviewing} onChange={(event) => setDraftFilters(current => ({ ...current, result: event.target.value as ApplicationHistoryFilters['result'] }))}>
               <option value="ALL">전체</option><option value="APPROVED">승인</option><option value="COMPLETED">완료</option><option value="REJECTED">반려</option><option value="CANCELED">취소</option>
@@ -348,6 +350,7 @@ function MerchantPlaceApplicationReviewPage() {
             ) : null}
             </Shared.Panel>
           </ListDetailWorkspace>
+        </div>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
       {preview && visibleDetail?.id === preview.applicationId ? <AttachmentPreview

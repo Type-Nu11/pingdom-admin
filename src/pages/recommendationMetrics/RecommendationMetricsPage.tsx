@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
@@ -152,12 +153,13 @@ function RecommendationMetricsPage() {
         <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>추천 성과 분석</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /></Shell.TopActions></Shell.TopBar>
         <Shared.Content><Shared.PageStack>
           <Shared.PageHeader><div><Shared.Eyebrow>성장 운영 &gt; 추천 성과</Shared.Eyebrow><Shared.PageTitle>추천 성과 및 버전 비교</Shared.PageTitle><Shared.PageDescription>장소별 추천 성과를 조회하고 동일 조건에서 버전 차이와 추천 근거를 확인합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/places')}>장소 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
-          <S.TabList role="tablist" aria-label="추천 분석 작업">
+          <S.TabList as={AccessibleTabList} panelId="recommendation-panel" role="tablist" aria-label="추천 분석 작업">
             <S.TabButton type="button" role="tab" $active={tab === 'metrics'} aria-selected={tab === 'metrics'} onClick={() => { setTab('metrics'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">monitoring</Shell.MaterialIcon>성과 조회</S.TabButton>
             <S.TabButton type="button" role="tab" $active={tab === 'compare'} aria-selected={tab === 'compare'} onClick={() => { setTab('compare'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>버전 비교</S.TabButton>
             <S.TabButton type="button" role="tab" $active={tab === 'explanation'} aria-selected={tab === 'explanation'} onClick={() => { setTab('explanation'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">manage_search</Shell.MaterialIcon>추천 설명</S.TabButton>
             <S.TabButton type="button" role="tab" $active={tab === 'policy'} aria-selected={tab === 'policy'} onClick={() => { setTab('policy'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">tune</Shell.MaterialIcon>운영 정책</S.TabButton>
           </S.TabList>
+            <div id="recommendation-panel" role="tabpanel" aria-labelledby={`recommendation-panel-tab-${['metrics', 'compare', 'explanation', 'policy'].indexOf(tab)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
           {tab === 'metrics' ? <>
             <S.SearchBar onSubmit={submitMetrics}>
@@ -198,7 +200,8 @@ function RecommendationMetricsPage() {
             {hook.isExplanationLoading ? <Shared.EmptyStateCard><strong>추천 설명을 불러오는 중입니다.</strong></Shared.EmptyStateCard> : hook.explanation ? <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>추천 요청 {hook.explanation.requestId}</Shared.PanelTitle><Shared.PanelDescription>노출 순위와 최종 점수 구성 요소입니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.explanation.items.length.toLocaleString()}개 후보</Shared.PanelCount></Shared.PanelHeader><Shared.CompareBody><S.CardList>{hook.explanation.items.map((item) => <S.RecordCard key={`${item.ranking}-${item.placeId}`}><S.RecordHeader><div><S.RecordTitle>{item.ranking}위 · {item.placeName}</S.RecordTitle><S.RecordMeta>장소 #{item.placeId} · 사용자 #{item.userId} · {item.recommendationVersion}</S.RecordMeta></div><S.StatusBadge $tone={item.recommendationStage === 'STABLE' ? 'success' : 'warning'}>{item.recommendationStage === 'STABLE' ? '안정' : '실험'}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>후보 소스</dt><dd>{item.source}</dd></S.DetailItem><S.DetailItem><dt>거리</dt><dd>{item.distanceMeters.toLocaleString()}m</dd></S.DetailItem><S.DetailItem><dt>최종 점수</dt><dd>{item.finalScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>개인화 / 지역</dt><dd>{item.personalScore.toFixed(4)} / {item.geoScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>품질 / 참여</dt><dd>{item.qualityScore.toFixed(4)} / {item.engagementScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>전환 / 탐색</dt><dd>{item.conversionScore.toFixed(4)} / {item.explorationScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>신뢰 / 맥락</dt><dd>{item.trustScore.toFixed(4)} / {item.contextScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>혜택 / 가용 / 부스트</dt><dd>{item.benefitScore.toFixed(4)} / {item.availabilityScore.toFixed(4)} / {item.boostScore.toFixed(4)}</dd></S.DetailItem></S.DetailGrid></S.RecordCard>)}</S.CardList></Shared.CompareBody></Shared.Panel> : <Shared.EmptyStateCard><strong>추천 requestId로 설명 로그를 조회해주세요.</strong></Shared.EmptyStateCard>}
           </> : null}
           {tab === 'policy' ? <RecommendationPolicyPanel /> : null}
-        </Shared.PageStack></Shared.Content>
+        </div>
+          </Shared.PageStack></Shared.Content>
       </Shell.MainArea>
     </Shell.AppShell>
   )

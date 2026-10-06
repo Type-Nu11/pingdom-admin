@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -1110,7 +1111,7 @@ function UserBanPage() {
                         </U.BadgeGroup>
                       </U.DetailSummaryCard>
 
-                      <U.DetailTabList role="tablist" aria-label="사용자 상세 탭">
+                      <U.DetailTabList as={AccessibleTabList} panelId="user-detail-panel" role="tablist" aria-label="사용자 상세 탭">
                         <U.DetailTabButton
                           type="button"
                           role="tab"
@@ -1130,6 +1131,7 @@ function UserBanPage() {
                           제재 이력
                         </U.DetailTabButton>
                       </U.DetailTabList>
+                      <div id="user-detail-panel" role="tabpanel" aria-labelledby={`user-detail-panel-tab-${detailTab === 'info' ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
                       {detailTab === 'info' ? (
                         <>
@@ -1344,6 +1346,7 @@ function UserBanPage() {
                       </U.DetailGroup>
                       )}
 
+                      </div>
                       <U.DetailActionGroup>
                         <U.DetailGroupTitle>밴 해제</U.DetailGroupTitle>
                         {selectedUserDetail.banned ? (

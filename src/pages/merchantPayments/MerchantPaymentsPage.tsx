@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
@@ -101,10 +102,11 @@ function MerchantPaymentsPage() {
         {payments.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{payments.successMessage}</Store.Notice> : null}
 
         <S.Panel>
-          <S.FilterBar role="tablist" aria-label="결제 정산 화면 전환">
+          <S.FilterBar as={AccessibleTabList} panelId="merchant-payments-panel" role="tablist" aria-label="결제 정산 화면 전환">
             <S.FilterButton type="button" role="tab" aria-selected={activeTab === 'payments'} $selected={activeTab === 'payments'} onClick={() => setActiveTab('payments')}>결제 내역</S.FilterButton>
             <S.FilterButton type="button" role="tab" aria-selected={activeTab === 'settlements'} $selected={activeTab === 'settlements'} onClick={() => setActiveTab('settlements')}>정산 원장</S.FilterButton>
           </S.FilterBar>
+          <div id="merchant-payments-panel" role="tabpanel" aria-labelledby={`merchant-payments-panel-tab-${activeTab === 'payments' ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
           {activeTab === 'payments' ? (
             <>
@@ -144,6 +146,7 @@ function MerchantPaymentsPage() {
               </>}
             </>
           )}
+        </div>
         </S.Panel>
       </Store.Content>
 

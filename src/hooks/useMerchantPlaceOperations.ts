@@ -53,7 +53,10 @@ export function useMerchantPlaceOperations() {
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [place, setPlace] = useState<MerchantPlaceDetail | null>(null)
-  const [operating, setOperating] = useState<MerchantPlaceOperating | null>(null)
+  const [operating, setOperating] = useState<(Omit<MerchantPlaceOperating, 'currentlyOperating' | 'checkedAt'> & {
+    currentlyOperating: boolean | null
+    checkedAt: string | null
+  }) | null>(null)
   const [operatingFailed, setOperatingFailed] = useState(false)
   const [media, setMedia] = useState<MerchantPlaceMediaResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -86,7 +89,8 @@ export function useMerchantPlaceOperations() {
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsLoading(true)
-    setOperating(null)
+    // Keep the last result during a same-place refresh so pending form input stays mounted.
+    setOperating(current => current ? { ...current, currentlyOperating: null, checkedAt: null } : null)
     setOperatingFailed(false)
     setSectionErrorMessage('')
 

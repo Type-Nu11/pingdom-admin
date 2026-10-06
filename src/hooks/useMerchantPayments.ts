@@ -23,7 +23,7 @@ function replacePayment(items: MerchantPayment[], next: MerchantPayment) {
   return items.map((item) => (item.id === next.id ? next : item))
 }
 
-export function useMerchantPayments() {
+export function useMerchantPayments({ persistActionError = false } = {}) {
   const { clearAuth } = useAuth()
   const [payments, setPayments] = useState<MerchantPayment[]>([])
   const [paymentPageInfo, setPaymentPageInfo] = useState<Omit<MerchantPaymentPageResponse, 'payments'>>({
@@ -48,7 +48,7 @@ export function useMerchantPayments() {
   const [paymentErrorMessage, setPaymentErrorMessage] = useState('')
   const [settlementErrorMessage, setSettlementErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage, persistActionError ? null : undefined)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [refundingPaymentId, setRefundingPaymentId] = useState<number | null>(null)
@@ -183,6 +183,7 @@ export function useMerchantPayments() {
     paymentErrorMessage,
     settlementErrorMessage,
     actionErrorMessage,
+    clearActionError: () => setActionErrorMessage(''),
     successMessage,
     refundingPaymentId,
     fetchPayments,

@@ -22,7 +22,7 @@ type LoadStatus = 'loading' | 'ready' | 'error'
 
 const PAGE_LIMIT = 20
 
-export function useMerchantPlaceReviews() {
+export function useMerchantPlaceReviews({ persistActionError = false } = {}) {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
@@ -34,7 +34,7 @@ export function useMerchantPlaceReviews() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage, persistActionError ? null : undefined)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeReviewId, setActiveReviewId] = useState<number | null>(null)
@@ -175,6 +175,7 @@ export function useMerchantPlaceReviews() {
     errorMessage,
     sectionErrorMessage,
     actionErrorMessage,
+    clearActionError: () => setActionErrorMessage(''),
     successMessage,
     activeReviewId,
     selectPlace,

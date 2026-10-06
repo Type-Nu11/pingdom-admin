@@ -99,7 +99,10 @@ export const Body = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
+  flex: 0 0 auto;
   flex-wrap: wrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
   justify-content: flex-end;
   gap: 8px;
   padding: 0 20px 20px;

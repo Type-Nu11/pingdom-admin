@@ -373,6 +373,10 @@ export const Section = styled.section`
   }
 `
 
+export const OperationalSection = styled(Section)`
+  margin-top: 24px;
+`
+
 export const PlaceholderSection = styled(Section)`
   margin-top: 48px;
 `

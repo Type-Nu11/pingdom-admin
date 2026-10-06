@@ -332,7 +332,7 @@ const NotificationTrigger = styled.button`
   &:hover {
     border-color: ${adminColors.border};
     background: ${adminColors.surfaceLow};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
 
   ${focusStyle}
@@ -350,7 +350,7 @@ const UnreadCount = styled.span`
   padding: 0 5px;
   border: 2px solid ${adminColors.surface};
   border-radius: 999px;
-  background: ${adminColors.primary};
+  background: ${adminColors.primaryAction};
   color: ${adminColors.primaryText};
   font-size: 12px;
   font-weight: 700;
@@ -401,7 +401,7 @@ const NotificationPanelHeading = styled.div`
 `
 
 const NotificationPanelCount = styled.span`
-  color: ${adminColors.primary};
+  color: ${adminColors.primaryForeground};
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
@@ -419,7 +419,7 @@ const MarkAllButton = styled.button`
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: ${adminColors.primary};
+  color: ${adminColors.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -480,7 +480,7 @@ const NotificationSectionHeader = styled.div`
   }
 
   span {
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
     font-size: 12px;
     font-weight: 700;
   }
@@ -552,7 +552,7 @@ const NotificationBody = styled.span`
 const NotificationDate = styled.time`
   display: block;
   margin-top: 7px;
-  color: ${adminColors.softText};
+  color: ${adminColors.muted};
   font-size: 12px;
 `
 
@@ -569,7 +569,7 @@ const NotificationState = styled.div`
 
   ${MaterialIcon} {
     margin-bottom: 2px;
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
     font-size: 28px;
   }
 
@@ -592,7 +592,7 @@ const RetryButton = styled.button`
   border: 1px solid ${adminColors.primarySoft};
   border-radius: 6px;
   background: ${adminColors.primaryTint};
-  color: ${adminColors.primary};
+  color: ${adminColors.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -608,7 +608,7 @@ const RetryButton = styled.button`
 const UpdatingText = styled.p`
   margin: 0;
   padding: 8px 16px 10px;
-  color: ${adminColors.softText};
+  color: ${adminColors.muted};
   font-size: 12px;
   text-align: right;
 `
@@ -621,7 +621,7 @@ const InlineError = styled.div`
   padding: 10px 16px;
   border-bottom: 1px solid ${adminColors.borderSoft};
   background: ${adminColors.errorTint};
-  color: ${adminColors.error};
+  color: ${adminColors.errorText};
   font-size: 12px;
 
   span {
@@ -636,7 +636,7 @@ const InlineError = styled.div`
     padding: 0 8px;
     border-color: ${adminColors.error};
     background: transparent;
-    color: ${adminColors.error};
+    color: ${adminColors.errorText};
   }
 `
 

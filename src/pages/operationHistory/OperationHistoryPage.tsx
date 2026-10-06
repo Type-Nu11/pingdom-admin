@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -328,7 +329,7 @@ function OperationHistoryPage() {
               </Shared.HeaderActions>
             </Shared.PageHeader>
 
-            <S.TabList role="tablist" aria-label="운영 이력 유형">
+            <S.TabList as={AccessibleTabList} panelId="operation-history-panel" role="tablist" aria-label="운영 이력 유형">
               <S.TabButton
                 type="button"
                 role="tab"
@@ -354,6 +355,7 @@ function OperationHistoryPage() {
                 개인정보 처리 이력
               </S.TabButton>
             </S.TabList>
+            <div id="operation-history-panel" role="tabpanel" aria-labelledby={`operation-history-panel-tab-${tab === 'audit' ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}
 
@@ -565,6 +567,7 @@ function OperationHistoryPage() {
                 </ListDetailWorkspace>
               </>
             )}
+          </div>
           </Shared.PageStack>
         </Shared.Content>
       </Shell.MainArea>

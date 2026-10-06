@@ -41,6 +41,11 @@ export const GlobalStyle = createGlobalStyle`
     text-decoration: none;
   }
 
+  button[role='tab']:focus-visible {
+    outline: 2px solid ${adminColors.primaryForeground};
+    outline-offset: 2px;
+  }
+
   main {
     min-height: 100vh;
     padding: 32px;

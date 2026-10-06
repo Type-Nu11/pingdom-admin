@@ -76,5 +76,5 @@ const Refresh = styled.button`
   &:disabled { opacity: 0.5; cursor: default; }
   &:focus-visible { outline: 2px solid ${c.primary}; outline-offset: 2px; }
 `
-const Warning = styled.p`margin: 0 0 12px; padding: 12px; border-radius: ${radius.md}; color: ${c.error}; background: ${c.errorTint}; font-size: 13px;`
+const Warning = styled.p`margin: 0 0 12px; padding: 12px; border-radius: ${radius.md}; color: ${c.errorText}; background: ${c.errorTint}; font-size: 13px;`
 const Empty = styled.p`margin: 0; padding: 12px 16px; color: ${c.muted}; background: ${c.surfaceLow}; font-size: 14px;`

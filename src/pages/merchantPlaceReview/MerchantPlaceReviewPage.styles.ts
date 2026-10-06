@@ -186,7 +186,7 @@ export const RequestButton = styled.button`
   &:hover:not(:disabled) {
     border-color: ${colors.error};
     background: ${colors.errorTint};
-    color: ${colors.error};
+    color: ${colors.errorText};
   }
 
   &:focus-visible {
@@ -213,7 +213,7 @@ export const RequestedBadge = styled.span<{ $status: 'PENDING' | 'APPROVED' | 'R
   }};
   color: ${({ $status }) => {
     if ($status === 'APPROVED') return colors.successText
-    if ($status === 'REJECTED') return colors.error
+    if ($status === 'REJECTED') return colors.errorText
     return colors.warningText
   }};
   font-size: 11px;

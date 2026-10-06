@@ -49,7 +49,7 @@ export const StepNumber = styled.span<{ $active?: boolean; $complete?: boolean }
   justify-content: center;
   border-radius: 50%;
   background: ${({ $active, $complete }) =>
-    $complete ? colors.successText : $active ? colors.primary : colors.surfaceLow};
+    $complete ? colors.successText : $active ? colors.primaryAction : colors.surfaceLow};
   color: ${({ $active, $complete }) => ($active || $complete ? colors.primaryText : colors.muted)};
   font-size: 12px;
   font-weight: 700;
@@ -106,7 +106,7 @@ export const IntroNotice = styled.div`
   background: ${colors.primaryTint};
 
   strong {
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-size: 13px;
     font-weight: 700;
   }
@@ -157,7 +157,7 @@ export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'danger' 
       : $tone === 'pending'
         ? css`background: ${colors.warningTint}; color: ${colors.warningText};`
         : $tone === 'danger'
-          ? css`background: ${colors.primaryTint}; color: ${colors.primary};`
+          ? css`background: ${colors.primaryTint}; color: ${colors.primaryForeground};`
           : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
 `
 
@@ -203,7 +203,7 @@ export const ReviewReason = styled.div`
   font-size: 13px;
   line-height: 1.55;
 
-  strong { margin-right: 6px; color: ${colors.primary}; }
+  strong { margin-right: 6px; color: ${colors.primaryForeground}; }
 `
 
 export const ReviewState = styled.div`

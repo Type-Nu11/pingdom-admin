@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -340,7 +341,7 @@ function DashboardPage() {
     return (
       <>
         <S.ActivityTabToolbar>
-          <S.ActivityTabs role="tablist" aria-label="최근 활동 유형">
+          <S.ActivityTabs as={AccessibleTabList} panelId={activityPanelId} role="tablist" aria-label="최근 활동 유형">
             {groups.map((group) => (
               <S.ActivityTab
                 key={group.key}
@@ -368,7 +369,7 @@ function DashboardPage() {
         {selectedGroup.rows.length === 0 ? (
           <S.EmptyState
             id={activityPanelId}
-            role="tabpanel"
+            role="tabpanel" tabIndex={0}
             aria-labelledby={selectedTabId}
           >
             {selectedGroup.title} 활동이 없습니다.
@@ -377,6 +378,7 @@ function DashboardPage() {
           <S.ActivityGroups
             id={activityPanelId}
             role="tabpanel"
+            tabIndex={0}
             aria-labelledby={selectedTabId}
           >
             <S.ActivityGroup>

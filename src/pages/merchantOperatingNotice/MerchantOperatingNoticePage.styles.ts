@@ -21,7 +21,7 @@ export const HeaderButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primary}; background: ${colors.primaryTint}; }
+  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -39,11 +39,11 @@ export const NoticeSummary = styled.div<{ $operating: boolean | null }>`
   font-size: 13px;
   line-height: 1.5;
 
-  strong { color: ${({ $operating }) => ($operating === false ? colors.warningText : colors.primary)}; }
+  strong { color: ${({ $operating }) => ($operating === false ? colors.warningText : colors.primaryForeground)}; }
 `
 
 export const SummaryIcon = styled.span`
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
 `
@@ -93,14 +93,14 @@ export const CreateButton = styled.button`
   padding: 0 14px;
   border: 1px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
+  background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primaryHover}; background: ${colors.primaryHover}; }
+  &:hover:not(:disabled) { border-color: ${colors.primaryHover}; background: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -120,13 +120,13 @@ export const FilterButton = styled.button<{ $selected: boolean }>`
   border: 1px solid transparent;
   border-radius: 7px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primary}; }
+  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -188,7 +188,7 @@ export const StatusBadge = styled.span<{ $tone: 'scheduled' | 'active' | 'expire
   border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'active' ? colors.successTint : $tone === 'expired' ? colors.warningTint : $tone === 'canceled' ? colors.errorTint : colors.primaryTint)};
-  color: ${({ $tone }) => ($tone === 'active' ? colors.successText : $tone === 'expired' ? colors.warningText : $tone === 'canceled' ? colors.error : colors.primary)};
+  color: ${({ $tone }) => ($tone === 'active' ? colors.successText : $tone === 'expired' ? colors.warningText : $tone === 'canceled' ? colors.errorText : colors.primaryForeground)};
   font-size: 11px;
   font-weight: 700;
 `
@@ -304,7 +304,7 @@ export const ScheduleText = styled.p`
 export const FormError = styled.p`
   grid-column: 1 / -1;
   margin: 0;
-  color: ${colors.error};
+  color: ${colors.errorText};
   font-size: 13px;
   font-weight: 700;
 `
@@ -324,7 +324,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   padding: 0 14px;
   border: 1px solid ${({ $variant }) => ($variant === 'primary' ? colors.primary : $variant === 'danger' ? colors.error : colors.border)};
   border-radius: 6px;
-  background: ${({ $variant }) => ($variant === 'primary' ? colors.primary : $variant === 'danger' ? colors.error : colors.surface)};
+  background: ${({ $variant }) => ($variant === 'primary' ? colors.primaryAction : $variant === 'danger' ? colors.errorAction : colors.surface)};
   color: ${({ $variant }) => ($variant === 'primary' || $variant === 'danger' ? colors.primaryText : colors.text)};
   font: inherit;
   font-size: 13px;
@@ -386,7 +386,7 @@ export const CloseButton = styled.button`
   font-size: 20px;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primary}; }
+  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `

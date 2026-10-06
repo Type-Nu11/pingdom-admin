@@ -55,7 +55,7 @@ export const Option = styled.button<{ $selected: boolean }>`
   border: 1px solid transparent;
   border-radius: 5px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.text)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.text)};
   font: inherit;
   font-size: 12px;
   font-weight: ${({ $selected }) => ($selected ? 700 : 600)};
@@ -63,5 +63,5 @@ export const Option = styled.button<{ $selected: boolean }>`
   cursor: pointer;
 
   &:hover,
-  &:focus-visible { outline: 0; background: ${colors.primaryTint}; color: ${colors.primary}; }
+  &:focus-visible { outline: 0; background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
 `

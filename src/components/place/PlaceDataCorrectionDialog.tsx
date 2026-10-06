@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type {
   AdminPlaceBasicInformationUpdateRequest,
@@ -391,7 +392,7 @@ export function PlaceDataCorrectionDialog({
             변경 결과는 저장 즉시 목록과 지도 마커에 반영됩니다.
           </S.OperatingDialogDescription>
 
-          <S.OperatingActionTabs $columns={4} role="tablist" aria-label="정보 보정 방식">
+          <S.OperatingActionTabs as={AccessibleTabList} panelId="place-correction-panel" $columns={4} role="tablist" aria-label="정보 보정 방식">
             {MODES.map((option) => (
               <S.OperatingActionTab
                 key={option.value}
@@ -406,6 +407,7 @@ export function PlaceDataCorrectionDialog({
               </S.OperatingActionTab>
             ))}
           </S.OperatingActionTabs>
+          <div id="place-correction-panel" role="tabpanel" aria-labelledby={`place-correction-panel-tab-${MODES.findIndex(option => option.value === mode)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
           <S.OperatingInfoNotice>
             {MODES.find((option) => option.value === mode)?.description}
           </S.OperatingInfoNotice>
@@ -616,6 +618,7 @@ export function PlaceDataCorrectionDialog({
               {formError || errorMessages[mode]}
             </S.OperatingFormNotice>
           ) : null}
+        </div>
         </S.OperatingDialogBody>
 
         <S.OperatingDialogActions>

@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -131,11 +132,12 @@ function PlaceVerificationPage() {
               </Shared.HeaderActions>
             </Shared.PageHeader>
 
-            <S.TabList role="tablist" aria-label="정보 검증 작업">
+            <S.TabList as={AccessibleTabList} panelId="place-verification-panel" role="tablist" aria-label="정보 검증 작업">
               <S.TabButton type="button" role="tab" aria-selected={activeTab === 'reports'} $active={activeTab === 'reports'} onClick={() => selectTab('reports')}><Shell.MaterialIcon aria-hidden="true">report</Shell.MaterialIcon>신고·반박</S.TabButton>
               <S.TabButton type="button" role="tab" aria-selected={activeTab === 'evidence'} $active={activeTab === 'evidence'} onClick={() => selectTab('evidence')}><Shell.MaterialIcon aria-hidden="true">fact_check</Shell.MaterialIcon>증빙</S.TabButton>
               <S.TabButton type="button" role="tab" aria-selected={activeTab === 'reverification'} $active={activeTab === 'reverification'} onClick={() => selectTab('reverification')}><Shell.MaterialIcon aria-hidden="true">sync_problem</Shell.MaterialIcon>재확인</S.TabButton>
             </S.TabList>
+            <div id="place-verification-panel" role="tabpanel" aria-labelledby={`place-verification-panel-tab-${['reports', 'evidence', 'reverification'].indexOf(activeTab)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
             {activeTab !== 'reports' ? (
               <S.SearchBar onSubmit={handlePlaceSearch}>
@@ -161,6 +163,7 @@ function PlaceVerificationPage() {
             {activeTab === 'reports' ? <PlaceInformationReportPanel reportHook={reportHook} /> : null}
             {activeTab === 'evidence' ? <PlaceInformationEvidencePanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
             {activeTab === 'reverification' ? <PlaceInformationReverificationPanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
+          </div>
           </Shared.PageStack>
         </Shared.Content>
       </Shell.MainArea>

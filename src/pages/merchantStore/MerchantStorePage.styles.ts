@@ -72,7 +72,7 @@ export const AccountIcon = styled.span`
   justify-content: center;
   border-radius: 50%;
   background: ${colors.primaryTint};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 18px;
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
@@ -91,7 +91,7 @@ export const LogoutButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     background: ${colors.primaryTint};
   }
 
@@ -155,7 +155,7 @@ export const PageIntro = styled.section`
 
 export const Eyebrow = styled.p`
   margin: 0 0 8px;
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-size: 13px;
   font-weight: 700;
 
@@ -243,7 +243,7 @@ export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'inactive
         : css`
             border-color: ${colors.primarySoft};
             background: ${colors.primaryTint};
-            color: ${colors.primary};
+            color: ${colors.primaryForeground};
           `}
 `
 
@@ -282,7 +282,7 @@ export const QuickLink = styled.button`
 
   &:hover {
     border-color: ${colors.primarySoft};
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     background: ${colors.primaryTint};
   }
 
@@ -324,7 +324,7 @@ export const WorkflowLink = styled.a`
   font-weight: 700;
   text-decoration: none;
 
-  &:hover { color: ${colors.primary}; }
+  &:hover { color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
 
@@ -347,7 +347,7 @@ export const MetricIcon = styled.span`
   flex-shrink: 0;
   border-radius: 8px;
   background: ${colors.primaryTint};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
@@ -457,7 +457,7 @@ export const PerformanceRetry = styled.button`
   border: 1px solid ${colors.primarySoft};
   border-radius: 5px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -593,14 +593,14 @@ export const SaveButton = styled.button`
   height: 42px;
   border: 1px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
+  background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: ${colors.primaryHover}; border-color: ${colors.primaryHover}; }
+  &:hover:not(:disabled) { background: ${colors.primaryForeground}; border-color: ${colors.primaryHover}; }
   &:disabled { cursor: wait; opacity: 0.65; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
@@ -613,7 +613,7 @@ export const Notice = styled.div<{ $tone: 'error' | 'success' }>`
   border: 0;
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'error' ? colors.errorTint : colors.successTint)};
-  color: ${({ $tone }) => ($tone === 'error' ? colors.error : colors.successText)};
+  color: ${({ $tone }) => ($tone === 'error' ? colors.errorText : colors.successText)};
   font-size: 13px;
   line-height: 1.5;
 `
@@ -702,7 +702,7 @@ export const ResourceMeta = styled.p`
 
 export const ResourceBadge = styled.span<{ $active?: boolean }>`
   flex-shrink: 0;
-  color: ${({ $active }) => ($active ? colors.successText : colors.primary)};
+  color: ${({ $active }) => ($active ? colors.successText : colors.primaryForeground)};
   font-size: 12px;
   font-weight: 700;
 `
@@ -736,7 +736,7 @@ export const EmptyStoreIcon = styled.span`
   justify-content: center;
   border-radius: 8px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 21px;
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
@@ -773,7 +773,7 @@ export const EmptyStoreAction = styled.button`
   padding: 0 13px;
   border: 1px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
+  background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
   font-size: 13px;
@@ -781,7 +781,7 @@ export const EmptyStoreAction = styled.button`
   white-space: nowrap;
   cursor: pointer;
 
-  &:hover { background: ${colors.primaryHover}; border-color: ${colors.primaryHover}; }
+  &:hover { background: ${colors.primaryForeground}; border-color: ${colors.primaryHover}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
 `
@@ -789,7 +789,7 @@ export const EmptyStoreAction = styled.button`
 export const EmptyStoreSecondaryAction = styled(EmptyStoreAction)`
   border-color: ${colors.primarySoft};
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
 
   &:hover { background: ${colors.primaryTint}; border-color: ${colors.primary}; }
 `
@@ -818,7 +818,7 @@ export const RetryButton = styled.button`
   border: 1px solid ${colors.primary};
   border-radius: 6px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 14px;
   font-weight: 700;

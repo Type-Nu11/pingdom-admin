@@ -1,35 +1,11 @@
 import assert from 'node:assert/strict'
 import { chromium } from 'playwright'
 import { startAccessibilityServer } from './ui-accessibility-server.mjs'
+import { measureElementContrast as measure } from '../helpers/element-contrast.mjs'
 
 const { server, url } = await startAccessibilityServer()
 let browser
 // This is a repeatable regression of production CSS/DOM, including hover/focus.
-function measure(element) {
-  const rgba = value => {
-    const values = value.match(/[\d.]+/g)?.map(Number) || [0, 0, 0, 0]
-    return [...values.slice(0, 3), values[3] ?? 1]
-  }
-  const blend = (fg, bg) => fg.slice(0, 3).map((v, i) => v * fg[3] + bg[i] * (1 - fg[3]))
-  const ancestors = []
-  for (let node = element; node; node = node.parentElement) ancestors.unshift(node)
-  let bg = ancestors.reduce((color, node) => blend(rgba(getComputedStyle(node).backgroundColor), color), [255, 255, 255])
-  let fg = blend(rgba(getComputedStyle(element).color), bg)
-  const style = getComputedStyle(element)
-  if (style.filter !== 'none') {
-    const brightness = style.filter.match(/^brightness\(([\d.]+)\)$/)
-    if (!brightness) throw new Error(`Unsupported contrast filter: ${style.filter}`)
-    const factor = Number(brightness[1])
-    fg = fg.map(value => Math.min(255, value * factor))
-    // These cases have opaque surfaces, so the filter also darkens that surface.
-    if (rgba(style.backgroundColor)[3] !== 1) throw new Error('Filtered transparent surface requires pixel verification')
-    bg = bg.map(value => Math.min(255, value * factor))
-  }
-  const luminance = color => color.map(v => { const s = v / 255; return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4 })
-    .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0)
-  const a = luminance(fg), b = luminance(bg)
-  return { name: element.dataset.contrast, foreground: fg, background: bg, ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) }
-}
 try {
   browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
@@ -64,6 +40,8 @@ try {
   }
   const failures = results.filter(result => result.ratio < 4.5)
   assert.deepEqual(failures, [], JSON.stringify(failures))
+  const primaryHover = results.find(result => result.name === 'place-primary' && result.state === 'hover')
+  assert.ok(Math.abs(primaryHover.ratio - 4.73660199720299) < 0.001, 'Place primary hover must include group opacity')
   console.log(`Actual CSS contrast: ${results.length} normal/hover/focus cases >= 4.5:1; minimum ${Math.min(...results.map(x => x.ratio)).toFixed(2)}:1`)
 
   for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {

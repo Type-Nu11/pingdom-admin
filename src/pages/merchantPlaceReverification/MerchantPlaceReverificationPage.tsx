@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AppDialog } from '../../components/common/AppDialog'
@@ -34,6 +35,7 @@ function MerchantPlaceReverificationPage() {
   const [selectedRequest, setSelectedRequest] = useState<MerchantPlaceReverificationRequest | null>(null)
   const [responseNote, setResponseNote] = useState('')
   const [formError, setFormError] = useState('')
+  const protection = useUnsavedChanges(Boolean(selectedRequest) && responseNote !== '', reverification.respondingRequestId !== null)
   const formId = useId()
   const headingRef = useRef<HTMLHeadingElement>(null)
 
@@ -44,9 +46,14 @@ function MerchantPlaceReverificationPage() {
 
   const closeResponseModal = (force = false) => {
     if (!force && reverification.respondingRequestId !== null) return
-    setSelectedRequest(null)
-    setResponseNote('')
-    setFormError('')
+    const close = () => {
+      protection.markClean()
+      setSelectedRequest(null)
+      setResponseNote('')
+      setFormError('')
+    }
+    if (force) close()
+    else protection.request(close)
   }
 
   const openResponseModal = (request: MerchantPlaceReverificationRequest) => {

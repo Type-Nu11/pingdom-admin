@@ -1,8 +1,11 @@
-import { readFile } from 'node:fs/promises'
-import { createServer } from 'vite'
+import { readFile, mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createServer } from '../helpers/isolated-vite.mjs'
 
 export async function startAccessibilityServer(port = 0) {
-  const server = await createServer({ server: { host: '127.0.0.1', port, strictPort: port !== 0, open: false }, plugins: [{
+  const output = await mkdtemp(join(tmpdir(), 'pingdom-accessibility-'))
+  const server = await createServer({ cacheDir: join(output, 'cache'), server: { host: '127.0.0.1', port, strictPort: port !== 0, open: false }, plugins: [{
     name: 'ui-accessibility-fixture',
     configureServer(vite) {
       vite.middlewares.use(async (req, res, next) => {

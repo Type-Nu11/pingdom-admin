@@ -1,11 +1,11 @@
 import { readFile, mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { createServer } from 'vite'
+import { createServer } from '../helpers/isolated-vite.mjs'
 
 export async function startReservationContextServer(port = 0) {
   const temp = await mkdtemp(join(tmpdir(), 'pingdom-reservation-context-'))
-  const server = await createServer({ cacheDir: join(temp, 'cache'), server: { host: '127.0.0.1', port, strictPort: port !== 0, open: false }, plugins: [{
+  const server = await createServer({ envDir: false, cacheDir: join(temp, 'cache'), server: { host: '127.0.0.1', port, strictPort: port !== 0, open: false }, plugins: [{
     name: 'reservation-context-fixture', enforce: 'pre',
     resolveId(source) { if (source.endsWith('/map/NaverMap')) return resolve('tests/browser/place-map-fixture.jsx') },
     configureServer(vite) {

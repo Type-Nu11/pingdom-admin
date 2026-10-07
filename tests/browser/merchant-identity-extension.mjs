@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
 import { createIdentityQaServer } from './merchant-identity-extension-server.mjs'
+import { guardBrowserPage } from '../helpers/browser-regression-guard.mjs'
 
 const { server, base, output } = await createIdentityQaServer()
 let browser
@@ -10,12 +11,9 @@ try {
   browser = await chromium.launch()
   for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
     const page = await browser.newPage({ viewport: { width, height } })
-    const errors = []
-    page.on('pageerror', error => errors.push(error.message))
-    await page.route('**/*', route => {
-      const url = new URL(route.request().url())
-      return ['127.0.0.1', 'fonts.googleapis.com', 'fonts.gstatic.com'].includes(url.hostname) && !url.pathname.startsWith('/api') ? route.continue() : route.abort()
-    })
+    const guard = await guardBrowserPage(page, base, event => page.url().includes('?fail') &&
+      event.kind === 'fixture-api' && event.method === 'GET' && event.path === '/merchant-owner/places/2' &&
+      event.status === 0 && event.text === 'Synthetic detail failure')
     const summary = scope => scope.locator('[aria-label="장소 #2 정보"]')
     const noOverflow = async scope => {
       const bounds = await scope.evaluate(element => ({ scroll: element.scrollWidth, client: element.clientWidth }))
@@ -90,7 +88,7 @@ try {
       assert.equal(await page.evaluate(details), 3)
       await dialog().getByRole('button', { name: '닫기', exact: true }).click()
     }
-    assert.deepEqual(errors, [])
+    guard.assertClean()
     console.log(`PASS identity extension: real layout/navigation, long text, keyboard, modals, 0/1/2 places, retry ${width}x${height}`)
     await page.close()
   }

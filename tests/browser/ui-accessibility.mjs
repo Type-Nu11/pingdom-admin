@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { chromium } from 'playwright'
 import { startAccessibilityServer } from './ui-accessibility-server.mjs'
 import { measureElementContrast as measure } from '../helpers/element-contrast.mjs'
+import { guardBrowserPage } from '../helpers/browser-regression-guard.mjs'
 
 const { server, url } = await startAccessibilityServer()
 let browser
@@ -9,20 +10,11 @@ let browser
 try {
   browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
-  const errors = [], unexpectedRequests = []
-  page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => {
-    // Only the two deliberately failed visitor GETs are expected in this scenario.
-    const text = message.text()
-    if (page.url().includes('scenario=failure') && /^관리자 방문자 검증 (reports|corrections) 조회 실패/.test(text) && text.includes('합성 조회 실패')) return
-    if (message.type() === 'error' || message.type() === 'warning') errors.push(text)
-  })
-  await page.route('**/*', route => {
-    const requested = new URL(route.request().url())
-    if (['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(requested.hostname)) return route.fulfill({ status: 200, contentType: 'text/css', body: '' })
-    if (requested.origin === new URL(url).origin && !requested.pathname.startsWith('/api/')) return route.continue()
-    unexpectedRequests.push(requested.pathname)
-    return route.abort()
+  const guard = await guardBrowserPage(page, new URL(url).origin, event => {
+    if (!page.url().includes('scenario=failure')) return false
+    if (event.kind === 'console') return event.level === 'error' && /^관리자 방문자 검증 (reports|corrections) 조회 실패/.test(event.text) && event.text.includes('합성 조회 실패')
+    return event.kind === 'fixture-api' && event.method === 'GET' && event.status === 500 && event.text === '합성 조회 실패' &&
+      ['/admin/visitor-verification-reports', '/admin/visitor-verification-reports/corrections'].includes(event.path)
   })
   await page.goto(url + '?scenario=catalog')
   await page.locator('[data-contrast]').first().waitFor()
@@ -87,8 +79,7 @@ try {
     }
     console.log(`Login/normal/empty/error layout, details and keyboard: ${width}×${height} PASS`)
   }
-  assert.deepEqual(errors, [])
-  assert.deepEqual(unexpectedRequests, [])
+  guard.assertClean()
   console.log('No runtime/console errors or real API requests; no operation data changed.')
 } finally {
   await browser?.close()

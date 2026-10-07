@@ -8,6 +8,7 @@ import LoginPage from '../../src/pages/login/LoginPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import { adminColors as c } from '../../src/styles/theme'
 import client from '../../src/api/customAxios'
+import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 import * as Login from '../../src/pages/login/LoginPage.styles'
 import * as Pages from '../../src/components/common/AdminPagination.styles'
 import * as Dates from '../../src/components/common/AdminDateTimePicker.styles'
@@ -35,8 +36,9 @@ const sampleReport = {
   createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
 }
 let requests = 0
-client.defaults.adapter = async config => {
+client.defaults.adapter = observeFixtureAdapter(async config => {
   if (config.method !== 'get') throw new Error(`Synthetic QA blocked ${config.method}`)
+  if (!['/admin/visitor-verification-reports', '/admin/visitor-verification-reports/corrections'].includes(config.url)) throw new Error(`Unexpected accessibility fixture API ${config.url}`)
   requests++
   document.documentElement.dataset.requests = String(requests)
   const populated = scenario === 'visitor'
@@ -47,7 +49,7 @@ client.defaults.adapter = async config => {
   }
   if (scenario === 'failure') throw Object.assign(new Error('합성 조회 실패'), { isAxiosError: true, config, response: { config, status: 500, data: { message: '합성 조회 실패' }, headers: {} } })
   return { config, data, status: 200, statusText: 'OK', headers: {} }
-}
+})
 const auth = { user: scenario === 'login' ? null : { username: '합성 QA', role: 'ADMIN' }, clearAuth() {}, logout() {}, isAuthenticated: scenario !== 'login', isAuthReady: true }
 const notifications = { notifications: [], unreadCount: 6, pendingWorkItems: [], pendingWorkEntries: [], pendingWorkCount: 0, pendingWorkStatus: 'success', pendingWorkErrorMessage: '', status: 'success', errorMessage: '', isUnreadCountLoading: false, isActionLoading: false, fetchNotifications: async () => {}, refreshUnreadCount: async () => {}, refreshPendingWork: async () => {} }
 // Use the production styled components, not copies of their CSS or theme-only assertions.

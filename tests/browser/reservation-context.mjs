@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
 import { startReservationContextServer } from './reservation-context-server.mjs'
+import { guardBrowserPage } from '../helpers/browser-regression-guard.mjs'
 
 const { server, base, output } = await startReservationContextServer()
 let browser
@@ -9,22 +10,15 @@ try {
   browser = await chromium.launch()
   for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
     const page = await browser.newPage({ viewport: { width, height } })
-    const errors = [], unexpected = []
     const allowedFailures = new Set()
-    page.on('pageerror', error => errors.push(error.message))
-    page.on('console', message => {
-      const text = message.text()
-      if (message.type() !== 'error' && message.type() !== 'warning') return
-      if (allowedFailures.has('list') && text.startsWith('관리자 예약 목록 조회 실패') && text.includes('합성 조회 실패')) return
-      if (allowedFailures.has('detail') && text.startsWith('관리자 예약 상세 조회 실패') && text.includes('합성 조회 실패')) return
-      errors.push(text)
-    })
-    await page.route('**/*', route => {
-      const url = new URL(route.request().url())
-      if (['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(url.hostname)) return route.fulfill({ contentType: 'text/css', body: '' })
-      if (url.origin === base && !url.pathname.startsWith('/api/')) return route.continue()
-      unexpected.push(url.pathname)
-      return route.abort()
+    const guard = await guardBrowserPage(page, base, event => {
+      if (event.kind === 'console') return event.level === 'error' &&
+        event.text.includes('합성 조회 실패') &&
+        ((allowedFailures.has('list') && event.text.startsWith('관리자 예약 목록 조회 실패')) ||
+         (allowedFailures.has('detail') && event.text.startsWith('관리자 예약 상세 조회 실패')))
+      return event.kind === 'fixture-api' && event.method === 'GET' && event.text === '합성 조회 실패' &&
+        ((allowedFailures.has('list') && event.path === '/admin/reservations' && event.status === 500) ||
+         (allowedFailures.has('detail') && event.path === '/admin/reservations/1' && event.status === 403))
     })
     const target = `${base}/reservations/review?placeId=7&page=2&reservationId=11`
     await page.goto(target)
@@ -99,8 +93,7 @@ try {
     await page.getByText('1–10 / 21개').waitFor()
     assert.equal(page.url(), `${base}/reservations/review`)
     assert.ok(!(await page.evaluate(() => window.reservationQA.calls)).some(call => call.url === '/admin/reservations/11'))
-    assert.deepEqual(errors, [])
-    assert.deepEqual(unexpected, [])
+    guard.assertClean()
     assert.ok((await page.evaluate(() => window.reservationQA.calls)).every(call => call.method === 'get'))
     console.log(`Reservation context/back/reload/filter/error/permission/account/empty: ${width}×${height} PASS`)
     await page.close()

@@ -10,6 +10,7 @@ import ReviewPage from '../../src/pages/merchantPlaceReview/MerchantPlaceReviewP
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 import { createMerchantDialogData } from './merchant-dialog-data.mjs'
+import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 
 const params = new URLSearchParams(location.search)
 const screen = params.get('screen') || 'refund'
@@ -17,21 +18,24 @@ const scenario = params.get('scenario') || 'success'
 const data = createMerchantDialogData()
 let notify = () => {}
 let mutations = 0
+window.qaDialog = { calls: [], release: null }
 // The adapter never forwards requests: only the named synthetic writes exist.
-client.defaults.adapter = async config => {
+client.defaults.adapter = observeFixtureAdapter(async config => {
+  window.qaDialog.calls.push({ method: config.method, url: config.url })
   let result
   if (config.method === 'get') result = data.read(config.url)
   else if (config.method === 'post') {
     mutations++
     notify(mutations)
-    await new Promise(resolve => setTimeout(resolve, scenario === 'delayed' && mutations === 1 ? 12_000 : 100))
-    if (scenario === 'error' || (scenario === 'delayed' && mutations === 1)) {
+    if (scenario === 'controlled' && mutations === 1) await new Promise(resolve => { window.qaDialog.release = resolve })
+    else await new Promise(resolve => setTimeout(resolve, scenario === 'delayed' && mutations === 1 ? 12_000 : 100))
+    if (scenario === 'error' || (['delayed', 'controlled'].includes(scenario) && mutations === 1)) {
       throw Object.assign(new Error('Synthetic failure'), { isAxiosError: true, config, response: { config, status: 500, data: { message: '합성 처리 실패 — 입력을 유지하고 다시 시도해주세요.' }, headers: {} } })
     }
     result = data.write(config.url, config.data ? JSON.parse(config.data) : {})
   } else throw new Error(`Blocked synthetic method ${config.method}`)
   return { config, data: result, status: 200, statusText: 'OK', headers: {} }
-}
+})
 const auth = { clearAuth() {}, logout() {}, user: { id: 99, username: '합성 QA', role: 'MERCHANT_OWNER' }, isAuthenticated: true, isAuthReady: true }
 const selection = { selectedPlaceId: 1, syncPlaces: () => 1, selectPlace() {} }
 const Page = screen === 'review' ? ReviewPage : screen === 'response' ? ResponsePage : ['selection', 'stop'].includes(screen) ? BoostPage : PaymentPage

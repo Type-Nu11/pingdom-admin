@@ -4,6 +4,8 @@ import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AppDialog } from '../../components/common/AppDialog'
+import { MerchantPlaceIdentitySummary } from '../../components/merchant/MerchantPlaceIdentitySummary'
+import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import { useMerchantPlaceReverification } from '../../hooks/useMerchantPlaceReverification'
 import type {
   MerchantPlaceReverificationRequest,
@@ -38,6 +40,10 @@ function MerchantPlaceReverificationPage() {
   const protection = useUnsavedChanges(Boolean(selectedRequest) && responseNote !== '', reverification.respondingRequestId !== null)
   const formId = useId()
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const identity = useMerchantPlaceIdentity([...new Set([
+    ...reverification.requests.map(request => request.placeId),
+    ...(selectedRequest ? [selectedRequest.placeId] : []),
+  ])])
 
   const handleLogout = () => {
     void logout()
@@ -84,14 +90,21 @@ function MerchantPlaceReverificationPage() {
     {reverification.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{reverification.successMessage}</Store.Notice> : null}
     {reverification.status === 'loading' || reverification.isLoading ? <Store.LoadingSummary aria-label="장소 정보 재확인 요청을 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : <S.Panel><S.PanelHeader><div><S.PanelTitle>재확인 요청 목록</S.PanelTitle><S.PanelDescription>응답 대기 상태의 요청에만 응답 내용을 제출할 수 있습니다.</S.PanelDescription></div></S.PanelHeader><S.ResultMeta>총 {reverification.pageInfo.totalCount.toLocaleString()}건</S.ResultMeta>{reverification.requests.length === 0 ? <S.Empty>현재 확인할 재확인 요청이 없습니다.</S.Empty> : <S.CampaignList>{reverification.requests.map((request) => {
       const status = STATUS[request.status]
-      return <S.CampaignItem as="div" key={request.requestId} $selected={false}><S.CampaignTop><S.CampaignTitle>장소 #{request.placeId} · 요청 #{request.requestId}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>요청 사유: {request.reason}</S.CampaignMeta><S.CampaignMeta>요청 {formatDateTime(request.requestedAt)} · 응답 기한 {formatDateTime(request.dueAt)}</S.CampaignMeta>{request.responseNote ? <S.CampaignMeta>제출한 응답: {request.responseNote}</S.CampaignMeta> : null}{request.status === 'REQUESTED' ? <S.FormActions><S.ActionButton type="button" disabled={reverification.respondingRequestId !== null} $variant="primary" onClick={() => openResponseModal(request)}>응답 작성</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
+      return <S.CampaignItem as="div" key={request.requestId} $selected={false}>
+        <S.CampaignTop><S.CampaignTitle>요청 #{request.requestId}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop>
+        <MerchantPlaceIdentitySummary placeId={request.placeId} identity={identity.places[request.placeId]} onRetry={identity.retry} disabled={reverification.respondingRequestId !== null} />
+        <S.CampaignMeta>요청 사유: {request.reason}</S.CampaignMeta><S.CampaignMeta>요청 {formatDateTime(request.requestedAt)} · 응답 기한 {formatDateTime(request.dueAt)}</S.CampaignMeta>
+        {request.responseNote ? <S.CampaignMeta>제출한 응답: {request.responseNote}</S.CampaignMeta> : null}
+        {request.status === 'REQUESTED' ? <S.FormActions><S.ActionButton type="button" disabled={reverification.respondingRequestId !== null} $variant="primary" onClick={() => openResponseModal(request)}>응답 작성</S.ActionButton></S.FormActions> : null}
+      </S.CampaignItem>
     })}</S.CampaignList>}{reverification.pageInfo.totalPages > 1 ? <AdminPagination ariaLabel="장소 정보 재확인 요청 목록 페이지네이션" page={reverification.pageInfo.page} totalPages={reverification.pageInfo.totalPages} hasNext={reverification.pageInfo.hasNext} disabled={reverification.isLoading} onPageChange={(nextPage) => void reverification.fetchRequests(nextPage)} /> : null}</S.Panel>}
   </Store.Content>{selectedRequest ? <AppDialog title="재확인 요청 응답" description="요청 사유와 응답 기한을 확인한 뒤 작성해주세요." isDismissible={reverification.respondingRequestId === null} fallbackFocusRef={headingRef} onClose={() => closeResponseModal()}
     footer={<>
       <S.ActionButton type="button" disabled={reverification.respondingRequestId !== null} onClick={() => closeResponseModal()}>취소</S.ActionButton>
       <S.ActionButton type="submit" form={formId} disabled={reverification.respondingRequestId !== null} $variant="primary">{reverification.respondingRequestId === selectedRequest.requestId ? '제출 중' : '응답 제출'}</S.ActionButton>
     </>}>
-    <S.ReadonlyNotice>장소 #{selectedRequest.placeId}의 요청 사유: {selectedRequest.reason}<br />응답 기한: {formatDateTime(selectedRequest.dueAt)}</S.ReadonlyNotice>
+    <MerchantPlaceIdentitySummary placeId={selectedRequest.placeId} identity={identity.places[selectedRequest.placeId]} onRetry={identity.retry} disabled={reverification.respondingRequestId !== null} />
+    <S.ReadonlyNotice>요청 #{selectedRequest.requestId} · 요청 사유: {selectedRequest.reason}<br />응답 기한: {formatDateTime(selectedRequest.dueAt)}</S.ReadonlyNotice>
     <S.Form id={formId} onSubmit={submitResponse}>
       <S.Field $wide>응답 내용<S.Textarea value={responseNote} maxLength={1000} disabled={reverification.respondingRequestId !== null} onChange={(event) => setResponseNote(event.target.value)} /></S.Field>
       {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}

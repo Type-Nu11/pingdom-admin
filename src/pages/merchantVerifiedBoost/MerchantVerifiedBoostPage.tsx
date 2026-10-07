@@ -2,6 +2,9 @@ import { useId, useRef, useState, type FormEvent, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AppDialog } from '../../components/common/AppDialog'
+import { MerchantPlaceSelect } from '../../components/merchant/MerchantPlaceSelect'
+import { MerchantPlaceIdentitySummary } from '../../components/merchant/MerchantPlaceIdentitySummary'
+import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantVerifiedBoost } from '../../hooks/useMerchantVerifiedBoost'
 import type {
@@ -96,7 +99,7 @@ function BoostSelectionDialog({
     </>}>
     <S.Form id={formId} onSubmit={(event) => void submit(event)}>
       <S.Field>상품<S.Select value={productId} disabled={isBusy} onChange={(event) => { setProductId(Number(event.target.value)); resetRequest() }}>{products.map((item) => <option value={item.productId} key={item.productId}>{item.name} · {item.durationDays}일 · {formatCurrency(item.priceAmount, item.currency)}</option>)}</S.Select></S.Field>
-      <S.Field>적용 장소<S.Select value={placeId} disabled={isBusy} onChange={(event) => { setPlaceId(Number(event.target.value)); resetRequest() }}>{placeIds.map((id) => <option value={id} key={id}>장소 #{id}</option>)}</S.Select></S.Field>
+      <S.Field as="div"><span>적용 장소</span><MerchantPlaceSelect compact fullWidth showSelectedName aria-label="적용 장소" value={placeId} disabled={isBusy} onChange={(event) => { setPlaceId(Number(event.target.value)); resetRequest() }}>{placeIds.map((id) => <option value={id} key={id}>장소 #{id}</option>)}</MerchantPlaceSelect></S.Field>
       {product ? <S.ReadonlyNotice style={{ gridColumn: '1 / -1', margin: 0 }}>{product.description || '상품 설명이 없습니다.'}</S.ReadonlyNotice> : null}
     </S.Form>
   </AppDialog>
@@ -112,6 +115,13 @@ function MerchantVerifiedBoostPage() {
   const activeSelectionIds = new Set(boost.executions.filter((execution) => execution.status === 'ACTIVE').map((execution) => execution.selectionId))
   const selectedPairs = new Set(boost.selections.map((selection) => `${selection.productId}:${selection.placeId}`))
   const productById = new Map(boost.products.map((product) => [product.productId, product]))
+  const identity = useMerchantPlaceIdentity([...new Set([
+    ...(boost.profile?.placeIds ?? []),
+    ...boost.selections.map(selection => selection.placeId),
+    ...boost.executions.map(execution => execution.placeId),
+    ...(pendingStop ? [pendingStop.placeId] : []),
+  ])])
+  const isUnlinked = (placeId: number) => boost.profileState === 'ready' && !boost.profile?.placeIds.includes(placeId)
 
   const handleLogout = () => {
     void logout()
@@ -145,7 +155,13 @@ function MerchantVerifiedBoostPage() {
           const hasActiveExecution = activeSelectionIds.has(selection.id)
           const isStarting = boost.activeAction === 'start' && boost.activeTargetId === selection.id
           const product = productById.get(selection.productId)
-          return <S.CampaignItem as="div" key={selection.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{product?.name || `상품 #${selection.productId}`}</S.CampaignTitle><S.StatusBadge $tone={hasActiveExecution ? 'published' : 'draft'}>{hasActiveExecution ? '집행 중' : '선택 완료'}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>장소 #{selection.placeId} · {product ? `${product.durationDays}일 · ${formatCurrency(product.priceAmount, product.currency)}` : `상품 #${selection.productId}`}</S.CampaignMeta><S.CampaignMeta>선택 {formatDateTime(selection.selectedAt)}</S.CampaignMeta><S.FormActions><S.ActionButton type="button" disabled={isActionPending || hasActiveExecution} $variant="primary" onClick={() => void boost.startExecution(selection)}>{isStarting ? '시작 중' : hasActiveExecution ? '집행 중' : '집행 시작'}</S.ActionButton></S.FormActions></S.CampaignItem>
+          return <S.CampaignItem as="div" key={selection.id} $selected={false}>
+            <S.CampaignTop><S.CampaignTitle>{product?.name || `상품 #${selection.productId}`}</S.CampaignTitle><S.StatusBadge $tone={hasActiveExecution ? 'published' : 'draft'}>{hasActiveExecution ? '집행 중' : '선택 완료'}</S.StatusBadge></S.CampaignTop>
+            <MerchantPlaceIdentitySummary placeId={selection.placeId} identity={identity.places[selection.placeId]} onRetry={identity.retry} disabled={isActionPending} isUnlinked={isUnlinked(selection.placeId)} />
+            <S.CampaignMeta>{product ? `${product.durationDays}일 · ${formatCurrency(product.priceAmount, product.currency)}` : `상품 #${selection.productId}`}</S.CampaignMeta>
+            <S.CampaignMeta>선택 {formatDateTime(selection.selectedAt)}</S.CampaignMeta>
+            <S.FormActions><S.ActionButton type="button" disabled={isActionPending || hasActiveExecution} $variant="primary" onClick={() => void boost.startExecution(selection)}>{isStarting ? '시작 중' : hasActiveExecution ? '집행 중' : '집행 시작'}</S.ActionButton></S.FormActions>
+          </S.CampaignItem>
         })}</S.CampaignList>}
         {boost.selectionPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="Verified Boost 선택 목록 페이지네이션" page={boost.selectionPageInfo.page} totalPages={boost.selectionPageInfo.totalPages} hasNext={boost.selectionPageInfo.hasNext} disabled={isActionPending || boost.selectionState === 'loading'} onPageChange={(nextPage) => void boost.fetchSelections(nextPage)} /> : null}
       </S.Panel>
@@ -155,7 +171,13 @@ function MerchantVerifiedBoostPage() {
           const status = EXECUTION_STATUS[execution.status]
           const isStopping = boost.activeAction === 'stop' && boost.activeTargetId === execution.id
           const product = productById.get(execution.productId)
-          return <S.CampaignItem as="div" key={execution.id} $selected={false}><S.CampaignTop><S.CampaignTitle>{product?.name || `상품 #${execution.productId}`}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>장소 #{execution.placeId} · 선택 #{execution.selectionId}</S.CampaignMeta><S.CampaignMeta>시작 {formatDateTime(execution.startedAt)} · 종료 {formatDateTime(execution.endsAt)}</S.CampaignMeta>{execution.stoppedAt ? <S.CampaignMeta>중단 {formatDateTime(execution.stoppedAt)}</S.CampaignMeta> : null}{execution.status === 'ACTIVE' ? <S.FormActions><S.ActionButton type="button" disabled={isActionPending} $variant="danger" onClick={() => { boost.clearActionError(); setPendingStop(execution) }}>{isStopping ? '중단 중' : '집행 중단'}</S.ActionButton></S.FormActions> : null}</S.CampaignItem>
+          return <S.CampaignItem as="div" key={execution.id} $selected={false}>
+            <S.CampaignTop><S.CampaignTitle>{product?.name || `상품 #${execution.productId}`}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop>
+            <MerchantPlaceIdentitySummary placeId={execution.placeId} identity={identity.places[execution.placeId]} onRetry={identity.retry} disabled={isActionPending} isUnlinked={isUnlinked(execution.placeId)} />
+            <S.CampaignMeta>선택 #{execution.selectionId}</S.CampaignMeta><S.CampaignMeta>시작 {formatDateTime(execution.startedAt)} · 종료 {formatDateTime(execution.endsAt)}</S.CampaignMeta>
+            {execution.stoppedAt ? <S.CampaignMeta>중단 {formatDateTime(execution.stoppedAt)}</S.CampaignMeta> : null}
+            {execution.status === 'ACTIVE' ? <S.FormActions><S.ActionButton type="button" disabled={isActionPending} $variant="danger" onClick={() => { boost.clearActionError(); setPendingStop(execution) }}>{isStopping ? '중단 중' : '집행 중단'}</S.ActionButton></S.FormActions> : null}
+          </S.CampaignItem>
         })}</S.CampaignList>}
         {boost.executionPageInfo.totalPages > 1 ? <AdminPagination ariaLabel="Verified Boost 집행 내역 페이지네이션" page={boost.executionPageInfo.page} totalPages={boost.executionPageInfo.totalPages} hasNext={boost.executionPageInfo.hasNext} disabled={isActionPending || boost.executionState === 'loading'} onPageChange={(nextPage) => void boost.fetchExecutions(nextPage)} /> : null}
       </S.Panel>
@@ -166,7 +188,8 @@ function MerchantVerifiedBoostPage() {
         <S.ActionButton type="button" disabled={isActionPending} onClick={closeStopDialog}>돌아가기</S.ActionButton>
         <S.ActionButton type="button" disabled={isActionPending} $variant="danger" onClick={() => void handleStop()}>{isActionPending ? '중단 중' : '집행 중단'}</S.ActionButton>
       </>}>
-      <S.ReadonlyNotice>장소 #{pendingStop.placeId}의 Verified Boost 집행을 중단합니다. 중단 후에는 현재 노출 상태가 즉시 변경될 수 있습니다.</S.ReadonlyNotice>
+      <MerchantPlaceIdentitySummary placeId={pendingStop.placeId} identity={identity.places[pendingStop.placeId]} onRetry={identity.retry} disabled={isActionPending} isUnlinked={isUnlinked(pendingStop.placeId)} />
+      <S.ReadonlyNotice>위 장소의 Verified Boost 집행을 중단합니다. 중단 후에는 현재 노출 상태가 즉시 변경될 수 있습니다.</S.ReadonlyNotice>
       {boost.actionErrorMessage ? <Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{boost.actionErrorMessage}</Store.Notice> : null}
     </AppDialog> : null}
   </Store.Page>

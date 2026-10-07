@@ -5,7 +5,7 @@
 - 기준: 2026-10-07 develop `fbf1f35` 이후 웹 검사 보강. 업무 구현/API/인증·권한·금액 계산은 변경하지 않는다.
 - GitHub Actions 조회 결과는 `Dependabot Updates` 한 개였다. PR #281에는 검증 check가 없었고, 저장소에 체크인된 검증 workflow도 없었다. 외부 서비스의 미공개 CI 존재 여부는 확인하지 못했다.
 - `Release verification`은 develop/release의 PR·push 및 수동 실행에서 lint/build/unit/핵심 Chromium 회귀를 실행하는 최소 workflow다. 기본 브랜치는 release이며 배포·시크릿·브랜치 보호를 변경하지 않는다. `pull_request_target`이나 쓰기 권한을 사용하지 않는다. checkout/setup-node v6 태그의 공식 commit SHA를 확인해 고정했다.
-- 현재 로컬 검증과 GitHub 실행 결과는 별개다. 커밋·푸시 전이므로 실제 Actions 실행은 아직 검증하지 않았다.
+- 로컬 검증과 GitHub 실행 결과는 별개다. 최초 로컬 검증 시점에는 커밋·푸시 전이었으며, 이후 PR #282 리뷰에서 확인한 원격 실패 및 로컬 후속 수정은 아래에 구분한다.
 
 ## 재현 가능한 준비와 실행
 
@@ -84,3 +84,12 @@ npm run test:release-browser
 - 생성된 좁은 화면 선택 모달 스크린샷에서 긴 본문 스크롤과 처리 버튼 노출을 추가 확인했다. 실데이터 mutation은 없다.
 - workflow YAML 로컬 파싱 통과, checkout/setup-node SHA와 node24 실행 선언은 공식 저장소 API로 대조했다. 로컬에 actionlint가 없어 해당 도구는 미수행이다. 실제 Ubuntu Actions 설치/실행은 푸시 후 확인해야 한다.
 - 실제 서버·계정 전체 QA, 실기기·다른 브라우저·운영 배포 및 외부 CI 존재 확인은 이번 로컬 검사 완료 범위가 아니다.
+
+## PR #282 리뷰 후속 검증
+
+- 원격 HEAD `0eff688`의 Actions run `37616328189`는 job이 시작되기 전에 실패했다. job-level env에서 `runner.temp`를 참조한 것이 원인이며, 로컬 YAML 파싱만으로는 이 컨텍스트 제한을 검증하지 못했다.
+- 지적 1: job-level env를 제거하고 준비 step에서 `$RUNNER_TEMP` 기반 출력 경로를 `$GITHUB_ENV`에 기록한다. 이후 브라우저 실행과 summary step이 동일한 경로를 사용한다. 시크릿·권한·트리거·배포 설정은 변경하지 않는다.
+- 지적 2: `npm test`에도 Chromium을 실행하는 보안 헤더 검사가 포함되어 있다. 설치되지 않은 별도 브라우저 캐시로 2개 실패를 재현했으며 Chromium 및 시스템 의존성 설치를 `npm test`보다 앞으로 옮겼다.
+- 두 지적의 재발을 막는 workflow 회귀 검사 2개를 추가했다. 전체 `npm test` 690개, 보안 헤더/새 workflow 검사 5개, lint·TypeScript/build·diff 검사 통과.
+- 공식 actionlint 1.7.12 릴리스의 SHA-256을 확인한 임시 실행 파일로 검사했다. 기존 workflow는 runner 컨텍스트 오류로 실패하고, 후속 수정 workflow는 통과했다. shellcheck는 별도로 실행하지 않았다.
+- 제품 코드와 브라우저 suite는 바뀌지 않았다. 수정 직전 리뷰에서 핵심 브라우저 6종을 다시 실행해 모두 통과했다. 위 후속 검증은 로컬 결과이며, 수정된 workflow의 원격 Ubuntu Actions 실행은 푸시 후 별도로 확인해야 한다.

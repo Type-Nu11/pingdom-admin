@@ -18,9 +18,10 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      PINGDOM_QA_OUTPUT: ${{ runner.temp }}/pingdom-browser-qa
     steps:
+      - name: Prepare browser verification output
+        shell: bash
+        run: echo "PINGDOM_QA_OUTPUT=$RUNNER_TEMP/pingdom-browser-qa" >> "$GITHUB_ENV"
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false

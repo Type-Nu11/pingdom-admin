@@ -1,4 +1,5 @@
 import type { AuthUser } from '../app/providers/AuthContext'
+import { readReservationReviewContext, writeReservationReviewContext } from './reservationReviewContext'
 
 export type AuthExitReason = 'expired' | 'session-changed' | 'logout'
 type ReturnRole = 'ADMIN' | 'MERCHANT_OWNER' | 'USER'
@@ -49,6 +50,16 @@ export function safeReturnTarget(value: string, role: string, includeDetails = t
     : role === 'MERCHANT_OWNER' ? MERCHANT_PATHS.has(path) || APPLICATION_PATHS.has(path)
       : role === 'USER' && APPLICATION_PATHS.has(path)
   if (!allowed) return null
+
+  if (path === '/reservations/review') {
+    const context = readReservationReviewContext(url.search)
+    // Guest returns never carry a previously selected person's reservation/place.
+    if (!includeDetails) {
+      context.query.placeId = undefined
+      context.selectedReservationId = null
+    }
+    return path + writeReservationReviewContext(context)
+  }
 
   const query = new URLSearchParams()
   // Free-text searches, applicant IDs, form values and unknown keys are not persisted.

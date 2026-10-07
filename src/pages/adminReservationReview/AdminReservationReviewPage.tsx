@@ -4,8 +4,8 @@ import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
 import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { ListPane } from '../../components/common/ListPane'
@@ -15,6 +15,14 @@ import { AdminNavigationMenu } from '../../components/navigation/AdminNavigation
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations } from '../../hooks/useAdminReservations'
 import { formatListRange } from '../../utils/listRange'
+import { listQueryKey } from '../../hooks/useListQueryState'
+import {
+  DEFAULT_RESERVATION_QUERY,
+  readReservationReviewContext,
+  reservationReviewOwnerMismatch,
+  writeReservationReviewContext,
+  type ReservationReviewQuery,
+} from '../../utils/reservationReviewContext'
 import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminReservation,
@@ -61,18 +69,81 @@ function parsePlaceId(value: string) {
 
 function AdminReservationReviewPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, user } = useAuth()
-  const hook = useAdminReservations()
-  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null)
-  const [status, setStatus] = useState<AdminReservationStatus | ''>('PENDING')
-  const [placeId, setPlaceId] = useState('')
+  const ownerMismatch = reservationReviewOwnerMismatch(location.state, user?.id, user?.role)
+  const context = useMemo(() => ownerMismatch
+    ? { query: DEFAULT_RESERVATION_QUERY, selectedReservationId: null }
+    : readReservationReviewContext(location.search), [location.search, ownerMismatch])
+  const { query, selectedReservationId } = context
+  const queryKey = listQueryKey(query)
+  const draftKey = listQueryKey({ ...query, page: 1 })
+  const hook = useAdminReservations(query)
+  const { fetchDetail, clearDetail } = hook
+  const appliedKey = listQueryKey(hook.query)
+  const [draft, setDraft] = useState({ key: draftKey, status: query.status, placeId: query.placeId ? String(query.placeId) : '', placeName: '' })
+  const currentDraft = draft.key === draftKey ? draft : { key: draftKey, status: query.status, placeId: query.placeId ? String(query.placeId) : '', placeName: '' }
+  const { status, placeId, placeName } = currentDraft
+  const setStatus = (value: AdminReservationStatus | '') => setDraft({ ...currentDraft, status: value })
+  const setPlaceId = (value: string, name = '') => setDraft({ ...currentDraft, placeId: value, placeName: name })
   const [placeSearchOpen, setPlaceSearchOpen] = useState(false)
-  const [placeName, setPlaceName] = useState('')
   const [filterError, setFilterError] = useState('')
   const [dialog, setDialog] = useState<Dialog>(null)
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState('')
   const adminIdentifier = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
+  const canonicalSearch = writeReservationReviewContext(context)
+  const notice = ownerMismatch ? 'account' : location.state?.reservationReviewNotice
+  const noticeMessages: Record<string, string> = {
+    account: '계정 또는 역할이 변경되어 이전 예약 조회 조건과 선택을 초기화했습니다.',
+    absent: '선택한 예약이 현재 조회 조건 또는 페이지에 없어 선택을 해제했습니다. 처리 상태가 변경되었을 수 있습니다.',
+    unavailable: '선택한 예약이 삭제되었거나 조회 권한이 변경되어 선택을 해제했습니다.',
+    changed: '예약 상태 또는 연결 장소가 조회 조건과 달라져 선택을 해제했습니다.',
+  }
+  const updateContext = useCallback((nextQuery: ReservationReviewQuery, reservationId: number | null, replace = false, message?: string) => {
+    navigate({ pathname: location.pathname, search: writeReservationReviewContext({ query: nextQuery, selectedReservationId: reservationId }) }, {
+      replace,
+      state: { reservationReviewOwner: { userId: user?.id, role: user?.role }, ...(message ? { reservationReviewNotice: message } : {}) },
+    })
+  }, [navigate, location.pathname, user?.id, user?.role])
+
+  useEffect(() => {
+    if (ownerMismatch || location.search !== canonicalSearch || !location.state?.reservationReviewOwner) {
+      updateContext(query, selectedReservationId, true, ownerMismatch ? 'account' : undefined)
+    }
+  }, [ownerMismatch, location.search, location.state, canonicalSearch, query, selectedReservationId, updateContext])
+
+  const selectionVerified = hook.listState.phase === 'success' && hook.listState.hasResult
+    && hook.resultRequestKey === queryKey && appliedKey === queryKey && hook.reservations.some(item => item.id === selectedReservationId)
+  useEffect(() => {
+    if (selectedReservationId === null || !selectionVerified) return
+    void fetchDetail(selectedReservationId)
+    return clearDetail
+  }, [selectedReservationId, selectionVerified, hook.reservations, fetchDetail, clearDetail])
+
+  useEffect(() => {
+    if (hook.activeAction !== null) return
+    if (hook.listState.restricted && appliedKey === queryKey && selectedReservationId !== null) {
+      updateContext(query, null, true, 'unavailable')
+      return
+    }
+    if (hook.listState.phase !== 'success' || !hook.listState.hasResult || hook.resultRequestKey !== queryKey) return
+    // The server may clamp a now-empty last page. Keep the URL in agreement.
+    if (hook.query.status === query.status && hook.query.placeId === query.placeId && hook.query.page !== query.page) {
+      updateContext(hook.query, null, true, selectedReservationId === null ? undefined : 'absent')
+      return
+    }
+    if (appliedKey !== queryKey || selectedReservationId === null) return
+    if (!selectionVerified) {
+      updateContext(query, null, true, 'absent')
+    } else if (hook.detailReservationId === selectedReservationId && hook.detailUnavailable) {
+      updateContext(query, null, true, 'unavailable')
+    } else if (hook.reservation?.id === selectedReservationId
+      && ((query.status && hook.reservation.status !== query.status) || (query.placeId !== undefined && hook.reservation.placeId !== query.placeId))) {
+      updateContext(query, null, true, 'changed')
+    }
+  }, [hook.activeAction, hook.listState.phase, hook.listState.hasResult, hook.listState.restricted, hook.resultRequestKey, hook.query, hook.reservation,
+    hook.detailReservationId, hook.detailUnavailable, appliedKey, queryKey, query, selectedReservationId, selectionVerified, updateContext])
 
   const search = () => {
     const nextPlaceId = parsePlaceId(placeId)
@@ -82,36 +153,39 @@ function AdminReservationReviewPage() {
     }
     setFilterError('')
     setDialog(null)
-    setSelectedReservationId(null)
     hook.clearDetail()
-    void hook.fetchReservations({ status, placeId: nextPlaceId, page: 1 })
+    setDraft({ ...currentDraft, key: listQueryKey({ status, placeId: nextPlaceId, page: 1 }) })
+    updateContext({ status, placeId: nextPlaceId, page: 1 }, null)
+    if (queryKey === listQueryKey({ status, placeId: nextPlaceId, page: 1 })) void hook.fetchReservations(query)
   }
 
   const changePage = (page: number) => {
     setDialog(null)
-    setSelectedReservationId(null)
     hook.clearDetail()
-    void hook.fetchReservations({ ...hook.query, page })
+    updateContext({ ...hook.query, page }, null)
   }
 
   const resetFilters = () => {
-    setStatus('PENDING')
-    setPlaceId('')
-    setPlaceName('')
+    setDraft({ key: listQueryKey(DEFAULT_RESERVATION_QUERY), status: 'PENDING', placeId: '', placeName: '' })
     setFilterError('')
     setDialog(null)
-    setSelectedReservationId(null)
     hook.clearDetail()
-    void hook.fetchReservations({ status: 'PENDING', placeId: undefined, page: 1 })
+    updateContext(DEFAULT_RESERVATION_QUERY, null)
+    if (queryKey === listQueryKey(DEFAULT_RESERVATION_QUERY)) void hook.fetchReservations(DEFAULT_RESERVATION_QUERY)
   }
 
   const selectReservation = (reservationId: number) => {
-    setSelectedReservationId(reservationId)
-    void hook.fetchDetail(reservationId)
+    if (reservationId === selectedReservationId && selectionVerified) {
+      void hook.fetchDetail(reservationId)
+      return
+    }
+    setDialog(null)
+    hook.clearDetail()
+    updateContext(query, reservationId, true)
   }
 
   const openDialog = (action: 'confirm' | 'reject') => {
-    if (!hook.reservation || hook.reservation.status !== 'PENDING') return
+    if (!selectionVerified || hook.isDetailLoading || !hook.reservation || hook.reservation.id !== selectedReservationId || hook.reservation.status !== 'PENDING') return
     setReason('')
     setFormError(''); hook.dismissActionError()
     setDialog({ action, target: { ...hook.reservation } })
@@ -119,7 +193,7 @@ function AdminReservationReviewPage() {
 
   const submitReview = async () => {
     if (!dialog || hook.activeAction) return
-    if (hook.reservation?.id !== dialog.target.id || hook.reservation.status !== 'PENDING') {
+    if (!selectionVerified || hook.isDetailLoading || selectedReservationId !== dialog.target.id || hook.reservation?.id !== dialog.target.id || hook.reservation.status !== 'PENDING') {
       setFormError('예약 상태가 변경되었습니다. 확인창을 닫고 예약을 다시 조회해주세요.')
       return
     }
@@ -185,6 +259,7 @@ function AdminReservationReviewPage() {
 
             {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
             {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
+            {typeof notice === 'string' && noticeMessages[notice] ? <FeedbackMessage tone="warning" onDismiss={() => updateContext(query, selectedReservationId, true)}>{noticeMessages[notice]}</FeedbackMessage> : null}
 
             <S.SearchBar onSubmit={(event) => { event.preventDefault(); search() }}>
               <S.SearchFilterGrid>
@@ -208,7 +283,7 @@ function AdminReservationReviewPage() {
                     inputMode="numeric"
                     placeholder="예: 70069"
                     disabled={hook.isLoading || hook.activeAction !== null}
-                    onChange={(event) => { setPlaceId(event.target.value); setPlaceName(''); setFilterError(''); setDialog(null); setSelectedReservationId(null); hook.clearDetail() }}
+                    onChange={(event) => { setPlaceId(event.target.value); setFilterError('') }}
                   />
                 </S.Field>
                 <ReviewUI.PlaceSearchButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => setPlaceSearchOpen(true)}>장소 검색</ReviewUI.PlaceSearchButton>
@@ -222,7 +297,7 @@ function AdminReservationReviewPage() {
               조회 조건: {hook.query.status ? STATUS[hook.query.status].label : '전체 상태'} · {hook.query.placeId ? `장소 #${hook.query.placeId}` : '전체 장소'}
               {status !== hook.query.status || parsePlaceId(placeId) !== hook.query.placeId ? ' · 미적용 변경 있음' : ''}
             </Shared.QuerySummary>
-            {placeSearchOpen ? <AdminTargetSearch title="장소명·주소 검색" load={searchAdminPlaces} onClose={() => setPlaceSearchOpen(false)} onSelect={place => { setPlaceId(String(place.id)); setPlaceName(place.name); setFilterError(''); setDialog(null); setSelectedReservationId(null); hook.clearDetail() }} /> : null}
+            {placeSearchOpen ? <AdminTargetSearch title="장소명·주소 검색" load={searchAdminPlaces} onClose={() => setPlaceSearchOpen(false)} onSelect={place => { setPlaceId(String(place.id), place.name); setFilterError('') }} /> : null}
             {filterError ? <Shared.Notice $variant="error" role="alert">{filterError}</Shared.Notice> : null}
 
 
@@ -249,13 +324,13 @@ function AdminReservationReviewPage() {
                   empty={hook.reservations.length === 0}
                   onRetry={() => void hook.fetchReservations()}
                   onReset={() => {
-                    setStatus('')
-                    setPlaceId('')
-                    setPlaceName('')
+                    const nextQuery: ReservationReviewQuery = { status: '', placeId: undefined, page: 1 }
+                    setDraft({ key: listQueryKey(nextQuery), status: '', placeId: '', placeName: '' })
                     setFilterError('')
-                    setSelectedReservationId(null)
+                    setDialog(null)
                     hook.clearDetail()
-                    void hook.fetchReservations({ status: '', placeId: undefined, page: 1 })
+                    updateContext(nextQuery, null)
+                    if (queryKey === listQueryKey(nextQuery)) void hook.fetchReservations(nextQuery)
                   }}
                 >
                     <S.CardList>
@@ -291,14 +366,16 @@ function AdminReservationReviewPage() {
                 <Shared.CompareBody>
                   {!selectedReservationId ? (
                     <Shared.EmptyState><strong>확인할 예약을 선택해주세요.</strong></Shared.EmptyState>
-                  ) : hook.isDetailLoading ? (
+                  ) : hook.listState.phase === 'error' ? (
+                    <Shared.EmptyState><strong>예약 목록을 다시 확인하지 못했습니다.</strong><span>선택은 유지되며 목록 재시도 후 상세를 확인할 수 있습니다.</span><Shared.SecondaryButton type="button" onClick={() => void hook.fetchReservations(query)}>목록 다시 시도</Shared.SecondaryButton></Shared.EmptyState>
+                  ) : !selectionVerified || hook.isDetailLoading || hook.detailReservationId !== selectedReservationId ? (
                     <Shared.EmptyState><strong>예약 상세를 불러오는 중입니다.</strong></Shared.EmptyState>
                   ) : hook.detailErrorMessage ? (
                     <Shared.EmptyState>
                       <strong>{hook.detailErrorMessage}</strong>
                       <Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedReservationId)}>다시 시도</Shared.SecondaryButton>
                     </Shared.EmptyState>
-                  ) : hook.reservation && selectedStatus ? (
+                  ) : hook.reservation?.id === selectedReservationId && selectedStatus ? (
                     <>
                       <S.RecordHeader>
                         <div>

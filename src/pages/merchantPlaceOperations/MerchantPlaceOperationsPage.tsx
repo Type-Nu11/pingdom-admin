@@ -13,7 +13,7 @@ import type {
   MerchantPlaceOperatingStatus,
   MerchantPlaceRegularOperatingHour,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from './MerchantPlaceOperationsPage.styles'
 
 const DAY_OPTIONS: Array<{ value: MerchantPlaceDayOfWeek; label: string }> = [

@@ -1,6 +1,6 @@
 import type { MerchantReservationConfirmation } from '../../types/merchantStore.types'
 import { reservationAmount, reservationCancellationDeadlineNotice, reservationCancellationRestriction, reservationConditionTime } from '../../utils/reservationConditions'
-import * as S from '../../pages/merchantCampaign/MerchantCampaignPage.styles'
+import * as S from './MerchantWorkspace.styles'
 import styled from 'styled-components'
 
 const ConditionText = styled(S.CampaignMeta)`

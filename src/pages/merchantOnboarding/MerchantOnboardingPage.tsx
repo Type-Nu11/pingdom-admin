@@ -2,7 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantOnboarding } from '../../hooks/useMerchantOnboarding'
 import * as S from './MerchantOnboardingPage.styles'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 
 const STATUS = { PENDING: '심사 대기', ACTIVE: '승인 완료', REJECTED: '반려', REVOKED: '권한 회수' }
 

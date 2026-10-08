@@ -1,6 +1,11 @@
+import { UserBanListFilters } from './UserBanListFilters'
+import { AdminFilterMenu } from './UserBanFilterMenu'
+import { UserSanctionHistory } from './UserSanctionHistory'
+import { formatBanType, getBanTypeTone, getBanStatusTone, formatBanDate, formatBanExpiresAt, formatOptionalText, formatRole, formatCountry, formatBanReason, formatCountWithUnit } from './userBan.format'
+import { BAN_TYPE_FILTER_OPTIONS, SANCTION_ACTION_FILTER_OPTIONS } from './userBan.options'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminPagination } from '../../components/common/AdminPagination'
@@ -16,189 +21,12 @@ import type {
   AdminUserBanRequest,
   AdminSortDirection,
   AdminUserSanctionAction,
-  AdminUserSanctionHistoryItem,
 } from '../../types/adminUserBan.types'
 import * as U from '../adminUtility/AdminUtilityPage.styles'
 import * as S from '../place/PlaceManagePage.styles'
 
 const ADMIN_BANNED_USER_PAGE_SIZE = 20
 const DEFAULT_TEMPORARY_BAN_DURATION_DAYS = '7'
-const BAN_TYPE_FILTER_OPTIONS = [
-  { value: '', label: '전체 유형' },
-  { value: 'PERMANENT', label: '영구 밴' },
-  { value: 'TEMPORARY', label: '기간 밴' },
-]
-const BAN_LIST_SORT_OPTIONS = [
-  { value: 'BANNED_AT', label: '밴 처리일' },
-  { value: 'EXPIRES_AT', label: '만료일' },
-  { value: 'USER_ID', label: '사용자 ID' },
-]
-const SORT_DIRECTION_OPTIONS = [
-  { value: 'DESC', label: '내림차순' },
-  { value: 'ASC', label: '오름차순' },
-]
-const SANCTION_ACTION_FILTER_OPTIONS = [
-  { value: '', label: '전체 상태' },
-  { value: 'APPLIED', label: '밴 처리' },
-  { value: 'RELEASED', label: '밴 해제' },
-  { value: 'EXPIRED', label: '기간 만료' },
-]
-
-const ADMIN_ROLE_LABELS: Record<string, string> = {
-  ADMIN: '관리자',
-  MODERATOR: '운영자',
-  USER: '일반 사용자',
-}
-
-const COUNTRY_LABELS: Record<string, string> = {
-  KR: '대한민국',
-  JP: '일본',
-  US: '미국',
-}
-
-const BAN_REASON_LABELS: Record<string, string> = {
-  POLICY_VIOLATION: '운영 정책 위반',
-  REPORT_BULK_ACCEPTED: '신고 일괄 승인으로 처리',
-  SPAM: '스팸 또는 도배',
-  HARASSMENT: '괴롭힘 또는 부적절한 행위',
-}
-
-type BadgeTone = 'danger' | 'warning' | 'success' | 'neutral'
-
-function padDatePart(value: number) {
-  return String(value).padStart(2, '0')
-}
-
-function formatBanType(value: string) {
-  if (value === 'PERMANENT') {
-    return '영구 밴'
-  }
-
-  if (value === 'TEMPORARY') {
-    return '기간 밴'
-  }
-
-  return value || '-'
-}
-
-function getBanTypeTone(value: string): BadgeTone {
-  return value === 'TEMPORARY' ? 'warning' : 'neutral'
-}
-
-function getBanStatusTone(isBanned: boolean): BadgeTone {
-  return isBanned ? 'danger' : 'success'
-}
-
-function formatBanDate(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return `${date.getFullYear()}.${padDatePart(date.getMonth() + 1)}.${padDatePart(
-    date.getDate()
-  )} ${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
-}
-
-function formatBanExpiresAt(banType: string, value?: string | null) {
-  if (value) {
-    return formatBanDate(value)
-  }
-
-  if (banType === 'PERMANENT') {
-    return '만료 없음'
-  }
-
-  if (banType === 'TEMPORARY') {
-    return '확인 필요'
-  }
-
-  return '-'
-}
-
-function formatOptionalText(value?: string | number | null) {
-  if (value === null || typeof value === 'undefined' || value === '') {
-    return '-'
-  }
-
-  return String(value)
-}
-
-function formatRole(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-
-  return ADMIN_ROLE_LABELS[value] ?? value.replaceAll('_', ' ')
-}
-
-function formatCountry(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-
-  return COUNTRY_LABELS[value] ?? value
-}
-
-function formatBanReason(value?: string | null) {
-  if (!value) {
-    return '등록된 밴 사유가 없습니다.'
-  }
-
-  return BAN_REASON_LABELS[value] ?? value.replaceAll('_', ' ')
-}
-
-function formatSanctionAction(value: AdminUserSanctionAction) {
-  if (value === 'APPLIED') {
-    return '밴 처리'
-  }
-
-  if (value === 'RELEASED') {
-    return '밴 해제'
-  }
-
-  if (value === 'EXPIRED') {
-    return '기간 만료'
-  }
-
-  return value
-}
-
-function getSanctionActionTone(value: AdminUserSanctionAction): BadgeTone {
-  if (value === 'APPLIED') {
-    return 'danger'
-  }
-
-  if (value === 'RELEASED') {
-    return 'success'
-  }
-
-  return 'neutral'
-}
-
-function formatSanctionHistorySummary(history: AdminUserSanctionHistoryItem) {
-  const processedAt = formatBanDate(history.processedAt)
-  const adminName = history.adminUsername || `관리자 ID ${history.adminUserId ?? '-'}`
-
-  return `${adminName} · ${processedAt}`
-}
-
-function formatSanctionHistoryPeriod(history: AdminUserSanctionHistoryItem) {
-  if (history.banType === 'PERMANENT') {
-    return '만료 없음'
-  }
-
-  if (history.endedAt) {
-    return `${formatBanDate(history.startedAt)} ~ ${formatBanDate(history.endedAt)}`
-  }
-
-  return formatBanDate(history.startedAt)
-}
 
 function parsePositiveInteger(value: string) {
   const parsedValue = Number(value)
@@ -208,10 +36,6 @@ function parsePositiveInteger(value: string) {
   }
 
   return parsedValue
-}
-
-function formatCountWithUnit(value?: number | null, unit = '건') {
-  return typeof value === 'number' ? `${value.toLocaleString()}${unit}` : '-'
 }
 
 function hasInvalidDateRange(from: string, to: string) {
@@ -224,94 +48,6 @@ function normalizeDateTimeInput(value: string) {
   }
 
   return value.length === 16 ? `${value}:00` : value
-}
-
-interface FilterMenuOption {
-  value: string
-  label: string
-}
-
-interface AdminFilterMenuProps {
-  ariaLabel: string
-  options: FilterMenuOption[]
-  value: string
-  onChange: (value: string) => void
-}
-
-function AdminFilterMenu({
-  ariaLabel,
-  options,
-  value,
-  onChange,
-}: AdminFilterMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-  const selectedOption = options.find((option) => option.value === value)
-
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [])
-
-  return (
-    <U.FilterMenuRoot ref={rootRef}>
-      <U.FilterMenuButton
-        type="button"
-        $open={isOpen}
-        aria-label={ariaLabel}
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        onClick={() => setIsOpen((open) => !open)}
-      >
-        <span className="filter-menu-label">
-          {selectedOption?.label ?? options[0]?.label ?? '-'}
-        </span>
-        <S.MaterialIcon className="filter-menu-icon" aria-hidden="true">
-          expand_more
-        </S.MaterialIcon>
-      </U.FilterMenuButton>
-      {isOpen ? (
-        <U.FilterMenuList role="listbox" aria-label={ariaLabel}>
-          {options.map((option) => (
-            <U.FilterMenuOption
-              key={option.value || 'ALL'}
-              type="button"
-              role="option"
-              $active={option.value === value}
-              aria-selected={option.value === value}
-              onClick={() => {
-                onChange(option.value)
-                setIsOpen(false)
-              }}
-            >
-              {option.label}
-              {option.value === value ? (
-                <S.MaterialIcon className="filter-menu-icon" aria-hidden="true">
-                  check
-                </S.MaterialIcon>
-              ) : null}
-            </U.FilterMenuOption>
-          ))}
-        </U.FilterMenuList>
-      ) : null}
-    </U.FilterMenuRoot>
-  )
 }
 
 function UserBanPage() {
@@ -840,99 +576,25 @@ function UserBanPage() {
               </U.SummaryBarItems>
             </U.SummaryBar>
 
-            <U.FilterPanel>
-              <U.FilterForm onSubmit={handleSearchSubmit}>
-                <U.FilterField>
-                  검색어
-                  <U.SearchInput
-                    type="search"
-                    value={banSearchQuery}
-                    placeholder="사용자 ID 또는 닉네임 검색"
-                    aria-label="사용자 ID 또는 닉네임 검색"
-                    onChange={(event) => setBanSearchQuery(event.target.value)}
-                  />
-                  <U.FilterHelpText>
-                    숫자는 사용자 ID, 문자는 닉네임 기준으로 검색합니다.
-                  </U.FilterHelpText>
-                </U.FilterField>
-                <U.FilterActions $alignWithField>
-                  <U.PrimaryButton type="submit" disabled={isLoading}>
-                    <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
-                    {isLoading ? '조회 중' : '조회'}
-                  </U.PrimaryButton>
-                </U.FilterActions>
-
-                <U.AdvancedFilterPanel>
-                  <U.FilterField>
-                    밴 유형
-                    <AdminFilterMenu
-                      ariaLabel="밴 유형 필터"
-                      options={BAN_TYPE_FILTER_OPTIONS}
-                      value={banTypeFilter}
-                      onChange={(value) =>
-                        setBanTypeFilter(value as AdminBanType | '')
-                      }
-                    />
-                  </U.FilterField>
-                  <U.FilterGroup>
-                    <U.FilterGroupLabel>처리 기간</U.FilterGroupLabel>
-                    <U.FilterGroupControls>
-                      <AdminDateTimePicker
-                        ariaLabel="밴 처리 시작일"
-                        value={banFrom}
-                        onChange={setBanFrom}
-                      />
-                      <U.FilterRangeSeparator aria-hidden="true">—</U.FilterRangeSeparator>
-                      <AdminDateTimePicker
-                        ariaLabel="밴 처리 종료일"
-                        value={banTo}
-                        onChange={setBanTo}
-                      />
-                    </U.FilterGroupControls>
-                  </U.FilterGroup>
-                  <U.FilterGroup>
-                    <U.FilterGroupLabel>정렬</U.FilterGroupLabel>
-                    <U.FilterGroupControls>
-                      <AdminFilterMenu
-                        ariaLabel="밴 사용자 정렬 기준"
-                        options={BAN_LIST_SORT_OPTIONS}
-                        value={banSortBy}
-                        onChange={(value) =>
-                          setBanSortBy(value as AdminBannedUserListSortBy)
-                        }
-                      />
-                      <U.FilterRangeSeparator aria-hidden="true">·</U.FilterRangeSeparator>
-                      <AdminFilterMenu
-                        ariaLabel="밴 사용자 정렬 방향"
-                        options={SORT_DIRECTION_OPTIONS}
-                        value={banSortDirection}
-                        onChange={(value) =>
-                          setBanSortDirection(value as AdminSortDirection)
-                        }
-                      />
-                    </U.FilterGroupControls>
-                  </U.FilterGroup>
-                  <U.FilterActions>
-                    <U.SecondaryButton
-                      type="button"
-                      disabled={isLoading || !hasActiveListFilters}
-                      onClick={handleResetFilters}
-                    >
-                      필터 초기화
-                    </U.SecondaryButton>
-                    <U.IconActionButton
-                      type="button"
-                      aria-label="밴 사용자 목록 새로고침"
-                      title="목록 새로고침"
-                      disabled={isLoading}
-                      onClick={handleRefresh}
-                    >
-                      <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
-                    </U.IconActionButton>
-                  </U.FilterActions>
-                </U.AdvancedFilterPanel>
-              </U.FilterForm>
-            </U.FilterPanel>
+            <UserBanListFilters
+              banSearchQuery={banSearchQuery}
+              banTypeFilter={banTypeFilter}
+              banFrom={banFrom}
+              banTo={banTo}
+              banSortBy={banSortBy}
+              banSortDirection={banSortDirection}
+              isLoading={isLoading}
+              hasActiveListFilters={hasActiveListFilters}
+              setBanSearchQuery={setBanSearchQuery}
+              setBanTypeFilter={setBanTypeFilter}
+              setBanFrom={setBanFrom}
+              setBanTo={setBanTo}
+              setBanSortBy={setBanSortBy}
+              setBanSortDirection={setBanSortDirection}
+              handleSearchSubmit={handleSearchSubmit}
+              handleResetFilters={handleResetFilters}
+              handleRefresh={handleRefresh}
+            />
 
             {listFilterError ? (
               <U.Notice $variant="error" role="alert">
@@ -1296,53 +958,15 @@ function UserBanPage() {
                             {sanctionHistoryFilterError}
                           </U.Notice>
                         ) : null}
-                        {isSanctionHistoryLoading ? (
-                          <U.DetailEmpty>
-                            <S.MaterialIcon aria-hidden="true">hourglass_empty</S.MaterialIcon>
-                            <strong>제재 이력을 불러오는 중입니다.</strong>
-                          </U.DetailEmpty>
-                        ) : sanctionHistoryErrorMessage ? (
-                          <U.Notice $variant="error" role="alert">
-                            {sanctionHistoryErrorMessage}
-                          </U.Notice>
-                        ) : sanctionHistories.length > 0 ? (
-                          <>
-                            <U.DetailList>
-                              {sanctionHistories.map((history) => (
-                                <U.DetailRow key={history.historyId}>
-                                  <dt>
-                                    <U.TableStatusBadge
-                                      $tone={getSanctionActionTone(history.action)}
-                                    >
-                                      {formatSanctionAction(history.action)}
-                                    </U.TableStatusBadge>
-                                  </dt>
-                                  <dd>
-                                    <U.SanctionHistoryHeader>
-                                      <strong>{formatBanType(history.banType)}</strong>
-                                    </U.SanctionHistoryHeader>
-                                    <U.SanctionHistoryMeta>
-                                      {formatBanReason(history.reason)}
-                                    </U.SanctionHistoryMeta>
-                                    <U.SanctionHistoryMeta>
-                                      {formatSanctionHistoryPeriod(history)} ·{' '}
-                                      {formatSanctionHistorySummary(history)}
-                                    </U.SanctionHistoryMeta>
-                                  </dd>
-                                </U.DetailRow>
-                              ))}
-                            </U.DetailList>
-                            {safeSanctionHistoryTotalPages > 1 ? (
-                              <AdminPagination ariaLabel="사용자 제재 이력 페이지네이션" page={sanctionHistoryPage} totalPages={safeSanctionHistoryTotalPages} hasNext={sanctionHistoryHasNext} disabled={isSanctionHistoryLoading} onPageChange={handleSanctionHistoryPageChange} />
-                            ) : null}
-                          </>
-                        ) : (
-                          <U.DetailEmpty>
-                            <S.MaterialIcon aria-hidden="true">history</S.MaterialIcon>
-                            <strong>제재 이력이 없습니다.</strong>
-                            <span>이 사용자에게 기록된 밴 처리, 해제, 만료 이력이 없습니다.</span>
-                          </U.DetailEmpty>
-                        )}
+                        <UserSanctionHistory
+                          sanctionHistories={sanctionHistories}
+                          isSanctionHistoryLoading={isSanctionHistoryLoading}
+                          sanctionHistoryErrorMessage={sanctionHistoryErrorMessage}
+                          safeSanctionHistoryTotalPages={safeSanctionHistoryTotalPages}
+                          sanctionHistoryPage={sanctionHistoryPage}
+                          sanctionHistoryHasNext={sanctionHistoryHasNext}
+                          handleSanctionHistoryPageChange={handleSanctionHistoryPageChange}
+                        />
                       </U.DetailGroup>
                       )}
 

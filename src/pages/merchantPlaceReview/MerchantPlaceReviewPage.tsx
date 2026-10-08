@@ -7,8 +7,8 @@ import { AppDialog } from '../../components/common/AppDialog'
 import { useMerchantPlaceReviews } from '../../hooks/useMerchantPlaceReviews'
 import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import type { MerchantPlaceReview } from '../../types/merchantStore.types'
-import * as Campaign from '../merchantCampaign/MerchantCampaignPage.styles'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Campaign from '../../components/merchant/MerchantWorkspace.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from './MerchantPlaceReviewPage.styles'
 
 const MAX_REASON_LENGTH = 500

@@ -12,8 +12,8 @@ import type {
   MerchantAvailabilityUpsertRequest,
   MerchantReservableProduct,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
-import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
+import * as S from '../../components/merchant/MerchantWorkspace.styles'
 
 function formatDateTime(value: string) {
   const date = new Date(value)

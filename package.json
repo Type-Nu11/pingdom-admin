@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:release-browser": "node scripts/run-browser-regressions.mjs",
     "test:reservation-context-browser": "node tests/browser/reservation-context.mjs",
     "test:ui-accessibility-browser": "node tests/browser/ui-accessibility.mjs",
     "test:merchant-naver-map-browser": "node tests/browser/merchant-naver-map.mjs",

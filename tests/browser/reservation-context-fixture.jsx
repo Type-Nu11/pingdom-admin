@@ -9,10 +9,11 @@ import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 import { AxiosError } from 'axios'
 import { reservation, reservationPage } from '../helpers/reservation-review-data.mjs'
+import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 
 const place = { id: 7, name: '합성 장소 7', address: '합성 주소', latitude: 37.5, longitude: 127, userId: 8, username: '합성 상점주', category: '카페', operatingStatus: 'OPERATING', discoveryStatus: 'VISIBLE', regularHours: [], operatingExceptions: [], posts: [], touristCategories: [] }
 window.reservationQA = { calls: [], listStatus: 0, detailStatus: 0, detailOverride: null, omitSelected: false }
-client.defaults.adapter = async config => {
+client.defaults.adapter = observeFixtureAdapter(async config => {
   const qa = window.reservationQA
   qa.calls.push({ url: config.url, method: config.method, params: config.params })
   if (config.method !== 'get') throw new Error('Synthetic QA forbids mutations')
@@ -29,7 +30,7 @@ client.defaults.adapter = async config => {
   else throw new Error(`Unexpected synthetic API ${config.url}`)
   if (status) throw new AxiosError('합성 조회 실패', 'ERR_BAD_RESPONSE', config, undefined, { config, data: {}, status, statusText: 'Synthetic failure', headers: {} })
   return { config, data, status: 200, statusText: 'OK', headers: {} }
-}
+})
 const auth = { user: { id: 99, username: '합성 QA', role: 'ADMIN' }, clearAuth() {}, logout: async () => {}, isAuthenticated: true, isAuthReady: true }
 const notifications = { notifications: [], unreadCount: 0, pendingWorkItems: [], pendingWorkEntries: [], pendingWorkCount: 0, status: 'success', pendingWorkStatus: 'success' }
 const root = createRoot(document.getElementById('root'))

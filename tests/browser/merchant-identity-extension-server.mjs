@@ -1,7 +1,7 @@
 import { readFile, mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createServer } from 'vite'
+import { createServer } from '../helpers/isolated-vite.mjs'
 
 export async function createIdentityQaServer() {
   const output = await mkdtemp(join(tmpdir(), 'pingdom-identity-extension-'))

@@ -6,13 +6,29 @@ import { AdminNotificationProvider } from '../../src/app/providers/AdminNotifica
 import Page from '../../src/pages/dashboard/DashboardPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
+import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
+import { reservation } from '../helpers/reservation-review-data.mjs'
 
 const scenario = new URLSearchParams(location.search).get('scenario') || 'success'
+const workPages = {
+  '/admin/reservations': ['reservations', 'totalElements'],
+  '/admin/merchant-place-applications': ['items', 'total'],
+  '/admin/place-review-deletion-requests': ['deletionRequests', 'totalElements'],
+  '/admin/community-reports': ['reports', 'totalCount'],
+  '/admin/place-information-reports': ['reports', 'totalCount'],
+  '/admin/visitor-verification-reports': ['reports', 'totalElements'],
+  '/admin/visitor-verification-reports/corrections': ['corrections', 'totalElements'],
+  '/admin/scout-profiles': ['profiles', 'totalCount'],
+  '/admin/scout-field-reports': ['reports', 'totalElements'],
+  '/admin/trust-score/anomalies': ['anomalies', 'totalCount'],
+}
 let attempt = 0
 const requests = []
 window.qaHeldRequests = []
 window.qaCompletedRequests = []
-client.defaults.adapter = async config => {
+client.defaults.adapter = observeFixtureAdapter(async config => {
+  if (config.method !== 'get') throw new Error('Dashboard fixture prohibits mutations')
+  if (!workPages[config.url] && !['/admin/dashboard/summary', '/admin/dashboard/recent-activities', '/admin/places/duplicates', '/admin/places/duplicate-candidates', '/admin/notifications/unread-count', '/admin/notifications'].includes(config.url)) throw new Error(`Unexpected dashboard fixture API ${config.url}`)
   requests.push(config.url)
   if (config.url === '/admin/reservations') attempt++
   if (scenario === 'loading') await new Promise(resolve => setTimeout(resolve, 800))
@@ -26,11 +42,16 @@ client.defaults.adapter = async config => {
   if (config.url === '/admin/dashboard/summary') data = { placeCount: 10, bannedUserCount: 0, operationalMetrics: { duplicatePlaceGroupCount: scenario === 'duplicate-groups' ? 3 : 0, expiringBannedUserCount: 0, missingLocationPlaceCount: 0, today: { placeRegistrationCount: 0 }, last7Days: { placeRegistrationCount: 0 } } }
   else if (config.url === '/admin/dashboard/recent-activities') data = { places: [], userSanctions: [] }
   else if (config.url.includes('/notifications')) data = { unreadCount: 0, count: 0, notifications: [] }
-  else if (config.url === '/admin/places/duplicates' || config.url === '/admin/places/duplicate-candidates') data = { groups: [], candidates: [], total: 0, page: 1, limit: 1, totalPages: 0, hasNext: false }
-  else data = { total: 0, totalCount: 0, totalElements: config.url === '/admin/reservations' && scenario !== 'zero' && !(scenario === 'retry' && attempt > 2) ? (scenario.startsWith('refresh-') && attempt > 1 ? 2 : 6) : 0 }
+  else if (config.url === '/admin/places/duplicates' || config.url === '/admin/places/duplicate-candidates') data = scenario === 'malformed-duplicates' ? { total: 0 } : { [config.url.endsWith('/duplicates') ? 'groups' : 'candidates']: [], total: 0, page: 1, limit: 1, totalPages: 0, hasNext: false }
+  else if (workPages[config.url]) {
+    const [rows, countKey] = workPages[config.url]
+    const count = config.url === '/admin/reservations' && scenario !== 'zero' && !(scenario === 'retry' && attempt > 2) ? (scenario.startsWith('refresh-') && attempt > 1 ? 2 : 6) : 0
+    data = { [rows]: count ? [reservation(1)] : [], [countKey]: count, page: 1, limit: 1, totalPages: count, hasNext: count > 1 }
+  }
+  else throw new Error(`Unexpected dashboard fixture API ${config.url}`)
   window.qaCompletedRequests.push(config.url)
   return { config, data, status: 200, statusText: 'OK', headers: {} }
-}
+})
 const auth = { clearAuth() {}, logout() {}, user: { id: 99, username: 'synthetic', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }
 function RouteProbe() {
   const current = useLocation()

@@ -9,7 +9,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
-const { PlaceSelect } = await server.ssrLoadModule('/src/pages/merchantStore/MerchantStorePage.styles.ts')
+const { PlaceSelect } = await server.ssrLoadModule('/src/components/merchant/MerchantSurface.styles.ts')
 let root, selected
 async function render(props = {}) {
   await act(async () => root.render(h(PlaceSelect, {

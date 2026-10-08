@@ -12,8 +12,8 @@ import type {
   MerchantSettlementEntryType,
   MerchantSettlementStatus,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
-import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
+import * as S from '../../components/merchant/MerchantWorkspace.styles'
 
 type Tab = 'payments' | 'settlements'
 

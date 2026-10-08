@@ -11,8 +11,8 @@ import type {
   MerchantReservationStatus,
   MerchantReservableProductType,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
-import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
+import * as S from '../../components/merchant/MerchantWorkspace.styles'
 
 const PRODUCT_TYPE_LABEL: Record<MerchantReservableProductType, string> = {
   GENERAL: '일반 예약',

@@ -13,7 +13,7 @@ import type {
   MerchantPlaceApplicationStatus,
   MerchantPlaceSearchItem,
 } from '../../types/merchantPlaceApplication.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from './MerchantPlaceApplicationPage.styles'
 
 const STATUS: Record<MerchantPlaceApplicationStatus, { label: string; tone: 'draft' | 'pending' | 'active' | 'danger' | 'neutral' }> = {

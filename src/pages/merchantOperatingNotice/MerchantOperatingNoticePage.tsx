@@ -15,7 +15,7 @@ import type {
   MerchantOperatingNoticeType,
   MerchantOperatingNoticeUpdateRequest,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from './MerchantOperatingNoticePage.styles'
 
 type StatusFilter = 'ALL' | MerchantOperatingNoticeStatus

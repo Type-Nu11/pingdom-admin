@@ -24,7 +24,7 @@ import type {
   MerchantPlaceRegistrationStatus,
   MerchantPlaceTag,
 } from '../../types/merchantPlaceRegistration.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from './MerchantPlaceRegistrationPage.styles'
 
 const STATUS: Record<MerchantPlaceRegistrationStatus, { label: string; tone: 'draft' | 'pending' | 'active' | 'danger' | 'neutral' }> = {

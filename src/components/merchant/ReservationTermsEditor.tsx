@@ -4,7 +4,7 @@ import { AdminSelect } from '../common/AdminStatusSelect'
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import type { MerchantAvailability, MerchantReservationTerms } from '../../types/merchantStore.types'
 import { parseReservationTerms, reservationTermsDraft, type ReservationTermsDraft } from '../../utils/merchantReservationTerms'
-import * as S from '../../pages/merchantCampaign/MerchantCampaignPage.styles'
+import * as S from './MerchantWorkspace.styles'
 
 export function ReservationTermsEditor({ availability, busy, error, onSave, onClose }: {
   availability: MerchantAvailability

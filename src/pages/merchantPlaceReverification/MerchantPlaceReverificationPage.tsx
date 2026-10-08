@@ -11,8 +11,8 @@ import type {
   MerchantPlaceReverificationRequest,
   MerchantPlaceReverificationStatus,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
-import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
+import * as S from '../../components/merchant/MerchantWorkspace.styles'
 
 const STATUS: Record<MerchantPlaceReverificationStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   REQUESTED: { label: '응답 대기', tone: 'draft' },

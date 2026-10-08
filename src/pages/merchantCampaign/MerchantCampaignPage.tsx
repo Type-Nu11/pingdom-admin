@@ -17,7 +17,7 @@ import type {
   MerchantCampaignRequest,
   MerchantCampaignStatus,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from './MerchantCampaignPage.styles'
 
 type StatusFilter = 'ALL' | MerchantCampaignStatus

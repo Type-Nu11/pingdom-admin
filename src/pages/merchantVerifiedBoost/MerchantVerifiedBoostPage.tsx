@@ -13,8 +13,8 @@ import type {
   MerchantVerifiedBoostProduct,
   MerchantVerifiedBoostSelectionCreateRequest,
 } from '../../types/merchantStore.types'
-import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
+import * as S from '../../components/merchant/MerchantWorkspace.styles'
+import * as Store from '../../components/merchant/MerchantSurface.styles'
 
 const EXECUTION_STATUS: Record<MerchantVerifiedBoostExecutionStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   ACTIVE: { label: '집행 중', tone: 'published' },

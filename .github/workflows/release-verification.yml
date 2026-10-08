@@ -24,6 +24,8 @@ jobs:
         run: echo "PINGDOM_QA_OUTPUT=$RUNNER_TEMP/pingdom-browser-qa" >> "$GITHUB_ENV"
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          # OpenAPI provenance tests read snapshots from a pinned historical commit.
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:

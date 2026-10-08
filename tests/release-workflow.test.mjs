@@ -4,6 +4,13 @@ import { readFile } from 'node:fs/promises'
 
 const workflow = await readFile(new URL('../.github/workflows/release-verification.yml', import.meta.url), 'utf8')
 
+test('release checkout retains pinned OpenAPI baseline history without persisted credentials', () => {
+  const checkout = workflow.split(/^\s*- uses: actions\/checkout@/m)[1]?.split(/^\s*- (?:uses|name|run):/m)[0]
+  assert.ok(checkout, 'release verification must check out the repository')
+  assert.match(checkout, /^\s+fetch-depth: 0\s*$/m, 'OpenAPI provenance tests read files from a pinned historical commit')
+  assert.match(checkout, /^\s+persist-credentials: false\s*$/m)
+})
+
 test('release workflow defines the shared output path after runner assignment', () => {
   const jobConfiguration = workflow.slice(workflow.indexOf('jobs:'), workflow.indexOf('    steps:'))
   assert.doesNotMatch(jobConfiguration, /\$\{\{\s*runner\./)

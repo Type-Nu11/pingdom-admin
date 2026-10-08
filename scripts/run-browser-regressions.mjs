@@ -12,6 +12,7 @@ export const browserCases = [
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],
+  ['user-ban-structure', 'tests/browser/user-ban-structure.mjs'],
 ]
 
 // Run suites sequentially: bounded browser load, separate processes/servers.

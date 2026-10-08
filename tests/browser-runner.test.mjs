@@ -7,7 +7,7 @@ import { browserCases, runBrowserProcess } from '../scripts/run-browser-regressi
 
 test('release browser list protects operational regression boundaries', () => {
   assert.equal(new Set(browserCases.map(([name]) => name)).size, browserCases.length)
-  for (const name of ['detector-probes', 'dashboard', 'accessibility', 'reservation-context', 'merchant-safety', 'merchant-identity']) assert.ok(browserCases.some(([key]) => key === name))
+  for (const name of ['detector-probes', 'dashboard', 'accessibility', 'reservation-context', 'merchant-safety', 'merchant-identity', 'user-ban-structure']) assert.ok(browserCases.some(([key]) => key === name))
 })
 for (const [name, source, expected] of [
   ['success', 'console.log("synthetic pass")', true],

@@ -1,0 +1,20 @@
+{
+  "parentStateAndHandlers": "ea4933d412521af95d99934e05ccca9a0d134532df719437a8dd38fdd688aa67",
+  "formatters": {
+    "padDatePart": "27f18bf3ba26495ab8a2893034ba02a9c78f229c5ec5878227093e646a5c1c1e",
+    "formatBanType": "8e479893a6ebc4aad3c68c350f8fcdcca57b49f5a0fb06aeb74e9936eca0f535",
+    "getBanTypeTone": "9bec77250d963d785cc9780c2a4b466dd7b8d3dacff02d106d7d24f886bee1a2",
+    "getBanStatusTone": "8ccf7c951e4fae7ee36bdbb2609ed25db59574c44df45da298eca6b94b3e6bef",
+    "formatBanDate": "3628df00ee0b990dc13b8a0003dbba1ec24779fb1b21b312d4ca243cabfe6375",
+    "formatBanExpiresAt": "eb4947b8e4efab2d5b911227af5c50b73cc01c4fc7e21cebe333c86862a1706d",
+    "formatOptionalText": "2a186cbd29392b5f62cf85ead08e4a52db18b48f92269540cda1895e33c61bea",
+    "formatRole": "6d2ac67fb16a6535025d10c80526124f4bfec1360434bca40b78188149ff74ef",
+    "formatCountry": "e06fd1a967c57f1f4571506882d8ea0a4cd61218f2affa98ced72f71f2ac2e7c",
+    "formatBanReason": "b29fcbf676f81021424011ec0a9c4b0bd31359df8e6edde6a3cdf893ad02ad43",
+    "formatSanctionAction": "b2fd3630117774c3f30763e70c7ac6c08944676a16b74f4164abae1d029babff",
+    "getSanctionActionTone": "36164100a75b3adba9106a7786e8002070e2d71fa21dd52b0aacc55575eb73a0",
+    "formatSanctionHistorySummary": "db0ebc3e47924d3be01256e7888500bd8d5fcf50b7f25563ac7208a1d43caae4",
+    "formatSanctionHistoryPeriod": "d785c3addf8b6b1dc20993d8fdd36a027dd74a067d706a5ca8e1cf86aa156696",
+    "formatCountWithUnit": "65c6cbde31956058389958465f9ca5553932f7325228ce0e1dc2a53d85a4bba9"
+  }
+}

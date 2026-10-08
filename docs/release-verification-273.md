@@ -22,7 +22,7 @@ npm run test:release-browser
 
 이미 설치된 개발 환경에서는 의존성을 다시 덮어쓰지 않고 동일한 검사 명령을 실행할 수 있다. Linux에서는 Chromium 시스템 라이브러리 설치 권한이 필요하다. Node 버전은 workflow와 맞춘다. 첫 npm/브라우저 설치에는 인터넷 연결이 필요하다.
 
-- 브라우저 검사는 6개 suite를 **순차** 실행한다. 각 suite는 별도 Node 프로세스·동적 로컬 포트·합성 fixture를 사용하며, 사용자 localhost:5173을 사용하거나 종료하지 않는다.
+- 브라우저 검사는 7개 suite를 **순차** 실행한다(#269에서 사용자 제재 화면 회귀 추가). 각 suite는 별도 Node 프로세스·동적 로컬 포트·합성 fixture를 사용하며, 사용자 localhost:5173을 사용하거나 종료하지 않는다.
 - 기본 로그/JSON summary는 OS 임시 디렉터리에 저장한다. CI는 `PINGDOM_QA_OUTPUT`을 runner 임시 경로로 지정한다. 체크인 대상에 로그·스크린샷·인증 정보를 추가하지 않는다.
 - suite당 제한은 180초다. 예외/import 오류/비정상 종료/시간 초과/중단은 실패다. 최초 실패에서 멈추며, 실행하지 않은 뒤 suite를 통과로 표시하지 않는다. 제한·중단 시 해당 자식 프로세스 그룹과 브라우저를 종료한다.
 - 각 suite는 성공/실패 시 자체 `finally`에서 브라우저·QA 서버를 닫는다. 로그와 스크린샷은 진단을 위해 임시 경로에 남는다. Actions summary에는 종류와 결과만 기록하며 인증/요청 payload는 포함하지 않는다.
@@ -37,8 +37,9 @@ npm run test:release-browser
 | reservation-context | 목록→장소→뒤로가기/재로드, 조회 조건·선택 복원, 실패·권한 변경·계정 경계 |
 | merchant-safety | 실제 상점주 모달 5종의 지연 요청 중 닫기/입력 잠금·포커스, 실패 후 대상/입력 보존과 재시도 |
 | merchant-identity | 실제 Router/MerchantLayout의 매장 식별·중복 조회·키보드·응답 미저장 보호·부분 실패/재조회 |
+| user-ban-structure | 실제 밴 화면의 입력/조회 분리·날짜 팝업·목록/이력 필터·상세/대상 변경·페이지 이동·빈 결과/실패/재조회/지연·밴 입력창 열기/취소 |
 
-뒤의 5개 suite는 1920×1080·1366×768·390×844에서 실행한다. detector-probes는 공통 계약의 감지 능력 검사이며 전체 화면 QA로 해석하지 않는다. 기존 다른 브라우저 스크립트를 삭제하거나 이 6개가 모든 화면을 검증한다고 주장하지 않는다. 기존 날짜/금액/조회 상태·입력 보호 테스트는 `npm test` 전체에 포함된다.
+뒤의 6개 suite는 주요 흐름을 1920×1080·1366×768·390×844에서 실행한다. detector-probes는 공통 계약의 감지 능력 검사이며 전체 화면 QA로 해석하지 않는다. 기존 다른 브라우저 스크립트를 삭제하거나 이 7개가 모든 화면을 검증한다고 주장하지 않는다. 기존 날짜/금액/조회 상태·입력 보호 테스트는 `npm test` 전체에 포함된다.
 
 ## 실패를 숨기지 않는 기준
 
@@ -58,6 +59,7 @@ npm run test:release-browser
 | reservation-context 실패 주입 구간 | 목록 GET 500 또는 선택 상세 GET 403·`합성 조회 실패`, 각각 지정 콘솔 prefix | 재시도 또는 권한/대상 변경 안내 |
 | merchant-safety | 해당 모달의 지정 POST 한 번의 500·`Synthetic failure`, 해당 처리 콘솔 prefix | 대상/입력 유지·닫기 재허용·재시도 성공 |
 | merchant-identity fail | 매장 #2 상세 GET의 `Synthetic detail failure` | 실패 보조 ID·재조회 성공 |
+| user-ban-structure history-error | 사용자 901의 제재 이력 GET 500·`합성 제재 이력 조회 실패`, 지정 이력 조회 콘솔 prefix | 오류 alert/빈 결과와 구분/재조회 성공 |
 
 경로/메서드/상태가 다르거나 같은 구간의 다른 콘솔·runtime·네트워크 오류는 실패한다. 의도한 HTTP 실패를 전역 허용하지 않는다. 감지 자체를 검증하는 probe의 오류는 해당 assertion이 실패해야 하며 정상 allowlist에 추가하지 않는다.
 

@@ -23,7 +23,7 @@ let browser
 try {
   await server.listen()
   browser = await chromium.launch()
-  for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
+  for (const [width, height] of [[1920, 1080], [1366, 768], [501, 772], [390, 844]]) {
     const page = await browser.newPage({ viewport: { width, height } })
     page.setDefaultTimeout(10000)
     const errors = []
@@ -69,14 +69,63 @@ try {
     const query = page.getByLabel('업체명 또는 주소', { exact: true })
     const search = page.getByRole('button', { name: '장소·주소 검색', exact: true })
     await query.waitFor()
+    await page.waitForFunction(() => window.naverTest?.stats.maps.length > 0)
+    const assertMapBoundary = async stage => {
+      const map = page.getByLabel('네이버 지도', { exact: true })
+      await map.scrollIntoViewIfNeeded()
+      const result = await map.evaluate(canvas => {
+        const viewport = canvas.parentElement.parentElement.parentElement
+        const hint = viewport.nextElementSibling
+        const rect = viewport.getBoundingClientRect()
+        // A synthetic high-z SDK control must not escape into the surrounding UI.
+        // This stresses the layout boundary; it does not reproduce real NAVER tiles.
+        const control = document.createElement('div')
+        control.textContent = 'Synthetic SDK control'
+        control.style.cssText = 'position:absolute;left:8px;bottom:8px;width:140px;height:22px;z-index:100000;background:white'
+        canvas.append(control)
+        const probe = document.createElement('div')
+        const controlRect = control.getBoundingClientRect()
+        probe.style.cssText = `position:fixed;left:${controlRect.left}px;top:${controlRect.top}px;width:140px;height:22px;z-index:10;background:white`
+        document.body.append(probe)
+        try {
+          const point = { x: controlRect.left + 4, y: controlRect.top + 4 }
+          const isolated = document.elementFromPoint(point.x, point.y) === probe
+          probe.remove()
+          const creditVisible = document.elementFromPoint(point.x, point.y) === control
+          // An overflowing SDK layer cannot paint or intercept clicks over the hint.
+          control.style.bottom = '-36px'
+          const hintRect = hint.getBoundingClientRect()
+          const hintPoint = { x: hintRect.left + 12, y: hintRect.top + 4 }
+          return {
+            isolated, creditVisible,
+            hintGap: hintRect.top - rect.bottom,
+            clipped: document.elementFromPoint(hintPoint.x, hintPoint.y) !== control,
+            height: rect.height,
+          }
+        } finally { probe.remove(); control.remove() }
+      })
+      assert.equal(result.isolated, true, stage + ': high-z SDK control stays below surrounding overlays')
+      assert.equal(result.creditVisible, true, stage + ': in-map control remains visible')
+      assert.equal(result.clipped, true, stage + ': overflowing SDK layer cannot cover the hint')
+      assert.ok(result.hintGap >= 8, stage + ': hint stays below the map')
+      return result.height
+    }
+    assert.equal(await assertMapBoundary('idle'), 220)
     assert.equal(await search.count(), 1)
     assert.equal(await page.locator('vite-error-overlay').count(), 0)
     assert.equal(await page.locator('#naver-address-query').count(), 0)
     // Closing is only a visibility change: a manually written name survives reopen before any search.
     await page.getByRole('button', { name: '직접 입력', exact: true }).click()
+    await page.waitForFunction(() => {
+      const canvas = document.querySelector('[aria-label="네이버 지도"]')
+      return canvas?.getBoundingClientRect().height >= 358
+    })
+    assert.ok(await assertMapBoundary('manual input expanded') >= 360)
     await page.getByLabel(/^장소명(?: \(필수\))?$/).fill('직접 작성한 장소')
     await page.getByRole('button', { name: '장소 직접 입력 닫기', exact: true }).click()
     assert.equal(await page.locator('#merchant-manual-place-fields').count(), 0)
+    await page.waitForFunction(() => document.querySelector('[aria-label="네이버 지도"]')?.parentElement.parentElement.parentElement.getBoundingClientRect().height === 220)
+    assert.equal(await assertMapBoundary('manual input collapsed'), 220)
     await page.waitForFunction(() => document.activeElement?.getAttribute('aria-controls') === 'merchant-manual-place-fields')
     await page.getByRole('button', { name: '직접 입력', exact: true }).click()
     assert.equal(await page.getByLabel(/^장소명(?: \(필수\))?$/).inputValue(), '직접 작성한 장소')
@@ -163,5 +212,5 @@ try {
     assert.deepEqual(errors, [])
     await page.close()
   }
-  console.log('PASS unified search: single input, business postal supplement, address routing, pin confirmation/cancel, manual preservation, failures, empty fallback, request races, map retry; 1920/1366/390; ' + output)
+  console.log('PASS unified search: single input, business postal supplement, address routing, pin confirmation/cancel, manual preservation, failures, empty fallback, request races, map retry, map layer containment; 1920/1366/501/390; ' + output)
 } finally { await browser?.close(); await server.close() }

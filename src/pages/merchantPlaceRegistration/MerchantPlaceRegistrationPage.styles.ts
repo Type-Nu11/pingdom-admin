@@ -563,6 +563,9 @@ export const LocationMap = styled(NaverMap)<{ $active: boolean }>`
 
 export const MapViewport = styled.div<{ $active: boolean }>`
   position: relative;
+  /* Bound SDK control layers without hiding attribution inside the map. */
+  isolation: isolate;
+  contain: paint;
   height: ${({ $active }) => ($active ? 'clamp(360px, 46vh, 440px)' : '220px')};
   overflow: hidden;
   border-radius: 7px;

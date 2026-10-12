@@ -14,6 +14,9 @@ export function AdminPendingWork({ compact = false, onNavigate }: { compact?: bo
   const zero = entries.filter(entry => entry.status === 'success' && entry.count === 0)
   const quiet = entries.filter(entry => entry.count === 0 && entry.status !== 'error')
   const visible = entries.filter(entry => entry.count !== 0 || entry.status === 'error')
+  const previewCount = compact ? 0 : Math.max(0, 2 - visible.length)
+  const preview = [...visible, ...quiet.slice(0, previewCount)]
+  const collapsed = quiet.slice(previewCount)
   const allZero = entries.length > 0 && zero.length === entries.length
 
   function row(entry: AdminPendingWorkEntry) {
@@ -35,9 +38,9 @@ export function AdminPendingWork({ compact = false, onNavigate }: { compact?: bo
       <Refresh type="button" aria-label="대기 업무 새로고침" title="대기 업무 새로고침" disabled={loading} onClick={() => void refreshPendingWork()}><Icon aria-hidden="true">refresh</Icon></Refresh>
     </Header>
     {failures.length > 0 ? <Warning role="alert">{failures.length === entries.length ? '모든 업무 조회에 실패했습니다.' : `${failures.length}개 업무 조회에 실패했습니다. 확인된 건수에 포함되지 않습니다.`}</Warning> : null}
-    {visible.length > 0 ? <Rows $compact={compact}>{visible.map(row)}</Rows> : null}
+    {preview.length > 0 ? <Rows $compact={compact}>{preview.map(row)}</Rows> : null}
     {allZero ? <Empty>조회한 {entries.length}개 업무에 처리 대기 항목이 없습니다.</Empty> : null}
-    {quiet.length > 0 ? <details><summary>{loading ? `이전 조회 0건 · ${quiet.length}개 업무 확인 중` : `대기 없음 · ${quiet.length}개 업무`}</summary><Rows $compact={compact}>{quiet.map(row)}</Rows></details> : null}
+    {collapsed.length > 0 ? <details><summary>{loading ? `이전 조회 0건 · ${collapsed.length}개 업무 확인 중` : `대기 없음 · ${collapsed.length}개 업무`}</summary><Rows $compact={compact}>{collapsed.map(row)}</Rows></details> : null}
   </Section>
 }
 

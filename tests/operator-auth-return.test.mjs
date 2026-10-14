@@ -48,6 +48,7 @@ for (const [role, path, expected] of [['ADMIN', '/places?placeId=8&keyword=priva
     assert.equal(returns.readLoginReturn().target, expected)
     assert.match(document.body.textContent, /로그인 인증/)
     assert.doesNotMatch(sessionStorage.getItem('pingdom-login-return'), /keyword|private|operator/)
+    assert.equal(document.querySelector('img[alt="PingDom"]').getAttribute('src'), '/operator/pingdom-logo.png')
     await act(async () => auth.saveLoginAuth(user(role)))
     assert.equal(window.location.pathname + window.location.search, '/operator' + expected)
     assert.equal(returns.readLoginReturn(), null)

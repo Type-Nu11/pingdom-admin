@@ -265,7 +265,7 @@ function PlaceEventPage() {
       <Shell.SideNav aria-label="관리자 메뉴">
         <Shell.SideHeader>
           <Shell.BrandLockup>
-            <Shell.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
           </Shell.BrandLockup>
         </Shell.SideHeader>
         <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>

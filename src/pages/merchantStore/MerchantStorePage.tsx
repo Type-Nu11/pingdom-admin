@@ -160,7 +160,7 @@ function MerchantStorePage() {
     return (
       <S.Page>
         <S.Header>
-          <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+          <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
           <S.LogoutButton type="button" onClick={handleLogout}>로그아웃</S.LogoutButton>
         </S.Header>
         <S.Content>
@@ -180,7 +180,7 @@ function MerchantStorePage() {
   return (
     <S.Page>
       <S.Header>
-        <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+        <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
         <S.HeaderUser>
           <S.AccountIcon aria-hidden="true">storefront</S.AccountIcon>
           <strong>{store.profile?.displayName || user?.username || '상점주'}</strong>

@@ -70,12 +70,12 @@ function MerchantReservationOperationsPage() {
   }
 
   if (operations.status === 'error') {
-    return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>예약 신청 조회</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{operations.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void operations.fetchReservations(1, true)}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
+    return <Store.Page><Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>예약 신청 조회</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{operations.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void operations.fetchReservations(1, true)}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
   return (
     <Store.Page>
-      <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
+      <Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
         <Store.PageIntro><div><Store.PageTitle>예약 신청 조회</Store.PageTitle><Store.PageDescription>고객 예약 신청을 확인합니다. 승인과 반려는 관리자 예약 심사에서 처리됩니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" onClick={() => navigate('/merchant/reservations/setup')}>예약 가능 시간</S.HeaderButton><S.HeaderButton type="button" disabled={operations.isLoading || operations.activeAction !== null} onClick={() => void operations.fetchReservations(operations.pageInfo.page)}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
         {operations.sectionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{operations.sectionErrorMessage}</Store.Notice> : null}

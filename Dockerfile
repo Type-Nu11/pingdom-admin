@@ -7,6 +7,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 COPY . .
+# macOS에서 SCP한 한글 파일명(NFD)을 Linux의 소스 경로(NFC)와 맞춥니다.
+RUN node scripts/normalize-build-paths.mjs
 ARG VITE_PUBLIC_API_BASE_URL
 ARG VITE_KAKAO_MAP_APP_KEY=""
 ENV VITE_PUBLIC_API_BASE_URL=${VITE_PUBLIC_API_BASE_URL} \

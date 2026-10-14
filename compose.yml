@@ -1,0 +1,23 @@
+name: pingdom-admin
+services:
+  web:
+    image: pingdom-admin:${PINGDOM_IMAGE_TAG:?Set a unique release tag}
+    build:
+      context: .
+      args:
+        VITE_PUBLIC_API_BASE_URL: /api
+        VITE_NAVER_MAP_CLIENT_ID: ${VITE_NAVER_MAP_CLIENT_ID:?Set the public NAVER Maps Client ID}
+    ports:
+      # Existing infra uses 8081 (web gateway) and 8082 (app gateway).
+      - "127.0.0.1:${PINGDOM_WEB_PORT:-8083}:8080"
+    environment:
+      # Must point at the authenticated WEB gateway, never the raw backend.
+      PINGDOM_API_UPSTREAM: ${PINGDOM_API_UPSTREAM:-host.docker.internal:8081}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

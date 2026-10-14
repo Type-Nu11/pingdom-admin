@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:ec2-image": "node scripts/verify-ec2-image.mjs",
     "test:release-browser": "node scripts/run-browser-regressions.mjs",
     "test:reservation-context-browser": "node tests/browser/reservation-context.mjs",
     "test:ui-accessibility-browser": "node tests/browser/ui-accessibility.mjs",

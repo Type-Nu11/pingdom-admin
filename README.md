@@ -75,7 +75,7 @@
 
 ### Requirements
 
-- Node.js
+- Node.js 24
 - npm
 - 관리자 API 서버 접근 권한
 - NAVER Maps 공개 Client ID 및 사용할 웹 서비스 URL 등록
@@ -83,17 +83,24 @@
 ### Setup
 
 ```bash
-git clone https://github.com/Type-Nu11/PingDom_Admin_Web.git
-cd PingDom_Admin_Web
-npm install
+git clone https://github.com/Type-Nu11/pingdom-admin.git
+cd pingdom-admin
+npm ci
+```
 
-Usage
+### Usage
+
+```bash
 npm run dev
+```
+
 기본 개발 서버는 Vite 설정에 따라 5173 포트를 사용합니다.
-Configuration
+
+### Configuration
+
 설정에 필요한 환경 변수는 `.env` 파일에 구성합니다. 로컬 개발에서는 Axios가
 `/api` same-origin 경로를 사용하므로 프록시 대상만 지정합니다. Production build는
-HTTPS `VITE_PUBLIC_API_BASE_URL`을 사용합니다.
+`VITE_PUBLIC_API_BASE_URL`을 사용하며, EC2 Docker 배포는 같은 도메인의 `/api`로 고정합니다.
 
 ```dotenv
 VITE_PUBLIC_API_BASE_URL=https://api.example.com
@@ -106,15 +113,30 @@ VITE_NAVER_MAP_CLIENT_ID=
 지도에는 공개 Client ID만 사용합니다. Client Secret은 `VITE_*`에 넣지 않습니다.
 로컬 `http://localhost:5173`과 실제 프론트 도메인을 네이버 웹 서비스 URL에 등록해야 합니다.
 환경·CSP 및 실환경 검증 범위는 [지도 전환 정리](docs/naver-map-cleanup.md)를 참고합니다.
-Verification
+
+### EC2 Deployment
+
+[EC2 배포 안내](docs/ec2-deployment.md)에 Docker 빌드·Nginx·Compose·기존 인증 프록시 연결,
+환경변수·검증·복구 절차를 정리했습니다. 기본 웹 포트는 내부 `127.0.0.1:8083`이며
+기존 infra의 `8081`·`8082`와 구분합니다. 컨테이너 실행만으로 외부 TLS·앱 분기까지
+완료되는 것은 아닙니다.
+
+### Verification
+
 저장소 변경사항은 다음 방법으로 검증합니다.
-Verification	Purpose
-npm run lint	ESLint 기반 코드 검사
-npm run build	TypeScript 타입 검사 및 프로덕션 빌드 검증
-npm run preview	빌드 결과물 로컬 미리보기
 
+| Verification | Purpose |
+|---|---|
+| `npm run lint` | ESLint 기반 코드 검사 |
+| `npm run build` | TypeScript 타입 검사 및 프로덕션 빌드 |
+| `npm test` | 단위·계약·회귀 검사 |
+| `npm run test:release-browser` | 합성 데이터 기반 Chromium 회귀 검사 |
+| `npm run test:ec2-image` | Docker 이미지·Nginx·가짜 게이트웨이 검증 |
+| `npm run preview` | 빌드 결과물 로컬 미리보기 |
 
-Repository Structure
+### Repository Structure
+
+```text
 .
 ├── public             # 정적 리소스 및 로고
 ├── src
@@ -133,11 +155,13 @@ Repository Structure
 ├── eslint.config.js
 ├── tsconfig.json
 └── README.md
-Release and Compatibility
+```
+
+### Release and Compatibility
+
 현재 버전은 GA(General Availability) 단계입니다.
 호환성에 영향을 주는 변경사항은 Release와 관련 문서를 통해 안내합니다.
 변경사항은 저장소의 Release 또는 변경 이력을 기준으로 확인합니다.
-```
 
 <div align="center">
 

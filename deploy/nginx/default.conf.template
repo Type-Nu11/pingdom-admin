@@ -1,0 +1,67 @@
+server {
+    listen 8080;
+    server_name _;
+    server_tokens off;
+    absolute_redirect off;
+    root /usr/share/nginx/html;
+    index index.html;
+    # The base Nginx MIME table does not include .mjs (PDF.js module worker).
+    include /etc/nginx/mime.types;
+    types { application/javascript mjs; }
+    client_max_body_size 20m;
+    include /etc/nginx/snippets/security-headers.conf;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Do not serve accidental dotfiles, build configuration or credentials.
+    location ~ /\. { return 404; }
+
+    location = /api { return 308 /api/; }
+    location ^~ /api/ {
+        # Trailing slash strips /api/ once, preserving the query and method.
+        proxy_pass http://${PINGDOM_API_UPSTREAM}/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # TLS is terminated by the trusted outer proxy (which must set this).
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_intercept_errors off;
+        proxy_redirect off;
+        # Keep Secure/HttpOnly/SameSite; rewrite both issuance and expiry paths.
+        proxy_cookie_path ~^/auth(/.*)?$ /api/auth$1;
+    }
+
+    # Keep Swagger working when the outer proxy routes the whole web host here.
+    location ~ ^/(swagger-ui(?:/|\.html$|$)|v3/api-docs(?:/|$)) {
+        proxy_pass http://${PINGDOM_API_UPSTREAM};
+        proxy_set_header Host $host;
+        proxy_intercept_errors off;
+    }
+
+    location = /index.html {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-store" always;
+    }
+
+    # Only Vite content-hashed assets are cached for a year. Missing assets must
+    # be 404, not SPA HTML (including JS workers and PDF CMaps).
+    location ~* "^/assets/.+-[A-Za-z0-9_-]{8,}\.[a-z0-9]+$" {
+        try_files $uri =404;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+    location ~* \.(?:js|mjs|css|map|json|png|jpe?g|gif|svg|ico|webp|avif|woff2?|ttf|wasm|bcmap|pdf|txt|xml|webmanifest)$ {
+        try_files $uri =404;
+        expires 5m;
+    }
+
+    location / { try_files $uri /index.html; }
+}

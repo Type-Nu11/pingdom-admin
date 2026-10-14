@@ -104,14 +104,27 @@ test('session change during PUT does not query or apply in the next account', as
 test('schedule/status mutations retain returned terms without putting terms into time edits', async () => {
   rows = [{ ...slot, reservationTerms: terms, conditionsVersion: 4 }]
   await mount()
-  adapter = config => response(config, { ...rows[0], totalCapacity: 6 })
-  await act(async () => state.saveAvailability(7, { placeId: 1, startsAt: slot.startsAt, endsAt: slot.endsAt, totalCapacity: 6 }))
+  adapter = async config => {
+    rows = [{ ...rows[0], ...(config.method === 'put' ? { totalCapacity: 6 } : { status: 'INACTIVE' }) }]
+    return response(config, rows[0])
+  }
+  let saved
+  await act(async () => { saved = await state.saveAvailability(7, { placeId: 1, startsAt: slot.startsAt, endsAt: slot.endsAt, totalCapacity: 6 }) })
+  assert.ok(saved)
+  assert.equal(state.actionErrorMessage, '')
+  assert.equal(state.availabilities[0].totalCapacity, 6)
   assert.deepEqual(state.availabilities[0].reservationTerms, terms)
   assert.equal(state.availabilities[0].conditionsVersion, 4)
   const request = JSON.parse(calls.find(config => config.method === 'put').data)
   assert.equal('reservationTerms' in request, false)
-  await act(async () => state.setAvailabilityActive(state.availabilities[0], false))
+  let deactivated
+  await act(async () => { deactivated = await state.setAvailabilityActive(state.availabilities[0], false) })
+  assert.ok(deactivated)
+  assert.equal(state.actionErrorMessage, '')
+  assert.equal(state.availabilities[0].status, 'INACTIVE')
   assert.deepEqual(state.availabilities[0].reservationTerms, terms)
+  assert.equal(state.availabilities[0].conditionsVersion, 4)
+  assert.equal(calls.filter(config => config.url.endsWith('/deactivate')).length, 1)
 })
 test('editor preloads persisted values, preserves input on failed save and closes only on success', async () => {
   let succeed = false, closed = 0, writes = []

@@ -1,5 +1,6 @@
 import type { AuthUser } from '../app/providers/AuthContext'
 import { readReservationReviewContext, writeReservationReviewContext } from './reservationReviewContext'
+import { browserPathToAppPath } from './appBasePath'
 
 export type AuthExitReason = 'expired' | 'session-changed' | 'logout'
 type ReturnRole = 'ADMIN' | 'MERCHANT_OWNER' | 'USER'
@@ -117,7 +118,11 @@ export function rememberAuthExit(user: AuthUser | null, reason: AuthExitReason, 
   }
   const role = isRole(user?.role) ? user.role : null
   const userId = user?.id && Number.isSafeInteger(user.id) && user.id > 0 ? user.id : null
-  const currentPath = path ?? (typeof window !== 'undefined' ? window.location.pathname + window.location.search : '')
+  // Explicit paths already come from React Router (basename removed).
+  // Only raw browser paths contain the public deployment prefix.
+  const currentPath = path ?? (typeof window !== 'undefined'
+    ? browserPathToAppPath(window.location.pathname + window.location.search, import.meta.env.BASE_URL) ?? ''
+    : '')
   writeLoginReturn({ reason, role, userId, target: role && userId !== null ? safeReturnTarget(currentPath, role) : null, createdAt: Date.now() })
 }
 

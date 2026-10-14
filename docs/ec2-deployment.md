@@ -49,6 +49,22 @@ Client Secret·JWT 키·네이버 검색 비밀키는 이 파일이나 `VITE_*`�
 
 ## 빌드 및 실행
 
+### 별도 프록시 EC2와 `/operator/` 경로 사용
+
+Compose 빌드의 웹 경로 기본값은 `/operator/`입니다. Vite 자산 경로와 React Router의
+`basename`에 같은 값을 사용하므로 공개 진입 주소는 `/operator/login`이 됩니다.
+루트 경로에 배포하는 환경은 `VITE_APP_BASE_PATH=/`로 설정하세요. API는 웹 경로와 별개로
+같은 origin의 `/api`를 유지합니다.
+
+프록시가 별도 EC2에 있으면 `PINGDOM_WEB_BIND_ADDRESS`를 **웹 EC2의 VPC 내부 IP**로,
+`PINGDOM_API_UPSTREAM`을 **프록시 EC2의 내부 웹 게이트웨이 주소:8081**로 설정합니다.
+바인딩 기본값은 기존과 같은 loopback이며, 접근 권한은 프록시 출발지로 제한해야 합니다.
+외부 프록시는 `/operator/` 접두사를 제거해 웹 컨테이너로 전달하고, `/api/`는 그대로
+웹 컨테이너의 API 프록시로 전달합니다. 이 저장소 변경이 외부 프록시나 보안 그룹을 자동 수정하지는 않습니다.
+
+`VITE_APP_BASE_PATH`를 바꾸면 이미지 재빌드가 필요합니다. 내부 IP 바인딩을 설정한 경우
+아래 health check도 `127.0.0.1` 대신 설정한 내부 IP로 확인하세요.
+
 ```bash
 docker compose --env-file .env.ec2.local config --quiet
 docker compose --env-file .env.ec2.local build --pull web

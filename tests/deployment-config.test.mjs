@@ -12,7 +12,7 @@ test('EC2 ships only the built site, excludes local secrets, and uses the reques
   assert.match(dockerfile, /COPY --from=build \/app\/dist \/usr\/share\/nginx\/html/)
   assert.doesNotMatch(dockerfile, /COPY \. \./)
   for (const pattern of ['.git', '.env', '.env.*', '*.local', '*.pem', '*.key', 'node_modules']) assert.ok(ignored.split('\n').includes(pattern))
-  assert.match(compose, /127\.0\.0\.1:\$\{PINGDOM_WEB_PORT:-8082\}:8080/)
+  assert.match(compose, /\$\{PINGDOM_WEB_BIND_ADDRESS:-127\.0\.0\.1\}:\$\{PINGDOM_WEB_PORT:-8082\}:8080/)
   assert.match(ec2Env, /^PINGDOM_WEB_PORT=8082$/m)
   assert.match(compose, /PINGDOM_API_UPSTREAM:-host\.docker\.internal:8081/)
   assert.match(compose, /restart: unless-stopped/)

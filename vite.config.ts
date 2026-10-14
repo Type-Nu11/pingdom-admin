@@ -21,6 +21,8 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_PROXY_TARGET || 'http://localhost:8080'
 
   return {
+    // 외부 프록시의 웹 경로와 번들 자산 경로를 일치시킵니다.
+    base: env.VITE_APP_BASE_PATH || '/',
     plugins: [react(), pdfCMapAssets()],
     build: {
       sourcemap: false,

@@ -262,7 +262,7 @@ export function useMerchantPlaceRegistrations() {
     request: MerchantPlaceRegistrationRequest | null,
     stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
     onAttachmentUploaded?: (attachment: MerchantPlaceRegistrationStagedAttachment) => void,
-    onDraftSaved?: () => void,
+    onDraftSaved?: (registration: MerchantPlaceRegistration) => void,
   ) => {
     if (actionRef.current) return null
     actionRef.current = 'request'
@@ -282,13 +282,16 @@ export function useMerchantPlaceRegistrations() {
       }
 
       if (!mountedRef.current) return null
-      applyApplication(application)
+      const savedRegistration = applyApplication(application)
       // Saving is complete even if a later upload, submission or recovery GET fails.
-      if (request) onDraftSaved?.()
+      if (request && savedRegistration) onDraftSaved?.(savedRegistration)
 
       for (const attachment of stagedAttachments) {
-        await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)
-        if (mountedRef.current) onAttachmentUploaded?.(attachment)
+        const uploaded = await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)
+        application = { ...application, attachments: [...application.attachments, uploaded] }
+        if (!mountedRef.current) return null
+        applyApplication(application)
+        onAttachmentUploaded?.(attachment)
       }
 
       const submitted = await submitMerchantPlaceApplication(application.id)
@@ -311,6 +314,8 @@ export function useMerchantPlaceRegistrations() {
             return toRegistration(recovered)
           } catch (recoveryError) {
             logDebugError('신규 장소 등록 신청 복구 조회 실패', recoveryError)
+            // Keep the known saved ID and uploads; retry must not create another draft.
+            return toRegistration(application)
           }
         }
       }

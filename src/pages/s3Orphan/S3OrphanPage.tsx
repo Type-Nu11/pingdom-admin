@@ -6,19 +6,10 @@ import { AdminPagination } from "../../components/common/AdminPagination";
 import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminS3Orphans } from "../../hooks/useAdminS3Orphans";
 import { useAuth } from "../../hooks/useAuth";
+import { formatLocalDateTime as date } from "../../utils/displayFormat";
 import * as Shell from "../place/PlaceManagePage.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
-function date(v?: string | null) {
-  if (!v) return "없음";
-  const d = new Date(v);
-  return Number.isNaN(d.getTime())
-    ? v
-    : new Intl.DateTimeFormat("ko-KR", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(d);
-}
 function S3OrphanPage() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -34,6 +25,10 @@ function S3OrphanPage() {
     user?.username ||
     (typeof user?.id === "number" ? `ID ${user.id}` : "관리자 계정");
   const report = h.report;
+  const canDelete = h.statusState === "ready" && h.reportState === "ready"
+    && h.status?.status === "COMPLETED" && h.activeAction === null;
+  const previousReport = Boolean(report) && (h.statusState !== "ready" || h.reportState !== "ready");
+  const statusLabel = h.status ? ({ RUNNING: "생성 중", COMPLETED: "생성 완료", FAILED: "생성 실패", NOT_FOUND: "리포트 없음" }[h.status.status]) : "";
   const selectedKeys = selectionReportId === report?.reportId ? selected : [];
   const moveReportPage = (page: number) => {
     if (!report || page === report.page) return;
@@ -52,7 +47,7 @@ function S3OrphanPage() {
     void h.fetchDryRun(prefix.trim(), n);
   };
   const remove = async () => {
-    if (!report) return;
+    if (!report || !canDelete) return;
     if (confirm !== report.reportId) {
       setFormError("리포트 ID가 일치하지 않습니다.");
       return;
@@ -102,7 +97,7 @@ function S3OrphanPage() {
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar>
           <Shell.TopTitleGroup>
-            <Shell.TopTitle>S3 고아 객체</Shell.TopTitle>
+            <Shell.TopTitle>미연결 파일 관리</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
@@ -112,17 +107,17 @@ function S3OrphanPage() {
           <Shared.PageStack>
             <Shared.PageHeader>
               <div>
-                <Shared.Eyebrow>시스템 &gt; 저장소 정리</Shared.Eyebrow>
-                <Shared.PageTitle>S3 고아 객체 관리</Shared.PageTitle>
+                <Shared.Eyebrow>시스템 &gt; 미연결 파일 관리</Shared.Eyebrow>
+                <Shared.PageTitle>미연결 파일 관리</Shared.PageTitle>
                 <Shared.PageDescription>
-                  DB 참조와 S3 객체를 대조하고 완료된 리포트의 삭제 후보만
-                  안전하게 정리합니다.
+                  장소 이미지에 연결되지 않은 저장소 파일을 확인합니다.
+                  삭제는 비교가 완료된 리포트에서 직접 선택한 파일에만 적용됩니다.
                 </Shared.PageDescription>
               </div>
               <Shared.HeaderActions>
                 <Shared.PrimaryButton
                   type="button"
-                  disabled={h.activeAction !== null}
+                  disabled={h.activeAction !== null || h.statusState === "loading" || h.reportState === "loading"}
                   onClick={() => void h.refresh()}
                 >
                   {h.activeAction === "refresh"
@@ -132,7 +127,7 @@ function S3OrphanPage() {
               </Shared.HeaderActions>
             </Shared.PageHeader>
             {h.errorMessage ? (
-              <Shared.Notice $variant="error">{h.errorMessage}</Shared.Notice>
+              <Shared.Notice $variant="error" role="alert">{h.errorMessage}</Shared.Notice>
             ) : null}
             {h.successMessage ? (
               <Shared.Notice $variant="success">
@@ -145,16 +140,16 @@ function S3OrphanPage() {
             <Shared.Panel>
               <Shared.PanelHeader>
                 <div>
-                  <Shared.PanelTitle>즉시 dry-run</Shared.PanelTitle>
+                  <Shared.PanelTitle>파일 비교 · 삭제 없음</Shared.PanelTitle>
                   <Shared.PanelDescription>
-                    삭제 없이 지정 prefix를 최대 개수까지 비교합니다.
+                    지정한 저장 경로의 파일을 스캔 한도까지 비교합니다. 파일은 삭제하지 않습니다.
                   </Shared.PanelDescription>
                 </div>
               </Shared.PanelHeader>
               <S.FormBody>
                 <S.FormGrid>
                   <S.Field>
-                    S3 prefix
+                    저장 경로 접두어
                     <S.Input
                       value={prefix}
                       onChange={(e) => setPrefix(e.target.value)}
@@ -174,24 +169,26 @@ function S3OrphanPage() {
                 <S.InlineActions>
                   <Shared.SecondaryButton
                     type="button"
-                    disabled={h.isLoading}
+                    disabled={h.dryRunState === "loading" || h.activeAction !== null}
                     onClick={dry}
                   >
-                    dry-run 실행
+                    파일 비교
                   </Shared.SecondaryButton>
                 </S.InlineActions>
+                {h.dryRunState === "loading" ? <Shared.PanelDescription role="status">파일을 비교하는 중입니다.</Shared.PanelDescription> : null}
+                {h.dryRun && h.dryRunState !== "ready" ? <Shared.PanelDescription>이전 비교 결과입니다.</Shared.PanelDescription> : null}
                 {h.dryRun ? (
                   <S.DetailGrid>
                     <S.DetailItem>
-                      <dt>DB 키</dt>
+                      <dt>연결된 이미지 키</dt>
                       <dd>{h.dryRun.dbKeyCount.toLocaleString()}개</dd>
                     </S.DetailItem>
                     <S.DetailItem>
-                      <dt>S3 객체</dt>
+                      <dt>저장소 파일</dt>
                       <dd>{h.dryRun.s3ObjectCount.toLocaleString()}개</dd>
                     </S.DetailItem>
                     <S.DetailItem>
-                      <dt>고아 후보</dt>
+                      <dt>미연결 후보</dt>
                       <dd>{h.dryRun.orphanObjectCount.toLocaleString()}개</dd>
                     </S.DetailItem>
                     <S.DetailItem>
@@ -205,24 +202,30 @@ function S3OrphanPage() {
             <Shared.Panel>
               <Shared.PanelHeader>
                 <div>
-                  <Shared.PanelTitle>백그라운드 리포트</Shared.PanelTitle>
+                  <Shared.PanelTitle>전체 비교 리포트</Shared.PanelTitle>
                   <Shared.PanelDescription>
-                    {h.status
-                      ? `${h.status.reportId} · ${h.status.status} · ${date(h.status.generatedAt)}`
-                      : "생성된 리포트가 없습니다."}
+                    {h.statusState === "loading" ? "리포트 상태를 조회하는 중입니다."
+                      : h.statusState === "error" ? "리포트 상태를 확인하지 못했습니다."
+                      : h.statusState === "empty" ? "조회할 리포트가 없습니다. 미생성 또는 보관 기간이 지난 상태일 수 있습니다."
+                      : `${h.status?.reportId} · ${statusLabel} · ${date(h.status?.generatedAt)} (서버 기록 기준)`}
                   </Shared.PanelDescription>
                 </div>
                 <Shared.PanelCount>
-                  {h.status?.deleteCandidateCount.toLocaleString() || 0}개 후보
+                  {h.statusState === "ready" && h.status?.status === "COMPLETED"
+                    ? `${h.status.deleteCandidateCount.toLocaleString()}개 후보` : "후보 수 미확인"}
                 </Shared.PanelCount>
               </Shared.PanelHeader>
-              {h.status?.status === "RUNNING" ? (
+              <Shared.CompareBody>
+                {h.statusState === "empty" ? <Shared.EmptyState><strong>조회할 리포트가 없습니다.</strong><p>필요하면 상단의 ‘리포트 새로 생성’을 눌러 비교를 시작하세요. 파일은 자동 삭제되지 않습니다.</p></Shared.EmptyState> : null}
+                <Shared.SecondaryButton type="button" disabled={h.statusState === "loading" || h.reportState === "loading" || h.activeAction !== null} onClick={() => void h.fetchStatus()}>리포트 상태 다시 조회</Shared.SecondaryButton>
+              </Shared.CompareBody>
+              {h.statusState === "ready" && h.status?.status === "RUNNING" ? (
                 <Shared.EmptyState>
                   <strong>
                     DB와 S3를 비교 중입니다. 자동으로 상태를 갱신합니다.
                   </strong>
                 </Shared.EmptyState>
-              ) : h.status?.status === "FAILED" ? (
+              ) : h.statusState === "ready" && h.status?.status === "FAILED" ? (
                 <Shared.Notice $variant="error">
                   {h.status.errorMessage || "리포트 생성이 실패했습니다."}
                 </Shared.Notice>
@@ -239,7 +242,7 @@ function S3OrphanPage() {
                 <Shared.HeaderActions>
                   <Shared.HeaderButton
                     type="button"
-                    disabled={!report || selectedKeys.length === 0}
+                    disabled={!report || !canDelete || selectedKeys.length === 0}
                     onClick={() => {
                       setConfirm("");
                       setFormError("");
@@ -251,9 +254,14 @@ function S3OrphanPage() {
                 </Shared.HeaderActions>
               </Shared.PanelHeader>
               <Shared.CompareBody>
+                {previousReport ? <Shared.PanelDescription>이전 리포트 결과입니다. 최신 조회가 완료되기 전에는 삭제할 수 없습니다.</Shared.PanelDescription> : null}
                 {!report ? (
                   <Shared.EmptyState>
-                    <strong>완료된 리포트가 없습니다.</strong>
+                    <strong>{h.statusState === "loading" || h.reportState === "loading" ? "리포트를 불러오는 중입니다."
+                      : h.statusState === "error" || h.reportState === "error" ? "리포트 조회를 다시 시도해주세요."
+                      : h.status?.status === "RUNNING" ? "비교가 완료되면 삭제 후보를 확인할 수 있습니다."
+                      : h.status?.status === "FAILED" ? "리포트 생성에 실패해 삭제 후보를 확인할 수 없습니다."
+                      : "조회할 완료 리포트가 없습니다."}</strong>
                   </Shared.EmptyState>
                 ) : report.deleteCandidates.length === 0 ? (
                   <Shared.EmptyState>
@@ -267,6 +275,7 @@ function S3OrphanPage() {
                           <label>
                             <input
                               type="checkbox"
+                              disabled={!canDelete}
                               checked={selectedKeys.includes(c.key)}
                               onChange={(e) => {
                                 setSelectionReportId(report.reportId);
@@ -292,7 +301,7 @@ function S3OrphanPage() {
                   page={report.page}
                   totalPages={report.totalPages}
                   hasNext={report.hasNext}
-                  disabled={h.isLoading}
+                  disabled={h.statusState === "loading" || h.reportState === "loading" || h.activeAction !== null}
                   onPageChange={moveReportPage}
                 />
               ) : null}
@@ -335,7 +344,7 @@ function S3OrphanPage() {
           >
             <Shared.ModalHeader>
               <Shared.ModalTitle id="s3-delete-title">
-                S3 객체 영구 삭제
+                미연결 파일 영구 삭제
               </Shared.ModalTitle>
               <Shared.ModalCloseButton
                 type="button"
@@ -380,7 +389,7 @@ function S3OrphanPage() {
               <Shared.PrimaryButton
                 type="button"
                 disabled={
-                  h.activeAction !== null || confirm !== report.reportId
+                  !canDelete || confirm !== report.reportId
                 }
                 onClick={() => void remove()}
               >

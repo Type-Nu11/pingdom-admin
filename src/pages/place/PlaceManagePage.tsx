@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import {
@@ -17,9 +17,10 @@ import { PlaceInspector } from '../../components/place/PlaceInspector'
 import { PlaceMapPanel } from '../../components/place/PlaceMapPanel'
 import { PlaceListPanel } from '../../components/place/PlaceListPanel'
 import type {
-  KakaoMapHandle,
-  KakaoMapMarker,
-} from '../../components/map/KakaoMap'
+  MapHandle,
+  MapMarker,
+} from '../../components/map/map.types'
+import { isValidMapCoordinate } from '../../components/map/map.types'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceOperatingNotices } from '../../hooks/useAdminPlaceOperatingNotices'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
@@ -45,8 +46,7 @@ function hasValidCoordinate(place: AdminPlaceItem) {
   return (
     typeof place.latitude === 'number' &&
     typeof place.longitude === 'number' &&
-    Number.isFinite(place.latitude) &&
-    Number.isFinite(place.longitude)
+    isValidMapCoordinate({ latitude: place.latitude, longitude: place.longitude })
   )
 }
 
@@ -71,8 +71,11 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
 
 function PlaceManagePage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const linkedPlaceId = searchParams.get('placeId')
   const { logout, user } = useAuth()
-  const mapRef = useRef<KakaoMapHandle | null>(null)
+  const mapRef = useRef<MapHandle | null>(null)
+  const [mapRevision, setMapRevision] = useState(0)
   const mapPanelRef = useRef<HTMLElement | null>(null)
   const placeDetailPanelRef = useRef<HTMLElement | null>(null)
   const placeListRef = useRef<HTMLDivElement | null>(null)
@@ -105,6 +108,7 @@ function PlaceManagePage() {
     totalPages,
     hasNext,
     isLoading,
+    hasListResult,
     isError,
     errorMessage,
     deleteErrorMessage,
@@ -131,6 +135,24 @@ function PlaceManagePage() {
   } = useAdminPlaces({
     limit: ADMIN_PLACE_PAGE_SIZE,
   })
+  useEffect(() => {
+    let active = true
+    const timer = window.setTimeout(() => {
+      setDeleteConfirmPlace(null); setPlaceOperation(null); setDataCorrectionPlace(null)
+      setTouristInfoEditPlace(null); setOperatingNoticePlace(null)
+      clearPlaceDetail()
+      const id = Number(linkedPlaceId)
+      if (!linkedPlaceId || !Number.isSafeInteger(id) || id <= 0) {
+        setSelectedPlace(null)
+        return
+      }
+      setSelectedPlace({ id, name: `장소 #${id}`, address: '', latitude: NaN, longitude: NaN, userId: 0 })
+      void fetchAdminPlaceDetail(id).then(detail => {
+        if (active && detail?.id === id) setSelectedPlace(detail)
+      })
+    }, 0)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [linkedPlaceId, fetchAdminPlaceDetail, clearPlaceDetail])
   const {
     runningActions: noticeRunningActions,
     actionErrors: noticeActionErrors,
@@ -147,7 +169,7 @@ function PlaceManagePage() {
   const pageStart = totalCount > 0 ? (page - 1) * ADMIN_PLACE_PAGE_SIZE + 1 : 0
   const pageEnd = totalCount > 0 ? pageStart + places.length - 1 : 0
   const pageRangeLabel =
-    totalCount > 0
+    !hasListResult ? (isLoading ? '조회 중' : '조회 결과 없음') : totalCount > 0
       ? `${pageStart.toLocaleString()}–${pageEnd.toLocaleString()} / ${totalCount.toLocaleString()}개`
       : '0개'
   const isPlaceDetailOpen = selectedPlace !== null
@@ -170,7 +192,7 @@ function PlaceManagePage() {
         : updatingPlaceIds['kakao-place-id'] !== null
           ? 'kakao-place-id'
           : null
-  const placeMapMarkers = useMemo<KakaoMapMarker[]>(
+  const placeMapMarkers = useMemo<MapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
         id: place.id,
@@ -184,10 +206,10 @@ function PlaceManagePage() {
   )
   const placeMapFitBoundsKey = useMemo(
     () =>
-      placeMapMarkers
+      `${mapRevision}:` + placeMapMarkers
         .map((marker) => `${marker.id}:${marker.latitude}:${marker.longitude}`)
         .join('|'),
-    [placeMapMarkers]
+    [placeMapMarkers, mapRevision]
   )
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
@@ -213,7 +235,8 @@ function PlaceManagePage() {
   const handleClosePlaceDetail = useCallback(() => {
     setSelectedPlace(null)
     clearPlaceDetail()
-  }, [clearPlaceDetail])
+    setSearchParams(params => { const next = new URLSearchParams(params); next.delete('placeId'); return next }, { replace: true })
+  }, [clearPlaceDetail, setSearchParams])
 
   const getSelectedPlaceMapOffsetX = useCallback(() => {
     const mapPanel = mapPanelRef.current
@@ -251,6 +274,10 @@ function PlaceManagePage() {
     },
     [getSelectedPlaceMapOffsetX]
   )
+
+  const handleMapReady = useCallback(() => {
+    if (selectedPlace) focusPlaceOnVisibleMap(selectedPlace)
+  }, [focusPlaceOnVisibleMap, selectedPlace])
 
   useEffect(() => {
     latestSortParamRef.current = selectedSortParam
@@ -300,10 +327,9 @@ function PlaceManagePage() {
 
   const handleSelectPlace = useCallback(
     (place: AdminPlaceItem) => {
-      setSelectedPlace(place)
-      void fetchAdminPlaceDetail(place.id)
+      setSearchParams(params => { const next = new URLSearchParams(params); next.set('placeId', String(place.id)); return next })
     },
-    [fetchAdminPlaceDetail]
+    [setSearchParams]
   )
 
   const handleSelectMapMarker = useCallback(
@@ -370,6 +396,7 @@ function PlaceManagePage() {
       category: selectedCategory || undefined,
     }).then((isSuccess) => {
       if (isSuccess) {
+        setMapRevision(revision => revision + 1)
         handleClosePlaceDetail()
       }
     })
@@ -626,8 +653,17 @@ function PlaceManagePage() {
 
     const recenterAnimationFrame = window.requestAnimationFrame(recenterSelectedPlace)
     const recenterTimer = window.setTimeout(recenterSelectedPlace, 220)
+    let resizeFrame: number | null = null
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
+      resizeFrame = window.requestAnimationFrame(recenterSelectedPlace)
+    })
+    if (mapPanelRef.current) observer?.observe(mapPanelRef.current)
+    if (placeDetailPanelRef.current) observer?.observe(placeDetailPanelRef.current)
 
     return () => {
+      observer?.disconnect()
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
       window.cancelAnimationFrame(recenterAnimationFrame)
       window.clearTimeout(recenterTimer)
     }
@@ -728,6 +764,7 @@ function PlaceManagePage() {
             totalPages={safeTotalPages}
             hasNext={hasNext}
             isLoading={isLoading}
+            hasListResult={hasListResult}
             isError={isError}
             errorMessage={errorMessage}
             pageRangeLabel={pageRangeLabel}
@@ -748,11 +785,12 @@ function PlaceManagePage() {
             panelRef={mapPanelRef}
             mapRef={mapRef}
             markers={placeMapMarkers}
-            displayCount={places.length}
+            displayCount={placeMapMarkers.length}
             fitBoundsKey={placeMapFitBoundsKey}
             selectedPlaceId={selectedPlace?.id ?? null}
             isListCollapsed={isPlacePanelCollapsed}
             onMarkerSelect={handleSelectMapMarker}
+            onMapReady={handleMapReady}
             onOpenList={() => setIsPlacePanelCollapsed(false)}
             inspector={
               <PlaceInspector
@@ -763,7 +801,7 @@ function PlaceManagePage() {
                 errorMessage={detailErrorMessage}
                 updatingPlaceIds={updatingPlaceIds}
                 onClose={handleClosePlaceDetail}
-                onRetry={(placeId) => void fetchAdminPlaceDetail(placeId)}
+                onRetry={(placeId) => { void fetchAdminPlaceDetail(placeId).then(detail => { if (detail?.id === placeId) setSelectedPlace(current => current?.id === placeId ? detail : current) }) }}
                 onFocusMap={focusPlaceOnVisibleMap}
                 onOpenOperation={handleOpenPlaceOperation}
                 onOpenTouristInfo={handleOpenTouristInfo}

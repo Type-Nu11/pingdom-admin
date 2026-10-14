@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -180,7 +181,7 @@ function VisitorVerificationPage() {
                 </Shared.HeaderButton>
               </Shared.HeaderActions>
             </Shared.PageHeader>
-            <S.TabList role="tablist">
+            <S.TabList as={AccessibleTabList} panelId="visitor-verification-panel" role="tablist" aria-label="검증 제보·정정 요청">
               <S.TabButton
                 type="button"
                 role="tab"
@@ -210,6 +211,7 @@ function VisitorVerificationPage() {
                 정정 요청
               </S.TabButton>
             </S.TabList>
+            <div id="visitor-verification-panel" role="tabpanel" aria-labelledby={`visitor-verification-panel-tab-${tab === "reports" ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
             {hook.actionErrorMessage ? (
               <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage>
             ) : null}
@@ -427,6 +429,7 @@ function VisitorVerificationPage() {
                 </Shared.CompareBody>
               </Shared.Panel>
             </Shared.Workspace>
+          </div>
           </Shared.PageStack>
         </Shared.Content>
       </Shell.MainArea>

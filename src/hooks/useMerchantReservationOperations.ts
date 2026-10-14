@@ -6,7 +6,7 @@ import {
   getMerchantReservations,
   getMerchantReservableProducts,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantAvailability,
@@ -17,6 +17,7 @@ import type {
 } from '../types/merchantStore.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
+import { reservationCancellationRestriction } from '../utils/reservationConditions'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type ReservationAction = 'cancel' | null
@@ -44,7 +45,7 @@ export function useMerchantReservationOperations() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  const [actionErrorKind, setActionErrorKind] = useState<'policy' | 'refund' | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeReservationId, setActiveReservationId] = useState<number | null>(null)
@@ -55,7 +56,7 @@ export function useMerchantReservationOperations() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -63,6 +64,9 @@ export function useMerchantReservationOperations() {
         ACCESS_DENIED: '상점주 권한이 필요합니다.',
         RESERVATION_NOT_FOUND: '예약 정보를 찾을 수 없습니다.',
         INVALID_RESERVATION_STATUS: '현재 상태에서는 처리할 수 없는 예약입니다.',
+        INVALID_RESERVATION_STATE: '현재 상태에서는 처리할 수 없는 예약입니다. 목록을 다시 확인해주세요.',
+        CANCELLATION_NOT_ALLOWED: '수락한 취소 정책 또는 기한에 따라 취소할 수 없습니다. 예약 조건을 확인해주세요.',
+        RESERVATION_REFUND_REQUIRED: '결제 처리 중이거나 환불되지 않은 결제가 있습니다. 결제·환불 내역을 확인하고 필요한 환불을 완료한 뒤 다시 시도해주세요.',
       },
     })
   }, [clearAuth])
@@ -86,7 +90,7 @@ export function useMerchantReservationOperations() {
     if (reservationResult.status === 'rejected') {
       setIsLoading(false)
       const nextMessage = getErrorMessage(reservationResult.reason, '예약 목록을 불러오지 못했습니다.')
-      if (isApiError(reservationResult.reason) && reservationResult.reason.category === 'unauthorized') {
+      if (shouldClearAuth(reservationResult.reason)) {
         clearAuth()
       }
       if (initial) {
@@ -115,7 +119,7 @@ export function useMerchantReservationOperations() {
     )
     if (referenceFailures.length > 0) {
       referenceFailures.forEach((result) => {
-        if (isApiError(result.reason) && result.reason.category === 'unauthorized') clearAuth()
+        if (shouldClearAuth(result.reason)) clearAuth()
         logDebugError('상점주 예약 참조 정보 조회 실패', result.reason)
       })
       setSectionErrorMessage('상품 또는 예약 시간 일부를 불러오지 못해 ID로 표시합니다. 새로고침 후 다시 시도해주세요.')
@@ -132,11 +136,24 @@ export function useMerchantReservationOperations() {
   }, [fetchReservations])
 
   const cancelReservation = useCallback(async (reservation: MerchantReservation) => {
-    if (reservation.status !== 'CONFIRMED' || actionRef.current !== null) return null
+    if (actionRef.current !== null || isLoading) return null
+    const current = reservations.find(item => item.id === reservation.id)
+    if (!current || current.status !== 'CONFIRMED') {
+      setActionErrorKind(null)
+      setActionErrorMessage('현재 상태에서는 처리할 수 없는 예약입니다. 목록을 다시 확인해주세요.')
+      return null
+    }
+    const restriction = reservationCancellationRestriction(current.confirmation)
+    if (restriction) {
+      setActionErrorKind('policy')
+      setActionErrorMessage(restriction)
+      return null
+    }
     actionRef.current = reservation.id
     setActiveReservationId(reservation.id)
     setActiveAction('cancel')
     setActionErrorMessage('')
+    setActionErrorKind(null)
     setSuccessMessage('')
 
     try {
@@ -147,6 +164,8 @@ export function useMerchantReservationOperations() {
       return next
     } catch (error) {
       if (mountedRef.current) {
+        const code = isApiError<MerchantStoreErrorResponse>(error) && error.response?.status === 409 ? error.response.data.code : null
+        setActionErrorKind(code === 'RESERVATION_REFUND_REQUIRED' ? 'refund' : code === 'CANCELLATION_NOT_ALLOWED' ? 'policy' : null)
         setActionErrorMessage(getErrorMessage(error, '예약 취소에 실패했습니다.'))
         logDebugError('상점주 예약 취소 실패', error)
       }
@@ -158,7 +177,12 @@ export function useMerchantReservationOperations() {
         setActiveAction(null)
       }
     }
-  }, [getErrorMessage])
+  }, [getErrorMessage, reservations, isLoading])
+
+  const clearActionError = () => {
+    setActionErrorMessage('')
+    setActionErrorKind(null)
+  }
 
   return {
     status,
@@ -170,6 +194,8 @@ export function useMerchantReservationOperations() {
     errorMessage,
     sectionErrorMessage,
     actionErrorMessage,
+    actionErrorKind,
+    clearActionError,
     successMessage,
     activeReservationId,
     activeAction,

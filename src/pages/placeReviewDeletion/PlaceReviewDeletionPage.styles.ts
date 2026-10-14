@@ -58,7 +58,7 @@ export const DangerButton = styled.button`
   padding: 0 16px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.error};
+  background: ${neutral.errorAction};
   color: ${neutral.primaryText};
   font-size: 14px;
   font-weight: 700;

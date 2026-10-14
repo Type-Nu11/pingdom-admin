@@ -38,7 +38,7 @@ export const FilterIcon = styled.span`
   border-radius: 8px;
   border: 0;
   background: ${adminColors.primaryTint};
-  color: ${adminColors.primary};
+  color: ${adminColors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 18px;
   font-variation-settings: 'FILL' 0, 'wght' 550, 'GRAD' 0, 'opsz' 20;

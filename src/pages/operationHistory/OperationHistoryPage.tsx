@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -7,6 +8,7 @@ import { AdminNavigationMenu } from '../../components/navigation/AdminNavigation
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { ListPane } from '../../components/common/ListPane'
+import { formatListRange } from '../../utils/listRange'
 import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminOperationHistories } from '../../hooks/useAdminOperationHistories'
@@ -35,6 +37,8 @@ const PRIVACY_ACTION_LABELS: Record<PrivacyProcessingAction, string> = {
 }
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
+  COMMUNITY_REPORT_ACCEPTED: '커뮤니티 신고 수락',
+  COMMUNITY_REPORT_DECLINED: '커뮤니티 신고 반려',
   USER_BAN_APPLIED: '사용자 밴 처리',
   USER_BAN_RELEASED: '사용자 밴 해제',
   PLACE_CREATED: '장소 등록',
@@ -47,6 +51,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
 }
 
 const AUDIT_TARGET_TYPE_LABELS: Record<string, string> = {
+  COMMUNITY_REPORT: '커뮤니티 신고',
   USER: '사용자',
   PLACE: '장소',
   MERCHANT: '상점주',
@@ -324,7 +329,7 @@ function OperationHistoryPage() {
               </Shared.HeaderActions>
             </Shared.PageHeader>
 
-            <S.TabList role="tablist" aria-label="운영 이력 유형">
+            <S.TabList as={AccessibleTabList} panelId="operation-history-panel" role="tablist" aria-label="운영 이력 유형">
               <S.TabButton
                 type="button"
                 role="tab"
@@ -350,6 +355,7 @@ function OperationHistoryPage() {
                 개인정보 처리 이력
               </S.TabButton>
             </S.TabList>
+            <div id="operation-history-panel" role="tabpanel" aria-labelledby={`operation-history-panel-tab-${tab === 'audit' ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
             {formError ? <Shared.Notice $variant="error">{formError}</Shared.Notice> : null}
 
@@ -380,9 +386,15 @@ function OperationHistoryPage() {
                         작업 유형
                         <S.Input
                           value={auditAction}
+                          list="community-audit-actions"
+                          aria-label="감사 로그 작업 유형"
                           placeholder="예: USER_BAN_APPLIED"
                           onChange={(event) => setAuditAction(event.target.value)}
                         />
+                        <datalist id="community-audit-actions">
+                          <option value="COMMUNITY_REPORT_ACCEPTED">커뮤니티 신고 수락</option>
+                          <option value="COMMUNITY_REPORT_DECLINED">커뮤니티 신고 반려</option>
+                        </datalist>
                       </S.Field>
                       <S.Field>
                         시작 시각
@@ -415,9 +427,12 @@ function OperationHistoryPage() {
                             대상 유형
                             <S.Input
                               value={targetType}
+                              list="community-audit-targets"
+                              aria-label="감사 로그 대상 유형"
                               placeholder="예: USER"
                               onChange={(event) => setTargetType(event.target.value)}
                             />
+                            <datalist id="community-audit-targets"><option value="COMMUNITY_REPORT">커뮤니티 신고</option></datalist>
                           </S.Field>
                           <S.Field>
                             대상 ID
@@ -444,8 +459,7 @@ function OperationHistoryPage() {
                 <ListDetailWorkspace constrained>
                   <ListPane
                     title="감사 로그"
-                    description="항목을 선택해 전후 상태를 확인합니다."
-                    count={hook.auditState.hasResult ? `${(hook.audit?.totalCount ?? 0).toLocaleString()}건${hook.auditState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                    count={hook.auditState.hasResult && hook.audit ? `${formatListRange({ page: hook.audit.page, pageSize: PAGE_LIMIT, itemCount: hook.audit.auditLogs.length, total: hook.audit.totalCount })}${hook.auditState.phase === 'error' || isLoading ? ' (이전 결과)' : ''}` : undefined}
                     page={hook.auditState.hasResult ? hook.audit?.page : undefined}
                     ariaLabel="감사 로그 목록"
                     footer={hook.auditState.hasResult && (hook.audit?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="감사 로그 페이지네이션" page={hook.audit?.page ?? 1} totalPages={hook.audit?.totalPages ?? 1} hasNext={hook.audit?.hasNext} disabled={isLoading} onPageChange={moveAudit} /> : null}
@@ -535,8 +549,7 @@ function OperationHistoryPage() {
                 <ListDetailWorkspace constrained>
                   <ListPane
                     title="개인정보 처리 이력"
-                    description="항목을 선택해 요청과 처리 결과를 확인합니다."
-                    count={hook.privacyState.hasResult ? `${(hook.privacy?.totalCount ?? 0).toLocaleString()}건${hook.privacyState.phase === 'error' ? ' (이전 결과)' : ''}` : undefined}
+                    count={hook.privacyState.hasResult && hook.privacy ? `${formatListRange({ page: hook.privacy.page, pageSize: PAGE_LIMIT, itemCount: hook.privacy.histories.length, total: hook.privacy.totalCount })}${hook.privacyState.phase === 'error' || isLoading ? ' (이전 결과)' : ''}` : undefined}
                     page={hook.privacyState.hasResult ? hook.privacy?.page : undefined}
                     ariaLabel="개인정보 처리 이력 목록"
                     footer={hook.privacyState.hasResult && (hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
@@ -554,6 +567,7 @@ function OperationHistoryPage() {
                 </ListDetailWorkspace>
               </>
             )}
+          </div>
           </Shared.PageStack>
         </Shared.Content>
       </Shell.MainArea>

@@ -4,7 +4,7 @@ import {
   getMerchantPlaceReverificationRequests,
   respondMerchantPlaceReverificationRequest,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantPlaceReverificationRequest,
@@ -25,7 +25,7 @@ function replaceRequest(
   return requests.map((request) => (request.requestId === next.requestId ? next : request))
 }
 
-export function useMerchantPlaceReverification() {
+export function useMerchantPlaceReverification({ persistActionError = false } = {}) {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [requests, setRequests] = useState<MerchantPlaceReverificationRequest[]>([])
@@ -40,7 +40,7 @@ export function useMerchantPlaceReverification() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage, persistActionError ? null : undefined)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [respondingRequestId, setRespondingRequestId] = useState<number | null>(null)
@@ -50,7 +50,7 @@ export function useMerchantPlaceReverification() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -144,6 +144,7 @@ export function useMerchantPlaceReverification() {
     errorMessage,
     sectionErrorMessage,
     actionErrorMessage,
+    clearActionError: () => setActionErrorMessage(''),
     successMessage,
     respondingRequestId,
     fetchRequests,

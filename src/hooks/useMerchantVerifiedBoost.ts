@@ -9,7 +9,7 @@ import {
   startMerchantVerifiedBoostExecution,
   stopMerchantVerifiedBoostExecution,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantStoreErrorResponse,
@@ -34,7 +34,7 @@ function replaceExecution(items: MerchantVerifiedBoostExecution[], next: Merchan
   return items.map((item) => (item.id === next.id ? next : item))
 }
 
-export function useMerchantVerifiedBoost() {
+export function useMerchantVerifiedBoost({ persistActionError = false } = {}) {
   const { clearAuth } = useAuth()
   const [selectionState, setSelectionState] = useState<LoadState>('loading')
   const [executionState, setExecutionState] = useState<LoadState>('loading')
@@ -63,7 +63,7 @@ export function useMerchantVerifiedBoost() {
   const [productErrorMessage, setProductErrorMessage] = useState('')
   const [profileErrorMessage, setProfileErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage, persistActionError ? null : undefined)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<BoostAction>(null)
@@ -75,7 +75,7 @@ export function useMerchantVerifiedBoost() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -317,6 +317,7 @@ export function useMerchantVerifiedBoost() {
     productErrorMessage,
     profileErrorMessage,
     actionErrorMessage,
+    clearActionError: () => setActionErrorMessage(''),
     successMessage,
     activeAction,
     activeTargetId,

@@ -11,7 +11,7 @@ import {
   updateAdminMerchantOwnerOnboarding,
   updateAdminMerchantOwnerPlaceQuality,
 } from "../api/adminMerchantOwnerApi";
-import { getAuthErrorMessage } from "../api/authError";
+import { shouldClearAuth, getAuthErrorMessage } from "../api/authError";
 import { isApiError } from "../api/customAxios";
 import type {
   AdminMerchantOnboardingUpdateRequest,
@@ -26,7 +26,8 @@ import type {
 import { logDebugError } from "../utils/debugLogger";
 import { useAuth } from "./useAuth";
 
-const LIMIT = 10;
+export const ADMIN_OWNER_PAGE_SIZE = 10;
+const LIMIT = ADMIN_OWNER_PAGE_SIZE;
 export type MerchantOwnerAction =
   | "approve"
   | "reject"
@@ -51,13 +52,6 @@ function getErrorMessage(error: unknown, fallback: string) {
     fallbackMessage: fallback,
     categoryMessages: CATEGORY_MESSAGES,
   });
-}
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminMerchantOwnerErrorResponse>(error) &&
-    (error.response?.data?.code === "INVALID_TOKEN" ||
-      error.category === "unauthorized")
-  );
 }
 
 export function useAdminMerchantOwners() {

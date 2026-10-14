@@ -1,6 +1,7 @@
 import customAxios from './customAxios'
 import type {
   AdminPlaceDuplicateDetailResponse,
+  AdminPlaceDuplicatePagination,
   AdminPlaceDuplicateGroupResponse,
   AdminPlaceDuplicateCandidateMergeRequest,
   AdminPlaceDuplicateCandidateStatus,
@@ -19,15 +20,31 @@ const ADMIN_PLACE_MERGE_HISTORIES_API_PATH = '/admin/places/merge-histories'
 const ADMIN_PLACE_DUPLICATE_CANDIDATES_API_PATH =
   '/admin/places/duplicate-candidates'
 
+function validateDuplicatePage(data: AdminPlaceDuplicatePagination, items: unknown) {
+  if (
+    !data || !Array.isArray(items) ||
+    !Number.isSafeInteger(data.total) || data.total < 0 ||
+    !Number.isSafeInteger(data.page) || data.page < 1 ||
+    !Number.isSafeInteger(data.limit) || data.limit < 1 ||
+    !Number.isSafeInteger(data.totalPages) || data.totalPages < 0 ||
+    typeof data.hasNext !== 'boolean'
+  ) {
+    throw new Error('Invalid duplicate place pagination response')
+  }
+}
+
 export async function getAdminPlaceDuplicateReviewCandidates(
-  status: AdminPlaceDuplicateCandidateStatus = 'PENDING'
+  status: AdminPlaceDuplicateCandidateStatus = 'PENDING',
+  page = 1,
+  limit = 20
 ) {
   const { data } =
     await customAxios.get<AdminPlaceDuplicateReviewCandidateListResponse>(
       ADMIN_PLACE_DUPLICATE_CANDIDATES_API_PATH,
-      { params: { status } }
+      { params: { status, page, limit } }
     )
 
+  validateDuplicatePage(data, data?.candidates)
   return data
 }
 
@@ -75,11 +92,13 @@ export async function mergeAdminPlaceDuplicateCandidate(
   return data
 }
 
-export async function getAdminPlaceDuplicateGroups() {
+export async function getAdminPlaceDuplicateGroups(page = 1, limit = 20) {
   const { data } = await customAxios.get<AdminPlaceDuplicateGroupResponse>(
-    ADMIN_PLACE_DUPLICATES_API_PATH
+    ADMIN_PLACE_DUPLICATES_API_PATH,
+    { params: { page, limit } }
   )
 
+  validateDuplicatePage(data, data?.groups)
   return data
 }
 

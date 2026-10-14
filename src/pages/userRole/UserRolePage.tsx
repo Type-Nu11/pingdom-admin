@@ -1,5 +1,7 @@
+import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
+import { searchAdminRoleTargets } from '../../api/adminTargetSearchApi'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
@@ -48,6 +50,19 @@ function UserRolePage() {
   const { logout, user } = useAuth();
   const hook = useAdminUserRoles();
   const [userIdInput, setUserIdInput] = useState("");
+  const [targetSearchOpen, setTargetSearchOpen] = useState(false);
+  const [targetName, setTargetName] = useState<{ id: number; name: string } | null>(null);
+  const userIdInputRef = useRef<HTMLInputElement>(null);
+  const focusSelectedTargetRef = useRef(false);
+  useEffect(() => {
+    if (targetSearchOpen || !focusSelectedTargetRef.current) return;
+    // Wait until the search dialog has finished restoring its previous focus.
+    const frame = window.requestAnimationFrame(() => {
+      focusSelectedTargetRef.current = false;
+      userIdInputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [targetSearchOpen]);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [reason, setReason] = useState("");
   const [formError, setFormError] = useState("");
@@ -148,21 +163,26 @@ function UserRolePage() {
                 </Shared.HeaderButton>
               </Shared.HeaderActions>
             </Shared.PageHeader>
+            <Shared.SecondaryButton type="button" disabled={hook.isMutating || hook.isLoading} onClick={() => setTargetSearchOpen(true)}>관리자 사용자명 검색</Shared.SecondaryButton>
+            {targetSearchOpen ? <AdminTargetSearch title="관리자 사용자명 검색" load={searchAdminRoleTargets} onClose={() => setTargetSearchOpen(false)} onSelect={target => { focusSelectedTargetRef.current = true; setUserIdInput(String(target.id)); setTargetName(target); setDialog(null); setFormError(""); void hook.fetchRoles(target.id) }} /> : null}
             <S.SearchBar as="form" onSubmit={search}>
               <S.InlineSearchControls>
                 <S.Field>
                   관리자 사용자 ID
                   <S.Input
+                    ref={userIdInputRef}
                     value={userIdInput}
+                    disabled={hook.isMutating}
                     inputMode="numeric"
                     placeholder="예: 42"
                     onChange={(event) => {
                       setUserIdInput(event.target.value);
+                      setTargetName(null); setDialog(null); hook.clearTarget();
                       setFormError(''); hook.dismissActionError();
                     }}
                   />
                 </S.Field>
-                <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>
+                <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.isMutating}>
                   {hook.isLoading ? "조회 중" : "역할 조회"}
                 </Shared.PrimaryButton>
               </S.InlineSearchControls>
@@ -200,7 +220,7 @@ function UserRolePage() {
                   <Shared.PanelTitle>역할 부여 상태</Shared.PanelTitle>
                   <Shared.PanelDescription>
                     {hook.targetUserId
-                      ? `관리자 #${hook.targetUserId}의 역할을 관리합니다.`
+                      ? `${targetName?.id === hook.targetUserId ? targetName.name + " · " : ""}관리자 #${hook.targetUserId}의 역할을 관리합니다.`
                       : "먼저 관리자 사용자 ID를 조회해주세요."}
                   </Shared.PanelDescription>
                 </div>

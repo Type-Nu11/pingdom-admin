@@ -13,7 +13,7 @@ import {
   updateAdminPlaceOperatingStatus,
   updateAdminPlaceTouristInfo,
 } from '../api/adminPlaceApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
 import { getPlaceCategoryLabel } from '../utils/placeCategory'
@@ -136,13 +136,6 @@ function getAdminPlaceErrorMessage(
   })
 }
 
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminPlaceApiErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
-  )
-}
-
 interface UseAdminPlacesOptions {
   initialPage?: number
   limit?: number
@@ -160,7 +153,8 @@ export function useAdminPlaces({
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [hasNext, setHasNext] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasListResult, setHasListResult] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [deleteErrorMessage, setDeleteErrorMessage] = useState('')
@@ -246,6 +240,7 @@ export function useAdminPlaces({
 
       if (requestId === latestRequestIdRef.current) {
         setPlaces(data.places)
+        setHasListResult(true)
         setPage(data.page)
         setTotalCount(data.totalCount)
         setTotalPages(data.totalPages)
@@ -852,6 +847,7 @@ export function useAdminPlaces({
     totalPages,
     hasNext,
     isLoading,
+    hasListResult,
     isError,
     errorMessage,
     deleteErrorMessage,

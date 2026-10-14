@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -6,6 +7,8 @@ import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import * as S from './DashboardPage.styles'
+import { AdminPendingWork } from '../../components/adminNotification/AdminPendingWork'
+import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
 type DashboardMetricKey =
   | 'placeCount'
@@ -79,7 +82,7 @@ const SERVICE_METRICS: DashboardMetric[] = [
 const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
   {
     key: 'duplicatePlaceGroupCount',
-    label: '중복 장소 후보',
+    label: '장소 병합·복구',
     unit: '건',
     icon: 'content_copy',
     route: '/places/duplicates',
@@ -104,7 +107,9 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
 ]
 
 const QUICK_ACTIONS = [
+  { label: '예약 심사', icon: 'event_available', route: '/reservations/review' },
   { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', route: '/merchant-place-applications' },
+  { label: '커뮤니티 신고 심사', icon: 'flag', route: '/community-reports' },
   { label: '장소 정보 검증', icon: 'fact_check', route: '/places/information-verification' },
 ]
 
@@ -114,14 +119,18 @@ function DashboardPage() {
   const {
     summary,
     recentActivities,
-    pendingMerchantPlaceApplications,
     status,
     recentActivitiesStatus,
-    pendingItemsStatus,
     isLoading,
     lastUpdatedAt,
     fetchSummary,
   } = useAdminDashboard()
+  const { refreshPendingWork, pendingWorkStatus } = useAdminNotifications()
+  const isDashboardRefreshing = isLoading || pendingWorkStatus === 'loading' || pendingWorkStatus === 'idle'
+  const refreshDashboard = () => {
+    void fetchSummary()
+    void refreshPendingWork()
+  }
   const [activeActivityTab, setActiveActivityTab] =
     useState<DashboardActivityTabKey | null>(null)
   const adminIdentifier = user?.username || user?.name || 'admin'
@@ -172,7 +181,7 @@ function DashboardPage() {
           <strong>대시보드 정보를 불러오지 못했습니다.</strong>
           <span>잠시 후 다시 시도해 주세요.</span>
         </S.StatusText>
-        <S.RetryButton type="button" onClick={() => void fetchSummary()}>
+        <S.RetryButton type="button" onClick={refreshDashboard}>
           다시 시도
         </S.RetryButton>
       </S.StatusPanel>
@@ -332,7 +341,7 @@ function DashboardPage() {
     return (
       <>
         <S.ActivityTabToolbar>
-          <S.ActivityTabs role="tablist" aria-label="최근 활동 유형">
+          <S.ActivityTabs as={AccessibleTabList} panelId={activityPanelId} role="tablist" aria-label="최근 활동 유형">
             {groups.map((group) => (
               <S.ActivityTab
                 key={group.key}
@@ -360,7 +369,7 @@ function DashboardPage() {
         {selectedGroup.rows.length === 0 ? (
           <S.EmptyState
             id={activityPanelId}
-            role="tabpanel"
+            role="tabpanel" tabIndex={0}
             aria-labelledby={selectedTabId}
           >
             {selectedGroup.title} 활동이 없습니다.
@@ -369,6 +378,7 @@ function DashboardPage() {
           <S.ActivityGroups
             id={activityPanelId}
             role="tabpanel"
+            tabIndex={0}
             aria-labelledby={selectedTabId}
           >
             <S.ActivityGroup>
@@ -402,49 +412,6 @@ function DashboardPage() {
           </S.ActivityGroups>
         )}
       </>
-    )
-  }
-
-  function renderPendingReviewQueue() {
-    if (!pendingMerchantPlaceApplications) {
-      if (pendingItemsStatus === 'loading') {
-        return <S.OperationalEmptyState>심사 대기 항목을 불러오는 중입니다.</S.OperationalEmptyState>
-      }
-
-      if (pendingItemsStatus === 'error') {
-        return renderSectionError('심사 대기 항목을 불러오지 못했습니다.')
-      }
-
-      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
-    }
-
-    if (pendingMerchantPlaceApplications.length === 0) {
-      return <S.OperationalEmptyState>심사 대기 중인 상점주 장소 신청이 없습니다.</S.OperationalEmptyState>
-    }
-
-    return (
-      <S.PendingList>
-        {pendingMerchantPlaceApplications.map((item) => (
-          <S.PendingItem
-            key={item.id}
-            type="button"
-            onClick={() => navigate('/merchant-place-applications', {
-              state: { applicationId: item.id },
-            })}
-          >
-            <S.PendingItemMain>
-              <strong title={item.placeName || item.businessName || `장소 신청 #${item.id}`}>
-                {item.placeName || item.businessName || `장소 신청 #${item.id}`}
-              </strong>
-              <span>{formatActivityDate(item.submittedAt ?? item.updatedAt ?? undefined) ?? '접수 시각 정보 없음'}</span>
-            </S.PendingItemMain>
-            <S.PendingItemMeta>
-              심사하기
-              <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
-            </S.PendingItemMeta>
-          </S.PendingItem>
-        ))}
-      </S.PendingList>
     )
   }
 
@@ -571,11 +538,11 @@ function DashboardPage() {
             <S.TopActions>
             <S.RefreshButton
               type="button"
-              aria-label={isLoading ? '대시보드 새로고침 중' : '대시보드 새로고침'}
-              title={isLoading ? '새로고침 중' : '대시보드 새로고침'}
-              $isLoading={isLoading}
-              disabled={isLoading}
-              onClick={() => void fetchSummary()}
+              aria-label={isDashboardRefreshing ? '대시보드 새로고침 중' : '대시보드 새로고침'}
+              title={isDashboardRefreshing ? '새로고침 중' : '대시보드 새로고침'}
+              $isLoading={isDashboardRefreshing}
+              disabled={isDashboardRefreshing}
+              onClick={refreshDashboard}
             >
               <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
             </S.RefreshButton>
@@ -587,12 +554,12 @@ function DashboardPage() {
           <S.PageHeader>
             <S.PageHeaderMain>
               <S.PageDescription>
-                PingDom의 주요 운영 현황과 처리할 항목을 확인합니다.
+                처리할 업무
               </S.PageDescription>
             </S.PageHeaderMain>
             <S.UpdateMeta aria-live="polite">
-              마지막 업데이트: {formatLastUpdated(lastUpdatedAt)}
-              {isLoading && summary ? (
+              요약·최근 활동 수신: {formatLastUpdated(lastUpdatedAt)}
+              {isDashboardRefreshing && summary ? (
                 <S.RefreshingText role="status">업데이트 중</S.RefreshingText>
               ) : null}
             </S.UpdateMeta>
@@ -600,52 +567,47 @@ function DashboardPage() {
 
           {renderStatusPanel()}
 
-          <S.Section aria-labelledby="dashboard-summary-title">
-            <S.SectionHeader>
-              <S.SectionTitle id="dashboard-summary-title">관리 요약</S.SectionTitle>
-              <S.SectionDescription>현재 운영 수치</S.SectionDescription>
-            </S.SectionHeader>
-            <S.SummaryGrid>
-              {SERVICE_METRICS.map(renderMetricCard)}
-            </S.SummaryGrid>
-          </S.Section>
+          <AdminPendingWork />
 
-          <S.Section aria-labelledby="dashboard-operational-metrics-title">
+          <S.OperationalSection aria-labelledby="dashboard-operational-metrics-title">
             <S.SectionHeader>
               <S.SectionTitle id="dashboard-operational-metrics-title">우선 확인</S.SectionTitle>
               <S.SectionDescription>
                 조치가 필요한 운영 항목
               </S.SectionDescription>
             </S.SectionHeader>
-            {visibleOperationalMetrics.length > 0 ? (
+            {status === 'loading' ? (
+              <S.ActivityPanelMeta role="status">
+                {summary?.operationalMetrics
+                  ? '운영 항목 업데이트 중 · 이전 조회 결과입니다.'
+                  : '운영 항목을 확인하는 중입니다.'}
+              </S.ActivityPanelMeta>
+            ) : status === 'error' || status === 'unavailable' ? (
+              renderSectionError(status === 'error' && summary?.operationalMetrics
+                ? '운영 항목을 새로 불러오지 못했습니다. 이전 조회 결과입니다.'
+                : '운영 항목을 확인하지 못했습니다.')
+            ) : null}
+            {status !== 'unavailable' && summary?.operationalMetrics && visibleOperationalMetrics.length > 0 ? (
               <S.OperationalMetricGrid>
                 {visibleOperationalMetrics.map(renderOperationalMetricCard)}
               </S.OperationalMetricGrid>
-            ) : (
+            ) : status === 'success' || status === 'empty' ? (
               <S.OperationalEmptyState>
-                현재 처리할 항목이 없습니다.
+                {summary?.operationalMetrics
+                  ? '조회된 운영 항목 중 확인할 항목이 없습니다.'
+                  : '운영 항목 집계가 제공되지 않았습니다.'}
               </S.OperationalEmptyState>
-            )}
-          </S.Section>
+            ) : null}
+          </S.OperationalSection>
 
-          <S.Section aria-labelledby="dashboard-pending-review-title">
+          <S.Section aria-labelledby="dashboard-summary-title">
             <S.SectionHeader>
-              <S.SectionTitle id="dashboard-pending-review-title">심사 대기</S.SectionTitle>
-              <S.SectionDescription>
-                {pendingItemsStatus === 'success'
-                  ? `상점주 장소 신청 ${(pendingMerchantPlaceApplications?.length ?? 0).toLocaleString()}건`
-                  : '처리 대기 중인 상점주 장소 신청'}
-              </S.SectionDescription>
+              <S.SectionTitle id="dashboard-summary-title">관리 요약</S.SectionTitle>
+              <S.SectionDescription>전체 현황</S.SectionDescription>
             </S.SectionHeader>
-            <S.OperationsPanel>
-              {pendingItemsStatus === 'loading' && pendingMerchantPlaceApplications ? (
-                <S.ActivityPanelMeta aria-live="polite">업데이트 중</S.ActivityPanelMeta>
-              ) : null}
-              {pendingItemsStatus === 'error' && pendingMerchantPlaceApplications
-                ? renderSectionError('심사 대기 항목을 새로 불러오지 못했습니다.')
-                : null}
-              {renderPendingReviewQueue()}
-            </S.OperationsPanel>
+            <S.SummaryGrid>
+              {SERVICE_METRICS.map(renderMetricCard)}
+            </S.SummaryGrid>
           </S.Section>
 
           <S.DashboardBottomGrid>

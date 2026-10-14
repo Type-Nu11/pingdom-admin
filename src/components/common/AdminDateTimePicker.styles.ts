@@ -59,7 +59,7 @@ export const Trigger = styled.button`
     background: ${neutral.primaryTint};
 
     ${Icon} {
-      color: ${neutral.primary};
+      color: ${neutral.primaryForeground};
     }
   }
 
@@ -67,7 +67,7 @@ export const Trigger = styled.button`
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
 
     ${Icon} {
-      color: ${neutral.primary};
+      color: ${neutral.primaryForeground};
     }
   }
 
@@ -121,7 +121,7 @@ export const IconButton = styled.button`
   &:focus-visible {
     outline: 0;
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -155,9 +155,9 @@ export const DayButton = styled.button<{
   border: 0;
   border-radius: ${radius.pill};
   background: ${({ $selected, $today }) =>
-    $selected ? neutral.primary : $today ? neutral.primaryTint : 'transparent'};
+    $selected ? neutral.primaryAction : $today ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected, $outside }) =>
-    $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
+    $selected ? neutral.primaryText : $outside ? neutral.muted : neutral.text};
   font: inherit;
   font-size: 12px;
   cursor: pointer;
@@ -166,8 +166,8 @@ export const DayButton = styled.button<{
   &:focus-visible {
     outline: 0;
     background: ${({ $selected }) =>
-      $selected ? neutral.primaryHover : neutral.primaryTint};
-    color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primary)};
+      $selected ? neutral.primaryForeground : neutral.primaryTint};
+    color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primaryForeground)};
   }
 `
 
@@ -197,17 +197,17 @@ export const SecondaryButton = styled.button`
   &:focus-visible {
     outline: 0;
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
 export const PrimaryButton = styled(SecondaryButton)`
-  background: ${neutral.primary};
+  background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
 
   &:hover,
   &:focus-visible {
-    background: ${neutral.primaryHover};
+    background: ${neutral.primaryForeground};
     color: ${neutral.primaryText};
   }
 `
@@ -277,7 +277,7 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
   border: 0;
   border-radius: ${radius.sm};
   background: ${({ $selected }) => ($selected ? neutral.primaryTint : 'transparent')};
-  color: ${({ $selected }) => ($selected ? neutral.primary : neutral.text)};
+  color: ${({ $selected }) => ($selected ? neutral.primaryForeground : neutral.text)};
   font: inherit;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
@@ -288,13 +288,13 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
   &:focus-visible {
     outline: 0;
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
 export const TimeSeparator = styled.span`
   align-self: center;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 16px;
   font-weight: 700;
 `

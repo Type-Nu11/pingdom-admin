@@ -261,6 +261,14 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
     onChange(formatDateTime(nextValue))
   }
 
+  const handleEscape = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Escape' || !isOpen) return
+    event.preventDefault()
+    event.stopPropagation()
+    setIsOpen(false)
+    rootRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+  }
+
   return (
     <S.Root ref={rootRef}>
       <S.Trigger
@@ -269,6 +277,7 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         disabled={disabled}
+        onKeyDown={handleEscape}
         onClick={() => {
           if (value) {
             setViewDate(parseValue(value))
@@ -286,6 +295,7 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
               role="dialog"
               aria-label={ariaLabel}
               data-admin-picker-layer
+              onKeyDown={handleEscape}
               style={
                 floatingPosition
                   ? { top: floatingPosition.top, left: floatingPosition.left }
@@ -384,6 +394,15 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
   const selectedHour = normalizedValue.slice(0, 2)
   const selectedMinute = normalizedValue.slice(3, 5)
 
+  const handleEscape = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Escape' || !isOpen) return false
+    event.preventDefault()
+    event.stopPropagation()
+    setIsOpen(false)
+    rootRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    return true
+  }
+
   const getOptionId = (unit: 'hour' | 'minute', option: string) =>
     `${pickerId}-${unit}-${option}`
 
@@ -441,6 +460,7 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
         disabled={disabled}
         onClick={() => setIsOpen((open) => !open)}
         onKeyDown={(event) => {
+          if (handleEscape(event)) return
           if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
             return
           }
@@ -460,6 +480,7 @@ export function AdminTimePicker({ ariaLabel, value, disabled, onChange }: Picker
               role="dialog"
               aria-label={ariaLabel}
               data-admin-picker-layer
+              onKeyDown={handleEscape}
               style={
                 floatingPosition
                   ? { top: floatingPosition.top, left: floatingPosition.left }

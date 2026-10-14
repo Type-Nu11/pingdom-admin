@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useRef, useState } from 'react'
 import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
 import { AdminSelect } from '../common/AdminStatusSelect'
@@ -310,7 +311,7 @@ export function PlaceOperatingNoticeDialog({
             장소 운영에 영향을 주는 공지를 예약하거나 기존 공지를 수정·취소합니다.
           </S.OperatingDialogDescription>
 
-          <S.OperatingActionTabs role="tablist" aria-label="운영 공지 작업 선택">
+          <S.OperatingActionTabs as={AccessibleTabList} panelId="operating-notice-panel" role="tablist" aria-label="운영 공지 작업 선택">
             {NOTICE_ACTIONS.map((option) => (
               <S.OperatingActionTab
                 key={option.value}
@@ -326,6 +327,7 @@ export function PlaceOperatingNoticeDialog({
               </S.OperatingActionTab>
             ))}
           </S.OperatingActionTabs>
+          <div id="operating-notice-panel" role="tabpanel" aria-labelledby={`operating-notice-panel-tab-${NOTICE_ACTIONS.findIndex(option => option.value === action)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
           {action === 'create' ? (
             <>
@@ -524,6 +526,7 @@ export function PlaceOperatingNoticeDialog({
               {formError || actionErrors[action]}
             </S.OperatingFormNotice>
           ) : null}
+        </div>
         </S.OperatingDialogBody>
 
         <S.OperatingDialogActions>

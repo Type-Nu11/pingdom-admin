@@ -1,4 +1,5 @@
 import type { AuthErrorResponse } from './auth.types'
+import type { ReviewPresentation } from './reviewPresentation.types'
 
 export type MerchantOwnerProfileStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REVOKED'
 export type MerchantOnboardingStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
@@ -43,12 +44,6 @@ export type MerchantPlaceDayOfWeek =
   | 'FRIDAY'
   | 'SATURDAY'
   | 'SUNDAY'
-export type MerchantPlaceClaimType = 'INITIAL' | 'OWNERSHIP_TRANSFER'
-export type MerchantPlaceClaimStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED'
-export type MerchantPlaceClaimDocumentType =
-  | 'BUSINESS_LICENSE'
-  | 'RESIDENT_REGISTRATION'
-  | 'REPRESENTATIVE_IMAGE'
 export type MerchantVerifiedBoostExecutionStatus = 'ACTIVE' | 'STOPPED' | 'EXPIRED'
 export type MerchantVerifiedBoostProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE'
 
@@ -265,11 +260,23 @@ export interface MerchantAvailability {
   placeId: number
   productId: number | null
   productType: MerchantReservableProductType
+  productName: string | null
+  reservationTerms: MerchantReservationTerms | null
+  conditionsVersion: number
   startsAt: string
   endsAt: string
   totalCapacity: number
   remainingCapacity: number
   status: ReservableProductStatus
+}
+
+export interface MerchantReservationTerms {
+  unitAmountMinor: number
+  additionalAmountMinor: number
+  currency: string
+  timezone: string
+  cancellable: boolean
+  cancellationCutoffMinutes: number | null
 }
 
 export interface MerchantAvailabilityUpsertRequest {
@@ -279,6 +286,32 @@ export interface MerchantAvailabilityUpsertRequest {
   startsAt: string
   endsAt: string
   totalCapacity?: number
+}
+
+export interface MerchantReservationConfirmation {
+  placeId: number
+  placeName: string
+  availabilityId: number
+  productType: MerchantReservableProductType
+  productId: number | null
+  productName: string | null
+  startsAt: string
+  endsAt: string
+  quantity: number
+  timezone: string
+  unitAmountMinor: number
+  additionalAmountMinor: number
+  totalAmountMinor: number
+  currency: string
+  currencyFractionDigits: number
+  paymentRequired: boolean
+  cancellable: boolean
+  cancellationDeadline: string | null
+  cancellationFeeMinor: number
+  refundableAmountMinor: number
+  conditionsVersion: number
+  productVersion: number | null
+  expiresAt: string
 }
 
 export interface MerchantReservation {
@@ -298,6 +331,7 @@ export interface MerchantReservation {
   canceledAt: string | null
   canceledBy: number | null
   updatedAt: string
+  confirmation: MerchantReservationConfirmation | null
 }
 
 export interface MerchantReservationPageResponse {
@@ -380,41 +414,6 @@ export interface MerchantPlaceReverificationPageResponse {
 
 export interface MerchantPlaceReverificationResponseRequest {
   responseNote: string
-}
-
-export interface MerchantPlaceClaim {
-  id: number
-  placeId: number
-  claimType: MerchantPlaceClaimType
-  status: MerchantPlaceClaimStatus
-  reason: string
-  reviewReason: string | null
-  reviewedAt: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface MerchantPlaceClaimPageResponse {
-  claims: MerchantPlaceClaim[]
-  page: number
-  limit: number
-  totalElements: number
-  totalPages: number
-  hasNext: boolean
-}
-
-export interface MerchantPlaceClaimCreateRequest {
-  placeId: number
-  reason: string
-}
-
-export interface MerchantPlaceClaimAttachment {
-  id: number
-  documentType: MerchantPlaceClaimDocumentType
-  contentType: string
-  fileSize: number
-  displayOrder: number
-  createdAt: string
 }
 
 export interface MerchantVerifiedBoostSelection {
@@ -620,7 +619,7 @@ export interface MerchantPlaceMediaOrderUpdateRequest {
   displayOrder: number
 }
 
-export interface MerchantPlaceReview {
+export interface MerchantPlaceReview extends ReviewPresentation {
   reviewId: number
   placeId: number
   userId: number

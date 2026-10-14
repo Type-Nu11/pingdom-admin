@@ -1,3 +1,4 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -261,7 +262,7 @@ function TrustScorePage() {
                 </Shared.HeaderButton>
               </Shared.HeaderActions>
             </Shared.PageHeader>
-            <S.TabList role="tablist">
+            <S.TabList as={AccessibleTabList} panelId="trust-score-panel" role="tablist" aria-label="신뢰 점수 작업">
               {(
                 [
                   ["reporter", "신고자 조회", "person_search"],
@@ -287,6 +288,7 @@ function TrustScorePage() {
                 </S.TabButton>
               ))}
             </S.TabList>
+            <div id="trust-score-panel" role="tabpanel" aria-labelledby={`trust-score-panel-tab-${['reporter', 'anomalies', 'rules'].indexOf(tab)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
             {hook.actionErrorMessage ? (
               <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage>
             ) : null}
@@ -731,6 +733,7 @@ function TrustScorePage() {
                 </Shared.Panel>
               </>
             ) : null}
+          </div>
           </Shared.PageStack>
         </Shared.Content>
       </Shell.MainArea>

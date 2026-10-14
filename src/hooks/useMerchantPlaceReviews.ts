@@ -6,7 +6,7 @@ import {
   getMerchantPlaceDetail,
   getMerchantPlaceReviews,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantOwnerProfile,
@@ -22,7 +22,7 @@ type LoadStatus = 'loading' | 'ready' | 'error'
 
 const PAGE_LIMIT = 20
 
-export function useMerchantPlaceReviews() {
+export function useMerchantPlaceReviews({ persistActionError = false } = {}) {
   const { clearAuth } = useAuth()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
@@ -34,7 +34,7 @@ export function useMerchantPlaceReviews() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sectionErrorMessage, setSectionErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage, persistActionError ? null : undefined)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeReviewId, setActiveReviewId] = useState<number | null>(null)
@@ -44,7 +44,7 @@ export function useMerchantPlaceReviews() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -80,7 +80,7 @@ export function useMerchantPlaceReviews() {
       } else {
         setSectionErrorMessage(nextMessage)
       }
-      if (isApiError(reviewsResult.reason) && reviewsResult.reason.category === 'unauthorized') clearAuth()
+      if (shouldClearAuth(reviewsResult.reason)) clearAuth()
       logDebugError('상점주 장소 리뷰 조회 실패', reviewsResult.reason)
       setIsLoading(false)
       return false
@@ -175,6 +175,7 @@ export function useMerchantPlaceReviews() {
     errorMessage,
     sectionErrorMessage,
     actionErrorMessage,
+    clearActionError: () => setActionErrorMessage(''),
     successMessage,
     activeReviewId,
     selectPlace,

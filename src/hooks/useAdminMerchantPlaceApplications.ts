@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminMerchantPlaceApplicationApi'
 import { getAdminMerchantOwner } from '../api/adminMerchantOwnerApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminMerchantPlaceApplication,
@@ -29,6 +29,14 @@ const CATEGORY_MESSAGES = {
 
 export type ApplicationReviewView = 'pending' | 'history'
 export type ApplicationTypeFilter = MerchantPlaceApplicationType | 'ALL'
+export const APPLICATION_REVIEW_PAGE_SIZE = 10
+export interface ApplicationHistoryFilters {
+  result: 'ALL' | 'APPROVED' | 'COMPLETED' | 'REJECTED' | 'CANCELED'
+  keyword: string
+  submittedFrom: string
+  submittedTo: string
+}
+export const EMPTY_HISTORY_FILTERS: ApplicationHistoryFilters = { result: 'ALL', keyword: '', submittedFrom: '', submittedTo: '' }
 
 const HISTORY_STATUSES: MerchantPlaceApplicationStatus[] = [
   'APPROVED',
@@ -64,12 +72,14 @@ export function useAdminMerchantPlaceApplications() {
   const pageRef = useRef(1)
   const viewRef = useRef<ApplicationReviewView>('pending')
   const applicationTypeRef = useRef<ApplicationTypeFilter>('ALL')
+  const [historyFilters, setHistoryFilters] = useState(EMPTY_HISTORY_FILTERS)
+  const historyFiltersRef = useRef(EMPTY_HISTORY_FILTERS)
   const listRequestRef = useRef(0)
   const detailRequestRef = useRef(0)
 
   const message = useCallback((error: unknown, fallback: string) => {
     if (!isApiError<AdminMerchantPlaceApplicationErrorResponse>(error)) return fallback
-    if (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
     return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES })
   }, [clearAuth])
 
@@ -84,10 +94,15 @@ export function useAdminMerchantPlaceApplications() {
     setErrorMessage('')
     try {
       const data = await api.getAdminMerchantPlaceApplications({
-        status: nextView === 'pending' ? 'PENDING' : HISTORY_STATUSES,
+        status: nextView === 'pending' ? 'PENDING' : historyFiltersRef.current.result === 'ALL' ? HISTORY_STATUSES : historyFiltersRef.current.result,
+        ...(nextView === 'history' ? {
+          keyword: historyFiltersRef.current.keyword || undefined,
+          submittedFrom: historyFiltersRef.current.submittedFrom || undefined,
+          submittedTo: historyFiltersRef.current.submittedTo || undefined,
+        } : {}),
         applicationType: nextApplicationType === 'ALL' ? undefined : nextApplicationType,
         page: nextPage,
-        limit: 10,
+        limit: APPLICATION_REVIEW_PAGE_SIZE,
       })
       if (requestId !== listRequestRef.current) return false
       setItems(data.items)
@@ -110,14 +125,40 @@ export function useAdminMerchantPlaceApplications() {
   }, [message])
 
   const changeView = useCallback((nextView: ApplicationReviewView) => {
+    if (nextView === viewRef.current) return
     viewRef.current = nextView
     pageRef.current = 1
+    setPage(1)
+    detailRequestRef.current += 1
+    setDetail(null)
+    setIsDetailLoading(false)
     setView(nextView)
     setItems([])
     setTotal(0)
     setTotalPages(0)
     setHasNext(false)
     void fetchApplications(1, nextView, applicationTypeRef.current)
+  }, [fetchApplications])
+
+  const applyHistoryFilters = useCallback((filters: ApplicationHistoryFilters, resetType = false) => {
+    const next = { ...filters, keyword: filters.keyword.trim() }
+    if (next.submittedFrom && next.submittedTo && next.submittedFrom > next.submittedTo) return false
+    historyFiltersRef.current = next
+    setHistoryFilters(next)
+    pageRef.current = 1
+    setPage(1)
+    setItems([])
+    setTotal(0)
+    setTotalPages(0)
+    setHasNext(false)
+    detailRequestRef.current += 1
+    setDetail(null)
+    if (resetType) {
+      applicationTypeRef.current = 'ALL'
+      setApplicationType('ALL')
+    }
+    void fetchApplications(1)
+    return true
   }, [fetchApplications])
 
   const changeApplicationType = useCallback((nextApplicationType: ApplicationTypeFilter) => {
@@ -215,16 +256,20 @@ export function useAdminMerchantPlaceApplications() {
     }
   }, [downloadingAttachmentId, message])
 
-  const review = useCallback(async (approved: boolean, reason: string) => {
-    if (!detail || reviewRef.current) return null
+  const review = useCallback(async (target: Pick<AdminMerchantPlaceApplication, 'id' | 'version'>, approved: boolean, reason: string) => {
+    if (reviewRef.current) return null
+    if (!detail || detail.id !== target.id || detail.version !== target.version || detail.status !== 'PENDING') {
+      setActionErrorMessage('신청 정보가 변경되었습니다. 확인창을 닫고 다시 조회해주세요.')
+      return null
+    }
     reviewRef.current = true
     setIsReviewing(true)
     setActionErrorMessage('')
     setSuccessMessage('')
     try {
       const reviewed = approved
-        ? await api.approveAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
-        : await api.rejectAdminMerchantPlaceApplication(detail.id, { reviewedVersion: detail.version, reason })
+        ? await api.approveAdminMerchantPlaceApplication(target.id, { reviewedVersion: target.version, reason })
+        : await api.rejectAdminMerchantPlaceApplication(target.id, { reviewedVersion: target.version, reason })
       setDetail(reviewed)
       setAttachments(reviewed.attachments)
       await fetchApplications(1)
@@ -241,7 +286,10 @@ export function useAdminMerchantPlaceApplications() {
     }
   }, [detail, fetchApplications, fetchDetail, message])
 
-  useEffect(() => { void fetchApplications(1) }, [fetchApplications])
+  useEffect(() => {
+    void fetchApplications(1)
+    return () => { listRequestRef.current += 1; detailRequestRef.current += 1 }
+  }, [fetchApplications])
 
   return {
     items,
@@ -255,6 +303,8 @@ export function useAdminMerchantPlaceApplications() {
     hasNext,
     view,
     applicationType,
+    historyFilters,
+    applyHistoryFilters,
     isLoading,
     isDetailLoading,
     downloadingAttachmentId,

@@ -1,7 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantStore } from '../../hooks/useMerchantStore'
+import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
+import { useSavedDraft } from '../../hooks/useSavedDraft'
+import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import type {
   MerchantOfferStatus,
   MerchantOwnerProfileStatus,
@@ -76,10 +79,11 @@ function StoreInformationForm({
   const [contactPhone, setContactPhone] = useState(initialValues?.contactPhone ?? '')
   const [websiteUrl, setWebsiteUrl] = useState(initialValues?.websiteUrl ?? '')
   const [reservationUrl, setReservationUrl] = useState(initialValues?.reservationUrl ?? '')
+  const draft = useSavedDraft(JSON.stringify([description, contactPhone, websiteUrl, reservationUrl]), { busy: isSaving })
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    await onSave({ description, contactPhone, websiteUrl, reservationUrl })
+    if (await onSave({ description, contactPhone, websiteUrl, reservationUrl })) draft.markSaved()
   }
 
   return (
@@ -137,8 +141,10 @@ function StoreInformationForm({
 
 function MerchantStorePage() {
   const navigate = useNavigate()
+  const requestTransition = useUnsavedNavigation()
   const { logout, user } = useAuth()
   const store = useMerchantStore()
+  const identity = useMerchantPlaceIdentity(store.profile?.placeIds ?? [])
   const ownerStatus = store.profile ? OWNER_STATUS[store.profile.status] : null
   const activeCampaignCount = store.campaigns.filter((campaign) => campaign.status === 'PUBLISHED').length
   const activeOfferCount = store.offers.filter((offer) => offer.status === 'PUBLISHED').length
@@ -189,16 +195,29 @@ function MerchantStorePage() {
             <S.PageTitle>내 가게 관리</S.PageTitle>
             <S.PageDescription>가게 정보와 운영 현황을 관리합니다.</S.PageDescription>
           </div>
-          {store.profile && store.profile.placeIds.length > 1 ? (
+          {store.profile && store.profile.placeIds.length > 0 ? (
             <S.PlaceSelect
+              compact
               aria-label="관리할 장소 선택"
               value={store.selectedPlaceId ?? ''}
-              onChange={(event) => store.selectPlace(Number(event.target.value))}
+              onChange={(event) => { const id = Number(event.target.value); if (id !== store.selectedPlaceId) requestTransition(() => store.selectPlace(id)) }}
             >
               {store.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}
             </S.PlaceSelect>
           ) : null}
         </S.PageIntro>
+
+        <S.WorkflowNav aria-label="가게 주요 업무">
+          {[
+            ['/merchant/place-operations', 'storefront', '운영 정보'],
+            ['/merchant/menus', 'restaurant_menu', '메뉴 관리'],
+            ['/merchant/reviews', 'rate_review', '리뷰 관리'],
+            ['/merchant/campaigns', 'campaign', '이벤트 관리'],
+            ['/merchant/reservations/setup', 'calendar_month', '예약 설정'],
+            ['/merchant/reservations', 'event_available', '예약 내역'],
+            ['/merchant/offers', 'local_offer', '혜택·쿠폰'],
+          ].map(([path, icon, label]) => <S.WorkflowLink as={Link} to={path} key={path}><S.MetricIcon aria-hidden="true">{icon}</S.MetricIcon>{label}</S.WorkflowLink>)}
+        </S.WorkflowNav>
 
         {store.status === 'loading' || !store.profile ? (
           <S.LoadingSummary aria-label="가게 정보를 불러오는 중">
@@ -212,11 +231,17 @@ function MerchantStorePage() {
                 <S.StoreSummary>
                   <div>
                     <S.SummaryTitleRow>
-                      <S.StoreName>사업자 상호: {store.profile.businessName}</S.StoreName>
+                      <S.StoreName>{identity.label(store.selectedPlaceId)}</S.StoreName>
                       {ownerStatus ? <S.StatusBadge $tone={ownerStatus.tone}>{ownerStatus.label}</S.StatusBadge> : null}
                     </S.SummaryTitleRow>
                     <S.StoreMeta>
-                      연결 장소: {store.profile.displayName} (#{store.selectedPlaceId})
+                      {identity.places[store.selectedPlaceId]?.status === 'ready'
+                        ? identity.places[store.selectedPlaceId].address || '주소 정보 없음'
+                        : identity.places[store.selectedPlaceId]?.status === 'error' ? '매장 정보를 불러오지 못했습니다.' : '매장 정보를 확인하고 있습니다.'}
+                    </S.StoreMeta>
+                    {identity.places[store.selectedPlaceId]?.status === 'error' ? <S.RetryButton type="button" onClick={() => identity.retry(store.selectedPlaceId!)}>매장 정보 다시 조회</S.RetryButton> : null}
+                    <S.StoreMeta>
+                      사업자 상호: {store.profile.businessName || '등록 정보 없음'} · 상점주 표시명: {store.profile.displayName || '등록 정보 없음'}
                       {store.profile.contactEmail ? ` · ${store.profile.contactEmail}` : ''}
                     </S.StoreMeta>
                   </div>
@@ -227,36 +252,6 @@ function MerchantStorePage() {
                   <S.Metric><S.MetricIcon aria-hidden="true">local_offer</S.MetricIcon><S.MetricContent><span>공개 중인 혜택</span><strong>{activeOfferCount}개</strong></S.MetricContent></S.Metric>
                   <S.Metric><S.MetricIcon aria-hidden="true">calendar_month</S.MetricIcon><S.MetricContent><span>예약 가능한 시간</span><strong>{activeAvailabilityCount}개</strong></S.MetricContent></S.Metric>
                 </S.Metrics>
-
-                <S.PerformanceSection aria-labelledby="merchant-performance-title">
-                  <S.PerformanceHeading>
-                    <div>
-                      <S.SectionTitle id="merchant-performance-title">성과 요약</S.SectionTitle>
-                      <S.SectionDescription>연결된 전체 장소의 탐색 노출과 예약 전환 성과입니다.</S.SectionDescription>
-                    </div>
-                    {store.performance ? <S.PerformanceScope>{formatCount(store.performance.placeCount)}개 장소 기준</S.PerformanceScope> : null}
-                  </S.PerformanceHeading>
-
-                  {store.isLoadingPerformance ? (
-                    <S.PerformanceGrid aria-label="성과 요약을 불러오는 중">
-                      {Array.from({ length: 6 }, (_, index) => <S.Skeleton key={index} $height={96} />)}
-                    </S.PerformanceGrid>
-                  ) : store.performance ? (
-                    <S.PerformanceGrid>
-                      <S.PerformanceMetric><span>추천 노출</span><strong>{formatCount(store.performance.exposureCount)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>추천 카드 클릭</span><strong>{formatCount(store.performance.clickCount)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>장소 북마크</span><strong>{formatCount(store.performance.bookmarkCount)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>예약</span><strong>{formatCount(store.performance.reservationCount)}</strong><small>확정 {formatCount(store.performance.confirmedReservationCount)}</small></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>클릭률</span><strong>{formatRate(store.performance.clickThroughRate)}</strong></S.PerformanceMetric>
-                      <S.PerformanceMetric><span>예약 전환율</span><strong>{formatRate(store.performance.reservationConversionRate)}</strong></S.PerformanceMetric>
-                    </S.PerformanceGrid>
-                  ) : (
-                    <S.PerformanceError role="alert">
-                      <span>{store.performanceErrorMessage || '성과 요약을 불러오지 못했습니다.'}</span>
-                      <S.PerformanceRetry type="button" onClick={() => void store.fetchPerformance()}>다시 시도</S.PerformanceRetry>
-                    </S.PerformanceError>
-                  )}
-                </S.PerformanceSection>
 
                 {store.sectionErrorMessage ? <div style={{ marginTop: 16 }}><S.Notice $tone="error" role="alert"><S.NoticeIcon aria-hidden="true">error_outline</S.NoticeIcon>{store.sectionErrorMessage}</S.Notice></div> : null}
                 {store.successMessage ? <div style={{ marginTop: 16 }}><S.Notice $tone="success" role="status"><S.NoticeIcon aria-hidden="true">check_circle</S.NoticeIcon>{store.successMessage}</S.Notice></div> : null}
@@ -294,12 +289,42 @@ function MerchantStorePage() {
                       <S.SectionHeading><div><S.SectionTitle>운영 상태</S.SectionTitle><S.SectionDescription>점주 프로필과 연결 장소 상태를 확인합니다.</S.SectionDescription></div></S.SectionHeading>
                       <S.StatusList>
                         <S.StatusRow><div><strong>상점주 계정</strong><span>승인된 계정만 장소 정보를 수정할 수 있습니다.</span></div><S.StateText $tone={ownerStatus?.tone === 'active' ? 'active' : ownerStatus?.tone === 'pending' ? 'pending' : 'neutral'}>{ownerStatus?.label ?? '확인 중'}</S.StateText></S.StatusRow>
-                        <S.StatusRow><div><strong>장소 연결</strong><span>현재 관리 권한이 연결된 장소입니다.</span></div><S.StateText $tone={store.selectedPlaceId ? 'active' : 'neutral'}>{store.selectedPlaceId ? `장소 #${store.selectedPlaceId}` : '연결 없음'}</S.StateText></S.StatusRow>
+                        <S.StatusRow><div><strong>장소 연결</strong><span>현재 관리 권한이 연결된 장소입니다.</span></div><S.StateText $tone={store.selectedPlaceId ? 'active' : 'neutral'}>{store.selectedPlaceId ? identity.label(store.selectedPlaceId) : '연결 없음'}</S.StateText></S.StatusRow>
                         <S.StatusRow><div><strong>운영 공지</strong><span>방문자에게 현재 노출 중인 운영 안내입니다.</span></div><S.StateText $tone={visibleNoticeCount > 0 ? 'pending' : 'neutral'}>{visibleNoticeCount > 0 ? `${visibleNoticeCount}건 노출 중` : '노출 공지 없음'}</S.StateText></S.StatusRow>
                       </S.StatusList>
                     </S.Section>
                   </S.Column>
                 </S.Workspace>
+
+                <S.PerformanceSection aria-labelledby="merchant-performance-title">
+                  <S.PerformanceHeading>
+                    <div>
+                      <S.SectionTitle id="merchant-performance-title">전체 매장 성과</S.SectionTitle>
+                      <S.SectionDescription>전체 연결 장소 · 기간 제한 없는 집계입니다. 위에서 선택한 매장만의 성과가 아닙니다.</S.SectionDescription>
+                    </div>
+                    {store.performance ? <S.PerformanceScope>{formatCount(store.performance.placeCount)}개 장소 기준</S.PerformanceScope> : null}
+                  </S.PerformanceHeading>
+
+                  {store.isLoadingPerformance ? (
+                    <S.PerformanceGrid aria-label="성과 요약을 불러오는 중">
+                      {Array.from({ length: 6 }, (_, index) => <S.Skeleton key={index} $height={96} />)}
+                    </S.PerformanceGrid>
+                  ) : store.performance ? (
+                    <S.PerformanceGrid>
+                      <S.PerformanceMetric><span>추천 노출</span><strong>{formatCount(store.performance.exposureCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>추천 카드 클릭</span><strong>{formatCount(store.performance.clickCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>장소 북마크</span><strong>{formatCount(store.performance.bookmarkCount)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>예약</span><strong>{formatCount(store.performance.reservationCount)}</strong><small>확정 {formatCount(store.performance.confirmedReservationCount)}</small></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>클릭률</span><strong>{formatRate(store.performance.clickThroughRate)}</strong></S.PerformanceMetric>
+                      <S.PerformanceMetric><span>예약 전환율</span><strong>{formatRate(store.performance.reservationConversionRate)}</strong></S.PerformanceMetric>
+                    </S.PerformanceGrid>
+                  ) : (
+                    <S.PerformanceError role="alert">
+                      <span>{store.performanceErrorMessage || '성과 요약을 불러오지 못했습니다.'}</span>
+                      <S.PerformanceRetry type="button" onClick={() => void store.fetchPerformance()}>다시 시도</S.PerformanceRetry>
+                    </S.PerformanceError>
+                  )}
+                </S.PerformanceSection>
               </>
             ) : (
               <S.EmptyStoreState>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminVerifiedBoostProductApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminVerifiedBoostProductErrorResponse,
@@ -41,7 +41,7 @@ export function useAdminVerifiedBoostProducts() {
 
   const errorText = useCallback((error: unknown, fallback: string) => {
     if (!isApiError<AdminVerifiedBoostProductErrorResponse>(error)) return fallback
-    if (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
     return getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES })
   }, [clearAuth])
 

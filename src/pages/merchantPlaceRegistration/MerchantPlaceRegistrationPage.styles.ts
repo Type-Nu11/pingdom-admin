@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import KakaoMap from '../../components/map/KakaoMap'
+import NaverMap from '../../components/map/NaverMap'
 import { adminColors } from '../../styles/theme'
 
 const colors = adminColors
@@ -8,6 +8,16 @@ export const Layout = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+`
+
+export const ScreenActions = styled.nav`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  button { width: auto; margin: 0; }
+  button:disabled { cursor: default; opacity: 0.55; }
 `
 
 const surfacePanel = css`
@@ -34,6 +44,11 @@ export const PanelHeading = styled.div`
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    > div:first-child { flex: 1 1 100%; min-width: 0; }
+  }
 `
 
 export const PanelTitle = styled.h2`
@@ -72,7 +87,7 @@ export const HistoryTab = styled.button<{ $active: boolean }>`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { color: ${colors.primary}; }
+  &:hover:not(:disabled) { color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
 
@@ -80,6 +95,9 @@ export const ApplicationList = styled.div`
   display: flex;
   flex-direction: column;
   border-top: 1px solid ${colors.borderSoft};
+  max-height: min(520px, 60vh);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 `
 
 export const ApplicationItem = styled.button<{ $selected: boolean }>`
@@ -147,7 +165,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
     : $tone === 'pending'
       ? css`background: ${colors.warningTint}; color: ${colors.warningText};`
       : $tone === 'danger'
-        ? css`background: ${colors.primaryTint}; color: ${colors.primary};`
+        ? css`background: ${colors.primaryTint}; color: ${colors.primaryForeground};`
         : $tone === 'draft'
           ? css`background: #f5f1ff; color: #7150af;`
           : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
@@ -168,7 +186,7 @@ export const NewApplicationButton = styled.button`
   border: 1px solid ${colors.primary};
   border-radius: 6px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -269,7 +287,7 @@ export const CategoryOption = styled.button<{ $selected: boolean }>`
   border: 1px solid transparent;
   border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.text)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.text)};
   font: inherit;
   font-size: 13px;
   font-weight: ${({ $selected }) => ($selected ? 700 : 600)};
@@ -277,7 +295,7 @@ export const CategoryOption = styled.button<{ $selected: boolean }>`
   cursor: pointer;
 
   &:hover,
-  &:focus-visible { outline: 0; background: ${colors.primaryTint}; color: ${colors.primary}; }
+  &:focus-visible { outline: 0; background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
 `
 
 export const PlaceSearchField = styled.div<{ $wide?: boolean }>`
@@ -312,7 +330,7 @@ export const PlaceSearchButton = styled.button`
   padding: 0;
   border: 1px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
+  background: ${colors.primaryAction};
   color: ${colors.primaryText};
   cursor: pointer;
 
@@ -322,14 +340,14 @@ export const PlaceSearchButton = styled.button`
     font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
   }
 
-  &:hover:not(:disabled) { background: ${colors.primaryHover}; }
+  &:hover:not(:disabled) { background: ${colors.primaryForeground}; }
   &:disabled { cursor: not-allowed; border-color: ${colors.disabled}; background: ${colors.disabled}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
 
 export const PlaceSearchHint = styled.p<{ $error?: boolean }>`
   margin: 8px 0 0;
-  color: ${({ $error }) => ($error ? colors.error : colors.muted)};
+  color: ${({ $error }) => ($error ? colors.errorText : colors.muted)};
   font-size: 12px;
   line-height: 1.45;
 `
@@ -375,7 +393,7 @@ export const PlaceSearchResult = styled.button`
   &:hover { background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
 
-  &:hover strong { color: ${colors.primary}; }
+  &:hover strong { color: ${colors.primaryForeground}; }
 `
 
 export const PlaceSearchResultTop = styled.div`
@@ -386,7 +404,7 @@ export const PlaceSearchResultTop = styled.div`
   gap: 10px;
 
   strong { min-width: 0; overflow: hidden; color: ${colors.text}; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-  span { flex: 0 0 auto; color: ${colors.primary}; font-size: 11px; font-weight: 700; }
+  span { flex: 0 0 auto; color: ${colors.primaryForeground}; font-size: 11px; font-weight: 700; }
 `
 
 export const PlaceSearchResultCategory = styled.span`
@@ -458,6 +476,13 @@ export const ManualEntryPrompt = styled.div`
   line-height: 1.5;
 `
 
+export const ManualEntryHeading = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`
+
 export const ManualEntryButton = styled.button`
   min-height: 34px;
   flex: 0 0 auto;
@@ -465,7 +490,7 @@ export const ManualEntryButton = styled.button`
   border: 1px solid ${colors.border};
   border-radius: 6px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -521,7 +546,7 @@ export const TagButton = styled.button<{ $selected: boolean }>`
   border: 1px solid ${({ $selected }) => ($selected ? 'transparent' : colors.border)};
   border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -531,13 +556,16 @@ export const TagButton = styled.button<{ $selected: boolean }>`
   &:disabled { cursor: not-allowed; opacity: 0.55; }
 `
 
-export const LocationMap = styled(KakaoMap)<{ $active: boolean }>`
+export const LocationMap = styled(NaverMap)<{ $active: boolean }>`
   height: 100%;
   min-height: 0;
 `
 
 export const MapViewport = styled.div<{ $active: boolean }>`
   position: relative;
+  /* Bound SDK control layers without hiding attribution inside the map. */
+  isolation: isolate;
+  contain: paint;
   height: ${({ $active }) => ($active ? 'clamp(360px, 46vh, 440px)' : '220px')};
   overflow: hidden;
   border-radius: 7px;
@@ -567,7 +595,7 @@ export const MapIdleOverlay = styled.div`
     border: 1px solid ${colors.border};
     border-radius: 6px;
     background: ${colors.surface};
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 19px;
     font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
@@ -655,7 +683,7 @@ export const MapStatus = styled.span<{ $hasLocation: boolean }>`
   border: 0;
   border-radius: 6px;
   background: ${({ $hasLocation }) => ($hasLocation ? colors.successTint : colors.primaryTint)};
-  color: ${({ $hasLocation }) => ($hasLocation ? colors.successText : colors.primary)};
+  color: ${({ $hasLocation }) => ($hasLocation ? colors.successText : colors.primaryForeground)};
   font-size: 11px;
   font-weight: 700;
 `
@@ -723,7 +751,7 @@ export const DayStatusButton = styled.button<{ $selected: boolean }>`
   border: 1px solid ${({ $selected }) => ($selected ? 'transparent' : colors.border)};
   border-radius: 6px;
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -755,7 +783,7 @@ export const ReadonlyBlock = styled.div`
   font-size: 13px;
   line-height: 1.55;
 
-  strong { color: ${colors.primary}; }
+  strong { color: ${colors.primaryForeground}; }
 `
 
 export const AttachmentNotice = styled.div`
@@ -791,7 +819,7 @@ export const SecondaryButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primary}; background: ${colors.primaryTint}; }
+  &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
   &:disabled { cursor: wait; opacity: 0.65; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
@@ -803,7 +831,7 @@ export const AttachmentHeading = styled.div`
 
   > span {
     flex: 0 0 auto;
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 20px;
     line-height: 1;
@@ -866,7 +894,7 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
 
   > span {
     flex: 0 0 auto;
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 19px;
   }
@@ -912,7 +940,7 @@ export const AttachmentFileInfo = styled.div`
 
   > span {
     flex: 0 0 auto;
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 19px;
   }
@@ -945,6 +973,6 @@ export const AttachmentEmpty = styled.p`
 
 export const DangerButton = styled(SecondaryButton)`
   border-color: #f2b8be;
-  color: ${colors.error};
-  &:hover:not(:disabled) { border-color: ${colors.error}; color: ${colors.error}; background: ${colors.errorTint}; }
+  color: ${colors.errorText};
+  &:hover:not(:disabled) { border-color: ${colors.error}; color: ${colors.errorText}; background: ${colors.errorTint}; }
 `

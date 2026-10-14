@@ -1,5 +1,7 @@
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
 import { useState } from 'react'
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
@@ -99,6 +101,13 @@ function PlaceEventPage() {
   const adminIdentifier =
     user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const isBusy = hook.activeAction !== null
+  const editingEvent = dialog?.type === 'edit' ? dialog.event : null
+  const changedFields = JSON.stringify([formPlaceId, title, description, formEventType, startAt, endAt]) !== JSON.stringify([
+    editingEvent ? String(editingEvent.placeId) : '', editingEvent?.title ?? '', editingEvent?.description ?? '',
+    editingEvent?.eventType ?? 'POP_UP', editingEvent ? toDateTimeValue(editingEvent.startAt) : '', editingEvent ? toDateTimeValue(editingEvent.endAt) : '',
+  ])
+  const guard = useUnsavedChanges(Boolean(dialog) && (reason !== '' || ((dialog?.type === 'create' || dialog?.type === 'edit') && changedFields)), Boolean(dialog) && isBusy)
+  const closeDialog = () => guard.request(() => setDialog(null))
 
   const clearForm = () => {
     setFormPlaceId('')
@@ -216,7 +225,7 @@ function PlaceEventPage() {
           ? await hook.createEvent(request)
           : await hook.updateEvent(dialog.event.eventId, request)
 
-      if (result) setDialog(null)
+      if (result) { guard.markClean(); setDialog(null) }
       return
     }
 
@@ -230,7 +239,7 @@ function PlaceEventPage() {
         ? await hook.publishEvent(dialog.event.eventId, { reason: reason.trim() })
         : await hook.cancelEvent(dialog.event.eventId, { reason: reason.trim() })
 
-    if (result) setDialog(null)
+    if (result) { guard.markClean(); setDialog(null) }
   }
 
   const dialogTitle =
@@ -301,9 +310,13 @@ function PlaceEventPage() {
                 <S.Field>이벤트 유형<AdminSelect aria-label="이벤트 유형" width="100%" value={eventType} disabled={isBusy} onChange={(event) => setEventType(event.target.value as AdminPlaceEventType | '')}><option value="">전체</option>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
                 <S.Field>공개 상태<AdminSelect aria-label="공개 상태" width="100%" value={publicationStatus} disabled={isBusy} onChange={(event) => setPublicationStatus(event.target.value as AdminPlaceEventPublicationStatus | '')}><option value="">전체</option>{Object.entries(PUBLICATION_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
                 <S.Field>일정 상태<AdminSelect aria-label="일정 상태" width="100%" value={scheduleStatus} disabled={isBusy} onChange={(event) => setScheduleStatus(event.target.value as AdminPlaceEventScheduleStatus | '')}><option value="">전체</option>{Object.entries(SCHEDULE_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
-                <S.SearchFilterActions><Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton></S.SearchFilterActions>
+                <S.SearchFilterActions $inline><Shared.SecondaryButton type="button" disabled={hook.isLoading || isBusy} onClick={resetSearch}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={hook.isLoading || isBusy}>{hook.isLoading ? '조회 중' : '조회'}</Shared.PrimaryButton></S.SearchFilterActions>
               </S.SearchFilterGrid>
             </S.SearchBar>
+            <Shared.QuerySummary aria-label="이벤트 조회 조건">
+              조회 조건: {hook.query.keyword ? `검색어 ${hook.query.keyword}` : '전체 검색어'} · {hook.query.placeId ? `장소 #${hook.query.placeId}` : '전체 장소'} · {hook.query.eventType ? EVENT_TYPES[hook.query.eventType] : '전체 유형'} · {hook.query.publicationStatus ? PUBLICATION_STATUS[hook.query.publicationStatus] : '전체 공개 상태'} · {hook.query.scheduleStatus ? SCHEDULE_STATUS[hook.query.scheduleStatus] : '전체 일정'}
+              {keyword.trim() !== (hook.query.keyword ?? '') || (placeId.trim() ? Number(placeId) : undefined) !== hook.query.placeId || eventType !== (hook.query.eventType ?? '') || publicationStatus !== (hook.query.publicationStatus ?? '') || scheduleStatus !== (hook.query.scheduleStatus ?? '') ? ' · 미적용 변경 있음' : ''}
+            </Shared.QuerySummary>
 
             {formError ? <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice> : null}
             {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
@@ -359,12 +372,12 @@ function PlaceEventPage() {
         </Shared.Content>
       </Shell.MainArea>
 
-      {dialog ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !isBusy && setDialog(null)}>
+      {dialog ? <Shared.ModalOverlay role="presentation" onKeyDown={(event) => { if (event.key === 'Escape' && !isBusy) { event.stopPropagation(); closeDialog() } }} onMouseDown={() => !isBusy && closeDialog()}>
         <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="place-event-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
-          <Shared.ModalHeader><Shared.ModalTitle id="place-event-dialog-title">{dialogTitle}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
+          <Shared.ModalHeader><Shared.ModalTitle id="place-event-dialog-title">{dialogTitle}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
           <Shared.ModalBody>
             {dialog.type === 'create' || dialog.type === 'edit' ? <S.FormGrid>
-              <S.Field>장소 ID *<S.Input inputMode="numeric" value={formPlaceId} disabled={isBusy || dialog.type === 'edit'} placeholder="예: 42" onChange={(event) => { setFormPlaceId(event.target.value); setFormError(''); hook.dismissActionError() }} /></S.Field>
+              <S.WideField as="div">장소 *{dialog.type === 'edit' ? <div>{dialog.event.placeName} · #{dialog.event.placeId}<small>{dialog.event.placeAddress}</small></div> : <AdminPlacePicker value={formPlaceId} disabled={isBusy} onChange={value => { setFormPlaceId(value); setFormError(''); hook.dismissActionError() }} />}</S.WideField>
               <S.Field>이벤트 유형 *<AdminSelect aria-label="등록 이벤트 유형" width="100%" value={formEventType} disabled={isBusy} onChange={(event) => { setFormEventType(event.target.value as AdminPlaceEventType); setFormError(''); hook.dismissActionError() }}>{Object.entries(EVENT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field>
               <S.WideField>이벤트 제목 *<S.Input maxLength={150} value={title} disabled={isBusy} onChange={(event) => { setTitle(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{title.length}/150</small></S.WideField>
               <S.Field>시작 일시 *<AdminDateTimePicker ariaLabel="이벤트 시작 일시" value={startAt} disabled={isBusy} onChange={(value) => { setStartAt(value); setFormError(''); hook.dismissActionError() }} /></S.Field>
@@ -377,7 +390,7 @@ function PlaceEventPage() {
             </>}
             {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
           </Shared.ModalBody>
-          <Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={isBusy} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={isBusy} onClick={() => void submitDialog()}>{isBusy ? '처리 중' : dialogSubmitLabel}</Shared.PrimaryButton></Shared.ModalFooter>
+          <Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={isBusy} onClick={closeDialog}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={isBusy} onClick={() => void submitDialog()}>{isBusy ? '처리 중' : dialogSubmitLabel}</Shared.PrimaryButton></Shared.ModalFooter>
         </Shared.Modal>
       </Shared.ModalOverlay> : null}
     </Shell.AppShell>

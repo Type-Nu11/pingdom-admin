@@ -1,0 +1,11 @@
+[
+  {
+    "method": "GET",
+    "path": "/admin/data-quality/issues",
+    "file": "src/api/adminDataQualityApi.ts",
+    "function": "getAdminDataQualityIssues",
+    "callers": [
+      "src/hooks/useAdminDataQualityIssues.ts"
+    ]
+  }
+]

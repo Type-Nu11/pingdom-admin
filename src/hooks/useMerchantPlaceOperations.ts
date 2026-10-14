@@ -13,7 +13,7 @@ import {
   updateMerchantPlaceMediaOrder,
   updateMerchantRepresentativeMedia,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantOwnerProfile,
@@ -53,7 +53,11 @@ export function useMerchantPlaceOperations() {
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [place, setPlace] = useState<MerchantPlaceDetail | null>(null)
-  const [operating, setOperating] = useState<MerchantPlaceOperating | null>(null)
+  const [operating, setOperating] = useState<(Omit<MerchantPlaceOperating, 'currentlyOperating' | 'checkedAt'> & {
+    currentlyOperating: boolean | null
+    checkedAt: string | null
+  }) | null>(null)
+  const [operatingFailed, setOperatingFailed] = useState(false)
   const [media, setMedia] = useState<MerchantPlaceMediaResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -69,7 +73,7 @@ export function useMerchantPlaceOperations() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -81,10 +85,13 @@ export function useMerchantPlaceOperations() {
     })
   }, [clearAuth])
 
-  const fetchPlaceOperations = useCallback(async (placeId: number) => {
+  const fetchPlaceOperations = useCallback(async (placeId: number, initialLoad = false) => {
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsLoading(true)
+    // Keep the last result during a same-place refresh so pending form input stays mounted.
+    setOperating(current => current ? { ...current, currentlyOperating: null, checkedAt: null } : null)
+    setOperatingFailed(false)
     setSectionErrorMessage('')
 
     const [placeResult, operatingResult, mediaResult] = await Promise.allSettled([
@@ -97,6 +104,7 @@ export function useMerchantPlaceOperations() {
 
     if (placeResult.status === 'fulfilled') setPlace(placeResult.value)
     if (operatingResult.status === 'fulfilled') setOperating(operatingResult.value)
+    setOperatingFailed(operatingResult.status === 'rejected')
     if (mediaResult.status === 'fulfilled') setMedia(sortMedia(mediaResult.value))
 
     const failures = [placeResult, operatingResult, mediaResult].filter(
@@ -104,19 +112,23 @@ export function useMerchantPlaceOperations() {
     )
     if (failures.length > 0) {
       failures.forEach((result) => {
-        if (isApiError(result.reason) && result.reason.category === 'unauthorized') clearAuth()
+        if (shouldClearAuth(result.reason)) clearAuth()
         logDebugError('상점주 장소 운영 정보 조회 실패', result.reason)
       })
       setSectionErrorMessage('일부 장소 운영 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.')
     }
 
     setIsLoading(false)
+    if (initialLoad && operatingResult.status === 'rejected') {
+      setErrorMessage(getErrorMessage(operatingResult.reason, '장소 운영 정보를 불러오지 못했습니다.'))
+    }
     return operatingResult.status === 'fulfilled'
-  }, [clearAuth])
+  }, [clearAuth, getErrorMessage])
 
   const fetchInitialData = useCallback(async () => {
     setStatus('loading')
     setErrorMessage('')
+    setSectionErrorMessage('')
 
     try {
       const nextProfile = await getMerchantOwnerProfile()
@@ -129,7 +141,7 @@ export function useMerchantPlaceOperations() {
         return
       }
 
-      const loaded = await fetchPlaceOperations(initialPlaceId)
+      const loaded = await fetchPlaceOperations(initialPlaceId, true)
       if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
     } catch (error) {
       if (!mountedRef.current) return
@@ -142,7 +154,7 @@ export function useMerchantPlaceOperations() {
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
+    return () => { mountedRef.current = false; requestRef.current += 1 }
   }, [fetchInitialData])
 
   const selectPlace = useCallback((placeId: number) => {
@@ -192,6 +204,7 @@ export function useMerchantPlaceOperations() {
       () => updateMerchantPlaceOperatingStatus(selectedPlaceId, { operatingStatus }),
       (next) => {
         setOperating(next)
+        setOperatingFailed(false)
         setPlace((current) => current ? { ...current, operatingStatus: next.operatingStatus, operatingStatusCheckedAt: next.operatingStatusCheckedAt } : current)
       },
       '장소 운영 상태를 변경했습니다.',
@@ -211,11 +224,12 @@ export function useMerchantPlaceOperations() {
           operatingExceptions: next.operatingExceptions,
         } : current)
         setPlace((current) => current ? { ...current, regularHours: next.regularHours, operatingExceptions: next.operatingExceptions } : current)
+        void fetchPlaceOperations(selectedPlaceId)
       },
       '영업시간을 저장했습니다.',
       '영업시간을 저장하지 못했습니다.',
     )
-  }, [runAction, selectedPlaceId])
+  }, [fetchPlaceOperations, runAction, selectedPlaceId])
 
   const updateRepresentativeMedia = useCallback((mediaId: number) => {
     if (!selectedPlaceId) return Promise.resolve(null)
@@ -316,6 +330,7 @@ export function useMerchantPlaceOperations() {
     selectedPlaceId,
     place,
     operating,
+    operatingFailed,
     media,
     isLoading,
     errorMessage,

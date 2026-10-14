@@ -1,20 +1,19 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useLayoutEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { useAuth } from '../../hooks/useAuth'
-import { MERCHANT_OFFER_PAGE_LIMIT, useMerchantOffers } from '../../hooks/useMerchantOffers'
+import { useMerchantOffers } from '../../hooks/useMerchantOffers'
 import type {
   MerchantCoupon,
   MerchantOffer,
   MerchantOfferCreateRequest,
   MerchantOfferStatus,
 } from '../../types/merchantStore.types'
-import * as Store from '../merchantStore/MerchantStorePage.styles'
-import * as S from '../merchantCampaign/MerchantCampaignPage.styles'
-
-type StatusFilter = 'ALL' | MerchantOfferStatus
+import * as Store from '../../components/merchant/MerchantSurface.styles'
+import * as S from '../../components/merchant/MerchantWorkspace.styles'
 
 const STATUS: Record<MerchantOfferStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   DRAFT: { label: '초안', tone: 'draft' },
@@ -68,6 +67,7 @@ function OfferEditor({
   onCreated: (offerId: number) => void
 }) {
   const [placeId, setPlaceId] = useState(preferredPlaceId ?? placeIds[0] ?? 0)
+  const identity = useMerchantPlaceIdentity(placeIds)
   const [title, setTitle] = useState(offer?.title ?? '')
   const [description, setDescription] = useState(offer?.description ?? '')
   const [benefitDescription, setBenefitDescription] = useState(offer?.benefitDescription ?? '')
@@ -122,8 +122,8 @@ function OfferEditor({
   }
 
   if (offer) {
-    return <S.Editor><S.ReadonlyNotice>현재 서버 계약에는 Offer 수정 API가 없습니다. 초안은 공개할 수 있고, 공개된 혜택은 종료할 수 있습니다.</S.ReadonlyNotice><S.Form>
-      <S.Field>연결 장소<S.Input value={`장소 #${offer.placeId}`} disabled /></S.Field>
+    return <S.Editor><S.ReadonlyNotice>{offer.status === 'DRAFT' ? '저장된 혜택은 내용을 변경할 수 없습니다. 내용을 확인한 뒤 공개하세요.' : offer.status === 'PUBLISHED' ? '공개 중인 혜택입니다. 제공을 중단하려면 혜택을 종료하세요.' : '종료된 혜택입니다. 등록 내용을 확인할 수 있습니다.'}</S.ReadonlyNotice><S.Form>
+      <S.Field>연결 장소<S.Input value={identity.label(offer.placeId, true)} disabled /></S.Field>
       <S.Field>상태<S.Input value={STATUS[offer.status].label} disabled /></S.Field>
       <S.Field $wide>혜택 제목<S.Input value={offer.title} disabled /></S.Field>
       <S.Field $wide>혜택 설명<S.Textarea value={offer.description} disabled /></S.Field>
@@ -141,7 +141,7 @@ function OfferEditor({
   }
 
   return <S.Editor><S.Form onSubmit={create}>
-    <S.Field>연결 장소<AdminSelect aria-label="혜택 연결 장소" width="100%" value={placeId} disabled={isBusy || placeIds.length === 0} onChange={(event) => setPlaceId(Number(event.target.value))}>{placeIds.length === 0 ? <option value="">연결된 장소 없음</option> : placeIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}</AdminSelect></S.Field>
+    <S.Field>연결 장소<Store.PlaceSelect compact aria-label="혜택 연결 장소" value={placeId} disabled={isBusy || placeIds.length === 0} onChange={(event) => setPlaceId(Number(event.target.value))}>{placeIds.length === 0 ? <option value="">연결된 장소 없음</option> : placeIds.map((id) => <option key={id} value={id}>연결 장소 #{id}</option>)}</Store.PlaceSelect></S.Field>
     <S.Field>쿠폰 유효기간<S.Input type="number" min="1" max="365" value={couponValidityDays} disabled={isBusy} onChange={(event) => setCouponValidityDays(event.target.value)} /><S.FieldHint>쿠폰 발급일 기준 1~365일</S.FieldHint></S.Field>
     <S.Field $wide>혜택 제목<S.Input value={title} maxLength={100} disabled={isBusy} onChange={(event) => setTitle(event.target.value)} /></S.Field>
     <S.Field $wide>혜택 설명<S.Textarea value={description} maxLength={1000} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} /><S.FieldHint>{description.length}/1000</S.FieldHint></S.Field>
@@ -160,9 +160,11 @@ function OfferEditor({
 function CouponRedeemer({
   activeAction,
   onRedeem,
+  inputRef,
 }: {
   activeAction: ReturnType<typeof useMerchantOffers>['activeAction']
   onRedeem: (request: { code: string }) => Promise<MerchantCoupon | null>
+  inputRef: RefObject<HTMLInputElement | null>
 }) {
   const [code, setCode] = useState('')
   const [formError, setFormError] = useState('')
@@ -185,51 +187,61 @@ function CouponRedeemer({
     }
   }
 
-  return <S.Panel><S.PanelHeader><div><S.PanelTitle>쿠폰 사용 처리</S.PanelTitle><S.PanelDescription>관광객이 제시한 쿠폰 코드를 한 번만 사용 처리합니다.</S.PanelDescription></div></S.PanelHeader><S.Editor><S.Form onSubmit={submit}><S.Field $wide>쿠폰 코드<S.Input value={code} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" disabled={isBusy} onChange={(event) => setCode(event.target.value)} /></S.Field>{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions><S.ActionButton type="submit" $variant="primary" disabled={isBusy}>{activeAction === 'redeem' ? '처리 중' : '사용 처리'}</S.ActionButton></S.FormActions></S.Form>{redeemedCoupon ? <S.ReadonlyNotice role="status">쿠폰 사용이 완료되었습니다. Offer #{redeemedCoupon.offerId} · {formatDateTime(redeemedCoupon.redeemedAt ?? redeemedCoupon.issuedAt)}</S.ReadonlyNotice> : null}</S.Editor></S.Panel>
+  return <S.Panel><S.PanelHeader><div><S.PanelTitle>쿠폰 사용 처리</S.PanelTitle><S.PanelDescription>관광객이 제시한 쿠폰 코드를 한 번만 사용 처리합니다.</S.PanelDescription></div></S.PanelHeader><S.Editor><S.Form onSubmit={submit}><S.Field $wide>쿠폰 코드<S.Input ref={inputRef} value={code} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" disabled={isBusy} onChange={(event) => setCode(event.target.value)} /></S.Field>{formError ? <S.FormError role="alert">{formError}</S.FormError> : null}<S.FormActions><S.ActionButton type="submit" $variant="primary" disabled={isBusy}>{activeAction === 'redeem' ? '처리 중' : '사용 처리'}</S.ActionButton></S.FormActions></S.Form>{redeemedCoupon ? <S.ReadonlyNotice role="status">쿠폰 사용이 완료되었습니다. Offer #{redeemedCoupon.offerId} · {formatDateTime(redeemedCoupon.redeemedAt ?? redeemedCoupon.issuedAt)}</S.ReadonlyNotice> : null}</S.Editor></S.Panel>
 }
 
 function MerchantOfferPage() {
+  const couponInputRef = useRef<HTMLInputElement>(null)
+  const focusCoupon = () => {
+    couponInputRef.current?.scrollIntoView({ block: 'center' })
+    couponInputRef.current?.focus({ preventScroll: true })
+  }
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const offer = useMerchantOffers()
-  const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null)
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
-  const [page, setPage] = useState(1)
+  const { selectedOfferId, statusFilter, page: currentPage, totalPages, setPage, setStatusFilter } = offer
   const isBusy = offer.activeAction !== null
-  const fetchOfferDetail = offer.fetchOfferDetail
-  const visibleOffers = useMemo(() => offer.offers.filter((item) => (
-    item.placeId === offer.selectedPlaceId && (statusFilter === 'ALL' || item.status === statusFilter)
-  )), [offer.offers, offer.selectedPlaceId, statusFilter])
-  const totalPages = Math.max(1, Math.ceil(visibleOffers.length / MERCHANT_OFFER_PAGE_LIMIT))
-  const currentPage = Math.min(page, totalPages)
-  const pageOffers = useMemo(() => visibleOffers.slice(
-    (currentPage - 1) * MERCHANT_OFFER_PAGE_LIMIT,
-    currentPage * MERCHANT_OFFER_PAGE_LIMIT,
-  ), [currentPage, visibleOffers])
+  const pageOffers = offer.offers
+  const paginationRef = useRef<HTMLDivElement>(null)
+  const paginationFocusRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    if (selectedOfferId) void fetchOfferDetail(selectedOfferId)
-  }, [fetchOfferDetail, selectedOfferId])
+  const changePage = (page: number) => {
+    if (page === currentPage) return
+    const active = document.activeElement
+    paginationFocusRef.current = active instanceof HTMLElement && paginationRef.current?.contains(active)
+      ? active.getAttribute('aria-label') : null
+    setPage(page)
+  }
+
+  useLayoutEffect(() => {
+    if (offer.isListLoading || !paginationFocusRef.current) return
+    const label = paginationFocusRef.current
+    paginationFocusRef.current = null
+    const container = paginationRef.current
+    if (!container || (document.activeElement !== document.body && !container.contains(document.activeElement))) return
+    const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
+    const target = buttons.find(button => button.getAttribute('aria-label') === label && !button.disabled)
+      ?? buttons.find(button => button.getAttribute('aria-current') === 'page' && !button.disabled)
+    ;(target ?? container).focus({ preventScroll: true })
+  }, [offer.isListLoading, totalPages, currentPage])
 
   const handleLogout = () => { void logout(); navigate('/login', { replace: true }) }
-  const startNew = () => { setSelectedOfferId(null); offer.clearSelectedOffer() }
+  const startNew = () => { offer.clearSelectedOffer() }
   const selectPlace = (placeId: number) => {
     offer.selectPlace(placeId)
-    setSelectedOfferId(null)
-    setPage(1)
   }
 
   if (offer.status === 'error') {
     return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>혜택·쿠폰 관리</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void offer.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
-  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{offer.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>혜택·쿠폰 관리</Store.PageTitle><Store.PageDescription>관광객 전용 혜택을 초안으로 등록하고 공개·종료하며, 현장에서 쿠폰을 사용 처리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={offer.status === 'loading' || isBusy} onClick={() => void offer.fetchInitialData()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
-    {offer.profile && offer.profile.placeIds.length > 1 ? <Store.PlaceSelect aria-label="혜택을 관리할 장소 선택" value={offer.selectedPlaceId ?? ''} onChange={(event) => selectPlace(Number(event.target.value))}>{offer.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
+  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{offer.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>혜택·쿠폰 관리</Store.PageTitle><Store.PageDescription>관광객 전용 혜택을 초안으로 등록하고 공개·종료하며, 현장에서 쿠폰을 사용 처리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={!offer.selectedPlaceId || offer.status !== 'ready' || isBusy} onClick={focusCoupon}>쿠폰 사용으로 이동</S.HeaderButton><S.HeaderButton type="button" disabled={offer.status === 'loading' || isBusy} onClick={() => void offer.fetchInitialData()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
+    {offer.profile && offer.profile.placeIds.length > 0 ? <Store.PlaceSelect aria-label="혜택을 관리할 장소 선택" value={offer.selectedPlaceId ?? ''} disabled={isBusy} onChange={(event) => selectPlace(Number(event.target.value))}>{offer.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}
     {offer.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.errorMessage}</Store.Notice> : null}
     {offer.detailErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.detailErrorMessage}</Store.Notice> : null}
     {offer.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{offer.actionErrorMessage}</Store.Notice> : null}
     {offer.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{offer.successMessage}</Store.Notice> : null}
-{!offer.selectedPlaceId && offer.status === 'ready' ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 혜택과 쿠폰을 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <><S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>혜택 목록</S.PanelTitle><S.PanelDescription>연결 장소에 등록한 관광객 전용 혜택입니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={offer.status !== 'ready' || isBusy} onClick={startNew}>새 혜택</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="혜택 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} disabled={isBusy} $selected={statusFilter === value} onClick={() => { setStatusFilter(value); setPage(1) }}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>총 {visibleOffers.length}건</S.ResultMeta>{offer.status === 'loading' || offer.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : pageOffers.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 혜택이 없습니다. 첫 혜택을 초안으로 등록해보세요.' : '선택한 상태의 혜택이 없습니다.'}</S.Empty> : <S.CampaignList>{pageOffers.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedOfferId} onClick={() => setSelectedOfferId(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.benefitDescription}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}{totalPages > 1 ? <AdminPagination ariaLabel="상점주 혜택 목록 페이지네이션" page={currentPage} totalPages={totalPages} disabled={isBusy} onPageChange={setPage} /> : null}</S.Panel><S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedOfferId ? '혜택 상세' : '새 혜택 등록'}</S.PanelTitle><S.PanelDescription>{selectedOfferId ? `혜택 #${selectedOfferId}의 정책과 상태를 확인합니다.` : '혜택을 저장하면 초안 상태로 등록됩니다.'}</S.PanelDescription></div>{offer.selectedOffer ? <S.StatusBadge $tone={STATUS[offer.selectedOffer.status].tone}>{STATUS[offer.selectedOffer.status].label}</S.StatusBadge> : null}</S.PanelHeader>{offer.isDetailLoading ? <S.Empty>혜택 상세를 불러오는 중입니다.</S.Empty> : <OfferEditor key={offer.selectedOffer?.id ?? `new-${offer.selectedPlaceId ?? 'none'}`} offer={offer.selectedOffer} preferredPlaceId={offer.selectedPlaceId} placeIds={offer.profile?.placeIds ?? []} activeAction={offer.activeAction} onCreate={offer.createOffer} onPublish={offer.publishOffer} onClose={offer.closeOffer} onCreated={setSelectedOfferId} />}</S.Panel></S.Workspace><div style={{ marginTop: 24 }}><CouponRedeemer activeAction={offer.activeAction} onRedeem={offer.redeemCoupon} /></div></>}
+{!offer.selectedPlaceId && offer.status === 'ready' ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">add_business</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 혜택과 쿠폰을 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <><S.Workspace><S.Panel><S.PanelHeader><div><S.PanelTitle>혜택 목록</S.PanelTitle><S.PanelDescription>연결 장소에 등록한 관광객 전용 혜택입니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={offer.status !== 'ready' || isBusy} onClick={startNew}>새 혜택</S.CreateButton></S.PanelHeader><S.FilterBar aria-label="혜택 상태 필터">{([['ALL', '전체'], ['DRAFT', '초안'], ['PUBLISHED', '공개 중'], ['CLOSED', '종료']] as const).map(([value, label]) => <S.FilterButton type="button" key={value} disabled={isBusy} $selected={statusFilter === value} onClick={() => { setStatusFilter(value) }}>{label}</S.FilterButton>)}</S.FilterBar><S.ResultMeta>{offer.totalElements === undefined ? '건수 확인 중' : `총 ${offer.totalElements}건`}</S.ResultMeta>{offer.status === 'loading' || offer.isListLoading ? <S.ListLoading><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /><Store.Skeleton $height={74} /></S.ListLoading> : offer.errorMessage ? <S.Empty><S.HeaderButton type="button" onClick={() => void offer.fetchOffers()}>목록 다시 조회</S.HeaderButton></S.Empty> : pageOffers.length === 0 ? <S.Empty>{statusFilter === 'ALL' ? '등록된 혜택이 없습니다. 첫 혜택을 초안으로 등록해보세요.' : '선택한 상태의 혜택이 없습니다.'}</S.Empty> : <S.CampaignList>{pageOffers.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedOfferId} disabled={isBusy} onClick={() => void offer.fetchOfferDetail(item.id)}><S.CampaignTop><S.CampaignTitle title={item.title}>{item.title}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{item.benefitDescription}</S.CampaignMeta><S.CampaignMeta>{formatDateTime(item.startsAt)} - {formatDateTime(item.endsAt)}</S.CampaignMeta></S.CampaignItem>)}</S.CampaignList>}<div ref={paginationRef} tabIndex={-1} aria-label="혜택 목록 페이지 이동">{totalPages > 1 ? <AdminPagination ariaLabel="상점주 혜택 목록 페이지네이션" page={currentPage} totalPages={totalPages} disabled={isBusy || offer.isListLoading} onPageChange={changePage} /> : null}</div></S.Panel><S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedOfferId ? '혜택 상세' : '새 혜택 등록'}</S.PanelTitle><S.PanelDescription>{selectedOfferId ? `혜택 #${selectedOfferId}의 정책과 상태를 확인합니다.` : '혜택을 저장하면 초안 상태로 등록됩니다.'}</S.PanelDescription></div>{offer.selectedOffer ? <S.StatusBadge $tone={STATUS[offer.selectedOffer.status].tone}>{STATUS[offer.selectedOffer.status].label}</S.StatusBadge> : null}</S.PanelHeader>{offer.isDetailLoading ? <S.Empty>혜택 상세를 불러오는 중입니다.</S.Empty> : offer.detailErrorMessage ? <S.Empty><S.HeaderButton type="button" onClick={() => selectedOfferId && void offer.fetchOfferDetail(selectedOfferId)}>상세 다시 조회</S.HeaderButton></S.Empty> : <OfferEditor key={offer.selectedOffer?.id ?? `new-${offer.selectedPlaceId ?? 'none'}-${offer.editorVersion}`} offer={offer.selectedOffer} preferredPlaceId={offer.selectedPlaceId} placeIds={offer.profile?.placeIds ?? []} activeAction={offer.activeAction} onCreate={offer.createOffer} onPublish={offer.publishOffer} onClose={offer.closeOffer} onCreated={() => undefined} />}</S.Panel></S.Workspace><div style={{ marginTop: 24 }}><CouponRedeemer inputRef={couponInputRef} activeAction={offer.activeAction} onRedeem={offer.redeemCoupon} /></div></>}
   </Store.Content></Store.Page>
 }
 

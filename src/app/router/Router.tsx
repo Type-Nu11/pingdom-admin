@@ -1,9 +1,11 @@
 import { lazy, Suspense, useLayoutEffect } from 'react'
 import {
-  BrowserRouter,
+  createBrowserRouter,
+  createRoutesFromElements,
+  RouterProvider,
+  Outlet,
   Navigate,
   Route,
-  Routes,
   useLocation,
 } from 'react-router-dom'
 import { ADMIN_MAIN_SCROLL_AREA_ID, MERCHANT_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
@@ -13,9 +15,13 @@ import {
   ProtectedRoute,
 } from './ProtectedRoute'
 import { MerchantLayout } from './MerchantLayout'
+import { MerchantApplicationLayout } from './MerchantApplicationLayout'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
+import { UnsavedChangesProvider } from '../../components/common/UnsavedChangesProvider'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
+const CommunityContentPage = lazy(() => import('../../pages/community/CommunityContentPage'))
+const CommunityReportsPage = lazy(() => import('../../pages/community/CommunityReportsPage'))
 const DashboardPage = lazy(() => import('../../pages/dashboard/DashboardPage'))
 const NotFoundPage = lazy(() => import('../../pages/notFound/NotFoundPage'))
 const PlaceManagePage = lazy(() => import('../../pages/place/PlaceManagePage'))
@@ -27,8 +33,6 @@ const PlaceVerificationPage = lazy(
   () => import('../../pages/placeVerification/PlaceVerificationPage'),
 )
 const UserBanPage = lazy(() => import('../../pages/userBan/UserBanPage'))
-const ReportedUsersPage = lazy(() => import('../../pages/reportedUsers/ReportedUsersPage'))
-const ReportAppealPage = lazy(() => import('../../pages/reportAppeal/ReportAppealPage'))
 const RecommendationMetricsPage = lazy(
   () => import('../../pages/recommendationMetrics/RecommendationMetricsPage'),
 )
@@ -154,19 +158,24 @@ function ScrollToTopOnRouteChange() {
 }
 
 // 관리자 인증과 보호 라우팅 구조를 관리합니다.
-export function Router() {
+function RouteRoot() {
   return (
-    <BrowserRouter>
+    <UnsavedChangesProvider>
       <ScrollToTopOnRouteChange />
       <Suspense fallback={<RouteLoadingFallback />}>
-        <Routes>
+        <Outlet />
+      </Suspense>
+    </UnsavedChangesProvider>
+  )
+}
+
+const router = createBrowserRouter(createRoutesFromElements(
+        <Route element={<RouteRoot />}>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<MerchantProtectedRoute />}>
             <Route element={<MerchantLayout />}>
               <Route path="/merchant" element={<MerchantStorePage />} />
-              <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
-              <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
               <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
               <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
               <Route path="/merchant/offers" element={<MerchantOfferPage />} />
@@ -178,14 +187,20 @@ export function Router() {
               <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
               <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
               <Route path="/merchant/reviews" element={<MerchantPlaceReviewPage />} />
-              <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
               <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
             </Route>
           </Route>
           <Route element={<MerchantOnboardingRoute />}>
             <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />
+            <Route element={<MerchantApplicationLayout />}>
+              <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
+              <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
+              <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
+            </Route>
           </Route>
           <Route element={<ProtectedRoute />}>
+            <Route path="/community" element={<CommunityContentPage />} />
+            <Route path="/community-reports" element={<CommunityReportsPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/places" element={<PlaceManagePage />} />
             <Route path="/places/events" element={<PlaceEventPage />} />
@@ -199,8 +214,8 @@ export function Router() {
               element={<PlaceVerificationPage />}
             />
             <Route path="/bans" element={<UserBanPage />} />
-            <Route path="/reports/reported-users" element={<ReportedUsersPage />} />
-            <Route path="/reports/appeals" element={<ReportAppealPage />} />
+            <Route path="/reports/reported-users" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/reports/appeals" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/recommendations/metrics"
               element={<RecommendationMetricsPage />}
@@ -244,8 +259,9 @@ export function Router() {
             <Route path="/data-quality" element={<DataQualityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
-  )
+        </Route>
+))
+
+export function Router() {
+  return <RouterProvider router={router} />
 }

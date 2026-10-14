@@ -18,6 +18,8 @@ export const Header = styled.header`
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
   min-height: 58px;
   padding: 12px 16px;
   border-bottom: 1px solid ${adminColors.border};
@@ -43,7 +45,7 @@ export const Description = styled.p`
 
 export const Count = styled.span`
   flex-shrink: 0;
-  color: ${adminColors.primary};
+  color: ${adminColors.muted};
   font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
@@ -53,7 +55,7 @@ export const ScrollArea = styled.div`
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 12px 14px;
+  padding: 8px;
   overscroll-behavior: contain;
 
   &:focus-visible {

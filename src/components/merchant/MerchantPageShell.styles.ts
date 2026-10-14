@@ -35,7 +35,7 @@ export const Header = styled.section`
 
 export const Eyebrow = styled.p`
   margin: 0 0 8px;
-  color: ${adminColors.primary};
+  color: ${adminColors.primaryForeground};
   font-size: 13px;
   font-weight: 700;
 `

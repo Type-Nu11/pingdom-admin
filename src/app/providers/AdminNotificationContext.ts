@@ -3,7 +3,7 @@ import type {
   AdminNotificationItem,
   AdminNotificationListRequest,
 } from '../../types/adminNotification.types'
-import type { AdminPendingWorkItem } from '../../api/adminPendingWorkApi'
+import type { AdminPendingWorkItem, AdminPendingWorkEntry } from '../../api/adminPendingWorkApi'
 
 export type NotificationLoadStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -11,6 +11,7 @@ export interface AdminNotificationContextValue {
   notifications: AdminNotificationItem[] | null
   unreadCount: number | null
   pendingWorkItems: AdminPendingWorkItem[] | null
+  pendingWorkEntries: AdminPendingWorkEntry[]
   pendingWorkCount: number | null
   pendingWorkStatus: NotificationLoadStatus
   pendingWorkErrorMessage: string

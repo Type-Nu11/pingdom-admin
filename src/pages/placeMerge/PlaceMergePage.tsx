@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
+import { AdminPagination } from '../../components/common/AdminPagination'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
 import { useAuth } from '../../hooks/useAuth'
@@ -141,6 +142,7 @@ function PlaceMergePage() {
   const {
     duplicateGroups,
     duplicateTotalCount,
+    duplicatePageInfo,
     duplicateDetail,
     mergeHistories,
     isGroupsLoading,
@@ -271,6 +273,14 @@ function PlaceMergePage() {
     void Promise.all([fetchDuplicateGroups(), fetchMergeHistories()])
   }
 
+  const handlePageChange = (page: number) => {
+    setSelectedGroup(null)
+    setSelectedSourceId(null)
+    setConfirmation(null)
+    clearDuplicateDetail()
+    void fetchDuplicateGroups(page)
+  }
+
   const handleSelectSource = (candidateId: number) => {
     setSelectedSourceId(candidateId)
   }
@@ -320,7 +330,7 @@ function PlaceMergePage() {
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar>
           <Shell.TopTitleGroup>
-            <Shell.TopTitle>중복 장소 관리</Shell.TopTitle>
+            <Shell.TopTitle>장소 병합·복구</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
@@ -340,10 +350,10 @@ function PlaceMergePage() {
           <S.PageStack>
             <S.PageHeader>
               <div>
-                <S.Eyebrow>장소 관리 &gt; 중복 장소 관리</S.Eyebrow>
-                <S.PageTitle>중복 장소 관리</S.PageTitle>
+                <S.Eyebrow>장소 관리 &gt; 장소 병합·복구</S.Eyebrow>
+                <S.PageTitle>장소 병합·복구</S.PageTitle>
                 <S.PageDescription>
-                  중복 가능성이 있는 장소를 비교하고 유지할 장소와 병합할 장소를 결정합니다.
+                  중복 장소를 비교해 병합하고, 병합 이력을 확인하거나 복구합니다.
                 </S.PageDescription>
               </div>
               <S.HeaderActions>
@@ -417,6 +427,7 @@ function PlaceMergePage() {
                             group.representativePlaceId
                           }
                           onClick={() => handleSelectGroup(group)}
+                          disabled={isGroupsLoading || activeAction !== null}
                         >
                           <S.GroupTopLine>
                             <S.GroupLabel>{getGroupLabel(group)}</S.GroupLabel>
@@ -437,6 +448,16 @@ function PlaceMergePage() {
                       ))}
                     </S.GroupList>
                   </S.ScrollArea>
+                  {duplicatePageInfo.totalPages > 1 ? (
+                    <AdminPagination
+                      page={duplicatePageInfo.page}
+                      totalPages={duplicatePageInfo.totalPages}
+                      hasNext={duplicatePageInfo.hasNext}
+                      disabled={isGroupsLoading || activeAction !== null}
+                      onPageChange={handlePageChange}
+                      ariaLabel="중복 장소 목록 페이지"
+                    />
+                  ) : null}
                 </S.Panel>
 
                 {activeGroup ? (

@@ -69,7 +69,7 @@ export const HistoryTab = styled.button<{ $active: boolean }>`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { color: ${colors.primary}; }
+  &:hover:not(:disabled) { color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
 
@@ -144,7 +144,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
     : $tone === 'pending'
       ? css`background: ${colors.warningTint}; color: ${colors.warningText};`
       : $tone === 'danger'
-        ? css`background: ${colors.primaryTint}; color: ${colors.primary};`
+        ? css`background: ${colors.primaryTint}; color: ${colors.primaryForeground};`
         : $tone === 'draft'
           ? css`background: #f5f1ff; color: #7150af;`
           : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
@@ -165,7 +165,7 @@ export const NewApplicationButton = styled.button`
   border: 1px solid ${colors.primary};
   border-radius: 6px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -229,7 +229,7 @@ export const SelectedPlace = styled.div`
   border-radius: 6px;
   background: ${colors.primaryTint};
 
-  > span { color: ${colors.primary}; font-family: 'Material Symbols Outlined'; font-size: 19px; }
+  > span { color: ${colors.primaryForeground}; font-family: 'Material Symbols Outlined'; font-size: 19px; }
   strong { display: block; color: ${colors.text}; font-size: 14px; }
   p { margin: 4px 0 0; color: ${colors.muted}; font-size: 12px; line-height: 1.45; }
 `
@@ -243,7 +243,7 @@ export const ReadonlyBlock = styled.div`
   font-size: 13px;
   line-height: 1.55;
 
-  strong { color: ${colors.primary}; }
+  strong { color: ${colors.primaryForeground}; }
 `
 
 export const FormActions = styled.div`
@@ -267,16 +267,16 @@ export const SecondaryButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primary}; background: ${colors.primaryTint}; }
+  &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
   &:disabled { cursor: wait; opacity: 0.65; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 `
 
 export const DangerButton = styled(SecondaryButton)`
   border-color: #f2b8be;
-  color: ${colors.error};
+  color: ${colors.errorText};
 
-  &:hover:not(:disabled) { border-color: ${colors.error}; color: ${colors.error}; background: ${colors.errorTint}; }
+  &:hover:not(:disabled) { border-color: ${colors.error}; color: ${colors.errorText}; background: ${colors.errorTint}; }
 `
 
 export const AttachmentNotice = styled.div`
@@ -297,7 +297,7 @@ export const AttachmentHeading = styled.div`
 
   > span {
     flex: 0 0 auto;
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 20px;
     line-height: 1;
@@ -362,7 +362,7 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
 
   > span {
     flex: 0 0 auto;
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 19px;
   }
@@ -413,7 +413,7 @@ export const AttachmentFileInfo = styled.div`
 
   > span {
     flex: 0 0 auto;
-    color: ${colors.primary};
+    color: ${colors.primaryForeground};
     font-family: 'Material Symbols Outlined';
     font-size: 19px;
   }

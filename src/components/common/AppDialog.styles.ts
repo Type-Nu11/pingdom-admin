@@ -45,6 +45,7 @@ export const Title = styled.h2`
 
 export const Description = styled.p`
   margin: 6px 0 0;
+  overflow-wrap: anywhere;
   color: ${adminColors.muted};
   font-size: 13px;
   line-height: 1.5;
@@ -86,6 +87,11 @@ export const Icon = styled.span`
 `
 
 export const Body = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 0;
   overflow-y: auto;
   padding: 20px;
@@ -93,6 +99,10 @@ export const Body = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
   justify-content: flex-end;
   gap: 8px;
   padding: 0 20px 20px;

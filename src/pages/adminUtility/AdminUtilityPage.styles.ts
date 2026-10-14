@@ -41,7 +41,7 @@ export const IntroText = styled.div`
 
 export const Eyebrow = styled.p`
   margin: 0 0 6px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0;
@@ -76,7 +76,7 @@ export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
   background: ${({ $tone }) =>
     $tone === 'warning' ? neutral.warningTint : neutral.primaryTint};
   color: ${({ $tone }) =>
-    $tone === 'warning' ? neutral.warningText : neutral.primary};
+    $tone === 'warning' ? neutral.warningText : neutral.primaryForeground};
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -213,14 +213,14 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
   border-radius: ${radius.pill};
   background: ${({ $active }) =>
     $active ? neutral.primaryTint : neutral.surfaceLow};
-  color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
+  color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.text)};
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 
   &:hover {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   span {
@@ -232,7 +232,7 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
     padding: 0 7px;
     border-radius: 999px;
     background: ${({ $active }) =>
-      $active ? neutral.primary : neutral.surfaceLow};
+      $active ? neutral.primaryAction : neutral.surfaceLow};
     color: ${({ $active }) => ($active ? neutral.primaryText : neutral.muted)};
     font-size: 12px;
   }
@@ -383,7 +383,7 @@ export const DatePickerButton = styled.button`
 
   .date-picker-icon {
     flex: 0 0 auto;
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
     font-size: 18px;
   }
 
@@ -433,7 +433,7 @@ export const DatePickerIconButton = styled.button`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -466,17 +466,17 @@ export const DatePickerDayButton = styled.button<{
   border: 0;
   border-radius: ${radius.pill};
   background: ${({ $selected, $today }) =>
-    $selected ? neutral.primary : $today ? neutral.primaryTint : 'transparent'};
+    $selected ? neutral.primaryAction : $today ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected, $outside }) =>
-    $selected ? neutral.primaryText : $outside ? neutral.softText : neutral.text};
+    $selected ? neutral.primaryText : $outside ? neutral.muted : neutral.text};
   font: inherit;
   font-size: 12px;
   cursor: pointer;
 
   &:hover {
     background: ${({ $selected }) =>
-      $selected ? neutral.primaryHover : neutral.primaryTint};
-    color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primary)};
+      $selected ? neutral.primaryForeground : neutral.primaryTint};
+    color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primaryForeground)};
   }
 `
 
@@ -530,7 +530,7 @@ export const DatePickerTimeButton = styled.button`
   }
 
   > span:first-child {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
     font-size: 18px;
   }
 
@@ -570,7 +570,7 @@ export const DatePickerTimeMenuTitle = styled.strong`
 export const DatePickerTimePreview = styled.span`
   display: block;
   margin-bottom: 8px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
@@ -618,7 +618,7 @@ export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
   background: ${({ $selected }) =>
     $selected ? neutral.primaryTint : 'transparent'};
   color: ${({ $selected }) =>
-    $selected ? neutral.primary : neutral.text};
+    $selected ? neutral.primaryForeground : neutral.text};
   font: inherit;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
@@ -628,14 +628,14 @@ export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
   &:focus-visible {
     outline: none;
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
 export const DatePickerTimeSeparator = styled.span`
   align-self: end;
   padding-bottom: 7px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 16px;
   font-weight: 700;
 `
@@ -701,7 +701,7 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
   border-radius: 6px;
   background: ${({ $active }) =>
     $active ? neutral.primaryTint : 'transparent'};
-  color: ${({ $active }) => ($active ? neutral.primary : neutral.text)};
+  color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.text)};
   font: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -709,11 +709,11 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   .filter-menu-icon {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
     font-size: 18px;
   }
 `
@@ -849,7 +849,7 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
   cursor: pointer;
 
   &:hover {
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:focus-visible {
@@ -932,11 +932,11 @@ const buttonStyle = css`
 export const PrimaryButton = styled.button`
   ${buttonStyle}
   border: 0;
-  background: ${neutral.primary};
+  background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
 
   &:hover:not(:disabled) {
-    background: ${neutral.primaryHover};
+    background: ${neutral.primaryForeground};
   }
 `
 
@@ -948,7 +948,7 @@ export const SecondaryButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 
@@ -968,7 +968,7 @@ export const IconActionButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:focus-visible {
@@ -1107,10 +1107,10 @@ export const TableStatusBadge = styled.span<{
     }
 
     if ($tone === 'neutral') {
-      return neutral.primary
+      return neutral.primaryForeground
     }
 
-    return neutral.error
+    return neutral.errorText
   }};
   font-size: 12px;
   font-weight: 500;
@@ -1139,7 +1139,7 @@ export const Notice = styled.div<{ $variant?: 'error' | 'info' }>`
   border-radius: 8px;
   background: ${({ $variant }) =>
     $variant === 'error' ? neutral.errorTint : neutral.surfaceLow};
-  color: ${({ $variant }) => ($variant === 'error' ? neutral.error : neutral.muted)};
+  color: ${({ $variant }) => ($variant === 'error' ? neutral.errorText : neutral.muted)};
   font-size: 14px;
   font-weight: 500;
   line-height: 1.3;
@@ -1209,7 +1209,7 @@ export const ActionInfoText = styled.span`
 
   .material-symbols-rounded {
     flex: 0 0 auto;
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
     font-size: 18px;
   }
 `
@@ -1507,7 +1507,7 @@ export const PolicyIcon = styled.span`
   justify-content: center;
   border-radius: 8px;
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
 `
 
 export const PolicyText = styled.div`

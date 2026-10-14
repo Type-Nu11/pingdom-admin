@@ -1,0 +1,37 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+
+const workflow = await readFile(new URL('../.github/workflows/release-verification.yml', import.meta.url), 'utf8')
+
+test('release checkout retains pinned OpenAPI baseline history without persisted credentials', () => {
+  const checkout = workflow.slice(workflow.indexOf('\n  verify:')).split(/^\s*- uses: actions\/checkout@/m)[1]?.split(/^\s*- (?:uses|name|run):/m)[0]
+  assert.ok(checkout, 'release verification must check out the repository')
+  assert.match(checkout, /^\s+fetch-depth: 0\s*$/m, 'OpenAPI provenance tests read files from a pinned historical commit')
+  assert.match(checkout, /^\s+persist-credentials: false\s*$/m)
+})
+
+test('release verifies the EC2 image without deployment credentials or production API calls', () => {
+  assert.match(workflow, /\n  ec2-image:/)
+  assert.match(workflow, /run: docker compose config --quiet/)
+  assert.match(workflow, /run: node scripts\/verify-ec2-image\.mjs/)
+  assert.doesNotMatch(workflow, /secrets\./)
+})
+
+test('release workflow defines the shared output path after runner assignment', () => {
+  const jobConfiguration = workflow.slice(workflow.indexOf('jobs:'), workflow.indexOf('    steps:'))
+  assert.doesNotMatch(jobConfiguration, /\$\{\{\s*runner\./)
+  assert.match(workflow, /run: echo "PINGDOM_QA_OUTPUT=\$RUNNER_TEMP\/pingdom-browser-qa" >> "\$GITHUB_ENV"/)
+  assert.ok(workflow.indexOf('Prepare browser verification output') < workflow.indexOf('- run: npm run test:release-browser'))
+  assert.match(workflow, /if \[ -f "\$PINGDOM_QA_OUTPUT\/summary\.json" \]/)
+})
+
+test('release workflow installs Chromium before unit and browser tests', () => {
+  const commands = [...workflow.matchAll(/^\s+- run: (.+)$/gm)].map(match => match[1])
+  const install = commands.indexOf('npx --no-install playwright install --with-deps chromium')
+  const unit = commands.indexOf('npm test')
+  const browser = commands.indexOf('npm run test:release-browser')
+  assert.ok(commands.indexOf('npm ci') >= 0 && commands.indexOf('npm ci') < install)
+  assert.ok(install >= 0 && unit > install, 'security header unit tests also launch Chromium')
+  assert.ok(browser > install)
+})

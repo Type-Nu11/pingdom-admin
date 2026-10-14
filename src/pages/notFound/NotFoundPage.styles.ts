@@ -37,7 +37,7 @@ export const IconBadge = styled.span`
   border: 1px solid ${neutral.primarySoft};
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 28px;
   line-height: 1;
@@ -50,7 +50,7 @@ export const IconBadge = styled.span`
 
 export const StatusCode = styled.p`
   margin: 0 0 8px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 28px;
   font-weight: 700;
   line-height: 1.3;
@@ -120,7 +120,7 @@ export const BackButton = styled.button`
   padding: 0 16px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.primary};
+  background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
   font-family: inherit;
   font-size: 14px;
@@ -128,7 +128,7 @@ export const BackButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: ${neutral.primaryHover};
+    background: ${neutral.primaryForeground};
   }
 
   &:focus-visible {
@@ -152,7 +152,7 @@ export const NavLink = styled(Link)`
 
   &:hover {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:focus-visible {

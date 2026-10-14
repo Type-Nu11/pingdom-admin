@@ -20,7 +20,7 @@ export const HeaderButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primary}; background: ${colors.primaryTint}; }
+  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
@@ -38,11 +38,11 @@ export const StateSummary = styled.div<{ $operating: boolean | null }>`
   font-size: 13px;
   line-height: 1.5;
 
-  strong { color: ${({ $operating }) => ($operating === false ? colors.warningText : colors.primary)}; }
+  strong { color: ${({ $operating }) => ($operating === false ? colors.warningText : colors.primaryForeground)}; }
 `
 
 export const StateIcon = styled.span`
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
 `
@@ -113,7 +113,7 @@ export const StatusOption = styled.label<{ $selected: boolean; $danger?: boolean
   cursor: pointer;
 
   input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: ${({ $danger }) => ($danger ? colors.error : colors.primary)}; }
-  strong { display: block; color: ${({ $danger, $selected }) => ($selected && $danger ? colors.error : colors.text)}; font-size: 13px; }
+  strong { display: block; color: ${({ $danger, $selected }) => ($selected && $danger ? colors.errorText : colors.text)}; font-size: 13px; }
   small { display: block; margin-top: 3px; color: ${colors.muted}; font-size: 12px; line-height: 1.45; }
 `
 
@@ -123,7 +123,7 @@ export const DangerNotice = styled.p`
   border: 0;
   border-radius: 6px;
   background: ${colors.errorTint};
-  color: ${colors.error};
+  color: ${colors.errorText};
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;
@@ -142,7 +142,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   padding: 0 14px;
   border: ${({ $variant }) => ($variant === 'primary' || $variant === 'danger' ? 0 : `1px solid ${colors.border}`)};
   border-radius: 6px;
-  background: ${({ $variant }) => ($variant === 'primary' ? colors.primary : $variant === 'danger' ? colors.error : colors.surface)};
+  background: ${({ $variant }) => ($variant === 'primary' ? colors.primaryAction : $variant === 'danger' ? colors.errorAction : colors.surface)};
   color: ${({ $variant }) => ($variant === 'primary' || $variant === 'danger' ? colors.primaryText : colors.text)};
   font: inherit;
   font-size: 13px;
@@ -156,7 +156,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
 
 export const FormError = styled.p`
   margin: 14px 0 0;
-  color: ${colors.error};
+  color: ${colors.errorText};
   font-size: 13px;
   font-weight: 700;
   line-height: 1.5;
@@ -250,7 +250,7 @@ export const IconButton = styled.button<{ $danger?: boolean }>`
   font-size: 18px;
   cursor: pointer;
 
-  &:hover:not(:disabled) { border-color: ${({ $danger }) => ($danger ? colors.error : colors.primary)}; background: ${({ $danger }) => ($danger ? colors.errorTint : colors.primaryTint)}; color: ${({ $danger }) => ($danger ? colors.error : colors.primary)}; }
+  &:hover:not(:disabled) { border-color: ${({ $danger }) => ($danger ? colors.error : colors.primary)}; background: ${({ $danger }) => ($danger ? colors.errorTint : colors.primaryTint)}; color: ${({ $danger }) => ($danger ? colors.errorText : colors.primaryForeground)}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `
@@ -263,7 +263,7 @@ export const TextButton = styled.button`
   padding: 0;
   border: 0;
   background: transparent;
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font: inherit;
   font-size: 12px;
   font-weight: 800;
@@ -351,7 +351,7 @@ export const RepresentativeBadge = styled.span`
   padding: 0 8px;
   border-radius: 11px;
   background: ${colors.primaryTint};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-size: 11px;
   font-weight: 800;
 `
@@ -368,7 +368,7 @@ export const MediaOrderActions = styled.div`
 `
 
 export const RepresentativeMediaButton = styled(IconButton)<{ $selected: boolean }>`
-  color: ${({ $selected }) => ($selected ? colors.primary : colors.muted)};
+  color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   border-color: ${({ $selected }) => ($selected ? colors.primarySoft : colors.border)};
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
 
@@ -401,12 +401,12 @@ export const UploadButton = styled.button`
   border: 1px solid ${colors.primary};
   border-radius: 6px;
   background: ${colors.surface};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 
-  &:hover { background: ${colors.primary}; color: ${colors.primaryText}; }
+  &:hover { background: ${colors.primaryAction}; color: ${colors.primaryText}; }
   &:disabled { cursor: not-allowed; opacity: 0.56; }
 `
 

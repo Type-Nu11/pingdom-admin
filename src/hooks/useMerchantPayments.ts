@@ -5,7 +5,7 @@ import {
   getMerchantSettlementLedger,
   refundMerchantPayment,
 } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantPayment,
@@ -23,7 +23,7 @@ function replacePayment(items: MerchantPayment[], next: MerchantPayment) {
   return items.map((item) => (item.id === next.id ? next : item))
 }
 
-export function useMerchantPayments() {
+export function useMerchantPayments({ persistActionError = false } = {}) {
   const { clearAuth } = useAuth()
   const [payments, setPayments] = useState<MerchantPayment[]>([])
   const [paymentPageInfo, setPaymentPageInfo] = useState<Omit<MerchantPaymentPageResponse, 'payments'>>({
@@ -43,12 +43,12 @@ export function useMerchantPayments() {
   })
   const [hasLoadedPayments, setHasLoadedPayments] = useState(false)
   const [hasLoadedSettlements, setHasLoadedSettlements] = useState(false)
-  const [isLoadingPayments, setIsLoadingPayments] = useState(false)
-  const [isLoadingSettlements, setIsLoadingSettlements] = useState(false)
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true)
+  const [isLoadingSettlements, setIsLoadingSettlements] = useState(true)
   const [paymentErrorMessage, setPaymentErrorMessage] = useState('')
   const [settlementErrorMessage, setSettlementErrorMessage] = useState('')
   const [actionErrorMessage, setActionErrorMessage] = useState('')
-  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
+  useAutoDismissMessage(actionErrorMessage, setActionErrorMessage, persistActionError ? null : undefined)
   const [successMessage, setSuccessMessage] = useState('')
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [refundingPaymentId, setRefundingPaymentId] = useState<number | null>(null)
@@ -59,7 +59,7 @@ export function useMerchantPayments() {
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
     if (!isApiError<MerchantStoreErrorResponse>(error)) return fallbackMessage
-    if (error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
 
     return getAuthErrorMessage(error, {
       fallbackMessage,
@@ -82,6 +82,7 @@ export function useMerchantPayments() {
       if (!mountedRef.current || requestId !== paymentRequestRef.current) return
 
       setPayments(data.payments)
+      setHasLoadedPayments(true)
       setPaymentPageInfo({
         page: data.page,
         limit: data.limit,
@@ -96,7 +97,6 @@ export function useMerchantPayments() {
       logDebugError('상점주 결제 목록 조회 실패', error)
     } finally {
       if (mountedRef.current && requestId === paymentRequestRef.current) {
-        setHasLoadedPayments(true)
         setIsLoadingPayments(false)
       }
     }
@@ -113,6 +113,7 @@ export function useMerchantPayments() {
       if (!mountedRef.current || requestId !== settlementRequestRef.current) return
 
       setSettlements(data.entries)
+      setHasLoadedSettlements(true)
       setSettlementPageInfo({
         page: data.page,
         limit: data.limit,
@@ -127,7 +128,6 @@ export function useMerchantPayments() {
       logDebugError('상점주 정산 원장 조회 실패', error)
     } finally {
       if (mountedRef.current && requestId === settlementRequestRef.current) {
-        setHasLoadedSettlements(true)
         setIsLoadingSettlements(false)
       }
     }
@@ -183,6 +183,7 @@ export function useMerchantPayments() {
     paymentErrorMessage,
     settlementErrorMessage,
     actionErrorMessage,
+    clearActionError: () => setActionErrorMessage(''),
     successMessage,
     refundingPaymentId,
     fetchPayments,

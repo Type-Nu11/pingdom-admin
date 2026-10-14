@@ -4,7 +4,7 @@ import { adminColors, radius } from '../../styles/theme'
 type FeedbackTone = 'error' | 'success' | 'warning' | 'info'
 
 const toneColor = {
-  error: { background: adminColors.errorTint, color: adminColors.error },
+  error: { background: adminColors.errorTint, color: adminColors.errorText },
   success: { background: adminColors.successToastSurface, color: adminColors.successText },
   warning: { background: adminColors.warningTint, color: adminColors.warningText },
   info: { background: adminColors.infoTint, color: adminColors.infoText },

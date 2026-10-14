@@ -125,7 +125,7 @@ export const MerchantProfileIcon = styled.div`
   border: 0;
   border-radius: 8px;
   background: ${colors.primaryTint};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-family: 'Material Symbols Outlined';
   font-size: 18px;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
@@ -166,7 +166,7 @@ export const LogoutButton = styled.button`
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease;
 
-  &:hover { border-color: ${colors.primary}; background: ${colors.primaryTint}; color: ${colors.primary}; }
+  &:hover { border-color: ${colors.primary}; background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
   @media (max-width: 900px) {

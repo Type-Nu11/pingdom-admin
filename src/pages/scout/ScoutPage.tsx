@@ -1,3 +1,4 @@
+import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -75,9 +76,12 @@ function ScoutPage() {
     params.set("tab", next);
     setSearchParams(params, { replace: true });
   };
-  const [selectedReport, setSelectedReport] = useState<ScoutFieldReport | null>(
+  const [reportSelection, setSelectedReport] = useState<ScoutFieldReport | null>(
     null,
   );
+  const selectedReport = hook.reportListState.hasResult && !hook.reportListState.restricted
+    ? hook.reports.find((item) => item.id === reportSelection?.id) ?? null
+    : null;
   const [dialog, setDialog] = useState<Dialog>(null);
   const [reason, setReason] = useState("");
   const [eligibleFrom, setEligibleFrom] = useState("");
@@ -271,7 +275,7 @@ function ScoutPage() {
                 {hook.successMessage}
               </Shared.Notice>
             ) : null}
-            {hook.errorMessage ? (
+            {tab === 'profiles' && hook.errorMessage ? (
               <Shared.Notice $variant="error" role="alert">
                 {hook.errorMessage}
               </Shared.Notice>
@@ -303,19 +307,17 @@ function ScoutPage() {
                         <Shared.PanelTitle>탐색 후보 프로필</Shared.PanelTitle>
                       </div>
                       <Shared.PanelCount>
-                        {hook.profileTotal.toLocaleString()}건
+                        {hook.profileListState.hasResult ? `${hook.profileTotal.toLocaleString()}건${hook.profileListState.phase !== 'success' ? ' (이전 결과)' : ''}` : '—'}
                       </Shared.PanelCount>
                     </Shared.PanelHeader>
                     <Shared.ScrollArea>
-                      {hook.profiles.length === 0 ? (
-                        <Shared.EmptyState>
-                          <strong>
-                            {hook.isLoading
-                              ? "불러오는 중입니다."
-                              : "프로필이 없습니다."}
-                          </strong>
-                        </Shared.EmptyState>
-                      ) : (
+                      <ListQueryBoundary
+                        state={hook.profileListState}
+                        error={hook.profileError}
+                        empty={hook.profiles.length === 0}
+                        onRetry={() => void hook.fetchProfiles()}
+                        onReset={() => void hook.fetchProfiles('', 1)}
+                      >
                         <S.CardList>
                           {hook.profiles.map((item) => (
                             <S.RecordButton
@@ -352,9 +354,9 @@ function ScoutPage() {
                             </S.RecordButton>
                           ))}
                         </S.CardList>
-                      )}
+                      </ListQueryBoundary>
                     </Shared.ScrollArea>
-                    {hook.profileTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 프로필 목록 페이지네이션" page={hook.profilePage} totalPages={hook.profileTotalPages} hasNext={hook.profileHasNext} disabled={hook.isLoading} onPageChange={(nextPage) => { hook.clearProfile(); void hook.fetchProfiles(hook.profileStatus, nextPage) }} /> : null}
+                    {hook.profileListState.hasResult && hook.profileTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 프로필 목록 페이지네이션" page={hook.profilePage} totalPages={hook.profileTotalPages} hasNext={hook.profileHasNext} disabled={hook.profileListState.phase === 'loading'} onPageChange={(nextPage) => { hook.clearProfile(); void hook.fetchProfiles(hook.profileStatus, nextPage) }} /> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader>
@@ -532,19 +534,17 @@ function ScoutPage() {
                         <Shared.PanelTitle>현장 제보</Shared.PanelTitle>
                       </div>
                       <Shared.PanelCount>
-                        {hook.reportTotal.toLocaleString()}건
+                        {hook.reportListState.hasResult ? `${hook.reportTotal.toLocaleString()}건${hook.reportListState.phase !== 'success' ? ' (이전 결과)' : ''}` : '—'}
                       </Shared.PanelCount>
                     </Shared.PanelHeader>
                     <Shared.ScrollArea>
-                      {hook.reports.length === 0 ? (
-                        <Shared.EmptyState>
-                          <strong>
-                            {hook.isLoading
-                              ? "불러오는 중입니다."
-                              : "제보가 없습니다."}
-                          </strong>
-                        </Shared.EmptyState>
-                      ) : (
+                      <ListQueryBoundary
+                        state={hook.reportListState}
+                        error={hook.reportError}
+                        empty={hook.reports.length === 0}
+                        onRetry={() => void hook.fetchReports()}
+                        onReset={() => void hook.fetchReports('', 1)}
+                      >
                         <S.CardList>
                           {hook.reports.map((item) => (
                             <S.RecordButton
@@ -579,9 +579,9 @@ function ScoutPage() {
                             </S.RecordButton>
                           ))}
                         </S.CardList>
-                      )}
+                      </ListQueryBoundary>
                     </Shared.ScrollArea>
-                    {hook.reportTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 현장 제보 목록 페이지네이션" page={hook.reportPage} totalPages={hook.reportTotalPages} hasNext={hook.reportHasNext} disabled={hook.isLoading} onPageChange={(nextPage) => void hook.fetchReports(hook.reportStatus, nextPage)} /> : null}
+                    {hook.reportListState.hasResult && hook.reportTotalPages > 1 ? <AdminPagination ariaLabel="탐색 후보 현장 제보 목록 페이지네이션" page={hook.reportPage} totalPages={hook.reportTotalPages} hasNext={hook.reportHasNext} disabled={hook.reportListState.phase === 'loading'} onPageChange={(nextPage) => void hook.fetchReports(hook.reportStatus, nextPage)} /> : null}
                   </Shared.Panel>
                   <Shared.Panel>
                     <Shared.PanelHeader>

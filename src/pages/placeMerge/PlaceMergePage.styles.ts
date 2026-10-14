@@ -36,12 +36,17 @@ export const PageHeader = styled.header`
 
   @media (max-width: 720px) {
     flex-direction: column;
+    align-items: stretch;
+
+    > div:first-child {
+      flex: initial;
+    }
   }
 `
 
 export const Eyebrow = styled.p`
   margin: 0 0 6px;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
 `
@@ -60,6 +65,11 @@ export const PageDescription = styled.p`
   color: ${neutral.muted};
   font-size: 14px;
   line-height: 1.3;
+`
+
+export const QuerySummary = styled(PageDescription)`
+  max-width: none;
+  overflow-wrap: anywhere;
 `
 
 export const HeaderActions = styled.div`
@@ -95,7 +105,7 @@ export const HeaderButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -112,7 +122,7 @@ export const Notice = styled.p<{ $variant?: 'error' | 'success' }>`
   background: ${({ $variant }) =>
     $variant === 'success' ? neutral.successTint : neutral.errorTint};
   color: ${({ $variant }) =>
-    $variant === 'success' ? neutral.successText : neutral.error};
+    $variant === 'success' ? neutral.successText : neutral.errorText};
   font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
@@ -165,7 +175,7 @@ export const PanelDescription = styled.p`
 
 export const PanelCount = styled.span`
   flex-shrink: 0;
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 14px;
   font-weight: 700;
 `
@@ -230,7 +240,7 @@ export const GroupLabel = styled.strong`
 `
 
 export const GroupCount = styled.span`
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
@@ -335,7 +345,7 @@ export const StatusTag = styled.span<{ $variant?: 'target' | 'source' | 'warning
         : neutral.surface};
   color: ${({ $variant }) =>
     $variant === 'target'
-      ? neutral.primary
+      ? neutral.primaryForeground
       : $variant === 'warning'
         ? neutral.warningText
         : neutral.muted};
@@ -476,14 +486,14 @@ export const PrimaryButton = styled.button`
   padding: 0 16px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${neutral.primary};
+  background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: ${neutral.primaryHover};
+    background: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -509,7 +519,7 @@ export const SecondaryButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${neutral.primaryTint};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 
   &:disabled {
@@ -660,7 +670,7 @@ export const ModalCloseButton = styled.button`
 
   &:hover {
     background: ${neutral.surfaceLow};
-    color: ${neutral.primary};
+    color: ${neutral.primaryForeground};
   }
 `
 

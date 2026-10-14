@@ -34,7 +34,7 @@ export const TabButton = styled.button<{ $active?: boolean }>`
     $active &&
     css`
       background: ${neutral.primaryTint};
-      color: ${neutral.primary};
+      color: ${neutral.primaryForeground};
     `}
 `
 
@@ -43,6 +43,15 @@ export const SearchBar = styled.form`
   border: 1px solid ${neutral.border};
   border-radius: 8px;
   background: ${neutral.surface};
+`
+
+export const PlaceLookupRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  > div { flex: 1 1 240px; max-width: 480px; }
+  > button { flex: 0 0 auto; }
 `
 
 export const Field = styled.label`
@@ -145,8 +154,9 @@ export const SearchFilterGrid = styled.div`
   }
 `
 
-export const SearchFilterActions = styled.div`
-  grid-column: 1 / -1;
+export const SearchFilterActions = styled.div<{ $inline?: boolean }>`
+  grid-column: ${({ $inline }) => $inline ? 'auto' : '1 / -1'};
+  align-self: end;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -336,10 +346,10 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
     $tone === 'success'
       ? neutral.successText
       : $tone === 'danger'
-        ? neutral.error
+        ? neutral.errorText
         : $tone === 'warning'
           ? neutral.warningText
-            : neutral.primary};
+            : neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
@@ -423,7 +433,7 @@ export const FormBody = styled.div`
 `
 
 export const Link = styled.a`
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-weight: 700;
   text-decoration: none;
 

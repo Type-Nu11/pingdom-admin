@@ -13,8 +13,8 @@ import {
   updateMerchantPlaceApplication,
   uploadMerchantPlaceApplicationAttachment,
 } from '../api/merchantPlaceApplicationApi'
-import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { getOptionalMerchantApplicationProfile } from '../api/merchantOnboardingApi'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantOwnerProfile } from '../types/merchantStore.types'
 import type {
@@ -38,7 +38,9 @@ function errorMessage(error: unknown, fallbackMessage: string) {
       ACCESS_DENIED: '상점주 권한이 필요합니다.',
       INVALID_TOKEN: '로그인이 만료되었습니다. 다시 로그인해주세요.',
       PLACE_NOT_FOUND: '선택한 장소를 찾을 수 없습니다. 다시 검색해주세요.',
+      INVALID_STATE: '신청 상태가 변경되어 저장할 수 없습니다. 입력 내용을 확인한 뒤 신청 내역을 새로고침해주세요.',
     },
+    categoryMessages: { conflict: '다른 곳에서 신청이 변경되었습니다. 입력 내용을 확인한 뒤 신청 내역을 새로고침해주세요.' },
   })
 }
 
@@ -65,11 +67,12 @@ export function useMerchantPlaceApplications() {
   useAutoDismissMessage(successMessage, setSuccessMessage)
   const [activeAction, setActiveAction] = useState<Action>(null)
   const mountedRef = useRef(true)
+  const searchRequestRef = useRef(0)
   const actionRef = useRef<Action>(null)
 
   const clearUnauthorizedSession = useCallback(
     (requestError: unknown) => {
-      if (isApiError(requestError) && requestError.category === 'unauthorized') clearAuth()
+      if (shouldClearAuth(requestError)) clearAuth()
     },
     [clearAuth],
   )
@@ -79,7 +82,7 @@ export function useMerchantPlaceApplications() {
     setError('')
 
     const [profileResult, applicationsResult] = await Promise.allSettled([
-      getMerchantOwnerProfile(),
+      getOptionalMerchantApplicationProfile(),
       getAllMerchantPlaceApplications(),
     ])
 
@@ -92,7 +95,7 @@ export function useMerchantPlaceApplications() {
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
 
-    if (failures.length === 2) {
+    if (failures.length > 0) {
       failures.forEach((result) => clearUnauthorizedSession(result.reason))
       setStatus('error')
       setError('운영 장소 신청 정보를 불러오지 못했습니다.')
@@ -100,22 +103,22 @@ export function useMerchantPlaceApplications() {
     }
 
     setStatus('ready')
-    if (failures.length > 0) {
-      failures.forEach((result) => {
-        clearUnauthorizedSession(result.reason)
-        logDebugError('상점주 장소 신청 일부 조회 실패', result.reason)
-      })
-      setError('일부 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
-    }
   }, [clearUnauthorizedSession])
 
   useEffect(() => {
     mountedRef.current = true
     void fetchApplications()
-    return () => { mountedRef.current = false }
+    return () => { mountedRef.current = false; searchRequestRef.current += 1 }
   }, [fetchApplications])
 
+  const resetSearch = useCallback(() => {
+    searchRequestRef.current += 1
+    setSuggestions([])
+    setIsSearching(false)
+  }, [])
+
   const searchPlaces = useCallback(async (keyword: string) => {
+    const requestId = ++searchRequestRef.current
     const trimmedKeyword = keyword.trim()
     if (trimmedKeyword.length < 2) {
       setSuggestions([])
@@ -126,15 +129,15 @@ export function useMerchantPlaceApplications() {
     setIsSearching(true)
     try {
       const result = await getMerchantPlaceSuggestions(trimmedKeyword)
-      if (mountedRef.current) setSuggestions(result.places)
+      if (mountedRef.current && requestId === searchRequestRef.current) setSuggestions(result.places)
     } catch (requestError) {
-      if (mountedRef.current) {
+      if (mountedRef.current && requestId === searchRequestRef.current) {
         setSuggestions([])
         clearUnauthorizedSession(requestError)
         logDebugError('상점주 장소 검색 실패', requestError)
       }
     } finally {
-      if (mountedRef.current) setIsSearching(false)
+      if (mountedRef.current && requestId === searchRequestRef.current) setIsSearching(false)
     }
   }, [clearUnauthorizedSession])
 
@@ -250,6 +253,7 @@ export function useMerchantPlaceApplications() {
     activeAction,
     fetchApplications,
     searchPlaces,
+    resetSearch,
     saveApplication,
     submitApplication,
     reopenApplication,

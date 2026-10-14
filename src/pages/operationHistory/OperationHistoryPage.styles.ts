@@ -115,7 +115,7 @@ export const AuditTypeTag = styled.span`
   border: 0;
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
-  color: ${neutral.primary};
+  color: ${neutral.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -165,7 +165,7 @@ export const PaginationPageButton = styled.button<{ $active?: boolean }>`
   padding: 0 8px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${({ $active }) => ($active ? neutral.primary : neutral.surfaceLow)};
+  background: ${({ $active }) => ($active ? neutral.primaryAction : neutral.surfaceLow)};
   color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
   font: inherit;
   font-size: 12px;
@@ -173,8 +173,8 @@ export const PaginationPageButton = styled.button<{ $active?: boolean }>`
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: ${({ $active }) => ($active ? neutral.primary : neutral.primaryTint)};
-    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primary)};
+    background: ${({ $active }) => ($active ? neutral.primaryAction : neutral.primaryTint)};
+    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primaryForeground)};
   }
 
   &:disabled {
@@ -211,7 +211,7 @@ export const AuditStateDetails = styled.details`
     cursor: pointer;
   }
 
-  summary::marker { color: ${neutral.primary}; }
+  summary::marker { color: ${neutral.primaryForeground}; }
 `
 
 export const AuditStateContent = styled.pre`

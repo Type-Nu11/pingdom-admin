@@ -43,7 +43,7 @@ export const DropdownTrigger = styled.button`
 
   &:hover:not(:disabled) {
     background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
 
   &:focus-visible {
@@ -136,21 +136,21 @@ export const DropdownOption = styled.button<{
 
   &:hover {
     background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
 
   ${({ $highlighted }) =>
     $highlighted &&
     css`
       background: ${adminColors.primaryTint};
-      color: ${adminColors.primary};
+      color: ${adminColors.primaryForeground};
     `}
 
   ${({ $selected }) =>
     $selected &&
     css`
       background: ${adminColors.primaryTint};
-      color: ${adminColors.primary};
+      color: ${adminColors.primaryForeground};
       font-weight: 700;
     `}
 `

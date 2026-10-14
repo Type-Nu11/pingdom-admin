@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminPlaceEventApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminPlaceEventActionRequest,
@@ -60,7 +60,7 @@ export function useAdminPlaceEvents() {
         return fallback
       }
 
-      if (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized') {
+      if (shouldClearAuth(error)) {
         clearAuth()
       }
 

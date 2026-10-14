@@ -1,8 +1,9 @@
 import type { AuthErrorResponse } from './auth.types'
+import type { ReviewPresentation } from './reviewPresentation.types'
 
 export type PlaceReviewDeletionRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
-export interface AdminPlaceReviewDeletionRequest {
+export interface AdminPlaceReviewDeletionRequest extends ReviewPresentation {
   deletionRequestId: number
   status: PlaceReviewDeletionRequestStatus
   requestReason: string

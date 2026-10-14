@@ -12,8 +12,8 @@ import {
   updateMerchantPlaceApplication,
   uploadMerchantPlaceApplicationAttachment,
 } from '../api/merchantPlaceApplicationApi'
-import { getMerchantOwnerProfile } from '../api/merchantStoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { getOptionalMerchantApplicationProfile } from '../api/merchantOnboardingApi'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantOwnerProfile } from '../types/merchantStore.types'
 import type {
@@ -76,7 +76,9 @@ function getErrorMessage(error: unknown, fallbackMessage: string) {
     codeMessages: {
       ACCESS_DENIED: '상점주 권한이 필요합니다.',
       INVALID_TOKEN: '로그인이 만료되었습니다. 다시 로그인해주세요.',
+      INVALID_STATE: '신청 상태가 변경되어 저장할 수 없습니다. 입력 내용을 확인한 뒤 신청 내역을 새로고침해주세요.',
     },
+    categoryMessages: { conflict: '다른 곳에서 신청이 변경되었습니다. 입력 내용을 확인한 뒤 신청 내역을 새로고침해주세요.' },
   })
 }
 
@@ -164,7 +166,7 @@ export function useMerchantPlaceRegistrations() {
   const actionRef = useRef<Action>(null)
 
   const clearUnauthorizedSession = useCallback((error: unknown) => {
-    if (isApiError(error) && error.category === 'unauthorized') clearAuth()
+    if (shouldClearAuth(error)) clearAuth()
   }, [clearAuth])
 
   const applyApplication = useCallback((application: MerchantPlaceApplication) => {
@@ -177,7 +179,7 @@ export function useMerchantPlaceRegistrations() {
     setStatus((current) => (current === 'ready' ? 'ready' : 'loading'))
     setErrorMessage('')
     const [profileResult, applicationsResult] = await Promise.allSettled([
-      getMerchantOwnerProfile(),
+      getOptionalMerchantApplicationProfile(),
       getAllMerchantPlaceApplications(),
     ])
     if (!mountedRef.current) return
@@ -191,17 +193,13 @@ export function useMerchantPlaceRegistrations() {
     const failures = [profileResult, applicationsResult].filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
-    if (failures.length === 2) {
+    if (failures.length > 0) {
       failures.forEach((result) => clearUnauthorizedSession(result.reason))
       setStatus('error')
       setErrorMessage('신규 장소 등록 신청 정보를 불러오지 못했습니다.')
       return
     }
     setStatus('ready')
-    if (failures.length > 0) {
-      failures.forEach((result) => logDebugError('신규 장소 등록 신청 일부 조회 실패', result.reason))
-      setErrorMessage('일부 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
-    }
   }, [clearUnauthorizedSession])
 
   useEffect(() => {
@@ -264,6 +262,7 @@ export function useMerchantPlaceRegistrations() {
     request: MerchantPlaceRegistrationRequest | null,
     stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
     onAttachmentUploaded?: (attachment: MerchantPlaceRegistrationStagedAttachment) => void,
+    onDraftSaved?: (registration: MerchantPlaceRegistration) => void,
   ) => {
     if (actionRef.current) return null
     actionRef.current = 'request'
@@ -283,11 +282,16 @@ export function useMerchantPlaceRegistrations() {
       }
 
       if (!mountedRef.current) return null
-      applyApplication(application)
+      const savedRegistration = applyApplication(application)
+      // Saving is complete even if a later upload, submission or recovery GET fails.
+      if (request && savedRegistration) onDraftSaved?.(savedRegistration)
 
       for (const attachment of stagedAttachments) {
-        await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)
-        if (mountedRef.current) onAttachmentUploaded?.(attachment)
+        const uploaded = await uploadMerchantPlaceApplicationAttachment(application.id, attachment.documentType, attachment.file)
+        application = { ...application, attachments: [...application.attachments, uploaded] }
+        if (!mountedRef.current) return null
+        applyApplication(application)
+        onAttachmentUploaded?.(attachment)
       }
 
       const submitted = await submitMerchantPlaceApplication(application.id)
@@ -310,6 +314,8 @@ export function useMerchantPlaceRegistrations() {
             return toRegistration(recovered)
           } catch (recoveryError) {
             logDebugError('신규 장소 등록 신청 복구 조회 실패', recoveryError)
+            // Keep the known saved ID and uploads; retry must not create another draft.
+            return toRegistration(application)
           }
         }
       }

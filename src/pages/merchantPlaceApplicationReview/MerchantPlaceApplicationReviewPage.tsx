@@ -1,14 +1,20 @@
+import { AccessibleTabList } from '../../components/common/AccessibleTabList'
+import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
+import { AttachmentPreview } from '../../components/common/AttachmentPreview'
+import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
+import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
+import { EMPTY_HISTORY_FILTERS, type ApplicationHistoryFilters } from '../../hooks/useAdminMerchantPlaceApplications'
 import { ListPane } from '../../components/common/ListPane'
 import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
-import { useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
+import { APPLICATION_REVIEW_PAGE_SIZE, useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
 import { useAuth } from '../../hooks/useAuth'
 import type {
   AdminMerchantPlaceApplication,
@@ -141,17 +147,33 @@ function MerchantPlaceApplicationReviewPage() {
   const location = useLocation()
   const { logout, user } = useAuth()
   const hook = useAdminMerchantPlaceApplications()
+  const [draftFilters, setDraftFilters] = useState<ApplicationHistoryFilters>(EMPTY_HISTORY_FILTERS)
+  const [filterError, setFilterError] = useState('')
   const applicationIdFromNavigation = getApplicationIdFromNavigationState(location.state)
+  const [preview, setPreview] = useState<{ applicationId: number; attachment: AdminMerchantPlaceApplicationAttachment } | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(applicationIdFromNavigation)
   const [decision, setDecision] = useState<'approve' | 'reject' | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<AdminMerchantPlaceApplication | null>(null)
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState('')
   const openedApplicationIdRef = useRef<number | null>(null)
   const fetchApplicationDetail = hook.fetchDetail
   const admin = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const isHistoryView = hook.view === 'history'
+  const applyFilters = (reset = false) => {
+    const filters = reset ? EMPTY_HISTORY_FILTERS : draftFilters
+    if (filters.submittedFrom && filters.submittedTo && filters.submittedFrom > filters.submittedTo) {
+      setFilterError('종료 일시는 시작 일시보다 빠를 수 없습니다.')
+      return
+    }
+    setFilterError('')
+    setDraftFilters({ ...filters, keyword: filters.keyword.trim() })
+    setSelectedId(null)
+    setDecision(null)
+    setPreview(null)
+    hook.applyHistoryFilters(filters, reset)
+  }
   const listTitle = isHistoryView ? '처리 이력' : '심사 대기 신청'
-  const listDescription = isHistoryView ? '승인·완료·반려·취소된 장소 신청을 확인합니다.' : '심사 대기 중인 신청을 선택해 사업자 정보와 증빙을 검토합니다.'
   const emptyMessage = isHistoryView ? '처리된 장소 신청 이력이 없습니다.' : '심사 대기 중인 장소 신청이 없습니다.'
   const loadingMessage = isHistoryView ? '처리 이력을 불러오는 중입니다.' : '심사 대기 신청을 불러오는 중입니다.'
   const safeTotalPages = Math.max(hook.totalPages, 1)
@@ -173,12 +195,14 @@ function MerchantPlaceApplicationReviewPage() {
     const page = Math.min(Math.max(nextPage, 1), safeTotalPages)
     if (page === hook.page || hook.isLoading || hook.isReviewing) return
 
+    setPreview(null)
     setSelectedId(null)
     setDecision(null)
     void hook.fetchApplications(page)
   }
 
   const selectApplication = (applicationId: number) => {
+    setPreview(null)
     setSelectedId(applicationId)
     setDecision(null)
     setReason('')
@@ -199,14 +223,18 @@ function MerchantPlaceApplicationReviewPage() {
   }, [applicationIdFromNavigation, fetchApplicationDetail])
 
   const openReview = (nextDecision: 'approve' | 'reject') => {
+    if (!hook.detail || hook.detail.id !== selectedId || hook.detail.status !== 'PENDING' || hook.isReviewing) return
+    setReviewTarget({ ...hook.detail })
     if (nextDecision === 'approve' && approvalBlockMessage) return
     setDecision(nextDecision)
     setReason('')
     setFormError(''); hook.dismissActionError()
   }
 
+  const ReviewButton = decision === 'reject' ? S.DangerButton : Shared.PrimaryButton
+
   const submitReview = async () => {
-    if (!decision || hook.isReviewing) return
+    if (!decision || !reviewTarget || hook.isReviewing) return
     if (decision === 'approve' && approvalBlockMessage) {
       setFormError(approvalBlockMessage)
       return
@@ -216,11 +244,16 @@ function MerchantPlaceApplicationReviewPage() {
       setFormError('심사 사유를 입력해주세요.')
       return
     }
-    if (await hook.review(decision === 'approve', trimmedReason)) {
+    if (await hook.review(reviewTarget, decision === 'approve', trimmedReason)) {
       setDecision(null)
+      setPreview(null)
       setSelectedId(null)
     }
   }
+
+  const visibleDetail = selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId
+    ? hook.detail
+    : null
 
   const emptyDetailTitle = hook.items.length === 0 && !hook.isLoading
     ? (isHistoryView ? '처리 이력이 없습니다.' : '현재 검토할 신청이 없습니다.')
@@ -239,14 +272,13 @@ function MerchantPlaceApplicationReviewPage() {
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>검토함</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchApplications(hook.page)}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton></Shell.TopActions></Shell.TopBar>
         <S.ReviewContent><S.ReviewPageStack>
-          <Shared.PageHeader><div><Shared.Eyebrow>검토함 &gt; 상점주 장소 신청 심사</Shared.Eyebrow><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.PageDescription>신규 장소 등록과 기존 장소 운영 신청을 한 곳에서 검토하고 승인 또는 반려합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
-          {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
+          <Shared.PageHeader><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
           {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
           <S.FilterBar>
-            <S.FilterTabs role="tablist" aria-label="장소 신청 상태">
-              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'pending'} $active={hook.view === 'pending'} disabled={hook.isLoading || hook.isReviewing} onClick={() => { setSelectedId(null); setDecision(null); hook.changeView('pending') }}>심사 대기</S.FilterTab>
-              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'history'} $active={hook.view === 'history'} disabled={hook.isLoading || hook.isReviewing} onClick={() => { setSelectedId(null); setDecision(null); hook.changeView('history') }}>처리 이력</S.FilterTab>
+            <S.FilterTabs as={AccessibleTabList} panelId="application-review-panel" role="tablist" aria-label="장소 신청 상태">
+              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'pending'} $active={hook.view === 'pending'} disabled={hook.isReviewing} onClick={() => { if (hook.view === 'pending') return; setSelectedId(null); setDecision(null); hook.changeView('pending') }}>심사 대기</S.FilterTab>
+              <S.FilterTab type="button" role="tab" aria-selected={hook.view === 'history'} $active={hook.view === 'history'} disabled={hook.isReviewing} onClick={() => { if (hook.view === 'history') return; setSelectedId(null); setDecision(null); hook.changeView('history') }}>처리 이력</S.FilterTab>
             </S.FilterTabs>
             <S.FilterField>신청 유형
               <AdminSelect aria-label="신청 유형 필터" value={hook.applicationType} width="208px" disabled={hook.isLoading || hook.isReviewing} onChange={(event) => { setSelectedId(null); setDecision(null); hook.changeApplicationType(event.target.value as typeof hook.applicationType) }}>
@@ -254,34 +286,117 @@ function MerchantPlaceApplicationReviewPage() {
               </AdminSelect>
             </S.FilterField>
           </S.FilterBar>
+          <div id="application-review-panel" role="tabpanel" aria-labelledby={`application-review-panel-tab-${hook.view === 'pending' ? 0 : 1}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 'inherit', minWidth: 0, minHeight: 0 }}>
+          {isHistoryView ? <S.HistoryFilters onSubmit={(event) => { event.preventDefault(); applyFilters() }} aria-label="처리 이력 검색">
+            <S.FilterField>처리 결과<AdminSelect aria-label="처리 결과" value={draftFilters.result} disabled={hook.isLoading || hook.isReviewing} onChange={(event) => setDraftFilters(current => ({ ...current, result: event.target.value as ApplicationHistoryFilters['result'] }))}>
+              <option value="ALL">전체</option><option value="APPROVED">승인</option><option value="COMPLETED">완료</option><option value="REJECTED">반려</option><option value="CANCELED">취소</option>
+            </AdminSelect></S.FilterField>
+            <S.FilterField>장소명·신청자 아이디<Form.Input value={draftFilters.keyword} disabled={hook.isLoading || hook.isReviewing} onChange={(event) => setDraftFilters(current => ({ ...current, keyword: event.target.value }))} /></S.FilterField>
+            <S.FilterField as="div">신청 시작 일시 (한국 시간)<AdminDateTimePicker ariaLabel="신청 시작 일시" value={draftFilters.submittedFrom} disabled={hook.isLoading || hook.isReviewing} onChange={(value) => setDraftFilters(current => ({ ...current, submittedFrom: value }))} /></S.FilterField>
+            <S.FilterField as="div">신청 종료 일시 (한국 시간)<AdminDateTimePicker ariaLabel="신청 종료 일시" value={draftFilters.submittedTo} disabled={hook.isLoading || hook.isReviewing} onChange={(value) => setDraftFilters(current => ({ ...current, submittedTo: value }))} /></S.FilterField>
+            <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.isReviewing}>조회</Shared.PrimaryButton>
+            <Shared.HeaderButton type="button" disabled={hook.isLoading || hook.isReviewing} onClick={() => applyFilters(true)}>초기화</Shared.HeaderButton>
+            {filterError ? <span role="alert">{filterError}</span> : null}
+            {hook.historyFilters ? <S.AppliedFilters role="status">적용 조건: {hook.historyFilters.result === 'ALL' ? '전체 결과' : STATUS_LABELS[hook.historyFilters.result]} · {hook.historyFilters.keyword || '전체 대상'} · {hook.historyFilters.submittedFrom || '시작 제한 없음'} ~ {hook.historyFilters.submittedTo || '종료 제한 없음'}</S.AppliedFilters> : null}
+          </S.HistoryFilters> : null}
+          {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
           <ListDetailWorkspace>
-            <ListPane title={listTitle} description={listDescription} count={`${hook.total.toLocaleString()}건`} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
+            <ListPane title={listTitle} range={!hook.isLoading && !hook.errorMessage ? { page: hook.page, pageSize: APPLICATION_REVIEW_PAGE_SIZE, itemCount: hook.items.length, total: hook.total } : undefined} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}
-              {!hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{emptyMessage}</strong></Shared.EmptyState> : null}
-              {hook.items.length > 0 ? <Form.CardList>{hook.items.map((item) => <Form.RecordButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}><Form.RecordHeader><Form.RecordTitle>{item.placeName || item.businessName || `장소 신청 #${item.id}`}</Form.RecordTitle><Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge></Form.RecordHeader><Form.RecordMeta>{TYPE_LABELS[item.applicationType]} · 신청자 #{item.applicantUserId}</Form.RecordMeta><Form.RecordDescription>{item.businessName} · {item.merchantDisplayName || item.legalName}</Form.RecordDescription><Form.RecordMeta>{formatDate(item.submittedAt ?? item.updatedAt)}</Form.RecordMeta></Form.RecordButton>)}</Form.CardList> : null}
+              {!hook.isLoading && !hook.errorMessage && hook.items.length === 0 ? <Shared.EmptyState><strong>{isHistoryView ? '조회 조건에 맞는 처리 이력이 없습니다.' : emptyMessage}</strong></Shared.EmptyState> : null}
+              {hook.items.length > 0 ? (
+                <S.ApplicationList>
+                  {hook.items.map((item) => {
+                    const title = item.placeName || item.businessName || `장소 신청 #${item.id}`
+                    const applicant = item.merchantDisplayName || item.legalName
+                    return (
+                      <S.ApplicationButton key={item.id} type="button" $selected={selectedId === item.id} onClick={() => selectApplication(item.id)}>
+                        <Form.RecordHeader>
+                          <S.ApplicationTitle>{title}</S.ApplicationTitle>
+                          <Form.StatusBadge $tone={statusTone(item.status)}>{STATUS_LABELS[item.status]}</Form.StatusBadge>
+                        </Form.RecordHeader>
+                        <Form.RecordMeta>{TYPE_LABELS[item.applicationType]}</Form.RecordMeta>
+                        {item.businessName && item.businessName !== title ? <Form.RecordMeta>{item.businessName}</Form.RecordMeta> : null}
+                        <S.ApplicationMeta>
+                          <span>{applicant ? `${applicant} · ` : ''}신청자 #{item.applicantUserId}</span>
+                          <time>{formatDate(item.submittedAt ?? item.updatedAt)}</time>
+                        </S.ApplicationMeta>
+                      </S.ApplicationButton>
+                    )
+                  })}
+                </S.ApplicationList>
+              ) : null}
             </ListPane>
             <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>장소 신청 상세</Shared.PanelTitle><Shared.PanelDescription>신청자·장소·증빙을 확인한 뒤 심사 결과를 기록합니다.</Shared.PanelDescription></div></Shared.PanelHeader><Shared.CompareBody>
               {!selectedId ? <Shared.EmptyState><strong>{emptyDetailTitle}</strong><p>{emptyDetailDescription}</p></Shared.EmptyState> : null}
               {selectedId && hook.isDetailLoading ? <Shared.EmptyState><strong>장소 신청 상세를 불러오는 중입니다.</strong></Shared.EmptyState> : null}
               {selectedId && !hook.isDetailLoading && hook.detailErrorMessage ? <Shared.EmptyState><strong>{hook.detailErrorMessage}</strong><Shared.SecondaryButton type="button" onClick={() => void hook.fetchDetail(selectedId)}>다시 시도</Shared.SecondaryButton></Shared.EmptyState> : null}
-              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} isReviewing={hook.isReviewing} approvalBlockMessage={approvalBlockMessage} onOpenReview={openReview} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
-            </Shared.CompareBody></Shared.Panel>
+              {selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId ? <ApplicationDetail application={hook.detail} attachments={hook.attachments} attachmentErrorMessage={hook.attachmentErrorMessage} downloadingAttachmentId={hook.downloadingAttachmentId} onPreview={(attachment) => setPreview({ applicationId: selectedId, attachment })} onDownload={(attachment) => void hook.downloadAttachment(hook.detail!.id, attachment)} /> : null}
+            </Shared.CompareBody>
+            {visibleDetail ? (
+              <S.ReviewActions aria-label="장소 신청 심사 작업">
+                <S.ActionTarget>
+                  <strong title={visibleDetail.placeName || visibleDetail.newPlace?.placeName || visibleDetail.businessName || '장소명 정보 없음'}>{visibleDetail.placeName || visibleDetail.newPlace?.placeName || visibleDetail.businessName || '장소명 정보 없음'}</strong>
+                  <span>신청 #{visibleDetail.id} · {STATUS_LABELS[visibleDetail.status]}</span>
+                </S.ActionTarget>
+                {visibleDetail.status === 'PENDING' ? <>
+                  {approvalBlockMessage ? <S.ActionReason id="application-approval-block" role="status">{approvalBlockMessage}</S.ActionReason> : null}
+                  <S.ActionButtons>
+                    <Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => openReview('reject')}>반려</Shared.SecondaryButton>
+                    <Shared.PrimaryButton type="button" aria-describedby={approvalBlockMessage ? 'application-approval-block' : undefined} disabled={hook.isReviewing || Boolean(approvalBlockMessage)} onClick={() => openReview('approve')}>{hook.isReviewing ? '처리 중' : '승인'}</Shared.PrimaryButton>
+                  </S.ActionButtons>
+                </> : <S.ActionReason>읽기 전용 · 현재 상태에서는 심사할 수 없습니다.</S.ActionReason>}
+              </S.ReviewActions>
+            ) : null}
+            </Shared.Panel>
           </ListDetailWorkspace>
+        </div>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>
-      {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-place-application-review-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-place-application-review-title">장소 신청 {decision === 'approve' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>장소 신청 #{hook.detail.id}을 {decision === 'approve' ? '승인' : '반려'}합니다. 처리 후 상태가 즉시 변경되며 되돌릴 수 없습니다.</Shared.ModalWarning><Form.Section><Form.Field>심사 사유 *<Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reason.length}/500</small></Form.Field></Form.Section>{formError ? <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'reject' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing || Boolean(approvalBlockMessage)} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '승인 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
+      {preview && visibleDetail?.id === preview.applicationId ? <AttachmentPreview
+        key={`${preview.applicationId}:${preview.attachment.id}`}
+        applicationId={preview.applicationId}
+        attachment={preview.attachment}
+        onClose={() => setPreview(null)}
+        onDownload={() => hook.downloadAttachment(preview.applicationId, preview.attachment)}
+      /> : null}
+      {decision && reviewTarget ? (
+        <AppDialog
+          title={`장소 신청 ${decision === 'approve' ? '승인' : '반려'}`}
+          isDismissible={!hook.isReviewing}
+          onClose={() => setDecision(null)}
+          footer={<>
+            <Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>
+            <ReviewButton type="button" disabled={hook.isReviewing || (decision === 'approve' && Boolean(approvalBlockMessage))} onClick={() => void submitReview()}>
+              {hook.isReviewing ? '처리 중' : decision === 'approve' ? '승인 확정' : '반려 확정'}
+            </ReviewButton>
+          </>}
+        >
+          <Form.DetailGrid>
+            <Form.DetailItem><dt>신청 번호</dt><dd>#{reviewTarget.id}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>신청 유형</dt><dd>{TYPE_LABELS[reviewTarget.applicationType]}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>장소</dt><dd>{reviewTarget.placeName || reviewTarget.newPlace?.placeName || '장소명 정보 없음'}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>신청자</dt><dd>{reviewTarget.legalName || '이름 정보 없음'} · #{reviewTarget.applicantUserId}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>상호</dt><dd>{reviewTarget.businessName || '정보 없음'}</dd></Form.DetailItem>
+          </Form.DetailGrid>
+          <p>이 신청을 {decision === 'approve' ? '승인' : '반려'}합니다. 대상과 심사 사유를 확인해주세요.</p>
+          <Form.Field>심사 사유 *
+            <Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} />
+            <small>{reason.length}/500</small>
+          </Form.Field>
+          {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
+        </AppDialog>
+      ) : null}
     </Shell.AppShell>
   )
 }
 
-function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, isReviewing, approvalBlockMessage, onOpenReview, onDownload }: {
+function ApplicationDetail({ application, attachments, attachmentErrorMessage, downloadingAttachmentId, onPreview, onDownload }: {
   application: AdminMerchantPlaceApplication
   attachments: AdminMerchantPlaceApplicationAttachment[]
   attachmentErrorMessage: string
   downloadingAttachmentId: number | null
-  isReviewing: boolean
-  approvalBlockMessage: string
-  onOpenReview: (decision: 'approve' | 'reject') => void
+  onPreview: (attachment: AdminMerchantPlaceApplicationAttachment) => void
   onDownload: (attachment: AdminMerchantPlaceApplicationAttachment) => void
 }) {
   const newPlace = application.newPlace
@@ -289,14 +404,12 @@ function ApplicationDetail({ application, attachments, attachmentErrorMessage, d
 
   return <>
     <Form.RecordHeader><div><Form.RecordTitle>{application.placeName || newPlace?.placeName || application.businessName || `장소 신청 #${application.id}`}</Form.RecordTitle><Form.RecordMeta>{TYPE_LABELS[application.applicationType]} · 신청자 #{application.applicantUserId}</Form.RecordMeta></div><Form.StatusBadge $tone={statusTone(application.status)}>{STATUS_LABELS[application.status]}</Form.StatusBadge></Form.RecordHeader>
-    <Form.Section><Form.SectionTitle>신청자 정보</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>사업자명</dt><dd>{application.businessName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>법적 이름</dt><dd>{application.legalName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>상점 표시명</dt><dd>{application.merchantDisplayName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>상점 연락처</dt><dd>{application.merchantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>이메일</dt><dd>{application.merchantContactEmail || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>접수 시각</dt><dd>{formatDate(application.submittedAt ?? application.createdAt)}</dd></Form.DetailItem><Form.DetailItem><dt>검토 시각</dt><dd>{formatDate(application.reviewedAt)}</dd></Form.DetailItem><Form.DetailItem><dt>승인 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid></Form.Section>
+    <Form.Section><Form.SectionTitle>신청자 정보</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>사업자명</dt><dd>{application.businessName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>법적 이름</dt><dd>{application.legalName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>상점 표시명</dt><dd>{application.merchantDisplayName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>상점 연락처</dt><dd>{application.merchantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>이메일</dt><dd>{application.merchantContactEmail || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>접수 시각</dt><dd>{formatDate(application.submittedAt ?? application.createdAt)}</dd></Form.DetailItem><Form.DetailItem><dt>검토 시각</dt><dd>{formatDate(application.reviewedAt)}</dd></Form.DetailItem><Form.DetailItem><dt>승인 장소</dt><dd><PlaceDetailLink id={application.placeId} /></dd></Form.DetailItem></Form.DetailGrid></Form.Section>
     {application.merchantDescription ? <Form.Section><Form.SectionTitle>상점 소개</Form.SectionTitle><S.Reason>{application.merchantDescription}</S.Reason></Form.Section> : null}
     {application.applicationType === 'NEW_PLACE' ? <Form.Section><Form.SectionTitle>신규 장소 정보</Form.SectionTitle>{newPlace ? <><Form.DetailGrid><Form.DetailItem><dt>장소명</dt><dd>{newPlace.placeName || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>카테고리</dt><dd>{CATEGORY_LABELS[newPlace.category] ?? newPlace.category}</dd></Form.DetailItem><Form.DetailItem><dt>도로명 주소</dt><dd>{newPlace.roadAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>지번 주소</dt><dd>{newPlace.jibunAddress || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>우편번호</dt><dd>{newPlace.postalCode || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>좌표</dt><dd>{formatCoordinates(newPlace.latitude, newPlace.longitude)}</dd></Form.DetailItem><Form.DetailItem><dt>사업장 연락처</dt><dd>{newPlace.businessContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>신청자 연락처</dt><dd>{newPlace.applicantContactPhone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>시간대</dt><dd>{newPlace.timezone || '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>태그</dt><dd>{tags.length ? tags.map((tag) => TAG_LABELS[tag] ?? tag).join(' · ') : '등록 정보 없음'}</dd></Form.DetailItem></Form.DetailGrid>{newPlace.description ? <Form.Section><Form.SectionTitle>장소 소개</Form.SectionTitle><S.Reason>{newPlace.description}</S.Reason></Form.Section> : null}<Form.Section><Form.SectionTitle>영업 시간</Form.SectionTitle><OperatingHours days={newPlace.operatingDays} /></Form.Section></> : <Form.RecordDescription>이 신청의 신규 장소 정보는 서버 응답에 없습니다.</Form.RecordDescription>}</Form.Section> : null}
-    {application.applicationType === 'EXISTING_PLACE_CLAIM' ? <Form.Section><Form.SectionTitle>기존 장소 운영 신청</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>대상 장소</dt><dd>{application.existingPlaceId ? `장소 #${application.existingPlaceId}` : '정보 없음'}</dd></Form.DetailItem><Form.DetailItem><dt>심사 완료 장소</dt><dd>{application.placeId ? `장소 #${application.placeId}` : '미연결'}</dd></Form.DetailItem></Form.DetailGrid>{application.claimReason ? <S.Reason>{application.claimReason}</S.Reason> : <Form.RecordDescription>등록된 신청 사유가 없습니다.</Form.RecordDescription>}</Form.Section> : null}
-    <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error" role="alert">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
+    {application.applicationType === 'EXISTING_PLACE_CLAIM' ? <Form.Section><Form.SectionTitle>기존 장소 운영 신청</Form.SectionTitle><Form.DetailGrid><Form.DetailItem><dt>대상 장소</dt><dd><PlaceDetailLink id={application.existingPlaceId} /></dd></Form.DetailItem><Form.DetailItem><dt>심사 완료 장소</dt><dd><PlaceDetailLink id={application.placeId} /></dd></Form.DetailItem></Form.DetailGrid>{application.claimReason ? <S.Reason>{application.claimReason}</S.Reason> : <Form.RecordDescription>등록된 신청 사유가 없습니다.</Form.RecordDescription>}</Form.Section> : null}
+    <Form.Section><Form.SectionTitle>제출 증빙</Form.SectionTitle>{attachmentErrorMessage ? <Shared.Notice $variant="error" role="alert">{attachmentErrorMessage}</Shared.Notice> : null}{attachments.length === 0 ? <Form.RecordDescription>등록된 증빙 파일이 없습니다.</Form.RecordDescription> : <S.AttachmentList>{attachments.map((attachment) => <S.AttachmentRow key={attachment.id}><div><strong>{DOCUMENT_LABELS[attachment.documentType]} · {attachment.originalFilename}</strong><span>{attachment.contentType || '파일'} · {formatFileSize(attachment.fileSize)} · 업로드 {formatDate(attachment.uploadedAt)}</span></div><S.AttachmentButton type="button" onClick={() => onPreview(attachment)}>미리보기</S.AttachmentButton><S.AttachmentButton type="button" disabled={downloadingAttachmentId !== null} onClick={() => onDownload(attachment)}><Shell.MaterialIcon aria-hidden="true">download</Shell.MaterialIcon>{downloadingAttachmentId === attachment.id ? '다운로드 중' : '다운로드'}</S.AttachmentButton></S.AttachmentRow>)}</S.AttachmentList>}</Form.Section>
     {application.reviewReason ? <Form.Section><Form.SectionTitle>심사 사유</Form.SectionTitle><S.Reason>{application.reviewReason}</S.Reason></Form.Section> : null}
-    {application.status === 'PENDING' && approvalBlockMessage ? <Shared.Notice $variant="error" role="alert">{approvalBlockMessage}</Shared.Notice> : null}
-    {application.status === 'PENDING' ? <Form.InlineActions><Shared.SecondaryButton type="button" disabled={isReviewing} onClick={() => onOpenReview('reject')}>반려</Shared.SecondaryButton><Shared.PrimaryButton type="button" title={approvalBlockMessage || undefined} disabled={isReviewing || Boolean(approvalBlockMessage)} onClick={() => onOpenReview('approve')}>승인</Shared.PrimaryButton></Form.InlineActions> : null}
   </>
 }
 

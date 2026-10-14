@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import * as api from '../api/adminTrustScoreApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth as clearable, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { AdminTrustScore, AdminTrustScoreErrorResponse, TrustScoreAnomaly, TrustScoreBatchResponse, TrustScoreHistory, TrustScoreInterventionEvaluation, TrustScoreInterventionRule, TrustScoreInterventionRuleRequest } from '../types/adminTrustScore.types'
 import { logDebugError } from '../utils/debugLogger'
@@ -10,7 +10,6 @@ import { useAuth } from './useAuth'
 type Action = 'resolve' | 'create-rule' | 'update-rule' | 'toggle-rule' | 'evaluate' | 'batch'
 const CATEGORY_MESSAGES = { unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.', forbidden: '관리자 권한이 필요합니다.', 'not-found': 'Trust Score 대상 또는 규칙을 찾을 수 없습니다.', conflict: '이미 처리되었거나 상태가 변경되었습니다.', network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.', 'request-blocked': '서버 응답을 읽지 못했습니다. 연결 상태를 확인해주세요.', timeout: '응답이 지연되고 있습니다.', server: '서버 오류가 발생했습니다.' }
 function message(error: unknown, fallback: string) { return isApiError<AdminTrustScoreErrorResponse>(error) ? getAuthErrorMessage(error, { fallbackMessage: fallback, categoryMessages: CATEGORY_MESSAGES }) : fallback }
-function clearable(error: unknown) { return isApiError<AdminTrustScoreErrorResponse>(error) && (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized') }
 
 export function useAdminTrustScore() {
   const { clearAuth } = useAuth()

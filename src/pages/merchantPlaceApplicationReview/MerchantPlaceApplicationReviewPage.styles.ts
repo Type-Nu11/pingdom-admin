@@ -1,36 +1,85 @@
 import styled from 'styled-components'
 import { adminColors, radius } from '../../styles/theme'
+import * as Form from '../placeVerification/PlaceVerificationPage.styles'
+import { PageContent, PageStack } from '../../components/common/ListDetailWorkspace.styles'
 
 const colors = adminColors
 
-export const ReviewContent = styled.main`
-  min-height: 0;
-  flex: 1;
-  overflow: hidden;
-  padding: 32px 32px 24px;
-  background: ${colors.background};
+export const ReviewActions = styled.footer`
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid ${colors.border};
+  background: ${colors.surface};
+`
 
-  @media (max-width: 1080px) {
-    overflow-y: auto;
+export const ActionTarget = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+
+  strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.4;
+    color: ${colors.strongText};
   }
 
-  @media (max-width: 720px) {
-    padding: 24px 16px;
+  span {
+    font-size: 12px;
+    color: ${colors.muted};
   }
 `
 
-export const ReviewPageStack = styled.div`
-  width: min(1280px, 100%);
-  min-height: 0;
-  height: 100%;
-  margin: 0 auto;
+export const ActionReason = styled.p`
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: ${colors.muted};
+  overflow-wrap: anywhere;
+`
+
+export const ActionButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  > button {
+    min-width: 80px;
+  }
+`
+
+export const ReviewContent = PageContent
+export const ReviewPageStack = PageStack
+
+export const ApplicationList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+`
 
-  @media (max-width: 1080px) {
-    height: auto;
-  }
+export const ApplicationButton = styled(Form.RecordButton)`
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+`
+
+export const ApplicationTitle = styled(Form.RecordTitle)`
+  min-width: 0;
+  overflow-wrap: anywhere;
+`
+
+export const ApplicationMeta = styled(Form.RecordMeta)`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
 `
 
 export const AttachmentList = styled.div`
@@ -40,7 +89,8 @@ export const AttachmentList = styled.div`
 `
 
 export const AttachmentRow = styled.article`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
@@ -50,8 +100,11 @@ export const AttachmentRow = styled.article`
   background: ${colors.surfaceLow};
 
   > div {
+    grid-column: 1 / -1;
     min-width: 0;
   }
+
+  > button:first-of-type { grid-column: 2; }
 
   strong,
   span {
@@ -86,7 +139,7 @@ export const AttachmentButton = styled.button`
   border: 0;
   border-radius: ${radius.pill};
   background: ${colors.surfaceLow};
-  color: ${colors.primary};
+  color: ${colors.primaryForeground};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -102,6 +155,8 @@ export const AttachmentButton = styled.button`
   &:hover:not(:disabled) {
     background: ${colors.primaryTint};
   }
+
+  &:focus-visible { outline: 2px solid ${colors.primaryForeground}; outline-offset: 2px; }
 
   &:disabled {
     cursor: default;
@@ -157,12 +212,12 @@ export const FilterBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px 16px;
   flex-wrap: wrap;
-  padding: 14px 16px;
+  padding: 4px 0;
   border: 0;
-  border-radius: ${radius.lg};
-  background: ${colors.surfaceLow};
+  border-radius: 0;
+  background: transparent;
 `
 
 export const FilterTabs = styled.div`
@@ -178,15 +233,21 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   padding: 0 14px;
   border: 0;
   border-radius: 6px;
-  background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
+  background: ${({ $active }) => ($active ? colors.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? colors.primaryText : colors.muted)};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
 
   &:hover:not(:disabled) {
-    color: ${({ $active }) => ($active ? colors.primaryText : colors.primary)};
+    color: ${({ $active }) => ($active ? colors.primaryText : colors.primaryForeground)};
+    background: ${({ $active }) => ($active ? colors.primaryForeground : colors.primaryTint)};
   }
+
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
 
   &:disabled {
     cursor: default;
@@ -195,12 +256,34 @@ export const FilterTab = styled.button<{ $active: boolean }>`
 `
 
 export const FilterField = styled.label`
+  min-width: 0;
+  flex-wrap: wrap;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   color: ${colors.muted};
   font-size: 12px;
   font-weight: 700;
+`
+
+export const HistoryFilters = styled.form`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  min-width: 0;
+  > label, > div { flex-direction: column; align-items: stretch; }
+  @media (max-width: 640px) {
+    > label, > div { width: 100%; }
+  }
+`
+
+export const AppliedFilters = styled.p`
+  flex-basis: 100%;
+  margin: 0;
+  color: ${colors.muted};
+  font-size: 12px;
+  overflow-wrap: anywhere;
 `
 
 export const DangerButton = styled.button`
@@ -211,7 +294,7 @@ export const DangerButton = styled.button`
   padding: 0 16px;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${colors.error};
+  background: ${colors.errorAction};
   color: ${colors.primaryText};
   font-size: 14px;
   font-weight: 700;

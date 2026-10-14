@@ -13,6 +13,9 @@ const PATH = '/admin/merchant-place-applications'
 export interface AdminMerchantPlaceApplicationListParams {
   status?: MerchantPlaceApplicationStatus | MerchantPlaceApplicationStatus[]
   applicationType?: MerchantPlaceApplicationType
+  keyword?: string
+  submittedFrom?: string
+  submittedTo?: string
   page?: number
   limit?: number
 }
@@ -40,10 +43,11 @@ export async function getAdminMerchantPlaceApplicationAttachments(applicationId:
 export async function downloadAdminMerchantPlaceApplicationAttachment(
   applicationId: number,
   attachmentId: number,
+  signal?: AbortSignal,
 ) {
   const response = await customAxios.get<Blob>(
     `${PATH}/${applicationId}/attachments/${attachmentId}/content`,
-    { responseType: 'blob' },
+    { responseType: 'blob', signal },
   )
 
   const contentType = response.headers['content-type']

@@ -8,7 +8,7 @@ import {
   getAdminUserSanctionStatus,
   releaseAdminUserBan,
 } from '../api/adminUserBanApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -84,13 +84,6 @@ function getAdminBannedUserErrorMessage(error: unknown) {
     codeMessages: ADMIN_BANNED_USER_CODE_MESSAGES,
     categoryMessages: ADMIN_BANNED_USER_CATEGORY_MESSAGES,
   })
-}
-
-function shouldClearAuth(error: unknown) {
-  return (
-    isApiError<AdminBannedUserApiErrorResponse>(error) &&
-    (error.response?.data?.code === 'INVALID_TOKEN' || error.category === 'unauthorized')
-  )
 }
 
 function hasOwnRequestField<Key extends keyof AdminBannedUserListRequest>(

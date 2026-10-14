@@ -4,7 +4,7 @@ import {
   getAdminAuditLogs,
   getPrivacyProcessingHistories,
 } from '../api/adminOperationHistoryApi'
-import { getAuthErrorMessage } from '../api/authError'
+import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   AdminAuditLogRequest,
@@ -89,7 +89,7 @@ export function useAdminOperationHistories() {
         else failPrivacy(error)
         setErrors((current) => ({ ...current, [tab]: getHistoryErrorMessage(error) }))
       }
-      if (isApiError(error) && error.category === 'unauthorized') {
+      if (shouldClearAuth(error)) {
         clearAuth()
       }
       logDebugError(debugLabel, error)

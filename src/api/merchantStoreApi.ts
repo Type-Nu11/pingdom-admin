@@ -1,4 +1,5 @@
 import customAxios from './customAxios'
+import { getAuthSessionId } from '../utils/authStorage'
 import type {
   MerchantCampaignPageResponse,
   MerchantCampaign,
@@ -43,6 +44,7 @@ import type {
   MerchantSettlementLedgerPageResponse,
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
+  MerchantReservationTerms,
   MerchantReservableProduct,
   MerchantReservableProductCreateRequest,
   MerchantReservation,
@@ -50,11 +52,6 @@ import type {
   MerchantPlaceReverificationPageResponse,
   MerchantPlaceReverificationRequest,
   MerchantPlaceReverificationResponseRequest,
-  MerchantPlaceClaim,
-  MerchantPlaceClaimAttachment,
-  MerchantPlaceClaimCreateRequest,
-  MerchantPlaceClaimDocumentType,
-  MerchantPlaceClaimPageResponse,
   MerchantVerifiedBoostExecution,
   MerchantVerifiedBoostExecutionPageResponse,
   MerchantVerifiedBoostProductPageResponse,
@@ -116,11 +113,17 @@ export async function updateMerchantPlaceInformation(
   return data
 }
 
-export async function getMerchantPlaceDetail(placeId: number) {
-  const { data } = await customAxios.get<MerchantPlaceDetail>(
-    `${MERCHANT_OWNER_PATH}/places/${placeId}`
-  )
-  return data
+const pendingPlaceDetails = new Map<string, Promise<MerchantPlaceDetail>>()
+
+export function getMerchantPlaceDetail(placeId: number) {
+  const key = `${getAuthSessionId()}:${placeId}`
+  const pending = pendingPlaceDetails.get(key)
+  if (pending) return pending
+  const request = customAxios.get<MerchantPlaceDetail>(`${MERCHANT_OWNER_PATH}/places/${placeId}`)
+    .then(({ data }) => data)
+    .finally(() => { if (pendingPlaceDetails.get(key) === request) pendingPlaceDetails.delete(key) })
+  pendingPlaceDetails.set(key, request)
+  return request
 }
 
 export async function getMerchantPlaceOperating(placeId: number) {
@@ -287,7 +290,7 @@ export async function updateMerchantBrand(brandId: number, request: MerchantBran
   return data
 }
 
-export async function getMerchantOffers(params: { page?: number; limit?: number } = {}) {
+export async function getMerchantOffers(params: { page?: number; limit?: number; placeId?: number; status?: MerchantOffer['status'] } = {}) {
   const { data } = await customAxios.get<MerchantOfferPageResponse>(
     `${MERCHANT_OWNER_PATH}/offers`,
     { params: { page: 1, limit: 20, ...params } }
@@ -430,6 +433,13 @@ export async function getMerchantAvailabilities() {
   return data
 }
 
+export async function updateMerchantReservationTerms(availabilityId: number, request: MerchantReservationTerms) {
+  const { data } = await customAxios.put<MerchantReservationTerms>(
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/reservation-terms`, request,
+  )
+  return data
+}
+
 export async function createMerchantAvailability(request: MerchantAvailabilityUpsertRequest) {
   const { data } = await customAxios.post<MerchantAvailability>(
     `${MERCHANT_OWNER_PATH}/availabilities`,
@@ -497,36 +507,6 @@ export async function respondMerchantPlaceReverificationRequest(
   return data
 }
 
-export async function getMerchantPlaceClaims(page = 1, limit = 20) {
-  const { data } = await customAxios.get<MerchantPlaceClaimPageResponse>(
-    `${MERCHANT_OWNER_PATH}/place-claims`,
-    { params: { page, limit } },
-  )
-  return data
-}
-
-export async function getMerchantPlaceClaim(claimId: number) {
-  const { data } = await customAxios.get<MerchantPlaceClaim>(
-    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}`,
-  )
-  return data
-}
-
-export async function createMerchantPlaceClaim(request: MerchantPlaceClaimCreateRequest) {
-  const { data } = await customAxios.post<MerchantPlaceClaim>(
-    `${MERCHANT_OWNER_PATH}/place-claims`,
-    request,
-  )
-  return data
-}
-
-export async function cancelMerchantPlaceClaim(claimId: number) {
-  const { data } = await customAxios.post<MerchantPlaceClaim>(
-    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/cancel`,
-  )
-  return data
-}
-
 export async function getMerchantVerifiedBoostSelections(page = 1, limit = 20) {
   const { data } = await customAxios.get<MerchantVerifiedBoostSelectionPageResponse>(
     `${MERCHANT_OWNER_PATH}/verified-boost-selections`,
@@ -574,47 +554,6 @@ export async function stopMerchantVerifiedBoostExecution(executionId: number) {
     `${MERCHANT_OWNER_PATH}/verified-boost-executions/${executionId}/stop`,
   )
   return data
-}
-
-export async function getMerchantPlaceClaimAttachments(claimId: number) {
-  const { data } = await customAxios.get<MerchantPlaceClaimAttachment[]>(
-    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments`,
-  )
-  return data
-}
-
-export async function uploadMerchantPlaceClaimAttachment(
-  claimId: number,
-  documentType: MerchantPlaceClaimDocumentType,
-  file: File,
-) {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('documentType', documentType)
-  const { data } = await customAxios.post<MerchantPlaceClaimAttachment>(
-    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments`,
-    formData,
-  )
-  return data
-}
-
-export async function reorderMerchantPlaceClaimAttachments(
-  claimId: number,
-  attachmentIds: number[],
-) {
-  const params = new URLSearchParams()
-  attachmentIds.forEach((attachmentId) => params.append('attachmentIds', String(attachmentId)))
-  await customAxios.post<void>(
-    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments/reorder`,
-    undefined,
-    { params },
-  )
-}
-
-export async function deleteMerchantPlaceClaimAttachment(claimId: number, attachmentId: number) {
-  await customAxios.delete<void>(
-    `${MERCHANT_OWNER_PATH}/place-claims/${claimId}/attachments/${attachmentId}`,
-  )
 }
 
 export async function getMerchantOperatingNotices(placeId: number) {

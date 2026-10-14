@@ -1,8 +1,19 @@
 import { useEffect } from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminNotificationProvider } from '../providers/AdminNotificationProvider'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
+import { getRoleHome, rememberGuestReturn } from '../../utils/authReturn'
+
+function LoginRedirect({ role }: { role: 'ADMIN' | 'MERCHANT_OWNER' | 'USER' }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  useEffect(() => {
+    rememberGuestReturn(location.pathname + location.search, role)
+    navigate('/login', { replace: true })
+  }, [location.pathname, location.search, navigate, role])
+  return <RouteLoadingFallback />
+}
 
 function RoleProtectedRoute({ expectedRole, withNotifications = false }: { expectedRole: 'ADMIN' | 'MERCHANT_OWNER'; withNotifications?: boolean }) {
   const { clearAuth, isAuthenticated, isAuthReady, user } = useAuth()
@@ -24,17 +35,11 @@ function RoleProtectedRoute({ expectedRole, withNotifications = false }: { expec
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <LoginRedirect role={expectedRole} />
   }
 
   if (user?.role !== expectedRole) {
-    const fallback = user?.role === 'ADMIN'
-      ? '/dashboard'
-      : user?.role === 'MERCHANT_OWNER'
-        ? '/merchant'
-        : user?.role === 'USER'
-          ? '/merchant/onboarding'
-          : '/login'
+    const fallback = getRoleHome(user?.role ?? '')
     return <Navigate to={fallback} replace />
   }
 
@@ -68,7 +73,7 @@ export function MerchantOnboardingRoute() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <LoginRedirect role="USER" />
   }
 
   if (user?.role === 'ADMIN') {

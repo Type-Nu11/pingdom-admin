@@ -30,7 +30,7 @@ export const IconButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${adminColors.primaryTint};
-    color: ${adminColors.primary};
+    color: ${adminColors.primaryForeground};
   }
 
   &:focus-visible {
@@ -77,7 +77,7 @@ export const PageButton = styled.button<{ $active?: boolean }>`
   padding: 0;
   border: 0;
   border-radius: ${radius.pill};
-  background: ${({ $active }) => ($active ? adminColors.primary : 'transparent')};
+  background: ${({ $active }) => ($active ? adminColors.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? adminColors.primaryText : adminColors.text)};
   font: inherit;
   font-size: 14px;
@@ -88,8 +88,8 @@ export const PageButton = styled.button<{ $active?: boolean }>`
     color 160ms ease;
 
   &:hover:not(:disabled) {
-    background: ${({ $active }) => ($active ? adminColors.primary : adminColors.primaryTint)};
-    color: ${({ $active }) => ($active ? adminColors.primaryText : adminColors.primary)};
+    background: ${({ $active }) => ($active ? adminColors.primaryAction : adminColors.primaryTint)};
+    color: ${({ $active }) => ($active ? adminColors.primaryText : adminColors.primaryForeground)};
   }
 
   &:focus-visible {

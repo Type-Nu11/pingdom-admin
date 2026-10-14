@@ -23,7 +23,7 @@ window.qaApplication = {
   merchantDescription: '', existingPlaceId: 7, placeName: '합성 신청 장소', claimReason: '운영자입니다.',
   updatedAt: '2026-09-30T10:00:00', createdAt: '2026-09-30T10:00:00',
   attachments: ['BUSINESS_REGISTRATION', 'IDENTITY_DOCUMENT', 'REPRESENTATIVE_IMAGE'].map((documentType, i) => ({ id: i + 1, documentType, originalFilename: documentType + '.png', fileSize: 100, displayOrder: i })),
-  newPlace: { placeName: '합성 신청 장소', category: 'RESTAURANT', latitude: 37.5, longitude: 127, roadAddress: '서울 테스트로 1', jibunAddress: '서울 테스트동 1', postalCode: '12345', description: '매장 소개', businessContactPhone: '+821012345678', applicantContactPhone: '+821012345678', tags: [], timezone: 'Asia/Seoul', operatingDays: [] },
+  newPlace: { placeName: '합성 신청 장소', category: 'RESTAURANT', latitude: 37.5, longitude: 127, roadAddress: '서울 테스트로 1', jibunAddress: '서울 테스트동 1', postalCode: '12345', description: '매장 소개', businessContactPhone: '+821012345678', applicantContactPhone: '+821012345678', tags: [], timezone: 'Asia/Tokyo', operatingDays: [{ dayOfWeek: 'MONDAY', status: 'OPEN', opensAt: '10:00:00', closesAt: '20:00:00', breakTimes: [{ opensAt: '14:00:00', closesAt: '15:00:00' }] }] },
 }
 client.defaults.adapter = async config => {
   const payload = typeof config.data === 'string' ? JSON.parse(config.data) : undefined

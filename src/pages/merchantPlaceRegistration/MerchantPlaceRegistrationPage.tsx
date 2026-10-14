@@ -9,17 +9,16 @@ import type { MapHandle } from '../../components/map/map.types'
 import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
 import { useAuth } from '../../hooks/useAuth'
+import { buildRegistrationOperatingDays, parseRegistrationSchedule, type RegistrationScheduleDraft } from '../../utils/merchantRegistrationSchedule'
 import {
   useMerchantPlaceRegistrations,
   type MerchantPlaceRegistrationStagedAttachment,
 } from '../../hooks/useMerchantPlaceRegistrations'
 import type {
   MerchantOperatingDayOfWeek,
-  MerchantOperatingDayStatus,
   MerchantPlaceCategory,
   MerchantPlaceRegistration,
   MerchantPlaceRegistrationAttachment,
-  MerchantPlaceRegistrationOperatingDay,
   MerchantPlaceRegistrationRequest,
   MerchantPlaceRegistrationStatus,
   MerchantPlaceTag,
@@ -76,17 +75,6 @@ const DAYS: Array<{ value: MerchantOperatingDayOfWeek; label: string }> = [
   { value: 'SUNDAY', label: '일' },
 ]
 
-type ScheduleDraft = {
-  dayOfWeek: MerchantOperatingDayOfWeek
-  status: MerchantOperatingDayStatus
-  opensAt: string
-  closesAt: string
-}
-
-function createDefaultSchedule(): ScheduleDraft[] {
-  return DAYS.map(({ value }) => ({ dayOfWeek: value, status: 'OPEN', opensAt: '10:00', closesAt: '20:00' }))
-}
-
 function formatDate(value: string | null) {
   if (!value) return '날짜 없음'
   const date = new Date(value)
@@ -123,41 +111,6 @@ function formatFileSize(value: number) {
   if (value < 1024) return `${value}B`
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)}KB`
   return `${(value / (1024 * 1024)).toFixed(1)}MB`
-}
-
-function toTime(value: string) {
-  return value
-}
-
-function parseTime(value: unknown, fallback: string) {
-  if (typeof value === 'string' && /^\d{2}:\d{2}(?::\d{2})?$/.test(value)) {
-    return value.slice(0, 5)
-  }
-  if (!value || typeof value !== 'object') return fallback
-  const candidate = value as { hour?: unknown; minute?: unknown }
-  if (typeof candidate.hour !== 'number' || typeof candidate.minute !== 'number') return fallback
-  return `${String(candidate.hour).padStart(2, '0')}:${String(candidate.minute).padStart(2, '0')}`
-}
-
-function parseSchedule(value: string | null) {
-  const defaults = createDefaultSchedule()
-  if (!value) return defaults
-  try {
-    const parsed = JSON.parse(value) as unknown
-    if (!Array.isArray(parsed)) return defaults
-    return defaults.map((fallback) => {
-      const current = parsed.find((item) => item && typeof item === 'object' && (item as { dayOfWeek?: string }).dayOfWeek === fallback.dayOfWeek) as Record<string, unknown> | undefined
-      const status = current?.status
-      return {
-        dayOfWeek: fallback.dayOfWeek,
-        status: status === 'CLOSED' || status === 'OPEN_24_HOURS' || status === 'OPEN' ? status : fallback.status,
-        opensAt: parseTime(current?.opensAt, fallback.opensAt),
-        closesAt: parseTime(current?.closesAt, fallback.closesAt),
-      }
-    })
-  } catch {
-    return defaults
-  }
 }
 
 function RegistrationForm({
@@ -219,7 +172,7 @@ function RegistrationForm({
   const [merchantContactPhone, setMerchantContactPhone] = useState(formatPhoneInput(registration?.merchantContactPhone ?? ''))
   const [isApplicantPhoneSame, setIsApplicantPhoneSame] = useState(false)
   const [tags, setTags] = useState<MerchantPlaceTag[]>(registration?.tags ?? [])
-  const [schedule, setSchedule] = useState<ScheduleDraft[]>(parseSchedule(registration?.operatingScheduleJson ?? null))
+  const [schedule, setSchedule] = useState<RegistrationScheduleDraft[]>(parseRegistrationSchedule(registration?.operatingScheduleJson ?? null))
   const draft = useSavedDraft(JSON.stringify([placeName, category, roadAddress, jibunAddress, postalCode, latitude, longitude, description, businessPhone, applicantPhone, legalName, businessName, businessRegistrationNumber, merchantDisplayName, merchantContactEmail, merchantContactPhone, isApplicantPhoneSame, tags, schedule]), { enabled: editable, busy: activeAction !== null })
   const [formError, setFormError] = useState('')
   const [placeSearchQuery, setPlaceSearchQuery] = useState('')
@@ -278,7 +231,7 @@ function RegistrationForm({
     return () => document.removeEventListener('pointerdown', closeCategoryMenu)
   }, [isCategoryMenuOpen])
 
-  const updateSchedule = (day: MerchantOperatingDayOfWeek, changes: Partial<ScheduleDraft>) => {
+  const updateSchedule = (day: MerchantOperatingDayOfWeek, changes: Partial<RegistrationScheduleDraft>) => {
     setSchedule((current) => current.map((item) => item.dayOfWeek === day ? { ...item, ...changes } : item))
   }
 
@@ -358,18 +311,14 @@ function RegistrationForm({
       return null
     }
     setFormError('')
-    const operatingDays: MerchantPlaceRegistrationOperatingDay[] = schedule.map((day) => ({
-      dayOfWeek: day.dayOfWeek,
-      status: day.status,
-      ...(day.status === 'OPEN' ? { opensAt: toTime(day.opensAt), closesAt: toTime(day.closesAt), breakTimes: [] } : {}),
-    }))
+    const operatingDays = buildRegistrationOperatingDays(schedule)
     return {
       legalName: legalName.trim(), businessName: requestBusinessName, businessRegistrationNumber: businessRegistrationNumber.trim(),
       merchantDisplayName: merchantDisplayName.trim(), merchantDescription: null, merchantContactEmail: merchantContactEmail.trim(), merchantContactPhone: normalizedMerchantContactPhone,
       placeName: placeName.trim(), category, latitude: numericLatitude, longitude: numericLongitude,
       roadAddress: roadAddress.trim(), jibunAddress: jibunAddress.trim(), postalCode: postalCode.trim(),
       description: description.trim(), businessContactPhone: normalizedBusinessPhone, applicantContactPhone: normalizedApplicantPhone,
-      tags, timezone: 'Asia/Seoul', operatingDays,
+      tags, timezone: registration?.timezone ?? 'Asia/Seoul', operatingDays,
     }
   }
 

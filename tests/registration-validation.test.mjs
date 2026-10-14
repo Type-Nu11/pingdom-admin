@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import ts from 'typescript'
+import { buildRegistrationOperatingDays } from '../src/utils/merchantRegistrationSchedule.ts'
 
 const source = await readFile(new URL('../src/pages/merchantPlaceRegistration/MerchantPlaceRegistrationPage.tsx', import.meta.url), 'utf8')
 const ast = ts.createSourceFile('Registration.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
@@ -18,7 +19,7 @@ function declaration(name) {
   return result
 }
 const code = ts.transpileModule([
-  'canEdit', 'normalizeE164Phone', 'toTime', 'E164_PHONE_PATTERN',
+  'canEdit', 'normalizeE164Phone', 'E164_PHONE_PATTERN',
   'ATTACHMENT_DOCUMENT_LABELS', 'ATTACHMENT_DOCUMENT_OPTIONS', 'REQUIRED_ATTACHMENT_TYPES',
   'editable', 'numericLatitude', 'numericLongitude', 'hasValidCoordinate',
   'buildRequest', 'requestReview',
@@ -28,6 +29,7 @@ function form(overrides = {}) {
   const calls = []
   let error = ''
   const values = {
+    buildRegistrationOperatingDays,
     registration: { id: 1, status: 'DRAFT', attachments: [] }, activeAction: null,
     draft: { isDirty: true },
     placeSearch: { phase: 'idle' }, pendingSelection: null,
@@ -37,7 +39,7 @@ function form(overrides = {}) {
     placeName: 'Edited place', roadAddress: 'Road', jibunAddress: 'Address', postalCode: '12345',
     description: 'Edited description', businessPhone: '+821012345678', applicantPhone: '+821012345678',
     latitude: '37.5', longitude: '127', category: 'RESTAURANT', tags: [],
-    schedule: [{ dayOfWeek: 'MONDAY', status: 'OPEN', opensAt: '09:00', closesAt: '18:00' }],
+    schedule: [{ dayOfWeek: 'MONDAY', status: 'OPEN', opensAt: '09:00', closesAt: '18:00', breakTimes: [] }],
     stagedAttachments: ['BUSINESS_REGISTRATION', 'IDENTITY_DOCUMENT', 'REPRESENTATIVE_IMAGE'].map(documentType => ({ documentType, file: {} })),
     setFormError: message => { error = message },
     setStagedAttachments() {}, clearAttachmentFile() {},

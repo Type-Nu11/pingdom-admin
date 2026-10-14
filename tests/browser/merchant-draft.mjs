@@ -51,6 +51,10 @@ try {
       await page.keyboard.press('Enter')
       await page.waitForFunction(() => window.qaApplication.legalName === '수정 신청자')
       assert.deepEqual(await page.evaluate(() => window.qaApplication.attachments), before)
+      if (kind === 'new') {
+        assert.equal(await page.evaluate(() => window.qaApplication.newPlace.timezone), 'Asia/Tokyo')
+        assert.deepEqual(await page.evaluate(() => window.qaApplication.newPlace.operatingDays.find(day => day.dayOfWeek === 'MONDAY').breakTimes), [{ opensAt: '14:00:00', closesAt: '15:00:00' }])
+      }
       await page.evaluate(() => document.fonts.ready)
       await page.screenshot({ path: join(output, `${kind}-${width}.png`), fullPage: true })
       await page.getByRole('button', { name: '심사 요청', exact: true }).click()
@@ -89,10 +93,6 @@ try {
           assert.deepEqual(await page.evaluate(() => window.qaApplication.attachments), before)
         }
       }
-      assert.deepEqual(errors, [])
-      await page.close()
-    }
-  }
       if (kind === 'new') {
         await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/draft-qa?new&fresh`)
         await page.getByRole('button', { name: '새 장소 등록 신청', exact: true }).click()
@@ -127,5 +127,9 @@ try {
         assert.equal(await page.evaluate(() => window.qaApplication.attachments.length), 3)
         assert.equal(await page.getByRole('button', { name: '선택 취소', exact: true }).count(), 0)
       }
+      assert.deepEqual(errors, [])
+      await page.close()
+    }
+  }
   console.log('PASS both forms: attached draft editing, conflict preservation, save/submit, attachment identity/order, pending lock; ' + output)
 } finally { await browser?.close(); await server.close() }

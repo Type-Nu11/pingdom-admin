@@ -193,3 +193,37 @@ test('refocusing a dismissed search queues suggestions again, but clearing ends 
   assert.equal(changes.at(-1), '')
   assert.equal(input().value, '')
 })
+
+for (const direction of ['ArrowDown', 'ArrowUp']) test(`${direction} after Escape reloads candidates using the unchanged query`, async t => {
+  const pending = []
+  client.defaults.adapter = config => new Promise(resolve => pending.push({
+    config,
+    resolve: () => resolve({ config, status: 200, statusText: 'OK', headers: {}, data: { items: [candidates[0]] } }),
+  }))
+  liveSearch = true
+  await act(async () => root.render(h(Probe)))
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  await focus()
+  await act(async () => t.mock.timers.tick(200))
+  assert.equal(pending.length, 1)
+  await act(async () => pending[0].resolve())
+  assert.equal(options().length, 1)
+  await key('Escape')
+  assert.equal(input().getAttribute('aria-expanded'), 'false')
+  assert.equal(document.activeElement, input())
+  assert.equal(input().value, '롯데')
+  await key(direction)
+  assert.equal(input().getAttribute('aria-expanded'), 'true')
+  assert.match(document.querySelector('[role="status"]').textContent, /검색 중/)
+  // Repeated navigation keys must not restart debounce or duplicate requests.
+  await key(direction)
+  await act(async () => t.mock.timers.tick(200))
+  assert.equal(pending.length, 2)
+  assert.equal(pending[1].config.params.query, '롯데')
+  await act(async () => pending[1].resolve())
+  await key(direction)
+  assert.equal(document.getElementById(input().getAttribute('aria-activedescendant')), options()[0])
+  await key('Enter')
+  assert.deepEqual(selected, [candidates[0]])
+  assert.equal(input().getAttribute('aria-expanded'), 'false')
+})

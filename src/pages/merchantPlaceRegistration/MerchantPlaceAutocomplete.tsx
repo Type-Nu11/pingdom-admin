@@ -59,7 +59,7 @@ export function MerchantPlaceAutocomplete({ query, search, disabled, onQueryChan
     if (event.key === 'Escape') { event.preventDefault(); close(); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
-      setIsOpen(true)
+      open()
       if (!search.results.length) return
       const next = event.key === 'ArrowDown'
         ? (activeIndex + 1) % search.results.length

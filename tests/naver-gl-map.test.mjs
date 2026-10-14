@@ -14,8 +14,30 @@ const paint = () => { const batch = [...frames.values()]; frames.clear(); batch.
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 const { createNaverGlZoomController, glWheelStep } = await server.ssrLoadModule('/src/components/map/naverGlZoomController.ts')
 const { createNaverMapController } = await server.ssrLoadModule('/src/components/map/naverMapController.ts')
+const { createNaverMarkerButton, updateNaverMarker } = await server.ssrLoadModule('/src/components/map/naverMarker.ts')
+const { getPlaceCategoryMarkerImageUrl } = await server.ssrLoadModule('/src/utils/placeCategory.ts')
 const { loadNaverMaps } = await server.ssrLoadModule('/src/components/map/loadNaverMaps.ts')
 after(async () => { await server.close(); dom.window.close() })
+
+test('category markers share the same sizing and preserve active state, viewport and zoom scaling', () => {
+  let defaultSize
+  for (const category of ['RESTAURANT', 'MUSIC', 'POP_UP', 'FASHION', 'BEAUTY', 'EXHIBITION', 'CAFE', 'CULTURAL_HERITAGE', 'OTHER']) {
+    const marker = { id: 1, latitude: 37.5, longitude: 127, label: '검증 장소', category }
+    const button = createNaverMarkerButton(() => {})
+    updateNaverMarker(button, marker, false, 16, 960)
+    assert.equal(button.querySelector('img').getAttribute('src'), getPlaceCategoryMarkerImageUrl(marker))
+    const size = [button.style.width, button.style.height]
+    if (!defaultSize) defaultSize = size
+    assert.deepEqual(size, defaultSize)
+    assert.equal(button.getAttribute('aria-pressed'), 'false')
+    const normalWidth = parseInt(button.style.width)
+    updateNaverMarker(button, marker, true, 16, 960)
+    assert.equal(button.getAttribute('aria-pressed'), 'true')
+    assert.ok(parseInt(button.style.width) > normalWidth)
+    updateNaverMarker(button, marker, false, 10, 480)
+    assert.ok(parseInt(button.style.width) < normalWidth)
+  }
+})
 
 test('GL loader shares a single GL request and retries', async () => {
   let pending = loadNaverMaps('test-id', 1000)
@@ -129,8 +151,8 @@ test('GL adapter preserves markers, panel positioning, refresh and scoped wheel 
   const map = stats.maps[0]
   assert.deepEqual([map.options.gl, map.options.zoom, map.options.minZoom, map.options.maxZoom, map.options.scrollWheel], [true, 15, 6, 20, false])
   const markers = [
-    { id: 1, label: '카페', latitude: 37.5, longitude: 127, category: 'CAFE', level: 10 },
-    { id: 2, label: '음식점', latitude: 37.501, longitude: 127.001, category: 'RESTAURANT', level: 20 },
+    { id: 1, label: '카페', latitude: 37.5, longitude: 127, category: 'CAFE' },
+    { id: 2, label: '음식점', latitude: 37.501, longitude: 127.001, category: 'RESTAURANT' },
   ]
   controller.update({ markers: [...markers, { ...markers[0], id: 3, latitude: NaN }], fitBoundsKey: 'two' })
   assert.equal(container.querySelectorAll('button').length, 2)

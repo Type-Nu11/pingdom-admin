@@ -8,7 +8,7 @@ const sampleMarkers: MapMarker[] = Array.from({ length: 30 }, (_, index) => ({
   id: index + 1, label: `검증 장소 ${index + 1}`,
   latitude: 37.5665 + Math.floor(index / 6) * 0.001,
   longitude: 126.978 + (index % 6) * 0.001,
-  category: index % 2 ? 'RESTAURANT' : 'CAFE', level: [0, 5, 10, 15, 20][index % 5],
+  category: index % 2 ? 'RESTAURANT' : 'CAFE',
 }))
 
 export default function NaverGlPreview() {

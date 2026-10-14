@@ -40,19 +40,6 @@ const LIST_ICON_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
   other: new URL('../assets/placeMarkers/icon/기타.svg', import.meta.url).href,
 }
 
-const FLAME_MARKER_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
-  restaurant: new URL('../assets/placeMarkers/category/음식점-불꽃.svg', import.meta.url).href,
-  music: new URL('../assets/placeMarkers/category/음악-불꽃.svg', import.meta.url).href,
-  popup: new URL('../assets/placeMarkers/category/팝업-불꽃.svg', import.meta.url).href,
-  fashion: new URL('../assets/placeMarkers/category/패션-불꽃.svg', import.meta.url).href,
-  beauty: new URL('../assets/placeMarkers/category/뷰티-불꽃.svg', import.meta.url).href,
-  exhibition: new URL('../assets/placeMarkers/category/전시-불꽃.svg', import.meta.url).href,
-  cafe: new URL('../assets/placeMarkers/category/카페-불꽃.svg', import.meta.url).href,
-  'cultural-heritage': new URL('../assets/placeMarkers/category/문화재-불꽃.svg', import.meta.url)
-    .href,
-  other: new URL('../assets/placeMarkers/category/기타-불꽃.svg', import.meta.url).href,
-}
-
 const CATEGORY_METADATA_BY_KEY: Record<
   string,
   { kind: PlaceCategoryKind; label: string; iconName: string }
@@ -113,8 +100,4 @@ export function getPlaceCategoryMarkerImageUrl(place: PlaceCategorySource) {
 
 export function getPlaceCategoryListIconImageUrl(place: PlaceCategorySource) {
   return LIST_ICON_IMAGE_URL_BY_KIND[getPlaceCategoryKind(place)]
-}
-
-export function getPlaceCategoryFlameMarkerImageUrl(place: PlaceCategorySource) {
-  return FLAME_MARKER_IMAGE_URL_BY_KIND[getPlaceCategoryKind(place)]
 }

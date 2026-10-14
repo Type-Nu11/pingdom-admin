@@ -6,10 +6,12 @@ services:
       context: .
       args:
         VITE_PUBLIC_API_BASE_URL: /api
+        VITE_APP_BASE_PATH: ${VITE_APP_BASE_PATH:-/operator/}
         VITE_NAVER_MAP_CLIENT_ID: ${VITE_NAVER_MAP_CLIENT_ID:?Set the public NAVER Maps Client ID}
     ports:
       # Required web host port. An app gateway on the same host must not also bind 8082.
-      - "127.0.0.1:${PINGDOM_WEB_PORT:-8082}:8080"
+      # Separate proxy EC2: set only the web EC2's private VPC IP, never 0.0.0.0.
+      - "${PINGDOM_WEB_BIND_ADDRESS:-127.0.0.1}:${PINGDOM_WEB_PORT:-8082}:8080"
     environment:
       # Must point at the authenticated WEB gateway, never the raw backend.
       PINGDOM_API_UPSTREAM: ${PINGDOM_API_UPSTREAM:-host.docker.internal:8081}

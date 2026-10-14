@@ -1,0 +1,27 @@
+name: pingdom-admin
+
+services:
+  web:
+    image: pingdom-admin:local
+    build:
+      context: .
+      args:
+        VITE_PUBLIC_API_BASE_URL: ${VITE_PUBLIC_API_BASE_URL:?Set VITE_PUBLIC_API_BASE_URL in .env.docker}
+        VITE_KAKAO_MAP_APP_KEY: ${VITE_KAKAO_MAP_APP_KEY:-}
+    # 기본은 호스트/프록시 전용. 외부 접근이 필요하면 허용할 출발지를 먼저 확정합니다.
+    ports:
+      - "${ADMIN_BIND_ADDRESS:-127.0.0.1}:${ADMIN_PORT:-8082}:8080"
+    restart: unless-stopped
+    mem_limit: 128m
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

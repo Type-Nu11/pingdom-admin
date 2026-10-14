@@ -10,18 +10,22 @@ const { createElement: h, act, useState } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { MerchantPlaceAutocomplete } = await server.ssrLoadModule('/src/pages/merchantPlaceRegistration/MerchantPlaceAutocomplete.tsx')
-let root, changes, selected, searches, cancellations, search, disabled
+const { useMerchantUnifiedPlaceSearch } = await server.ssrLoadModule('/src/hooks/useMerchantUnifiedPlaceSearch.ts')
+const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
+let root, changes, selected, searches, cancellations, search, disabled, liveSearch, liveState
 const candidates = [
   { kind: 'place', name: '롯데 합성 가게', roadAddress: '서울 합성로 10', jibunAddress: '', postalCode: '', latitude: 37, longitude: 127 },
   { kind: 'address', roadAddress: '서울 롯데합성로 20', jibunAddress: '서울 합성동 20', postalCode: '12345', latitude: 37.1, longitude: 127.1 },
 ]
 function Probe() {
   const [query, setQuery] = useState('롯데')
+  liveState = useMerchantUnifiedPlaceSearch()
   return h('form', { onSubmit: event => { event.preventDefault(); throw new Error('Search must not submit the registration') } },
     h(MerchantPlaceAutocomplete, {
-      query, search, disabled,
-      onQueryChange(value, composing) { changes.push({ value, composing }); setQuery(value) },
-      onSearch() { searches++ }, onCancel() { cancellations++ }, onSelect(item) { selected.push(item) },
+      query, search: liveSearch ? liveState : search, disabled,
+      onQueryChange(value) { changes.push(value); setQuery(value); if (liveSearch) liveState.scheduleSearch(value) },
+      onSearch() { searches++; if (liveSearch) void liveState.search(query) },
+      onCancel() { cancellations++; if (liveSearch) liveState.reset() }, onSelect(item) { selected.push(item) },
     }))
 }
 const input = () => document.querySelector('[role="combobox"]')
@@ -29,7 +33,7 @@ const options = () => [...document.querySelectorAll('[role="option"]')]
 const key = value => act(async () => input().dispatchEvent(new window.KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true })))
 const focus = () => act(async () => input().focus())
 beforeEach(async () => {
-  changes = []; selected = []; searches = 0; cancellations = 0; disabled = false
+  changes = []; selected = []; searches = 0; cancellations = 0; disabled = false; liveSearch = false
   search = { results: candidates, phase: 'idle', isError: false, message: '' }
   root = createRoot(document.getElementById('root'))
   await act(async () => root.render(h(Probe)))
@@ -73,25 +77,65 @@ test('pointer selection, focus leaving, and input clearing have distinct behavio
   await focus()
   await act(async () => document.querySelector('[aria-label="검색어 지우기"]').click())
   assert.equal(input().value, '')
-  assert.deepEqual(changes.at(-1), { value: '', composing: false })
+  assert.equal(changes.at(-1), '')
   assert.equal(document.activeElement, input())
 })
 
-test('typing reports Korean composition state, and composing Enter never selects or submits', async () => {
+test('Korean input updates the query during composition; Enter does not select or submit, and compositionend does not repeat the value', async () => {
   await focus()
   await act(async () => input().dispatchEvent(new window.CompositionEvent('compositionstart', { bubbles: true })))
   await act(async () => {
     Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(input(), '롯데마')
     input().dispatchEvent(new window.Event('input', { bubbles: true }))
   })
-  assert.deepEqual(changes.at(-1), { value: '롯데마', composing: true })
+  assert.equal(changes.at(-1), '롯데마')
   await key('Enter')
   assert.equal(searches, 0)
   assert.deepEqual(selected, [])
   await act(async () => input().dispatchEvent(new window.CompositionEvent('compositionend', { bubbles: true })))
-  assert.deepEqual(changes.at(-1), { value: '롯데마', composing: false })
+  assert.deepEqual(changes, ['롯데마'])
   await key('Enter')
   assert.equal(searches, 1)
+})
+
+for (const immediate of [false, true]) test(`real search hook: ${immediate ? 'first click survives late IME completion' : '200ms pause during Korean composition triggers search without a click'}`, async t => {
+  const pending = []
+  client.defaults.adapter = config => new Promise(resolve => pending.push({ config, resolve: () => resolve({ config, status: 200, statusText: 'OK', headers: {}, data: { items: [{ name: '롯데마 합성 가게', roadAddress: '서울 합성로 10', jibunAddress: '', latitude: 37, longitude: 127 }] } }) }))
+  liveSearch = true
+  await act(async () => root.render(h(Probe)))
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  await focus()
+  await act(async () => input().dispatchEvent(new window.CompositionEvent('compositionstart', { bubbles: true })))
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(input(), '롯데마')
+    input().dispatchEvent(new window.Event('input', { bubbles: true }))
+  })
+  if (immediate) {
+    await act(async () => document.querySelector('[aria-label="장소·주소 검색"]').click())
+  } else {
+    await act(async () => t.mock.timers.tick(199))
+    assert.equal(pending.length, 0)
+    await act(async () => t.mock.timers.tick(1))
+  }
+  assert.equal(pending.length, 1)
+  assert.equal(pending[0].config.params.query, '롯데마')
+  await act(async () => input().dispatchEvent(new window.CompositionEvent('compositionend', { bubbles: true })))
+  assert.equal(pending[0].config.signal.aborted, false)
+  await act(async () => t.mock.timers.tick(500))
+  assert.equal(pending.length, 1)
+  await act(async () => pending[0].resolve())
+  assert.equal(options().length, 1)
+  assert.match(options()[0].textContent, /롯데마 합성 가게.*서울 합성로 10/)
+})
+
+test('a late unchanged compositionend cannot reopen suggestions after selecting a candidate', async () => {
+  await focus()
+  await act(async () => input().dispatchEvent(new window.CompositionEvent('compositionstart', { bubbles: true })))
+  await act(async () => options()[0].click())
+  assert.equal(input().getAttribute('aria-expanded'), 'false')
+  await act(async () => input().dispatchEvent(new window.CompositionEvent('compositionend', { bubbles: true })))
+  assert.equal(input().getAttribute('aria-expanded'), 'false')
+  assert.deepEqual(changes, [])
 })
 
 test('waiting, empty results and server failure are not shown as successful place suggestions', async () => {
@@ -129,13 +173,13 @@ test('refocusing a dismissed search queues suggestions again, but clearing ends 
   search = { results: [], phase: 'idle', isError: false, message: '' }
   await act(async () => root.render(h(Probe)))
   await focus()
-  assert.deepEqual(changes.at(-1), { value: '롯데', composing: false })
+  assert.equal(changes.at(-1), '롯데')
   await key('Escape')
   await act(async () => document.getElementById('outside').focus())
   await focus()
   assert.equal(changes.length, 2)
   const clear = document.querySelector('[aria-label="검색어 지우기"]')
   await act(async () => { clear.focus(); clear.click() })
-  assert.deepEqual(changes.at(-1), { value: '', composing: false })
+  assert.equal(changes.at(-1), '')
   assert.equal(input().value, '')
 })

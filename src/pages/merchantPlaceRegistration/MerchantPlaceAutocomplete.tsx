@@ -15,7 +15,7 @@ export function MerchantPlaceAutocomplete({ query, search, disabled, onQueryChan
   query: string
   search: ReturnType<typeof useMerchantUnifiedPlaceSearch>
   disabled: boolean
-  onQueryChange: (query: string, composing: boolean) => void
+  onQueryChange: (query: string) => void
   onSearch: () => void
   onCancel: () => void
   onSelect: (candidate: MerchantSearchCandidate) => void
@@ -48,7 +48,7 @@ export function MerchantPlaceAutocomplete({ query, search, disabled, onQueryChan
     if (busy) return
     setIsOpen(true)
     if (query.trim().length >= 2 && !search.results.length && search.phase === 'idle' && !search.message) {
-      onQueryChange(query, false)
+      onQueryChange(query)
     }
   }
   const keyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -92,17 +92,22 @@ export function MerchantPlaceAutocomplete({ query, search, disabled, onQueryChan
             placeholder="장소명 또는 주소"
             disabled={disabled} onFocus={open}
             onChange={(event) => {
-              setIsOpen(true); setActiveIndex(-1)
-              onQueryChange(event.target.value, composing.current)
+              if (event.target.value !== query) {
+                setIsOpen(true); setActiveIndex(-1)
+                onQueryChange(event.target.value)
+              }
             }}
-            onCompositionStart={() => { composing.current = true; onCancel() }}
+            onCompositionStart={() => { composing.current = true }}
             onCompositionEnd={(event) => {
-              composing.current = false; setIsOpen(true); setActiveIndex(-1)
-              onQueryChange(event.currentTarget.value, false)
+              composing.current = false
+              if (event.currentTarget.value !== query) {
+                setIsOpen(true); setActiveIndex(-1)
+                onQueryChange(event.currentTarget.value)
+              }
             }} onKeyDown={keyDown} />
           {query ? <S.PlaceSearchClearButton type="button" aria-label="검색어 지우기" disabled={disabled}
             onPointerDown={(event) => event.preventDefault()}
-            onClick={() => { inputRef.current?.focus(); onQueryChange('', false); setActiveIndex(-1); setIsOpen(false) }}>
+            onClick={() => { inputRef.current?.focus(); onQueryChange(''); setActiveIndex(-1); setIsOpen(false) }}>
             <span aria-hidden="true">close</span>
           </S.PlaceSearchClearButton> : null}
         </S.PlaceSearchInputArea>

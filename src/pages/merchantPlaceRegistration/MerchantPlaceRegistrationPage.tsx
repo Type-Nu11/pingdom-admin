@@ -276,11 +276,10 @@ function RegistrationForm({
     void placeSearch.search(placeSearchQuery)
   }
 
-  const changePlaceSearchQuery = (query: string, composing: boolean) => {
+  const changePlaceSearchQuery = (query: string) => {
     setPendingSelection(null)
     setPlaceSearchQuery(query)
-    if (composing) placeSearch.reset()
-    else placeSearch.scheduleSearch(query)
+    placeSearch.scheduleSearch(query)
   }
 
   const selectPlaceSearchResult = async (candidate: MerchantSearchCandidate) => {

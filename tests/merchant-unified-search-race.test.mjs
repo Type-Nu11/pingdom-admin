@@ -24,14 +24,14 @@ afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
 const search = query => act(async () => { void state.search(query) })
 
-test('automatic search waits 300ms, ignores short input, and searches only the latest keyword', async t => {
+test('automatic search waits 200ms, ignores short input, and searches only the latest keyword', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] })
   await act(async () => { state.scheduleSearch('롯'); t.mock.timers.tick(500) })
   assert.equal(pending.length, 0)
   await act(async () => state.scheduleSearch('롯데'))
   assert.equal(state.phase, 'waiting')
-  await act(async () => { t.mock.timers.tick(200); state.scheduleSearch('롯데마트') })
-  await act(async () => t.mock.timers.tick(299))
+  await act(async () => { t.mock.timers.tick(150); state.scheduleSearch('롯데마트') })
+  await act(async () => t.mock.timers.tick(199))
   assert.equal(pending.length, 0)
   await act(async () => t.mock.timers.tick(1))
   assert.equal(pending.length, 1)
@@ -47,6 +47,32 @@ test('Enter starts immediately and consumes the pending automatic search', async
   await act(async () => t.mock.timers.tick(500))
   assert.equal(pending.length, 1)
   await act(async () => pending[0].resolve())
+})
+
+test('same-value input events do not restart the 200ms timer', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  await act(async () => state.scheduleSearch('롯데'))
+  await act(async () => { t.mock.timers.tick(150); state.scheduleSearch(' 롯데 ') })
+  await act(async () => t.mock.timers.tick(50))
+  assert.equal(pending.length, 1)
+  assert.equal(pending[0].config.params.query, '롯데')
+})
+
+test('late IME completion cannot cancel an immediate search or start another request', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  await act(async () => state.scheduleSearch('롯데'))
+  await search('롯데')
+  await act(async () => state.scheduleSearch('롯데'))
+  assert.equal(pending[0].config.signal.aborted, false)
+  assert.equal(state.phase, 'search')
+  await act(async () => t.mock.timers.tick(500))
+  assert.equal(pending.length, 1)
+  await act(async () => pending[0].resolve())
+  await act(async () => { state.scheduleSearch('롯데'); t.mock.timers.tick(500) })
+  assert.equal(pending.length, 1)
+  assert.equal(state.results[0].name, '롯데')
+  await search('롯데')
+  assert.equal(pending.length, 2, 'an explicit search can still refresh or retry the same keyword')
 })
 
 test('clear and unmount cancel queued searches before any API call', async t => {
@@ -67,7 +93,7 @@ test('typing a newer keyword aborts the active request immediately before the de
   await act(async () => pending[0].resolve())
   assert.equal(state.phase, 'waiting')
   assert.deepEqual(state.results, [])
-  await act(async () => t.mock.timers.tick(300))
+  await act(async () => t.mock.timers.tick(200))
   assert.equal(pending[1].config.params.query, '롯데마트')
 })
 

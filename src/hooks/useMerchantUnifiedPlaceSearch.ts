@@ -7,11 +7,13 @@ export function useMerchantUnifiedPlaceSearch() {
   const [isError, setIsError] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'waiting' | 'search' | 'complete'>('idle')
   const scheduledSearch = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestKeyword = useRef<string | null>(null)
   const request = useRef<{ id: number; query: string | null; controller: AbortController | null }>({ id: 0, query: null, controller: null })
 
   const reset = () => {
     if (scheduledSearch.current !== null) clearTimeout(scheduledSearch.current)
     scheduledSearch.current = null
+    latestKeyword.current = null
     request.current.controller?.abort()
     request.current = { id: request.current.id + 1, query: null, controller: null }
     setResults([])
@@ -38,6 +40,7 @@ export function useMerchantUnifiedPlaceSearch() {
     const keyword = query.trim()
     if (request.current.controller && request.current.query === keyword) return
     const { controller, isCurrent } = start(keyword)
+    latestKeyword.current = keyword
     setPhase('search')
     try {
       const next = await searchMerchantPlacesAndAddresses(keyword, controller.signal)
@@ -73,10 +76,15 @@ export function useMerchantUnifiedPlaceSearch() {
   }
 
   const scheduleSearch = (query: string) => {
+    const keyword = query.trim()
+    // IME compositionend/input can repeat the same value after a manual search.
+    // Do not cancel that request or restart an unchanged debounce timer.
+    if (latestKeyword.current === keyword) return
     reset()
-    if (query.trim().length < 2) return
+    if (keyword.length < 2) return
+    latestKeyword.current = keyword
     setPhase('waiting')
-    scheduledSearch.current = setTimeout(() => { void search(query) }, 300)
+    scheduledSearch.current = setTimeout(() => { void search(keyword) }, 200)
   }
 
   return { results, message, isError, phase, reset, search, scheduleSearch, prepareSelection }

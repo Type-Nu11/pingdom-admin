@@ -5,10 +5,13 @@ export function useMerchantUnifiedPlaceSearch() {
   const [results, setResults] = useState<MerchantSearchCandidate[]>([])
   const [message, setMessage] = useState('')
   const [isError, setIsError] = useState(false)
-  const [phase, setPhase] = useState<'idle' | 'search' | 'complete'>('idle')
+  const [phase, setPhase] = useState<'idle' | 'waiting' | 'search' | 'complete'>('idle')
+  const scheduledSearch = useRef<ReturnType<typeof setTimeout> | null>(null)
   const request = useRef<{ id: number; query: string | null; controller: AbortController | null }>({ id: 0, query: null, controller: null })
 
   const reset = () => {
+    if (scheduledSearch.current !== null) clearTimeout(scheduledSearch.current)
+    scheduledSearch.current = null
     request.current.controller?.abort()
     request.current = { id: request.current.id + 1, query: null, controller: null }
     setResults([])
@@ -18,6 +21,7 @@ export function useMerchantUnifiedPlaceSearch() {
   }
 
   useEffect(() => () => {
+    if (scheduledSearch.current !== null) clearTimeout(scheduledSearch.current)
     request.current.id += 1
     request.current.controller?.abort()
   }, [])
@@ -68,5 +72,12 @@ export function useMerchantUnifiedPlaceSearch() {
     }
   }
 
-  return { results, message, isError, phase, reset, search, prepareSelection }
+  const scheduleSearch = (query: string) => {
+    reset()
+    if (query.trim().length < 2) return
+    setPhase('waiting')
+    scheduledSearch.current = setTimeout(() => { void search(query) }, 300)
+  }
+
+  return { results, message, isError, phase, reset, search, scheduleSearch, prepareSelection }
 }

@@ -1,3 +1,22 @@
+import restaurantMarker from '../assets/placeMarkers/category/restaurant.svg'
+import restaurantListIcon from '../assets/placeMarkers/icon/restaurant.svg'
+import musicMarker from '../assets/placeMarkers/category/music.svg'
+import musicListIcon from '../assets/placeMarkers/icon/music.svg'
+import popupMarker from '../assets/placeMarkers/category/popup.svg'
+import popupListIcon from '../assets/placeMarkers/icon/popup.svg'
+import fashionMarker from '../assets/placeMarkers/category/fashion.svg'
+import fashionListIcon from '../assets/placeMarkers/icon/fashion.svg'
+import beautyMarker from '../assets/placeMarkers/category/beauty.svg'
+import beautyListIcon from '../assets/placeMarkers/icon/beauty.svg'
+import exhibitionMarker from '../assets/placeMarkers/category/exhibition.svg'
+import exhibitionListIcon from '../assets/placeMarkers/icon/exhibition.svg'
+import cafeMarker from '../assets/placeMarkers/category/cafe.svg'
+import cafeListIcon from '../assets/placeMarkers/icon/cafe.svg'
+import culturalHeritageMarker from '../assets/placeMarkers/category/cultural-heritage.svg'
+import culturalHeritageListIcon from '../assets/placeMarkers/icon/cultural-heritage.svg'
+import otherMarker from '../assets/placeMarkers/category/other.svg'
+import otherListIcon from '../assets/placeMarkers/icon/other.svg'
+
 export interface PlaceCategorySource {
   category?: string | null
   categoryName?: string | null
@@ -17,27 +36,27 @@ type PlaceCategoryKind =
   | 'other'
 
 const MARKER_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
-  restaurant: new URL('../assets/placeMarkers/category/음식점.svg', import.meta.url).href,
-  music: new URL('../assets/placeMarkers/category/음악.svg', import.meta.url).href,
-  popup: new URL('../assets/placeMarkers/category/팝업.svg', import.meta.url).href,
-  fashion: new URL('../assets/placeMarkers/category/패션.svg', import.meta.url).href,
-  beauty: new URL('../assets/placeMarkers/category/뷰티.svg', import.meta.url).href,
-  exhibition: new URL('../assets/placeMarkers/category/전시.svg', import.meta.url).href,
-  cafe: new URL('../assets/placeMarkers/category/카페.svg', import.meta.url).href,
-  'cultural-heritage': new URL('../assets/placeMarkers/category/문화재.svg', import.meta.url).href,
-  other: new URL('../assets/placeMarkers/category/기타.svg', import.meta.url).href,
+  restaurant: restaurantMarker,
+  music: musicMarker,
+  popup: popupMarker,
+  fashion: fashionMarker,
+  beauty: beautyMarker,
+  exhibition: exhibitionMarker,
+  cafe: cafeMarker,
+  'cultural-heritage': culturalHeritageMarker,
+  other: otherMarker,
 }
 
 const LIST_ICON_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
-  restaurant: new URL('../assets/placeMarkers/icon/음식점.svg', import.meta.url).href,
-  music: new URL('../assets/placeMarkers/icon/음악.svg', import.meta.url).href,
-  popup: new URL('../assets/placeMarkers/icon/팝업.svg', import.meta.url).href,
-  fashion: new URL('../assets/placeMarkers/icon/패션.svg', import.meta.url).href,
-  beauty: new URL('../assets/placeMarkers/icon/뷰티.svg', import.meta.url).href,
-  exhibition: new URL('../assets/placeMarkers/icon/전시.svg', import.meta.url).href,
-  cafe: new URL('../assets/placeMarkers/icon/카페.svg', import.meta.url).href,
-  'cultural-heritage': new URL('../assets/placeMarkers/icon/문화재.svg', import.meta.url).href,
-  other: new URL('../assets/placeMarkers/icon/기타.svg', import.meta.url).href,
+  restaurant: restaurantListIcon,
+  music: musicListIcon,
+  popup: popupListIcon,
+  fashion: fashionListIcon,
+  beauty: beautyListIcon,
+  exhibition: exhibitionListIcon,
+  cafe: cafeListIcon,
+  'cultural-heritage': culturalHeritageListIcon,
+  other: otherListIcon,
 }
 
 const CATEGORY_METADATA_BY_KEY: Record<

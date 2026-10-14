@@ -58,6 +58,17 @@ try {
   assert.equal(entry.status, 200)
   assert.match(entry.headers.get('cache-control'), /immutable/)
   assert.equal(entry.headers.get('x-content-type-options'), 'nosniff')
+  const svgAssets = (await docker('exec', web, 'find', '/usr/share/nginx/html/assets', '-name', '*.svg')).split('\n').filter(Boolean)
+  assert.ok(svgAssets.length > 0, 'non-inline marker SVGs must be bundled')
+  for (const assetPath of svgAssets) {
+    const path = assetPath.replace('/usr/share/nginx/html', '')
+    assert.match(path, /^\/assets\/[A-Za-z0-9_-]+\.svg$/, 'image URLs must use ASCII filenames')
+    const res = await fetch(url + path)
+    assert.equal(res.status, 200, path)
+    assert.match(res.headers.get('content-type'), /image\/svg\+xml/)
+    assert.match(res.headers.get('cache-control'), /immutable/)
+    assert.match(await res.text(), /<svg\b/)
+  }
   const workers = (await docker('exec', web, 'find', '/usr/share/nginx/html/assets', '-name', '*.mjs')).split('\n').filter(Boolean)
   assert.ok(workers.length > 0, 'built PDF.js worker exists')
   for (const worker of workers) {
@@ -79,7 +90,7 @@ try {
     if (path.endsWith('/logout')) assert.match(cookie, /Max-Age=0/)
   }
   assert.equal((await fetch(`${url}/swagger-ui/index.html`)).status, 200)
-  console.log('PASS EC2 image: nginx -t, SPA, cache, headers, API 401/query/method/headers, refresh cookie issuance/expiry, Swagger; synthetic gateway only.')
+  console.log('PASS EC2 image: nginx -t, SPA, SVG assets, cache, headers, API 401/query/method/headers, refresh cookie issuance/expiry, Swagger; synthetic gateway only.')
 } catch (error) {
   if (containers.includes(web)) console.error(await docker('logs', web).catch(() => 'Container logs unavailable'))
   throw error

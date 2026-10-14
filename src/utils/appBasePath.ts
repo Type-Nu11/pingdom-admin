@@ -1,7 +1,9 @@
 /** Only same-origin absolute directory paths can be a browser-router basename. */
 export function normalizeAppBasePath(value?: string): string {
   if (value === undefined || value === '') return '/'
-  if (!/^\/(?:[A-Za-z0-9_-]+\/?)*$/.test(value)) {
+  // Require a slash between segments so invalid input cannot trigger
+  // exponential backtracking by repeatedly splitting one long segment.
+  if (value !== '/' && !/^\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\/?$/.test(value)) {
     throw new Error('VITE_APP_BASE_PATH must be an absolute directory path such as / or /operator/.')
   }
   const base = value.endsWith('/') ? value : `${value}/`

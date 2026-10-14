@@ -200,12 +200,12 @@ function MerchantReservationSetupPage() {
   })
 
   if (reservation.status === 'error') {
-    return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>예약 가능 시간</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{reservation.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void reservation.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
+    return <Store.Page><Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>예약 가능 시간</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{reservation.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void reservation.fetchInitialData()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
   return (
     <Store.Page>
-      <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{reservation.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
+      <Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{reservation.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
         <Store.PageIntro><div><Store.PageTitle>예약 가능 시간</Store.PageTitle><Store.PageDescription>고객이 예약 신청할 수 있는 시간과 수용 인원을 등록합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={reservation.status === 'loading' || reservation.isLoading || isBusy} onClick={() => refresh()}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
         {reservation.profile && reservation.profile.placeIds.length > 0 ? <Store.PlaceSelect disabled={isBusy} aria-label="예약을 관리할 장소 선택" value={reservation.selectedPlaceId ?? ''} onChange={(event) => selectPlace(Number(event.target.value))}>{reservation.profile.placeIds.map((placeId) => <option key={placeId} value={placeId}>연결 장소 #{placeId}</option>)}</Store.PlaceSelect> : null}

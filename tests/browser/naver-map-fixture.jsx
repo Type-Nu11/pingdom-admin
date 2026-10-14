@@ -4,8 +4,8 @@ import NaverMap from '../../src/components/map/NaverMap'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 
 const markers = [
-  { id: 1, latitude: 37.5665, longitude: 126.978, label: '합성 카페', category: 'CAFE', level: 0 },
-  { id: 2, latitude: 37.5685, longitude: 126.983, label: '합성 음식점', category: 'RESTAURANT', level: 15 },
+  { id: 1, latitude: 37.5665, longitude: 126.978, label: '합성 카페', category: 'CAFE' },
+  { id: 2, latitude: 37.5685, longitude: 126.983, label: '합성 음식점', category: 'RESTAURANT' },
 ]
 const real = new URLSearchParams(location.search).has('real')
 window.mapQa = { selected: [], clicks: [], ready: 0 }

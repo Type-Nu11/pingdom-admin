@@ -17,7 +17,7 @@ concurrency:
 jobs:
   ec2-image:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -29,8 +29,9 @@ jobs:
         env:
           PINGDOM_IMAGE_TAG: ci-synthetic
           VITE_NAVER_MAP_CLIENT_ID: qa-public-client-id
+          VITE_APP_BASE_PATH: /operator/
         run: docker compose config --quiet
-      - name: Verify Docker image against a synthetic gateway
+      - name: Verify root and operator images through synthetic proxy and gateway
         run: node scripts/verify-ec2-image.mjs
   verify:
     runs-on: ubuntu-latest

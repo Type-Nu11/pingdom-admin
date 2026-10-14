@@ -8,7 +8,6 @@ export interface MapMarker extends MapCoordinate {
   label: string
   category?: string | null
   categoryName?: string | null
-  level?: number
 }
 
 export interface MapHandle {

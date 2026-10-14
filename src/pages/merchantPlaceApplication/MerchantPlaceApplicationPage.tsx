@@ -367,12 +367,12 @@ function MerchantPlaceApplicationPage() {
   }
 
   if (claim.status === 'error') {
-    return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void claim.fetchApplications()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
+    return <Store.Page><Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void claim.fetchApplications()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
   return (
     <Store.Page>
-      <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{claim.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
+      <Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{claim.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header>
       <Store.Content>
         <Store.PageIntro><div><Store.PageTitle>기존 장소 운영 권한 신청</Store.PageTitle><Store.PageDescription>이미 등록된 장소를 선택하고 운영 권한을 신청하세요. 승인되면 상점주 권한과 장소 연결이 자동으로 완료됩니다.</Store.PageDescription></div><Store.QuickLinks aria-label="상점주 바로가기"><Store.QuickLink type="button" onClick={() => requestTransition(refreshApplications)}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
         {claim.error ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{claim.error}</Store.Notice> : null}

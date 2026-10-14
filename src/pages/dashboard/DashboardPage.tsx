@@ -501,7 +501,7 @@ function DashboardPage() {
       <S.SideNav aria-label="관리자 메뉴">
         <S.SideHeader>
           <S.BrandLockup>
-            <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+            <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
           </S.BrandLockup>
         </S.SideHeader>
 

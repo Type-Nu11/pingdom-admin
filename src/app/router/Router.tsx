@@ -260,7 +260,7 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>
-))
+), { basename: import.meta.env.BASE_URL })
 
 export function Router() {
   return <RouterProvider router={router} />

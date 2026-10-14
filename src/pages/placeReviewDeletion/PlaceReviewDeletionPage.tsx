@@ -89,7 +89,7 @@ function PlaceReviewDeletionPage() {
   return (
     <Shell.AppShell>
       <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src="/pingdom-logo.png" alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
+        <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
         <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile>

@@ -5,6 +5,7 @@ import { useUnsavedChanges, useUnsavedNavigation } from '../../hooks/useUnsavedC
 import { AdminTimePicker } from '../../components/common/AdminDateTimePicker'
 import { getMerchantSearchSelection, type MerchantSearchCandidate } from '../../api/merchantUnifiedPlaceSearchApi'
 import { useMerchantUnifiedPlaceSearch } from '../../hooks/useMerchantUnifiedPlaceSearch'
+import { MerchantPlaceAutocomplete } from './MerchantPlaceAutocomplete'
 import type { MapHandle } from '../../components/map/map.types'
 import { AttachmentTypeDropdown } from '../../components/merchant/AttachmentTypeDropdown'
 import { MerchantConfirmationDialog } from '../../components/merchant/MerchantConfirmationDialog'
@@ -258,6 +259,7 @@ function RegistrationForm({
   const applySearchSelection = (candidate: MerchantSearchCandidate) => {
     const next = getMerchantSearchSelection(candidate, currentLocation)
     setPlaceName(next.placeName)
+    setPlaceSearchQuery(candidate.kind === 'place' ? candidate.name : candidate.roadAddress || candidate.jibunAddress)
     setRoadAddress(next.roadAddress)
     setJibunAddress(next.jibunAddress)
     setPostalCode(next.postalCode)
@@ -272,6 +274,12 @@ function RegistrationForm({
   const searchPlaces = () => {
     setPendingSelection(null)
     void placeSearch.search(placeSearchQuery)
+  }
+
+  const changePlaceSearchQuery = (query: string) => {
+    setPendingSelection(null)
+    setPlaceSearchQuery(query)
+    placeSearch.scheduleSearch(query)
   }
 
   const selectPlaceSearchResult = async (candidate: MerchantSearchCandidate) => {
@@ -428,25 +436,12 @@ function RegistrationForm({
         <Store.Field>상점주 연락처 (필수)<Store.Input type="tel" inputMode="tel" value={merchantContactPhone} maxLength={30} placeholder="+82-010-1234-5678" disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactPhone(formatPhoneInput(event.target.value))} /><S.SectionHint>국가번호를 포함한 형식으로 입력하세요. 예: +82-010-1234-5678</S.SectionHint></Store.Field>
           </S.Section>
           <S.Section>
-            <S.SectionLegend>장소·주소 검색</S.SectionLegend>
-            <S.SectionHint>업체명이나 도로명·지번 주소를 입력하세요. 검색어에 맞춰 네이버 장소 또는 주소 후보를 찾습니다.</S.SectionHint>
+            <S.SectionLegend>장소 검색</S.SectionLegend>
             <S.PlaceSearchField $wide>
-              <S.PlaceSearchLabel htmlFor="merchant-place-search">업체명 또는 주소</S.PlaceSearchLabel>
-              <S.PlaceSearchControl>
-                <Store.Input id="merchant-place-search" maxLength={100} value={placeSearchQuery} placeholder="예: 성수 카페, 서울 중구 세종대로 110" disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceSearchQuery(event.target.value) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); searchPlaces() } }} />
-                <S.PlaceSearchButton type="button" aria-label="장소·주소 검색" title="장소·주소 검색" disabled={!editable || activeAction !== null || placeSearch.phase !== 'idle'} onClick={searchPlaces}><span aria-hidden="true">search</span></S.PlaceSearchButton>
-              </S.PlaceSearchControl>
-              <S.PlaceSearchHint role="status" $error={placeSearch.isError}>
-                {placeSearch.phase === 'search' ? '장소·주소를 검색하는 중입니다.' : placeSearch.phase === 'complete' ? '선택한 업체의 주소·우편번호를 확인하는 중입니다.' : placeSearch.message}
-              </S.PlaceSearchHint>
-              {placeSearch.results.length > 0 ? <S.PlaceSearchResults aria-label="검색 후보">
-                <S.PlaceSearchResultsTitle>검색 결과 · 주소를 확인하고 선택하세요</S.PlaceSearchResultsTitle>
-                {placeSearch.results.map((candidate, index) => <S.PlaceSearchResult type="button" key={index} disabled={!editable || activeAction !== null} onClick={() => void selectPlaceSearchResult(candidate)}>
-                  <S.PlaceSearchResultTop><strong>{candidate.kind === 'place' ? candidate.name : candidate.roadAddress || candidate.jibunAddress}</strong><small>{candidate.kind === 'place' ? '업체' : '주소'}</small></S.PlaceSearchResultTop>
-                  <S.PlaceSearchResultAddress><span aria-hidden="true">location_on</span>{candidate.kind === 'place' ? candidate.roadAddress || candidate.jibunAddress : candidate.jibunAddress || candidate.roadAddress}</S.PlaceSearchResultAddress>
-                  {candidate.postalCode ? <small>우편번호 {candidate.postalCode}</small> : null}
-                </S.PlaceSearchResult>)}
-              </S.PlaceSearchResults> : null}
+              <MerchantPlaceAutocomplete query={placeSearchQuery} search={placeSearch}
+                disabled={!editable || activeAction !== null} onQueryChange={changePlaceSearchQuery}
+                onSearch={searchPlaces} onCancel={cancelPlaceSearch}
+                onSelect={(candidate) => void selectPlaceSearchResult(candidate)} />
               {hasSelectedPlace ? <S.SelectedPlaceSummary>
                 <strong>선택한 장소</strong>
                 {!isManualPlaceEntry ? <S.SelectedPlaceNameField htmlFor="merchant-place-name">장소명<Store.Input id="merchant-place-name" value={placeName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => { cancelPlaceSearch(); setPlaceName(event.target.value) }} /></S.SelectedPlaceNameField> : <strong>{placeName || '장소명을 아래에서 입력해주세요.'}</strong>}
@@ -609,10 +604,10 @@ function MerchantPlaceRegistrationPage() {
   })
 
   if (registration.status === 'error') {
-    return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void registration.fetchRegistrations()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
+    return <Store.Page><Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle></div></Store.PageIntro><Store.Notice $tone="error" role="alert"><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice><div style={{ marginTop: 16 }}><Store.RetryButton type="button" onClick={() => void registration.fetchRegistrations()}>다시 시도</Store.RetryButton></div></Store.Content></Store.Page>
   }
 
-  return <Store.Page><Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{registration.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle><Store.PageDescription>아직 등록되지 않은 가게를 신청하세요. 이미 등록된 장소라면 기존 장소 운영 신청을 이용해야 합니다.</Store.PageDescription></div><Store.QuickLinks aria-label="신청 내역 새로고침"><Store.QuickLink type="button" onClick={() => requestTransition(refreshRegistrations)}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
+  return <Store.Page><Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{registration.profile?.displayName || user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle>신규 장소 등록</Store.PageTitle><Store.PageDescription>아직 등록되지 않은 가게를 신청하세요. 이미 등록된 장소라면 기존 장소 운영 신청을 이용해야 합니다.</Store.PageDescription></div><Store.QuickLinks aria-label="신청 내역 새로고침"><Store.QuickLink type="button" onClick={() => requestTransition(refreshRegistrations)}>새로고침</Store.QuickLink></Store.QuickLinks></Store.PageIntro>
     {registration.errorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.errorMessage}</Store.Notice> : null}
     {registration.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{registration.actionErrorMessage}</Store.Notice> : null}
     {registration.successMessage ? <Store.Notice $tone="success" role="status" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">check_circle</Store.NoticeIcon>{registration.successMessage}</Store.Notice> : null}

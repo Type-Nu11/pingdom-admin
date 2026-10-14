@@ -66,7 +66,7 @@ function MerchantPaymentsPage() {
   return (
     <Store.Page>
       <Store.Header>
-        <Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+        <Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
         <Store.HeaderUser>
           <Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon>
           <strong>{user?.username || '상점주'}</strong>

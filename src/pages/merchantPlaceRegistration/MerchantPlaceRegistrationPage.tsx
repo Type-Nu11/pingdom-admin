@@ -184,7 +184,7 @@ function RegistrationForm({
     request: MerchantPlaceRegistrationRequest | null,
     stagedAttachments: MerchantPlaceRegistrationStagedAttachment[],
     onAttachmentUploaded?: (attachment: MerchantPlaceRegistrationStagedAttachment) => void,
-    onDraftSaved?: () => void,
+    onDraftSaved?: (registration: MerchantPlaceRegistration) => void,
   ) => Promise<MerchantPlaceRegistration | null>
   onReopen: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
   onCancel: (applicationId: number) => Promise<MerchantPlaceRegistration | null>
@@ -428,7 +428,7 @@ function RegistrationForm({
       (uploadedAttachment) => {
         setStagedAttachments((current) => current.filter((attachment) => attachment !== uploadedAttachment))
       },
-      draft.markSaved,
+      () => draft.markSaved(),
     )
     if (next?.status === 'PENDING') {
       setStagedAttachments([])
@@ -672,7 +672,7 @@ function MerchantPlaceRegistrationPage() {
     <S.Layout ref={screenRef} tabIndex={-1} aria-label={screen === 'history' ? '신청 내역' : '신청서'}>
       {screen === 'form' ? <S.RegistrationPanel>
         <S.PanelHeading><div><S.PanelTitle>{selectedRegistration ? '등록 신청 상세' : '장소 정보 입력'}</S.PanelTitle><S.PanelDescription>{selectedRegistration ? `신청 번호 #${selectedRegistration.id} · 마지막 수정 ${formatDate(selectedRegistration.updatedAt)}` : '기본 정보, 위치, 영업시간을 입력한 뒤 심사를 요청하세요.'}</S.PanelDescription></div>{selectedRegistration ? <S.StatusBadge $tone={STATUS[selectedRegistration.status].tone}>{STATUS[selectedRegistration.status].label}</S.StatusBadge> : null}</S.PanelHeading>
-        <RegistrationForm stagedAttachments={stagedAttachments} setStagedAttachments={setStagedAttachments} key={selectedRegistration?.id ?? `new-${newFormVersion}`} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onRequestReview={async (id, request, attachments, onAttachmentUploaded, onDraftSaved) => { const next = await registration.requestRegistrationReview(id, request, attachments, onAttachmentUploaded, onDraftSaved); if (next) setSelectedId(next.id); return next }} onReopen={registration.reopenRegistration} onCancel={async (applicationId) => { const canceled = await registration.cancelRegistration(applicationId); if (canceled) { setStagedAttachments([]); setSelectedId(null); setScreen('history'); moveFocusRef.current = true }; return canceled }} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} />
+        <RegistrationForm stagedAttachments={stagedAttachments} setStagedAttachments={setStagedAttachments} key={selectedRegistration?.id ?? `new-${newFormVersion}`} registration={selectedRegistration} profile={registration.profile} activeAction={registration.activeAction} onSave={async (id, request) => { const next = await registration.saveRegistration(id, request); if (next) setSelectedId(next.id); return next }} onRequestReview={async (id, request, attachments, onAttachmentUploaded, onDraftSaved) => { const next = await registration.requestRegistrationReview(id, request, attachments, onAttachmentUploaded, (saved) => { onDraftSaved?.(saved); setSelectedId(saved.id) }); if (next) setSelectedId(next.id); return next }} onReopen={registration.reopenRegistration} onCancel={async (applicationId) => { const canceled = await registration.cancelRegistration(applicationId); if (canceled) { setStagedAttachments([]); setSelectedId(null); setScreen('history'); moveFocusRef.current = true }; return canceled }} onDelete={registration.deleteAttachment} onReorder={registration.reorderAttachments} />
       </S.RegistrationPanel> : null}
       {screen === 'history' ? <S.HistoryPanel aria-label="등록 신청 내역">
         <S.PanelHeading><div><S.PanelTitle>등록 신청 내역</S.PanelTitle><S.PanelDescription>작성 중이거나 처리된 신청서를 선택해 확인할 수 있습니다.</S.PanelDescription></div><S.HistoryTabs as={AccessibleTabList} panelId="registration-history-panel" role="tablist" aria-label="신규 장소 등록 신청 내역"><S.HistoryTab type="button" role="tab" aria-selected={registrationListView === 'applications'} $active={registrationListView === 'applications'} onClick={() => { if (registrationListView !== 'applications') requestTransition(() => changeRegistrationListView('applications')) }}>신청 내역</S.HistoryTab><S.HistoryTab type="button" role="tab" aria-selected={registrationListView === 'canceled'} $active={registrationListView === 'canceled'} onClick={() => { if (registrationListView !== 'canceled') requestTransition(() => changeRegistrationListView('canceled')) }}>취소 내역 ({canceledRegistrationCount})</S.HistoryTab></S.HistoryTabs></S.PanelHeading>

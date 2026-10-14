@@ -93,5 +93,39 @@ try {
       await page.close()
     }
   }
+      if (kind === 'new') {
+        await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/draft-qa?new&fresh`)
+        await page.getByRole('button', { name: '새 장소 등록 신청', exact: true }).click()
+        for (const [label, value] of [
+          ['법적 성명', '합성 신청자'], ['사업자명', '합성 사업자'], ['사업자등록번호', '1234567890'],
+          ['상점주 노출명', '합성 가게'], ['상점주 연락 이메일', 'synthetic@example.com'], ['상점주 연락처', '+821012345678'],
+        ]) await page.getByRole('textbox', { name: new RegExp(label) }).fill(value)
+        await page.getByRole('button', { name: '직접 입력', exact: true }).click()
+        for (const [label, value] of [
+          ['장소명', '합성 신규 장소'], ['도로명 주소', '합성로 1'], ['지번 주소', '합성동 1'], ['우편번호', '12345'],
+          ['장소 소개', '테스트 전용 소개'], ['사업장 연락처', '+821012345678'], ['신청자 연락처', '+821012345678'],
+        ]) await page.getByRole('textbox', { name: new RegExp(label) }).fill(value)
+        await page.getByText('좌표 직접 입력', { exact: true }).click()
+        await page.getByLabel('위도', { exact: true }).fill('37.5')
+        await page.getByLabel('경도', { exact: true }).fill('127')
+        for (const label of ['사업자등록증', '신분증', '대표 이미지']) {
+          await page.getByRole('button', { name: '증빙 파일 종류', exact: true }).click()
+          await page.getByRole('option', { name: label, exact: true }).click()
+          await page.locator('input[type="file"]').setInputFiles({ name: 'proof.png', mimeType: 'image/png', buffer: Buffer.from('synthetic') })
+          await page.getByRole('button', { name: '파일 추가', exact: true }).click()
+        }
+        await page.evaluate(() => { window.qaFailUploadType = 'IDENTITY_DOCUMENT'; window.qaFailRecovery = true })
+        await page.getByRole('button', { name: '심사 요청', exact: true }).click()
+        await page.getByRole('alert').filter({ hasText: '신청서를 저장했지만' }).waitFor()
+        await page.getByText(/신청 번호 #1/).waitFor()
+        assert.equal(await page.getByRole('button', { name: '선택 취소', exact: true }).count(), 2)
+        assert.equal(await page.getByLabel(/법적 성명/).inputValue(), '합성 신청자')
+        await page.evaluate(() => { window.qaFailUploadType = null; window.qaFailRecovery = false })
+        await page.getByRole('button', { name: '심사 요청', exact: true }).click()
+        await page.waitForFunction(() => window.qaApplication.status === 'PENDING')
+        assert.equal(await page.evaluate(() => window.qaCalls.filter(c => c.method === 'post' && c.url === '/users/me/merchant-place-applications').length), 1)
+        assert.equal(await page.evaluate(() => window.qaApplication.attachments.length), 3)
+        assert.equal(await page.getByRole('button', { name: '선택 취소', exact: true }).count(), 0)
+      }
   console.log('PASS both forms: attached draft editing, conflict preservation, save/submit, attachment identity/order, pending lock; ' + output)
 } finally { await browser?.close(); await server.close() }

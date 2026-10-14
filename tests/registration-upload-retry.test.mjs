@@ -35,7 +35,7 @@ function scenario(existing, dirty = false) {
   const requestReview = compile(`const ${hookExpression}; return requestRegistrationReview`, {
     useCallback: fn => fn, actionRef: { current: null }, mountedRef: { current: true },
     setActiveAction() {}, setActionErrorMessage() {}, setSuccessMessage() {},
-    applyApplication: data => { saved = data }, clearUnauthorizedSession() {},
+    applyApplication: data => { saved = data; return data }, clearUnauthorizedSession() {},
     toRequest: x => x, toRegistration: x => x, getErrorMessage: () => 'failure', logDebugError() {},
     updateMerchantPlaceApplication: async () => { if (failSave) throw new Error('save failure'); return saved },
     getMerchantPlaceApplication: async () => { if (failRecovery) throw new Error('recovery failure'); return { ...saved } },
@@ -43,7 +43,9 @@ function scenario(existing, dirty = false) {
     uploadMerchantPlaceApplicationAttachment: async (id, type) => {
       uploads.push(type)
       if (failFile === type) throw new Error('upload failure')
-      saved = { ...saved, attachments: [...saved.attachments, { documentType: type }] }
+      const attachment = { documentType: type }
+      saved = { ...saved, attachments: [...saved.attachments, attachment] }
+      return attachment
     },
     submitMerchantPlaceApplication: async () => {
       submissions++

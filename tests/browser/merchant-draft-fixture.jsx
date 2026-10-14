@@ -8,10 +8,14 @@ import Claim from '../../src/pages/merchantPlaceApplication/MerchantPlaceApplica
 import Registration from '../../src/pages/merchantPlaceRegistration/MerchantPlaceRegistrationPage'
 import client from '../../src/api/customAxios'
 const isNew = location.search.includes('new')
+const fresh = location.search.includes('fresh')
 const base = '/users/me/merchant-place-applications'
 window.qaCalls = []
 window.qaFailSave = false
 window.qaFailSubmit = false
+window.qaFailRecovery = false
+window.qaFailUploadType = null
+window.qaCreated = false
 window.qaApplication = {
   id: 1, applicantUserId: 1, status: 'DRAFT', applicationType: isNew ? 'NEW_PLACE' : 'EXISTING_PLACE_CLAIM',
   legalName: '테스트 신청자', businessName: '테스트 사업자', merchantDisplayName: '테스트 매장',
@@ -22,19 +26,31 @@ window.qaApplication = {
   newPlace: { placeName: '합성 신청 장소', category: 'RESTAURANT', latitude: 37.5, longitude: 127, roadAddress: '서울 테스트로 1', jibunAddress: '서울 테스트동 1', postalCode: '12345', description: '매장 소개', businessContactPhone: '+821012345678', applicantContactPhone: '+821012345678', tags: [], timezone: 'Asia/Seoul', operatingDays: [] },
 }
 client.defaults.adapter = async config => {
-  const payload = config.data ? JSON.parse(config.data) : undefined
+  const payload = typeof config.data === 'string' ? JSON.parse(config.data) : undefined
   window.qaCalls.push({ method: config.method, url: config.url, payload })
   let data
   if (config.url === '/users/me/merchant-owner-profile') data = { status: 'PENDING', businessName: '테스트 사업자', placeIds: [] }
-  else if (config.url === base) data = { items: [window.qaApplication], page: 1, hasNext: false }
+  else if (config.url === base && config.method === 'post') {
+    window.qaCreated = true
+    window.qaApplication = { ...window.qaApplication, ...payload, attachments: [] }
+    data = window.qaApplication
+  }
+  else if (config.url === base) data = { items: fresh && !window.qaCreated ? [] : [window.qaApplication], page: 1, hasNext: false }
   else if (config.url === base + '/1' && config.method === 'put') {
     if (window.qaFailSave) throw new AxiosError('conflict', 'ERR_BAD_REQUEST', config, null, { status: 409, data: { code: 'INVALID_STATE' }, config, headers: {} })
     window.qaApplication = { ...window.qaApplication, ...payload }
     data = window.qaApplication
+  } else if (config.url === base + '/1/attachments') {
+    if (window.qaFailUploadType === config.params.documentType) throw new Error('Synthetic upload failure')
+    data = { id: window.qaApplication.attachments.length + 1, documentType: config.params.documentType, originalFilename: 'proof.png', fileSize: 10, displayOrder: window.qaApplication.attachments.length }
+    window.qaApplication = { ...window.qaApplication, attachments: [...window.qaApplication.attachments, data] }
   } else if (config.url === base + '/1/submit') {
     if (window.qaFailSubmit) throw new Error('Synthetic submit failure')
     window.qaApplication = { ...window.qaApplication, status: 'PENDING' }; data = window.qaApplication
-  } else if (config.url === base + '/1') data = window.qaApplication
+  } else if (config.url === base + '/1') {
+    if (window.qaFailRecovery) throw new Error('Synthetic recovery failure')
+    data = window.qaApplication
+  }
   else throw new Error('Unexpected fixture request: ' + config.url)
   return { config, data: structuredClone(data), status: 200, statusText: 'OK', headers: {} }
 }

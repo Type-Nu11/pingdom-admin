@@ -8,8 +8,8 @@ services:
         VITE_PUBLIC_API_BASE_URL: /api
         VITE_NAVER_MAP_CLIENT_ID: ${VITE_NAVER_MAP_CLIENT_ID:?Set the public NAVER Maps Client ID}
     ports:
-      # Existing infra uses 8081 (web gateway) and 8082 (app gateway).
-      - "127.0.0.1:${PINGDOM_WEB_PORT:-8083}:8080"
+      # Required web host port. An app gateway on the same host must not also bind 8082.
+      - "127.0.0.1:${PINGDOM_WEB_PORT:-8082}:8080"
     environment:
       # Must point at the authenticated WEB gateway, never the raw backend.
       PINGDOM_API_UPSTREAM: ${PINGDOM_API_UPSTREAM:-host.docker.internal:8081}

@@ -3,16 +3,18 @@ import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
-const [dockerfile, ignored, compose, nginx, security, vercel] = await Promise.all([
-  read('Dockerfile'), read('.dockerignore'), read('compose.yml'), read('deploy/nginx/default.conf.template'), read('deploy/nginx/security-headers.conf'), read('vercel.json'),
+const [dockerfile, ignored, compose, nginx, security, vercel, ec2Env] = await Promise.all([
+  read('Dockerfile'), read('.dockerignore'), read('compose.yml'), read('deploy/nginx/default.conf.template'), read('deploy/nginx/security-headers.conf'), read('vercel.json'), read('deploy/ec2.env.example'),
 ])
-test('EC2 ships only the built site, excludes local secrets, and avoids existing gateway ports', () => {
+test('EC2 ships only the built site, excludes local secrets, and uses the requested web host port', () => {
   assert.match(dockerfile, /FROM node:24.* AS build/)
   assert.match(dockerfile, /RUN npm ci/)
   assert.match(dockerfile, /COPY --from=build \/app\/dist \/usr\/share\/nginx\/html/)
   assert.doesNotMatch(dockerfile, /COPY \. \./)
   for (const pattern of ['.git', '.env', '.env.*', '*.local', '*.pem', '*.key', 'node_modules']) assert.ok(ignored.split('\n').includes(pattern))
-  assert.match(compose, /127\.0\.0\.1:\$\{PINGDOM_WEB_PORT:-8083\}:8080/)
+  assert.match(compose, /127\.0\.0\.1:\$\{PINGDOM_WEB_PORT:-8082\}:8080/)
+  assert.match(ec2Env, /^PINGDOM_WEB_PORT=8082$/m)
+  assert.match(compose, /PINGDOM_API_UPSTREAM:-host\.docker\.internal:8081/)
   assert.match(compose, /restart: unless-stopped/)
   assert.match(dockerfile, /HEALTHCHECK/)
 })

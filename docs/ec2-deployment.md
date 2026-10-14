@@ -6,9 +6,12 @@ Node 24에서 `npm ci`·`npm run build` 후 `dist`만 Nginx 이미지로 복사�
 운영에서 Vite 개발 서버를 띄우지 않습니다. 이 저장소는 웹 컨테이너를 준비하며,
 실제 EC2 접속·DNS·TLS·HAProxy 변경은 자동 실행하지 않습니다.
 
-현재 infra는 웹 인증 게이트웨이 8081, 앱 게이트웨이 8082를 사용합니다.
-웹 컨테이너의 기본 호스트 포트는 **127.0.0.1:8083**입니다. #285의 초기 8082안은
-같은 EC2에서 충돌하므로 사용하지 않습니다. 배포 전 `ss -ltn`으로 실제 점유를 확인하세요.
+배포 요구에 따라 웹 컨테이너의 기본 호스트 포트는 **127.0.0.1:8082**입니다.
+컨테이너 내부 Nginx는 8080, API upstream의 기본 웹 인증 게이트웨이는 8081을 유지합니다.
+현재 infra 저장소의 예시 설정에도 앱 게이트웨이 `8082:8082`가 있으므로 같은 EC2에서
+이 설정을 그대로 함께 실행하면 충돌합니다. 별도 EC2/IP를 사용하거나 인프라 담당자가
+기존 앱 게이트웨이 포트·바인딩을 조정해야 합니다. 이 웹 변경은 인프라 설정을 바꾸거나
+실제 배포 구조를 확정하지 않습니다. 배포 전 `ss -ltn`으로 실제 점유를 확인하세요.
 
 필수 확인:
 
@@ -23,7 +26,7 @@ Node 24에서 `npm ci`·`npm run build` 후 `dist`만 Nginx 이미지로 복사�
   생길 수 있으므로 내부 게이트웨이 주소를 사용합니다.
 - 외부 TLS 프록시는 원래 Host와 `X-Forwarded-Proto: https`를 설정해야 합니다.
   다른 호스트/컨테이너의 프록시는 호스트의 127.0.0.1에 직접 접근할 수 없으므로,
-  연결 네트워크·내부 주소를 먼저 합의하세요. 8083을 인터넷에 공개하는 것으로 해결하지 않습니다.
+  연결 네트워크·내부 주소를 먼저 합의하세요. 8082를 인터넷에 공개하는 것으로 해결하지 않습니다.
 
 ## 설정
 
@@ -51,7 +54,7 @@ docker compose --env-file .env.ec2.local config --quiet
 docker compose --env-file .env.ec2.local build --pull web
 docker compose --env-file .env.ec2.local up -d --no-build web
 docker compose --env-file .env.ec2.local ps
-curl -fsS http://127.0.0.1:8083/healthz
+curl -fsS http://127.0.0.1:8082/healthz
 ```
 
 Docker 서비스 자체도 부팅 시 시작되어야 `restart: unless-stopped`가 동작합니다.

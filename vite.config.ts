@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { pdfCMapAssets } from './build/pdfCMapAssets.ts'
+import { normalizeAppBasePath } from './src/utils/appBasePath.ts'
 
 const REFRESH_TOKEN_COOKIE_PREFIX = 'PINGDOM_REFRESH_TOKEN='
 
@@ -21,6 +22,7 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_PROXY_TARGET || 'http://localhost:8080'
 
   return {
+    base: normalizeAppBasePath(env.VITE_APP_BASE_PATH),
     plugins: [react(), pdfCMapAssets()],
     build: {
       sourcemap: false,

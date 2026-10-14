@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import { JSDOM } from 'jsdom'
 import { createServer } from 'vite'
+import { CanceledError } from 'axios'
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/' })
 for (const key of ['window', 'document', 'localStorage', 'sessionStorage']) globalThis[key] = dom.window[key]
@@ -23,6 +24,50 @@ beforeEach(async () => {
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
 const search = query => act(async () => { void state.search(query) })
+
+test('primary failure, partial fallback failure and complete empty are distinct hook outcomes', async () => {
+  await search('없는 업체')
+  await act(async () => pending[0].reject(Object.assign(new Error('unavailable'), { isAxiosError: true, response: { status: 503 } })))
+  assert.equal(state.isError, true)
+  assert.equal(state.isWarning, false)
+  assert.equal(pending.length, 1)
+  assert.doesNotMatch(state.message, /0건/)
+  await search('없는 업체')
+  await act(async () => pending[1].resolve([]))
+  await act(async () => pending[2].reject(Object.assign(new Error('unavailable'), { isAxiosError: true, response: { status: 503, data: { code: 'NAVER_ADDRESS_SEARCH_UNAVAILABLE' } } })))
+  assert.equal(state.isError, false)
+  assert.equal(state.isWarning, true)
+  assert.match(state.message, /업체명 검색 결과는 0건.*추가 주소 검색을 완료하지 못했습니다/)
+  await search('없는 업체')
+  await act(async () => pending[3].resolve([]))
+  await act(async () => pending[4].resolve([]))
+  assert.equal(state.isError, false)
+  assert.equal(state.isWarning, false)
+  assert.match(state.message, /^검색 결과가 없습니다/)
+})
+
+test('session cancellation is silent and the same query can be automatically retried', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  await search('롯데')
+  await act(async () => pending[0].reject(new CanceledError('session changed')))
+  assert.equal(state.isError, false)
+  assert.equal(state.isWarning, false)
+  assert.equal(state.message, '')
+  assert.equal(state.phase, 'idle')
+  await act(async () => state.scheduleSearch('롯데'))
+  await act(async () => t.mock.timers.tick(200))
+  assert.equal(pending.length, 2)
+})
+
+test('canceled postal supplementation never returns a candidate to apply', async () => {
+  let selection
+  await act(async () => { selection = state.prepareSelection({ ...item, kind: 'place', postalCode: '' }) })
+  await act(async () => pending[0].reject(new CanceledError('session changed')))
+  assert.equal(await selection, null)
+  assert.equal(state.isError, false)
+  assert.equal(state.message, '')
+  assert.equal(state.phase, 'idle')
+})
 
 test('automatic search waits 200ms, ignores short input, and searches only the latest keyword', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] })

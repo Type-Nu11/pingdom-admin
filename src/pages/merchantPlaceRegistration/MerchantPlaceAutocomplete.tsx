@@ -126,12 +126,12 @@ export function MerchantPlaceAutocomplete({ query, search, disabled, onQueryChan
             </S.PlaceSearchResultContent>
           </S.PlaceSearchResult>)}
         </S.PlaceSearchResults>
-        {!search.results.length ? <S.PlaceSearchEmpty role={search.isError ? 'alert' : 'status'} $error={search.isError}>
+        {!search.results.length ? <S.PlaceSearchEmpty role={search.isError || search.isWarning ? 'alert' : 'status'} $error={search.isError} $warning={search.isWarning}>
           {search.phase === 'waiting' || search.phase === 'search' ? '검색 중…' : hint || '검색어를 입력해주세요.'}
         </S.PlaceSearchEmpty> : null}
       </S.PlaceSearchPopover> : null}
     </S.PlaceSearchPopoverAnchor>
     <S.PlaceSearchLabel as="p" id={`${listId}-hint`}>2글자 이상 입력하면 자동 검색합니다. 위·아래 방향키로 이동하고 Enter로 선택하거나 Esc로 닫을 수 있습니다.</S.PlaceSearchLabel>
-    {!expanded && hint ? <S.PlaceSearchHint role={search.isError ? 'alert' : 'status'} $error={search.isError}>{hint}</S.PlaceSearchHint> : null}
+    {!expanded && hint ? <S.PlaceSearchHint role={search.isError || search.isWarning ? 'alert' : 'status'} $error={search.isError} $warning={search.isWarning}>{hint}</S.PlaceSearchHint> : null}
   </>
 }

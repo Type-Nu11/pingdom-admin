@@ -41,6 +41,16 @@ beforeEach(async () => {
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
 
+test('partial search failures are accessible warnings, not ordinary empty results', async () => {
+  search = { results: [], phase: 'idle', isError: false, isWarning: true, message: '업체명 검색 결과는 0건입니다. 추가 주소 검색을 완료하지 못했습니다.' }
+  await act(async () => root.render(h(Probe)))
+  await focus()
+  const alert = document.querySelector('[role="alert"]')
+  assert.match(alert.textContent, /업체명 검색 결과는 0건.*추가 주소 검색/)
+  assert.equal(options().length, 0)
+  assert.equal(input().getAttribute('aria-expanded'), 'true')
+})
+
 test('focus shows named place/address options, address lines and highlighted keyword', async () => {
   assert.equal(input().getAttribute('aria-expanded'), 'false')
   await focus()

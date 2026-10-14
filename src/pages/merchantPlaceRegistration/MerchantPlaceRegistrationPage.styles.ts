@@ -381,9 +381,9 @@ export const PlaceSearchButton = styled.button`
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -3px; }
 `
 
-export const PlaceSearchHint = styled.p<{ $error?: boolean }>`
+export const PlaceSearchHint = styled.p<{ $error?: boolean; $warning?: boolean }>`
   margin: 8px 0 0;
-  color: ${({ $error }) => ($error ? colors.errorText : colors.muted)};
+  color: ${({ $error, $warning }) => $error ? colors.errorText : $warning ? colors.warningText : colors.muted};
   font-size: 12px;
   line-height: 1.45;
 `
@@ -407,12 +407,12 @@ export const PlaceSearchResults = styled.div`
   overscroll-behavior: contain;
 `
 
-export const PlaceSearchEmpty = styled.p<{ $error?: boolean }>`
+export const PlaceSearchEmpty = styled.p<{ $error?: boolean; $warning?: boolean }>`
   margin: 0;
   padding: 18px 14px;
   font-size: 13px;
   line-height: 1.5;
-  color: ${({ $error }) => $error ? colors.errorText : colors.muted};
+  color: ${({ $error, $warning }) => $error ? colors.errorText : $warning ? colors.warningText : colors.muted};
 `
 
 export const PlaceSearchResult = styled.button<{ $active?: boolean }>`

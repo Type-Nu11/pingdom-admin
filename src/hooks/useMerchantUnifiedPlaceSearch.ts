@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { completeMerchantSearchCandidate, searchMerchantPlacesAndAddresses, type MerchantSearchCandidate } from '../api/merchantUnifiedPlaceSearchApi'
+import { completeMerchantSearchCandidate, isMerchantSearchCancellation, MerchantSearchFailure, searchMerchantPlacesAndAddresses, type MerchantSearchCandidate } from '../api/merchantUnifiedPlaceSearchApi'
 
 export function useMerchantUnifiedPlaceSearch() {
   const [results, setResults] = useState<MerchantSearchCandidate[]>([])
   const [message, setMessage] = useState('')
   const [isError, setIsError] = useState(false)
+  const [isWarning, setIsWarning] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'waiting' | 'search' | 'complete'>('idle')
   const scheduledSearch = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestKeyword = useRef<string | null>(null)
@@ -19,6 +20,7 @@ export function useMerchantUnifiedPlaceSearch() {
     setResults([])
     setMessage('')
     setIsError(false)
+    setIsWarning(false)
     setPhase('idle')
   }
 
@@ -49,7 +51,10 @@ export function useMerchantUnifiedPlaceSearch() {
       setMessage(next.length ? '주소를 확인한 뒤 적용할 후보를 선택해주세요.' : '검색 결과가 없습니다. 지역명을 포함해 다시 검색하거나 직접 입력해주세요.')
     } catch (error) {
       if (!isCurrent()) return
-      setIsError(true)
+      if (isMerchantSearchCancellation(error)) { latestKeyword.current = null; return }
+      const partial = error instanceof MerchantSearchFailure && error.isPartial
+      setIsError(!partial)
+      setIsWarning(partial)
       setMessage(error instanceof Error ? error.message : '검색하지 못했습니다. 다시 시도해주세요.')
     } finally {
       if (isCurrent()) { request.current.controller = null; request.current.query = null; setPhase('idle') }
@@ -66,6 +71,7 @@ export function useMerchantUnifiedPlaceSearch() {
       return next
     } catch (error) {
       if (isCurrent()) {
+        if (isMerchantSearchCancellation(error)) return null
         setIsError(true)
         setMessage(error instanceof Error ? error.message : '선택한 주소를 확인하지 못했습니다.')
       }
@@ -87,5 +93,5 @@ export function useMerchantUnifiedPlaceSearch() {
     scheduledSearch.current = setTimeout(() => { void search(keyword) }, 200)
   }
 
-  return { results, message, isError, phase, reset, search, scheduleSearch, prepareSelection }
+  return { results, message, isError, isWarning, phase, reset, search, scheduleSearch, prepareSelection }
 }

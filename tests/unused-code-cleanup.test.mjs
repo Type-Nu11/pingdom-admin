@@ -21,6 +21,8 @@ test('unused placeholders and superseded API wrappers do not return', () => {
   }
   const client = readFileSync('src/api/customAxios.ts', 'utf8')
   assert.match(client, /async function requestTokenRefresh\(sessionId: string\)/)
-  assert.match(client, /\.post<RefreshTokenResponse>/)
-  assert.match(readFileSync('src/utils/authStorage.ts', 'utf8'), /readLegacyAuthState/)
+  assert.match(readFileSync('src/api/authSessionApi.ts', 'utf8'), /\.post<RefreshTokenResponse>/)
+  const storage = readFileSync('src/utils/authStorage.ts', 'utf8')
+  assert.match(storage, /cleanupLegacyAuthStorage/)
+  assert.doesNotMatch(storage, /readLegacyAuthState/)
 })

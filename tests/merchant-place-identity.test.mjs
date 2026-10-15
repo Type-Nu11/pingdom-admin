@@ -80,7 +80,7 @@ test('account switch resets identity cache and ignores old account responses', a
   const pending = []
   handler = config => new Promise(resolve => pending.push({ config, resolve }))
   await mount()
-  localStorage.setItem('pingdom-auth-session', 'second-session')
+  localStorage.setItem('pingdom-auth-control', JSON.stringify({ id: 'second-session', blocked: true }))
   await mount({ user: { id: 2, username: 'second' } })
   await act(async () => pending.slice(2).forEach(({ config, resolve }) => resolve({ ...detail(Number(config.url.split('/').at(-1))), name: '두 번째 계정' })))
   await act(async () => pending.slice(0, 2).forEach(({ config, resolve }) => resolve(detail(Number(config.url.split('/').at(-1))))))

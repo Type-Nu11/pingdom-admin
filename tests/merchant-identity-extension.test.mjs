@@ -158,7 +158,7 @@ test('the two pages share cached identities across navigation', async () => {
 
 test('an account change discards late identity results from the previous session', async () => {
   gate = deferred(); await mount(Boost)
-  localStorage.setItem('pingdom-auth-session', 'synthetic-second-session')
+  localStorage.setItem('pingdom-auth-control', JSON.stringify({ id: 'synthetic-second-session', blocked: true }))
   data = createIdentityExtensionData(2, true)
   await mount(Boost, 100)
   await act(async () => gate.resolve()); gate = null

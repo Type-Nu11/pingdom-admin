@@ -40,7 +40,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
     const coordinates = validMarkers().map(marker => new maps.LatLng(marker.latitude, marker.longitude))
     if (coordinates.length === 1) map.setCenter(coordinates[0])
     else if (coordinates.length > 1) {
-      // Leave room for large level markers, not only their coordinate anchors.
+      // Leave room for marker images and the selected marker, not only their coordinate anchors.
       map.fitBounds(coordinates, { top: 160, right: 120, bottom: 100, left: 120, maxZoom: 18 })
     }
   }

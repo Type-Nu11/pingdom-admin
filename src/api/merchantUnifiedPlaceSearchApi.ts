@@ -1,3 +1,4 @@
+import { isCancel } from 'axios'
 import { getNaverPlaceSearchError, searchMerchantNaverPlaces, type NaverPlaceSearchItem } from './merchantNaverPlaceSearchApi'
 import { getNaverAddressSearchError, searchNaverAddresses, type AddressCandidate } from './merchantNaverAddressSearchApi'
 import { isApiError } from './customAxios'
@@ -6,6 +7,28 @@ import { isValidMapCoordinate } from '../components/map/map.types'
 export type MerchantSearchCandidate =
   | (NaverPlaceSearchItem & { kind: 'place'; postalCode: string })
   | (AddressCandidate & { kind: 'address' })
+
+// A successful empty primary search is not the same as a fully empty search.
+// Retain the failure's scope instead of losing it in a plain message wrapper.
+export class MerchantSearchFailure extends Error {
+  constructor(message: string, readonly isPartial: boolean, readonly originalError: unknown) {
+    super(message)
+    this.name = 'MerchantSearchFailure'
+  }
+}
+
+export function isMerchantSearchCancellation(error: unknown): boolean {
+  return isCancel(error) || (error instanceof Error && error.name === 'AbortError')
+}
+
+function authenticationMessage(error: unknown): string | null {
+  if (!isApiError(error)) return null
+  const status = error.response?.status ?? error.status
+  if (status === 401 || error.category === 'unauthorized') return '로그인 상태를 확인하지 못했습니다. 다시 로그인한 뒤 검색해주세요.'
+  if (status === 403 || error.category === 'forbidden') return '검색 권한이 없습니다. 계정 권한을 확인해주세요.'
+  if (error.isRefreshFailure) return '인증 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.'
+  return null
+}
 
 export function prefersAddressSearch(query: string): boolean {
   // A locality name alone is ambiguous. Require a road/lot number, not just digits in a brand.
@@ -21,7 +44,7 @@ export function sameSearchAddress(first: Pick<AddressCandidate, 'roadAddress' | 
     && normalize(first.jibunAddress) === normalize(second.jibunAddress))
 }
 
-async function searchByKind(kind: MerchantSearchCandidate['kind'], query: string, signal: AbortSignal): Promise<MerchantSearchCandidate[]> {
+async function searchByKind(kind: MerchantSearchCandidate['kind'], query: string, signal: AbortSignal, emptyPrimary?: MerchantSearchCandidate['kind']): Promise<MerchantSearchCandidate[]> {
   signal.throwIfAborted()
   try {
     const items: MerchantSearchCandidate[] = kind === 'address'
@@ -31,7 +54,14 @@ async function searchByKind(kind: MerchantSearchCandidate['kind'], query: string
     return items
   } catch (error) {
     signal.throwIfAborted()
-    throw new Error(kind === 'address' ? getNaverAddressSearchError(error) : getNaverPlaceSearchError(error))
+    if (isMerchantSearchCancellation(error)) throw error
+    const authMessage = authenticationMessage(error)
+    if (authMessage) throw new MerchantSearchFailure(authMessage, false, error)
+    const failureMessage = kind === 'address' ? getNaverAddressSearchError(error) : getNaverPlaceSearchError(error)
+    const message = emptyPrimary
+      ? `${emptyPrimary === 'place' ? '업체명' : '주소'} 검색 결과는 0건입니다. 추가 ${kind === 'place' ? '업체명' : '주소'} 검색을 완료하지 못했습니다. ${failureMessage}`
+      : failureMessage
+    throw new MerchantSearchFailure(message, Boolean(emptyPrimary), error)
   }
 }
 
@@ -41,7 +71,7 @@ export async function searchMerchantPlacesAndAddresses(query: string, signal: Ab
   const first = prefersAddressSearch(keyword) ? 'address' : 'place'
   const results = await searchByKind(first, keyword, signal)
   // A failed request is not an empty result. Only a valid empty response triggers the other API.
-  return results.length ? results : searchByKind(first === 'address' ? 'place' : 'address', keyword, signal)
+  return results.length ? results : searchByKind(first === 'address' ? 'place' : 'address', keyword, signal, first)
 }
 
 export async function completeMerchantSearchCandidate(candidate: MerchantSearchCandidate, signal: AbortSignal): Promise<{ candidate: MerchantSearchCandidate; message: string }> {
@@ -56,9 +86,9 @@ export async function completeMerchantSearchCandidate(candidate: MerchantSearchC
     return { candidate, message: '일치하는 우편번호를 확인하지 못했습니다. 직접 입력으로 보완해주세요.' }
   } catch (error) {
     signal.throwIfAborted()
-    if (isApiError(error) && (error.category === 'unauthorized' || error.category === 'forbidden' || error.isRefreshFailure)) {
-      throw new Error(getNaverAddressSearchError(error))
-    }
+    if (isMerchantSearchCancellation(error)) throw error
+    const authMessage = authenticationMessage(error)
+    if (authMessage) throw new MerchantSearchFailure(authMessage, false, error)
     return { candidate, message: `${getNaverAddressSearchError(error)} 업체 위치는 유지됩니다. 우편번호는 직접 입력해주세요.` }
   }
 }

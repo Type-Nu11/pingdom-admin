@@ -76,7 +76,7 @@ function LoginPage() {
     <S.Page>
       <S.StartShell>
         <S.BrandHeader>
-          <S.BrandLogo src="/pingdom-logo.png" alt="PingDom" />
+          <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
         </S.BrandHeader>
 
         <S.WelcomeHeader>

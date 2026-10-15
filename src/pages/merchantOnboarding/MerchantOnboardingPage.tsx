@@ -16,7 +16,7 @@ export default function MerchantOnboardingPage() {
     navigate('/login', { replace: true })
   }
   return <Store.Page>
-    <Store.Header><Store.BrandLogo src="/pingdom-logo.png" alt="PingDom" /><Store.RetryButton onClick={() => void relogin()}>로그아웃</Store.RetryButton></Store.Header>
+    <Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.RetryButton onClick={() => void relogin()}>로그아웃</Store.RetryButton></Store.Header>
     <Store.Content>
       <Store.PageIntro><Store.PageTitle>상점주 신청</Store.PageTitle></Store.PageIntro>
       <S.Stack>

@@ -315,85 +315,138 @@ export const PlaceSearchLabel = styled.label`
   white-space: nowrap;
 `
 
-export const PlaceSearchControl = styled.div`
+export const PlaceSearchPopoverAnchor = styled.div`
+  position: relative;
+  min-width: 0;
+`
+
+export const PlaceSearchInputArea = styled.div<{ $expanded: boolean }>`
+  position: relative;
+  min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 42px;
-  gap: 8px;
+  grid-template-columns: 44px minmax(0, 1fr) 40px;
+  align-items: center;
+  border: 1px solid ${colors.border};
+  border-radius: ${({ $expanded }) => $expanded ? '8px 8px 0 0' : '8px'};
+  background: ${colors.surface};
+  &:focus-within { border-color: ${colors.primary}; box-shadow: 0 0 0 1px ${colors.primary}; }
+  input {
+    min-width: 0;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 15px;
+    &:focus { outline: none; border: 0; box-shadow: none; }
+  }
+`
+
+export const PlaceSearchClearButton = styled.button`
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: ${colors.muted};
+  cursor: pointer;
+  span { font-family: 'Material Symbols Outlined'; font-size: 20px; }
+  &:hover { background: ${colors.surfaceContainer}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; }
 `
 
 export const PlaceSearchButton = styled.button`
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid ${colors.primary};
+  border: 0;
   border-radius: 6px;
-  background: ${colors.primaryAction};
-  color: ${colors.primaryText};
+  background: transparent;
+  color: ${colors.primaryForeground};
   cursor: pointer;
 
   span {
     font-family: 'Material Symbols Outlined';
-    font-size: 20px;
+    font-size: 24px;
     font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
   }
 
-  &:hover:not(:disabled) { background: ${colors.primaryForeground}; }
-  &:disabled { cursor: not-allowed; border-color: ${colors.disabled}; background: ${colors.disabled}; }
-  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
+  &:hover:not(:disabled) { background: ${colors.primaryTint}; }
+  &:disabled { cursor: not-allowed; color: ${colors.softText}; }
+  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -3px; }
 `
 
-export const PlaceSearchHint = styled.p<{ $error?: boolean }>`
+export const PlaceSearchHint = styled.p<{ $error?: boolean; $warning?: boolean }>`
   margin: 8px 0 0;
-  color: ${({ $error }) => ($error ? colors.errorText : colors.muted)};
+  color: ${({ $error, $warning }) => $error ? colors.errorText : $warning ? colors.warningText : colors.muted};
   font-size: 12px;
   line-height: 1.45;
 `
 
-export const PlaceSearchResults = styled.div`
+export const PlaceSearchPopover = styled.div`
   position: absolute;
   z-index: 12;
-  top: 70px;
+  top: 100%;
   left: 0;
   right: 0;
-  max-height: 276px;
-  overflow-y: auto;
+  overflow: hidden;
   border: 1px solid ${colors.border};
-  border-radius: 8px;
+  border-radius: 0 0 8px 8px;
   background: ${colors.surface};
-  box-shadow: 0 14px 30px ${colors.shadow};
+  box-shadow: 0 8px 18px ${colors.shadow};
 `
 
-export const PlaceSearchResultsTitle = styled.strong`
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  border-bottom: 1px solid ${colors.borderSoft};
-  color: ${colors.strongText};
-  font-size: 12px;
-  font-weight: 700;
+export const PlaceSearchResults = styled.div`
+  max-height: min(420px, 55vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 `
 
-export const PlaceSearchResult = styled.button`
+export const PlaceSearchEmpty = styled.p<{ $error?: boolean; $warning?: boolean }>`
+  margin: 0;
+  padding: 18px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: ${({ $error, $warning }) => $error ? colors.errorText : $warning ? colors.warningText : colors.muted};
+`
+
+export const PlaceSearchResult = styled.button<{ $active?: boolean }>`
   width: 100%;
-  display: grid;
-  gap: 5px;
-  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 18px;
   border: 0;
-  border-bottom: 1px solid ${colors.borderSoft};
-  background: ${colors.surface};
+  background: ${({ $active }) => $active ? colors.primaryTint : colors.surface};
   color: ${colors.text};
   text-align: left;
   cursor: pointer;
 
-  &:last-child { border-bottom: 0; }
   &:hover { background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
 
   &:hover strong { color: ${colors.primaryForeground}; }
+`
+
+export const PlaceSearchResultIcon = styled.span`
+  flex: 0 0 auto;
+  color: ${colors.softText};
+  font-family: 'Material Symbols Outlined';
+  font-size: 21px;
+  font-variation-settings: 'FILL' 1;
+`
+
+export const PlaceSearchResultContent = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  mark { background: transparent; color: ${colors.primaryForeground}; font-weight: 800; }
 `
 
 export const PlaceSearchResultTop = styled.div`
@@ -403,17 +456,7 @@ export const PlaceSearchResultTop = styled.div`
   justify-content: space-between;
   gap: 10px;
 
-  strong { min-width: 0; overflow: hidden; color: ${colors.text}; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-  span { flex: 0 0 auto; color: ${colors.primaryForeground}; font-size: 11px; font-weight: 700; }
-`
-
-export const PlaceSearchResultCategory = styled.span`
-  overflow: hidden;
-  color: ${colors.muted};
-  font-size: 11px;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  strong { min-width: 0; color: ${colors.text}; font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
 `
 
 export const PlaceSearchResultAddress = styled.small`
@@ -421,20 +464,11 @@ export const PlaceSearchResultAddress = styled.small`
   display: flex;
   align-items: center;
   gap: 4px;
-  overflow: hidden;
   color: ${colors.muted};
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 
-  span {
-    flex: 0 0 auto;
-    color: ${colors.softText};
-    font-family: 'Material Symbols Outlined';
-    font-size: 15px;
-    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 16;
-  }
 `
 
 export const SelectedPlaceSummary = styled.div`

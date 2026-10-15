@@ -49,6 +49,41 @@ Client Secret·JWT 키·네이버 검색 비밀키는 이 파일이나 `VITE_*`�
 
 ## 빌드 및 실행
 
+### `/operator/` 배포와 별도 프록시 EC2
+
+Compose의 웹 경로 기본값은 `/operator/`이고, 직접 Docker 빌드와 로컬 개발 기본값은 `/`입니다.
+`VITE_APP_BASE_PATH`가 Vite 자산 URL과 React Router basename에 함께 반영됩니다.
+예: 공개 로그인 `/operator/login`, 상점주 홈 `/operator/merchant`.
+API는 UI 경로와 별개로 같은 origin의 **`/api/*`**를 유지합니다.
+`/operator/api`로 변경하지 않습니다. 경로 설정을 바꾸면 **이미지 재빌드**가 필요합니다.
+경로는 `/` 또는 `/operator/` 같은 절대 디렉터리 경로만 허용하며, 외부 URL·중복 슬래시·
+상위 경로 이동·API/Swagger와 겹치는 접두사는 빌드 시 거절합니다. 마지막 `/`는 정규화합니다.
+
+외부 프록시 계약:
+
+| 공개 요청 | 웹 컨테이너가 받아야 하는 요청 |
+| --- | --- |
+| `/operator/login` | `/login` |
+| `/operator/assets/<hash>.js` | `/assets/<hash>.js` |
+| `/operator/pingdom-logo.png` | `/pingdom-logo.png` |
+| `/operator/pdfjs/cmaps/<name>.bcmap` | `/pdfjs/cmaps/<name>.bcmap` |
+| `/api/users/me` | `/api/users/me` (컨테이너가 인증 게이트웨이에 `/users/me`로 전달) |
+| `/swagger-ui/*`, `/v3/api-docs*` | 기존 게이트웨이 분기 유지 |
+
+외부 프록시가 `/operator/`를 **정확히 한 번 제거**하고 `/api/`는 유지해야 합니다.
+`/operator`는 `/operator/`로 리다이렉트하고 `/operators/` 같은 유사 경로를 매칭하지 마세요.
+이 표는 필요한 계약이며 현재 운영 프록시에 반영됐다는 증거가 아닙니다.
+infra 저장소의 현재 develop에는 운영 `/operator/` 분기 정보가 없으므로 운영 설정과 대조해야 합니다.
+
+같은 호스트의 프록시는 `PINGDOM_WEB_BIND_ADDRESS=127.0.0.1`을 유지합니다.
+별도 프록시 EC2라면 **웹 EC2의 사설 VPC IP**를 바인딩 주소로 설정하고,
+`PINGDOM_API_UPSTREAM`도 컨테이너에서 접근 가능한 **인증 웹 게이트웨이의 내부 주소:포트**로 설정합니다.
+기본 8081은 예시이며 실제 게이트웨이 포트와 대조해야 합니다.
+**`0.0.0.0` 바인딩이나 8082 인터넷 공개로 연결 문제를 해결하지 마세요.**
+보안 그룹·호스트 방화벽은 프록시 출발지만 허용하고 Host·`X-Forwarded-Proto: https`를 유지합니다.
+별도 EC2 구성에서는 loopback `healthz` 명령도 설정한 사설 IP 주소로 바꿉니다.
+실제 프록시·보안 그룹·DNS·TLS 설정은 이 저장소 변경으로 자동 수정되지 않습니다.
+
 ```bash
 docker compose --env-file .env.ec2.local config --quiet
 docker compose --env-file .env.ec2.local build --pull web
@@ -99,9 +134,22 @@ Docker가 실행 중인 환경에서 다음을 실행하면 가짜 게이트웨�
 npm run test:ec2-image
 ```
 
-검사 범위: 이미지 빌드, `nginx -t`, health check, SPA 직접 접근, 캐시·보안 헤더,
-PDF Worker MIME·CMap 제공·정적 파일 404, API 401·쿼리·메서드·헤더 전달, 쿠키 발급/만료 Path, Swagger.
+검사 범위: `/`와 `/operator/` 이미지 빌드, 가짜 외부 프록시→웹 Nginx→가짜 게이트웨이,
+`nginx -t`, health check, SPA 직접 접근, 로고·마커 SVG·favicon, 캐시·보안 헤더,
+PDF Worker MIME·CMap 제공·정적 파일 404, API 401/403/404/503·쿼리·메서드·헤더 전달,
+쿠키 발급/만료 Path, Swagger. QA 포트는 loopback의 임의 포트이며 실제 API나 운영 mutation은 사용하지 않습니다.
 이 검사는 실제 TLS·네이버 인증·EC2 보안 그룹·운영 로그인 성공을 증명하지 않습니다.
+
+로그인 복귀는 `tests/operator-auth-return.test.mjs`에서 실제 인증 Provider·보호 라우트·로그인 컴포넌트로
+검사합니다. 저장 대상은 basename 없는 허용 경로만 유지하며, 다른 계정/권한에는 복원하지 않습니다.
+브라우저 수동 검증은 `node tests/browser/operator-deployment-server.mjs`로 합성 QA 화면을 열 수 있습니다.
+출력된 로컬 URL에서 합성 아이디 `synthetic`·비밀번호 `synthetic-password`를 입력하고 관리자/상점주 이동,
+인증 만료→로그인→원래 화면 복귀, 권한 오류 시 화면 유지, 로그아웃을 확인합니다.
+이 서버는 Axios 요청을 합성 어댑터로 처리하므로 실제 인증 서버를 호출하지 않습니다.
+루트 비교는 `QA_APP_BASE_PATH=/ node tests/browser/operator-deployment-server.mjs`를 사용합니다.
+
+PR #290의 경로·바인딩 설정 아이디어를 반영하고, 인증 복귀·공개 로고 경로·실제 Docker 프록시 검증을 보완했습니다.
+장소 검색 자동완성·이미지 파일명 정리는 별도 PR #288의 범위이며, 주소 검색 503의 서버 원인은 이 변경으로 해결되지 않습니다.
 
 실배포 후에는 HTTPS에서 로그인→새로고침→토큰 갱신→로그아웃, 관리자/상점주 권한,
 지도·마커·주소 검색, PDF/이미지 첨부 조회, 모바일 직접 URL, 기존 앱 API를 확인합니다.
@@ -128,3 +176,18 @@ PDF Worker MIME·CMap 제공·정적 파일 404, API 401·쿼리·메서드·헤
 API 오류/전달·쿠키 발급/만료·Swagger를 가짜 게이트웨이로 검사해 통과했습니다.
 Compose 설정과 workflow YAML 구문도 확인했습니다. 임시 검사 자원은 정리했습니다.
 실제 EC2·외부 프록시·TLS·운영 API 인증·원격 GitHub Actions는 미검증이며 완료 처리하지 않았습니다.
+
+### 2026-10-15 `/operator/` 보완 검증
+
+- 기준: develop `dfd020c`에서 분기한 `fix/operator-deployment-readiness` 미커밋 변경.
+- 전체 Node 테스트 721개, ESLint, TypeScript·production build 통과.
+- 실제 `/`·`/operator/` 빌드 산출물의 Router basename·favicon·로고·마커·PDF Worker·CMap URL 일치 확인.
+- Docker 합성 프록시→Nginx→합성 인증 게이트웨이 두 경로 검사 통과.
+  웹·게이트웨이는 internal 네트워크이며, QA 외부 프록시만 별도 네트워크의 loopback 임시 포트를 사용.
+  401/403/404/503 보존, 메서드·쿼리·인증 헤더·HTTPS 전달 헤더, 쿠키 발급/만료 Path 확인.
+  `/`·`/operator/`와 loopback·예시 사설 IP의 Compose 설정 조합도 검사(사설 IP 리스너는 실행하지 않음).
+- 인앱 브라우저 합성 QA: `/operator/` 관리자·상점주 로그인, 인증 만료→재로그인→작업 경로·허용 조건 복귀,
+  권한 오류 시 작업 화면 유지, 로그아웃, 새로고침 확인. 루트 경로의 관리자 복귀도 확인.
+- 테스트 컨테이너·네트워크·이미지·브라우저 탭·임시 QA 서버 정리 완료.
+- 운영 프록시·실제 TLS·EC2 보안 그룹·NAVER 검색 인증 및 실서버 로그인은 미검증.
+  주소 검색 503 해결이나 운영 배포 완료를 의미하지 않음.

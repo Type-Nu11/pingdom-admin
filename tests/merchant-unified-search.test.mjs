@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import { JSDOM } from 'jsdom'
 import { createServer } from 'vite'
+import { CanceledError } from 'axios'
 
 const dom = new JSDOM('', { url: 'http://localhost/' })
 for (const key of ['window', 'document', 'localStorage', 'sessionStorage']) globalThis[key] = dom.window[key]
@@ -69,6 +70,70 @@ test('two valid empty responses stay empty', async () => {
   client.defaults.adapter = async config => { calls++; return response(config, []) }
   assert.deepEqual(await api.searchMerchantPlacesAndAddresses('없는 업체', signal()), [])
   assert.equal(calls, 2)
+})
+
+for (const [query, first, second] of [['없는 업체', '업체명', '주소'], ['서울 합성로 10', '주소', '업체명']]) {
+  for (const failure of ['unavailable', 'timeout', 'rate-limit', 'malformed', 'network']) {
+    test(`${first} empty followed by ${second} ${failure} retains partial-search context`, async () => {
+      let calls = 0
+      client.defaults.adapter = async config => {
+        if (++calls === 1) return response(config, [])
+        if (failure === 'malformed') return { ...response(config, []), data: {} }
+        const prefix = second === '주소' ? 'NAVER_ADDRESS_SEARCH' : 'NAVER_PLACE_SEARCH'
+        const code = failure === 'unavailable' ? `${prefix}_UNAVAILABLE` : failure === 'timeout' ? `${prefix}_TIMEOUT` : `${prefix}_RATE_LIMITED`
+        throw Object.assign(new Error('synthetic failure'), { isAxiosError: true, category: failure === 'network' ? 'network' : failure === 'timeout' ? 'timeout' : 'server', response: failure === 'network' ? undefined : { status: failure === 'rate-limit' ? 429 : 503, data: { code } } })
+      }
+      await assert.rejects(api.searchMerchantPlacesAndAddresses(query, signal()), error => {
+        assert.ok(error instanceof api.MerchantSearchFailure)
+        assert.equal(error.isPartial, true)
+        assert.match(error.message, new RegExp(`${first} 검색 결과는 0건.*추가 ${second} 검색을 완료하지 못했습니다`))
+        return true
+      })
+      assert.equal(calls, 2)
+    })
+  }
+}
+
+for (const status of [401, 403]) {
+  for (const stage of ['primary', 'fallback', 'postal']) {
+    test(`${stage} HTTP ${status} without category cannot become empty or partial warning`, async () => {
+      let calls = 0
+      client.defaults.adapter = async config => {
+        if (stage === 'fallback' && ++calls === 1) return response(config, [])
+        throw Object.assign(new Error('synthetic auth failure'), { isAxiosError: true, response: { status, data: { code: 'NAVER_ADDRESS_SEARCH_UNAVAILABLE' } } })
+      }
+      const run = stage === 'postal'
+        ? api.completeMerchantSearchCandidate({ ...place, kind: 'place', postalCode: '' }, signal())
+        : api.searchMerchantPlacesAndAddresses('없는 업체', signal())
+      await assert.rejects(run, error => {
+        assert.equal(error.isPartial, false)
+        assert.match(error.message, status === 401 ? /로그인/ : /권한/)
+        assert.doesNotMatch(error.message, /0건|서비스를 사용할 수 없/)
+        return true
+      })
+    })
+  }
+}
+
+test('refresh failures and session cancellations are never treated as fallback or postal warnings', async () => {
+  for (const stage of ['fallback', 'postal']) {
+    for (const canceled of [false, true]) {
+      let calls = 0
+      const error = canceled ? new CanceledError('session changed') : Object.assign(new Error('refresh'), { isAxiosError: true, isRefreshFailure: true, category: 'network' })
+      client.defaults.adapter = async config => {
+        if (stage === 'fallback' && ++calls === 1) return response(config, [])
+        throw error
+      }
+      const run = stage === 'postal'
+        ? api.completeMerchantSearchCandidate({ ...place, kind: 'place', postalCode: '' }, signal())
+        : api.searchMerchantPlacesAndAddresses('없는 업체', signal())
+      await assert.rejects(run, failure => {
+        if (canceled) assert.equal(failure, error)
+        else { assert.equal(failure.isPartial, false); assert.match(failure.message, /인증 상태/) }
+        return true
+      })
+    }
+  }
 })
 
 test('postal supplementation matches addresses and never substitutes the address geocoder coordinates', async () => {

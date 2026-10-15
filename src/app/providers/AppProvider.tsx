@@ -8,8 +8,8 @@ import { AuthProvider } from './AuthProvider'
 export function AppProvider({ children }: PropsWithChildren) {
   return (
     <ThemeProvider theme={theme}>
+      <GlobalStyle />
       <AuthProvider>
-        <GlobalStyle />
         {children}
       </AuthProvider>
     </ThemeProvider>

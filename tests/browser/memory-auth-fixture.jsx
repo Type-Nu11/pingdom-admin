@@ -1,11 +1,10 @@
 import React, { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { AuthProvider } from '../../src/app/providers/AuthProvider'
+import { AppProvider } from '../../src/app/providers/AppProvider'
 import { MerchantProtectedRoute, ProtectedRoute } from '../../src/app/router/ProtectedRoute'
 import { useAuth } from '../../src/hooks/useAuth'
 import LoginPage from '../../src/pages/login/LoginPage'
-import { GlobalStyle } from '../../src/styles/globalStyle'
 
 function Controls() {
   const [status, setStatus] = useState('')
@@ -32,10 +31,10 @@ function Work() {
     <button onClick={() => void logout()}>로그아웃 검증</button>
   </main>
 }
-createRoot(document.getElementById('root')).render(<StrictMode><GlobalStyle/><Controls/><AuthProvider><BrowserRouter basename="/console/">
+createRoot(document.getElementById('root')).render(<StrictMode><Controls/><AppProvider><BrowserRouter basename="/console/">
   <Routes>
     <Route path="/login" element={<LoginPage/>}/>
     <Route element={<ProtectedRoute/>}><Route path="/dashboard" element={<Work/>}/><Route path="/places" element={<Work/>}/></Route>
     <Route element={<MerchantProtectedRoute/>}><Route path="/merchant" element={<Work/>}/><Route path="/merchant/menus" element={<Work/>}/></Route>
   </Routes>
-</BrowserRouter></AuthProvider></StrictMode>)
+</BrowserRouter></AppProvider></StrictMode>)

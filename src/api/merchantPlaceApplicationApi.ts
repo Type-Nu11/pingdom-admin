@@ -72,13 +72,6 @@ export async function cancelMerchantPlaceApplication(applicationId: number) {
   return data
 }
 
-export async function getMerchantPlaceApplicationAttachments(applicationId: number) {
-  const { data } = await customAxios.get<MerchantPlaceApplication['attachments']>(
-    `${APPLICATIONS_PATH}/${applicationId}/attachments`,
-  )
-  return data
-}
-
 export async function uploadMerchantPlaceApplicationAttachment(
   applicationId: number,
   documentType: MerchantPlaceApplication['attachments'][number]['documentType'],

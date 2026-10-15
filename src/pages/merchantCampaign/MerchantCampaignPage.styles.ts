@@ -36,39 +36,6 @@ export {
   Workspace,
 } from '../../components/merchant/MerchantWorkspace.styles'
 
-export const Pagination = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px 24px 22px;
-  border-top: 1px solid ${colors.borderSoft};
-`
-
-export const PaginationButton = styled.button`
-  min-width: 64px;
-  height: 34px;
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  background: ${colors.surface};
-  color: ${colors.text};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primaryForeground}; }
-  &:disabled { opacity: 0.45; cursor: not-allowed; }
-`
-
-export const PageText = styled.span`
-  min-width: 42px;
-  color: ${colors.muted};
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-`
-
 export const BrandField = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;

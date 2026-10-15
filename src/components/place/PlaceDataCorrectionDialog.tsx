@@ -5,7 +5,6 @@ import type {
   AdminPlaceCoordinatesUpdateRequest,
   AdminPlaceDetail,
   AdminPlaceGeocodingUpdateRequest,
-  AdminPlaceKakaoPlaceIdUpdateRequest,
   AdminPlaceStandardCategory,
 } from '../../types/adminPlace.types'
 import { AdminSelect } from '../common/AdminStatusSelect'
@@ -15,7 +14,6 @@ export type PlaceDataCorrectionAction =
   | 'basic-information'
   | 'geocoding'
   | 'coordinates'
-  | 'kakao-place-id'
 
 interface PlaceDataCorrectionDialogProps {
   place: AdminPlaceDetail
@@ -25,9 +23,6 @@ interface PlaceDataCorrectionDialogProps {
   onClose: () => void
   onUpdateBasicInformation: (
     payload: AdminPlaceBasicInformationUpdateRequest
-  ) => Promise<boolean>
-  onUpdateKakaoPlaceId: (
-    payload: AdminPlaceKakaoPlaceIdUpdateRequest
   ) => Promise<boolean>
   onUpdateCoordinates: (
     payload: AdminPlaceCoordinatesUpdateRequest
@@ -56,11 +51,6 @@ const MODES: Array<{
     value: 'coordinates',
     label: '좌표만',
     description: '주소는 유지하고 지도 좌표만 보정합니다.',
-  },
-  {
-    value: 'kakao-place-id',
-    label: 'Kakao ID',
-    description: 'Kakao 장소 연결을 변경하거나 해제합니다.',
   },
 ]
 
@@ -121,7 +111,6 @@ export function PlaceDataCorrectionDialog({
   onClearError,
   onClose,
   onUpdateBasicInformation,
-  onUpdateKakaoPlaceId,
   onUpdateCoordinates,
   onUpdateGeocoding,
 }: PlaceDataCorrectionDialogProps) {
@@ -130,7 +119,6 @@ export function PlaceDataCorrectionDialog({
   const [category, setCategory] = useState<AdminPlaceStandardCategory | ''>(() =>
     getStandardCategory(place.category ?? place.categoryName)
   )
-  const [kakaoPlaceId, setKakaoPlaceId] = useState(place.kakaoPlaceId ?? '')
   const [address, setAddress] = useState(place.address ?? '')
   const [roadAddress, setRoadAddress] = useState(place.roadAddress ?? '')
   const [jibunAddress, setJibunAddress] = useState(place.jibunAddress ?? '')
@@ -183,24 +171,6 @@ export function PlaceDataCorrectionDialog({
     setMode(nextMode)
     setFormError('')
     onClearError(nextMode)
-  }
-
-  const handleKakaoPlaceIdSubmit = async () => {
-    const nextKakaoPlaceId = kakaoPlaceId.trim()
-
-    if (nextKakaoPlaceId.length > 50) {
-      setFormError('Kakao place id는 50자 이하여야 합니다.')
-      return
-    }
-
-    if ((place.kakaoPlaceId ?? '') === nextKakaoPlaceId) {
-      setFormError('현재 Kakao place id와 다른 값을 입력해주세요.')
-      return
-    }
-
-    if (await onUpdateKakaoPlaceId({ kakaoPlaceId: nextKakaoPlaceId })) {
-      onClose()
-    }
   }
 
   const handleBasicInformationSubmit = async () => {
@@ -348,8 +318,6 @@ export function PlaceDataCorrectionDialog({
 
     if (mode === 'basic-information') {
       await handleBasicInformationSubmit()
-    } else if (mode === 'kakao-place-id') {
-      await handleKakaoPlaceIdSubmit()
     } else if (mode === 'coordinates') {
       await handleCoordinatesSubmit()
     } else {
@@ -388,11 +356,11 @@ export function PlaceDataCorrectionDialog({
 
         <S.OperatingDialogBody>
           <S.OperatingDialogDescription>
-            장소 기본 정보와 식별자, 주소·좌표 중 필요한 범위만 선택해 보정합니다.
+            장소 기본 정보와 주소·좌표 중 필요한 범위만 선택해 보정합니다.
             변경 결과는 저장 즉시 목록과 지도 마커에 반영됩니다.
           </S.OperatingDialogDescription>
 
-          <S.OperatingActionTabs as={AccessibleTabList} panelId="place-correction-panel" $columns={4} role="tablist" aria-label="정보 보정 방식">
+          <S.OperatingActionTabs as={AccessibleTabList} panelId="place-correction-panel" $columns={3} role="tablist" aria-label="정보 보정 방식">
             {MODES.map((option) => (
               <S.OperatingActionTab
                 key={option.value}
@@ -462,36 +430,6 @@ export function PlaceDataCorrectionDialog({
                   }}
                 />
                 <small>{reason.length}/500</small>
-              </S.OperatingFormField>
-            </>
-          ) : mode === 'kakao-place-id' ? (
-            <>
-              <S.OperatingComparisonGrid>
-                <S.OperatingComparisonItem>
-                  <span>현재 연결</span>
-                  <strong>{place.kakaoPlaceId || '연결 정보 없음'}</strong>
-                </S.OperatingComparisonItem>
-                <S.OperatingComparisonArrow aria-hidden="true">
-                  arrow_forward
-                </S.OperatingComparisonArrow>
-                <S.OperatingComparisonItem $changed>
-                  <span>변경 후</span>
-                  <strong>{kakaoPlaceId.trim() || '연결 해제'}</strong>
-                </S.OperatingComparisonItem>
-              </S.OperatingComparisonGrid>
-              <S.OperatingFormField>
-                <span>Kakao place ID</span>
-                <S.OperatingTextInput
-                  value={kakaoPlaceId}
-                  maxLength={50}
-                  placeholder="비워서 저장하면 기존 연결을 해제합니다."
-                  disabled={isSubmitting}
-                  onChange={(event) => {
-                    setKakaoPlaceId(event.target.value)
-                    clearMessages()
-                  }}
-                />
-                <small>{kakaoPlaceId.length}/50</small>
               </S.OperatingFormField>
             </>
           ) : (

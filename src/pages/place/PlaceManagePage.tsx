@@ -129,7 +129,6 @@ function PlaceManagePage() {
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
     updatePlaceTouristInfo,
-    updatePlaceKakaoPlaceId,
     updatePlaceCoordinates,
     updatePlaceGeocoding,
   } = useAdminPlaces({
@@ -189,9 +188,7 @@ function PlaceManagePage() {
       ? 'geocoding'
       : updatingPlaceIds.coordinates !== null
         ? 'coordinates'
-        : updatingPlaceIds['kakao-place-id'] !== null
-          ? 'kakao-place-id'
-          : null
+        : null
   const placeMapMarkers = useMemo<MapMarker[]>(
     () =>
       places.filter(hasValidCoordinate).map((place) => ({
@@ -560,7 +557,6 @@ function PlaceManagePage() {
 
     clearUpdateErrorMessage('geocoding')
     clearUpdateErrorMessage('coordinates')
-    clearUpdateErrorMessage('kakao-place-id')
     clearUpdateErrorMessage('basic-information')
     setDataCorrectionPlace(placeDetail)
   }
@@ -866,14 +862,10 @@ function PlaceManagePage() {
             'basic-information': updateErrorMessages['basic-information'],
             geocoding: updateErrorMessages.geocoding,
             coordinates: updateErrorMessages.coordinates,
-            'kakao-place-id': updateErrorMessages['kakao-place-id'],
           }}
           onClearError={clearUpdateErrorMessage}
           onClose={handleCloseDataCorrection}
           onUpdateBasicInformation={handleUpdateBasicInformation}
-          onUpdateKakaoPlaceId={(payload) =>
-            updatePlaceKakaoPlaceId(dataCorrectionPlace.id, payload)
-          }
           onUpdateCoordinates={handleUpdateCoordinates}
           onUpdateGeocoding={handleUpdateGeocoding}
         />

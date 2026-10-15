@@ -53,11 +53,6 @@ export const StartShell = styled.div`
   }
 `
 
-export const CenterShell = styled(StartShell)`
-  justify-content: center;
-  min-height: calc(100vh - 64px);
-`
-
 export const BrandHeader = styled.header`
   display: flex;
   flex-direction: column;
@@ -320,46 +315,4 @@ export const FooterLink = styled.a`
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
-`
-
-export const SuccessCard = styled.section`
-  width: min(100%, 470px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 48px;
-  padding: 48px 32px;
-  border: 1px solid ${adminColors.border};
-  border-radius: 24px;
-  background: ${adminColors.surface};
-  box-shadow: 0 16px 40px ${adminColors.shadow};
-  text-align: center;
-`
-
-export const SuccessIconBox = styled.div`
-  width: 64px;
-  height: 64px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: ${adminColors.successTint};
-  color: ${adminColors.success};
-`
-
-export const SuccessTitle = styled.h1`
-  margin: 24px 0 0;
-  color: ${adminColors.strongText};
-  font-size: ${typography.title2.bold.fontSize}px;
-  font-weight: ${typography.title2.bold.fontWeight};
-  letter-spacing: 0;
-  line-height: ${typography.title2.bold.lineHeight};
-`
-
-export const SuccessDescription = styled.p`
-  margin: 14px 0 0;
-  color: ${adminColors.muted};
-  font-size: ${typography.body.regular.fontSize}px;
-  font-weight: ${typography.body.regular.fontWeight};
-  line-height: ${typography.body.regular.lineHeight};
 `

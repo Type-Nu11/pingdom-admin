@@ -138,16 +138,6 @@ export interface AdminPlaceBasicInformationUpdateResponse {
   message: string
 }
 
-export interface AdminPlaceKakaoPlaceIdUpdateRequest {
-  kakaoPlaceId: string
-}
-
-export interface AdminPlaceKakaoPlaceIdUpdateResponse {
-  placeId: number
-  kakaoPlaceId: string
-  message: string
-}
-
 export interface AdminPlaceCoordinatesUpdateRequest {
   latitude: number
   longitude: number
@@ -337,5 +327,4 @@ export type AdminPlaceUpdateErrorResponse = AuthErrorResponse<
   | 'INVALID_TOKEN'
   | 'ACCESS_DENIED'
   | 'PLACE_NOT_FOUND'
-  | 'PLACE_KAKAO_PLACE_ID_CONFLICT'
 >

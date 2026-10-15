@@ -30,12 +30,4 @@ export interface MerchantOwnerApplicationProfile {
   placeIds: number[]
 }
 
-export interface MerchantOwnerApplicationRequest {
-  businessName: string
-  displayName: string
-  description?: string | null
-  contactEmail: string
-  contactPhone: string
-}
-
 export type MerchantOnboardingErrorResponse = AuthErrorResponse<string>

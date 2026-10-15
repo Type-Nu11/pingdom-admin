@@ -22,8 +22,6 @@ export interface PlaceCategorySource {
   categoryName?: string | null
 }
 
-export const PLACE_CATEGORY_ACCENT_COLOR = '#FF4A75'
-
 type PlaceCategoryKind =
   | 'restaurant'
   | 'music'
@@ -61,30 +59,29 @@ const LIST_ICON_IMAGE_URL_BY_KIND: Record<PlaceCategoryKind, string> = {
 
 const CATEGORY_METADATA_BY_KEY: Record<
   string,
-  { kind: PlaceCategoryKind; label: string; iconName: string }
+  { kind: PlaceCategoryKind; label: string }
 > = {
-  RESTAURANT: { kind: 'restaurant', label: '음식점', iconName: 'restaurant' },
-  음식점: { kind: 'restaurant', label: '음식점', iconName: 'restaurant' },
-  MUSIC: { kind: 'music', label: '음악', iconName: 'headphones' },
-  음악: { kind: 'music', label: '음악', iconName: 'headphones' },
-  POP_UP: { kind: 'popup', label: '팝업', iconName: 'redeem' },
-  팝업: { kind: 'popup', label: '팝업', iconName: 'redeem' },
-  FASHION: { kind: 'fashion', label: '패션', iconName: 'checkroom' },
-  패션: { kind: 'fashion', label: '패션', iconName: 'checkroom' },
-  BEAUTY: { kind: 'beauty', label: '뷰티', iconName: 'palette' },
-  뷰티: { kind: 'beauty', label: '뷰티', iconName: 'palette' },
-  EXHIBITION: { kind: 'exhibition', label: '전시', iconName: 'museum' },
-  전시: { kind: 'exhibition', label: '전시', iconName: 'museum' },
-  CAFE: { kind: 'cafe', label: '카페', iconName: 'local_cafe' },
-  카페: { kind: 'cafe', label: '카페', iconName: 'local_cafe' },
+  RESTAURANT: { kind: 'restaurant', label: '음식점' },
+  음식점: { kind: 'restaurant', label: '음식점' },
+  MUSIC: { kind: 'music', label: '음악' },
+  음악: { kind: 'music', label: '음악' },
+  POP_UP: { kind: 'popup', label: '팝업' },
+  팝업: { kind: 'popup', label: '팝업' },
+  FASHION: { kind: 'fashion', label: '패션' },
+  패션: { kind: 'fashion', label: '패션' },
+  BEAUTY: { kind: 'beauty', label: '뷰티' },
+  뷰티: { kind: 'beauty', label: '뷰티' },
+  EXHIBITION: { kind: 'exhibition', label: '전시' },
+  전시: { kind: 'exhibition', label: '전시' },
+  CAFE: { kind: 'cafe', label: '카페' },
+  카페: { kind: 'cafe', label: '카페' },
   CULTURAL_HERITAGE: {
     kind: 'cultural-heritage',
     label: '문화재',
-    iconName: 'account_balance',
   },
-  문화재: { kind: 'cultural-heritage', label: '문화재', iconName: 'account_balance' },
-  OTHER: { kind: 'other', label: '기타', iconName: 'location_on' },
-  기타: { kind: 'other', label: '기타', iconName: 'location_on' },
+  문화재: { kind: 'cultural-heritage', label: '문화재' },
+  OTHER: { kind: 'other', label: '기타' },
+  기타: { kind: 'other', label: '기타' },
 }
 
 function normalizeCategoryKey(value?: string | null) {
@@ -107,10 +104,6 @@ function getPlaceCategoryKind(place: PlaceCategorySource): PlaceCategoryKind {
 
 export function getPlaceCategoryLabel(place: PlaceCategorySource) {
   return getCategoryMetadata(place)?.label ?? place.categoryName?.trim() ?? '미분류'
-}
-
-export function getPlaceCategoryIconName(place: PlaceCategorySource) {
-  return getCategoryMetadata(place)?.iconName ?? 'location_on'
 }
 
 export function getPlaceCategoryMarkerImageUrl(place: PlaceCategorySource) {

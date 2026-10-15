@@ -72,22 +72,3 @@ export function getAuthErrorMessage<T extends AuthErrorResponse>(
 
   return options.fallbackMessage
 }
-
-export function normalizeFieldErrors<T extends string>(
-  errors: Record<string, string> | Partial<Record<T, string>> | undefined,
-  allowedKeys: readonly T[]
-) {
-  if (!errors) {
-    return {}
-  }
-
-  return allowedKeys.reduce<Partial<Record<T, string>>>((acc, key) => {
-    const value = errors[key]
-
-    if (value) {
-      acc[key] = value
-    }
-
-    return acc
-  }, {})
-}

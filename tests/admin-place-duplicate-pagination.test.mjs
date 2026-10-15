@@ -48,8 +48,9 @@ beforeEach(() => {
       data = { ...item(Number(config.url.split('/').at(-1)), false), distanceMeters: 10 }
     } else if (config.url.startsWith('/admin/places/duplicates/')) {
       const id = Number(config.url.split('/').at(-1))
-      data = { id, name: '테스트 장소', address: '테스트 주소', kakaoPlaceId: '', latitude: 37, longitude: 127, userId: 1, registrant: '테스트', photoCount: 0, candidates: [] }
-    } else data = { id: Number(config.url.split('/').at(-1)), name: '테스트 장소', address: '테스트 주소', latitude: 37, longitude: 127, username: '테스트' }
+      data = { id, name: '테스트 장소', address: '테스트 주소', kakaoPlaceId: 'legacy-id-not-for-display', latitude: 37, longitude: 127, userId: 1, registrant: '테스트', photoCount: 0,
+        candidates: [{ id: id + 100, name: '비교 장소', address: '비교 주소', kakaoPlaceId: 'other-legacy-id', latitude: 37.001, longitude: 127, userId: 2, registrant: '비교 등록자', photoCount: 0, reason: '동일 주소', distanceMeters: 10 }] }
+    } else data = { id: Number(config.url.split('/').at(-1)), name: '테스트 장소', address: '테스트 주소', kakaoPlaceId: 'legacy-id-not-for-display', latitude: 37, longitude: 127, username: '테스트' }
     return { config, data, status: 200, statusText: 'OK', headers: {} }
   }
   root = createRoot(document.getElementById('root'))
@@ -123,6 +124,16 @@ for (const groups of [false, true]) {
     assert.equal(document.querySelector('[aria-pressed="true"]'), null)
     assert.match(document.body.textContent, /#21/)
     assert.equal([...document.querySelectorAll('button')].filter(b => b.textContent.startsWith(groups ? '중복 후보 #' : '후보 #')).length, 5)
+  })
+  test(label + ': compared places retain IDs and coordinates without displaying legacy Kakao IDs', async () => {
+    await mount(groups ? MergePage : CandidatePage)
+    const first = [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(groups ? '중복 후보 #1' : '후보 #1'))
+    await act(async () => first.click())
+    assert.match(document.body.textContent, /테스트 장소/)
+    assert.match(document.body.textContent, /37\.000000, 127\.000000/)
+    assert.match(document.body.textContent, /101/)
+    assert.doesNotMatch(document.body.textContent, /Kakao|legacy-id-not-for-display|other-legacy-id/)
+    assert.ok(requests.every(request => request.method === 'get'))
   })
 }
 test('changing candidate status returns to page one; refreshing preserves the status', async () => {

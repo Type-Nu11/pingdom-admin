@@ -159,30 +159,6 @@ export const AuditTime = styled.time`
   white-space: nowrap;
 `
 
-export const PaginationPageButton = styled.button<{ $active?: boolean }>`
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: ${radius.pill};
-  background: ${({ $active }) => ($active ? neutral.primaryAction : neutral.surfaceLow)};
-  color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: ${({ $active }) => ($active ? neutral.primaryAction : neutral.primaryTint)};
-    color: ${({ $active }) => ($active ? neutral.primaryText : neutral.primaryForeground)};
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.55;
-  }
-`
-
 export const AuditDetailHeader = styled.div`
   display: flex;
   align-items: flex-start;

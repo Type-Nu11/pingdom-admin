@@ -37,4 +37,8 @@ test('legacy response fields remain compatible but Kakao ID operations are remov
   assert.doesNotMatch(types, /AdminPlaceKakaoPlaceIdUpdate(?:Request|Response)/)
   const mergeTypes = await readFile(new URL('src/types/adminPlaceMerge.types.ts', root), 'utf8')
   assert.match(mergeTypes, /kakaoPlaceId:/)
+  const files = await sources(new URL('src/', root))
+  for (const file of files.filter(file => /\/(?:components|pages|hooks)\//.test(file.pathname))) {
+    assert.doesNotMatch(await readFile(file, 'utf8'), /kakaoPlaceId|Kakao ID|Kakao place ID|kakao-place-id|updatePlaceKakaoPlaceId/, file.pathname)
+  }
 })

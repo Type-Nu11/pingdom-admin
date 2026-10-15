@@ -77,7 +77,6 @@ function PlaceComparisonCard({
     id: number
     name: string
     address: string
-    kakaoPlaceId: string
     latitude: number
     longitude: number
     userId: number
@@ -122,10 +121,6 @@ function PlaceComparisonCard({
         <S.MetaRow>
           <dt>좌표</dt>
           <dd>{`${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`}</dd>
-        </S.MetaRow>
-        <S.MetaRow>
-          <dt>Kakao ID</dt>
-          <dd>{place.kakaoPlaceId || '정보 없음'}</dd>
         </S.MetaRow>
       </S.MetaList>
     </S.PlaceCard>
@@ -180,7 +175,6 @@ function PlaceMergePage() {
             id: duplicateDetail.id,
             name: duplicateDetail.name,
             address: duplicateDetail.address,
-            kakaoPlaceId: duplicateDetail.kakaoPlaceId,
             latitude: duplicateDetail.latitude,
             longitude: duplicateDetail.longitude,
             userId: duplicateDetail.userId,

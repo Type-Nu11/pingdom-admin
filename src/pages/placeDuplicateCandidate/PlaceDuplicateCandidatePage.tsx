@@ -93,10 +93,6 @@ function PlaceDetailCard({
           <dt>좌표</dt>
           <dd>{`${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`}</dd>
         </S.MetaRow>
-        <S.MetaRow>
-          <dt>Kakao ID</dt>
-          <dd>{place.kakaoPlaceId || '연결 정보 없음'}</dd>
-        </S.MetaRow>
       </S.MetaList>
       <S.SecondaryButton type="button" disabled={selected} onClick={onSelect}>
         {selected ? '유지 장소로 선택됨' : '이 장소 유지'}

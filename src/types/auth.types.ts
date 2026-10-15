@@ -29,13 +29,6 @@ export interface RefreshTokenResponse {
   accessToken: string
 }
 
-export interface ValidationErrorResponse {
-  message: string
-  errors: Record<string, string>
-}
-
 export type LoginErrorResponse = AuthErrorResponse<
   'INVALID_CREDENTIALS' | 'ADMIN_ACCESS_REQUIRED'
 >
-
-export type RefreshTokenErrorResponse = AuthErrorResponse<'INVALID_TOKEN' | 'USER_NOT_FOUND'>

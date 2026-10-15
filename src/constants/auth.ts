@@ -10,5 +10,3 @@ export const AUTH_STORAGE_KEYS = {
   country: 'country',
   role: 'role',
 } as const
-
-export const MIN_PASSWORD_LENGTH = 8

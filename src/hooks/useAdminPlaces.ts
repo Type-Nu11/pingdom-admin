@@ -8,7 +8,6 @@ import {
   updateAdminPlaceCoordinates,
   updateAdminPlaceDiscoveryStatus,
   updateAdminPlaceGeocoding,
-  updateAdminPlaceKakaoPlaceId,
   updateAdminPlaceOperatingSchedule,
   updateAdminPlaceOperatingStatus,
   updateAdminPlaceTouristInfo,
@@ -28,7 +27,6 @@ import type {
   AdminPlaceDiscoveryStatusUpdateRequest,
   AdminPlaceItem,
   AdminPlaceGeocodingUpdateRequest,
-  AdminPlaceKakaoPlaceIdUpdateRequest,
   AdminPlaceListErrorResponse,
   AdminPlaceListRequest,
   AdminPlaceListSortParam,
@@ -62,8 +60,6 @@ const ADMIN_PLACE_CODE_MESSAGES = {
     '연결된 체크인 이력이 있어 장소를 삭제할 수 없습니다.',
   PLACE_SCOUT_FIELD_REPORT_CONNECTED:
     '연결된 Scout 현장 제보가 있어 장소를 삭제할 수 없습니다.',
-  PLACE_KAKAO_PLACE_ID_CONFLICT:
-    '이미 다른 장소에 연결된 Kakao place id입니다.',
 }
 
 type AdminPlaceApiErrorResponse =
@@ -78,7 +74,6 @@ type PlaceUpdateAction =
   | 'operating-schedule'
   | 'discovery-status'
   | 'tourist-info'
-  | 'kakao-place-id'
   | 'coordinates'
   | 'geocoding'
 
@@ -90,7 +85,6 @@ const EMPTY_PLACE_UPDATE_IDS: PlaceUpdateState<number | null> = {
   'operating-schedule': null,
   'discovery-status': null,
   'tourist-info': null,
-  'kakao-place-id': null,
   coordinates: null,
   geocoding: null,
 }
@@ -101,7 +95,6 @@ const EMPTY_PLACE_UPDATE_ERRORS: PlaceUpdateState<string> = {
   'operating-schedule': '',
   'discovery-status': '',
   'tourist-info': '',
-  'kakao-place-id': '',
   coordinates: '',
   geocoding: '',
 }
@@ -673,53 +666,6 @@ export function useAdminPlaces({
     [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
   )
 
-  const updatePlaceKakaoPlaceId = useCallback(
-    async (placeId: number, payload: AdminPlaceKakaoPlaceIdUpdateRequest) => {
-      const action: PlaceUpdateAction = 'kakao-place-id'
-      if (updatingPlaceIdsRef.current[action] !== null) {
-        return false
-      }
-
-      updatingPlaceIdsRef.current[action] = placeId
-      setUpdatingPlaceIds((current) => ({ ...current, [action]: placeId }))
-      setUpdateErrorMessages((current) => ({ ...current, [action]: '' }))
-      clearActionSuccessMessage()
-
-      try {
-        const data = await updateAdminPlaceKakaoPlaceId(placeId, payload)
-
-        setPlaceDetail((current) =>
-          current?.id === placeId
-            ? { ...current, kakaoPlaceId: data.kakaoPlaceId || null }
-            : current
-        )
-        showActionSuccessMessage(data.message || 'Kakao place id를 저장했습니다.')
-
-        return true
-      } catch (error) {
-        setUpdateErrorMessages((current) => ({
-          ...current,
-          [action]: getAdminPlaceErrorMessage(
-            error,
-            'Kakao place id를 수정하지 못했습니다.'
-          ),
-        }))
-
-        if (shouldClearAuth(error)) {
-          clearAuth()
-        }
-
-        logDebugError('관리자 장소 Kakao place id 수정 실패', error)
-
-        return false
-      } finally {
-        updatingPlaceIdsRef.current[action] = null
-        setUpdatingPlaceIds((current) => ({ ...current, [action]: null }))
-      }
-    },
-    [clearActionSuccessMessage, clearAuth, showActionSuccessMessage]
-  )
-
   const updatePlaceCoordinates = useCallback(
     async (placeId: number, payload: AdminPlaceCoordinatesUpdateRequest) => {
       const action: PlaceUpdateAction = 'coordinates'
@@ -868,7 +814,6 @@ export function useAdminPlaces({
     updatePlaceOperatingStatus,
     updatePlaceOperatingSchedule,
     updatePlaceTouristInfo,
-    updatePlaceKakaoPlaceId,
     updatePlaceCoordinates,
     updatePlaceGeocoding,
   }

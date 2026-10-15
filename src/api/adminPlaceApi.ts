@@ -10,8 +10,6 @@ import type {
   AdminPlaceGeocodingUpdateRequest,
   AdminPlaceGeocodingUpdateResponse,
   AdminPlaceItem,
-  AdminPlaceKakaoPlaceIdUpdateRequest,
-  AdminPlaceKakaoPlaceIdUpdateResponse,
   AdminPlaceListRequest,
   AdminPlaceListResponse,
   AdminPlaceOperatingScheduleUpdateRequest,
@@ -117,18 +115,6 @@ export async function updateAdminPlaceTouristInfo(
 ) {
   const { data } = await customAxios.patch<AdminPlaceTouristInfoUpdateResponse>(
     `${ADMIN_PLACES_API_PATH}/${placeId}/tourist-info`,
-    payload
-  )
-
-  return data
-}
-
-export async function updateAdminPlaceKakaoPlaceId(
-  placeId: number,
-  payload: AdminPlaceKakaoPlaceIdUpdateRequest
-) {
-  const { data } = await customAxios.patch<AdminPlaceKakaoPlaceIdUpdateResponse>(
-    `${ADMIN_PLACES_API_PATH}/${placeId}/kakao-place-id`,
     payload
   )
 

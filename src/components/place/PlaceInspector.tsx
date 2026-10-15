@@ -313,8 +313,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       disabled={
                         updatingPlaceIds['basic-information'] !== null ||
                         updatingPlaceIds.geocoding !== null ||
-                        updatingPlaceIds.coordinates !== null ||
-                        updatingPlaceIds['kakao-place-id'] !== null
+                        updatingPlaceIds.coordinates !== null
                       }
                       onClick={onOpenDataCorrection}
                     >
@@ -342,10 +341,6 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                       <S.DetailMetaRow>
                         <span>좌표 출처</span>
                         <strong>{placeDetail.geocodingSource || '출처 정보 없음'}</strong>
-                      </S.DetailMetaRow>
-                      <S.DetailMetaRow>
-                        <span>Kakao place ID</span>
-                        <strong>{placeDetail.kakaoPlaceId || '연결 정보 없음'}</strong>
                       </S.DetailMetaRow>
                     </S.DetailMetaGroup>
                   </S.DetailMetaList>

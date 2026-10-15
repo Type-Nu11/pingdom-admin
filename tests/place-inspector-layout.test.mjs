@@ -71,3 +71,13 @@ test('technical information retains correction entry and resets for another plac
   await render({selectedPlace:{...place,id:2},placeDetail:{...place,id:2}})
   assert.equal(document.querySelector('details').open,false)
 })
+test('legacy Kakao ID is not displayed and remaining correction states still gate editing',async()=>{
+  await render({placeDetail:{...place,kakaoPlaceId:'legacy-id-not-for-display'}})
+  document.querySelector('details').open=true
+  assert.doesNotMatch(document.body.textContent,/Kakao|legacy-id-not-for-display/)
+  assert.equal(button('정보 보정').disabled,false)
+  for(const action of ['basic-information','coordinates','geocoding']) {
+    await render({updatingPlaceIds:new Proxy({}, {get:(_target,key)=>key===action?1:null})})
+    assert.equal(button('정보 보정').disabled,true,action)
+  }
+})

@@ -28,10 +28,13 @@ test('application source has no Kakao SDK, loader or client key dependency', asy
   assert.match(readme, /VITE_NAVER_MAP_CLIENT_ID=/)
 })
 
-test('Kakao data identifiers and geocoding provenance remain supported', async () => {
+test('legacy response fields remain compatible but Kakao ID operations are removed', async () => {
   const types = await readFile(new URL('src/types/adminPlace.types.ts', root), 'utf8')
   assert.match(types, /kakaoPlaceId\??:/)
   assert.match(types, /AdminPlaceGeocodingSource = 'KAKAO'/)
   const api = await readFile(new URL('src/api/adminPlaceApi.ts', root), 'utf8')
-  assert.match(api, /kakao-place-id/)
+  assert.doesNotMatch(api, /kakao-place-id|updateAdminPlaceKakaoPlaceId/)
+  assert.doesNotMatch(types, /AdminPlaceKakaoPlaceIdUpdate(?:Request|Response)/)
+  const mergeTypes = await readFile(new URL('src/types/adminPlaceMerge.types.ts', root), 'utf8')
+  assert.match(mergeTypes, /kakaoPlaceId:/)
 })

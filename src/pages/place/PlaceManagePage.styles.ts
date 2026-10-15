@@ -1677,48 +1677,6 @@ export const OperatingActionTabs = styled.div<{ $columns?: 3 | 4 }>`
   }
 `
 
-export const OperatingComparisonGrid = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-`
-
-export const OperatingComparisonItem = styled.div<{ $changed?: boolean }>`
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid ${({ $changed }) => ($changed ? neutral.primarySoft : neutral.border)};
-  border-radius: 8px;
-  background: ${({ $changed }) =>
-    $changed ? neutral.primaryTint : neutral.surfaceHighest};
-
-  span,
-  strong {
-    display: block;
-  }
-
-  span {
-    color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  strong {
-    margin-top: 4px;
-    overflow: hidden;
-    color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-`
-
-export const OperatingComparisonArrow = styled(MaterialIcon)`
-  color: ${neutral.muted};
-  font-size: 18px;
-`
-
 export const OperatingCoordinateComparison = styled.div`
   display: flex;
   align-items: center;

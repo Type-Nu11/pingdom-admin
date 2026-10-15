@@ -1,3 +1,4 @@
+import { token, installAuthLocks } from './helpers/auth-session.mjs'
 import assert from 'node:assert/strict'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import { JSDOM } from 'jsdom'
@@ -5,6 +6,7 @@ import { createServer } from 'vite'
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/places?placeId=8', pretendToBeVisual: true })
 for (const key of ['window', 'document', 'localStorage', 'sessionStorage', 'HTMLElement', 'Node', 'Event']) globalThis[key] = dom.window[key]
+installAuthLocks(window)
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act, StrictMode } = await import('react')
 const { createRoot } = await import('react-dom/client')
@@ -22,6 +24,7 @@ const KEY = 'pingdom-login-return'
 let root, context
 beforeEach(() => {
   localStorage.clear(); sessionStorage.clear()
+  auth.clearStoredAuth(undefined, 'logout'); sessionStorage.clear()
   window.history.replaceState(null, '', '/places?placeId=8')
   root = createRoot(document.getElementById('root'))
 })
@@ -69,7 +72,7 @@ test('guest entry strips selected target IDs and preserves a safe tab', () => {
 })
 
 test('explicit logout suppresses guest return and session notice', () => {
-  auth.saveLoginAuth({ ...USER, accessToken: 'token' })
+  auth.saveLoginAuth({ ...USER, username: 'synthetic', accessToken: token(1) })
   auth.clearStoredAuth()
   assert.match(auth.getAuthSessionNotice(), /만료/)
   auth.clearStoredAuth(undefined, 'logout')
@@ -80,7 +83,7 @@ test('explicit logout suppresses guest return and session notice', () => {
 })
 
 test('repeated auth cleanup retains reason, identity and original work route', () => {
-  auth.saveLoginAuth({ ...USER, accessToken: 'token' })
+  auth.saveLoginAuth({ ...USER, username: 'synthetic', accessToken: token(1) })
   auth.clearStoredAuth('test mismatch', 'session-changed')
   window.history.replaceState(null, '', '/login')
   auth.clearStoredAuth()
@@ -90,7 +93,7 @@ test('repeated auth cleanup retains reason, identity and original work route', (
 })
 
 test('dismissing reason removes both persisted and in-memory notice', () => {
-  auth.saveLoginAuth({ ...USER, accessToken: 'token' })
+  auth.saveLoginAuth({ ...USER, username: 'synthetic', accessToken: token(1) })
   auth.clearStoredAuth()
   auth.dismissAuthSessionNotice()
   assert.equal(auth.getAuthSessionNotice(), '')
@@ -123,7 +126,7 @@ async function mountRoutes() {
 
 test('StrictMode login restores saved target once despite effect replay', async () => {
   returns.rememberAuthExit(USER, 'expired', '/places?placeId=8')
-  auth.saveLoginAuth({ ...USER, accessToken: 'token' })
+  auth.saveLoginAuth({ ...USER, username: 'synthetic', accessToken: token(1) })
   window.history.replaceState(null, '', '/login')
   await mountRoutes()
   assert.equal(window.location.pathname + window.location.search, '/places?placeId=8')
@@ -140,7 +143,7 @@ test('protected guest redirect persists destination and selects merchant login',
 
 test('provider logout goes to login and leaves no return target', async () => {
   window.history.replaceState(null, '', '/merchant/menus')
-  auth.saveLoginAuth({ id: 1, role: 'MERCHANT_OWNER', accessToken: 'token' })
+  auth.saveLoginAuth({ id: 1, role: 'MERCHANT_OWNER', username: 'synthetic', accessToken: token(1) })
   client.defaults.adapter = async config => ({ config, data: {}, status: 200, headers: {}, statusText: 'OK' })
   await mountRoutes()
   await act(async () => context.logout())
@@ -151,29 +154,28 @@ test('provider logout goes to login and leaves no return target', async () => {
 
 test('other-tab logout explains session change without retaining target identity', async () => {
   window.history.replaceState(null, '', '/merchant/menus')
-  auth.saveLoginAuth({ id: 1, role: 'MERCHANT_OWNER', accessToken: 'token' })
+  auth.saveLoginAuth({ id: 1, role: 'MERCHANT_OWNER', username: 'synthetic', accessToken: token(1) })
   await mountRoutes()
-  const dispatch = window.dispatchEvent
-  window.dispatchEvent = () => true
-  auth.clearStoredAuth(undefined, 'logout')
-  window.dispatchEvent = dispatch
-  await act(async () => window.dispatchEvent(new window.StorageEvent('storage', { key: 'pingdom-auth-storage-commit', storageArea: localStorage })))
+  await act(async () => {
+    localStorage.setItem('pingdom-auth-control', JSON.stringify({ id: 'remote-logout', blocked: true }))
+    window.dispatchEvent(new window.StorageEvent('storage', { key: 'pingdom-auth-control', storageArea: localStorage }))
+  })
   assert.equal(window.location.pathname, '/login')
   assert.match(document.body.textContent, /세션이 변경/)
   assert.equal(returns.readLoginReturn().userId, null)
   assert.equal(returns.readLoginReturn().target, null)
 })
 
-test('remote account switch clears a pending return from the previous identity', async () => {
+test('remote session change clears a pending return from the previous identity', async () => {
   window.history.replaceState(null, '', '/merchant/menus')
-  auth.saveLoginAuth({ id: 1, role: 'MERCHANT_OWNER', accessToken: 'token' })
+  auth.saveLoginAuth({ id: 1, role: 'MERCHANT_OWNER', username: 'synthetic', accessToken: token(1) })
   await mountRoutes()
   returns.rememberAuthExit({ id: 1, role: 'MERCHANT_OWNER' }, 'expired', '/merchant/menus')
-  const dispatch = window.dispatchEvent
-  window.dispatchEvent = () => true
-  auth.saveLoginAuth({ id: 2, role: 'MERCHANT_OWNER', accessToken: 'other' })
-  window.dispatchEvent = dispatch
-  await act(async () => window.dispatchEvent(new window.StorageEvent('storage', { key: 'pingdom-auth-storage-commit', storageArea: localStorage })))
-  assert.equal(context.user.id, 2)
-  assert.equal(returns.readLoginReturn(), null)
+  await act(async () => {
+    localStorage.setItem('pingdom-auth-control', JSON.stringify({ id: 'remote-transition', blocked: true }))
+    window.dispatchEvent(new window.StorageEvent('storage', { key: 'pingdom-auth-control', storageArea: localStorage }))
+  })
+  assert.equal(auth.getStoredAuthState(), null)
+  assert.equal(returns.readLoginReturn().userId, null)
+  assert.equal(returns.readLoginReturn().target, null)
 })

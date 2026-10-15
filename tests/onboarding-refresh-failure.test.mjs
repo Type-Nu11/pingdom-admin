@@ -1,3 +1,4 @@
+import { token, installAuthLocks } from './helpers/auth-session.mjs'
 import assert from 'node:assert/strict'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import axios from 'axios'
@@ -8,6 +9,7 @@ const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/' })
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) {
   globalThis[key] = dom.window[key]
 }
+installAuthLocks(window)
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
@@ -38,7 +40,7 @@ async function mount() {
 }
 
 beforeEach(() => {
-  auth.saveLoginAuth({ accessToken: 'A', id: 1, username: 'merchant' })
+  auth.saveLoginAuth({ accessToken: token(1, '-old'), role: 'ADMIN', id: 1, username: 'merchant' })
   failedPath = null
   directNotFound = false
   refreshes = 0
@@ -68,7 +70,7 @@ test('initial refresh 404 is a load error, not an empty onboarding result', asyn
   assert.equal(latest.status, 'error')
   assert.ok(latest.errorMessage)
   assert.ok(refreshes > 0)
-  assert.equal(auth.getStoredAccessToken(), 'A')
+  assert.equal(auth.getStoredAccessToken(), token(1, '-old'))
 })
 
 test('refresh 404 preserves loaded onboarding data and allows retry', async () => {
@@ -79,7 +81,7 @@ test('refresh 404 preserves loaded onboarding data and allows retry', async () =
   assert.equal(latest.status, 'error')
   assert.ok(latest.errorMessage)
   assert.deepEqual(latest.profile, profile)
-  assert.equal(auth.getStoredAccessToken(), 'A')
+  assert.equal(auth.getStoredAccessToken(), token(1, '-old'))
   failedPath = null
   await act(async () => latest.fetchOnboarding())
   assert.equal(latest.status, 'ready')

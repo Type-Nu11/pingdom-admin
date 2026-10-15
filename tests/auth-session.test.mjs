@@ -1,3 +1,4 @@
+import { token } from './helpers/auth-session.mjs'
 import assert from 'node:assert/strict'
 import { after, beforeEach, test } from 'node:test'
 import axios from 'axios'
@@ -10,7 +11,9 @@ globalThis.localStorage = {
   removeItem: (key) => storage.delete(key),
 }
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
-const auth = await server.ssrLoadModule('/src/utils/authStorage.ts')
+const rawAuth = await server.ssrLoadModule('/src/utils/authStorage.ts')
+const auth = { ...rawAuth, saveLoginAuth: data => rawAuth.saveLoginAuth({ role: 'ADMIN', ...data }) }
+const A = token(1, '-old'), B = token(2, '-old')
 const { default: client, runAuthTransition } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const authApi = await server.ssrLoadModule('/src/api/authApi.ts')
 const { getAuthErrorMessage } = await server.ssrLoadModule('/src/api/authError.ts')
@@ -19,7 +22,7 @@ after(async () => {
   axios.defaults.adapter = originalAdapter
   await server.close()
 })
-beforeEach(() => auth.saveLoginAuth({ accessToken: 'A', id: 1, username: 'A' }))
+beforeEach(() => auth.saveLoginAuth({ accessToken: A, id: 1, username: A }))
 
 function accessToken(userId, type = 'access') {
   const payload = Buffer.from(JSON.stringify({ sub: String(userId), type, username: '테스트 계정' })).toString('base64url')
@@ -61,7 +64,7 @@ for (const [status, code, category] of [
     assert.equal(error.category, category)
     assert.equal(error.status, status)
     assert.equal(error.isRefreshFailure, true)
-    assert.equal(auth.getStoredAccessToken(), 'A')
+    assert.equal(auth.getStoredAccessToken(), A)
     assert.equal(auth.getAuthSessionId(), sessionId)
     assert.equal(requests, 1)
     assert.notEqual(error.response?.data?.code, 'INVALID_TOKEN')
@@ -88,7 +91,7 @@ test('a later request can refresh after a temporary failure', async () => {
     return response(config, { accessToken: accessToken(1) })
   }
   client.defaults.adapter = async config => {
-    if (config.headers.get('Authorization') === 'Bearer A') throw unauthorized(config)
+    if (config.headers.get('Authorization') === 'Bearer ' + A) throw unauthorized(config)
     return response(config, 'ok')
   }
   await assert.rejects(client.get('/detail'))
@@ -119,10 +122,10 @@ for (const transition of ['logout', 'switch']) {
     const pending = client.post('/test-write', {}).catch((error) => error)
     await started.promise
     if (transition === 'logout') auth.clearStoredAuth()
-    else auth.saveLoginAuth({ accessToken: 'B', id: 2, username: 'B' })
+    else auth.saveLoginAuth({ accessToken: B, id: 2, username: B })
     refresh.resolve({ accessToken: 'late-A' })
     assert.ok(axios.isCancel(await pending))
-    assert.equal(auth.getStoredAccessToken(), transition === 'logout' ? '' : 'B')
+    assert.equal(auth.getStoredAccessToken(), transition === 'logout' ? '' : B)
     assert.equal(calls, 1)
   })
 }
@@ -140,7 +143,7 @@ test('same-session simultaneous 401 responses share one refresh', async () => {
   }
   client.defaults.adapter = async (config) => {
     calls++
-    if (config.headers.get('Authorization') === 'Bearer A') throw unauthorized(config)
+    if (config.headers.get('Authorization') === 'Bearer ' + A) throw unauthorized(config)
     return response(config, 'done')
   }
   const pending = Promise.all([client.post('/one'), client.post('/two')])
@@ -163,14 +166,14 @@ for (const outcome of ['success', '401']) {
       started.resolve()
       await gate.promise
       if (outcome === '401') throw unauthorized(config)
-      return response(config, { privateData: 'A' })
+      return response(config, { privateData: A })
     }
     const pending = client.get('/detail').catch((error) => error)
     await started.promise
-    auth.saveLoginAuth({ accessToken: 'B', id: 2 })
+    auth.saveLoginAuth({ accessToken: B, id: 2 })
     gate.resolve()
     assert.ok(axios.isCancel(await pending))
-    assert.equal(auth.getStoredAccessToken(), 'B')
+    assert.equal(auth.getStoredAccessToken(), B)
     assert.equal(calls, 1)
   })
 }
@@ -186,10 +189,10 @@ test('late refresh failure cannot clear a new session', async () => {
   client.defaults.adapter = async (config) => { throw unauthorized(config) }
   const pending = client.get('/detail').catch((error) => error)
   await started.promise
-  auth.saveLoginAuth({ accessToken: 'B', id: 2 })
+  auth.saveLoginAuth({ accessToken: B, id: 2 })
   gate.resolve()
   assert.ok(axios.isCancel(await pending))
-  assert.equal(auth.getStoredAccessToken(), 'B')
+  assert.equal(auth.getStoredAccessToken(), B)
 })
 
 test('new-session refresh is independent of a pending old-session refresh', async () => {
@@ -207,12 +210,12 @@ test('new-session refresh is independent of a pending old-session refresh', asyn
   }
   const oldRequest = client.post('/old-write').catch((error) => error)
   await started[0].promise
-  auth.saveLoginAuth({ accessToken: 'B', id: 2 })
+  auth.saveLoginAuth({ accessToken: B, id: 2 })
   const newRequest = client.get('/new-detail')
   await started[1].promise
   gates[0].resolve({ accessToken: 'late-A' })
   assert.ok(axios.isCancel(await oldRequest))
-  assert.equal(auth.getStoredAccessToken(), 'B')
+  assert.equal(auth.getStoredAccessToken(), B)
   gates[1].resolve({ accessToken: accessToken(2) })
   assert.equal((await newRequest).data, 'B result')
   assert.equal(auth.getStoredAccessToken(), accessToken(2))
@@ -246,7 +249,7 @@ test('auth transition aborts and settles refresh before sending logout and login
   const old = client.post('/old-write').catch((error) => error)
   await started.promise
   const logout = runAuthTransition(async () => { auth.clearStoredAuth(); await authApi.logout() })
-  const login = runAuthTransition(async () => { auth.saveLoginAuth(await authApi.login({ username: 'B', password: 'mock' })) })
+  const login = runAuthTransition(async () => { auth.saveLoginAuth(await authApi.login({ username: B, password: 'mock' })) })
   await aborted.promise
   assert.ok(axios.isCancel(await client.post('/blocked-during-transition').catch((error) => error)))
   assert.deepEqual(events, ['refresh-aborted'])
@@ -261,7 +264,7 @@ test('auth transition aborts and settles refresh before sending logout and login
 test('late cookie overwrite cannot make B writes retry as A on the next refresh', async () => {
   const started = deferred()
   const gate = deferred()
-  let cookie = 'A'
+  let cookie = A
   let refreshes = 0
   const writes = []
   axios.defaults.adapter = async (config) => {
@@ -269,7 +272,7 @@ test('late cookie overwrite cannot make B writes retry as A on the next refresh'
     if (refreshes++ === 0) { started.resolve(); await gate.promise }
     // Model a browser applying Set-Cookie before Axios handles the response.
     cookie = cookieOwner
-    return response(config, { accessToken: accessToken(cookieOwner === 'A' ? 1 : 2) })
+    return response(config, { accessToken: accessToken(cookieOwner === A ? 1 : 2) })
   }
   client.defaults.adapter = async (config) => {
     writes.push(config.headers.get('Authorization'))
@@ -278,15 +281,15 @@ test('late cookie overwrite cannot make B writes retry as A on the next refresh'
   const old = client.post('/old-write').catch((error) => error)
   await started.promise
   // An uncoordinated login (e.g. another tab) can still change the shared cookie.
-  cookie = 'B'
-  auth.saveLoginAuth({ id: 2, username: 'B', accessToken: 'B' })
+  cookie = B
+  auth.saveLoginAuth({ id: 2, username: B, accessToken: B })
   gate.resolve()
   assert.ok(axios.isCancel(await old))
-  assert.equal(cookie, 'A')
-  assert.equal(auth.getStoredAccessToken(), 'B')
+  assert.equal(cookie, A)
+  assert.equal(auth.getStoredAccessToken(), B)
   const result = await client.post('/B-write').catch((error) => error)
   assert.ok(axios.isAxiosError(result))
-  assert.deepEqual(writes, ['Bearer A', 'Bearer B'])
+  assert.deepEqual(writes, ['Bearer ' + A, 'Bearer ' + B])
   assert.equal(auth.getStoredAccessToken(), '')
   assert.equal(auth.getStoredAuthState(), null)
   assert.match(auth.getAuthSessionNotice(), /다시 로그인/)
@@ -313,17 +316,17 @@ for (const [label, token] of [
 test('storage rejects mismatched identity even when called directly', () => {
   const session = auth.getAuthSessionId()
   assert.equal(auth.saveRefreshedAuthTokens({ accessToken: accessToken(2) }, session), false)
-  assert.equal(auth.getStoredAccessToken(), 'A')
+  assert.equal(auth.getStoredAccessToken(), A)
   assert.equal(auth.saveRefreshedAuthTokens({ accessToken: accessToken(1) }, session), true)
   assert.equal(auth.getAuthSessionId(), session)
 })
 
 test('failed transition releases the queue and allows a later login and refresh', async () => {
   await assert.rejects(runAuthTransition(async () => { throw new Error('mock login failure') }))
-  await runAuthTransition(async () => auth.saveLoginAuth({ id: 2, accessToken: 'B' }))
+  await runAuthTransition(async () => auth.saveLoginAuth({ id: 2, accessToken: B }))
   axios.defaults.adapter = async (config) => response(config, { accessToken: accessToken(2) })
   client.defaults.adapter = async (config) => {
-    if (config.headers.get('Authorization') === 'Bearer B') throw unauthorized(config)
+    if (config.headers.get('Authorization') === 'Bearer ' + B) throw unauthorized(config)
     return response(config, 'ok')
   }
   assert.equal((await client.get('/detail')).data, 'ok')

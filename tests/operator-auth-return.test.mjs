@@ -1,3 +1,4 @@
+import { token, installAuthLocks } from './helpers/auth-session.mjs'
 import assert from 'node:assert/strict'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import { JSDOM } from 'jsdom'
@@ -5,6 +6,7 @@ import { createServer } from 'vite'
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/operator/places?placeId=8' })
 for (const key of ['window', 'document', 'localStorage', 'sessionStorage', 'HTMLElement', 'Node', 'Event']) globalThis[key] = dom.window[key]
+installAuthLocks(window)
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act, StrictMode } = await import('react')
 const { createRoot } = await import('react-dom/client')
@@ -18,9 +20,10 @@ const { default: LoginPage } = await server.ssrLoadModule('/src/pages/login/Logi
 const { MerchantProtectedRoute, ProtectedRoute } = await server.ssrLoadModule('/src/app/router/ProtectedRoute.tsx')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 let root, context
-const user = role => ({ id: 1, role, username: 'synthetic', accessToken: 'synthetic-token' })
+const user = role => ({ id: 1, role, username: 'synthetic', accessToken: token(1) })
 beforeEach(() => {
   localStorage.clear(); sessionStorage.clear()
+  auth.clearStoredAuth(undefined, 'logout'); sessionStorage.clear()
   window.history.replaceState(null, '', '/operator/places?placeId=8&keyword=private')
   client.defaults.adapter = async config => ({ config, data: { notifications: [], unreadCount: 0, items: [], reports: [], requests: [], candidates: [], groups: [], profiles: [], reservations: [], applications: [], anomalies: [], total: 0, totalCount: 0, totalElements: 0, totalPages: 0, page: 1, limit: 20, hasNext: false }, status: 200, headers: {}, statusText: 'OK' })
   root = createRoot(document.getElementById('root'))

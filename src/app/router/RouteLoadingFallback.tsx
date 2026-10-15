@@ -4,22 +4,42 @@ import { adminColors } from '../../styles/theme'
 interface RouteLoadingFallbackProps {
   title?: string
   description?: string
+  onRetry?: () => void
+  onSignIn?: () => void
 }
 
 export function RouteLoadingFallback({
   title = '관리자 화면을 불러오는 중입니다.',
   description = '잠시만 기다리면 요청한 화면으로 이동합니다.',
+  onRetry,
+  onSignIn,
 }: RouteLoadingFallbackProps) {
   return (
-    <LoadingPage role="status" aria-live="polite">
+    <LoadingPage role={onRetry ? 'alert' : 'status'} aria-live="polite">
       <LoadingCard>
         <LoadingIcon aria-hidden="true">admin_panel_settings</LoadingIcon>
         <LoadingTitle>{title}</LoadingTitle>
         <LoadingDescription>{description}</LoadingDescription>
+        {onRetry ? <RecoveryButton type="button" onClick={onRetry}>다시 확인</RecoveryButton> : null}
+        {onSignIn ? <RecoveryButton type="button" onClick={onSignIn}>직접 로그인</RecoveryButton> : null}
       </LoadingCard>
     </LoadingPage>
   )
 }
+
+const RecoveryButton = styled.button`
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid ${adminColors.border};
+  border-radius: 8px;
+  background: ${adminColors.surface};
+  color: ${adminColors.primaryForeground};
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid ${adminColors.primaryForeground}; outline-offset: 2px; }
+`
 
 const LoadingPage = styled.main`
   min-height: 100vh;

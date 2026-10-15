@@ -1,3 +1,4 @@
+import { token, installAuthLocks } from './helpers/auth-session.mjs'
 import assert from 'node:assert/strict'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import axios from 'axios'
@@ -6,6 +7,7 @@ import { createServer } from 'vite'
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/' })
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) globalThis[key] = dom.window[key]
+installAuthLocks(window)
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
@@ -83,7 +85,7 @@ for (const [name, useHook] of [['admin', useAdminScouts], ['merchant', useMercha
   for (const refresh of [false, true]) {
     for (const status of [401, 403, 400, 429, 500, undefined]) {
       test(`${name}: ${refresh ? 'refresh' : 'resource'} ${status ?? 'network'} uses shared logout policy`, async () => {
-        if (refresh) storage.saveLoginAuth({ accessToken: 'A', id: 1, username: 'test' })
+        if (refresh) storage.saveLoginAuth({ accessToken: token(1, '-old'), role: 'ADMIN', id: 1, username: 'test' })
         client.defaults.adapter = async config => { throw failure(refresh ? 401 : status, config) }
         axios.defaults.adapter = async config => {
           assert.equal(config.url, '/auth/token/refresh')
@@ -98,15 +100,15 @@ for (const [name, useHook] of [['admin', useAdminScouts], ['merchant', useMercha
   }
 
   test(`${name}: late previous-session 401 cannot clear the new account`, async () => {
-    storage.saveLoginAuth({ accessToken: 'A', id: 1, username: 'first' })
+    storage.saveLoginAuth({ accessToken: token(1, '-old'), role: 'ADMIN', id: 1, username: 'first' })
     let release
     const gate = new Promise(resolve => { release = resolve })
     client.defaults.adapter = async config => { await gate; throw failure(401, config) }
     axios.defaults.adapter = async () => { assert.fail('old session must not refresh') }
     await mount(useHook)
-    storage.saveLoginAuth({ accessToken: 'B', id: 2, username: 'second' })
+    storage.saveLoginAuth({ accessToken: token(2, '-old'), role: 'ADMIN', id: 2, username: 'second' })
     await act(async () => { release(); await gate })
     assert.equal(clears, 0)
-    assert.equal(storage.getStoredAccessToken(), 'B')
+    assert.equal(storage.getStoredAccessToken(), token(2, '-old'))
   })
 }

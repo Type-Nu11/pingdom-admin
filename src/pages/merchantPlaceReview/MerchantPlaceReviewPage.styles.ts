@@ -109,23 +109,6 @@ export const ReviewContent = styled.p`
   white-space: pre-wrap;
 `
 
-export const ImageList = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
-  overflow-x: auto;
-`
-
-export const ReviewImage = styled.img`
-  width: 82px;
-  height: 82px;
-  flex: 0 0 auto;
-  display: block;
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  object-fit: cover;
-`
-
 export const ReviewFooter = styled.div`
   display: flex;
   align-items: center;

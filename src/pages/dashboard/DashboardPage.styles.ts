@@ -99,59 +99,6 @@ export const SideMenu = styled.div`
   }
 `
 
-export const MenuButton = styled.button<{ $active?: boolean }>`
-  width: 100%;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 24px;
-  border: 0;
-  border-right: 2px solid transparent;
-  background: transparent;
-  color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.muted)};
-  font: inherit;
-  font-size: 14px;
-  font-weight: ${({ $active }) => ($active ? 700 : 500)};
-  text-align: left;
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-
-  &:hover {
-    background: ${neutral.primaryTint};
-    color: ${neutral.primaryForeground};
-  }
-
-  ${({ $active }) =>
-    $active &&
-    css`
-      border-right-color: ${neutral.primary};
-      background: ${neutral.primaryTint};
-
-      ${MaterialIcon} {
-        font-variation-settings:
-          'FILL' 1,
-          'wght' 400,
-          'GRAD' 0,
-          'opsz' 20;
-      }
-    `}
-
-  @media (max-width: 900px) {
-    width: auto;
-    flex-shrink: 0;
-    border-right: 0;
-    border-bottom: 2px solid transparent;
-    border-radius: 8px;
-
-    ${({ $active }) =>
-      $active &&
-      css`
-        border-bottom-color: ${neutral.primary};
-      `}
-  }
-`
-
 export const SideFooter = styled.div`
   padding: 18px 24px 24px;
   border-top: 1px solid ${neutral.border};
@@ -278,26 +225,6 @@ export const TopActions = styled.div`
   gap: 8px;
 `
 
-export const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: ${radius.pill};
-  background: transparent;
-  color: ${neutral.muted};
-  cursor: pointer;
-
-  &:hover { background: ${neutral.primaryTint}; color: ${neutral.primaryForeground}; }
-
-  &:focus-visible {
-    outline: 3px solid ${neutral.primarySoft};
-    outline-offset: 2px;
-  }
-`
-
 export const PageContent = styled.main`
   width: min(calc(100% - 64px), 1280px);
   min-height: calc(100vh - 64px);
@@ -326,14 +253,6 @@ export const PageHeader = styled.div`
 
 export const PageHeaderMain = styled.div`
   min-width: 0;
-`
-
-export const PageTitle = styled.h1`
-  margin: 0 0 6px;
-  color: ${neutral.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
 `
 
 export const PageDescription = styled.p`
@@ -375,10 +294,6 @@ export const Section = styled.section`
 
 export const OperationalSection = styled(Section)`
   margin-top: 24px;
-`
-
-export const PlaceholderSection = styled(Section)`
-  margin-top: 48px;
 `
 
 export const SectionHeader = styled.div`
@@ -429,12 +344,6 @@ export const DashboardBottomGrid = styled.div`
   }
 `
 
-export const PlaceholderGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
 export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action'; $compact?: boolean }>`
   min-width: 0;
   display: flex;
@@ -443,36 +352,6 @@ export const OperationsPanel = styled.section<{ $tone?: 'neutral' | 'action'; $c
   border: 0;
   border-radius: ${radius.lg};
   background: ${({ $tone }) => ($tone === 'action' ? neutral.surfaceHighest : neutral.surfaceLow)};
-`
-
-export const OperationsPanelHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-`
-
-export const OperationsPanelTitle = styled.h3`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 700;
-`
-
-export const PanelCount = styled.span`
-  color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 500;
-`
-
-export const PanelUpdatingText = styled.span`
-  color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 500;
 `
 
 export const ActivityTabs = styled.div`
@@ -672,98 +551,6 @@ export const ActivityBadge = styled.span<{
   font-size: 12px;
   font-weight: 500;
   line-height: 1.3;
-`
-
-export const PendingList = styled.div`
-  max-height: 360px;
-  overflow-y: auto;
-  padding-right: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  scrollbar-width: thin;
-  scrollbar-color: ${neutral.border} transparent;
-`
-
-export const PendingItem = styled.button`
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px 0;
-  border: 0;
-  border-bottom: 1px solid ${neutral.borderSoft};
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-
-  &:last-child {
-    border-bottom: 0;
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 1;
-  }
-
-  &:hover:not(:disabled) {
-    color: ${neutral.primaryForeground};
-  }
-
-  &:focus-visible {
-    outline: 3px solid ${neutral.primarySoft};
-    outline-offset: 3px;
-    border-radius: 6px;
-  }
-`
-
-export const PendingItemMain = styled.span`
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  strong,
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  strong {
-    color: ${neutral.text};
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  span {
-    color: ${neutral.warningText};
-    font-size: 12px;
-  }
-`
-
-export const PendingItemMeta = styled.span`
-  max-width: 45%;
-  overflow-wrap: anywhere;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  color: ${neutral.softText};
-  font-size: 12px;
-
-  ${PendingItem}:hover:not(:disabled) & {
-    color: ${neutral.primaryForeground};
-  }
-
-  ${MaterialIcon} {
-    font-size: 16px;
-  }
 `
 
 export const EmptyState = styled.p`

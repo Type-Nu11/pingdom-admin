@@ -12,11 +12,13 @@ import { GlobalStyle } from '../../src/styles/globalStyle'
 
 const response = (config, data = {}) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 const failure = (config, status) => { throw new axios.AxiosError('Synthetic failure', 'ERR_BAD_RESPONSE', config, {}, { ...response(config), status }) }
-axios.defaults.adapter = async config => failure(config, 401)
+let verifiedUser = null
+axios.defaults.adapter = async config => config.url === '/users/me' && verifiedUser ? response(config, verifiedUser) : failure(config, 401)
 client.defaults.adapter = async config => {
   if (config.url === '/auth/admin/login' || config.url === '/auth/login') {
     const role = config.url === '/auth/admin/login' ? 'ADMIN' : 'MERCHANT_OWNER'
-    return response(config, { id: 1, username: 'synthetic-operator', role, accessToken: `header.${btoa(JSON.stringify({ sub: '1', type: 'access' }))}.signature` })
+    verifiedUser = { id: 1, username: 'synthetic-operator', role, accessToken: `header.${btoa(JSON.stringify({ sub: '1', type: 'access' }))}.signature` }
+    return response(config, verifiedUser)
   }
   if (config.url === '/auth/logout') return response(config)
   if (config.method !== 'get') throw new Error('Business mutations forbidden in deployment QA')

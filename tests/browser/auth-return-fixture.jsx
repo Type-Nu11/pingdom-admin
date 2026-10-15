@@ -20,6 +20,7 @@ const response = (config, data = {}) => ({ config, data, status: 200, statusText
 const reject = (config, status) => { throw new axios.AxiosError('Synthetic failure', 'ERR_BAD_RESPONSE', config, {}, { ...response(config), status }) }
 axios.defaults.adapter = async config => {
   window.qaRequests.push(config.url)
+  if (config.url === '/users/me') return response(config, login(window.qaLogin.id, window.qaLogin.role))
   if (config.url !== '/auth/token/refresh') throw new Error('Unexpected raw request')
   if (window.qaMode === 'refresh503') return reject(config, 503)
   if (window.qaMode === 'timeout') throw new axios.AxiosError('Synthetic timeout', 'ECONNABORTED', config)

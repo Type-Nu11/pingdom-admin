@@ -1,5 +1,3 @@
-import type { AuthErrorResponse } from './auth.types'
-
 export type MerchantPlaceRegistrationStatus =
   | 'DRAFT'
   | 'PENDING'
@@ -123,14 +121,3 @@ export interface MerchantPlaceRegistrationRequest {
   timezone?: string
   operatingDays?: MerchantPlaceRegistrationOperatingDay[]
 }
-
-export interface MerchantPlaceRegistrationPageResponse {
-  applications: MerchantPlaceRegistration[]
-  page: number
-  limit: number
-  totalCount: number
-  totalPages: number
-  hasNext: boolean
-}
-
-export type MerchantPlaceRegistrationErrorResponse = AuthErrorResponse<string>

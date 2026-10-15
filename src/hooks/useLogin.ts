@@ -5,6 +5,9 @@ import { login as requestLogin, type LoginMode } from '../api/authApi'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import type { LoginErrorResponse, LoginRequest } from '../types/auth.types'
+import { beginLoginAttempt, getAuthSessionId } from '../utils/authStorage'
+import { requestVerifiedProfile } from '../api/authSessionApi'
+import { AuthSessionError } from '../utils/authSessionError'
 
 const LOGIN_ERROR_MESSAGE = '로그인 중 오류가 발생했습니다.'
 const LOGIN_CATEGORY_MESSAGES = {
@@ -66,10 +69,17 @@ export function useLogin(mode: LoginMode = 'admin') {
         password,
       }
 
-      await runAuthTransition(async () => {
+      const attempt = beginLoginAttempt()
+      const verifiedLogin = await runAuthTransition(async () => {
+        if (getAuthSessionId() !== attempt) throw new AuthSessionError('다른 창에서 로그인 상태가 변경되었습니다. 다시 시도해주세요.')
         const data = await requestLogin(payload, mode)
-        login(data)
+        const state = await requestVerifiedProfile(data.accessToken)
+        if (mode === 'admin' && state.user?.role !== 'ADMIN') throw new AuthSessionError('관리자 권한이 있는 계정으로 로그인해주세요.')
+        if (getAuthSessionId() !== attempt) throw new AuthSessionError('다른 창에서 로그인 상태가 변경되었습니다. 다시 시도해주세요.')
+        return { ...data, ...state.user, accessToken: state.accessToken } as typeof data
       })
+      if (getAuthSessionId() !== attempt) throw new AuthSessionError('다른 창에서 로그인 상태가 변경되었습니다. 다시 시도해주세요.')
+      login(verifiedLogin)
 
       return 'success' satisfies LoginResult
     } catch (error) {
@@ -92,7 +102,7 @@ export function useLogin(mode: LoginMode = 'admin') {
           return 'credential-error' satisfies LoginResult
         }
       } else {
-        setErrorMessage(LOGIN_ERROR_MESSAGE)
+        setErrorMessage(error instanceof AuthSessionError ? error.message : LOGIN_ERROR_MESSAGE)
         logDebugError('로그인 실패', error)
       }
 

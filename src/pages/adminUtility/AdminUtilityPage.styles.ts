@@ -39,57 +39,12 @@ export const IntroText = styled.div`
   min-width: 0;
 `
 
-export const Eyebrow = styled.p`
-  margin: 0 0 6px;
-  color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0;
-`
-
-export const IntroTitle = styled.h1`
-  margin: 0;
-  color: ${neutral.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
-`
-
 export const IntroDescription = styled.p`
   max-width: 640px;
   margin: 8px 0 0;
   color: ${neutral.muted};
   font-size: 14px;
   line-height: 1.3;
-`
-
-export const StatusBadge = styled.span<{ $tone?: 'ready' | 'warning' }>`
-  min-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 8px;
-  border: 1px solid
-    ${({ $tone }) =>
-      $tone === 'warning' ? neutral.warning : neutral.primarySoft};
-  border-radius: ${radius.pill};
-  background: ${({ $tone }) =>
-    $tone === 'warning' ? neutral.warningTint : neutral.primaryTint};
-  color: ${({ $tone }) =>
-    $tone === 'warning' ? neutral.warningText : neutral.primaryForeground};
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-`
-
-export const SummaryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-
-  @media (max-width: 860px) {
-    grid-template-columns: 1fr;
-  }
 `
 
 export const SummaryBar = styled.section`
@@ -162,18 +117,6 @@ export const FilterPanel = styled.section`
   border: 0;
   border-radius: ${radius.md};
   background: ${neutral.surfaceLow};
-`
-
-export const FilterTopLine = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-
-  @media (max-width: 760px) {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 `
 
 export const ResultSummary = styled.p`
@@ -360,99 +303,6 @@ const inputControlStyle = css`
   }
 `
 
-export const DatePickerRoot = styled.div`
-  position: relative;
-  min-width: 0;
-`
-
-export const DatePickerButton = styled.button`
-  ${inputControlStyle}
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  cursor: pointer;
-  text-align: left;
-
-  .date-picker-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .date-picker-icon {
-    flex: 0 0 auto;
-    color: ${neutral.primaryForeground};
-    font-size: 18px;
-  }
-
-  &:hover {
-    border-color: ${neutral.primarySoft};
-  }
-`
-
-export const DatePickerPopover = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: 20;
-  width: min(300px, calc(100vw - 40px));
-  padding: 14px;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${neutral.surface};
-  box-shadow: 0 18px 42px ${neutral.shadow};
-`
-
-export const DatePickerHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-`
-
-export const DatePickerTitle = styled.strong`
-  color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
-`
-
-export const DatePickerIconButton = styled.button`
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: ${radius.pill};
-  background: transparent;
-  color: ${neutral.muted};
-  cursor: pointer;
-
-  &:hover {
-    background: ${neutral.primaryTint};
-    color: ${neutral.primaryForeground};
-  }
-`
-
-export const DatePickerWeekdays = styled.div`
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 4px;
-  color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-`
-
-export const DatePickerGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-`
-
 export const DatePickerDayButton = styled.button<{
   $outside?: boolean
   $selected?: boolean
@@ -478,166 +328,6 @@ export const DatePickerDayButton = styled.button<{
       $selected ? neutral.primaryForeground : neutral.primaryTint};
     color: ${({ $selected }) => ($selected ? neutral.primaryText : neutral.primaryForeground)};
   }
-`
-
-export const DatePickerFooter = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid ${neutral.borderSoft};
-`
-
-export const DatePickerTimeField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-`
-
-export const DatePickerTimeLabel = styled.span`
-  color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
-`
-
-export const DatePickerTimePicker = styled.div`
-  position: relative;
-`
-
-export const DatePickerTimeButton = styled.button`
-  min-width: 118px;
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: ${radius.md};
-  background: ${neutral.surfaceLow};
-  color: ${neutral.text};
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-
-  > span {
-    flex: 1;
-    text-align: left;
-    font-variant-numeric: tabular-nums;
-  }
-
-  > span:first-child {
-    color: ${neutral.primaryForeground};
-    font-size: 18px;
-  }
-
-  > span:last-child {
-    color: ${neutral.softText};
-    font-size: 18px;
-  }
-
-  &:hover,
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px ${neutral.primaryTint};
-  }
-`
-
-export const DatePickerTimeMenu = styled.div`
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 2;
-  width: 174px;
-  padding: 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 10px;
-  background: ${neutral.surface};
-  box-shadow: 0 14px 32px ${neutral.shadow};
-`
-
-export const DatePickerTimeMenuTitle = styled.strong`
-  display: block;
-  margin-bottom: 4px;
-  color: ${neutral.strongText};
-  font-size: 12px;
-  font-weight: 700;
-`
-
-export const DatePickerTimePreview = styled.span`
-  display: block;
-  margin-bottom: 8px;
-  color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-`
-
-export const DatePickerTimeColumns = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
-`
-
-export const DatePickerTimeColumn = styled.div`
-  min-width: 0;
-`
-
-export const DatePickerTimeColumnLabel = styled.span`
-  display: block;
-  margin-bottom: 4px;
-  color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-`
-
-export const DatePickerTimeOptions = styled.div`
-  max-height: 132px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow-y: auto;
-  padding: 2px;
-  border: 0;
-  border-radius: 7px;
-  background: ${neutral.surfaceLow};
-
-  scrollbar-width: thin;
-  scrollbar-color: ${neutral.border} transparent;
-`
-
-export const DatePickerTimeOption = styled.button<{ $selected?: boolean }>`
-  min-height: 28px;
-  border: 0;
-  border-radius: ${radius.sm};
-  background: ${({ $selected }) =>
-    $selected ? neutral.primaryTint : 'transparent'};
-  color: ${({ $selected }) =>
-    $selected ? neutral.primaryForeground : neutral.text};
-  font: inherit;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-
-  &:hover,
-  &:focus-visible {
-    outline: none;
-    background: ${neutral.primaryTint};
-    color: ${neutral.primaryForeground};
-  }
-`
-
-export const DatePickerTimeSeparator = styled.span`
-  align-self: end;
-  padding-bottom: 7px;
-  color: ${neutral.primaryForeground};
-  font-size: 16px;
-  font-weight: 700;
 `
 
 export const FilterMenuRoot = styled.div`
@@ -754,42 +444,6 @@ export const DetailFilterActions = styled(FilterActions)`
   }
 `
 
-export const MetricItem = styled.section`
-  min-width: 0;
-  min-height: 92px;
-  padding: 14px 16px;
-  border: 0;
-  border-radius: ${radius.md};
-  background: ${neutral.surfaceLow};
-`
-
-export const MetricLabel = styled.p`
-  margin: 0;
-  color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
-`
-
-export const MetricValue = styled.strong`
-  display: block;
-  margin-top: 6px;
-  overflow: hidden;
-  color: ${neutral.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const MetricHint = styled.span`
-  display: block;
-  margin-top: 6px;
-  color: ${neutral.softText};
-  font-size: 12px;
-  line-height: 1.3;
-`
-
 export const WorkGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(420px, 1fr);
@@ -871,17 +525,6 @@ export const WorkSection = styled(Section)`
 export const WorkSectionBody = styled(SectionBody)`
   min-height: 0;
   overflow: auto;
-`
-
-export const Toolbar = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  margin-bottom: 14px;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
 `
 
 export const SearchInput = styled.input`
@@ -1214,24 +857,6 @@ export const ActionInfoText = styled.span`
   }
 `
 
-export const Pagination = styled.nav`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid ${neutral.borderSoft};
-`
-
-export const PaginationStatus = styled.span`
-  min-width: 96px;
-  color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-`
-
 export const DetailEmpty = styled.div`
   min-height: 220px;
   display: flex;
@@ -1486,50 +1111,6 @@ export const ConfirmActions = styled.div`
   margin-top: 18px;
 `
 
-export const PolicyList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`
-
-export const PolicyItem = styled.div`
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 10px;
-  align-items: flex-start;
-`
-
-export const PolicyIcon = styled.span`
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  background: ${neutral.primaryTint};
-  color: ${neutral.primaryForeground};
-`
-
-export const PolicyText = styled.div`
-  min-width: 0;
-
-  strong {
-    display: block;
-    color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.3;
-  }
-
-  span {
-    display: block;
-    margin-top: 3px;
-    color: ${neutral.muted};
-    font-size: 12px;
-    line-height: 1.3;
-  }
-`
-
 export const FormGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1565,77 +1146,5 @@ export const FieldInput = styled.input`
     outline-color: ${neutral.primary};
     box-shadow: 0 0 0 3px ${neutral.primaryTint};
     background: ${neutral.surface};
-  }
-`
-
-export const ToggleList = styled.div`
-  display: flex;
-  flex-direction: column;
-`
-
-export const ToggleRow = styled.label`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid ${neutral.borderSoft};
-
-  &:last-child {
-    border-bottom: 0;
-  }
-`
-
-export const ToggleText = styled.span`
-  min-width: 0;
-
-  strong {
-    display: block;
-    color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.3;
-  }
-
-  small {
-    display: block;
-    margin-top: 4px;
-    color: ${neutral.muted};
-    font-size: 12px;
-    line-height: 1.3;
-  }
-`
-
-export const ToggleInput = styled.input`
-  width: 42px;
-  height: 24px;
-  appearance: none;
-  border: 1px solid ${neutral.borderDark};
-  border-radius: 999px;
-  background: ${neutral.surfaceHigh};
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
-
-  &::before {
-    width: 18px;
-    height: 18px;
-    display: block;
-    margin: 2px;
-    border-radius: 50%;
-    background: ${neutral.surface};
-    box-shadow: 0 1px 3px ${neutral.shadow};
-    content: '';
-    transition: transform 160ms ease;
-  }
-
-  &:checked {
-    border-color: ${neutral.primary};
-    background: ${neutral.primary};
-  }
-
-  &:checked::before {
-    transform: translateX(18px);
   }
 `

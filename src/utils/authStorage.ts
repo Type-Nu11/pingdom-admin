@@ -1,314 +1,170 @@
 import { AUTH_STORAGE_KEYS } from '../constants/auth'
 import { getAccessTokenSubject } from './accessTokenSubject'
+import { AuthSessionError } from './authSessionError'
 import { clearLoginReturn, getLoginReturnNotice, rememberAuthExit, type AuthExitReason } from './authReturn'
 import type { LoginResponse, RefreshTokenResponse } from '../types/auth.types'
 import type { AuthState, AuthUser } from '../app/providers/AuthContext'
 
-const AUTH_STORAGE_CHANGE_EVENT = 'pingdom-auth-storage-change'
-const LEGACY_REFRESH_TOKEN_STORAGE_KEY = 'refreshToken'
-const AUTH_SESSION_KEY = 'pingdom-auth-session'
-const AUTH_STORAGE_COMMIT_KEY = 'pingdom-auth-storage-commit'
-let fallbackSessionId = ''
-let authSessionNotice = ''
-
+// Compatibility name only: credentials and profiles live exclusively in module memory.
+const CONTROL_KEY = 'pingdom-auth-control'
+const LEGACY_KEYS = [...Object.values(AUTH_STORAGE_KEYS), 'refreshToken', 'pingdom-auth-session', 'pingdom-auth-storage-commit']
+type Control = { id: string; blocked: boolean }
 export interface AuthStorageSnapshot {
   sessionId: string
   authState: AuthState | null
+  status: 'loading' | 'ready' | 'error'
+  error: string
+}
+const listeners = new Set<(source?: 'local' | 'remote') => void>()
+let control: Control = readControl()
+let snapshot: AuthStorageSnapshot = { sessionId: crypto.randomUUID(), authState: null, status: control.blocked ? 'ready' : 'loading', error: '' }
+let authSessionNotice = ''
+let listening = false
+
+function readControl(): Control {
+  try {
+    if (typeof localStorage === 'undefined') return { id: 'initial', blocked: false }
+    const raw = localStorage.getItem(CONTROL_KEY)
+    if (!raw) return { id: 'initial', blocked: false }
+    const value = JSON.parse(raw) as Control
+    if (typeof value.id === 'string' && value.id && typeof value.blocked === 'boolean') return { id: value.id, blocked: value.blocked }
+  } catch { /* Unreadable storage cannot prove that a prior logout was cleared. */ }
+  return { id: 'unavailable', blocked: true }
 }
 
-export function getAuthSessionNotice() {
-  return getLoginReturnNotice() || authSessionNotice
-}
-
-export function dismissAuthSessionNotice() {
-  authSessionNotice = ''
-  clearLoginReturn()
-}
-
-export function getAuthSessionId() {
-  return getStoredAuthSnapshot().sessionId
-}
-
-function getLegacySessionId() {
-  let sessionId = canUseStorage() ? getStoredString(AUTH_SESSION_KEY) : fallbackSessionId
-  if (!sessionId) {
-    sessionId = crypto.randomUUID()
-    setStoredString(AUTH_SESSION_KEY, sessionId)
-    fallbackSessionId = sessionId
-  }
-  return sessionId
-}
-
-function rotateAuthSession() {
-  fallbackSessionId = crypto.randomUUID()
-  setStoredString(AUTH_SESSION_KEY, fallbackSessionId)
-  return fallbackSessionId
-}
-
-function canUseStorage() {
-  return typeof localStorage !== 'undefined'
-}
-
-function canUseWindow() {
-  return typeof window !== 'undefined'
-}
-
-function notifyAuthStorageChange(snapshot: AuthStorageSnapshot) {
-  // Publish the operation's complete value, never reread partially written fields.
-  setStoredString(AUTH_STORAGE_COMMIT_KEY, JSON.stringify({ ...snapshot, commitId: crypto.randomUUID() }))
-  if (!canUseWindow()) {
-    return
-  }
-
-  window.dispatchEvent(new Event(AUTH_STORAGE_CHANGE_EVENT))
-}
-
-function getStoredString(key: string) {
-  if (!canUseStorage()) {
-    return ''
-  }
-
-  return localStorage.getItem(key) ?? ''
-}
-
-function setStoredString(key: string, value: string) {
-  if (!canUseStorage()) {
-    return
-  }
-
-  localStorage.setItem(key, value)
-}
-
-function removeStoredValue(key: string) {
-  if (!canUseStorage()) {
-    return
-  }
-
-  localStorage.removeItem(key)
-}
-
-function parseStoredNumber(value: string) {
-  if (!value) {
-    return null
-  }
-
-  const parsedValue = Number(value)
-
-  return Number.isNaN(parsedValue) ? null : parsedValue
-}
-
-function normalizeAuthString(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
-
-function normalizeAuthNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-function stringifyAuthNumber(value: unknown) {
-  const normalizedValue = normalizeAuthNumber(value)
-
-  return normalizedValue === null ? '' : String(normalizedValue)
-}
-
-export function getStoredAccessToken() {
-  return getStoredAuthSnapshot().authState?.accessToken ?? ''
-}
-
-export function getStoredAuthState(): AuthState | null {
-  return getStoredAuthSnapshot().authState
-}
-
-export function getStoredAuthSnapshot(): AuthStorageSnapshot {
-  const committed = getStoredString(AUTH_STORAGE_COMMIT_KEY)
-  if (committed) {
-    try {
-      const value = JSON.parse(committed) as AuthStorageSnapshot
-      const state = value?.authState
-      const user = state?.user
-      if (typeof value?.sessionId === 'string' && value.sessionId && (
-        state === null || (
-          typeof state?.accessToken === 'string' && state.accessToken && user &&
-          (user.id === null || typeof user.id === 'number' && Number.isFinite(user.id)) &&
-          (user.birthYear === null || typeof user.birthYear === 'number' && Number.isFinite(user.birthYear)) &&
-          ['username', 'name', 'email', 'profileImageUrl', 'language', 'country', 'role']
-            .every(key => typeof user[key as keyof AuthUser] === 'string')
-        )
-      )) return { sessionId: value.sessionId, authState: state }
-    } catch { /* An invalid commit must not resurrect old individual fields. */ }
-    return { sessionId: getLegacySessionId(), authState: null }
-  }
-  // Existing installations have individual fields but no committed snapshot yet.
-  return { sessionId: getLegacySessionId(), authState: readLegacyAuthState() }
-}
-
-function readLegacyAuthState(): AuthState | null {
-  removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
-  const accessToken = getStoredString(AUTH_STORAGE_KEYS.accessToken)
-
-  if (!accessToken) {
-    return null
-  }
-
-  return {
-    accessToken,
-    user: {
-      id: parseStoredNumber(getStoredString(AUTH_STORAGE_KEYS.userId)),
-      username: getStoredString(AUTH_STORAGE_KEYS.username),
-      name: getStoredString(AUTH_STORAGE_KEYS.name),
-      email: getStoredString(AUTH_STORAGE_KEYS.email),
-      birthYear: parseStoredNumber(getStoredString(AUTH_STORAGE_KEYS.birthYear)),
-      profileImageUrl: getStoredString(AUTH_STORAGE_KEYS.profileImageUrl),
-      language: getStoredString(AUTH_STORAGE_KEYS.language),
-      country: getStoredString(AUTH_STORAGE_KEYS.country),
-      role: getStoredString(AUTH_STORAGE_KEYS.role),
-    },
+export function cleanupLegacyAuthStorage() {
+  for (const storage of [() => globalThis.localStorage, () => globalThis.sessionStorage]) {
+    try { const target = storage(); LEGACY_KEYS.forEach(key => target?.removeItem(key)) } catch { /* Storage may be disabled. */ }
   }
 }
+cleanupLegacyAuthStorage()
 
-export function createAuthStateFromLogin(data: LoginResponse): AuthState {
+function emit(source: 'local' | 'remote' = 'local') { listeners.forEach(listener => listener(source)) }
+
+function reconcileControl() {
+  const next = readControl()
+  if (next.id === control.id && next.blocked === control.blocked) return false
+  if (snapshot.authState?.user) {
+    clearLoginReturn()
+    rememberAuthExit(null, 'session-changed')
+  }
+  control = next
+  snapshot = { sessionId: crypto.randomUUID(), authState: null, status: next.blocked ? 'ready' : 'loading', error: '' }
+  cleanupLegacyAuthStorage()
+  queueMicrotask(() => emit('remote'))
+  return true
+}
+
+export function getAuthSessionId() { reconcileControl(); return snapshot.sessionId }
+export function getStoredAuthSnapshot() { reconcileControl(); return snapshot }
+export function getStoredAuthState() { return getStoredAuthSnapshot().authState }
+export function getStoredAccessToken() { return getStoredAuthState()?.accessToken ?? '' }
+export function isAuthRestoreBlocked() { reconcileControl(); return control.blocked }
+export function getAuthSessionNotice() { return getLoginReturnNotice() || authSessionNotice }
+export function dismissAuthSessionNotice() { authSessionNotice = ''; clearLoginReturn() }
+
+function publishControl(blocked: boolean, requireStorage = false) {
+  control = { id: crypto.randomUUID(), blocked }
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(CONTROL_KEY, JSON.stringify(control))
+  } catch {
+    if (requireStorage) throw new AuthSessionError('로그인 상태를 동기화하지 못했습니다. 사이트 저장소를 허용한 뒤 다시 시도해주세요.')
+  }
+  return control.id
+}
+
+export function createAuthStateFromLogin(data: Omit<LoginResponse, 'message'>): AuthState {
   return {
     accessToken: data.accessToken,
     user: {
-      id: normalizeAuthNumber(data.id),
-      username: normalizeAuthString(data.username),
-      name: '',
-      email: normalizeAuthString(data.email),
-      birthYear: normalizeAuthNumber(data.birthYear),
-      profileImageUrl: normalizeAuthString(data.profileImageUrl),
-      language: normalizeAuthString(data.language),
-      country: normalizeAuthString(data.country),
-      role: normalizeAuthString(data.role),
+      id: data.id, username: data.username ?? '', name: '', email: data.email ?? '',
+      birthYear: data.birthYear ?? null, profileImageUrl: data.profileImageUrl ?? '',
+      language: data.language ?? '', country: data.country ?? '', role: data.role ?? '',
     },
+  }
+}
+
+export function assertValidAuthState(state: AuthState) {
+  const user = state.user
+  if (!user || typeof user.id !== 'number' || !Number.isSafeInteger(user.id) || user.id <= 0 ||
+    getAccessTokenSubject(state.accessToken) !== String(user.id) ||
+    !['ADMIN', 'MERCHANT_OWNER', 'USER'].includes(user.role) ||
+    !['username', 'name', 'email', 'profileImageUrl', 'language', 'country'].every(key => typeof user[key as keyof AuthUser] === 'string') ||
+    !(user.birthYear === null || Number.isSafeInteger(user.birthYear))) {
+    throw new AuthSessionError('서버의 로그인 정보를 확인할 수 없습니다. 다시 로그인해주세요.')
   }
 }
 
 export function saveLoginAuth(data: LoginResponse) {
-  const sessionId = rotateAuthSession()
+  const authState = createAuthStateFromLogin(data)
+  assertValidAuthState(authState)
+  const sessionId = publishControl(false, true)
   authSessionNotice = ''
-  removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
-  setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
-  setStoredString(AUTH_STORAGE_KEYS.userId, stringifyAuthNumber(data.id))
-  setStoredString(AUTH_STORAGE_KEYS.username, normalizeAuthString(data.username))
-  removeStoredValue(AUTH_STORAGE_KEYS.name)
-  setStoredString(AUTH_STORAGE_KEYS.email, normalizeAuthString(data.email))
-  setStoredString(AUTH_STORAGE_KEYS.birthYear, stringifyAuthNumber(data.birthYear))
-  setStoredString(
-    AUTH_STORAGE_KEYS.profileImageUrl,
-    normalizeAuthString(data.profileImageUrl)
-  )
-  setStoredString(AUTH_STORAGE_KEYS.language, normalizeAuthString(data.language))
-  setStoredString(AUTH_STORAGE_KEYS.country, normalizeAuthString(data.country))
-  setStoredString(AUTH_STORAGE_KEYS.role, normalizeAuthString(data.role))
-  notifyAuthStorageChange({ sessionId, authState: createAuthStateFromLogin(data) })
+  cleanupLegacyAuthStorage()
+  snapshot = { sessionId, authState, status: 'ready', error: '' }
+  emit()
+}
+
+export function beginLoginAttempt() {
+  const sessionId = publishControl(true, true)
+  snapshot = { sessionId, authState: null, status: 'ready', error: '' }
+  emit()
+  return sessionId
+}
+
+export function saveRestoredAuth(state: AuthState, sessionId: string) {
+  if (getAuthSessionId() !== sessionId || control.blocked) return false
+  assertValidAuthState(state)
+  snapshot = { sessionId, authState: state, status: 'ready', error: '' }
+  authSessionNotice = ''
+  emit()
+  return true
+}
+
+export function setAuthRestoreStatus(sessionId: string, status: AuthStorageSnapshot['status'], error = '') {
+  if (getAuthSessionId() !== sessionId) return
+  snapshot = { ...snapshot, status, error }
+  emit()
 }
 
 export function saveRefreshedAuthTokens(data: RefreshTokenResponse, sessionId: string) {
-  const snapshot = getStoredAuthSnapshot()
-  if (snapshot.sessionId !== sessionId || !snapshot.authState?.user) return false
-  const userId = snapshot.authState.user.id
-  if (userId === null || getAccessTokenSubject(data.accessToken) !== String(userId)) return false
-  setStoredString(AUTH_STORAGE_KEYS.accessToken, data.accessToken)
-  notifyAuthStorageChange({ sessionId, authState: { ...snapshot.authState, accessToken: data.accessToken } })
+  if (getAuthSessionId() !== sessionId || !snapshot.authState?.user) return false
+  if (getAccessTokenSubject(data.accessToken) !== String(snapshot.authState.user.id)) return false
+  snapshot = { ...snapshot, authState: { ...snapshot.authState, accessToken: data.accessToken } }
+  emit()
   return true
 }
 
 export function clearStoredAuth(notice?: string, reason: AuthExitReason = 'expired') {
   const user = getStoredAuthState()?.user ?? null
-  if (reason === 'logout') {
-    authSessionNotice = ''
-    rememberAuthExit(null, reason)
-  } else if (user) {
-    authSessionNotice = notice ?? '로그인 인증이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.'
-    rememberAuthExit(user, reason)
-  }
-  const sessionId = rotateAuthSession()
-  Object.values(AUTH_STORAGE_KEYS).forEach(removeStoredValue)
-  removeStoredValue(LEGACY_REFRESH_TOKEN_STORAGE_KEY)
-  notifyAuthStorageChange({ sessionId, authState: null })
+  authSessionNotice = reason === 'logout' ? '' : notice ?? '로그인 인증이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.'
+  if (reason === 'logout' || user) rememberAuthExit(reason === 'logout' ? null : user, reason)
+  // Non-sensitive tombstone: failed server logout must not resurrect a cookie on reload.
+  const sessionId = publishControl(true)
+  snapshot = { sessionId, authState: null, status: 'ready', error: '' }
+  cleanupLegacyAuthStorage()
+  emit()
 }
 
 export function updateStoredAuthUser(user: Partial<AuthUser>) {
-  const snapshot = getStoredAuthSnapshot()
-  if (!snapshot.authState?.user) return
-  const nextUser = { ...snapshot.authState.user }
-  for (const key of ['id', 'birthYear'] as const) {
-    if (user[key] === null || typeof user[key] === 'number' && Number.isFinite(user[key])) {
-      nextUser[key] = user[key]
-    }
-  }
-  for (const key of ['username', 'name', 'email', 'profileImageUrl', 'language', 'country', 'role'] as const) {
-    if (typeof user[key] === 'string') nextUser[key] = user[key]
-  }
-  if (typeof user.id === 'number') {
-    setStoredString(AUTH_STORAGE_KEYS.userId, String(user.id))
-  }
-
-  if (user.id === null) {
-    removeStoredValue(AUTH_STORAGE_KEYS.userId)
-  }
-
-  if (typeof user.username === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.username, user.username)
-  }
-
-  if (typeof user.name === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.name, user.name)
-  }
-
-  if (typeof user.email === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.email, user.email)
-  }
-
-  if (typeof user.birthYear === 'number') {
-    setStoredString(AUTH_STORAGE_KEYS.birthYear, String(user.birthYear))
-  }
-
-  if (user.birthYear === null) {
-    removeStoredValue(AUTH_STORAGE_KEYS.birthYear)
-  }
-
-  if (typeof user.profileImageUrl === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.profileImageUrl, user.profileImageUrl)
-  }
-
-  if (typeof user.language === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.language, user.language)
-  }
-
-  if (typeof user.country === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.country, user.country)
-  }
-
-  if (typeof user.role === 'string') {
-    setStoredString(AUTH_STORAGE_KEYS.role, user.role)
-  }
-  notifyAuthStorageChange({ ...snapshot, authState: { ...snapshot.authState, user: nextUser } })
+  const state = getStoredAuthState()
+  if (!state?.user) return
+  const next = { ...state, user: { ...state.user, ...user } }
+  assertValidAuthState(next)
+  snapshot = { ...snapshot, authState: next }
+  emit()
 }
 
 export function subscribeAuthStorageChange(listener: (source?: 'local' | 'remote') => void) {
-  if (!canUseWindow()) {
-    return () => {}
+  if (!listening && typeof window !== 'undefined') {
+    // Read the current record, never trust a delayed StorageEvent payload.
+    window.addEventListener('storage', event => {
+      if (event.storageArea !== localStorage || event.key !== null && event.key !== CONTROL_KEY) return
+      reconcileControl()
+    })
+    window.addEventListener('pageshow', () => { reconcileControl() })
+    listening = true
   }
-
-  let lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
-  const handleLocalChange = () => {
-    lastCommit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
-    listener('local')
-  }
-  const handleStorage = (event: StorageEvent) => {
-    if (event.storageArea !== localStorage) return
-    if (event.key !== null && event.key !== AUTH_STORAGE_COMMIT_KEY) return
-    const commit = getStoredString(AUTH_STORAGE_COMMIT_KEY)
-    if (event.key !== null && commit === lastCommit) return
-    lastCommit = commit
-    listener('remote')
-  }
-  window.addEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
-  window.addEventListener('storage', handleStorage)
-
-  return () => {
-    window.removeEventListener(AUTH_STORAGE_CHANGE_EVENT, handleLocalChange)
-    window.removeEventListener('storage', handleStorage)
-  }
+  listeners.add(listener)
+  return () => { listeners.delete(listener) }
 }

@@ -1,9 +1,10 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 import { logout as requestLogout } from '../../api/authApi'
 import { runAuthTransition } from '../../api/customAxios'
 import type { LoginResponse } from '../../types/auth.types'
 import {
   clearStoredAuth,
+  getAuthSessionId,
   getStoredAuthSnapshot,
   getStoredAuthState,
   saveLoginAuth,
@@ -11,7 +12,8 @@ import {
   updateStoredAuthUser,
 } from '../../utils/authStorage'
 import { logDebugError } from '../../utils/debugLogger'
-import { clearLoginReturn, rememberAuthExit } from '../../utils/authReturn'
+import { restoreAuthSession } from '../../api/authSessionApi'
+import { RouteLoadingFallback } from '../router/RouteLoadingFallback'
 import {
   AuthContext,
   EMPTY_AUTH_STATE,
@@ -27,19 +29,10 @@ function getInitialAuthSnapshot() {
 export function AuthProvider({ children }: PropsWithChildren) {
   const [snapshot, setSnapshot] = useState(getInitialAuthSnapshot)
   const { authState, sessionId } = snapshot
-  const previousSnapshot = useRef(snapshot)
-  const [isAuthReady, setIsAuthReady] = useState(true)
-  const syncAuth = useCallback((source?: 'local' | 'remote') => {
+  const isAuthReady = snapshot.status === 'ready'
+  const syncAuth = useCallback(() => {
     const next = getInitialAuthSnapshot()
-    const previousUser = previousSnapshot.current.authState.user
-    const nextUser = next.authState.user
-    if (source === 'remote' && previousUser && (previousUser.id !== nextUser?.id || previousUser.role !== nextUser?.role)) {
-      clearLoginReturn()
-      if (!nextUser) rememberAuthExit(null, 'session-changed')
-    }
-    previousSnapshot.current = next
     setSnapshot(next)
-    setIsAuthReady(true)
   }, [])
 
   useEffect(() => {
@@ -48,6 +41,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     queueMicrotask(() => { if (active) syncAuth() })
     return () => { active = false; unsubscribe() }
   }, [syncAuth])
+
+  useEffect(() => {
+    if (snapshot.status === 'loading') void restoreAuthSession()
+  }, [snapshot.sessionId, snapshot.status])
+
+  const retryAuthRestore = useCallback(() => { void restoreAuthSession() }, [])
 
   const clearAuth = useCallback(() => {
     clearStoredAuth()
@@ -59,11 +58,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const logout = useCallback(async () => {
     clearStoredAuth(undefined, 'logout')
+    const logoutSession = getAuthSessionId()
 
     try {
       await runAuthTransition(async () => {
-        // 앞서 대기 중이던 로그인 응답이 저장됐더라도 로그아웃이 마지막 상태가 됩니다.
-        clearStoredAuth(undefined, 'logout')
+        // A newer explicit login owns the cookie now; do not delete its session.
+        if (getAuthSessionId() !== logoutSession) return
         await requestLogout()
       })
     } catch (error) {
@@ -88,5 +88,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [authState, clearAuth, isAuthReady, login, logout, updateUser]
   )
 
-  return <AuthContext.Provider value={value}><Fragment key={`${sessionId}:${authState.user?.id ?? ''}:${authState.user?.role ?? ''}`}>{children}</Fragment></AuthContext.Provider>
+  return <AuthContext.Provider value={value}>
+    {isAuthReady ? <Fragment key={authState.user ? `${sessionId}:${authState.user.id}:${authState.user.role}` : 'guest'}>{children}</Fragment>
+      : <RouteLoadingFallback title={snapshot.error ? '로그인 상태를 확인하지 못했습니다.' : '로그인 상태를 확인하고 있습니다.'}
+        description={snapshot.error || '안전하게 세션을 복구하고 있습니다. 잠시만 기다려주세요.'}
+        onRetry={snapshot.error ? retryAuthRestore : undefined}
+        onSignIn={snapshot.error ? clearAuth : undefined} />}
+  </AuthContext.Provider>
 }

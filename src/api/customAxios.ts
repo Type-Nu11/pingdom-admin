@@ -1,10 +1,13 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import type { RefreshTokenResponse } from '../types/auth.types'
+import { AUTH_API_BASE_URL, requestCookieAccessToken, isAuthRestoring } from './authSessionApi'
+import { withAuthCookieLock } from '../utils/authCookieLock'
 import {
   clearStoredAuth,
   getStoredAccessToken,
   getAuthSessionId,
   saveRefreshedAuthTokens,
+  getStoredAuthSnapshot,
 } from '../utils/authStorage'
 
 export type ApiErrorCategory =
@@ -36,9 +39,7 @@ export function isApiError<T = unknown>(error: unknown): error is ApiError<T> {
   return axios.isAxiosError(error)
 }
 
-const API_BASE_URL = import.meta.env.DEV
-  ? '/api'
-  : import.meta.env.VITE_PUBLIC_API_BASE_URL
+const API_BASE_URL = AUTH_API_BASE_URL
 const TOKEN_REFRESH_API_PATH = '/auth/token/refresh'
 const tokenRefreshRequests = new Map<string, {
   controller: AbortController
@@ -50,7 +51,7 @@ const SESSION_MISMATCH_MESSAGE = '로그인 정보가 일치하지 않아 세션
 
 class AuthSessionMismatchError extends Error {}
 
-// 같은 탭의 쿠키 변경 요청을 직렬화합니다. 쿠키가 다른 계정을 가리키는 경우에는 토큰 사용자 비교로 방어합니다.
+// Local queue also drains aborted refreshes; the shared lock covers other tabs and cold starts.
 export function runAuthTransition<T>(action: () => Promise<T>): Promise<T> {
   pendingAuthTransitions++
   const refreshes = [...tokenRefreshRequests.values()]
@@ -58,7 +59,7 @@ export function runAuthTransition<T>(action: () => Promise<T>): Promise<T> {
   const settled = Promise.allSettled(refreshes.map(({ promise }) => promise))
   const transition = authTransitionTail.then(async () => {
     await settled
-    return action()
+    return withAuthCookieLock(action)
   })
   const result = transition.finally(() => { pendingAuthTransitions-- })
   authTransitionTail = result.catch(() => {})
@@ -183,21 +184,16 @@ async function requestTokenRefresh(sessionId: string) {
   const pending = tokenRefreshRequests.get(sessionId)
   if (pending) return pending.promise
   const controller = new AbortController()
-  const request = axios
-    .post<RefreshTokenResponse>(TOKEN_REFRESH_API_PATH, undefined, {
-      baseURL: API_BASE_URL,
-      timeout: 10000,
-      withCredentials: true,
-      signal: controller.signal,
-    })
-    .then(({ data }) => {
-      assertCurrentSession(sessionId)
-      if (!saveRefreshedAuthTokens(data, sessionId)) {
-        throw new AuthSessionMismatchError(SESSION_MISMATCH_MESSAGE)
-      }
+  const request = withAuthCookieLock(async () => {
+    assertCurrentSession(sessionId)
+    const data = await requestCookieAccessToken(controller.signal)
+    assertCurrentSession(sessionId)
+    if (!saveRefreshedAuthTokens(data, sessionId)) {
+      throw new AuthSessionMismatchError(SESSION_MISMATCH_MESSAGE)
+    }
 
-      return data
-    })
+    return data
+  })
     .finally(() => {
       tokenRefreshRequests.delete(sessionId)
     })
@@ -215,6 +211,10 @@ function shouldClearAuthAfterRefreshFailure(error: unknown) {
 customAxios.interceptors.request.use((config) => {
   const request = config as RetriableRequestConfig
   if (shouldAttachAccessToken(config.url)) {
+    if (request._authSessionId) assertCurrentSession(request._authSessionId)
+    // Protected UI waits at AuthProvider. Do not replay a stale component's write after recovery.
+    if (getStoredAuthSnapshot().status === 'loading' && isAuthRestoring()) throw new axios.CanceledError('로그인 상태를 확인하고 있습니다.')
+    if (getStoredAuthSnapshot().status === 'error') throw new axios.CanceledError('로그인 상태 확인 후 다시 시도해주세요.')
     request._authSessionId ??= getAuthSessionId()
     assertCurrentSession(request._authSessionId)
   }

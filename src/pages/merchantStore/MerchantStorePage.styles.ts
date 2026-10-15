@@ -37,17 +37,6 @@ export {
   PlaceSelect,
 } from '../../components/merchant/MerchantSurface.styles'
 
-export const Eyebrow = styled.p`
-  margin: 0 0 8px;
-  color: ${colors.primaryForeground};
-  font-size: 13px;
-  font-weight: 700;
-
-  .merchant-layout-content & {
-    display: none;
-  }
-`
-
 export const StoreSummary = styled.section`
   padding: 24px;
   border-radius: 8px;

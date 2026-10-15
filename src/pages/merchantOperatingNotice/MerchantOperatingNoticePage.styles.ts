@@ -26,28 +26,6 @@ export const HeaderButton = styled.button`
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
 
-export const NoticeSummary = styled.div<{ $operating: boolean | null }>`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding: 13px 16px;
-  border: 0;
-  border-radius: 8px;
-  background: ${({ $operating }) => ($operating === false ? colors.warningTint : colors.primaryTint)};
-  color: ${colors.text};
-  font-size: 13px;
-  line-height: 1.5;
-
-  strong { color: ${({ $operating }) => ($operating === false ? colors.warningText : colors.primaryForeground)}; }
-`
-
-export const SummaryIcon = styled.span`
-  color: ${colors.primaryForeground};
-  font-family: 'Material Symbols Outlined';
-  font-size: 20px;
-`
-
 export const Workspace = styled.div`
   display: grid;
   grid-template-columns: minmax(330px, 0.9fr) minmax(440px, 1.1fr);
@@ -267,17 +245,6 @@ const fieldStyle = css`
   &:disabled { cursor: not-allowed; background: ${colors.surfaceLow}; color: ${colors.softText}; }
 `
 
-export const Select = styled.select`
-  ${fieldStyle}
-  height: 42px;
-  padding: 0 38px 0 12px;
-  appearance: none;
-  background: ${colors.surface} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%236B6B73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
-  cursor: pointer;
-
-  &:disabled { background-color: ${colors.surfaceLow}; }
-`
-
 export const Textarea = styled.textarea`
   ${fieldStyle}
   min-height: 144px;
@@ -334,63 +301,4 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   &:hover:not(:disabled) { filter: brightness(0.96); }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
-`
-
-export const ModalOverlay = styled.div`
-  position: fixed;
-  z-index: 160;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(30, 31, 35, 0.44);
-`
-
-export const Modal = styled.section`
-  width: min(460px, 100%);
-  overflow: hidden;
-  border-radius: 8px;
-  background: ${colors.surface};
-  box-shadow: 0 24px 56px ${colors.shadow};
-`
-
-export const ModalHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 20px 22px 16px;
-  border-bottom: 1px solid ${colors.borderSoft};
-`
-
-export const ModalTitle = styled.h2`
-  margin: 0;
-  color: ${colors.strongText};
-  font-size: 18px;
-  line-height: 1.35;
-`
-
-export const CloseButton = styled.button`
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: ${colors.muted};
-  font-family: 'Material Symbols Outlined';
-  font-size: 20px;
-  cursor: pointer;
-
-  &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
-  &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
-  &:disabled { opacity: 0.55; cursor: not-allowed; }
-`
-
-export const ModalBody = styled.div`
-  padding: 20px 22px 22px;
 `

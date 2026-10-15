@@ -416,18 +416,6 @@ export const InlineActions = styled.div`
   margin-top: 12px;
 `
 
-export const Pagination = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px;
-  border-top: 1px solid ${neutral.border};
-  color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
-`
-
 export const FormBody = styled.div`
   padding: 16px;
 `

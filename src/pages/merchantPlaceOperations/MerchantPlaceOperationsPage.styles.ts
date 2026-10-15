@@ -25,28 +25,6 @@ export const HeaderButton = styled.button`
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `
 
-export const StateSummary = styled.div<{ $operating: boolean | null }>`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding: 13px 16px;
-  border: 0;
-  border-radius: 8px;
-  background: ${({ $operating }) => ($operating === false ? colors.warningTint : colors.primaryTint)};
-  color: ${colors.text};
-  font-size: 13px;
-  line-height: 1.5;
-
-  strong { color: ${({ $operating }) => ($operating === false ? colors.warningText : colors.primaryForeground)}; }
-`
-
-export const StateIcon = styled.span`
-  color: ${colors.primaryForeground};
-  font-family: 'Material Symbols Outlined';
-  font-size: 20px;
-`
-
 export const Workspace = styled.div`
   display: grid;
   grid-template-columns: minmax(370px, 0.9fr) minmax(440px, 1.1fr);
@@ -409,7 +387,6 @@ export const UploadButton = styled.button`
   &:hover { background: ${colors.primaryAction}; color: ${colors.primaryText}; }
   &:disabled { cursor: not-allowed; opacity: 0.56; }
 `
-
 
 export const ModalOverlay = styled.div`
   position: fixed;

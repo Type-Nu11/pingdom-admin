@@ -101,88 +101,6 @@ export const SideMenu = styled.div`
   }
 `
 
-export const MenuButton = styled.button<{ $active?: boolean }>`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 48px;
-  padding: 0 24px;
-  border: 0;
-  border-right: 2px solid transparent;
-  background: transparent;
-  color: ${neutral.neutralText};
-  font-size: 14px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    color 160ms ease,
-    border-color 160ms ease;
-
-  &:hover:not(:disabled) {
-    background: ${neutral.primaryTint};
-    color: ${neutral.primaryForeground};
-  }
-
-  &:disabled {
-    border-right-color: ${neutral.warning};
-    background: ${neutral.warningTint};
-    color: ${neutral.muted};
-    cursor: default;
-
-    ${MaterialIcon} {
-      color: ${neutral.warning};
-    }
-  }
-
-  ${({ $active }) =>
-    $active &&
-    css`
-      border-right-color: ${neutral.primary};
-      background: ${neutral.primaryTint};
-      color: ${neutral.primaryForeground};
-      font-weight: 700;
-
-      ${MaterialIcon} {
-        font-variation-settings:
-          'FILL' 1,
-          'wght' 400,
-          'GRAD' 0,
-        'opsz' 20;
-      }
-    `}
-
-  @media (max-width: 900px) {
-    width: auto;
-    flex-shrink: 0;
-    border-right: 0;
-    border-bottom: 2px solid transparent;
-    border-radius: 8px;
-
-    &:disabled {
-      border-right: 0;
-      border-bottom-color: ${neutral.warning};
-    }
-
-    ${({ $active }) =>
-      $active &&
-      css`
-        border-bottom-color: ${neutral.primary};
-      `}
-  }
-`
-
-export const MenuStatusText = styled.span`
-  margin-left: auto;
-  color: ${neutral.warning};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
-  white-space: nowrap;
-`
-
 export const SideFooter = styled.div`
   flex: 0 0 auto;
   padding: 18px 24px 24px;
@@ -521,18 +439,6 @@ export const DetailStatus = styled.div`
   line-height: 1.3;
 `
 
-export const DetailNotice = styled.p`
-  margin: 0 0 14px;
-  padding: 12px;
-  border: 0;
-  border-radius: 8px;
-  background: ${neutral.errorTint};
-  color: ${neutral.errorText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-`
-
 export const DetailErrorState = styled.div`
   display: flex;
   flex-direction: column;
@@ -558,48 +464,11 @@ export const DetailMetaList = styled.div`
   gap: 10px;
 `
 
-export const DetailRepresentativeImage = styled.img`
-  width: 100%;
-  height: 176px;
-  display: block;
-  margin: 0 0 12px;
-  border: 1px solid ${neutral.borderSoft};
-  border-radius: 8px;
-  object-fit: cover;
-`
-
-export const DetailImagePlaceholder = styled.div`
-  width: 100%;
-  height: 176px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0 0 12px;
-  border-radius: 8px;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.muted};
-  font-size: 13px;
-  font-weight: 700;
-
-  ${MaterialIcon} {
-    font-size: 20px;
-  }
-`
-
 export const DetailMetaGroup = styled.section`
   padding: 12px;
   border: 0;
   border-radius: 8px;
   background: ${neutral.surfaceLow};
-`
-
-export const DetailMetaGroupTitle = styled.h4`
-  margin: 0 0 10px;
-  color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
 `
 
 export const DetailMetaRow = styled.div`
@@ -791,101 +660,6 @@ export const OperatingStatusBadge = styled.span<{
   white-space: nowrap;
 `
 
-export const OperatingHoursList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 10px;
-
-  @media (max-width: 520px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-`
-
-export const OperatingHoursItem = styled.div`
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid ${neutral.borderSoft};
-  border-radius: 7px;
-  background: ${neutral.surface};
-
-  span {
-    color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  strong {
-    overflow: hidden;
-    color: ${neutral.text};
-    font-size: 12px;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-`
-
-export const OperatingExceptionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 14px;
-
-  span {
-    color: ${neutral.strongText};
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  small {
-    color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
-  }
-`
-
-export const OperatingExceptionsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
-`
-
-export const OperatingExceptionItem = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  gap: 10px;
-  padding: 8px 10px;
-  border: 1px solid ${neutral.borderSoft};
-  border-radius: 7px;
-  background: ${neutral.surface};
-
-  span,
-  strong {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  span {
-    color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  strong {
-    color: ${neutral.text};
-    font-size: 12px;
-    font-weight: 700;
-    text-align: right;
-  }
-`
-
 export const OperatingEmptyState = styled.p`
   margin: 10px 0 0;
   padding: 10px 12px;
@@ -933,16 +707,6 @@ export const DetailActionButton = styled.button`
   &:disabled {
     cursor: default;
     opacity: 0.5;
-  }
-`
-
-export const DetailDeleteButton = styled(DetailActionButton)`
-  background: ${neutral.errorTint};
-  color: ${neutral.errorText};
-
-  &:hover:not(:disabled) {
-    background: ${neutral.errorAction};
-    color: ${neutral.primaryText};
   }
 `
 
@@ -1138,66 +902,6 @@ export const ClearFilterButton = styled.button`
 
   &:hover {
     color: ${neutral.primaryForeground};
-  }
-`
-
-export const FilterRow = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-`
-
-export const FilterControl = styled.label`
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 6px;
-  color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
-`
-
-export const Select = styled.select`
-  height: 40px;
-  min-width: 0;
-  padding: 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 4px;
-  outline: 1px solid transparent;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font-size: 14px;
-  cursor: pointer;
-
-  &:focus {
-    border-color: ${neutral.primary};
-    outline-color: ${neutral.primary};
-    box-shadow: 0 0 0 3px ${neutral.primaryTint};
-  }
-`
-
-export const CompactSelect = styled.select`
-  height: 40px;
-  width: 92px;
-  padding: 0 10px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  outline: 1px solid transparent;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-
-  &:focus {
-    border-color: ${neutral.primary};
-    outline-color: ${neutral.primary};
-    box-shadow: 0 0 0 3px ${neutral.primaryTint};
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
   }
 `
 
@@ -1434,18 +1138,6 @@ export const PlaceDiscoveryStatusBadge = styled.span`
   white-space: nowrap;
 `
 
-export const ReportBadge = styled.span`
-  flex-shrink: 0;
-  padding: 3px 6px;
-  border: 0;
-  border-radius: ${radius.pill};
-  background: ${neutral.errorTint};
-  color: ${neutral.errorText};
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
-`
-
 export const PlaceMeta = styled.p`
   display: flex;
   align-items: center;
@@ -1491,14 +1183,6 @@ export const PlaceMetaLine = styled.p`
       display: none;
     }
   }
-`
-
-export const PlaceStatList = PlaceMetaLine
-
-export const PlaceStat = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
 `
 
 export const EmptyState = styled.div`
@@ -1649,81 +1333,6 @@ export const AdminMap = styled(NaverMap)`
 
   border: 0;
   border-radius: 0;
-`
-
-export const MapMarkerLayer = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-`
-
-export const MapMarker = styled.button<{ $active?: boolean }>`
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border: 0;
-  background: transparent;
-  color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.muted)};
-  cursor: pointer;
-  opacity: ${({ $active }) => ($active ? 1 : 0.74)};
-  pointer-events: auto;
-  transform: translate(-50%, -50%);
-  transition:
-    color 160ms ease,
-    opacity 160ms ease,
-    transform 160ms ease;
-
-  ${MaterialIcon} {
-    font-size: ${({ $active }) => ($active ? '40px' : '32px')};
-    font-variation-settings:
-      'FILL' 1,
-      'wght' 400,
-      'GRAD' 0,
-      'opsz' 20;
-  }
-
-  ${({ $active }) =>
-    $active &&
-    css`
-      &::after {
-        position: absolute;
-        width: 34px;
-        height: 34px;
-        border: 2px solid ${neutral.primary};
-        border-radius: 999px;
-        content: '';
-        opacity: 0.72;
-      }
-    `}
-
-  &:hover {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.06);
-  }
-`
-
-export const MarkerTooltip = styled.span`
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  margin-bottom: 6px;
-  padding: 5px 8px;
-  border-radius: 4px;
-  background: ${neutral.primaryAction};
-  color: ${neutral.primaryText};
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  transform: translateX(-50%);
-  transition: opacity 160ms ease;
-
-  ${MapMarker}:hover & {
-    opacity: 1;
-  }
 `
 
 export const MapControlGroup = styled.div`
@@ -2018,30 +1627,6 @@ export const OperatingOption = styled.label<{
   }
 `
 
-export const OperatingSelect = styled.select`
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid ${neutral.border};
-  border-radius: 8px;
-  outline: 0;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:focus {
-    border-color: ${neutral.primary};
-    box-shadow: 0 0 0 3px ${neutral.primaryTint};
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.55;
-  }
-`
-
 export const OperatingTextInput = styled.input`
   min-height: 42px;
   padding: 0 12px;
@@ -2076,48 +1661,6 @@ export const OperatingFieldRow = styled.div`
 
   @media (max-width: 620px) {
     grid-template-columns: minmax(0, 1fr);
-  }
-`
-
-export const OperatingCategoryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-
-  @media (max-width: 620px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-`
-
-export const OperatingCategoryOption = styled.label<{ $selected?: boolean }>`
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  border: 1px solid ${({ $selected }) => ($selected ? neutral.primary : neutral.border)};
-  border-radius: 8px;
-  background: ${({ $selected }) => ($selected ? neutral.primaryTint : neutral.surface)};
-  color: ${({ $selected }) => ($selected ? neutral.primaryForeground : neutral.text)};
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-
-  input {
-    width: 15px;
-    height: 15px;
-    margin: 0;
-    accent-color: ${neutral.primary};
-  }
-
-  &:has(input:focus-visible) {
-    outline: 2px solid ${neutral.primary};
-    outline-offset: 2px;
-  }
-
-  &:has(input:disabled) {
-    cursor: default;
-    opacity: 0.55;
   }
 `
 
@@ -2408,31 +1951,6 @@ export const OperatingTimeControls = styled.div`
   font-weight: 700;
 `
 
-export const OperatingTimeInput = styled.input`
-  width: 104px;
-  min-height: 34px;
-  padding: 0 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
-  outline: 0;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-
-  &:focus {
-    border-color: ${neutral.primary};
-    box-shadow: 0 0 0 2px ${neutral.primaryTint};
-  }
-
-  &:disabled {
-    cursor: default;
-    background: ${neutral.surfaceLow};
-    color: ${neutral.softText};
-  }
-`
-
 export const OperatingExceptionEditorList = styled.div`
   display: flex;
   flex-direction: column;
@@ -2457,31 +1975,6 @@ export const OperatingExceptionEditorHeader = styled.div`
 
   > div:first-child {
     width: 150px;
-  }
-`
-
-export const OperatingDateInput = styled.input`
-  min-height: 36px;
-  min-width: 0;
-  padding: 0 8px;
-  border: 1px solid ${neutral.border};
-  border-radius: 6px;
-  outline: 0;
-  background: ${neutral.surface};
-  color: ${neutral.text};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-
-  &:focus {
-    border-color: ${neutral.primary};
-    box-shadow: 0 0 0 2px ${neutral.primaryTint};
-  }
-
-  &:disabled {
-    cursor: default;
-    background: ${neutral.surfaceLow};
-    color: ${neutral.softText};
   }
 `
 
@@ -2612,186 +2105,6 @@ export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
   }
 `
 
-export const PlaceModal = styled.section`
-  width: min(520px, 100%);
-  max-height: min(760px, 92vh);
-  display: flex;
-  overflow: hidden;
-  flex-direction: column;
-  border: 1px solid ${neutral.border};
-  border-radius: 12px;
-  background: ${neutral.surface};
-  box-shadow: 0 24px 70px ${neutral.strongShadow};
-`
-
-export const ModalHeader = styled.header`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 24px;
-  border-bottom: 1px solid ${neutral.border};
-`
-
-export const ModalTitle = styled.h2`
-  margin: 0;
-  color: ${neutral.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
-`
-
-export const ModalCloseButton = styled.button`
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: ${radius.pill};
-  background: transparent;
-  color: ${neutral.text};
-  cursor: pointer;
-
-  &:hover {
-    background: ${neutral.surfaceHigh};
-  }
-`
-
-export const ModalBody = styled.div`
-  display: flex;
-  overflow-y: auto;
-  flex-direction: column;
-  gap: 20px;
-  padding: 24px;
-`
-
-export const DetailGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 28px;
-`
-
-export const DetailItem = styled.div`
-  min-width: 0;
-`
-
-export const DetailLabel = styled.p`
-  margin: 0 0 6px;
-  color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0;
-`
-
-export const DetailValue = styled.p`
-  margin: 0;
-  color: ${neutral.text};
-  font-size: 16px;
-  line-height: 1.3;
-  word-break: break-word;
-`
-
-export const ReportNotice = styled.div`
-  display: flex;
-  gap: 12px;
-  padding: 14px;
-  border: 0;
-  border-radius: 8px;
-  background: ${neutral.errorTint};
-  color: ${neutral.errorText};
-
-  ${MaterialIcon} {
-    flex-shrink: 0;
-    font-size: 24px;
-  }
-`
-
-export const ReportTitle = styled.p`
-  margin: 0 0 4px;
-  color: ${neutral.errorText};
-  font-size: 14px;
-  font-weight: 700;
-`
-
-export const ReportDescription = styled.p`
-  margin: 0;
-  color: ${neutral.muted};
-  font-size: 12px;
-  line-height: 1.3;
-`
-
-export const PhotoLink = styled.button`
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  gap: 8px;
-  border: 0;
-  background: transparent;
-  color: ${neutral.primaryForeground};
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:hover {
-    color: ${neutral.primaryForeground};
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
-
-  ${MaterialIcon} {
-    font-size: 18px;
-  }
-`
-
-export const MemoBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
-export const MemoTextarea = styled.textarea`
-  min-height: 120px;
-  resize: vertical;
-  padding: 12px;
-  border: 0;
-  border-radius: 8px;
-  outline: 1px solid transparent;
-  background: ${neutral.surfaceLow};
-  color: ${neutral.text};
-
-  &:focus {
-    outline-color: ${neutral.primary};
-    background: ${neutral.surface};
-  }
-`
-
-export const DeleteWarning = styled.div`
-  display: flex;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 8px;
-  background: ${neutral.errorAction};
-  color: ${neutral.primaryText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-
-  ${MaterialIcon} {
-    flex-shrink: 0;
-  }
-`
-
-export const ModalFooter = styled.footer`
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid ${neutral.border};
-  background: ${neutral.surfaceLow};
-`
-
 export const SecondaryButton = styled.button`
   min-height: 40px;
   padding: 0 18px;
@@ -2805,22 +2118,6 @@ export const SecondaryButton = styled.button`
 
   &:hover {
     background: ${neutral.surfaceHigh};
-  }
-`
-
-export const DangerOutlineButton = styled.button`
-  min-height: 40px;
-  padding: 0 18px;
-  border: 1px solid ${neutral.error};
-  border-radius: ${radius.pill};
-  background: ${neutral.surface};
-  color: ${neutral.errorText};
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:hover {
-    background: ${neutral.errorTint};
   }
 `
 

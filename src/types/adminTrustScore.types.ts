@@ -9,6 +9,7 @@ export type TrustScoreInterventionAction = 'WARN' | 'REVIEW_REQUIRED' | 'TEMPORA
 export interface TrustScoreEvidence { submittedCount: number; acceptedCount: number; declinedCount: number; falseReportCount: number; acceptanceRate: number; baseScore: number; acceptedScoreBonus: number; falseReportScorePenalty: number }
 export interface AdminTrustScore { reporterUserId: number; reporterUsername: string; trustScore: number; trustGrade: TrustScoreGrade; restricted: boolean; restrictedUntil: string | null; restrictionReason: string | null; evidence: TrustScoreEvidence }
 export interface TrustScoreHistory { id: number; reporterUserId: number; beforeScore: number; afterScore: number; reason: string; changedAt: string }
+export interface TrustScoreHistoryResponse { items: TrustScoreHistory[]; page: number; limit: number; total: number; totalPages: number; hasNext: boolean }
 export interface TrustScoreBatchResponse { processedCount: number; changedCount: number }
 export interface TrustScoreAnomaly { id: number; reporterUserId: number; reporterUsername: string; anomalyType: TrustScoreAnomalyType; severity: TrustScoreAnomalySeverity; baselineScore: number; observedScore: number; submittedCount: number; acceptedCount: number; declinedCount: number; falseReportCount: number; detectedAt: string; resolvedAt: string | null; resolutionReason: string | null }
 export interface TrustScoreAnomalyResponse { anomalies: TrustScoreAnomaly[]; page: number; limit: number; totalCount: number; totalPages: number }

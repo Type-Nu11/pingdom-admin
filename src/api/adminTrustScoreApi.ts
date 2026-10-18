@@ -1,9 +1,28 @@
 import customAxios from './customAxios'
-import type { AdminTrustScore, TrustScoreAnomaly, TrustScoreAnomalyResponse, TrustScoreBatchResponse, TrustScoreHistory, TrustScoreInterventionEvaluation, TrustScoreInterventionRule, TrustScoreInterventionRuleRequest, TrustScoreInterventionRuleResponse } from '../types/adminTrustScore.types'
+import type { AdminTrustScore, TrustScoreAnomaly, TrustScoreAnomalyResponse, TrustScoreBatchResponse, TrustScoreHistoryResponse, TrustScoreInterventionEvaluation, TrustScoreInterventionRule, TrustScoreInterventionRuleRequest, TrustScoreInterventionRuleResponse } from '../types/adminTrustScore.types'
 
 const PATH = '/admin/trust-score'
 export async function getAdminTrustScore(reporterUserId: number) { const { data } = await customAxios.get<AdminTrustScore>(`${PATH}/reporters/${reporterUserId}`); return data }
-export async function getAdminTrustScoreHistory(reporterUserId: number) { const { data } = await customAxios.get<TrustScoreHistory[]>(`${PATH}/reporters/${reporterUserId}/history`); return data }
+export async function getAdminTrustScoreHistory(reporterUserId: number, page = 1, limit = 20) {
+  const { data } = await customAxios.get<TrustScoreHistoryResponse>(`${PATH}/reporters/${reporterUserId}/history`, { params: { page, limit } })
+  // Types alone cannot validate a live response. Never turn a legacy array or
+  // malformed page into a misleading empty/successful result.
+  if (!data || !Array.isArray(data.items)
+    || !Number.isSafeInteger(data.page) || data.page < 1
+    || !Number.isSafeInteger(data.limit) || data.limit < 1
+    || !Number.isSafeInteger(data.total) || data.total < 0
+    || !Number.isSafeInteger(data.totalPages) || data.totalPages < 0
+    || typeof data.hasNext !== 'boolean'
+    || data.totalPages !== Math.ceil(data.total / data.limit)
+    || data.hasNext !== (data.page < data.totalPages)
+    || data.items.length > data.limit || data.items.length > data.total
+    || data.items.some(item => !item || !Number.isSafeInteger(item.id)
+      || item.reporterUserId !== reporterUserId || !Number.isSafeInteger(item.beforeScore)
+      || !Number.isSafeInteger(item.afterScore) || typeof item.reason !== 'string' || typeof item.changedAt !== 'string')) {
+    throw new Error('신뢰 점수 이력 응답 형식을 확인할 수 없습니다.')
+  }
+  return data
+}
 export async function recalculateAdminTrustScores() { const { data } = await customAxios.post<TrustScoreBatchResponse>(`${PATH}/batch/recalculate`); return data }
 export async function getAdminTrustScoreAnomalies(params: { page?: number; limit?: number; reporterUserId?: number; unresolvedOnly?: boolean }) { const { data } = await customAxios.get<TrustScoreAnomalyResponse>(`${PATH}/anomalies`, { params }); return data }
 export async function resolveAdminTrustScoreAnomaly(anomalyId: number, resolutionReason: string) { const { data } = await customAxios.patch<TrustScoreAnomaly>(`${PATH}/anomalies/${anomalyId}/resolve`, { resolutionReason }); return data }

@@ -11,7 +11,7 @@ import client from '../../src/api/customAxios'
 const base = { placeId: 1, startsAt: '2099-10-01T10:00', endsAt: '2099-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0 }
 let rows = [
   { ...base, id: 7, reservationTerms: null },
-  { ...base, id: 8, startsAt: '2099-10-02T10:00', reservationTerms: { unitAmountMinor: 0, additionalAmountMinor: 0, currency: 'KRW', timezone: 'Asia/Seoul', cancellable: false, cancellationCutoffMinutes: null } },
+  { ...base, id: 8, startsAt: '2099-10-02T10:00', reservationTerms: { timezone: 'Asia/Seoul', cancellable: false, cancellationCutoffMinutes: null } },
 ]
 window.qaMode = 'success'
 window.qaWrites = []
@@ -19,6 +19,8 @@ client.defaults.adapter = async config => {
   const response = data => ({ config, data, status: 200, statusText: 'OK', headers: {} })
   if (config.method === 'put') {
     if (!/^\/merchant-owner\/availabilities\/\d+\/reservation-terms$/.test(config.url)) throw new Error('Unexpected mutation')
+    const body = JSON.parse(config.data)
+    if (JSON.stringify(Object.keys(body).sort()) !== JSON.stringify(['cancellable', 'cancellationCutoffMinutes', 'timezone'])) throw new Error('Unexpected terms fields')
     window.qaWrites.push({ url: config.url, body: JSON.parse(config.data) })
     if (window.qaMode === 'pending') await new Promise(resolve => { window.qaRelease = resolve })
     if (window.qaMode === 'failure') throw new Error('Synthetic offline error')
@@ -29,12 +31,13 @@ client.defaults.adapter = async config => {
   }
   if (config.method !== 'get') throw new Error('Unexpected mutation')
   if (config.url.endsWith('/me')) return response({ displayName: '예약 조건 테스트 상점주', placeIds: [1] })
+  if (config.url === '/merchant-owner/places/1') return response({ id: 1, name: '합성 매장', roadAddress: '서울 테스트로 1' })
   if (config.url.endsWith('/availabilities')) {
     if (window.qaMode === 'refresh-failure' && window.qaWrites.length) throw new Error('Synthetic reload failure')
     rows = JSON.parse(sessionStorage.getItem('qaTerms') ?? 'null') ?? rows
     return response(rows)
   }
-  return response([])
+  throw new Error(`Unexpected synthetic read: ${config.url}`)
 }
 const places = { selectedPlaceId: 1, selectPlace() {}, syncPlaces(ids) { return ids[0] ?? null } }
 const router = createBrowserRouter([{ path: '/terms-qa', element: <UnsavedChangesProvider><Page /></UnsavedChangesProvider> }])

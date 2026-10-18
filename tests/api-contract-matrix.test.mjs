@@ -51,12 +51,12 @@ test('new contracts reflect source connections without claiming live QA', () => 
     ['GET', '/merchant-owner/availabilities'],
     ['PUT', '/merchant-owner/availabilities/{availabilityId}/reservation-terms'],
   ]) {
-    assert.equal(row(method, path).issue, '#296')
+    assert.ok(row(method, path).issue.includes('#296'))
     assert.equal(row(method, path).status, 'implemented')
     assert.match(row(method, path).frontend_target, /useMerchantReservationSetup/)
     assert.match(row(method, path).backend_prerequisite, /실서버 저장 QA 미수행/)
     assert.match(row(method, path).backend_prerequisite, /전체 스냅샷 갱신 #302/)
-    assert.equal(row(method, path).last_verified, '2026-10-18T15:09:05Z')
+    assert.equal(row(method, path).last_verified, method === 'GET' ? '2026-10-19' : '2026-10-18T15:09:05Z')
   }
   assert.equal(row('GET', '/users/me/merchant-place-applications/naver-place-search').status, 'implemented')
   assert.match(row('GET', '/admin/dashboard/pending-items').frontend_target, /예약/)

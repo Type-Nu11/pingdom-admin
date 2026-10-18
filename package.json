@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:trust-score-history-browser": "node tests/browser/trust-score-history.mjs",
     "test:reservation-timezone-browser": "node tests/browser/reservation-timezone.mjs",
     "test:reservation-setup-browser": "node tests/browser/reservation-setup.mjs",
     "test:ec2-image": "node scripts/verify-ec2-image.mjs",

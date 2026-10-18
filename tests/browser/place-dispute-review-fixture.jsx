@@ -13,15 +13,17 @@ import { report, list } from '../helpers/place-dispute-data.mjs'
 
 const path = '/admin/place-information-reports'
 const qa = window.placeReviewQA = { calls: [], detailStatus: 0, listStatus: 0, postStatus: 0,
-  delayPost: false, empty: false, clears: 0 }
+  delayPost: false, delayList: false, delayDetail: false, empty: false, clears: 0 }
 const records = new Map([[1, report(1)], [2, report(2)]])
 client.defaults.adapter = observeFixtureAdapter(async config => {
   qa.calls.push({ method: config.method, path: config.url })
   let data, status
   if (config.method === 'get' && config.url === path) {
     data = list(qa.empty ? [] : [...records.values()]); status = qa.listStatus
+    if (qa.delayList) await new Promise(resolve => { qa.releaseList = resolve })
   } else if (config.method === 'get' && /^\/admin\/place-information-reports\/\d+$/.test(config.url)) {
     data = records.get(Number(config.url.split('/').at(-1))); status = qa.detailStatus
+    if (qa.delayDetail) await new Promise(resolve => { qa.releaseDetail = resolve })
   } else {
     const match = config.url.match(/^\/admin\/place-information-reports\/(\d+)(?:\/disputes\/(\d+))?\/review$/)
     if (config.method !== 'post' || !match) throw Error(`Unexpected synthetic API ${config.method} ${config.url}`)

@@ -299,6 +299,38 @@ test('an old account save cannot close a new account dialog or erase its input',
   assert.equal(state.actionSuccessMessage, '')
 })
 
+for (const type of ['report', 'dispute']) for (const denied of ['list', 'detail']) {
+  test(`${type} saved dialog stays closed after early ${denied} 403 and delayed sibling GET retry`, async () => {
+    showPanel = true; await mount(); await select()
+    const button = name => [...document.querySelectorAll('button')].find(node => node.textContent.trim() === name)
+    await act(async () => button(type === 'report' ? '신고 검토' : '반박 검토').click())
+    await act(async () => {
+      const input = document.querySelector('textarea')
+      Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(input, '합성 지연 재조회 판정 근거')
+      input.dispatchEvent(new window.Event('input', { bubbles: true }))
+    })
+    const gate = deferred()
+    adapter = config => {
+      if (config.method === 'post') return standard(config)
+      if (config.url === (denied === 'list' ? path : path + '/1')) return fail(config, 403)
+      return gate.promise.then(() => standard(config))
+    }
+    await act(async () => button(type === 'report' ? '검토 결과 저장' : '반박 수용').click())
+    await settle()
+    assert.equal(document.querySelector('[role="dialog"]') === null, true, '403 hides the dialog before the other GET settles')
+    assert.equal(state.activeAction, type === 'report' ? 'review-report' : 'review-dispute')
+    await act(async () => gate.resolve()); await settle()
+    assert.match(state.actionNotice, /저장됐지만/)
+    assert.equal(state.activeAction, null)
+    adapter = standard
+    await act(async () => state.retryRefresh()); await settle()
+    assert.equal(state.reportDetail.reportId, 1)
+    assert.equal(state.canReview, true)
+    assert.equal(document.querySelector('[role="dialog"]') === null, true, 'GET retry must not revive the saved draft')
+    assert.equal(writes().length, 1)
+  })
+}
+
 for (const change of ['account', 'session', 'unmount']) test(`late detail after ${change} is ignored`, async () => {
   await mount()
   const gate = deferred()

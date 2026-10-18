@@ -121,7 +121,12 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               reviewReason: reason,
             })
           : null
-    if (result && currentDialog.current === submittedDialog) { guard.markClean(); setDialog(null) }
+    if (result) {
+      if (currentDialog.current === submittedDialog) guard.markClean()
+      // A denied refresh can hide this dialog before the save finishes.
+      // Retire that saved draft without closing a newer dialog or clearing its guard.
+      setDialog(current => current === submittedDialog ? null : current)
+    }
   }
 
   return (

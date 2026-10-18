@@ -85,21 +85,66 @@ try {
     await retry.click(); await retry.waitFor({ state: 'detached' })
     assert.equal(await page.getByRole('button', { name: '신고 검토', exact: true }).isDisabled(), false)
 
-    // A permission failure during refresh hides data, but must not erase the known save outcome.
+    // Both reply orders must retire a saved dialog even if permission failure hides it early.
     allowed.add(403)
+    for (const denied of ['list', 'detail']) {
+      await page.getByRole('button', { name: '신고 검토', exact: true }).click()
+      dialog = page.getByRole('dialog', { name: '신고 검토', exact: true })
+      assert.equal(await dialog.getByRole('textbox', { name: /판정 근거/ }).inputValue(), '')
+      await dialog.getByRole('combobox', { name: '신고 검토 결과', exact: true }).click()
+      await page.getByRole('option', { name: '검토 중', exact: true }).click()
+      await dialog.getByRole('textbox', { name: /판정 근거/ }).fill('합성 재조회 권한 확인')
+      await page.evaluate(mode => {
+        Object.assign(window.placeReviewQA, {
+          listStatus: mode === 'list' ? 403 : 0, detailStatus: mode === 'detail' ? 403 : 0,
+          delayList: mode === 'detail', delayDetail: mode === 'list',
+          releaseList: null, releaseDetail: null,
+        })
+      }, denied)
+      await dialog.getByRole('button', { name: '검토 결과 저장', exact: true }).click()
+      await dialog.waitFor({ state: 'detached' })
+      await page.waitForFunction(mode => typeof window.placeReviewQA[mode === 'list' ? 'releaseDetail' : 'releaseList'] === 'function', denied)
+      assert.equal(await retry.count(), 0, 'the sibling GET is still pending')
+      await page.evaluate(mode => {
+        window.placeReviewQA.delayList = false; window.placeReviewQA.delayDetail = false
+        window.placeReviewQA[mode === 'list' ? 'releaseDetail' : 'releaseList']()
+      }, denied)
+      await retry.waitFor()
+      await page.getByRole('alert').filter({ hasText: '검토 결과는 저장됐지만' }).waitFor()
+      assert.equal(await page.getByText('반박 2건', { exact: true }).count(), 0)
+      const postCount = await page.evaluate(() => window.placeReviewQA.calls.filter(call => call.method === 'post').length)
+      await page.evaluate(() => { window.placeReviewQA.listStatus = 0; window.placeReviewQA.detailStatus = 0 })
+      await retry.click(); await retry.waitFor({ state: 'detached' })
+      await page.getByText('반박 2건', { exact: true }).waitFor()
+      assert.equal(await page.getByRole('dialog').count(), 0, 'GET retry must not revive the saved dialog')
+      assert.equal(await page.evaluate(() => window.placeReviewQA.calls.filter(call => call.method === 'post').length), postCount)
+      await page.screenshot({ path: join(output, `permission-retry-${denied}-${width}.png`), fullPage: true })
+    }
+
+    // An old account's save must not close a new draft or clear its unsaved protection.
     await page.getByRole('button', { name: '신고 검토', exact: true }).click()
     dialog = page.getByRole('dialog', { name: '신고 검토', exact: true })
-    await dialog.getByRole('combobox', { name: '신고 검토 결과', exact: true }).click()
-    await page.getByRole('option', { name: '검토 중', exact: true }).click()
-    await dialog.getByRole('textbox', { name: /판정 근거/ }).fill('합성 재조회 권한 확인')
-    await page.evaluate(() => { window.placeReviewQA.listStatus = 403 })
+    await dialog.getByRole('textbox', { name: /판정 근거/ }).fill('이전 계정의 합성 검토')
+    await page.evaluate(() => { window.placeReviewQA.delayPost = true })
     await dialog.getByRole('button', { name: '검토 결과 저장', exact: true }).click()
-    await dialog.waitFor({ state: 'detached' }); await retry.waitFor()
-    await page.getByRole('alert').filter({ hasText: '검토 결과는 저장됐지만' }).waitFor()
-    assert.equal(await page.getByText('반박 2건', { exact: true }).count(), 0)
-    await page.evaluate(() => { window.placeReviewQA.listStatus = 0 })
-    await retry.click(); await retry.waitFor({ state: 'detached' })
-    await page.getByText('반박 2건', { exact: true }).waitFor()
+    await dialog.getByRole('button', { name: '저장 중', exact: true }).waitFor()
+    await page.evaluate(() => window.placeReviewQA.changeAccount(150))
+    await page.getByText('검토할 신고를 선택해주세요.', { exact: true }).waitFor()
+    await page.getByRole('button').filter({ hasText: '신고 #2 · 장소 #102' }).click()
+    await page.getByText('신고 #2', { exact: true }).waitFor()
+    await page.getByRole('button', { name: '신고 검토', exact: true }).click()
+    dialog = page.getByRole('dialog', { name: '신고 검토', exact: true })
+    await dialog.getByRole('textbox', { name: /판정 근거/ }).fill('새 계정의 미저장 검토')
+    await page.evaluate(() => { window.placeReviewQA.delayPost = false; window.placeReviewQA.releasePost() })
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    assert.equal(await dialog.getByRole('textbox', { name: /판정 근거/ }).inputValue(), '새 계정의 미저장 검토')
+    await page.keyboard.press('Escape')
+    await unsaved.waitFor()
+    await unsaved.getByRole('button', { name: '계속 작성', exact: true }).click()
+    assert.equal(await dialog.getByRole('textbox', { name: /판정 근거/ }).inputValue(), '새 계정의 미저장 검토')
+    await dialog.getByRole('button', { name: '취소', exact: true }).click()
+    await unsaved.getByRole('button', { name: '변경 버리고 이동', exact: true }).click()
+    await dialog.waitFor({ state: 'detached' })
 
     // Existing whole-report review: POST failure retains the reason, retry succeeds.
     await page.getByRole('button', { name: '신고 검토', exact: true }).click()
@@ -131,7 +176,7 @@ try {
     await page.getByText('조건에 맞는 신고가 없습니다.', { exact: true }).waitFor()
     guard.assertClean()
     const writes = (await page.evaluate(() => window.placeReviewQA.calls)).filter(c => c.method !== 'get')
-    assert.equal(writes.length, 5)
+    assert.equal(writes.length, 7)
     assert.ok(writes.every(c => c.method === 'post' && /\/review$/.test(c.path)))
     console.log(`PASS place-dispute review/save/refresh/retry/dialog/empty/auth ${width}×${height}`)
     await page.close()

@@ -11,6 +11,7 @@ let report = () => {}
 const requests = []
 let slots = [{ id: 7, placeId: 1, startsAt: '2099-10-01T10:00:00', endsAt: '2099-10-01T11:00:00',
   totalCapacity: 6, remainingCapacity: 6, status: 'ACTIVE', reservationTerms: null, conditionsVersion: 0 }]
+if (new URLSearchParams(location.search).has('timezone-qa')) slots = [{ ...slots[0], startsAt: '2030-03-10T05:00:17.123456789', endsAt: '2030-03-10T06:00:17.123456789' }]
 client.defaults.adapter = async config => {
   const body = config.data ? JSON.parse(config.data) : null
   requests.push({ method: config.method, url: config.url, body })
@@ -32,7 +33,9 @@ client.defaults.adapter = async config => {
   if (['post', 'put'].includes(config.method) && /^\/merchant-owner\/availabilities(?:\/\d+)?$/.test(config.url)) {
     if (JSON.stringify(Object.keys(body).sort()) !== JSON.stringify(['endsAt', 'placeId', 'startsAt', 'totalCapacity'])) throw new Error('Unexpected slot payload')
     const id = config.method === 'post' ? 8 : Number(config.url.split('/').at(-1))
-    const next = { ...slots[0], ...body, id }
+    const existing = slots.find(slot => slot.id === id)
+    const used = existing ? existing.totalCapacity - existing.remainingCapacity : 0
+    const next = { ...slots[0], ...body, id, remainingCapacity: body.totalCapacity - used }
     slots = [...slots.filter(slot => slot.id !== id), next]
     return response(next)
   }

@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:data-quality-browser": "node tests/browser/data-quality.mjs",
     "test:place-dispute-review-browser": "node tests/browser/place-dispute-review.mjs",
     "test:trust-score-history-browser": "node tests/browser/trust-score-history.mjs",
     "test:reservation-timezone-browser": "node tests/browser/reservation-timezone.mjs",

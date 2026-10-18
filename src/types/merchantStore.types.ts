@@ -8,8 +8,6 @@ export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantPlaceMenuCurrency = 'KRW' | 'USD' | 'JPY' | 'CNY' | 'EUR'
 export type MerchantPlaceMenuStatus = 'AVAILABLE' | 'SOLD_OUT' | 'HIDDEN' | 'INACTIVE'
 export type MerchantAvailabilityStatus = 'ACTIVE' | 'INACTIVE'
-// Legacy confirmation display is removed separately in #297, not a product API contract.
-export type LegacyReservationProductType = 'GENERAL' | 'TICKET' | 'CLASS'
 export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELED'
 export type MerchantPaymentStatus =
   | 'PROCESSING'
@@ -271,25 +269,13 @@ export interface MerchantReservationConfirmation {
   placeId: number
   placeName: string
   availabilityId: number
-  productType: LegacyReservationProductType
-  productId: number | null
-  productName: string | null
   startsAt: string
   endsAt: string
   quantity: number
   timezone: string
-  unitAmountMinor: number
-  additionalAmountMinor: number
-  totalAmountMinor: number
-  currency: string
-  currencyFractionDigits: number
-  paymentRequired: boolean
   cancellable: boolean
   cancellationDeadline: string | null
-  cancellationFeeMinor: number
-  refundableAmountMinor: number
   conditionsVersion: number
-  productVersion: number | null
   expiresAt: string
 }
 
@@ -299,8 +285,6 @@ export interface MerchantReservation {
   availabilityId: number
   reservationStartsAt?: string | null
   reservationEndsAt?: string | null
-  productId: number | null
-  productType: LegacyReservationProductType
   quantity: number
   status: MerchantReservationStatus
   createdAt: string

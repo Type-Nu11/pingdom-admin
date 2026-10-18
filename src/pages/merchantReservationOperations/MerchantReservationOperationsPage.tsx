@@ -10,16 +10,9 @@ import { useMerchantReservationOperations } from '../../hooks/useMerchantReserva
 import type {
   MerchantReservation,
   MerchantReservationStatus,
-  LegacyReservationProductType,
 } from '../../types/merchantStore.types'
 import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from '../../components/merchant/MerchantWorkspace.styles'
-
-const PRODUCT_TYPE_LABEL: Record<LegacyReservationProductType, string> = {
-  GENERAL: '일반 예약',
-  TICKET: '티켓',
-  CLASS: '클래스',
-}
 
 const STATUS: Record<MerchantReservationStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   PENDING: { label: '관리자 심사 대기', tone: 'draft' },
@@ -73,13 +66,13 @@ function MerchantReservationOperationsPage() {
         {operations.status === 'loading' || operations.isLoading ? <Store.LoadingSummary aria-label="예약 신청을 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : <S.Panel><S.PanelHeader><div><S.PanelTitle>예약 신청 목록</S.PanelTitle><S.PanelDescription>심사 대기 예약은 관리자 승인 또는 반려를 기다립니다. 승인된 예약은 필요한 경우에만 취소할 수 있습니다.</S.PanelDescription></div></S.PanelHeader><S.ResultMeta>총 {operations.pageInfo.totalElements.toLocaleString()}건</S.ResultMeta>{operations.reservations.length === 0 ? <S.Empty>현재 조회할 예약 신청이 없습니다.</S.Empty> : <S.CampaignList>{operations.reservations.map((reservation) => {
           const availability = availabilityById.get(reservation.availabilityId)
           const status = STATUS[reservation.status]
-          const productLabel = reservation.confirmation?.productName ?? '예약 신청'
+          const placeLabel = reservation.confirmation?.placeName || (availability?.placeId ? `장소 #${availability.placeId}` : `예약 #${reservation.id}`)
           const isCanceling = operations.activeReservationId === reservation.id
           const restriction = reservationCancellationRestriction(reservation.confirmation)
 
           return <S.CampaignItem as="div" key={reservation.id} $selected={false}>
-            <S.CampaignTop><S.CampaignTitle>{productLabel}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop>
-            <S.CampaignMeta>예약 #{reservation.id} · {PRODUCT_TYPE_LABEL[reservation.productType]} · {reservation.quantity}명</S.CampaignMeta>
+            <S.CampaignTop><S.CampaignTitle>{placeLabel}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop>
+            <S.CampaignMeta>예약 #{reservation.id} · {reservation.quantity}명</S.CampaignMeta>
             {!reservation.confirmation ? <S.CampaignMeta style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{reservation.reservationStartsAt || reservation.reservationEndsAt
               ? `${formatReservationSchedule(reservation.reservationStartsAt)} - ${formatReservationSchedule(reservation.reservationEndsAt)}`
               : availability ? `${formatReservationSchedule(availability.startsAt)} - ${formatReservationSchedule(availability.endsAt)}` : `예약 가능 시간 #${reservation.availabilityId}`}</S.CampaignMeta> : null}

@@ -45,12 +45,11 @@ function Layout() {
 async function mount(kind) {
   router = createMemoryRouter([{ element: h(Layout), children: [{ path: '/form', element: h(pages[kind]) }, { path: '/other', element: h('p', null, 'other') }, { path: '/login', element: h('p', null, 'login') }] }], { initialEntries: ['/form'] })
   await act(async () => root.render(h(RouterProvider, { router })))
-  if (kind === 'availability') await click([...document.querySelectorAll('button')].find(element => element.textContent.startsWith('일반 장소 예약') && element.textContent.includes('잔여')))
+  if (kind === 'availability') await click([...document.querySelectorAll('button')].find(element => element.textContent.startsWith('예약 가능 시간 #') && element.textContent.includes('잔여')))
   if (kind === 'notices') await click([...document.querySelectorAll('button')].find(element => element.textContent.startsWith('합성 공지 1')))
   if (kind === 'response') await click(button('응답 작성'))
 }
 async function dirty(kind) {
-  if (kind === 'products') await fill(document.querySelector('input[maxlength="100"]'), '합성 상품 수정')
   if (kind === 'availability') await fill(document.querySelector('input[type="number"]'), '7')
   if (kind === 'notices' || kind === 'response') await fill(document.querySelector('textarea'), '합성 입력 수정')
   if (kind === 'operations') await click(button('일정 추가'))
@@ -92,7 +91,7 @@ for (const kind of Object.keys(pages)) {
     assert.equal(router.state.location.pathname, '/login'); assert.equal(confirmation(), undefined)
   })
 }
-for (const [kind, submit] of [['products', '상품 등록'], ['availability', '시간 저장'], ['notices', '공지 저장'], ['response', '응답 제출']]) {
+for (const [kind, submit] of [['availability', '시간 저장'], ['notices', '공지 저장'], ['response', '응답 제출']]) {
   test(`${kind}: failed save keeps input and busy guard; successful retry clears the baseline`, async () => {
     await mount(kind); await dirty(kind)
     let resolve; gate = { promise: new Promise(r => { resolve = r }) }; failure = true
@@ -138,7 +137,7 @@ test('response: close/Escape/backdrop confirmation leaves the parent draft intac
   await click(button('응답 작성')); assert.equal(document.querySelector('textarea').value, '')
 })
 
-for (const kind of ['products', 'availability', 'notices', 'operations']) {
+for (const kind of ['availability', 'notices', 'operations']) {
   test(`${kind}: canceled store switch retains input; confirmed switch starts another store cleanly`, async () => {
     await mount(kind); await dirty(kind)
     const select = document.querySelector('[role="combobox"][aria-label$="장소 선택"]')
@@ -165,14 +164,6 @@ for (const kind of ['products', 'availability', 'notices', 'operations']) {
     assert.equal(clean.defaultPrevented, false)
   })
 }
-test('products: selecting CLASS then saving clears the name without a stale dirty baseline', async () => {
-  await mount('products')
-  const select = document.querySelector('[role="combobox"][aria-label="예약 상품 유형"]')
-  await click(select); await click([...document.querySelectorAll('[role="option"]')].find(element => element.textContent.includes('클래스')))
-  await dirty('products'); await click(button('상품 등록'))
-  assert.match(select.textContent, /클래스/); assert.equal(document.querySelector('input[maxlength="100"]').value, '')
-  await click(button('화면 이동')); assert.equal(router.state.location.pathname, '/other')
-})
 test('notices: filtering does not discard edited text and scoped cancel-reason close does not discard parent input', async () => {
   await mount('notices'); await dirty('notices'); await click(button('노출 중'))
   assert.equal(confirmation(), undefined); assert.equal(document.querySelector('textarea').value, '합성 입력 수정')
@@ -185,10 +176,10 @@ test('notices: filtering does not discard edited text and scoped cancel-reason c
   assert.equal(document.querySelector('textarea').value, '합성 입력 수정')
   await click(button('화면 이동')); assert.ok(confirmation())
 })
-for (const kind of ['products', 'availability', 'notices']) test(`${kind}: restoring the original value does not leave a warning`, async () => {
+for (const kind of ['availability', 'notices']) test(`${kind}: restoring the original value does not leave a warning`, async () => {
   await mount(kind); await dirty(kind)
-  const field = kind === 'products' ? document.querySelector('input[maxlength="100"]') : kind === 'availability' ? document.querySelector('input[type="number"]') : document.querySelector('textarea')
-  await fill(field, kind === 'products' ? '' : kind === 'availability' ? '5' : '합성 공지 1')
+  const field = kind === 'availability' ? document.querySelector('input[type="number"]') : document.querySelector('textarea')
+  await fill(field, kind === 'availability' ? '5' : '합성 공지 1')
   await click(button('화면 이동')); assert.equal(router.state.location.pathname, '/other'); assert.equal(confirmation(), undefined)
 })
 test('notices: expired notices remain read-only and do not block navigation', async () => {

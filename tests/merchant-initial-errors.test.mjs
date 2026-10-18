@@ -26,7 +26,7 @@ beforeEach(() => {
     let data = {}
     if (config.url.endsWith('/me')) data = { placeIds }
     else if (config.url.endsWith('/media')) data = { media: [] }
-    else if (config.url.endsWith('/reservable-products') || config.url.endsWith('/availabilities')) data = []
+    else if (config.url.endsWith('/availabilities')) data = []
     return { config, data, status: 200, statusText: 'OK', headers: {} }
   }
 })
@@ -38,7 +38,7 @@ async function mount(hook) {
 }
 for (const [name, hook, core, optional, refresh] of [
   ['operations', useMerchantPlaceOperations, '/merchant-owner/places/1/operating', '/merchant-owner/places/1/media', () => state.fetchPlaceOperations(1)],
-  ['reservation', useMerchantReservationSetup, '/merchant-owner/availabilities', '/merchant-owner/reservable-products', () => state.fetchReservationSetup()],
+  ['reservation', useMerchantReservationSetup, '/merchant-owner/availabilities', null, () => state.fetchReservationSetup()],
 ]) {
   test(`${name}: initial core failure has a message and retry recovers`, async () => {
     failures.add(core)
@@ -52,15 +52,15 @@ for (const [name, hook, core, optional, refresh] of [
     assert.equal(state.errorMessage, '')
     assert.equal(name === 'reservation' ? state.availabilityError : state.sectionErrorMessage, '')
   })
-  test(`${name}: optional failure preserves ready screen and section warning`, async () => {
+  if (optional) test(`${name}: optional failure preserves ready screen and section warning`, async () => {
     failures.add(optional)
     await mount(hook)
     assert.equal(state.status, 'ready')
     assert.equal(state.errorMessage, '')
-    assert.ok(name === 'reservation' ? state.productError : state.sectionErrorMessage)
+    assert.ok(state.sectionErrorMessage)
     failures.clear()
     await act(async () => refresh())
-    assert.equal(name === 'reservation' ? state.productError : state.sectionErrorMessage, '')
+    assert.equal(state.sectionErrorMessage, '')
   })
   test(`${name}: later section failure does not become an initial error`, async () => {
     await mount(hook)

@@ -87,9 +87,6 @@ const MerchantMenuPage = lazy(
 const MerchantReservationSetupPage = lazy(
   () => import('../../pages/merchantReservationSetup/MerchantReservationSetupPage'),
 )
-const MerchantReservationProductsPage = lazy(
-  () => import('../../pages/merchantReservationProducts/MerchantReservationProductsPage'),
-)
 const MerchantReservationOperationsPage = lazy(
   () => import('../../pages/merchantReservationOperations/MerchantReservationOperationsPage'),
 )
@@ -180,7 +177,7 @@ const router = createBrowserRouter(createRoutesFromElements(
               <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
               <Route path="/merchant/offers" element={<MerchantOfferPage />} />
               <Route path="/merchant/menus" element={<MerchantMenuPage />} />
-              <Route path="/merchant/reservations/products" element={<MerchantReservationProductsPage />} />
+              <Route path="/merchant/reservations/products" element={<Navigate to="/merchant/reservations/setup" replace state={{ reservationProductsRemoved: true }} />} />
               <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
               <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />
               <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />

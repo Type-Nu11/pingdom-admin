@@ -8,7 +8,7 @@ import Page from '../../src/pages/merchantReservationSetup/MerchantReservationSe
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 
-const base = { placeId: 1, productId: null, productName: null, productType: 'GENERAL', startsAt: '2099-10-01T10:00', endsAt: '2099-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0 }
+const base = { placeId: 1, startsAt: '2099-10-01T10:00', endsAt: '2099-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0 }
 let rows = [
   { ...base, id: 7, reservationTerms: null },
   { ...base, id: 8, startsAt: '2099-10-02T10:00', reservationTerms: { unitAmountMinor: 0, additionalAmountMinor: 0, currency: 'KRW', timezone: 'Asia/Seoul', cancellable: false, cancellationCutoffMinutes: null } },

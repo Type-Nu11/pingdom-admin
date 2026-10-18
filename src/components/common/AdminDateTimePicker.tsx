@@ -14,65 +14,82 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 const HOURS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'))
 const MINUTES = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'))
 
-function parseValue(value: string) {
+function calendarParts(date: Date, wallClock = false) {
+  return wallClock
+    ? { year: date.getUTCFullYear(), month: date.getUTCMonth(), day: date.getUTCDate(), weekday: date.getUTCDay(), hour: date.getUTCHours(), minute: date.getUTCMinutes() }
+    : { year: date.getFullYear(), month: date.getMonth(), day: date.getDate(), weekday: date.getDay(), hour: date.getHours(), minute: date.getMinutes() }
+}
+
+function calendarDate(year: number, month: number, day: number, hour = 0, minute = 0, wallClock = false) {
+  if (!wallClock) return new Date(year, month, day, hour, minute)
+  const date = new Date(0)
+  date.setUTCFullYear(year, month, day)
+  date.setUTCHours(hour, minute, 0, 0)
+  return date
+}
+
+function parseValue(value: string, wallClock = false, today?: string): Date {
   const matched = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/)
 
   if (!matched) {
-    return new Date()
+    return wallClock && today ? parseValue(today, true) : new Date()
   }
 
-  return new Date(
+  return calendarDate(
     Number(matched[1]),
     Number(matched[2]) - 1,
     Number(matched[3]),
     Number(matched[4] ?? 0),
-    Number(matched[5] ?? 0)
+    Number(matched[5] ?? 0), wallClock
   )
 }
 
-function formatDate(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-    date.getDate()
+function formatDate(date: Date, wallClock = false) {
+  const p = calendarParts(date, wallClock)
+  return `${p.year}-${String(p.month + 1).padStart(2, '0')}-${String(
+    p.day
   ).padStart(2, '0')}`
 }
 
-function formatDateTime(date: Date) {
-  return `${formatDate(date)}T${String(date.getHours()).padStart(2, '0')}:${String(
-    date.getMinutes()
+function formatDateTime(date: Date, wallClock = false) {
+  const p = calendarParts(date, wallClock)
+  return `${formatDate(date, wallClock)}T${String(p.hour).padStart(2, '0')}:${String(
+    p.minute
   ).padStart(2, '0')}`
 }
 
-function formatDateLabel(value: string, includeTime: boolean) {
+function formatDateLabel(value: string, includeTime: boolean, wallClock = false) {
   if (!value) {
     return includeTime ? '일시 선택' : '날짜 선택'
   }
 
-  const date = parseValue(value)
-  const dateLabel = `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.`
+  const p = calendarParts(parseValue(value, wallClock), wallClock)
+  const dateLabel = `${p.year}. ${p.month + 1}. ${p.day}.`
 
   return includeTime
-    ? `${dateLabel} ${String(date.getHours()).padStart(2, '0')}:${String(
-        date.getMinutes()
+    ? `${dateLabel} ${String(p.hour).padStart(2, '0')}:${String(
+        p.minute
       ).padStart(2, '0')}`
     : dateLabel
 }
 
-function getCalendarDays(viewDate: Date) {
-  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1)
-  const start = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1 - firstDay.getDay())
+function getCalendarDays(viewDate: Date, wallClock = false) {
+  const p = calendarParts(viewDate, wallClock)
+  const firstDay = calendarDate(p.year, p.month, 1, 0, 0, wallClock)
+  const start = calendarParts(calendarDate(p.year, p.month, 1 - calendarParts(firstDay, wallClock).weekday, 0, 0, wallClock), wallClock)
 
   return Array.from(
     { length: 42 },
-    (_, index) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + index)
+    (_, index) => calendarDate(start.year, start.month, start.day + index, 0, 0, wallClock)
   )
 }
 
-function isSameDay(left: Date | null, right: Date) {
+function isSameDay(left: Date | null, right: Date, wallClock = false) {
   return Boolean(
     left &&
-      left.getFullYear() === right.getFullYear() &&
-      left.getMonth() === right.getMonth() &&
-      left.getDate() === right.getDate()
+      calendarParts(left, wallClock).year === calendarParts(right, wallClock).year &&
+      calendarParts(left, wallClock).month === calendarParts(right, wallClock).month &&
+      calendarParts(left, wallClock).day === calendarParts(right, wallClock).day
   )
 }
 
@@ -168,6 +185,9 @@ interface PickerProps {
   value: string
   disabled?: boolean
   onChange: (value: string) => void
+  /** Civil fields stored in UTC-shaped Dates, never browser DST-normalized. */
+  wallClock?: boolean
+  today?: string
 }
 
 export function AdminDatePicker({ ariaLabel, value, disabled, onChange }: PickerProps) {
@@ -187,6 +207,8 @@ export function AdminDateTimePicker({
   value,
   disabled,
   onChange,
+  wallClock,
+  today,
 }: PickerProps) {
   return (
     <DatePicker
@@ -194,6 +216,8 @@ export function AdminDateTimePicker({
       value={value}
       disabled={disabled}
       includeTime
+      wallClock={wallClock}
+      today={today}
       onChange={onChange}
     />
   )
@@ -203,16 +227,16 @@ interface DatePickerProps extends PickerProps {
   includeTime: boolean
 }
 
-function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DatePickerProps) {
+function DatePicker({ ariaLabel, value, disabled, includeTime, onChange, wallClock = false, today }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [viewDate, setViewDate] = useState(() => parseValue(value))
+  const [viewDate, setViewDate] = useState(() => parseValue(value, wallClock, today))
   const rootRef = useRef<HTMLDivElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const floatingPosition = useFloatingLayerPosition(isOpen, rootRef, popoverRef)
-  const selectedDate = value ? parseValue(value) : null
-  const calendarDays = useMemo(() => getCalendarDays(viewDate), [viewDate])
+  const selectedDate = value ? parseValue(value, wallClock, today) : null
+  const calendarDays = useMemo(() => getCalendarDays(viewDate, wallClock), [viewDate, wallClock])
   const timeValue = selectedDate
-    ? `${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(
+    ? `${String(calendarParts(selectedDate, wallClock).hour).padStart(2, '0')}:${String(calendarParts(selectedDate, wallClock).minute).padStart(
         2,
         '0'
       )}`
@@ -245,9 +269,14 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
 
   const handleDateSelect = (nextDate: Date) => {
     const nextValue = selectedDate ? new Date(selectedDate) : new Date(nextDate)
-    nextValue.setFullYear(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate())
-    nextValue.setSeconds(0, 0)
-    onChange(includeTime ? formatDateTime(nextValue) : formatDate(nextValue))
+    if (wallClock) {
+      nextValue.setUTCFullYear(nextDate.getUTCFullYear(), nextDate.getUTCMonth(), nextDate.getUTCDate())
+      nextValue.setUTCSeconds(0, 0)
+    } else {
+      nextValue.setFullYear(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate())
+      nextValue.setSeconds(0, 0)
+    }
+    onChange(includeTime ? formatDateTime(nextValue, wallClock) : formatDate(nextValue, wallClock))
 
     if (!includeTime) {
       setIsOpen(false)
@@ -257,8 +286,9 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
   const handleTimeChange = (nextTime: string) => {
     const [hours, minutes] = nextTime.split(':').map(Number)
     const nextValue = selectedDate ? new Date(selectedDate) : new Date(viewDate)
-    nextValue.setHours(hours, minutes, 0, 0)
-    onChange(formatDateTime(nextValue))
+    if (wallClock) nextValue.setUTCHours(hours, minutes, 0, 0)
+    else nextValue.setHours(hours, minutes, 0, 0)
+    onChange(formatDateTime(nextValue, wallClock))
   }
 
   const handleEscape = (event: ReactKeyboardEvent<HTMLElement>) => {
@@ -273,19 +303,19 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
     <S.Root ref={rootRef}>
       <S.Trigger
         type="button"
-        aria-label={`${ariaLabel}, ${formatDateLabel(value, includeTime)}`}
+        aria-label={`${ariaLabel}, ${formatDateLabel(value, includeTime, wallClock)}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         disabled={disabled}
         onKeyDown={handleEscape}
         onClick={() => {
           if (value) {
-            setViewDate(parseValue(value))
+            setViewDate(parseValue(value, wallClock, today))
           }
           setIsOpen((open) => !open)
         }}
       >
-        <span>{formatDateLabel(value, includeTime)}</span>
+        <span>{formatDateLabel(value, includeTime, wallClock)}</span>
         <S.Icon aria-hidden="true">calendar_month</S.Icon>
       </S.Trigger>
       {isOpen
@@ -308,21 +338,21 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
               aria-label="이전 달"
               onClick={() =>
                 setViewDate((current) =>
-                  new Date(current.getFullYear(), current.getMonth() - 1, 1)
+                  calendarDate(calendarParts(current, wallClock).year, calendarParts(current, wallClock).month - 1, 1, 0, 0, wallClock)
                 )
               }
             >
               <S.Icon aria-hidden="true">chevron_left</S.Icon>
             </S.IconButton>
             <S.CalendarTitle>
-              {viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월
+              {calendarParts(viewDate, wallClock).year}년 {calendarParts(viewDate, wallClock).month + 1}월
             </S.CalendarTitle>
             <S.IconButton
               type="button"
               aria-label="다음 달"
               onClick={() =>
                 setViewDate((current) =>
-                  new Date(current.getFullYear(), current.getMonth() + 1, 1)
+                  calendarDate(calendarParts(current, wallClock).year, calendarParts(current, wallClock).month + 1, 1, 0, 0, wallClock)
                 )
               }
             >
@@ -339,14 +369,14 @@ function DatePicker({ ariaLabel, value, disabled, includeTime, onChange }: DateP
               <S.DayButton
                 key={date.toISOString()}
                 type="button"
-                $outside={date.getMonth() !== viewDate.getMonth()}
-                $selected={isSameDay(selectedDate, date)}
-                $today={isSameDay(new Date(), date)}
-                aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
-                aria-pressed={isSameDay(selectedDate, date)}
+                $outside={calendarParts(date, wallClock).month !== calendarParts(viewDate, wallClock).month}
+                $selected={isSameDay(selectedDate, date, wallClock)}
+                $today={isSameDay(wallClock && today ? parseValue(today, true) : new Date(), date, wallClock)}
+                aria-label={`${calendarParts(date, wallClock).year}년 ${calendarParts(date, wallClock).month + 1}월 ${calendarParts(date, wallClock).day}일`}
+                aria-pressed={isSameDay(selectedDate, date, wallClock)}
                 onClick={() => handleDateSelect(date)}
               >
-                {date.getDate()}
+                {calendarParts(date, wallClock).day}
               </S.DayButton>
             ))}
           </S.DayGrid>

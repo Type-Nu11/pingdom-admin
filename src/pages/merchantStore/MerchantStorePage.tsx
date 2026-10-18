@@ -5,6 +5,7 @@ import { useMerchantStore } from '../../hooks/useMerchantStore'
 import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import { useSavedDraft } from '../../hooks/useSavedDraft'
 import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
+import { formatReservationSchedule as formatDateTime } from '../../utils/reservationTime'
 import type {
   MerchantOfferStatus,
   MerchantOwnerProfileStatus,
@@ -36,14 +37,6 @@ function formatDate(value: string) {
     .format(date)
     .replace(/\./g, '')
     .replace(/\s/g, '.')
-}
-
-function formatDateTime(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function formatCount(value: number) {
@@ -282,7 +275,7 @@ function MerchantStorePage() {
 
                     <S.Section>
                       <S.SectionHeading><div><S.SectionTitle>예약 시간</S.SectionTitle><S.SectionDescription>고객이 선택할 수 있는 예약 시간과 잔여 인원입니다.</S.SectionDescription></div></S.SectionHeading>
-                      {store.reservationAvailabilities.length === 0 ? <S.Empty>등록된 예약 시간이 없습니다.</S.Empty> : <S.ResourceList>{store.reservationAvailabilities.slice(0, 4).map((availability) => <S.ResourceRow key={availability.id}><S.ResourceTop><S.ResourceTitle title={`${formatDateTime(availability.startsAt)} - ${formatDateTime(availability.endsAt)}`}>{formatDateTime(availability.startsAt)} - {formatDateTime(availability.endsAt)}</S.ResourceTitle><S.ResourceBadge $active={availability.status === 'ACTIVE'}>{availability.status === 'ACTIVE' ? '예약 가능' : '비활성'}</S.ResourceBadge></S.ResourceTop><S.ResourceMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.ResourceMeta></S.ResourceRow>)}</S.ResourceList>}
+                      {store.reservationAvailabilities.length === 0 ? <S.Empty>등록된 예약 시간이 없습니다.</S.Empty> : <S.ResourceList>{store.reservationAvailabilities.slice(0, 4).map((availability) => <S.ResourceRow key={availability.id}><S.ResourceTop><S.ResourceTitle style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }} title={`${formatDateTime(availability.startsAt)} - ${formatDateTime(availability.endsAt)}`}>{formatDateTime(availability.startsAt)} - {formatDateTime(availability.endsAt)}</S.ResourceTitle><S.ResourceBadge $active={availability.status === 'ACTIVE'}>{availability.status === 'ACTIVE' ? '예약 가능' : '비활성'}</S.ResourceBadge></S.ResourceTop><S.ResourceMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.ResourceMeta></S.ResourceRow>)}</S.ResourceList>}
                     </S.Section>
 
                     <S.Section>

@@ -297,6 +297,8 @@ export interface MerchantReservation {
   id: number
   touristUserId: number
   availabilityId: number
+  reservationStartsAt?: string | null
+  reservationEndsAt?: string | null
   productId: number | null
   productType: LegacyReservationProductType
   quantity: number

@@ -13,10 +13,11 @@ const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthConte
 const { MerchantPlaceContext } = await server.ssrLoadModule('/src/app/providers/MerchantPlaceContext.ts')
 const { useMerchantReservationSetup } = await server.ssrLoadModule('/src/hooks/useMerchantReservationSetup.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
+const { updateMerchantReservationTerms } = await server.ssrLoadModule('/src/api/merchantStoreApi.ts')
 const { parseReservationTerms, reservationTermsDraft } = await server.ssrLoadModule('/src/utils/merchantReservationTerms.ts')
 const { clearStoredAuth } = await server.ssrLoadModule('/src/utils/authStorage.ts')
 const { ReservationTermsEditor } = await server.ssrLoadModule('/src/components/merchant/ReservationTermsEditor.tsx')
-const terms = { unitAmountMinor: 1000, additionalAmountMinor: 50, currency: 'USD', timezone: 'Asia/Seoul', cancellable: true, cancellationCutoffMinutes: 60 }
+const terms = { timezone: 'Asia/Seoul', cancellable: true, cancellationCutoffMinutes: 60 }
 const slot = { id: 7, placeId: 1, startsAt: '2099-10-01T10:00', endsAt: '2099-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0, reservationTerms: null }
 const response = (config, data) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 let root, state, adapter, calls, clears, rows
@@ -36,21 +37,34 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
 
-test('unset, zero/free, and noncancellable are distinct and serialized exactly', () => {
+test('unset, zero-cutoff, and noncancellable are distinct and serialized as three fields', () => {
   const empty = reservationTermsDraft(null)
-  assert.equal(empty.unitAmountMinor, ''); assert.equal(empty.cancellation, '')
+  assert.deepEqual(empty, { timezone: 'Asia/Seoul', cancellation: '', cancellationCutoffMinutes: '' })
   assert.equal(typeof parseReservationTerms(empty), 'string')
   assert.deepEqual(parseReservationTerms(reservationTermsDraft(terms)), terms)
-  const free = { ...terms, unitAmountMinor: 0, additionalAmountMinor: 0, cancellable: false, cancellationCutoffMinutes: null }
-  assert.deepEqual(parseReservationTerms({ ...reservationTermsDraft(free), cancellationCutoffMinutes: '99' }), free)
+  const disallowed = { ...terms, cancellable: false, cancellationCutoffMinutes: null }
+  assert.deepEqual(parseReservationTerms({ ...reservationTermsDraft(disallowed), cancellationCutoffMinutes: '99' }), disallowed)
+  assert.deepEqual(parseReservationTerms({ ...reservationTermsDraft(terms), cancellationCutoffMinutes: '0' }), { ...terms, cancellationCutoffMinutes: 0 })
+  assert.equal(JSON.stringify(empty).includes('undefined'), false)
+  assert.equal(reservationTermsDraft({ timezone: 'Asia/Seoul' }).cancellation, '')
 })
-test('validation rejects missing, fractional, negative, unsafe amounts, currency, timezone and cutoff', () => {
+test('validation rejects invalid timezone, cancellation choice and out-of-range cutoff', () => {
   const valid = reservationTermsDraft(terms)
-  for (const key of ['unitAmountMinor', 'additionalAmountMinor']) for (const value of ['', '-1', '1.5', '1e3', '9007199254740992']) assert.equal(typeof parseReservationTerms({ ...valid, [key]: value }), 'string')
-  for (const value of ['', 'usd', 'US', 'USDD']) assert.equal(typeof parseReservationTerms({ ...valid, currency: value }), 'string')
-  for (const value of ['', 'invalid', '+09:00']) assert.equal(typeof parseReservationTerms({ ...valid, timezone: value }), 'string')
-  for (const value of ['', '-1', '0.5', '2147483648']) assert.equal(typeof parseReservationTerms({ ...valid, cancellationCutoffMinutes: value }), 'string')
+  for (const value of ['', 'invalid', '+09:00', ' '.repeat(65)]) assert.equal(typeof parseReservationTerms({ ...valid, timezone: value }), 'string')
+  for (const value of ['', '-1', '0.5', '1e3', '2147483648', '9007199254740992']) assert.equal(typeof parseReservationTerms({ ...valid, cancellationCutoffMinutes: value }), 'string')
+  for (const value of ['', 'unexpected']) assert.equal(typeof parseReservationTerms({ ...valid, cancellation: value }), 'string')
   assert.equal(parseReservationTerms({ ...valid, cancellationCutoffMinutes: '0' }).cancellationCutoffMinutes, 0)
+  assert.equal(parseReservationTerms({ ...valid, cancellationCutoffMinutes: '2147483647' }).cancellationCutoffMinutes, 2147483647)
+})
+for (const field of ['unitAmountMinor', 'additionalAmountMinor', 'currency']) {
+  for (const value of [null, 0, 'KRW']) test(`legacy ${field}=${value} is rejected before any request`, async () => {
+    await assert.rejects(() => updateMerchantReservationTerms(7, { ...terms, [field]: value }), /예약 금액/)
+    assert.equal(calls.length, 0)
+  })
+}
+test('the API serializes only current contract keys', async () => {
+  await updateMerchantReservationTerms(7, { ...terms, unrelated: 'must not leak' })
+  assert.deepEqual(JSON.parse(calls[0].data), terms)
 })
 test('successful PUT uses fixed target, reloads stored values and version, survives another reload', async () => {
   await mount()
@@ -130,10 +144,11 @@ test('editor preloads persisted values, preserves input on failed save and close
   let succeed = false, closed = 0, writes = []
   const child = () => h(ReservationTermsEditor, { availability: { ...slot, reservationTerms: terms }, busy: false, error: '', onClose() { closed++ }, async onSave(id, value) { writes.push({ id, value }); return succeed ? {} : null } })
   await mount(child())
-  assert.equal(document.querySelector('[aria-label="1인당 가격"]').value, '1000')
+  assert.equal(document.querySelector('[aria-label="기준 시간대"]').value, 'Asia/Seoul')
+  for (const label of ['1인당 가격', '예약당 추가 비용', '통화']) assert.equal(document.querySelector(`[aria-label="${label}"]`), null)
   await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })))
   assert.equal(closed, 0); assert.deepEqual(writes[0], { id: 7, value: terms })
-  assert.equal(document.querySelector('[aria-label="1인당 가격"]').value, '1000')
+  assert.equal(document.querySelector('[aria-label="시작 전 취소 기한(분)"]').value, '60')
   succeed = true
   await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })))
   assert.equal(closed, 1)

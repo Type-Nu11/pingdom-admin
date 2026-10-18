@@ -255,9 +255,6 @@ export interface MerchantAvailability {
 }
 
 export interface MerchantReservationTerms {
-  unitAmountMinor: number
-  additionalAmountMinor: number
-  currency: string
   timezone: string
   cancellable: boolean
   cancellationCutoffMinutes: number | null

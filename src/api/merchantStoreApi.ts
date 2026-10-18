@@ -401,8 +401,13 @@ export async function getMerchantAvailabilities() {
 }
 
 export async function updateMerchantReservationTerms(availabilityId: number, request: MerchantReservationTerms) {
+  if ('unitAmountMinor' in request || 'additionalAmountMinor' in request || 'currency' in request) {
+    throw new Error('예약 금액 설정은 더 이상 지원하지 않습니다. 취소 조건을 다시 입력해주세요.')
+  }
+  const { timezone, cancellable, cancellationCutoffMinutes } = request
   const { data } = await customAxios.put<MerchantReservationTerms>(
-    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/reservation-terms`, request,
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/reservation-terms`,
+    { timezone, cancellable, cancellationCutoffMinutes },
   )
   return data
 }

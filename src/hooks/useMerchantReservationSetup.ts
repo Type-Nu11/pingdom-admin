@@ -232,7 +232,7 @@ export function useMerchantReservationSetup() {
         }
         setAvailabilityError(getErrorMessage(result.refreshError, '조건은 저장됐지만 최신 버전을 불러오지 못했습니다. 시간 목록을 다시 조회해주세요.'))
       }
-    }, '예약 가격·취소 조건을 저장했습니다.', '예약 가격·취소 조건을 저장하지 못했습니다.')
+    }, '예약 취소 조건을 저장했습니다.', '예약 취소 조건을 저장하지 못했습니다.')
   }, [availabilities, selectedPlaceId, runAction, getErrorMessage])
 
   return {

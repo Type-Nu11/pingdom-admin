@@ -112,10 +112,10 @@ function AvailabilityEditor({
           <S.Input type="number" min="1" value={totalCapacity} disabled={isBusy} onChange={(event) => setTotalCapacity(event.target.value)} />
         </S.Field>
         {availability ? <S.Field>현재 잔여 인원<S.Input value={`${availability.remainingCapacity}명`} disabled /></S.Field> : null}
-        {availability ? <S.Field $wide><S.FieldHint>{availability.reservationTerms ? '가격·취소 조건 설정됨' : '가격·취소 조건 미설정'}</S.FieldHint></S.Field> : null}
+        {availability ? <S.Field $wide><S.FieldHint>{availability.reservationTerms ? '예약 취소 조건 설정됨' : '예약 취소 조건 미설정'}</S.FieldHint></S.Field> : null}
         {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}
         <S.FormActions>
-          {availability ? <S.ActionButton type="button" disabled={isBusy} onClick={onEditTerms}>가격·취소 조건</S.ActionButton> : null}
+          {availability ? <S.ActionButton type="button" disabled={isBusy} onClick={onEditTerms}>예약 취소 조건</S.ActionButton> : null}
           {availability ? (
             <S.ActionButton type="button" disabled={isBusy} $variant={availability.status === 'ACTIVE' ? 'danger' : 'secondary'} onClick={() => void onToggleActive(availability, availability.status !== 'ACTIVE')}>
               {activeAction === 'activate-availability' || activeAction === 'deactivate-availability' ? '처리 중' : availability.status === 'ACTIVE' ? '비활성화' : '활성화'}

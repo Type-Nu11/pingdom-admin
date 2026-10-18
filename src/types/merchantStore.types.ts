@@ -7,8 +7,9 @@ export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantPlaceMenuCurrency = 'KRW' | 'USD' | 'JPY' | 'CNY' | 'EUR'
 export type MerchantPlaceMenuStatus = 'AVAILABLE' | 'SOLD_OUT' | 'HIDDEN' | 'INACTIVE'
-export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
-export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
+export type MerchantAvailabilityStatus = 'ACTIVE' | 'INACTIVE'
+// Legacy confirmation display is removed separately in #297, not a product API contract.
+export type LegacyReservationProductType = 'GENERAL' | 'TICKET' | 'CLASS'
 export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELED'
 export type MerchantPaymentStatus =
   | 'PROCESSING'
@@ -241,33 +242,16 @@ export interface MerchantCoupon {
   redeemedAt: string | null
 }
 
-export interface MerchantReservableProduct {
-  id: number
-  placeId: number
-  productType: MerchantReservableProductType
-  name: string
-  status: ReservableProductStatus
-}
-
-export interface MerchantReservableProductCreateRequest {
-  placeId: number
-  productType: MerchantReservableProductType
-  name: string
-}
-
 export interface MerchantAvailability {
   id: number
   placeId: number
-  productId: number | null
-  productType: MerchantReservableProductType
-  productName: string | null
   reservationTerms: MerchantReservationTerms | null
   conditionsVersion: number
   startsAt: string
   endsAt: string
   totalCapacity: number
   remainingCapacity: number
-  status: ReservableProductStatus
+  status: MerchantAvailabilityStatus
 }
 
 export interface MerchantReservationTerms {
@@ -281,18 +265,16 @@ export interface MerchantReservationTerms {
 
 export interface MerchantAvailabilityUpsertRequest {
   placeId: number
-  productId?: number
-  productType?: MerchantReservableProductType
   startsAt: string
   endsAt: string
-  totalCapacity?: number
+  totalCapacity: number
 }
 
 export interface MerchantReservationConfirmation {
   placeId: number
   placeName: string
   availabilityId: number
-  productType: MerchantReservableProductType
+  productType: LegacyReservationProductType
   productId: number | null
   productName: string | null
   startsAt: string
@@ -319,7 +301,7 @@ export interface MerchantReservation {
   touristUserId: number
   availabilityId: number
   productId: number | null
-  productType: MerchantReservableProductType
+  productType: LegacyReservationProductType
   quantity: number
   status: MerchantReservationStatus
   createdAt: string

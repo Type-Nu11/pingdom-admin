@@ -39,7 +39,6 @@ client.defaults.adapter = async config => {
     return response(next)
   }
   if (config.url.endsWith('/reservations')) return response({ reservations: rows, page: 1, limit: 20, totalElements: rows.length, totalPages: 1, hasNext: false })
-  if (config.url.endsWith('/reservable-products')) return response([{ id: 3, name: '이후 변경된 상품명' }])
   return response([])
 }
 createRoot(document.getElementById('root')).render(<AuthContext.Provider value={{ user: { username: 'synthetic' }, clearAuth() {}, logout() {} }}><BrowserRouter><GlobalStyle /><Routes><Route path="/reservation-qa" element={<Page />} /><Route path="/merchant/payments" element={<h1>결제 내역 테스트 경로</h1>} /></Routes></BrowserRouter></AuthContext.Provider>)

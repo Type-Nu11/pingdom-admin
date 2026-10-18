@@ -17,7 +17,7 @@ const { parseReservationTerms, reservationTermsDraft } = await server.ssrLoadMod
 const { clearStoredAuth } = await server.ssrLoadModule('/src/utils/authStorage.ts')
 const { ReservationTermsEditor } = await server.ssrLoadModule('/src/components/merchant/ReservationTermsEditor.tsx')
 const terms = { unitAmountMinor: 1000, additionalAmountMinor: 50, currency: 'USD', timezone: 'Asia/Seoul', cancellable: true, cancellationCutoffMinutes: 60 }
-const slot = { id: 7, placeId: 1, productId: null, productName: null, productType: 'GENERAL', startsAt: '2099-10-01T10:00', endsAt: '2099-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0, reservationTerms: null }
+const slot = { id: 7, placeId: 1, startsAt: '2099-10-01T10:00', endsAt: '2099-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0, reservationTerms: null }
 const response = (config, data) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 let root, state, adapter, calls, clears, rows
 function Probe() { state = useMerchantReservationSetup(); return null }

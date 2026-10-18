@@ -33,7 +33,7 @@ export function ReservationTermsEditor({ availability, busy, error, onSave, onCl
       if (result) { protection.markClean(); onClose() }
     } finally { saving.current = false }
   }
-  return <AppDialog title="가격·취소 조건" isDismissible={!busy} onClose={() => protection.request(onClose)} description={`${availability.productName ?? '일반 장소 예약'} · ${availability.startsAt} — ${availability.endsAt}`}>
+  return <AppDialog title="가격·취소 조건" isDismissible={!busy} onClose={() => protection.request(onClose)} description={`예약 가능 시간 #${availability.id} · ${availability.startsAt} — ${availability.endsAt}`}>
     <S.Form onSubmit={submit}>
       <S.Field $wide><S.FieldHint>{availability.reservationTerms ? '저장된 조건을 수정합니다.' : '가격·취소 조건이 아직 설정되지 않았습니다. 무료 또는 취소 불가로 간주하지 않습니다.'}</S.FieldHint></S.Field>
       <S.Field>1인당 가격<S.Input aria-label="1인당 가격" type="number" min="0" step="1" value={draft.unitAmountMinor} disabled={busy} onChange={event => change('unitAmountMinor', event.target.value)} /></S.Field>

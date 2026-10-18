@@ -16,8 +16,10 @@ const { UnsavedChangesProvider } = await server.ssrLoadModule('/src/components/c
 const { useMerchantReservationSetup } = await server.ssrLoadModule('/src/hooks/useMerchantReservationSetup.ts')
 const { default: Page } = await server.ssrLoadModule('/src/pages/merchantReservationSetup/MerchantReservationSetupPage.tsx')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
+const api = await server.ssrLoadModule('/src/api/merchantStoreApi.ts')
+const { clearStoredAuth } = await server.ssrLoadModule('/src/utils/authStorage.ts')
 let root, router, hook, adapter, clears
-const item = { id: 1, placeId: 1, productId: null, productType: 'GENERAL', startsAt: '2027-10-01T10:00', endsAt: '2027-10-01T11:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE' }
+const item = { id: 1, placeId: 1, startsAt: '2030-10-01T10:00:00', endsAt: '2030-10-01T11:00:00', totalCapacity: 5, remainingCapacity: 5, status: 'ACTIVE', conditionsVersion: 0, reservationTerms: null }
 const response = (config, data) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 const base = async config => response(config, config.url.endsWith('/me') ? { placeIds: [1, 2] } : config.url.endsWith('/availabilities') ? [item] : [])
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r }); return { promise, resolve } }
@@ -33,17 +35,16 @@ beforeEach(() => { clears = 0; adapter = base; client.defaults.adapter = config 
 afterEach(async () => { await act(async () => root.unmount()); router?.dispose(); router = null })
 after(async () => { await server.close(); dom.window.close() })
 
-test('product failure leaves time results available and retries independently', async () => {
-  adapter = config => config.url.endsWith('/reservable-products') ? Promise.reject(new Error('offline')) : base(config)
+test('removed product API is never queried and cannot block time writes', async () => {
+  const requests = []
+  adapter = config => { requests.push(config.url); if (config.url.includes('reservable-products')) throw new Error('Removed endpoint'); return base(config) }
   await render()
-  assert.equal(hook.status, 'ready'); assert.equal(hook.productStatus, 'error'); assert.equal(hook.availabilityStatus, 'ready')
-  await act(async () => { await hook.fetchAvailabilities() })
-  assert.ok(hook.productError); assert.equal(hook.availabilities.length, 1)
-  adapter = base
-  await act(async () => { await hook.fetchProducts() })
-  assert.equal(hook.productStatus, 'ready'); assert.equal(hook.productError, '')
+  assert.equal(hook.status, 'ready'); assert.equal(hook.availabilityStatus, 'ready')
+  await act(async () => { assert.equal(await hook.fetchReservationSetup(), true) })
+  assert.equal(hook.availabilities.length, 1)
+  assert.ok(requests.every(url => !url.includes('reservable-products')))
 })
-for (const [endpoint, method, field] of [['availabilities', 'fetchAvailabilities', 'availabilities'], ['reservable-products', 'fetchProducts', 'products']]) {
+for (const [endpoint, method, field] of [['availabilities', 'fetchAvailabilities', 'availabilities']]) {
   test(`${endpoint}: older response cannot overwrite a retry`, async () => {
     await render(); const gate = deferred(); let calls = 0
     adapter = async config => {
@@ -123,34 +124,27 @@ test('external place change clears selected editor target', async () => {
   assert.ok(!document.body.textContent.includes('시간 저장'))
 })
 
-for (const explicitChoice of [false, true]) test(`delayed products use the displayed selection and preserve draft (explicit=${explicitChoice})`, async () => {
-  const gate = deferred()
-  const first = { id: 10, placeId: 1, name: 'First ticket', productType: 'TICKET', status: 'ACTIVE' }
-  const second = { ...first, id: 20, name: 'Second ticket' }
-  let products = [first, second]
+for (const editing of [false, true]) test(`slot ${editing ? 'update' : 'create'} uses only current fields without a product selection`, async () => {
+  const requests = []
   let submitted
   adapter = async config => {
+    requests.push(config)
     if (config.method !== 'get') {
       submitted = JSON.parse(config.data)
       return response(config, { ...item, ...submitted, id: 99 })
     }
-    if (config.url.endsWith('/reservable-products')) { await gate.promise; return response(config, products) }
     return base(config)
   }
   await render(h(Page))
-  const capacity = document.querySelector('input[type="number"]')
-  assert.equal(capacity.disabled, true)
-  await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
   const button = text => [...document.querySelectorAll('button')].find(el => el.textContent.trim() === text)
   const click = async el => { assert.ok(el); await act(async () => el.click()) }
-  await click(document.querySelector('[aria-label="예약 대상"]'))
-  await click(button('등록한 예약 상품'))
-  assert.ok(document.querySelector('[aria-label="예약 상품 선택"]').textContent.includes(first.name))
-  if (explicitChoice) {
-    await click(document.querySelector('[aria-label="예약 상품 선택"]'))
-    await click(button('Second ticket · 티켓'))
-  }
-  for (const [label, day] of [['예약 시작 일시', 10], ['예약 종료 일시', 11]]) {
+  if (editing) await click([...document.querySelectorAll('button')].find(el => el.textContent.startsWith('예약 가능 시간 #1')))
+  const capacity = document.querySelector('input[type="number"]')
+  assert.equal(capacity.disabled, false)
+  assert.equal(document.querySelector('[aria-label="예약 대상"]'), null)
+  assert.equal(document.querySelector('[aria-label="예약 상품 선택"]'), null)
+  assert.doesNotMatch(document.body.textContent, /상품 #undefined|상품 다시 시도/)
+  if (!editing) for (const [label, day] of [['예약 시작 일시', 10], ['예약 종료 일시', 11]]) {
     await click(document.querySelector(`[aria-label^="${label},"]`))
     await click(document.querySelector('[aria-label="다음 달"]'))
     const date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, day)
@@ -162,16 +156,53 @@ for (const explicitChoice of [false, true]) test(`delayed products use the displ
     capacity.dispatchEvent(new window.Event('input', { bubbles: true }))
   })
   const startsLabel = document.querySelector('[aria-label^="예약 시작 일시,"]').getAttribute('aria-label')
-  if (explicitChoice) {
-    products = [second, first]
-    await click(button('새로고침'))
-    await click(button('계속 작성'))
-    assert.ok(document.querySelector('[aria-label="예약 상품 선택"]').textContent.includes(second.name))
-  }
+  await click(button('새로고침'))
+  await click(button('계속 작성'))
   assert.equal(document.querySelector('input[type="number"]'), capacity)
   assert.equal(capacity.value, '17')
   assert.equal(document.querySelector('[aria-label^="예약 시작 일시,"]').getAttribute('aria-label'), startsLabel)
-  await click(button('시간 등록'))
-  assert.equal(submitted.productId, explicitChoice ? second.id : first.id)
+  await click(button(editing ? '시간 저장' : '시간 등록'))
+  assert.deepEqual(Object.keys(submitted).sort(), ['endsAt', 'placeId', 'startsAt', 'totalCapacity'])
   assert.equal(submitted.totalCapacity, 17)
+  assert.ok(requests.every(config => !config.url.includes('reservable-products')))
+  assert.equal(requests.find(config => config.method !== 'get').method, editing ? 'put' : 'post')
+})
+
+for (const method of ['createMerchantAvailability', 'updateMerchantAvailability']) {
+  for (const field of ['productId', 'productType']) test(`${method} rejects stale ${field}, including null, before sending a request`, async () => {
+    let writes = 0
+    adapter = config => { writes++; return base(config) }
+    const request = { placeId: 1, startsAt: item.startsAt, endsAt: item.endsAt, totalCapacity: 5, [field]: null }
+    await assert.rejects(() => method.startsWith('create') ? api[method](request) : api[method](1, request), /예약 상품 연결/)
+    assert.equal(writes, 0)
+  })
+}
+
+test('availability writes reject concurrent submissions and remain blocked on a failed query', async () => {
+  await render()
+  const gate = deferred(); let writes = 0
+  adapter = async config => { writes++; await gate.promise; return response(config, item) }
+  const request = { placeId: 1, startsAt: item.startsAt, endsAt: item.endsAt, totalCapacity: 5 }
+  let pending
+  await act(async () => { pending = hook.createAvailability(request) })
+  await act(async () => { assert.equal(await hook.createAvailability(request), null) })
+  assert.equal(writes, 1)
+  await act(async () => { gate.resolve(); await pending })
+  adapter = async () => { throw new Error('offline') }
+  await act(async () => { await hook.fetchAvailabilities() })
+  await act(async () => { assert.equal(await hook.createAvailability(request), null) })
+  assert.equal(writes, 1)
+})
+
+test('an old-session slot mutation cannot update the next account', async () => {
+  await render()
+  const gate = deferred()
+  adapter = async config => { await gate.promise; return response(config, { ...item, totalCapacity: 99 }) }
+  let pending, result
+  await act(async () => { pending = hook.saveAvailability(1, { placeId: 1, startsAt: item.startsAt, endsAt: item.endsAt, totalCapacity: 99 }) })
+  await act(async () => { clearStoredAuth(); gate.resolve(); result = await pending })
+  assert.equal(result, null)
+  assert.equal(hook.availabilities[0].totalCapacity, 5)
+  assert.equal(hook.successMessage, '')
+  assert.equal(hook.actionErrorMessage, '')
 })

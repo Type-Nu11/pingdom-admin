@@ -37,7 +37,8 @@ beforeEach(() => {
     calls.push(config)
     if (config.method !== 'get') return handler(config)
     if (config.url.endsWith('/reservations')) return response(config, { reservations: rows, page: 1, limit: 20, totalElements: rows.length, totalPages: 1, hasNext: false })
-    return response(config, config.url.endsWith('/reservable-products') ? [{ id: 3, name: '현재 상품' }] : [{ id: 2, startsAt: '2020-01-01T00:00:00', endsAt: '2020-01-02T00:00:00' }])
+    if (config.url.endsWith('/availabilities')) return response(config, [{ id: 2, startsAt: '2020-01-01T00:00:00', endsAt: '2020-01-02T00:00:00' }])
+    throw new Error(`Unexpected read ${config.url}`)
   }
 })
 afterEach(async () => { await act(async () => root.unmount()) })
@@ -81,6 +82,7 @@ test('page prefers accepted snapshot over changed product/availability and disab
   assert.match(document.body.textContent, /20.50 USD/)
   const buttons = [...document.querySelectorAll('button')].filter(button => button.textContent === '예약 취소')
   assert.equal(buttons[0].disabled, false); assert.equal(buttons[1].disabled, true)
+  assert.ok(calls.every(config => !config.url.includes('reservable-products')))
 })
 for (const [status, code, kind] of [[409, 'CANCELLATION_NOT_ALLOWED', 'policy'], [409, 'RESERVATION_REFUND_REQUIRED', 'refund'], [409, 'INVALID_RESERVATION_STATE', null], [401, 'EXPIRED_TOKEN', null], [403, 'ACCESS_DENIED', null], [500, '', null]]) {
   test(`cancel ${status}/${code}: retains row, separates auth and guidance`, async () => {

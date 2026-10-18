@@ -36,7 +36,7 @@ client.defaults.adapter = async config => {
   else if (config.url.endsWith('/offers')) data = { offers: [] }
   else if (config.url.endsWith('/operating-notices')) data = { notices: [] }
   else if (config.url.endsWith('/reviews')) data = { reviews: [], page: 1, limit: 20, totalElements: 0, totalPages: 0, hasNext: false }
-  else if (['/menus', '/reservable-products', '/availabilities'].some(path => config.url.endsWith(path))) data = []
+  else if (['/menus', '/availabilities'].some(path => config.url.endsWith(path))) data = []
   else throw new Error(`Unexpected request: ${config.url}`)
   return { config, data, status: 200, statusText: 'OK', headers: {} }
 }

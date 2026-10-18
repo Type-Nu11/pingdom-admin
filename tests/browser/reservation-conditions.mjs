@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createServer } from 'vite'
+import { createServer } from '../helpers/isolated-vite.mjs'
+import { guardBrowserPage } from '../helpers/browser-regression-guard.mjs'
 import { chromium } from 'playwright'
-const output = await mkdtemp(join(tmpdir(), 'pingdom-255-'))
+const output = await mkdtemp(join(tmpdir(), 'pingdom-297-'))
 const server = await createServer({ cacheDir: join(output, 'cache'), server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'reservation-qa', configureServer(vite) {
   vite.middlewares.use(async (req, res, next) => {
     if (!req.url.startsWith('/reservation-qa') && !req.url.startsWith('/merchant/payments')) return next()
@@ -13,22 +14,21 @@ const server = await createServer({ cacheDir: join(output, 'cache'), server: { p
   })
 } }] })
 let browser
+const expectedConflict = event => (event.kind === 'fixture-api' && event.method === 'POST' && event.status === 409 && event.text === 'Synthetic conflict' && /^\/merchant-owner\/reservations\/\d+\/cancel$/.test(event.path)) || (event.kind === 'console' && event.level === 'error' && event.text.startsWith('상점주 예약 취소 실패') && event.text.includes('Synthetic conflict'))
 try {
   await server.listen(); browser = await chromium.launch()
-  for (const [width, height] of [[1920, 1080], [1366, 768]]) {
+  const base = `http://127.0.0.1:${server.httpServer.address().port}`
+  for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
     const page = await browser.newPage({ viewport: { width, height }, timezoneId: 'America/Los_Angeles' })
-    const errors = []
-    page.on('pageerror', error => errors.push(error.message))
-    await page.route('**/*', route => {
-      const host = new URL(route.request().url()).hostname
-      return host === '127.0.0.1' || host === 'fonts.googleapis.com' || host === 'fonts.gstatic.com' ? route.continue() : route.abort()
-    })
+    const guard = await guardBrowserPage(page, base, expectedConflict)
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/reservation-qa`)
     await page.getByText('예약 신청 목록', { exact: true }).waitFor()
-    await page.getByText('총액', { exact: false }).first().waitFor()
-    assert.ok((await page.locator('body').innerText()).includes('20.50 USD'))
-    assert.ok((await page.locator('body').innerText()).includes('0.00 USD'))
-    assert.equal(await page.getByText('수락 당시 클래스', { exact: true }).count(), 1)
+    await page.getByLabel('수락한 예약 조건').first().waitFor()
+    const text = await page.locator('body').innerText()
+    assert.match(text, /테스트 매장.*2명.*수락 조건 v1/s)
+    assert.match(text, /관리자 심사 대기/)
+    assert.match(text, /관리자 반려.*합성 반려 사유/s)
+    assert.doesNotMatch(text, /상품|총액|금액|무료|0원|결제 불필요|undefined/)
     const cancel = page.getByRole('button', { name: '예약 취소', exact: true })
     assert.equal(await cancel.nth(3).isDisabled(), true)
     assert.equal(await cancel.nth(4).isDisabled(), false)
@@ -69,8 +69,17 @@ try {
     await cancel.first().click()
     await dialog.getByRole('button', { name: '예약 취소', exact: true }).click()
     await dialog.getByRole('button', { name: '결제·환불 내역 확인' }).click()
-    await page.getByRole('heading', { name: '결제 내역 테스트 경로' }).waitFor()
-    assert.deepEqual(errors, [])
+    await page.getByRole('heading', { name: '결제·정산' }).waitFor()
+    await page.getByText('결제 #10', { exact: true }).waitFor()
+    await page.getByText('예약 #1 · 금액 정보 없음', { exact: true }).waitFor()
+    assert.doesNotMatch(await page.locator('body').innerText(), /0원|0 KRW/)
+    await page.getByRole('button', { name: '전액 환불', exact: true }).click()
+    await page.getByRole('dialog').getByRole('button', { name: '전액 환불', exact: true }).click()
+    await page.getByRole('status').filter({ hasText: '환불 요청이 접수되었습니다.' }).waitFor()
+    await page.getByText('환불 처리 중', { exact: true }).waitFor()
+    assert.doesNotMatch(await page.locator('body').innerText(), /환불 완료|전액 환불했습니다/)
+    assert.equal(await page.getByRole('button', { name: '전액 환불', exact: true }).count(), 0)
+    guard.assertClean()
     await page.close()
   }
   for (const [skew, deadlineOffset, mode] of [[120_000, 60_000, 'success'], [-120_000, -60_000, 'policy']]) {
@@ -80,7 +89,7 @@ try {
       Date.now = () => originalNow() + skew
       window.qaDeadline = deadline
     }, { skew, deadline: new Date(Date.now() + deadlineOffset).toISOString() })
-    await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort())
+    const guard = await guardBrowserPage(page, base, expectedConflict)
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/reservation-qa`)
     const cancel = page.getByRole('button', { name: '예약 취소', exact: true }).first()
     await cancel.waitFor()
@@ -100,6 +109,7 @@ try {
       await page.screenshot({ path: join(output, 'server-deadline-1366.png'), fullPage: true })
     }
     assert.equal(await page.evaluate(() => window.qaWrites.length), 1)
+    guard.assertClean()
     await page.close()
   }
   console.log('PASS reservation conditions, conflicts, pending dialog guards, success, refund navigation and clock skew; ' + output)

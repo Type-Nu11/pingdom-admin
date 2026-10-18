@@ -341,7 +341,7 @@ function AdminReservationReviewPage() {
                               <S.StatusBadge $tone={itemStatus.tone}>{itemStatus.label}</S.StatusBadge>
                             </S.RecordHeader>
                             <S.RecordMeta>예약 #{item.id} · {formatPerson(item.touristUsername, item.touristUserId)}</S.RecordMeta>
-                            <S.RecordSummary>{item.productName || '예약 상품 정보 없음'} · {formatSchedule(item)}</S.RecordSummary>
+                            <S.RecordSummary>{item.quantity.toLocaleString()}명 · {formatSchedule(item)}</S.RecordSummary>
                           </S.RecordButton>
                         )
                       })}
@@ -353,7 +353,7 @@ function AdminReservationReviewPage() {
                 <Shared.PanelHeader>
                   <div>
                     <Shared.PanelTitle>예약 상세</Shared.PanelTitle>
-                    <Shared.PanelDescription>예약자, 장소, 상품과 처리 이력을 확인합니다.</Shared.PanelDescription>
+                    <Shared.PanelDescription>예약자, 장소, 시간·인원과 처리 이력을 확인합니다.</Shared.PanelDescription>
                   </div>
                 </Shared.PanelHeader>
                 <Shared.CompareBody>
@@ -381,9 +381,8 @@ function AdminReservationReviewPage() {
                         <S.DetailItem><dt>예약자</dt><dd>{formatPerson(hook.reservation.touristUsername, hook.reservation.touristUserId)}</dd></S.DetailItem>
                         <S.DetailItem><dt>장소</dt><dd><PlaceDetailLink id={hook.reservation.placeId} name={hook.reservation.placeName} /></dd></S.DetailItem>
                         <S.DetailItem><dt>상점주</dt><dd>{formatPerson(hook.reservation.merchantOwnerUsername, hook.reservation.merchantOwnerUserId)}</dd></S.DetailItem>
-                        <S.DetailItem><dt>예약 상품</dt><dd>{hook.reservation.productName || '정보 없음'}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 시간</dt><dd>{formatSchedule(hook.reservation)}</dd></S.DetailItem>
-                        <S.DetailItem><dt>예약 수량</dt><dd>{hook.reservation.quantity.toLocaleString()}명</dd></S.DetailItem>
+                        <S.DetailItem><dt>예약 인원</dt><dd>{hook.reservation.quantity.toLocaleString()}명</dd></S.DetailItem>
                         <S.DetailItem><dt>검토 관리자</dt><dd>{hook.reservation.reviewedBy === null ? '미처리' : `관리자 #${hook.reservation.reviewedBy}`}</dd></S.DetailItem>
                         <S.DetailItem><dt>검토 일시</dt><dd>{formatDate(hook.reservation.reviewedAt)}</dd></S.DetailItem>
                       </S.DetailGrid>
@@ -445,9 +444,8 @@ function AdminReservationReviewPage() {
             <S.DetailItem><dt>예약 번호</dt><dd>#{dialog.target.id}</dd></S.DetailItem>
             <S.DetailItem><dt>장소</dt><dd>{dialog.target.placeName || '정보 없음'} · #{dialog.target.placeId}</dd></S.DetailItem>
             <S.DetailItem><dt>예약자</dt><dd>{formatPerson(dialog.target.touristUsername, dialog.target.touristUserId)}</dd></S.DetailItem>
-            <S.DetailItem><dt>예약 상품</dt><dd>{dialog.target.productName || '정보 없음'}</dd></S.DetailItem>
             <S.DetailItem><dt>예약 일정</dt><dd>{formatSchedule(dialog.target)}</dd></S.DetailItem>
-            <S.DetailItem><dt>예약 수량</dt><dd>{dialog.target.quantity.toLocaleString()}명</dd></S.DetailItem>
+            <S.DetailItem><dt>예약 인원</dt><dd>{dialog.target.quantity.toLocaleString()}명</dd></S.DetailItem>
           </S.DetailGrid>
           <S.FormGrid>
             <S.WideField>

@@ -84,6 +84,22 @@ test('page prefers accepted snapshot over changed product/availability and disab
   assert.equal(buttons[0].disabled, false); assert.equal(buttons[1].disabled, true)
   assert.ok(calls.every(config => !config.url.includes('reservable-products')))
 })
+test('legacy reservation schedule uses its UTC snapshot before a changed availability in every client zone', async () => {
+  const previous = process.env.TZ
+  try {
+    for (const timezone of ['Asia/Seoul', 'UTC', 'America/New_York']) {
+      process.env.TZ = timezone
+      rows = [{ ...reservation, confirmation: null, reservationStartsAt: '2030-03-10T05:00:00', reservationEndsAt: '2030-03-10T06:00:00' }]
+      await mount(h(Page))
+      assert.match(document.body.textContent, /2030\.03\.10 14:00 \(한국 시각\)/)
+      assert.doesNotMatch(document.body.textContent, /2020\.01\.01/)
+      await act(async () => root.render(null))
+    }
+  } finally {
+    if (previous === undefined) delete process.env.TZ
+    else process.env.TZ = previous
+  }
+})
 for (const [status, code, kind] of [[409, 'CANCELLATION_NOT_ALLOWED', 'policy'], [409, 'RESERVATION_REFUND_REQUIRED', 'refund'], [409, 'INVALID_RESERVATION_STATE', null], [401, 'EXPIRED_TOKEN', null], [403, 'ACCESS_DENIED', null], [500, '', null]]) {
   test(`cancel ${status}/${code}: retains row, separates auth and guidance`, async () => {
     await mount()

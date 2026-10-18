@@ -5,6 +5,7 @@ import { AdminPagination } from '../../components/common/AdminPagination'
 import { AppDialog } from '../../components/common/AppDialog'
 import { ReservationConditions } from '../../components/merchant/ReservationConditions'
 import { reservationCancellationRestriction } from '../../utils/reservationConditions'
+import { formatReservationSchedule, formatReservationEventTime as formatDateTime } from '../../utils/reservationTime'
 import { useMerchantReservationOperations } from '../../hooks/useMerchantReservationOperations'
 import type {
   MerchantReservation,
@@ -25,14 +26,6 @@ const STATUS: Record<MerchantReservationStatus, { label: string; tone: 'draft' |
   CONFIRMED: { label: '관리자 승인', tone: 'published' },
   REJECTED: { label: '관리자 반려', tone: 'closed' },
   CANCELED: { label: '취소', tone: 'closed' },
-}
-
-function formatDateTime(value: string | null) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function MerchantReservationOperationsPage() {
@@ -87,7 +80,9 @@ function MerchantReservationOperationsPage() {
           return <S.CampaignItem as="div" key={reservation.id} $selected={false}>
             <S.CampaignTop><S.CampaignTitle>{productLabel}</S.CampaignTitle><S.StatusBadge $tone={status.tone}>{status.label}</S.StatusBadge></S.CampaignTop>
             <S.CampaignMeta>예약 #{reservation.id} · {PRODUCT_TYPE_LABEL[reservation.productType]} · {reservation.quantity}명</S.CampaignMeta>
-            {!reservation.confirmation ? <S.CampaignMeta>{availability ? `${formatDateTime(availability.startsAt)} - ${formatDateTime(availability.endsAt)}` : `예약 가능 시간 #${reservation.availabilityId}`}</S.CampaignMeta> : null}
+            {!reservation.confirmation ? <S.CampaignMeta style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{reservation.reservationStartsAt || reservation.reservationEndsAt
+              ? `${formatReservationSchedule(reservation.reservationStartsAt)} - ${formatReservationSchedule(reservation.reservationEndsAt)}`
+              : availability ? `${formatReservationSchedule(availability.startsAt)} - ${formatReservationSchedule(availability.endsAt)}` : `예약 가능 시간 #${reservation.availabilityId}`}</S.CampaignMeta> : null}
             <ReservationConditions confirmation={reservation.confirmation} now={now} />
             <S.CampaignMeta>신청 {formatDateTime(reservation.createdAt)}{reservation.confirmedAt ? ` · 관리자 승인 ${formatDateTime(reservation.confirmedAt)}` : ''}{reservation.status === 'REJECTED' ? ` · 관리자 반려 ${formatDateTime(reservation.rejectedAt ?? reservation.reviewedAt)}${reservation.reviewReason ? ` · 반려 사유: ${reservation.reviewReason}` : ''}` : ''}{reservation.canceledAt ? ` · 취소 ${formatDateTime(reservation.canceledAt)}` : ''}</S.CampaignMeta>
             {reservation.status === 'CONFIRMED' ? <S.FormActions><S.ActionButton type="button" disabled={isCanceling || isPending || Boolean(restriction)} $variant="danger" onClick={() => { operations.clearActionError(); setNow(Date.now()); setCancelTarget(reservation) }}>예약 취소</S.ActionButton></S.FormActions> : null}

@@ -15,6 +15,7 @@ import { AdminNavigationMenu } from '../../components/navigation/AdminNavigation
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations } from '../../hooks/useAdminReservations'
 import { formatListRange } from '../../utils/listRange'
+import { formatReservationSchedule, formatReservationEventTime as formatDate } from '../../utils/reservationTime'
 import { listQueryKey } from '../../hooks/useListQueryState'
 import {
   DEFAULT_RESERVATION_QUERY,
@@ -42,17 +43,9 @@ const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 
 
 type Dialog = { action: 'confirm' | 'reject'; target: AdminReservation } | null
 
-function formatDate(value?: string | null) {
-  if (!value) return '정보 없음'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
-}
-
 function formatSchedule(reservation: AdminReservation) {
   if (!reservation.reservationStartsAt && !reservation.reservationEndsAt) return '예약 시간 정보 없음'
-  return `${formatDate(reservation.reservationStartsAt)} - ${formatDate(reservation.reservationEndsAt)}`
+  return `${formatReservationSchedule(reservation.reservationStartsAt)} - ${formatReservationSchedule(reservation.reservationEndsAt)}`
 }
 
 function formatPerson(name: string | null, id: number | null) {

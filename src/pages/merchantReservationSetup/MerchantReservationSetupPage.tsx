@@ -6,26 +6,13 @@ import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useAuth } from '../../hooks/useAuth'
 import { useMerchantReservationSetup } from '../../hooks/useMerchantReservationSetup'
 import { ReservationTermsEditor } from '../../components/merchant/ReservationTermsEditor'
+import { availabilityToInput, formatReservationSchedule, reservationTimestamp, reservationInputToUtc, reservationTodayInput } from '../../utils/reservationTime'
 import type {
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
 } from '../../types/merchantStore.types'
 import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from '../../components/merchant/MerchantWorkspace.styles'
-
-function formatDateTime(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
-function toDateTimeInput(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value.slice(0, 16)
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
 
 function AvailabilityEditor({
   availability,
@@ -48,8 +35,8 @@ function AvailabilityEditor({
   onCreated: (availabilityId: number) => void
   onEditTerms: () => void
 }) {
-  const [startsAt, setStartsAt] = useState(availability ? toDateTimeInput(availability.startsAt) : '')
-  const [endsAt, setEndsAt] = useState(availability ? toDateTimeInput(availability.endsAt) : '')
+  const [startsAt, setStartsAt] = useState(availabilityToInput(availability?.startsAt))
+  const [endsAt, setEndsAt] = useState(availabilityToInput(availability?.endsAt))
   const [totalCapacity, setTotalCapacity] = useState(String(availability?.totalCapacity ?? 1))
   const [formError, setFormError] = useState('')
   const isBusy = activeAction !== null || queryBlocked
@@ -59,18 +46,18 @@ function AvailabilityEditor({
     event.preventDefault()
     if (isBusy) return
     const capacity = Number(totalCapacity)
-    const startDate = new Date(startsAt)
-    const endDate = new Date(endsAt)
+    const startDate = reservationTimestamp(reservationInputToUtc(startsAt, availability?.startsAt))
+    const endDate = reservationTimestamp(reservationInputToUtc(endsAt, availability?.endsAt))
 
-    if (!startsAt || !endsAt || Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    if (startDate === null || endDate === null) {
       setFormError('예약 시작·종료 일시를 모두 선택해주세요.')
       return
     }
-    if (startDate <= new Date()) {
+    if (startDate <= Date.now()) {
       setFormError('예약 시작 일시는 현재 시각 이후로 선택해주세요.')
       return
     }
-    if (endDate <= new Date()) {
+    if (endDate <= Date.now()) {
       setFormError('예약 종료 일시는 현재 시각 이후로 선택해주세요.')
       return
     }
@@ -85,8 +72,8 @@ function AvailabilityEditor({
     setFormError('')
     const request: MerchantAvailabilityUpsertRequest = {
       placeId,
-      startsAt,
-      endsAt,
+      startsAt: reservationInputToUtc(startsAt, availability?.startsAt)!,
+      endsAt: reservationInputToUtc(endsAt, availability?.endsAt)!,
       totalCapacity: capacity,
     }
     const next = availability ? await onSave(availability.id, request) : await onCreate(request)
@@ -100,12 +87,12 @@ function AvailabilityEditor({
     <S.Editor>
       <S.Form onSubmit={submit}>
         <S.Field>
-          시작 일시
-          <AdminDateTimePicker ariaLabel="예약 시작 일시" value={startsAt} disabled={isBusy} onChange={setStartsAt} />
+          시작 일시 (한국 시각)
+          <AdminDateTimePicker ariaLabel="예약 시작 일시" value={startsAt} wallClock today={reservationTodayInput()} disabled={isBusy} onChange={setStartsAt} />
         </S.Field>
         <S.Field>
-          종료 일시
-          <AdminDateTimePicker ariaLabel="예약 종료 일시" value={endsAt} disabled={isBusy} onChange={setEndsAt} />
+          종료 일시 (한국 시각)
+          <AdminDateTimePicker ariaLabel="예약 종료 일시" value={endsAt} wallClock today={reservationTodayInput()} disabled={isBusy} onChange={setEndsAt} />
         </S.Field>
         <S.Field>
           총 예약 가능 인원
@@ -184,7 +171,7 @@ function MerchantReservationSetupPage() {
           <S.ResultMeta>{reservation.hasAvailabilityResult ? `등록된 예약 가능 시간 ${availabilities.length}개${reservation.availabilityStatus !== 'ready' ? ' (이전 결과)' : ''}` : '조회 결과 없음'}</S.ResultMeta>
           {!reservation.hasAvailabilityResult ? <S.Empty>{reservation.availabilityStatus === 'loading' ? '예약 가능 시간을 불러오는 중입니다.' : '예약 가능 시간 조회를 다시 시도해주세요.'}</S.Empty> : availabilities.length === 0 ? <S.Empty>등록된 예약 가능 시간이 없습니다.</S.Empty> : <S.CampaignList>{availabilities.map((availability) => <S.CampaignItem type="button" key={availability.id} disabled={isBusy || reservation.isLoading} $selected={availability.id === selectedAvailabilityId} onClick={() => { if (availability.id !== selectedAvailabilityId) requestNavigation(() => setSelectedAvailabilityId(availability.id)) }}>
             <S.CampaignTop><S.CampaignTitle>예약 가능 시간 #{availability.id}</S.CampaignTitle><S.StatusBadge $tone={availability.status === 'ACTIVE' ? 'published' : 'closed'}>{availability.status === 'ACTIVE' ? '예약 가능' : '비활성'}</S.StatusBadge></S.CampaignTop>
-            <S.CampaignMeta>{formatDateTime(availability.startsAt)} - {formatDateTime(availability.endsAt)}</S.CampaignMeta><S.CampaignMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.CampaignMeta>
+            <S.CampaignMeta style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{formatReservationSchedule(availability.startsAt)} - {formatReservationSchedule(availability.endsAt)}</S.CampaignMeta><S.CampaignMeta>잔여 {availability.remainingCapacity} / {availability.totalCapacity}명</S.CampaignMeta>
           </S.CampaignItem>)}</S.CampaignList>}
         </S.Panel>}
       </Store.Content>

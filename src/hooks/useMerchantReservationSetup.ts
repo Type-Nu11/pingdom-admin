@@ -22,6 +22,7 @@ import { logDebugError } from '../utils/debugLogger'
 import { useMerchantPlaceSelection } from '../app/providers/MerchantPlaceContext'
 import { useAuth } from './useAuth'
 import { getAuthSessionId } from '../utils/authStorage'
+import { reservationTimestamp } from '../utils/reservationTime'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type ReservationSetupAction =
@@ -38,7 +39,7 @@ function replaceById<T extends { id: number }>(items: T[], next: T) {
 }
 
 function sortAvailabilities(items: MerchantAvailability[]) {
-  return [...items].sort((left, right) => left.startsAt.localeCompare(right.startsAt))
+  return [...items].sort((left, right) => (reservationTimestamp(left.startsAt) ?? Infinity) - (reservationTimestamp(right.startsAt) ?? Infinity))
 }
 
 export function useMerchantReservationSetup() {

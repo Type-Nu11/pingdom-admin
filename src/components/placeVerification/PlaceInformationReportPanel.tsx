@@ -1,5 +1,6 @@
 import { FeedbackMessage } from '../common/FeedbackMessage'
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { AppDialog } from '../common/AppDialog'
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { AdminSelect } from '../common/AdminStatusSelect'
 import { AdminStatusFilter } from '../common/AdminStatusFilter'
@@ -10,7 +11,6 @@ import type {
   PlaceInformationReportReviewRequest,
   PlaceInformationReportStatus,
 } from '../../types/adminPlaceVerification.types'
-import * as Shell from '../../pages/place/PlaceManagePage.styles'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
 import {
@@ -33,8 +33,8 @@ const STATUS_OPTIONS: Array<{ value: PlaceInformationReportStatus | ''; label: s
 ]
 
 type ReviewDialog =
-  | { type: 'report' }
-  | { type: 'dispute'; dispute: PlaceInformationDispute }
+  | { type: 'report'; reportId: number; version: number; owner: string }
+  | { type: 'dispute'; dispute: PlaceInformationDispute; reportId: number; version: number; owner: string }
   | null
 
 export function PlaceInformationReportPanel({ reportHook }: { reportHook: ReportHook }) {
@@ -42,6 +42,11 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
     status,
     reports,
     reportDetail,
+    selectedReportId,
+    selectionVersion,
+    owner,
+    canReview,
+    hasListResult,
     page,
     totalCount,
     totalPages,
@@ -54,42 +59,50 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
     actionErrorMessage,
     dismissActionError,
     actionSuccessMessage,
+    actionNotice,
+    retryRefresh,
     fetchReports,
     fetchReportDetail,
     clearReportDetail,
     reviewReport,
     reviewDispute,
   } = reportHook
-  const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
   const [dialog, setDialog] = useState<ReviewDialog>(null)
+  const visibleDialog = reportDetail && dialog?.reportId === selectedReportId && dialog?.version === selectionVersion
+    && dialog?.owner === owner ? dialog : null
+  const currentDialog = useRef(visibleDialog)
+  useLayoutEffect(() => { currentDialog.current = visibleDialog }, [visibleDialog])
   const [reportStatus, setReportStatus] =
     useState<PlaceInformationReportReviewRequest['status']>('UNDER_REVIEW')
   const [reviewReason, setReviewReason] = useState('')
   const [formError, setFormError] = useState('')
-  const guard = useUnsavedChanges(Boolean(dialog) && (reviewReason !== '' || (dialog?.type === 'report' && reportStatus !== (reportDetail?.status === 'SUBMITTED' ? 'UNDER_REVIEW' : 'RESOLVED'))), Boolean(dialog) && activeAction !== null)
+  const guard = useUnsavedChanges(Boolean(visibleDialog) && (reviewReason !== '' || (visibleDialog?.type === 'report' && reportStatus !== (reportDetail?.status === 'SUBMITTED' ? 'UNDER_REVIEW' : 'RESOLVED'))), Boolean(visibleDialog) && activeAction !== null)
   const closeDialog = () => guard.request(() => setDialog(null))
 
   const handleStatusChange = (nextStatus: PlaceInformationReportStatus | '') => {
-    setSelectedReportId(null)
+    setDialog(null)
     clearReportDetail()
     void fetchReports(nextStatus, 1)
   }
 
   const openReportReview = () => {
+    if (!reportDetail || !canReview || activeAction) return
     setReportStatus(reportDetail?.status === 'SUBMITTED' ? 'UNDER_REVIEW' : 'RESOLVED')
     setReviewReason('')
     setFormError(''); dismissActionError()
-    setDialog({ type: 'report' })
+    setDialog({ type: 'report', reportId: reportDetail.reportId, version: selectionVersion, owner })
   }
 
   const openDisputeReview = (dispute: PlaceInformationDispute) => {
+    if (!reportDetail || !canReview || activeAction) return
     setReviewReason('')
     setFormError(''); dismissActionError()
-    setDialog({ type: 'dispute', dispute })
+    setDialog({ type: 'dispute', dispute, reportId: reportDetail.reportId, version: selectionVersion, owner })
   }
 
   const submitReview = async (disputeStatus?: 'ACCEPTED' | 'REJECTED') => {
-    if (!reportDetail || !dialog || activeAction) return
+    if (!reportDetail || !visibleDialog || !canReview || activeAction) return
+    const submittedDialog = visibleDialog
     const reason = reviewReason.trim()
     if (!reason) {
       setFormError('판정 근거를 입력해주세요.')
@@ -97,24 +110,28 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
     }
 
     const result =
-      dialog.type === 'report'
-        ? await reviewReport(reportDetail.reportId, {
+      submittedDialog.type === 'report'
+        ? await reviewReport(submittedDialog.reportId, {
             status: reportStatus,
             reviewReason: reason,
           })
         : disputeStatus
-          ? await reviewDispute(reportDetail.reportId, dialog.dispute.disputeId, {
+          ? await reviewDispute(submittedDialog.reportId, submittedDialog.dispute.disputeId, {
               status: disputeStatus,
               reviewReason: reason,
             })
           : null
-    if (result) { guard.markClean(); setDialog(null) }
+    if (result && currentDialog.current === submittedDialog) { guard.markClean(); setDialog(null) }
   }
 
   return (
     <>
       {actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage> : null}
       {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
+      {actionNotice ? <Shared.Notice $variant="error" role="alert">
+        {actionNotice}
+        <Shared.SecondaryButton type="button" disabled={isLoading || isDetailLoading || activeAction !== null} onClick={() => void retryRefresh()}>최신 정보 다시 조회</Shared.SecondaryButton>
+      </Shared.Notice> : null}
 
       <AdminStatusFilter
         label="신고 상태"
@@ -129,10 +146,14 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
         ))}
       </AdminStatusFilter>
 
-      {errorMessage ? <Shared.Notice $variant="error" role="alert">{errorMessage}</Shared.Notice> : null}
+      {errorMessage && !actionNotice ? <Shared.Notice $variant="error" role="alert">
+        {errorMessage}{hasListResult ? ' 이전에 조회한 목록입니다.' : ''}
+        <Shared.SecondaryButton type="button" disabled={isLoading || activeAction !== null} onClick={() => void fetchReports()}>목록 다시 조회</Shared.SecondaryButton>
+      </Shared.Notice> : null}
       {isLoading && reports.length === 0 ? (
         <Shared.EmptyStateCard><strong>신고를 불러오는 중입니다.</strong></Shared.EmptyStateCard>
-      ) : reports.length === 0 ? (
+      ) : reports.length === 0 && !selectedReportId ? (
+        errorMessage || !hasListResult ? null :
         <Shared.EmptyStateCard><strong>조건에 맞는 신고가 없습니다.</strong></Shared.EmptyStateCard>
       ) : (
       <Shared.Workspace>
@@ -142,7 +163,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               <Shared.PanelTitle>정보 신고</Shared.PanelTitle>
               <Shared.PanelDescription>신고를 선택해 근거와 반박을 검토합니다.</Shared.PanelDescription>
             </div>
-            <Shared.PanelCount>{totalCount.toLocaleString()}건</Shared.PanelCount>
+            <Shared.PanelCount>{errorMessage ? '이전 조회 · ' : ''}{totalCount.toLocaleString()}건</Shared.PanelCount>
           </Shared.PanelHeader>
           <Shared.ScrollArea>
             <S.CardList>
@@ -151,8 +172,9 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
                   key={report.reportId}
                   type="button"
                   $selected={selectedReportId === report.reportId}
+                  disabled={activeAction !== null}
                   onClick={() => {
-                    setSelectedReportId(report.reportId)
+                    setDialog(null)
                     void fetchReportDetail(report.reportId)
                   }}
                 >
@@ -166,7 +188,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               ))}
             </S.CardList>
           </Shared.ScrollArea>
-          {totalPages > 1 ? <AdminPagination ariaLabel="장소 정보 신고 목록 페이지네이션" page={page} totalPages={totalPages} hasNext={hasNext} disabled={isLoading} onPageChange={(nextPage) => void fetchReports(status, nextPage)} /> : null}
+          {totalPages > 1 ? <AdminPagination ariaLabel="장소 정보 신고 목록 페이지네이션" page={page} totalPages={totalPages} hasNext={hasNext} disabled={isLoading || activeAction !== null} onPageChange={(nextPage) => void fetchReports(status, nextPage)} /> : null}
         </Shared.Panel>
 
         <Shared.Panel>
@@ -181,13 +203,14 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
               <Shared.EmptyState><strong>검토할 신고를 선택해주세요.</strong></Shared.EmptyState>
             ) : isDetailLoading ? (
               <Shared.EmptyState><strong>신고 상세를 불러오는 중입니다.</strong></Shared.EmptyState>
-            ) : detailErrorMessage ? (
+            ) : detailErrorMessage && !reportDetail ? (
               <Shared.EmptyState>
                 <strong>{detailErrorMessage}</strong>
-                <Shared.SecondaryButton type="button" onClick={() => void fetchReportDetail(selectedReportId)}>다시 시도</Shared.SecondaryButton>
+                {!actionNotice ? <Shared.SecondaryButton type="button" onClick={() => void fetchReportDetail(selectedReportId)}>다시 시도</Shared.SecondaryButton> : null}
               </Shared.EmptyState>
             ) : reportDetail ? (
               <>
+                {detailErrorMessage && !actionNotice ? <Shared.Notice $variant="error" role="alert">{detailErrorMessage} 이전에 확인한 상세이며 재조회 전에는 검토할 수 없습니다.</Shared.Notice> : null}
                 <S.RecordHeader>
                   <div>
                     <S.RecordTitle>신고 #{reportDetail.reportId}</S.RecordTitle>
@@ -209,7 +232,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
                 ) : null}
                 {!['RESOLVED', 'CANCELED'].includes(reportDetail.status) ? (
                   <S.InlineActions>
-                    <Shared.PrimaryButton type="button" disabled={activeAction !== null} onClick={openReportReview}>신고 검토</Shared.PrimaryButton>
+                    <Shared.PrimaryButton type="button" disabled={!canReview || activeAction !== null} onClick={openReportReview}>신고 검토</Shared.PrimaryButton>
                   </S.InlineActions>
                 ) : null}
 
@@ -231,7 +254,7 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
                           <S.RecordMeta>{formatVerificationDate(dispute.createdAt)}{dispute.reviewReason ? ` · 검토: ${dispute.reviewReason}` : ''}</S.RecordMeta>
                           <S.InlineActions>
                             {dispute.evidenceUrl ? <S.Link href={dispute.evidenceUrl} target="_blank" rel="noreferrer">반박 증빙 열기</S.Link> : null}
-                            {dispute.status === 'SUBMITTED' ? <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => openDisputeReview(dispute)}>반박 검토</Shared.SecondaryButton> : null}
+                            {dispute.status === 'SUBMITTED' ? <Shared.SecondaryButton type="button" disabled={!canReview || activeAction !== null} onClick={() => openDisputeReview(dispute)}>반박 검토</Shared.SecondaryButton> : null}
                           </S.InlineActions>
                         </S.RecordCard>
                       ))}
@@ -245,45 +268,41 @@ export function PlaceInformationReportPanel({ reportHook }: { reportHook: Report
       </Shared.Workspace>
       )}
 
-      {dialog && reportDetail ? (
-        <Shared.ModalOverlay role="presentation" onKeyDown={(event) => { if (event.key === 'Escape' && activeAction === null) { event.stopPropagation(); closeDialog() } }} onMouseDown={() => activeAction === null && closeDialog()}>
-          <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="report-review-title" onMouseDown={(event) => event.stopPropagation()}>
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="report-review-title">{dialog.type === 'report' ? '신고 검토' : `반박 #${dialog.dispute.disputeId} 검토`}</Shared.ModalTitle>
-              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              <S.FormGrid>
-                {dialog.type === 'report' ? (
-                  <S.WideField>검토 상태
-                    <AdminSelect aria-label="신고 검토 결과" value={reportStatus} disabled={activeAction !== null} width="100%" onChange={(event) => setReportStatus(event.target.value as PlaceInformationReportReviewRequest['status'])}>
-                      <option value="UNDER_REVIEW">검토 중</option>
-                      <option value="ACCEPTED">신고 수용</option>
-                      <option value="REJECTED">신고 반려</option>
-                      <option value="RESOLVED">처리 완료</option>
-                    </AdminSelect>
-                  </S.WideField>
-                ) : null}
-                <S.WideField>판정 근거 *
-                  <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError(''); dismissActionError() }} />
-                  <small>{reviewReason.length}/500</small>
-                </S.WideField>
-              </S.FormGrid>
-              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</Shared.SecondaryButton>
-              {dialog.type === 'report' ? (
-                <Shared.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => void submitReview()}>{activeAction ? '저장 중' : '검토 결과 저장'}</Shared.PrimaryButton>
-              ) : (
-                <>
-                  <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={() => void submitReview('REJECTED')}>반박 반려</Shared.SecondaryButton>
-                  <Shared.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => void submitReview('ACCEPTED')}>반박 수용</Shared.PrimaryButton>
-                </>
-              )}
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
+      {visibleDialog && reportDetail ? (
+        <AppDialog
+          title={visibleDialog.type === 'report' ? '신고 검토' : `반박 #${visibleDialog.dispute.disputeId} 검토`}
+          isDismissible={activeAction === null}
+          onClose={closeDialog}
+          footer={<>
+            <Shared.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</Shared.SecondaryButton>
+            {visibleDialog.type === 'report' ? (
+              <Shared.PrimaryButton type="button" disabled={!canReview || activeAction !== null} onClick={() => void submitReview()}>{activeAction ? '저장 중' : '검토 결과 저장'}</Shared.PrimaryButton>
+            ) : (
+              <>
+                <Shared.SecondaryButton type="button" disabled={!canReview || activeAction !== null} onClick={() => void submitReview('REJECTED')}>반박 반려</Shared.SecondaryButton>
+                <Shared.PrimaryButton type="button" disabled={!canReview || activeAction !== null} onClick={() => void submitReview('ACCEPTED')}>{activeAction ? '저장 중' : '반박 수용'}</Shared.PrimaryButton>
+              </>
+            )}
+          </>}
+        >
+          <S.FormGrid>
+            {visibleDialog.type === 'report' ? (
+              <S.WideField>검토 상태
+                <AdminSelect aria-label="신고 검토 결과" value={reportStatus} disabled={activeAction !== null} width="100%" onChange={(event) => setReportStatus(event.target.value as PlaceInformationReportReviewRequest['status'])}>
+                  <option value="UNDER_REVIEW">검토 중</option>
+                  <option value="ACCEPTED">신고 수용</option>
+                  <option value="REJECTED">신고 반려</option>
+                  <option value="RESOLVED">처리 완료</option>
+                </AdminSelect>
+              </S.WideField>
+            ) : null}
+            <S.WideField>판정 근거 *
+              <S.TextArea value={reviewReason} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewReason(event.target.value); setFormError(''); dismissActionError() }} />
+              <small>{reviewReason.length}/500</small>
+            </S.WideField>
+          </S.FormGrid>
+          {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
+        </AppDialog>
       ) : null}
     </>
   )

@@ -77,6 +77,8 @@ test('applied query and selected detail survive place navigation, back and remou
   assert.equal(calls[0].params.page, 2)
   assert.equal(calls[0].params.placeId, 7)
   assert.match(document.body.textContent, /예약 #11 · 신청/)
+  assert.match(document.body.textContent, /예약 인원.*1명/)
+  assert.doesNotMatch(document.body.textContent, /상품|무료|결제 불필요|undefined/)
   const saved = { pathname: location.pathname, search: location.search, state: location.state }
   const link = document.querySelector('a[href="/places?placeId=7"]')
   await act(async () => link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true, button: 0 })))
@@ -226,6 +228,8 @@ test('review failure keeps its dialog error and blocks closing while the synthet
     : defaultAdapter(config)
   await mount('/reservations/review?reservationId=1')
   await click(button('승인'))
+  assert.match(document.querySelector('[role="dialog"]').textContent, /예약 인원.*1명/)
+  assert.doesNotMatch(document.querySelector('[role="dialog"]').textContent, /상품|결제 불필요/)
   await click(button('승인 확정'))
   const dialog = document.querySelector('[role="dialog"]')
   assert.equal(dialog.querySelector('[aria-label="닫기"]').disabled, true)
@@ -257,4 +261,32 @@ test('successful synthetic review keeps the target and clears a selection no lon
   assert.equal(document.querySelector('[role="dialog"]'), null)
   assert.match(document.body.textContent, /예약을 승인했습니다/)
   assert.equal(calls.filter(c => c.method === 'post').length, 1)
+})
+
+test('synthetic rejection without product fields retains review reason and never confirms a reservation', async () => {
+  adapter = config => {
+    if (config.method === 'post') {
+      assert.equal(config.url, '/admin/reservations/1/reject')
+      assert.equal(JSON.parse(config.data).reason, '합성 반려 사유')
+      return respond(config, reservation(1, { status: 'REJECTED', reviewReason: '합성 반려 사유' }))
+    }
+    return defaultAdapter(config)
+  }
+  await mount('/reservations/review?reservationId=1')
+  await click(button('반려'))
+  const dialog = document.querySelector('[role="dialog"]')
+  assert.match(dialog.textContent, /예약 일정.*예약 인원.*1명/)
+  assert.doesNotMatch(dialog.textContent, /상품|무료|결제 불필요/)
+  await click(button('반려 확정'))
+  assert.match(dialog.textContent, /반려 사유를 입력/)
+  assert.equal(calls.filter(call => call.method === 'post').length, 0)
+  await act(async () => {
+    const textarea = dialog.querySelector('textarea')
+    Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(textarea, '합성 반려 사유')
+    textarea.dispatchEvent(new window.Event('input', { bubbles: true }))
+  })
+  await click(button('반려 확정'))
+  assert.equal(document.querySelector('[role="dialog"]'), null)
+  assert.match(document.body.textContent, /예약을 반려했습니다/)
+  assert.equal(calls.filter(call => call.method === 'post').length, 1)
 })

@@ -2,11 +2,11 @@
 
 ## 이번 확인 범위
 
-- 최신 갱신 이슈: #254 (2026-10-04 KST). #207은 레거시 정리의 과거 근거로 보존합니다.
+- 최신 갱신 이슈: #302 (2026-10-19 KST). #254·#207은 과거 수집/레거시 정리 근거로 보존합니다.
 - 정확한 수집 기준은 metadata.json과 그룹별 스냅샷을 참조한다. 현재 operation 수는 갱신 스크립트 출력과 테스트로 확인한다.
 - 출처·수집 시각: [metadata.json](openapi/metadata.json)
-- 원본: [admin.json](openapi/admin.json), [merchant.json](openapi/merchant.json)
-- App, Common, Consulting은 이번 대조 대상에서 제외한다. 기존 범위 밖 CSV 행은 확인일을 갱신하지 않고 보존한다.
+- 매트릭스 범위 원본: [admin.json](openapi/admin.json), [merchant.json](openapi/merchant.json)
+- 참고 수집 원본: [app.json](openapi/app.json), [common.json](openapi/common.json). App의 예약·결제 응답을 Merchant와 교차 확인한다. 두 그룹은 최초 수집이라 과거 차이를 주장하지 않고 CSV 전체 범위로 확장하지 않는다. Consulting은 제외한다. 기존 범위 밖 CSV 행은 확인일을 갱신하지 않고 보존한다.
 - Swagger에 없는 경로는 문서에서 제거된 것으로만 판단한다. 서버 기능 삭제나 실제 404 응답을 확정하지 않는다.
 - 인증 API 실행·실서버 mutation·운영 QA는 수행하지 않았다.
 
@@ -43,9 +43,10 @@ last_verified는 문서·소스 대조일이며 런타임 성공 확인일이 �
 ```bash
 npm ci
 node scripts/api-source-inventory.mjs
-node scripts/refresh-openapi-snapshots.mjs --refresh --baseline <갱신_전_스냅샷이_있는_커밋>
+node scripts/refresh-openapi-snapshots.mjs --refresh --baseline <갱신_전_스냅샷이_있는_커밋> --server-ref <직접_확인한_서버_커밋_40자리>
 python3 scripts/refresh-api-contract-matrix.py
-node --test tests/api-contract-matrix.test.mjs tests/openapi-refresh.test.mjs
+npm run check:api-matrix
+node --test tests/api-contract-matrix.test.mjs tests/openapi-refresh.test.mjs tests/current-api-contract.test.mjs
 ```
 
 갱신 스크립트는 저장된 두 OpenAPI와 현재 소스를 읽어 CSV 및 source-contract-gaps.json을 갱신한다. 네트워크 호출은 하지 않는다.
@@ -53,17 +54,35 @@ node --test tests/api-contract-matrix.test.mjs tests/openapi-refresh.test.mjs
 
 새 수집은 각 metadata.sources URL에서 성공 응답을 받아 JSON/OpenAPI paths를 확인한 뒤 스냅샷과 수집 시각을 함께 갱신한다. 실패 응답으로 기존 스냅샷을 덮어쓰지 않는다.
 
-수집 스크립트는 두 그룹의 HTTP 200·OpenAPI 검증과 기준 커밋 비교가 모두 성공한 뒤 생성 파일을 갱신한다. 리다이렉트는 따라가지 않으며 인증 헤더나 환경변수의 토큰을 사용하지 않는다. 원본 응답 문자열을 변경하지 않고 저장하며 그룹별 조회 시각·SHA-256·소스 커밋을 기록한다. 원본 baseline은 `metadata.comparison_baseline` 커밋에 보존한다.
+수집 스크립트는 네 그룹의 HTTP 200·OpenAPI 검증과 기준 커밋 비교가 모두 성공한 뒤 생성 파일을 갱신한다. 리다이렉트는 따라가지 않으며 인증 헤더나 환경변수의 토큰을 사용하지 않는다. URL의 사용자명·비밀번호·query·fragment는 거부한다. 원본 응답 문자열을 변경하지 않고 저장하며 그룹별 조회 시각·SHA-256·웹 기준 커밋과 조사한 서버 커밋을 별도로 기록한다. `--server-ref` 생략 시 서버 기준은 null이며 운영 배포 버전을 추정하지 않는다. 원본 baseline은 `metadata.comparison_baseline` 커밋에 보존한다. 과거 참조 원본이 없는 App/Common은 initial_collection으로 기록한다.
 
 `contract-changes.json`은 고정 baseline과 최신 스냅샷의 오프라인 비교 결과다. 추가/삭제 operation과 schema, 기존 항목의 contract/documentation 변경을 구분한다. `$ref`가 같아도 component의 required/nullable/property 변화는 별도로 추적한다. 이름·설명·예시 분류는 자동 보조이며 breaking change 판정이나 서버 런타임 검증을 대신하지 않는다.
 
-상세 최신 결과와 제한: [#254 갱신 기록](api-contract-refresh-254.md). 매트릭스의 새 호출은 기본 partial이며, 명시적으로 검토한 #225·#256의 연동 근거만 implemented로 기록한다. 기존 implemented 상태도 과거 구현 근거를 보존하는 것으로, 이번 실행의 실제 서버 성공을 의미하지 않는다.
+상세 최신 결과와 제한: [#302 갱신 기록](api-contract-verification-302.md). 매트릭스의 새 호출은 기본 partial이며, 이전 implemented 기록과 제품별 #295~#301의 확인 근거를 보존한다. 과거 #256의 조건/가격 문구로 새 검증 기록을 덮어쓰지 않는다. 기존 implemented 상태도 과거 구현 근거를 보존하는 것으로, 이번 실행의 실제 서버 성공을 의미하지 않는다.
+
+## 배포 전 원격 변화 검사 (파일 수정 없음)
+
+```bash
+npm run check:api-matrix
+npm run check:api-contracts
+```
+
+- `check:api-matrix`는 저장된 스냅샷·소스에서 CSV/gaps가 재현되는지 검사하며 파일을 쓰지 않는다. 차이가 있으면 실패한다.
+- `check:api-contracts`는 저장된 원본의 SHA-256을 확인하고 네 공개 Swagger를 새로 받아 비교한다. 스냅샷·메타데이터·보고서를 덮어쓰지 않는다.
+- 종료 코드 0: contract 차이 없음(태그·설명 등 documentation 차이는 출력되더라도 0). 호환성 전체나 실제 업무 성공을 보증하지 않는다.
+- 종료 코드 1: operation/schema/요청·응답·required/nullable/security/server 등 contract 차이 발견. 정상적인 추가도 포함하므로 사람의 영향 검토가 필요하다. 자동으로 breaking change라고 단정하지 않는다.
+- 종료 코드 2: 네트워크·timeout·HTTP 인증/리다이렉트·HTML·비정상 OpenAPI·저장 해시 문제로 비교 차단. 호환 상태로 간주하거나 기존 기준 파일을 갱신하지 않는다. 원격 HTML/응답·인증정보는 오류 로그에 출력하지 않는다.
+- 차단 결과는 안전한 reason(network/http/invalid-document/source-or-stored-snapshot), 그룹명과 HTTP 상태만 포함한다. 원격 응답 본문이나 원본 네트워크 오류의 URL/자격정보를 복사하지 않는다.
+- 배포 후보에서 변경 감지가 나오면 계약 영향 검토 → 명시적 refresh → 원본/매트릭스 diff 리뷰 → 단위·브라우저 회귀 순서로 확인한다. `--check`와 `--refresh`는 동시에 사용할 수 없다.
+- 외부 장애를 매번 PR 실패로 만들지 않기 위해 기본 CI에서는 저장된 원본 기반 검사를 수행한다. 실제 원격 명령은 배포 전 명시적으로 실행한다. 시크릿·스케줄·배포 설정을 새로 추가하지 않는다.
 
 ## 정적 분석 한계
 
 TypeScript AST로 문자열·템플릿·상수·간단한 경로 반환 함수를 읽고 API 함수의 참조 파일을 기록한다. 동적 작업명은 경로 패턴으로 대조한다. 중괄호 인자 이름 차이는 비교에서 무시하지만 CSV는 Swagger 원래 경로명을 보존한다.
 참조 파일이 있다는 사실만으로 실제 라우트 노출·권한·성공 응답을 보장하지 않는다. 새 연결은 partial로 보수적으로 기록하며, 불확실한 항목을 implemented로 자동 승격하지 않는다.
 [소스 계약 차이](openapi/source-contract-gaps.json)는 사용 중이지만 현재 대상 그룹에 없는 호출 후보로, 신규 서버 버그나 제거 확정 목록이 아니다.
+
+`known-source-contracts.json`은 서버 소스로 별도 확인한 문서 누락 근거다. 데이터 품질 GET의 AdminOnly·페이지 DTO·ApiAudience/기능 Tag 후속을 원본 Swagger와 분리한다. 생성기는 이 근거와 #301 구현 상태를 보존하지만 실제 GET 성공을 만들어내지 않는다. 서버 문서가 보완되면 새 원본과 함께 known gap의 해소 여부도 검토한다.
 
 ## PR 규칙
 

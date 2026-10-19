@@ -5,7 +5,8 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { collectSnapshots, compareDocuments, operations, validateOpenApi } from '../scripts/refresh-openapi-snapshots.mjs'
+import { createHash } from 'node:crypto'
+import { collectSnapshots, compareDocuments, operations, validateOpenApi, checkSnapshots, hasContractChanges } from '../scripts/refresh-openapi-snapshots.mjs'
 
 const document = () => ({ openapi: '3.0.1', paths: { '/test': { get: { tags: ['old'], operationId: 'old', responses: { 200: { description: 'OK', content: { 'application/json': { schema: { $ref: '#/components/schemas/Item' } } } } } } } }, components: { schemas: { Item: { type: 'object', properties: { id: { type: 'integer' } } } } } })
 test('renamed tags/operationIds do not masquerade as contract changes', () => {
@@ -103,7 +104,7 @@ test('CLI leaves both snapshots, metadata and report unchanged when either group
     git(['add', 'docs/openapi'])
     git(['-c', 'user.name=Contract test', '-c', 'user.email=contract@example.test', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'test baseline'])
     const script = fileURLToPath(new URL('../scripts/refresh-openapi-snapshots.mjs', import.meta.url))
-    for (const group of ['admin', 'merchant']) for (const responses of ['invalid', [], {}]) {
+    for (const group of ['admin', 'merchant', 'app', 'common']) for (const responses of ['invalid', [], {}]) {
       const invalid = document()
       invalid.paths['/test'].get.responses = responses
       const runner = `process.argv = [process.execPath, ${JSON.stringify(script)}, '--refresh', '--baseline', 'HEAD'];
@@ -118,6 +119,65 @@ test('CLI leaves both snapshots, metadata and report unchanged when either group
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }
+})
+
+const sha = raw => createHash('sha256').update(raw).digest('hex')
+test('read-only comparison separates documentation changes, contract drift and blocked reads', async () => {
+  const raw = JSON.stringify(document())
+  const metadata = { scope: ['admin', 'merchant'], reference_scope: ['app', 'common'],
+    sources: Object.fromEntries(['admin', 'merchant', 'app', 'common'].map(group => [group, `https://example.test/${group}`])),
+    snapshots: Object.fromEntries(['admin', 'merchant', 'app', 'common'].map(group => [group, { sha256: sha(raw) }])) }
+  const reader = async () => raw
+  const fetcher = value => async () => ({ status: 200, text: async () => JSON.stringify(value) })
+  assert.equal((await checkSnapshots(metadata, reader, fetcher(document()))).status, 'compatible')
+  const documentation = document(); documentation.paths['/test'].get.tags = ['updated']
+  assert.equal((await checkSnapshots(metadata, reader, fetcher(documentation))).status, 'compatible')
+  const contract = document(); contract.components.schemas.Item.required = ['id']
+  const result = await checkSnapshots(metadata, reader, fetcher(contract))
+  assert.equal(result.status, 'changed'); assert.equal(hasContractChanges(result.report), true)
+  assert.deepEqual(Object.keys(result.report.groups), ['admin', 'merchant', 'app', 'common'])
+  await assert.rejects(checkSnapshots(metadata, async () => '{}', fetcher(document())), /hash mismatch/)
+  await assert.rejects(checkSnapshots(metadata, reader, async () => ({ status: 403 })), /HTTP 403/)
+  await assert.rejects(checkSnapshots(metadata, reader, async () => { throw new Error('Synthetic timeout') }), error => error.reason === 'network')
+})
+
+test('check CLI has distinct exit codes and never modifies snapshots or metadata', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'pingdom-openapi-check-'))
+  try {
+    mkdirSync(join(directory, 'docs/openapi'), { recursive: true })
+    const raw = JSON.stringify(document())
+    const sources = { admin: 'https://example.test/admin', merchant: 'https://example.test/merchant' }
+    const metadata = { scope: ['admin', 'merchant'], sources, snapshots: { admin: { sha256: sha(raw) }, merchant: { sha256: sha(raw) } } }
+    const files = { 'admin.json': raw, 'merchant.json': raw, 'metadata.json': JSON.stringify(metadata), 'contract-changes.json': '{"sentinel":true}' }
+    for (const [name, value] of Object.entries(files)) writeFileSync(join(directory, 'docs/openapi', name), value)
+    const script = fileURLToPath(new URL('../scripts/refresh-openapi-snapshots.mjs', import.meta.url))
+    for (const [kind, expected] of [['same', 0], ['documentation', 0], ['contract', 1], ['HTML', 2], ['auth', 2], ['redirect', 2], ['timeout', 2], ['invalid', 2]]) {
+      const doc = document()
+      if (kind === 'documentation') doc.paths['/test'].get.summary = 'updated docs'
+      if (kind === 'contract') doc.components.schemas.Item.properties.id.nullable = true
+      const runner = `process.argv=[process.execPath,${JSON.stringify(script)},'--check'];
+        globalThis.fetch=async()=>{ ${kind === 'timeout' ? 'throw new Error("Synthetic timeout")' : `return {status:${kind === 'auth' ? 401 : kind === 'redirect' ? 302 : 200},text:async()=>${JSON.stringify(kind === 'HTML' ? '<html>private-session-value</html>' : kind === 'invalid' ? '{}' : JSON.stringify(doc))}}`} };
+        await import(${JSON.stringify(new URL('../scripts/refresh-openapi-snapshots.mjs', import.meta.url).href)});`
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', runner], { cwd: directory, encoding: 'utf8', timeout: 10000 })
+      assert.equal(result.error, undefined); assert.equal(result.status, expected, `${kind}: ${result.stderr}`)
+      const report = JSON.parse(expected === 2 ? result.stderr : result.stdout)
+      assert.equal(report.status, expected === 2 ? 'blocked' : expected === 1 ? 'changed' : 'compatible')
+      if (expected === 2) {
+        assert.equal(report.reason, ['auth', 'redirect'].includes(kind) ? 'http' : kind === 'timeout' ? 'network' : 'invalid-document')
+        assert.equal(report.group, 'admin')
+        if (kind === 'auth') assert.equal(report.httpStatus, 401)
+      }
+      assert.doesNotMatch(result.stdout + result.stderr, /private-session-value/)
+      for (const [name, value] of Object.entries(files)) assert.equal(readFileSync(join(directory, 'docs/openapi', name), 'utf8'), value)
+    }
+  } finally { rmSync(directory, { recursive: true, force: true }) }
+})
+
+test('remote collection rejects query credentials without making requests', async () => {
+  let calls = 0
+  const fetcher = async () => { calls++; throw new Error('Must not fetch') }
+  await assert.rejects(collectSnapshots({ admin: 'https://example.test/api?token=private', merchant: 'https://example.test/api#secret' }, fetcher), /Query/)
+  assert.equal(calls, 0)
 })
 
 test('path server additions, URL changes and removals remain visible as contract differences', () => {

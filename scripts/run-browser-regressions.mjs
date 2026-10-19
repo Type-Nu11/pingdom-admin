@@ -15,6 +15,12 @@ export const browserCases = [
   ['user-ban-structure', 'tests/browser/user-ban-structure.mjs'],
   ['community', 'tests/browser/community.mjs'],
   ['merchant-draft', 'tests/browser/merchant-draft.mjs'],
+  ['reservation-setup', 'tests/browser/reservation-setup.mjs'],
+  ['reservation-timezone', 'tests/browser/reservation-timezone.mjs'],
+  ['trust-score-history', 'tests/browser/trust-score-history.mjs'],
+  ['place-dispute-review', 'tests/browser/place-dispute-review.mjs'],
+  ['data-quality', 'tests/browser/data-quality.mjs'],
+  ['residual-contract', 'tests/browser/residual-contract.mjs'],
 ]
 
 // Run suites sequentially: bounded browser load, separate processes/servers.

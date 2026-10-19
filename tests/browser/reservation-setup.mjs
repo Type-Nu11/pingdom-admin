@@ -17,9 +17,10 @@ try {
     })
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
-      if (['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(url.hostname)) return route.continue()
+      if (route.request().method() === 'GET' && route.request().resourceType() === 'stylesheet'
+        && ['fonts.googleapis.com', 'cdn.jsdelivr.net'].includes(url.hostname)) return route.fulfill({ status: 200, contentType: 'text/css', body: '' })
       if (url.origin !== base || url.pathname.startsWith('/api/')) {
-        if (!['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net', 'oapi.map.naver.com'].includes(url.hostname)) forbidden.push(url.pathname)
+        forbidden.push(url.pathname)
         return route.abort()
       }
       return route.continue()

@@ -38,7 +38,7 @@ async function reviewMerchantOwner(
 ) {
   const { data } = await customAxios.post<AdminMerchantOwnerProfile>(
     `${PATH}/${userId}/${action}`,
-    request,
+    { reason: request.reason },
   )
   return data
 }

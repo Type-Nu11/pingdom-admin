@@ -1,36 +1,56 @@
 {
-  "collected_at": "2026-10-03T16:42:24.907Z",
+  "collected_at": "2026-10-19T00:00:47.012Z",
   "sources": {
     "admin": "https://www.typenull.xyz/v3/api-docs/admin",
-    "merchant": "https://www.typenull.xyz/v3/api-docs/merchant"
+    "merchant": "https://www.typenull.xyz/v3/api-docs/merchant",
+    "app": "https://www.typenull.xyz/v3/api-docs/app",
+    "common": "https://www.typenull.xyz/v3/api-docs/common"
   },
   "scope": [
     "admin",
     "merchant"
   ],
   "excluded": [
-    "app",
-    "common",
     "consulting"
   ],
   "verification": "Public GET retrieval and static source comparison only; no login, authenticated requests or mutations",
-  "source_commit": "bbe199b0bc8666ae7571760c6c20b17d934ea3fa",
-  "issue": "#254",
-  "comparison_baseline": "bbe199b0bc8666ae7571760c6c20b17d934ea3fa",
+  "source_commit": "40d0a3102fe23434a953b141399a5dc5be27bb97",
+  "issue": "#302",
+  "comparison_baseline": "40d0a3102fe23434a953b141399a5dc5be27bb97",
   "snapshots": {
     "admin": {
-      "collected_at": "2026-10-03T16:42:24.907Z",
+      "collected_at": "2026-10-19T00:00:46.988Z",
       "url": "https://www.typenull.xyz/v3/api-docs/admin",
-      "sha256": "c12dcfa62a983ecb1acf9a25275b3ebb188d19cbf78a10daf73974bb82d81372",
-      "baseline_sha256": "e954557df391d59e7e0bc1e6b79775f3a300e8a0a30b94f98a389b5802507c64",
+      "sha256": "3ba0f82d690b41ae7be5442f6fcfdb30ea96889081b7873411b37ef32016b3a6",
+      "baseline_sha256": "c12dcfa62a983ecb1acf9a25275b3ebb188d19cbf78a10daf73974bb82d81372",
       "operations": 145
     },
     "merchant": {
-      "collected_at": "2026-10-03T16:42:24.879Z",
+      "collected_at": "2026-10-19T00:00:47.001Z",
       "url": "https://www.typenull.xyz/v3/api-docs/merchant",
-      "sha256": "17a02f54a5ca7a92ea5dab5f3667f94f4a52efe4a0ad8d0c030912b0acd0990e",
-      "baseline_sha256": "ca70da5164f3f673c4d39a5100e865d6a09f1383d2cfc52c3de81f07a6968689",
-      "operations": 85
+      "sha256": "9e8859c801f18705325642e4a24188cd1b248766cda614c58c1e9f32887388dc",
+      "baseline_sha256": "17a02f54a5ca7a92ea5dab5f3667f94f4a52efe4a0ad8d0c030912b0acd0990e",
+      "operations": 81
+    },
+    "app": {
+      "collected_at": "2026-10-19T00:00:47.012Z",
+      "url": "https://www.typenull.xyz/v3/api-docs/app",
+      "sha256": "5f9412dcae7fbdb2be215c4c6ec993a591b3b50a8d50f328ec2f82db62a781dd",
+      "baseline_sha256": null,
+      "operations": 112
+    },
+    "common": {
+      "collected_at": "2026-10-19T00:00:46.967Z",
+      "url": "https://www.typenull.xyz/v3/api-docs/common",
+      "sha256": "7503464d77b4ce1e273f1d9d188c7f05dc3832247a58a30e6699ef302e187dbd",
+      "baseline_sha256": null,
+      "operations": 14
     }
-  }
+  },
+  "reference_scope": [
+    "app",
+    "common"
+  ],
+  "server_source_reference": "2df52f73914c4c1295fb013d7cc8779de2721df2",
+  "server_source_verification": "Source reference is separate from deployed version; OpenAPI info.version is not release provenance"
 }

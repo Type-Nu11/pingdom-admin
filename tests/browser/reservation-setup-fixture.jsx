@@ -4,6 +4,7 @@ import { AuthContext } from '../../src/app/providers/AuthContext'
 import { Router } from '../../src/app/router/Router'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
+import { verifyReservationFixture } from '../helpers/reservation-fixture-contract.mjs'
 
 // Every business request terminates in memory, including unknown/removed paths.
 let mode = 'success'
@@ -14,9 +15,10 @@ let slots = [{ id: 7, placeId: 1, startsAt: '2099-10-01T10:00:00', endsAt: '2099
 if (new URLSearchParams(location.search).has('timezone-qa')) slots = [{ ...slots[0], startsAt: '2030-03-10T05:00:17.123456789', endsAt: '2030-03-10T06:00:17.123456789' }]
 client.defaults.adapter = async config => {
   const body = config.data ? JSON.parse(config.data) : null
+  verifyReservationFixture(config.url, body)
   requests.push({ method: config.method, url: config.url, body })
   report([...requests])
-  const response = data => ({ config, data, status: 200, statusText: 'OK', headers: {} })
+  const response = data => { verifyReservationFixture(config.url, data); return { config, data, status: 200, statusText: 'OK', headers: {} } }
   if (mode === 'query-failure' && config.method === 'get' && config.url.endsWith('/availabilities')
     || mode === 'write-failure' && config.method !== 'get') {
     throw Object.assign(new Error('Synthetic failure'), { isAxiosError: true, config,

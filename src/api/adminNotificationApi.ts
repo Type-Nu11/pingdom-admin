@@ -22,7 +22,10 @@ export async function getAdminNotifications(
     ADMIN_NOTIFICATIONS_API_PATH,
     {
       params: {
-        ...request,
+        type: request.type,
+        read: request.read,
+        from: request.from,
+        to: request.to,
         page: request.page ?? 1,
         limit: request.limit ?? 20,
       },

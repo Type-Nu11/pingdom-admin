@@ -156,7 +156,11 @@ export function useMerchantPayments({ persistActionError = false } = {}) {
       if (!mountedRef.current) return null
 
       setPayments((items) => replacePayment(items, next))
-      setSuccessMessage('결제를 전액 환불했습니다.')
+      setSuccessMessage(next.status === 'REFUNDED'
+        ? '결제를 전액 환불했습니다.'
+        : next.status === 'REFUND_PROCESSING'
+          ? '환불 요청이 접수되었습니다. 환불 처리 중이며 완료 여부는 결제 내역에서 확인해주세요.'
+          : '환불 요청 후 결제 상태를 확인해주세요. 환불 완료는 확인되지 않았습니다.')
       void fetchSettlements(settlementPageInfo.page)
       return next
     } catch (error) {

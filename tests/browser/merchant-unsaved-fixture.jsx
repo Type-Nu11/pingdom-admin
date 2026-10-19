@@ -4,7 +4,6 @@ import { createBrowserRouter, RouterProvider, Outlet, useNavigate } from 'react-
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { MerchantPlaceContext } from '../../src/app/providers/MerchantPlaceContext'
 import { UnsavedChangesProvider } from '../../src/components/common/UnsavedChangesProvider'
-import ProductsPage from '../../src/pages/merchantReservationProducts/MerchantReservationProductsPage'
 import AvailabilityPage from '../../src/pages/merchantReservationSetup/MerchantReservationSetupPage'
 import NoticesPage from '../../src/pages/merchantOperatingNotice/MerchantOperatingNoticePage'
 import OperationsPage from '../../src/pages/merchantPlaceOperations/MerchantPlaceOperationsPage'
@@ -47,8 +46,8 @@ function Layout() {
     </UnsavedChangesProvider></MerchantPlaceContext.Provider>
   </AuthContext.Provider>
 }
-const pages = { products: ProductsPage, availability: AvailabilityPage, notices: NoticesPage, operations: OperationsPage, response: ResponsePage }
-const Page = pages[new URLSearchParams(location.search).get('screen')] || ProductsPage
+const pages = { availability: AvailabilityPage, notices: NoticesPage, operations: OperationsPage, response: ResponsePage }
+const Page = pages[new URLSearchParams(location.search).get('screen')] || AvailabilityPage
 const router = createBrowserRouter([{ element: <Layout />, children: [
   { path: '/', element: <Page /> },
   { path: '/other', element: <p>이동 완료</p> },

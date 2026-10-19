@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -26,8 +26,7 @@ export const TabButton = styled.button<{ $active?: boolean }>`
   border-radius: 7px;
   background: transparent;
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   ${({ $active }) =>
@@ -61,8 +60,7 @@ export const Field = styled.label`
   flex-direction: column;
   gap: 6px;
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   small {
     color: ${neutral.muted};
@@ -289,9 +287,7 @@ export const RecordHeader = styled.div`
 export const RecordTitle = styled.strong`
   display: block;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
 `
 
 export const RecordMeta = styled.p`
@@ -350,8 +346,7 @@ export const StatusBadge = styled.span<{ $tone?: 'success' | 'warning' | 'danger
         : $tone === 'warning'
           ? neutral.warningText
             : neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
 `
 
@@ -374,8 +369,7 @@ export const DetailItem = styled.div`
 
   dt {
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   dd {
@@ -404,8 +398,7 @@ export const SectionHeader = styled.div`
 export const SectionTitle = styled.h3`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const InlineActions = styled.div`
@@ -454,16 +447,14 @@ export const MetricCard = styled.div`
   span {
     display: block;
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   strong {
     display: block;
     margin-top: 5px;
     color: ${neutral.strongText};
-    font-size: 18px;
-    font-weight: 700;
+    ${typo.headline2.bold}
   }
 `
 
@@ -489,8 +480,7 @@ export const Table = styled.table`
   th {
     background: ${neutral.surfaceLow};
     color: ${neutral.neutralText};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   th:first-child,
@@ -548,8 +538,7 @@ export const CheckField = styled.label`
   align-items: center;
   gap: 8px;
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   input {
     width: 18px;

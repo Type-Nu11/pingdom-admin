@@ -1,5 +1,6 @@
 import customAxios from './customAxios'
 import type {
+  PlaceInformationDispute,
   PlaceInformationDisputeReviewRequest,
   PlaceInformationEvidenceCreateRequest,
   PlaceInformationEvidenceResponse,
@@ -51,7 +52,7 @@ export async function reviewAdminPlaceInformationDispute(
   disputeId: number,
   request: PlaceInformationDisputeReviewRequest
 ) {
-  const { data } = await customAxios.post<PlaceInformationReport>(
+  const { data } = await customAxios.post<PlaceInformationDispute>(
     `${ADMIN_PLACE_INFORMATION_REPORTS_PATH}/${reportId}/disputes/${disputeId}/review`,
     request
   )

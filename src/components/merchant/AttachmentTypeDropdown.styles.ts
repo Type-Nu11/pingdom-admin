@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -15,19 +15,18 @@ export const Trigger = styled.button`
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  padding: 0 10px;
+  padding: 8px 10px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   text-align: left;
   cursor: pointer;
 
-  > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  > span:last-child { color: ${colors.muted}; font-family: 'Material Symbols Outlined'; font-size: 18px; }
+  > span:first-child { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+  > span:last-child { flex-shrink: 0; width: 1em; height: 1em; overflow: hidden; color: ${colors.muted}; font-family: 'Material Symbols Outlined'; font-size: 18px; line-height: 1; }
   &[aria-expanded='true'] { border-color: ${colors.primary}; box-shadow: 0 0 0 3px ${colors.primaryTint}; }
   &:hover:not(:disabled) { border-color: ${colors.primarySoft}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
@@ -58,7 +57,7 @@ export const Option = styled.button<{ $selected: boolean }>`
   color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.text)};
   font: inherit;
   font-size: 12px;
-  font-weight: ${({ $selected }) => ($selected ? 700 : 600)};
+  font-weight: ${({ $selected }) => ($selected ? typography.label.bold.fontWeight : typography.label.medium.fontWeight)};
   text-align: left;
   cursor: pointer;
 

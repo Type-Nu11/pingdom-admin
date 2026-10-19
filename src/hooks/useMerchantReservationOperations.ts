@@ -4,13 +4,11 @@ import {
   cancelMerchantReservation,
   getMerchantAvailabilities,
   getMerchantReservations,
-  getMerchantReservableProducts,
 } from '../api/merchantStoreApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type {
   MerchantAvailability,
-  MerchantReservableProduct,
   MerchantReservation,
   MerchantReservationPageResponse,
   MerchantStoreErrorResponse,
@@ -39,7 +37,6 @@ export function useMerchantReservationOperations() {
     totalPages: 0,
     hasNext: false,
   })
-  const [products, setProducts] = useState<MerchantReservableProduct[]>([])
   const [availabilities, setAvailabilities] = useState<MerchantAvailability[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -79,9 +76,8 @@ export function useMerchantReservationOperations() {
     setErrorMessage('')
     setSectionErrorMessage('')
 
-    const [reservationResult, productResult, availabilityResult] = await Promise.allSettled([
+    const [reservationResult, availabilityResult] = await Promise.allSettled([
       getMerchantReservations(page, PAGE_LIMIT),
-      getMerchantReservableProducts(),
       getMerchantAvailabilities(),
     ])
 
@@ -111,10 +107,9 @@ export function useMerchantReservationOperations() {
       totalPages: reservationResult.value.totalPages,
       hasNext: reservationResult.value.hasNext,
     })
-    if (productResult.status === 'fulfilled') setProducts(productResult.value)
     if (availabilityResult.status === 'fulfilled') setAvailabilities(availabilityResult.value)
 
-    const referenceFailures = [productResult, availabilityResult].filter(
+    const referenceFailures = [availabilityResult].filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
     if (referenceFailures.length > 0) {
@@ -122,7 +117,7 @@ export function useMerchantReservationOperations() {
         if (shouldClearAuth(result.reason)) clearAuth()
         logDebugError('상점주 예약 참조 정보 조회 실패', result.reason)
       })
-      setSectionErrorMessage('상품 또는 예약 시간 일부를 불러오지 못해 ID로 표시합니다. 새로고침 후 다시 시도해주세요.')
+      setSectionErrorMessage('예약 시간을 불러오지 못해 예약 시간 ID로 표시합니다. 새로고침 후 다시 시도해주세요.')
     }
 
     setStatus('ready')
@@ -188,7 +183,6 @@ export function useMerchantReservationOperations() {
     status,
     reservations,
     pageInfo,
-    products,
     availabilities,
     isLoading,
     errorMessage,

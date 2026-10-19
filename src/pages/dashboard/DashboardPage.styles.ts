@@ -1,5 +1,5 @@
 import styled, { css, keyframes } from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 const loadingShimmer = keyframes`
@@ -156,7 +156,7 @@ export const AdminProfileText = styled.div`
     white-space: nowrap;
   }
 
-  strong { color: ${neutral.strongText}; font-size: 14px; font-weight: 700; }
+  strong { color: ${neutral.strongText}; ${typo.label.bold} }
   span { color: ${neutral.muted}; font-size: 12px; }
 `
 
@@ -172,8 +172,7 @@ export const LogoutButton = styled.button`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover { background: ${neutral.primaryTint}; color: ${neutral.primaryForeground}; }
@@ -214,8 +213,7 @@ export const TopBar = styled.header`
 export const TopTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const TopActions = styled.div`
@@ -308,8 +306,7 @@ export const SectionHeader = styled.div`
 export const SectionTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const SectionDescription = styled.p`
@@ -369,8 +366,7 @@ export const ActivityPanelMeta = styled.div`
   min-height: 18px;
   margin: -2px 0 8px;
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   text-align: right;
 `
 
@@ -399,8 +395,7 @@ export const ActivityViewAllButton = styled.button`
   background: transparent;
   color: ${neutral.muted};
   font: inherit;
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   white-space: nowrap;
   cursor: pointer;
 
@@ -432,8 +427,7 @@ export const ActivityTab = styled.button<{ $active?: boolean }>`
   background: transparent;
   color: ${({ $active }) => ($active ? neutral.text : neutral.muted)};
   font: inherit;
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   cursor: pointer;
 
   &:hover {
@@ -449,8 +443,7 @@ export const ActivityTab = styled.button<{ $active?: boolean }>`
 
 export const ActivityTabCount = styled.span`
   color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const ActivityGroups = styled.div`
@@ -504,8 +497,7 @@ export const ActivityItemMain = styled.div`
 
   strong {
     color: ${neutral.text};
-    font-size: 14px;
-    font-weight: 500;
+    ${typo.label.medium}
   }
 
   span {
@@ -548,9 +540,7 @@ export const ActivityBadge = styled.span<{
     if ($tone === 'error') return neutral.errorText
     return neutral.primaryForeground
   }};
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.caption.medium}
 `
 
 export const EmptyState = styled.p`
@@ -594,8 +584,7 @@ export const InlineRetryButton = styled.button`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   cursor: pointer;
 
   &:hover {
@@ -682,15 +671,13 @@ export const SummaryArrow = styled(MaterialIcon)`
 
 export const SummaryLabel = styled.span`
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
 `
 
 export const SummaryValue = styled.strong<{ $muted?: boolean }>`
   margin-top: 4px;
   color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
-  font-size: 24px;
-  font-weight: 700;
+  ${typo.title2.bold}
   line-height: 1;
 `
 
@@ -778,16 +765,14 @@ export const OperationalMetricContent = styled.span`
 export const OperationalMetricLabel = styled.span`
   overflow: hidden;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
 
 export const OperationalMetricValue = styled.strong<{ $muted?: boolean }>`
   color: ${({ $muted }) => ($muted ? neutral.softText : neutral.strongText)};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
   line-height: 1;
 `
 
@@ -812,8 +797,7 @@ export const QuickActionButton = styled.button`
   background: transparent;
   color: ${neutral.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   text-align: left;
   cursor: pointer;
 
@@ -877,7 +861,7 @@ export const StatusText = styled.div`
   flex-direction: column;
   gap: 4px;
 
-  strong { color: ${neutral.strongText}; font-size: 14px; font-weight: 700; }
+  strong { color: ${neutral.strongText}; ${typo.label.bold} }
   span { color: ${neutral.muted}; font-size: 14px; line-height: 1.3; }
 `
 
@@ -891,8 +875,7 @@ export const RetryButton = styled.button`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover { background: ${neutral.primaryTint}; color: ${neutral.primaryForeground}; }

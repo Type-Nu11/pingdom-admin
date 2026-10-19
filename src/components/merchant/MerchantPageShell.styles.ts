@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../styles/theme'
 
 export const Page = styled.main`
   min-height: calc(100vh - 64px);
@@ -36,21 +36,17 @@ export const Header = styled.section`
 export const Eyebrow = styled.p`
   margin: 0 0 8px;
   color: ${adminColors.primaryForeground};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const Title = styled.h1`
   margin: 0 0 6px;
   color: ${adminColors.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.title1.bold}
 `
 
 export const Description = styled.p`
   margin: 0;
   color: ${adminColors.muted};
-  font-size: 16px;
-  line-height: 1.5;
+  ${typo.body.regular}
 `

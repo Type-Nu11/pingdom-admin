@@ -28,7 +28,7 @@ const reportPath = '/admin/posts/s3/orphans/report'
 const dryPath = '/admin/s3/orphan-objects'
 const absentMessage = '생성된 S3 고아 파일 리포트가 없습니다.'
 const status = { reportId: 'synthetic', status: 'COMPLETED', generatedAt: '2026-10-05T12:30:00', completedAt: '2026-10-05T12:31:00', dbKeyCount: 2, s3KeyCount: 3, deleteCandidateCount: 1, errorMessage: null }
-const report = { ...status, deleteCandidates: [{ key: 'map/synthetic.png', reason: '합성 후보' }], page: 1, limit: 5, totalCount: 1, totalPages: 1, hasNext: false }
+const report = { ...Object.fromEntries(Object.entries(status).filter(([key]) => key !== 'completedAt')), deleteCandidates: [{ key: 'map/synthetic.png', reason: '합성 후보' }], page: 1, limit: 5, totalCount: 1, totalPages: 1, hasNext: false }
 const pageData = { page: 1, limit: 20, totalElements: 0, totalPages: 0, hasNext: false }
 const response = (config, data) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 const failure = (code, data = {}) => Object.assign(new Error('Synthetic failure'), { isAxiosError: true, response: { status: code, data, headers: {}, config: {} } })
@@ -130,6 +130,14 @@ test('only the latest endpoint known absence is accepted, never generic/auth 404
 for (const missing of ['known-404', 'not-found-status']) test(`S3 ${missing} is empty without generation/deletion`, async () => {
   adapter = config => config.url === statusPath ? missing === 'known-404' ? Promise.reject(failure(404, { message: absentMessage })) : Promise.resolve(response(config, { ...status, status: 'NOT_FOUND' })) : base(config)
   await mount(); assert.equal(state.statusState, 'empty'); assert.equal(state.report, null); assert.equal(state.errorMessage, '')
+  assert.ok(calls.every(config => config.method === 'get'))
+})
+test('S3 report loads without inventing a status-only completion timestamp', async () => {
+  await mount()
+  assert.equal(status.completedAt, '2026-10-05T12:31:00')
+  assert.equal('completedAt' in state.report, false)
+  assert.equal(state.reportState, 'ready')
+  assert.equal(state.status.status, 'COMPLETED')
   assert.ok(calls.every(config => config.method === 'get'))
 })
 for (const code of [404, 401, 403, 500]) test(`S3 unrelated HTTP ${code} remains an error`, async () => {

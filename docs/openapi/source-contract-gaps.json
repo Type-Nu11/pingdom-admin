@@ -6,6 +6,15 @@
     "function": "getAdminDataQualityIssues",
     "callers": [
       "src/hooks/useAdminDataQualityIssues.ts"
-    ]
+    ],
+    "known_contract": {
+      "method": "GET",
+      "path": "/admin/data-quality/issues",
+      "success_response_schema": "200:DataQualityIssuePageResponse (server source)",
+      "source_commit": "2df52f73914c4c1295fb013d7cc8779de2721df2",
+      "source_file": "src/main/java/com/typenull/pingdom/moderation/api/DataQualityMonitoringController.java",
+      "documentation_gap": "Controller has no ApiAudience; ADMIN audience and functional Tag require backend follow-up",
+      "verification": "#301/PR #309: 소스·합성 회귀 확인; 인증된 실서버 GET 미수행; 전체 스냅샷 갱신 #302; 공개 Swagger 누락은 API 제거 증거가 아님"
+    }
   }
 ]

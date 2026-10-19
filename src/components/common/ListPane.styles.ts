@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 export const Panel = styled.section`
   min-width: 0;
@@ -32,8 +32,7 @@ export const Heading = styled.div`
 export const Title = styled.h2`
   margin: 0;
   color: ${adminColors.strongText};
-  font-size: 16px;
-  font-weight: 700;
+  ${typo.body.bold}
 `
 
 export const Description = styled.p`
@@ -46,8 +45,7 @@ export const Description = styled.p`
 export const Count = styled.span`
   flex-shrink: 0;
   color: ${adminColors.muted};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   white-space: nowrap;
 `
 

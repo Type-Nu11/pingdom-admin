@@ -13,5 +13,5 @@ const server = await createServer({ server: { host: '127.0.0.1', port: 5194, str
   },
 }] })
 await server.listen()
-console.log('Synthetic form QA: http://127.0.0.1:5194/?screen=products')
+console.log('Synthetic form QA: http://127.0.0.1:5194/?screen=availability')
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, async () => { await server.close(); process.exit(0) })

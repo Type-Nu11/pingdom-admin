@@ -23,6 +23,19 @@ try {
     const target = `${base}/reservations/review?placeId=7&page=2&reservationId=11`
     await page.goto(target)
     await page.getByText(/예약 #11 · 신청/).waitFor()
+    assert.doesNotMatch(await page.locator('body').innerText(), /예약 상품|무료|결제 불필요|undefined/)
+    await page.getByText('예약 인원', { exact: true }).waitFor()
+    for (const action of ['승인', '반려']) {
+      await page.getByRole('button', { name: action, exact: true }).click()
+      const dialog = page.getByRole('dialog')
+      await dialog.getByText('예약 인원', { exact: true }).waitFor()
+      assert.doesNotMatch(await dialog.innerText(), /상품|무료|결제 불필요/)
+      const bounds = await dialog.boundingBox()
+      assert.ok(bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= width && bounds.y + bounds.height <= height)
+      await page.screenshot({ path: join(output, `${action === '승인' ? 'confirm' : 'reject'}-dialog-${width}.png`) })
+      await page.keyboard.press('Escape')
+      await dialog.waitFor({ state: 'hidden' })
+    }
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
     await page.screenshot({ path: join(output, `restored-${width}.png`) })
     const link = page.getByRole('link', { name: '합성 장소 7 · #7', exact: true })

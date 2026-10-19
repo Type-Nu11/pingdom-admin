@@ -45,8 +45,6 @@ import type {
   MerchantAvailability,
   MerchantAvailabilityUpsertRequest,
   MerchantReservationTerms,
-  MerchantReservableProduct,
-  MerchantReservableProductCreateRequest,
   MerchantReservation,
   MerchantReservationPageResponse,
   MerchantPlaceReverificationPageResponse,
@@ -395,37 +393,6 @@ export async function deactivateMerchantPlaceMenu(placeId: number, menuId: numbe
   )
 }
 
-export async function getMerchantReservableProducts() {
-  const { data } = await customAxios.get<MerchantReservableProduct[]>(
-    `${MERCHANT_OWNER_PATH}/reservable-products`
-  )
-  return data
-}
-
-export async function createMerchantReservableProduct(
-  request: MerchantReservableProductCreateRequest,
-) {
-  const { data } = await customAxios.post<MerchantReservableProduct>(
-    `${MERCHANT_OWNER_PATH}/reservable-products`,
-    request,
-  )
-  return data
-}
-
-export async function activateMerchantReservableProduct(productId: number) {
-  const { data } = await customAxios.post<MerchantReservableProduct>(
-    `${MERCHANT_OWNER_PATH}/reservable-products/${productId}/activate`,
-  )
-  return data
-}
-
-export async function deactivateMerchantReservableProduct(productId: number) {
-  const { data } = await customAxios.post<MerchantReservableProduct>(
-    `${MERCHANT_OWNER_PATH}/reservable-products/${productId}/deactivate`,
-  )
-  return data
-}
-
 export async function getMerchantAvailabilities() {
   const { data } = await customAxios.get<MerchantAvailability[]>(
     `${MERCHANT_OWNER_PATH}/availabilities`,
@@ -434,16 +401,29 @@ export async function getMerchantAvailabilities() {
 }
 
 export async function updateMerchantReservationTerms(availabilityId: number, request: MerchantReservationTerms) {
+  if ('unitAmountMinor' in request || 'additionalAmountMinor' in request || 'currency' in request) {
+    throw new Error('예약 금액 설정은 더 이상 지원하지 않습니다. 취소 조건을 다시 입력해주세요.')
+  }
+  const { timezone, cancellable, cancellationCutoffMinutes } = request
   const { data } = await customAxios.put<MerchantReservationTerms>(
-    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/reservation-terms`, request,
+    `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}/reservation-terms`,
+    { timezone, cancellable, cancellationCutoffMinutes },
   )
   return data
+}
+
+function availabilityRequest(request: MerchantAvailabilityUpsertRequest) {
+  if ('productId' in request || 'productType' in request) {
+    throw new Error('예약 상품 연결은 더 이상 지원하지 않습니다. 예약 시간을 다시 입력해주세요.')
+  }
+  const { placeId, startsAt, endsAt, totalCapacity } = request
+  return { placeId, startsAt, endsAt, totalCapacity }
 }
 
 export async function createMerchantAvailability(request: MerchantAvailabilityUpsertRequest) {
   const { data } = await customAxios.post<MerchantAvailability>(
     `${MERCHANT_OWNER_PATH}/availabilities`,
-    request,
+    availabilityRequest(request),
   )
   return data
 }
@@ -454,7 +434,7 @@ export async function updateMerchantAvailability(
 ) {
   const { data } = await customAxios.put<MerchantAvailability>(
     `${MERCHANT_OWNER_PATH}/availabilities/${availabilityId}`,
-    request,
+    availabilityRequest(request),
   )
   return data
 }

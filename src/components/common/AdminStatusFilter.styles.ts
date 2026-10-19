@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 export const Panel = styled.section`
   border: 0;
@@ -53,9 +53,7 @@ export const Heading = styled.div`
 export const Title = styled.span`
   margin: 0;
   color: ${adminColors.strongText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
 `
 
 export const Description = styled.p`

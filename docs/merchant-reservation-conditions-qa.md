@@ -1,5 +1,7 @@
 # 예약 수락 조건 및 취소 안내 검증 (#255)
 
+> 이 문서는 #255 당시 계약과 검증 이력입니다. 2026-10-19 #297에서 상품·금액·결제 필요 여부·취소 수수료/환불액 표시와 전용 금액 함수를 제거했습니다. 현재 구현·픽스처·검증 범위는 [예약 표시 계약 정리](reservation-display-297.md)를 따릅니다. 아래의 무료/유료 표시와 테스트용 결제 도착 화면은 현재 동작 설명이 아닙니다.
+
 ## 확인한 계약
 
 - 2026-10-01 공개 merchant OpenAPI의 ReservationResponse.confirmation 및 nullable ReservationConfirmation을 확인했습니다.

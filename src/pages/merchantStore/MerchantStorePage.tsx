@@ -5,6 +5,7 @@ import { useMerchantStore } from '../../hooks/useMerchantStore'
 import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
 import { useSavedDraft } from '../../hooks/useSavedDraft'
 import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
+import { formatReservationSchedule as formatDateTime } from '../../utils/reservationTime'
 import type {
   MerchantOfferStatus,
   MerchantOwnerProfileStatus,
@@ -36,14 +37,6 @@ function formatDate(value: string) {
     .format(date)
     .replace(/\./g, '')
     .replace(/\s/g, '.')
-}
-
-function formatDateTime(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  const pad = (number: number) => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function formatCount(value: number) {

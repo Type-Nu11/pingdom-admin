@@ -9,7 +9,7 @@ export interface AdminDataQualityIssue {
   ruleCode: string
   severity: DataQualityIssueSeverity
   status: DataQualityIssueStatus
-  details: string
+  details: string | null
   detectedAt: string
 }
 
@@ -21,9 +21,5 @@ export interface AdminDataQualityIssuePageResponse {
   totalPages: number
   hasNext: boolean
 }
-
-export type AdminDataQualityIssueListResponse =
-  | AdminDataQualityIssue[]
-  | AdminDataQualityIssuePageResponse
 
 export type AdminDataQualityErrorResponse = AuthErrorResponse<string>

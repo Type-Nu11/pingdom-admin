@@ -104,7 +104,6 @@ export interface AdminPlaceDetail {
   jibunAddress?: string | null
   postalCode?: string | null
   geocodingSource?: AdminPlaceGeocodingSource
-  kakaoPlaceId?: string | null
   operatingStatus?: AdminPlaceOperatingStatus
   operatingStatusCheckedAt?: string | null
   discoveryStatus?: AdminPlaceDiscoveryStatus

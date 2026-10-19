@@ -1,5 +1,5 @@
 import styled, { css, keyframes } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typography, typo, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -53,7 +53,7 @@ export const HeaderUser = styled.div`
   align-items: center;
   gap: 10px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
 
   strong {
     max-width: 180px;
@@ -87,8 +87,7 @@ export const LogoutButton = styled.button`
   background: transparent;
   color: ${colors.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover {
@@ -157,27 +156,21 @@ export const PageIntro = styled.section`
 export const PageTitle = styled.h1`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.title1.bold}
   letter-spacing: 0;
 
   .merchant-layout-content & {
     margin-bottom: 6px;
-    font-size: 24px;
   }
 `
 
 export const PageDescription = styled.p`
   margin: 10px 0 0;
   color: ${colors.muted};
-  font-size: 15px;
-  line-height: 1.55;
+  ${typo.body.regular}
 
   .merchant-layout-content & {
     margin-top: 0;
-    font-size: 16px;
-    line-height: 1.5;
   }
 `
 
@@ -203,8 +196,7 @@ export const QuickLink = styled.button`
   background: ${colors.surface};
   color: ${colors.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover {
@@ -235,8 +227,7 @@ export const Field = styled.label<{ $wide?: boolean }>`
   flex-direction: column;
   gap: 8px;
   color: ${colors.text};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   ${({ $wide }) =>
     $wide &&
@@ -252,7 +243,7 @@ const fieldStyle = css`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 14px;
+  ${typo.label.regular}
   outline: 0;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 
@@ -292,8 +283,7 @@ export const SaveButton = styled.button`
   background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { background: ${colors.primaryForeground}; border-color: ${colors.primaryHover}; }
@@ -310,7 +300,7 @@ export const Notice = styled.div<{ $tone: 'error' | 'success' }>`
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'error' ? colors.errorTint : colors.successTint)};
   color: ${({ $tone }) => ($tone === 'error' ? colors.errorText : colors.successText)};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -325,7 +315,7 @@ export const NoticeIcon = styled.span`
 export const Empty = styled.div`
   padding: 20px 0 4px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -360,14 +350,13 @@ export const EmptyStoreIcon = styled.span`
 export const EmptyStoreTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 16px;
-  font-weight: 700;
+  ${typo.body.bold}
 `
 
 export const EmptyStoreDescription = styled.p`
   margin: 6px 0 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 `
 
@@ -391,8 +380,7 @@ export const EmptyStoreAction = styled.button`
   background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   white-space: nowrap;
   cursor: pointer;
 
@@ -435,7 +423,6 @@ export const RetryButton = styled.button`
   background: ${colors.surface};
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 `

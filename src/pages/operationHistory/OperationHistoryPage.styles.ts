@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -81,9 +81,7 @@ export const AuditActionCell = styled.span`
 export const AuditActionTitle = styled.strong`
   overflow: hidden;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -116,8 +114,7 @@ export const AuditTypeTag = styled.span`
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -138,8 +135,7 @@ export const AuditActorCell = styled.span`
 
   strong {
     color: ${neutral.text};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   span {
@@ -182,12 +178,21 @@ export const AuditStateDetails = styled.details`
     align-items: center;
     min-height: 46px;
     color: ${neutral.text};
-    font-size: 14px;
-    font-weight: 700;
+    ${typo.label.bold}
     cursor: pointer;
   }
 
   summary::marker { color: ${neutral.primaryForeground}; }
+`
+
+export const AuditReadNotice = styled.p`
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 14px;
+  line-height: 1.5;
 `
 
 export const AuditStateContent = styled.pre`

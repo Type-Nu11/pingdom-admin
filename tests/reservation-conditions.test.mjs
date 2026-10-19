@@ -14,16 +14,15 @@ const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthConte
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { useMerchantReservationOperations } = await server.ssrLoadModule('/src/hooks/useMerchantReservationOperations.ts')
 const { default: Page } = await server.ssrLoadModule('/src/pages/merchantReservationOperations/MerchantReservationOperationsPage.tsx')
-const { reservationAmount, reservationConditionTime, reservationCancellationRestriction, reservationCancellationDeadlineNotice } = await server.ssrLoadModule('/src/utils/reservationConditions.ts')
+const { reservationConditionTime, reservationCancellationRestriction, reservationCancellationDeadlineNotice } = await server.ssrLoadModule('/src/utils/reservationConditions.ts')
 const { ReservationConditions } = await server.ssrLoadModule('/src/components/merchant/ReservationConditions.tsx')
 const conditions = {
-  placeId: 1, placeName: '수락 당시 매장', productId: 3, productName: '수락 당시 상품', productType: 'TICKET', availabilityId: 2,
+  placeId: 1, placeName: '수락 당시 매장', availabilityId: 2,
   quantity: 2, timezone: 'Asia/Seoul', startsAt: '2099-10-01T00:00:00Z', endsAt: '2099-10-01T01:00:00Z',
-  unitAmountMinor: 1000, additionalAmountMinor: 50, totalAmountMinor: 2050, currency: 'USD', currencyFractionDigits: 2,
-  paymentRequired: true, cancellable: true, cancellationDeadline: '2099-09-30T23:00:00Z',
-  cancellationFeeMinor: 0, refundableAmountMinor: 2050, conditionsVersion: 1, productVersion: 2, expiresAt: '2020-01-01T00:00:00Z',
+  cancellable: true, cancellationDeadline: '2099-09-30T23:00:00Z',
+  conditionsVersion: 1, expiresAt: '2020-01-01T00:00:00Z',
 }
-const reservation = { id: 1, productId: 3, productType: 'TICKET', availabilityId: 2, quantity: 2, status: 'CONFIRMED', createdAt: '2026-10-01T00:00:00Z', confirmation: conditions }
+const reservation = { id: 1, availabilityId: 2, quantity: 2, status: 'CONFIRMED', createdAt: '2026-10-01T00:00:00Z', confirmation: conditions }
 const response = (config, data) => ({ config, data, status: 200, statusText: 'OK', headers: {} })
 let root, state, rows, handler, calls, clears
 function Probe() { state = useMerchantReservationOperations(); return null }
@@ -37,21 +36,13 @@ beforeEach(() => {
     calls.push(config)
     if (config.method !== 'get') return handler(config)
     if (config.url.endsWith('/reservations')) return response(config, { reservations: rows, page: 1, limit: 20, totalElements: rows.length, totalPages: 1, hasNext: false })
-    return response(config, config.url.endsWith('/reservable-products') ? [{ id: 3, name: '현재 상품' }] : [{ id: 2, startsAt: '2020-01-01T00:00:00', endsAt: '2020-01-02T00:00:00' }])
+    if (config.url.endsWith('/availabilities')) return response(config, [{ id: 2, startsAt: '2020-01-01T00:00:00', endsAt: '2020-01-02T00:00:00' }])
+    throw new Error(`Unexpected read ${config.url}`)
   }
 })
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
 
-test('minor-unit currencies use supplied precision without rounding or exchange', () => {
-  assert.equal(reservationAmount(2050, 'USD', 2), '20.50 USD')
-  assert.equal(reservationAmount(2050, 'KRW', 0), '2,050 KRW')
-  assert.equal(reservationAmount(2050, 'JPY', 0), '2,050 JPY')
-  assert.equal(reservationAmount(2050, 'KWD', 3), '2.050 KWD')
-  assert.equal(reservationAmount(Number.MAX_SAFE_INTEGER, 'USD', 2), '90,071,992,547,409.91 USD')
-  assert.equal(reservationAmount(0, 'USD', 2), '0.00 USD')
-  for (const args of [[NaN, 'USD', 2], [Number.MAX_SAFE_INTEGER + 1, 'USD', 2], [-1, 'USD', 2], [1, '', 2], [1, 'USD', -1]]) assert.equal(reservationAmount(...args), '금액 정보 없음')
-})
 test('condition dates use offset and explicit timezone, not client local time', () => {
   assert.match(reservationConditionTime('2026-09-30T15:00:00Z', 'Asia/Seoul'), /2026.*10.*01.*00:00.*Asia\/Seoul/)
   assert.equal(reservationConditionTime('2026-10-01T00:00:00', 'Asia/Seoul'), '시각 정보 없음')
@@ -63,24 +54,55 @@ test('accepted policy blocks locally, but deadline and missing conditions need s
   assert.equal(reservationCancellationDeadlineNotice(conditions, deadline - 1), null)
   assert.match(reservationCancellationDeadlineNotice(conditions, deadline), /기기 시각.*서버/)
   assert.match(reservationCancellationRestriction({ ...conditions, cancellable: false }), /정책/)
-  for (const confirmation of [null, { ...conditions, cancellationDeadline: null }, { ...conditions, cancellationDeadline: 'invalid' }]) assert.equal(reservationCancellationRestriction(confirmation), null)
+  for (const confirmation of [null, { ...conditions, cancellable: undefined }, { ...conditions, cancellationDeadline: null }, { ...conditions, cancellationDeadline: 'invalid' }]) assert.equal(reservationCancellationRestriction(confirmation), null)
 })
-test('null conditions and explicit free/noncancellable conditions remain distinct', async () => {
+test('null conditions and explicit noncancellable conditions remain distinct without inventing prices', async () => {
   await mount(h(ReservationConditions, { confirmation: null, now: 0 }))
   assert.match(document.body.textContent, /수락 조건 정보 없음/)
   assert.ok(!document.body.textContent.includes('결제 불필요'))
-  await mount(h(ReservationConditions, { confirmation: { ...conditions, totalAmountMinor: 0, paymentRequired: false, cancellable: false }, now: 0 }))
-  assert.match(document.body.textContent, /총액 0.00 USD/)
+  await mount(h(ReservationConditions, { confirmation: { ...conditions, cancellable: false }, now: 0 }))
+  assert.doesNotMatch(document.body.textContent, /금액|총액|무료|0원|결제 불필요|상품/)
   assert.match(document.body.textContent, /취소할 수 없습니다/)
 })
-test('page prefers accepted snapshot over changed product/availability and disables forbidden cancellation', async () => {
+test('current response renders accepted place/time/quantity without retired fields and disables forbidden cancellation', async () => {
   rows = [reservation, { ...reservation, id: 2, confirmation: { ...conditions, cancellable: false } }]
   await mount(h(Page))
-  assert.ok(document.body.textContent.includes('수락 당시 상품'))
-  assert.ok(!document.body.textContent.includes('현재 상품'))
-  assert.match(document.body.textContent, /20.50 USD/)
+  assert.match(document.body.textContent, /수락 당시 매장.*2명.*수락 조건 v1/)
+  assert.match(document.body.textContent, /2099.*10.*01.*09:00.*Asia\/Seoul/)
+  assert.doesNotMatch(document.body.textContent, /상품|금액|총액|무료|0원|결제 불필요|undefined/)
   const buttons = [...document.querySelectorAll('button')].filter(button => button.textContent === '예약 취소')
   assert.equal(buttons[0].disabled, false); assert.equal(buttons[1].disabled, true)
+  assert.ok(calls.every(config => !config.url.includes('reservable-products')))
+})
+test('missing cancellation deadline stays unknown rather than unlimited cancellation', async () => {
+  await mount(h(ReservationConditions, { confirmation: { ...conditions, cancellationDeadline: null }, now: 0 }))
+  assert.match(document.body.textContent, /취소 기한 정보 없음.*서버 확인/)
+  assert.doesNotMatch(document.body.textContent, /언제든|무제한|무료|결제 불필요/)
+})
+test('pending, confirmed, rejected and canceled reservations remain distinct without product fields', async () => {
+  rows = ['PENDING', 'CONFIRMED', 'REJECTED', 'CANCELED'].map((status, i) => ({ ...reservation, id: i + 1, status, reviewReason: status === 'REJECTED' ? '합성 반려 사유' : null }))
+  await mount(h(Page))
+  assert.match(document.body.textContent, /관리자 심사 대기/)
+  assert.match(document.body.textContent, /관리자 승인/)
+  assert.match(document.body.textContent, /관리자 반려.*합성 반려 사유/)
+  assert.equal([...document.querySelectorAll('button')].filter(button => button.textContent === '예약 취소').length, 1)
+  assert.doesNotMatch(document.body.textContent, /상품|결제 불필요|금액 정보 없음/)
+})
+test('legacy reservation schedule uses its UTC snapshot before a changed availability in every client zone', async () => {
+  const previous = process.env.TZ
+  try {
+    for (const timezone of ['Asia/Seoul', 'UTC', 'America/New_York']) {
+      process.env.TZ = timezone
+      rows = [{ ...reservation, confirmation: null, reservationStartsAt: '2030-03-10T05:00:00', reservationEndsAt: '2030-03-10T06:00:00' }]
+      await mount(h(Page))
+      assert.match(document.body.textContent, /2030\.03\.10 14:00 \(한국 시각\)/)
+      assert.doesNotMatch(document.body.textContent, /2020\.01\.01/)
+      await act(async () => root.render(null))
+    }
+  } finally {
+    if (previous === undefined) delete process.env.TZ
+    else process.env.TZ = previous
+  }
 })
 for (const [status, code, kind] of [[409, 'CANCELLATION_NOT_ALLOWED', 'policy'], [409, 'RESERVATION_REFUND_REQUIRED', 'refund'], [409, 'INVALID_RESERVATION_STATE', null], [401, 'EXPIRED_TOKEN', null], [403, 'ACCESS_DENIED', null], [500, '', null]]) {
   test(`cancel ${status}/${code}: retains row, separates auth and guidance`, async () => {

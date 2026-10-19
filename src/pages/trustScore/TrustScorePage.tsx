@@ -312,7 +312,7 @@ function TrustScorePage() {
                       <S.Input
                         inputMode="numeric"
                         value={reporterId}
-                        placeholder="예: 12"
+                        placeholder="예: 123"
                         onChange={(event) => {
                           setReporterId(event.target.value);
                           setFormError(''); hook.dismissActionError();
@@ -330,11 +330,15 @@ function TrustScorePage() {
                 {formError ? (
                   <Shared.Notice $variant="error" role="alert">{formError}</Shared.Notice>
                 ) : null}
-                {!hook.reporter ? (
+                {hook.reporterError ? <Shared.Notice $variant="error" role="alert">{hook.reporterError}{hook.reporter ? ' 표시된 점수는 이전 결과입니다.' : ''}
+                  <Shared.SecondaryButton type="button" disabled={hook.isReporterLoading || hook.activeAction !== null} onClick={() => hook.selectedReporterId && void hook.fetchReporter(hook.selectedReporterId)}>신고자 다시 시도</Shared.SecondaryButton>
+                </Shared.Notice> : null}
+                {hook.isReporterLoading ? <Shared.Notice role="status">신고자 점수를 불러오는 중입니다.{hook.reporter ? ' 현재 표시된 점수는 이전 결과입니다.' : ''}</Shared.Notice> : null}
+                {!hook.reporter && hook.reporterPhase === 'idle' ? (
                   <Shared.EmptyStateCard>
                     <strong>신고자 ID로 Trust Score를 조회해주세요.</strong>
                   </Shared.EmptyStateCard>
-                ) : (
+                ) : hook.reporter ? (
                   <>
                     <Shared.Panel>
                       <Shared.PanelHeader>
@@ -402,7 +406,7 @@ function TrustScorePage() {
                         <S.InlineActions>
                           <Shared.SecondaryButton
                             type="button"
-                            disabled={hook.activeAction !== null}
+                            disabled={hook.activeAction !== null || hook.reporterPhase !== 'success'}
                             onClick={() =>
                               setDialog({
                                 type: "evaluate",
@@ -414,7 +418,7 @@ function TrustScorePage() {
                           </Shared.SecondaryButton>
                           <Shared.PrimaryButton
                             type="button"
-                            disabled={hook.activeAction !== null}
+                            disabled={hook.activeAction !== null || hook.reporterPhase !== 'success'}
                             onClick={() => setDialog({ type: "batch" })}
                           >
                             전체 점수 재계산
@@ -430,16 +434,21 @@ function TrustScorePage() {
                             서버가 보관한 점수 재계산 기록입니다.
                           </Shared.PanelDescription>
                         </div>
-                        <Shared.PanelCount>
-                          {hook.history.length}건
-                        </Shared.PanelCount>
+                        {hook.historyPageInfo ? <Shared.PanelCount>
+                          전체 {hook.historyPageInfo.total.toLocaleString()}건 · {hook.historyPageInfo.page} / {Math.max(1, hook.historyPageInfo.totalPages)}페이지
+                          {hook.historyPhase !== 'success' ? ' (이전 결과)' : ''}
+                        </Shared.PanelCount> : null}
                       </Shared.PanelHeader>
                       <S.FormBody>
-                        {hook.history.length === 0 ? (
+                        {hook.historyPhase === 'loading' ? <Shared.Notice role="status">점수 변경 이력을 불러오는 중입니다.{hook.historyPageInfo ? ' 아래는 이전 결과입니다.' : ''}</Shared.Notice> : null}
+                        {hook.historyError ? <Shared.Notice $variant="error" role="alert">{hook.historyError}
+                          <Shared.SecondaryButton type="button" disabled={hook.isReporterLoading || hook.historyPhase === 'loading' || hook.activeAction !== null} onClick={() => void hook.fetchHistory(hook.requestedHistoryPage)}>이력 다시 시도</Shared.SecondaryButton>
+                        </Shared.Notice> : null}
+                        {hook.historyPageInfo && hook.history.length === 0 && hook.historyPhase === 'success' ? (
                           <Shared.EmptyState>
-                            <strong>변경 이력이 없습니다.</strong>
+                            <strong>{hook.historyPageInfo.total === 0 ? '변경 이력이 없습니다.' : '현재 페이지에 변경 이력이 없습니다.'}</strong>
                           </Shared.EmptyState>
-                        ) : (
+                        ) : hook.history.length > 0 ? (
                           <S.CardList>
                             {hook.history.map((item) => (
                               <S.RecordCard key={item.id}>
@@ -466,11 +475,19 @@ function TrustScorePage() {
                               </S.RecordCard>
                             ))}
                           </S.CardList>
-                        )}
+                        ) : null}
+                        {hook.historyPageInfo && hook.historyPageInfo.totalPages > 1 ? <AdminPagination
+                          ariaLabel="점수 변경 이력 페이지네이션"
+                          page={hook.historyPageInfo.page}
+                          totalPages={hook.historyPageInfo.totalPages}
+                          hasNext={hook.historyPageInfo.hasNext}
+                          disabled={hook.historyPhase === 'loading' || hook.isReporterLoading || hook.activeAction !== null}
+                          onPageChange={page => void hook.fetchHistory(page)}
+                        /> : null}
                       </S.FormBody>
                     </Shared.Panel>
                   </>
-                )}
+                ) : null}
                 {hook.evaluation ? (
                   <Shared.Notice $variant="success" role="status">
                     평가 결과: {hook.evaluation.message}

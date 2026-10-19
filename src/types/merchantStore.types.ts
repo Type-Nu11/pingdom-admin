@@ -7,8 +7,7 @@ export type MerchantCampaignStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantOfferStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 export type MerchantPlaceMenuCurrency = 'KRW' | 'USD' | 'JPY' | 'CNY' | 'EUR'
 export type MerchantPlaceMenuStatus = 'AVAILABLE' | 'SOLD_OUT' | 'HIDDEN' | 'INACTIVE'
-export type ReservableProductStatus = 'ACTIVE' | 'INACTIVE'
-export type MerchantReservableProductType = 'GENERAL' | 'TICKET' | 'CLASS'
+export type MerchantAvailabilityStatus = 'ACTIVE' | 'INACTIVE'
 export type MerchantReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELED'
 export type MerchantPaymentStatus =
   | 'PROCESSING'
@@ -241,39 +240,19 @@ export interface MerchantCoupon {
   redeemedAt: string | null
 }
 
-export interface MerchantReservableProduct {
-  id: number
-  placeId: number
-  productType: MerchantReservableProductType
-  name: string
-  status: ReservableProductStatus
-}
-
-export interface MerchantReservableProductCreateRequest {
-  placeId: number
-  productType: MerchantReservableProductType
-  name: string
-}
-
 export interface MerchantAvailability {
   id: number
   placeId: number
-  productId: number | null
-  productType: MerchantReservableProductType
-  productName: string | null
   reservationTerms: MerchantReservationTerms | null
   conditionsVersion: number
   startsAt: string
   endsAt: string
   totalCapacity: number
   remainingCapacity: number
-  status: ReservableProductStatus
+  status: MerchantAvailabilityStatus
 }
 
 export interface MerchantReservationTerms {
-  unitAmountMinor: number
-  additionalAmountMinor: number
-  currency: string
   timezone: string
   cancellable: boolean
   cancellationCutoffMinutes: number | null
@@ -281,36 +260,22 @@ export interface MerchantReservationTerms {
 
 export interface MerchantAvailabilityUpsertRequest {
   placeId: number
-  productId?: number
-  productType?: MerchantReservableProductType
   startsAt: string
   endsAt: string
-  totalCapacity?: number
+  totalCapacity: number
 }
 
 export interface MerchantReservationConfirmation {
   placeId: number
   placeName: string
   availabilityId: number
-  productType: MerchantReservableProductType
-  productId: number | null
-  productName: string | null
   startsAt: string
   endsAt: string
   quantity: number
   timezone: string
-  unitAmountMinor: number
-  additionalAmountMinor: number
-  totalAmountMinor: number
-  currency: string
-  currencyFractionDigits: number
-  paymentRequired: boolean
   cancellable: boolean
   cancellationDeadline: string | null
-  cancellationFeeMinor: number
-  refundableAmountMinor: number
   conditionsVersion: number
-  productVersion: number | null
   expiresAt: string
 }
 
@@ -318,8 +283,8 @@ export interface MerchantReservation {
   id: number
   touristUserId: number
   availabilityId: number
-  productId: number | null
-  productType: MerchantReservableProductType
+  reservationStartsAt?: string | null
+  reservationEndsAt?: string | null
   quantity: number
   status: MerchantReservationStatus
   createdAt: string

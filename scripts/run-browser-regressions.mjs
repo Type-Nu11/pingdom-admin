@@ -9,12 +9,21 @@ export const browserCases = [
   ['detector-probes', 'tests/browser/regression-probes.mjs'],
   ['dashboard', 'tests/browser/dashboard-pending.mjs'],
   ['accessibility', 'tests/browser/ui-accessibility.mjs'],
+  ['web-design-system', 'tests/browser/web-design-system.mjs'],
+  ['text-readability', 'tests/browser/text-readability.mjs'],
+  ['admin-readable-copy', 'tests/browser/admin-readable-copy.mjs'],
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],
   ['user-ban-structure', 'tests/browser/user-ban-structure.mjs'],
   ['community', 'tests/browser/community.mjs'],
   ['merchant-draft', 'tests/browser/merchant-draft.mjs'],
+  ['reservation-setup', 'tests/browser/reservation-setup.mjs'],
+  ['reservation-timezone', 'tests/browser/reservation-timezone.mjs'],
+  ['trust-score-history', 'tests/browser/trust-score-history.mjs'],
+  ['place-dispute-review', 'tests/browser/place-dispute-review.mjs'],
+  ['data-quality', 'tests/browser/data-quality.mjs'],
+  ['residual-contract', 'tests/browser/residual-contract.mjs'],
 ]
 
 // Run suites sequentially: bounded browser load, separate processes/servers.

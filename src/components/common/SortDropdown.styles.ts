@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 export const DropdownRoot = styled.div<{ $width?: string }>`
   position: relative;
@@ -14,19 +14,18 @@ export const DropdownRoot = styled.div<{ $width?: string }>`
 
 export const DropdownTrigger = styled.button`
   width: 100%;
-  height: 40px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  padding: 0 10px 0 12px;
+  padding: 9px 10px 9px 12px;
   border: 0;
   border-radius: ${radius.md};
   outline: 1px solid transparent;
   background: ${adminColors.surfaceLow};
   color: ${adminColors.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -36,9 +35,9 @@ export const DropdownTrigger = styled.button`
 
   > span:first-child {
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   &:hover:not(:disabled) {
@@ -126,8 +125,7 @@ export const DropdownOption = styled.button<{
   border-radius: 7px;
   background: transparent;
   color: ${adminColors.text};
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   text-align: left;
   cursor: pointer;
   transition:

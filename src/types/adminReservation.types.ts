@@ -11,8 +11,6 @@ export interface AdminReservation {
   merchantOwnerUserId: number | null
   merchantOwnerUsername: string | null
   availabilityId: number
-  productId: number | null
-  productName: string | null
   quantity: number
   reservationStartsAt: string | null
   reservationEndsAt: string | null

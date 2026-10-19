@@ -4,6 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "check:api-contracts": "node scripts/refresh-openapi-snapshots.mjs --check",
+    "check:api-matrix": "python3 scripts/refresh-api-contract-matrix.py --check",
+    "test:data-quality-browser": "node tests/browser/data-quality.mjs",
+    "test:place-dispute-review-browser": "node tests/browser/place-dispute-review.mjs",
+    "test:trust-score-history-browser": "node tests/browser/trust-score-history.mjs",
+    "test:reservation-timezone-browser": "node tests/browser/reservation-timezone.mjs",
+    "test:reservation-setup-browser": "node tests/browser/reservation-setup.mjs",
     "test:ec2-image": "node scripts/verify-ec2-image.mjs",
     "test:release-browser": "node scripts/run-browser-regressions.mjs",
     "test:reservation-context-browser": "node tests/browser/reservation-context.mjs",

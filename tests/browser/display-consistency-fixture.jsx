@@ -8,13 +8,19 @@ import PaymentPage from '../../src/pages/merchantPayments/MerchantPaymentsPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 import { paymentFixture, settlementFixture } from './display-consistency-data.mjs'
+import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 
 // Entirely synthetic adapter: no request (including mutations) reaches a real API.
 const params = new URLSearchParams(location.search)
 const screen = params.get('screen') || 's3'
 const scenario = params.get('scenario') || 'empty'
 const report = { reportId: 'synthetic-report', status: scenario === 'running' ? 'RUNNING' : scenario === 'failed' ? 'FAILED' : 'COMPLETED', generatedAt: '2026-10-05T12:30:00', completedAt: '2026-10-05T12:31:00', dbKeyCount: 2, s3KeyCount: 3, deleteCandidateCount: 1, errorMessage: scenario === 'failed' ? '합성 리포트 생성 실패' : null, deleteCandidates: [{ key: 'map/synthetic-only.png', reason: '합성 비교 후보 — 실제 파일 아님' }], page: 1, totalCount: 1, totalPages: 1, hasNext: false }
-client.defaults.adapter = async config => {
+const status = Object.fromEntries(Object.entries(report).filter(([key]) => !['deleteCandidates', 'page', 'totalCount', 'totalPages', 'hasNext'].includes(key)))
+delete report.completedAt
+report.limit = 5
+window.displayQA = { calls: [], responses: [] }
+client.defaults.adapter = observeFixtureAdapter(async config => {
+  window.displayQA.calls.push({ method: config.method, path: config.url })
   if (config.method !== 'get') throw new Error('QA: mutations blocked')
   if (scenario === 'loading' && !config.url.includes('notifications')) await new Promise(resolve => setTimeout(resolve, 10_000))
   let data
@@ -22,14 +28,15 @@ client.defaults.adapter = async config => {
   else if (config.url === '/admin/s3/orphan-objects') data = { dbKeyCount: 2, s3ObjectCount: 3, orphanObjectCount: 1, truncated: false }
   else if (config.url === '/admin/posts/s3/orphans/report/status') {
     if (scenario === 'empty' || scenario === 'error') throw Object.assign(new Error('Synthetic query failure'), { isAxiosError: true, config, response: { status: scenario === 'empty' ? 404 : 500, data: { message: scenario === 'empty' ? '생성된 S3 고아 파일 리포트가 없습니다.' : '합성 조회 실패' }, headers: {}, config } })
-    data = report
+    data = status
   } else if (config.url === '/admin/posts/s3/orphans/report') data = report
   else if (config.url === '/merchant-owner/payments' || config.url === '/merchant-owner/payments/settlements') {
     if (scenario === 'error') throw new Error('Synthetic payment query failure')
     data = config.url === '/merchant-owner/payments' ? paymentFixture(scenario) : settlementFixture(scenario)
   } else throw new Error(`Unexpected synthetic request ${config.url}`)
+  window.displayQA.responses.push({ path: config.url, data })
   return { config, data, status: 200, statusText: 'OK', headers: {} }
-}
+})
 const auth = { clearAuth() {}, logout() {}, user: { id: 99, username: '합성 QA', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }
 // Notifications are outside this fixture's scope; avoid unrelated pending-work polls.
 const notifications = { notifications: [], unreadCount: 0, pendingWorkItems: [], pendingWorkEntries: [], pendingWorkCount: 0, pendingWorkStatus: 'success', pendingWorkErrorMessage: '', status: 'success', errorMessage: '', isUnreadCountLoading: false, isActionLoading: false, async fetchNotifications() {}, async refreshUnreadCount() {}, async refreshPendingWork() {}, async markAsRead() { return false }, async markAllAsRead() { return false } }

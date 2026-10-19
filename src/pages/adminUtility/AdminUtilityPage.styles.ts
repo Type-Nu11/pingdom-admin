@@ -1083,6 +1083,10 @@ export const ConfirmDescription = styled.p`
   line-height: 1.3;
 `
 
+export const ConfirmReasonField = styled(ActionLabel)`
+  margin-top: 14px;
+`
+
 export const ConfirmMeta = styled.div`
   display: flex;
   flex-direction: column;

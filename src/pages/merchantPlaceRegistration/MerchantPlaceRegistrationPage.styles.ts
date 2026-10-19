@@ -435,7 +435,7 @@ export const PlaceSearchResult = styled.button<{ $active?: boolean }>`
 
 export const PlaceSearchResultIcon = styled.span`
   flex: 0 0 auto;
-  color: ${colors.softText};
+  color: ${colors.primary};
   font-family: 'Material Symbols Outlined';
   font-size: 21px;
   font-variation-settings: 'FILL' 1;

@@ -384,12 +384,12 @@ export const DetailEyebrow = styled.p`
 `
 
 export const DetailTitle = styled.h3`
-  overflow: hidden;
+  min-width: 0;
   margin: 0;
   color: ${neutral.strongText};
   ${typo.headline2.bold}
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 `
 
 export const DetailCloseButton = styled.button`
@@ -482,11 +482,10 @@ export const DetailMetaRow = styled.div`
 
   strong {
     display: block;
-    overflow: hidden;
     color: ${neutral.text};
     ${typo.label.bold}
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 `
 
@@ -585,11 +584,10 @@ export const OperatingSummaryLabel = styled.div`
   }
 
   small {
-    overflow: hidden;
     color: ${neutral.muted};
     ${typo.caption.medium}
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 `
 

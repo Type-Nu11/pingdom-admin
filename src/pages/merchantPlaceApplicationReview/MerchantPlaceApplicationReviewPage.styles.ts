@@ -112,11 +112,10 @@ export const AttachmentRow = styled.article`
   }
 
   strong {
-    overflow: hidden;
     color: ${colors.strongText};
     ${typo.caption.bold}
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   span {

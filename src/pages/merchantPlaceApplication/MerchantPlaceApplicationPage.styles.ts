@@ -205,13 +205,13 @@ export const SearchResult = styled.button`
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
 
   strong { display: block; color: ${colors.text}; ${typo.label.bold} }
-  span { display: block; margin-top: 4px; overflow: hidden; color: ${colors.muted}; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  span { display: block; margin-top: 4px; color: ${colors.muted}; font-size: 12px; overflow-wrap: anywhere; white-space: normal; }
 `
 
 export const SearchHint = styled.p`
   margin: 7px 0 0;
   color: ${colors.muted};
-  font-size: 12px;
+  ${typo.caption.regular}
   line-height: 1.45;
 `
 
@@ -365,9 +365,8 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
   div { min-width: 0; }
   strong, small {
     display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
   strong { color: ${colors.text}; font-size: 12px; }
   small { margin-top: 1px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
@@ -414,7 +413,7 @@ export const AttachmentFileInfo = styled.div`
   }
 
   div { min-width: 0; }
-  strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  strong, small { display: block; overflow-wrap: anywhere; white-space: normal; }
   strong { color: ${colors.text}; font-size: 12px; }
   small { margin-top: 2px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 `

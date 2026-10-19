@@ -305,12 +305,12 @@ export const PlaceCardLabel = styled.p`
 `
 
 export const PlaceCardTitle = styled.h3`
-  overflow: hidden;
+  min-width: 0;
   margin: 4px 0 0;
   color: ${neutral.strongText};
   ${typo.body.bold}
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 `
 
 export const StatusTag = styled.span<{ $variant?: 'target' | 'source' | 'warning' }>`
@@ -359,13 +359,13 @@ export const MetaRow = styled.div`
   }
 
   dd {
-    overflow: hidden;
+    min-width: 0;
     margin: 0;
     color: ${neutral.text};
     font-size: 12px;
     line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 `
 
@@ -693,12 +693,12 @@ export const ModalSummaryItem = styled.div`
   }
 
   dd {
-    overflow: hidden;
+    min-width: 0;
     margin: 4px 0 0;
     color: ${neutral.strongText};
     ${typo.label.bold}
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 `
 

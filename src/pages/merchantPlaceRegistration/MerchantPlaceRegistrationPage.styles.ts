@@ -203,6 +203,8 @@ export const Section = styled.fieldset`
   border-top: 1px solid ${colors.borderSoft};
 
   &:first-of-type { padding-top: 0; border-top: 0; }
+
+  @media (max-width: 620px) { grid-template-columns: 1fr; }
 `
 
 export const SectionLegend = styled.legend`
@@ -218,7 +220,7 @@ export const SectionHint = styled.p`
   grid-column: 1 / -1;
   margin: -7px 0 14px;
   color: ${colors.muted};
-  font-size: 12px;
+  ${typo.caption.regular}
   line-height: 1.5;
 `
 
@@ -747,11 +749,15 @@ export const ScheduleRow = styled.div`
   background: ${colors.surface};
 
   @media (max-width: 700px) {
-    grid-template-columns: 38px 1fr;
+    grid-template-columns: 38px minmax(0, 1fr);
     gap: 10px;
     padding: 10px;
 
     > :last-child { grid-column: 2 / -1; }
+  }
+
+  @media (max-width: 400px) {
+    > :last-child { grid-column: 1 / -1; }
   }
 `
 
@@ -761,7 +767,9 @@ export const DayName = styled.strong`
 `
 
 export const DayStatus = styled.div`
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 `
 
@@ -789,6 +797,11 @@ export const ScheduleTimeControls = styled.div`
 
   @media (max-width: 700px) {
     justify-self: start;
+  }
+
+  @media (max-width: 400px) {
+    width: 100%;
+    > div { flex: 1; min-width: 0; }
   }
 `
 
@@ -917,7 +930,7 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
   }
 
   div { min-width: 0; }
-  strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  strong, small { display: block; overflow-wrap: anywhere; white-space: normal; }
   strong { color: ${colors.text}; font-size: 12px; }
   small { margin-top: 1px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 
@@ -963,7 +976,7 @@ export const AttachmentFileInfo = styled.div`
   }
 
   div { min-width: 0; }
-  strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  strong, small { display: block; overflow-wrap: anywhere; white-space: normal; }
   strong { color: ${colors.text}; font-size: 12px; }
   small { margin-top: 2px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 `

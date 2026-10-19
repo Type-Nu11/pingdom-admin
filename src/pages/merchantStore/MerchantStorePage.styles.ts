@@ -379,21 +379,19 @@ export const ResourceTop = styled.div`
 export const ResourceTitle = styled.h3`
   min-width: 0;
   margin: 0;
-  overflow: hidden;
   color: ${colors.text};
   ${typo.label.bold}
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 `
 
 export const ResourceMeta = styled.p`
   margin: 6px 0 0;
-  overflow: hidden;
   color: ${colors.muted};
   font-size: 12px;
   line-height: 1.45;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 `
 
 export const ResourceBadge = styled.span<{ $active?: boolean }>`

@@ -28,6 +28,8 @@ export const GlobalStyle = createGlobalStyle`
       sans-serif;
     line-height: ${typography.label.regular.lineHeight};
     letter-spacing: 0;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

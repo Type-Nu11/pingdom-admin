@@ -341,13 +341,15 @@ export const FilterMenuButton = styled.button<{ $open?: boolean }>`
     `}
 
   .filter-menu-label {
-    overflow: hidden;
+    min-width: 0;
+    padding: 9px 0;
     text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .filter-menu-icon {
+    flex-shrink: 0;
     color: ${neutral.muted};
     font-size: 20px;
     line-height: 1;
@@ -879,11 +881,11 @@ export const DetailSummaryCard = styled.section`
 
 export const DetailTitle = styled.strong`
   display: block;
-  overflow: hidden;
+  min-width: 0;
   color: ${neutral.strongText};
   ${typo.headline2.bold}
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 `
 
 export const DetailMeta = styled.span`

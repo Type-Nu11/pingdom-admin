@@ -1,4 +1,5 @@
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
+import { InlineExample } from '../../components/common/Text.styles'
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useUnsavedChanges, useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
 import { useNavigate } from 'react-router-dom'
@@ -248,7 +249,7 @@ function ApplicationForm({
       <Store.Field>
         연락처 (필수)
         <Store.Input type="tel" value={phone} inputMode="tel" maxLength={30} placeholder="+82-10-1234-5678" disabled={!editable || activeAction !== null} onChange={(event) => setPhone(event.target.value)} />
-        <S.SearchHint>국가번호를 포함한 국제 형식으로 입력하세요. 예: +82-10-1234-5678</S.SearchHint>
+        <S.SearchHint>국가번호를 포함해 입력하세요. <InlineExample>예: +82-10-1234-5678</InlineExample></S.SearchHint>
       </Store.Field>
       <Store.Field $wide>
         운영할 장소 (필수)

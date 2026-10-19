@@ -32,7 +32,7 @@ export const Trigger = styled.button`
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 12px;
+  padding: 10px 12px;
   border: 0;
   border-radius: ${radius.md};
   outline: 0;
@@ -45,9 +45,8 @@ export const Trigger = styled.button`
 
   > span:first-child {
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   ${Icon} {

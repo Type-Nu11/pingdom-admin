@@ -266,7 +266,7 @@ export const Textarea = styled.textarea`
 export const FieldHint = styled.p`
   margin: -2px 0 0;
   color: ${colors.muted};
-  font-size: 12px;
+  ${typo.caption.regular}
   line-height: 1.45;
 `
 

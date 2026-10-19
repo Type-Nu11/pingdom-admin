@@ -1,8 +1,10 @@
 """Reconcile checked-in OpenAPI with source evidence; no network or runtime QA."""
 import csv
+import io
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +28,8 @@ def content(value):
 
 def main():
     metadata = json.loads((ROOT / 'docs/openapi/metadata.json').read_text())
+    known = json.loads((ROOT / 'docs/openapi/known-source-contracts.json').read_text())
+    known_by_key = {(r['method'], normalize(r['path'])): r for r in known}
     with MATRIX.open() as f:
         reader = csv.DictReader(f)
         fields = reader.fieldnames
@@ -56,7 +60,7 @@ def main():
                            success_response_schema='|'.join(f'{s}:{content(v)}' for s, v in operation.get('responses', {}).items() if s.startswith('2')) or '-',
                            error_response_schemas='|'.join(f'{s}:{content(v)}' for s, v in operation.get('responses', {}).items() if not s.startswith('2')) or '-',
                            last_verified=metadata['collected_at'], canonical_status=f'{group}: documented',
-                           issue=previous.get('issue') or '#254', backend_prerequisite='계약 존재; 실서버 QA 미수행')
+                           issue=previous.get('issue') or '#302', backend_prerequisite=previous.get('backend_prerequisite') or '계약 존재; 실서버 QA 미수행')
                 row['frontend_target'] = '; '.join(f"{c['file']}::{c['function']} -> {','.join(c['callers']) or 'no callers'}" for c in calls) or '호출 근거 없음'
                 row['status'] = 'partial' if connected else 'missing'
                 row['destructive'] = previous.get('destructive') or ('no' if method == 'get' else 'review-required')
@@ -75,12 +79,19 @@ def main():
                                backend_prerequisite='옛 MapImage 운영 기능 제외; 서버 API·데이터 삭제는 별도 결정')
                 if method == 'get' and (path == '/merchant-owner/places/{placeId}/menus/{menuId}' or path == '/users/me/merchant-place-applications/{applicationId}/attachments') and not connected:
                     row.update(status='alternative', frontend_target='메뉴 목록 또는 통합 신청 상세의 첨부 배열 사용; 단건 API 직접 호출 없음')
+                if path == '/admin/places/{id}/kakao-place-id' and not connected:
+                    row.update(status='excluded', issue='#292; #302', confirmation='웹 Kakao ID 수정 UI/API 제거; 호출하지 않음',
+                               backend_prerequisite='서버 문서에는 존재하지만 현 웹 제품 범위에서 제외; 서버 endpoint 삭제 의미 아님')
                 if connected and '/media' in path:
                     row.update(status='implemented', confirmation='useMerchantPlaceOperations; displayOrder 이동 위치/업로드 후 완료 등록', backend_prerequisite='없음; 현재 문서 계약과 요청 필드 연결 확인')
                 if connected and path.endswith('/naver-place-search'):
-                    row.update(status='implemented', issue='#225', confirmation='업체명 검색 후보 선택; 수동 카테고리 유지; 실환경 QA는 #220', backend_prerequisite='공개 검색 계약과 호출 연결 존재; 인증된 실검색 QA 미수행')
-                if connected and (path.endswith('/reservation-terms') or path == '/merchant-owner/availabilities' and method == 'get'):
-                    row.update(status='implemented', issue='#256', confirmation='PR #265 / docs/merchant-reservation-terms-qa.md: 조건 편집·저장·재조회 모의 검증; 실환경 QA #220', backend_prerequisite='nullable reservationTerms·conditionsVersion 조회 및 PUT 연동 완료; 실서버 QA 미수행')
+                    row.update(status='implemented')
+                # An automated source inventory must not replace manually verified
+                # product evidence (#295-#301) with older #256-era assumptions.
+                if connected and previous.get('status') == 'implemented':
+                    for field in ['issue', 'confirmation', 'backend_prerequisite', 'frontend_target']:
+                        if previous.get(field):
+                            row[field] = previous[field]
                 rows.append(row)
     for previous in old:
         key = (previous['method'], normalize(previous['path']))
@@ -91,24 +102,41 @@ def main():
         if in_scope:
             calls = evidence.get(key, [])
             connected = [c for c in calls if c['callers']]
-            row.update(status='blocked' if connected else 'removed', issue='#203' if 'merchant-verification' in row['path'] else '#207',
+            source_contract = known_by_key.get(key)
+            row.update(status='blocked' if connected else 'removed', issue=previous.get('issue') or ('#203' if 'merchant-verification' in row['path'] else '#207'),
                        canonical_status='현재 Admin/Merchant 문서에 없음; 서버 삭제 확정 아님',
                        last_verified=metadata['collected_at'],
                        backend_prerequisite='사용 중 호출의 계약 확인 필요' if connected else '통합 신청 등 대체 사용; 구형 호출 근거 없음',
                        frontend_target='; '.join(f"{c['file']}::{c['function']} -> {','.join(c['callers'])}" for c in connected) or '호출 근거 없음')
+            if connected and source_contract:
+                row.update(status=previous['status'], issue=previous['issue'],
+                           success_response_schema=source_contract['success_response_schema'],
+                           confirmation=previous['confirmation'], frontend_target=previous['frontend_target'],
+                           backend_prerequisite=source_contract['verification'],
+                           canonical_status='현재 Admin/Merchant 문서에 없음; 서버 소스 구현 확인; 알려진 문서 그룹 누락')
         else:
             row['canonical_status'] = 'out-of-scope: 기존 기록 보존, 이번 확인 대상 아님'
         rows.append(row)
-    with MATRIX.open('w', newline='') as f:
-        writer = csv.DictWriter(f, fields, quoting=csv.QUOTE_ALL, lineterminator='\n')
-        writer.writeheader()
-        for i, row in enumerate(rows, 1):
-            row['id'] = str(i)
-            writer.writerow(row)
-    gaps = [c for c in inventory if c['callers'] and c['path'].startswith(('/admin/', '/merchant-owner/', '/users/me/merchant-')) and not any(
+    for row in rows:
+        # Keep the original product evidence while making the formerly pending
+        # snapshot task current. This transformation is idempotent.
+        row['backend_prerequisite'] = row['backend_prerequisite'].replace('전체 스냅샷 갱신 #302', '원본 스냅샷은 #302 기준으로 갱신')
+    output = io.StringIO(newline='')
+    writer = csv.DictWriter(output, fields, quoting=csv.QUOTE_ALL, lineterminator='\n')
+    writer.writeheader()
+    for i, row in enumerate(rows, 1):
+        row['id'] = str(i)
+        writer.writerow(row)
+    gaps = [{**c, **({'known_contract': known_by_key[(c['method'], normalize(c['path']))]} if (c['method'], normalize(c['path'])) in known_by_key else {})} for c in inventory if c['callers'] and c['path'].startswith(('/admin/', '/merchant-owner/', '/users/me/merchant-')) and not any(
         c['method'] == method and re.fullmatch(re.sub(r'\\\{.*?\\\}', '[^/]+', re.escape(c['path'])), p)
         for method, p in current)]
-    (ROOT / 'docs/openapi/source-contract-gaps.json').write_text(json.dumps(gaps, ensure_ascii=False, indent=2) + '\n')
+    artifacts = {MATRIX: output.getvalue(), ROOT / 'docs/openapi/source-contract-gaps.json': json.dumps(gaps, ensure_ascii=False, indent=2) + '\n'}
+    if '--check' in sys.argv:
+        if any(path.read_text() != contents for path, contents in artifacts.items()):
+            raise SystemExit('Contract matrix/source gaps are stale; refresh explicitly and review the diff')
+    else:
+        for path, contents in artifacts.items():
+            path.write_text(contents)
     print(f'{len(current)} current operations; {len(rows)} total rows')
     for row in rows:
         if row['status'] in ['missing', 'alternative']:

@@ -11,6 +11,12 @@ const current = ['admin', 'merchant'].flatMap(group => {
   const doc = JSON.parse(readFileSync(`docs/openapi/${group}.json`, 'utf8'))
   return Object.entries(doc.paths).flatMap(([path, methods]) => Object.keys(methods).filter(m => ['get', 'post', 'put', 'patch', 'delete'].includes(m)).map(m => key(m, path)))
 })
+test('matrix regeneration is reproducible without overwriting product evidence', () => {
+  const names = ['docs/web-api-contract-matrix.csv', 'docs/openapi/source-contract-gaps.json']
+  const before = names.map(name => readFileSync(name, 'utf8'))
+  execFileSync('python3', ['scripts/refresh-api-contract-matrix.py', '--check'], { encoding: 'utf8' })
+  assert.deepEqual(names.map(name => readFileSync(name, 'utf8')), before)
+})
 test('matrix covers each documented Admin and Merchant operation exactly once', () => {
   const documented = rows.filter(r => r.canonical_status.endsWith(': documented')).map(r => key(r.method, r.path))
   assert.deepEqual(documented.sort(), current.sort())
@@ -28,6 +34,7 @@ test('missing and alternate APIs are distinct from implemented flows', () => {
   assert.equal(row('PATCH', '/merchant-owner/places/{placeId}/media/{mediaId}').status, 'implemented')
   assert.match(row('PATCH', '/merchant-owner/places/{placeId}/media/{mediaId}').confirmation, /displayOrder/)
   assert.equal(row('GET', '/users/me/merchant-verification').status, 'removed')
+  assert.equal(row('PATCH', '/admin/places/{id}/kakao-place-id').status, 'excluded')
 })
 test('unused Claim code is removed without removing onboarding or unified applications', () => {
   const api = readFileSync('src/api/merchantStoreApi.ts', 'utf8')
@@ -55,14 +62,17 @@ test('new contracts reflect source connections without claiming live QA', () => 
     assert.equal(row(method, path).status, 'implemented')
     assert.match(row(method, path).frontend_target, /useMerchantReservationSetup/)
     assert.match(row(method, path).backend_prerequisite, /실서버 저장 QA 미수행/)
-    assert.match(row(method, path).backend_prerequisite, /전체 스냅샷 갱신 #302/)
-    assert.equal(row(method, path).last_verified, method === 'GET' ? '2026-10-19' : '2026-10-18T15:09:05Z')
+    assert.match(row(method, path).backend_prerequisite, /원본 스냅샷은 #302 기준으로 갱신/)
+    assert.equal(row(method, path).last_verified, JSON.parse(readFileSync('docs/openapi/metadata.json', 'utf8')).collected_at)
   }
   assert.equal(row('GET', '/users/me/merchant-place-applications/naver-place-search').status, 'implemented')
   assert.match(row('GET', '/admin/dashboard/pending-items').frontend_target, /예약/)
   for (const entry of rows.filter(r => r.issue === '#204')) assert.equal(entry.status, 'excluded')
   const gaps = JSON.parse(readFileSync('docs/openapi/source-contract-gaps.json', 'utf8'))
   assert.ok(gaps.some(r => r.path === '/admin/data-quality/issues'))
+  assert.match(gaps.find(r => r.path === '/admin/data-quality/issues').known_contract.documentation_gap, /ApiAudience/)
+  assert.equal(row('GET', '/admin/data-quality/issues').status, 'implemented')
+  assert.match(row('GET', '/admin/data-quality/issues').issue, /#301/)
 })
 test('snapshot provenance and structural diff can be reproduced from the pinned baseline', () => {
   const metadata = JSON.parse(readFileSync('docs/openapi/metadata.json', 'utf8'))

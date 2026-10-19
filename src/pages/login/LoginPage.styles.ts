@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, typography, radius } from '../../styles/theme'
+import { typo, adminColors, typography, radius } from '../../styles/theme'
 
 export const MaterialIcon = styled.span`
   width: 1em;
@@ -11,8 +11,7 @@ export const MaterialIcon = styled.span`
   flex-shrink: 0;
   color: currentColor;
   font-family: 'Material Symbols Outlined';
-  font-size: 20px;
-  font-weight: 400;
+  ${typo.headline1.regular}
   line-height: 1;
   font-variation-settings:
     'FILL' 0,
@@ -304,8 +303,7 @@ export const SessionNotice = styled.p`
 export const FooterText = styled.p`
   margin: 28px 0 0;
   color: ${adminColors.muted};
-  font-size: ${typography.label.regular.fontSize}px;
-  font-weight: ${typography.label.regular.fontWeight};
+  ${typo.label.regular}
   line-height: ${typography.label.regular.lineHeight};
   text-align: center;
 `

@@ -1,0 +1,79 @@
+import assert from 'node:assert/strict'
+import { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { chromium } from 'playwright'
+import { createServer } from '../helpers/isolated-vite.mjs'
+import { guardBrowserPage } from '../helpers/browser-regression-guard.mjs'
+
+const output = await mkdtemp(join(tmpdir(), 'pingdom-admin-copy-'))
+const server = await createServer({ cacheDir: join(output, 'cache'), server: { port: 0, host: '127.0.0.1' }, plugins: [{ name: 'admin-copy-qa', configureServer(vite) {
+  vite.middlewares.use(async (req, res, next) => {
+    if (!req.url?.startsWith('/__qa/admin-copy')) return next()
+    res.setHeader('Content-Type', 'text/html')
+    res.end(await vite.transformIndexHtml(req.url, (await readFile('index.html', 'utf8')).replace('/src/main.tsx', '/tests/browser/admin-readable-copy-fixture.jsx')))
+  })
+} }] })
+let browser
+try {
+  await server.listen(); browser = await chromium.launch()
+  const base = `http://127.0.0.1:${server.httpServer.address().port}`
+  for (const [width, height] of [[1920, 1080], [1449, 772], [390, 844]]) {
+    const page = await browser.newPage({ viewport: { width, height } })
+    const guard = await guardBrowserPage(page, base)
+    await page.goto(`${base}/__qa/admin-copy?screen=history`)
+    await page.getByRole('button', { name: /신청 첨부 정보 조회/ }).click()
+    await page.getByText('장소 신청 #1', { exact: true }).waitFor()
+    await page.getByText('대표 이미지의 첨부 정보를 조회했습니다.', { exact: true }).waitFor()
+    await page.getByText('조회·열람 기록입니다. 이 작업 자체는 대상 정보를 변경하지 않습니다.', { exact: true }).waitFor()
+    assert.equal(await page.getByText('작업 전 상태 보기', { exact: true }).count(), 0)
+    const technical = page.locator('details').filter({ has: page.locator('summary', { hasText: '기술 정보 보기' }) })
+    assert.equal(await technical.getAttribute('open'), null)
+    await technical.locator('summary').focus(); await page.keyboard.press('Enter')
+    await technical.getByText('MERCHANT_PLACE_APPLICATION_ATTACHMENT_VIEWED', { exact: true }).waitFor({ state: 'visible' })
+    await technical.getByText('{"applicationId":1}', { exact: true }).waitFor({ state: 'visible' })
+    await technical.locator('summary').click()
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    await page.screenshot({ path: join(output, `history-read-${width}.png`), fullPage: true })
+    await page.getByRole('button', { name: /사용자 밴 처리/ }).click()
+    await page.getByText('작업 전 상태 보기', { exact: true }).waitFor()
+    assert.equal(await page.getByRole('note').count(), 0)
+    await page.getByRole('button', { name: /작업 유형 확인 필요/ }).click()
+    await page.getByText('알 수 없는 작업의 원본 사유', { exact: true }).first().waitFor()
+    assert.equal(await page.getByText('장소 신청 #999', { exact: true }).count(), 0)
+    await page.getByLabel('감사 로그 작업 유형', { exact: true }).fill('신청 첨부 정보 조회')
+    await page.getByRole('button', { name: '조회', exact: true }).click()
+    await page.waitForFunction(() => window.copyQA.calls.at(-1).params.action === 'MERCHANT_PLACE_APPLICATION_ATTACHMENT_VIEWED')
+    await page.getByRole('button', { name: '상세 필터 펼치기', exact: true }).click()
+    await page.getByLabel('감사 로그 대상 유형', { exact: true }).fill('신청 첨부파일')
+    await page.getByRole('button', { name: '조회', exact: true }).click()
+    await page.waitForFunction(() => window.copyQA.calls.at(-1).params.targetType === 'MERCHANT_PLACE_APPLICATION_ATTACHMENT')
+    assert.ok((await page.evaluate(() => window.copyQA.calls)).every(call => call.method === 'get'))
+
+    await page.goto(`${base}/__qa/admin-copy?screen=notifications`)
+    await page.getByText('새 신고 접수', { exact: false }).waitFor()
+    await page.getByRole('button', { name: '발송 결과', exact: true }).click()
+    const deliveryFilter = page.getByRole('combobox', { name: '발송 상태', exact: true })
+    await deliveryFilter.click(); await page.getByRole('option', { name: '재시도 예정', exact: true }).click()
+    await page.waitForFunction(() => window.copyQA.calls.at(-1).params.status === 'RETRY_SCHEDULED')
+    await page.getByText(/앱 푸시 발송 #/).waitFor()
+    await page.getByRole('button', { name: '재처리 이벤트', exact: true }).click()
+    const outboxFilter = page.getByRole('combobox', { name: '재처리 이벤트 상태', exact: true })
+    await outboxFilter.click(); await page.getByRole('option', { name: '재시도 대기', exact: true }).click()
+    await page.waitForFunction(() => window.copyQA.calls.at(-1).params.status === 'RETRY')
+    assert.ok((await page.evaluate(() => window.copyQA.calls)).every(call => call.method === 'get'))
+    await page.screenshot({ path: join(output, `notifications-${width}.png`), fullPage: true })
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+
+    await page.goto(`${base}/__qa/admin-copy?screen=recommendations`)
+    await page.getByText('클릭률은 노출 대비 클릭 비율이며, 보정 클릭률은 시스템의 보정 기준을 적용한 값입니다.', { exact: true }).waitFor()
+    await page.getByRole('tab', { name: '추천 설명', exact: true }).click()
+    await page.getByPlaceholder('추천 요청 번호를 붙여넣으세요', { exact: true }).waitFor()
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    assert.ok((await page.evaluate(() => window.copyQA.calls)).every(call => call.method === 'get'))
+    guard.assertClean()
+    await page.close()
+    console.log(`PASS admin wording, raw evidence disclosure, Korean filters -> exact API codes, notification status, request guidance ${width}×${height}`)
+  }
+  console.log(`GET-only synthetic screenshots: ${output}`)
+} finally { await browser?.close(); await server.close() }

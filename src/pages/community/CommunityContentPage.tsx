@@ -29,7 +29,7 @@ function Comments({ postId }: { postId: number }) {
       <Form.RecordTitle>댓글 #{comment.commentId} · {comment.hidden ? '숨김' : '공개'}</Form.RecordTitle>
       <Form.RecordMeta>{comment.authorUsername || '이름 없음'} · #{comment.authorUserId}</Form.RecordMeta><Form.RecordSummary>{comment.content}</Form.RecordSummary>
     </Form.RecordButton>)}
-    <CommunityPagination data={query.pagination} page={page} loading={query.loading} onChange={p => { void query.changePage(p); setCommentId(null) }} label="댓글 페이지네이션" />
+    {query.pagination && query.pagination.totalPages > 1 ? <CommunityPagination data={query.pagination} page={page} loading={query.loading} onChange={p => { void query.changePage(p); setCommentId(null) }} label="댓글 페이지네이션" /> : null}
     <QueryMessage {...detail} onRetry={detail.refresh} />
     {detail.data && detail.data.postId === postId && detail.data.commentId === commentId ? <section aria-label="댓글 상세"><CommunityContentView content={detail.data} /></section> : null}
   </S.Body>

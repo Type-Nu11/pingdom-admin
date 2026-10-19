@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -57,8 +57,7 @@ export const BrandButton = styled.button`
   background: ${colors.surface};
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
   cursor: pointer;
 
@@ -73,7 +72,7 @@ export const ModalOverlay = styled.div`
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgb(17 24 39 / 40%);
+  background: ${colors.overlay};
 `
 
 export const Modal = styled.section`
@@ -83,7 +82,7 @@ export const Modal = styled.section`
   border: 1px solid ${colors.border};
   border-radius: 8px;
   background: ${colors.surface};
-  box-shadow: 0 20px 45px rgb(15 23 42 / 18%);
+  box-shadow: 0 20px 45px ${colors.strongShadow};
 `
 
 export const ModalHeader = styled.div`
@@ -98,8 +97,7 @@ export const ModalHeader = styled.div`
 export const ModalTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const ModalBody = styled.div`

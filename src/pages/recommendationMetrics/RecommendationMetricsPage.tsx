@@ -23,8 +23,8 @@ import * as S from '../placeVerification/PlaceVerificationPage.styles'
 type Tab = 'metrics' | 'compare' | 'explanation' | 'policy'
 
 const SORT_OPTIONS: Array<{ value: RecommendationMetricSortBy; label: string }> = [
-  { value: 'SMOOTHED_CTR', label: '보정 CTR' },
-  { value: 'RAW_CTR', label: '원본 CTR' },
+  { value: 'SMOOTHED_CTR', label: '보정 클릭률' },
+  { value: 'RAW_CTR', label: '클릭률' },
   { value: 'BOOKMARK_CONVERSION', label: '북마크 전환' },
   { value: 'LIKE_CONVERSION', label: '좋아요 전환' },
   { value: 'TOTAL_CONVERSION', label: '전체 전환' },
@@ -54,8 +54,8 @@ function SummaryCards({ summary, delta }: { summary: AdminRecommendationMetricSu
     <S.MetricGrid>
       <S.MetricCard><span>노출</span><strong>{delta ? signed(summary.exposureCount) : summary.exposureCount.toLocaleString()}</strong></S.MetricCard>
       <S.MetricCard><span>클릭</span><strong>{delta ? signed(summary.clickCount) : summary.clickCount.toLocaleString()}</strong></S.MetricCard>
-      <S.MetricCard><span>원본 CTR</span><strong>{delta ? signed(summary.rawCtr, true) : percent(summary.rawCtr)}</strong></S.MetricCard>
-      <S.MetricCard><span>보정 CTR</span><strong>{delta ? signed(summary.smoothedCtr, true) : percent(summary.smoothedCtr)}</strong></S.MetricCard>
+      <S.MetricCard><span>클릭률</span><strong>{delta ? signed(summary.rawCtr, true) : percent(summary.rawCtr)}</strong></S.MetricCard>
+      <S.MetricCard><span>보정 클릭률</span><strong>{delta ? signed(summary.smoothedCtr, true) : percent(summary.smoothedCtr)}</strong></S.MetricCard>
       <S.MetricCard><span>북마크 전환율</span><strong>{delta ? signed(summary.bookmarkConversionRate, true) : percent(summary.bookmarkConversionRate)}</strong></S.MetricCard>
       <S.MetricCard><span>좋아요 전환율</span><strong>{delta ? signed(summary.likeConversionRate, true) : percent(summary.likeConversionRate)}</strong></S.MetricCard>
       <S.MetricCard><span>전체 전환율</span><strong>{delta ? signed(summary.totalConversionRate, true) : percent(summary.totalConversionRate)}</strong></S.MetricCard>
@@ -128,7 +128,7 @@ function RecommendationMetricsPage() {
     event.preventDefault()
     const value = requestId.trim()
     if (!value) {
-      setFormError('추천 requestId를 입력해주세요.')
+      setFormError('추천 요청 번호를 입력해주세요.')
       return
     }
     setFormError('')
@@ -162,11 +162,12 @@ function RecommendationMetricsPage() {
             <div id="recommendation-panel" role="tabpanel" aria-labelledby={`recommendation-panel-tab-${['metrics', 'compare', 'explanation', 'policy'].indexOf(tab)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 
           {tab === 'metrics' ? <>
+            <Shared.QuerySummary>클릭률은 노출 대비 클릭 비율이며, 보정 클릭률은 시스템의 보정 기준을 적용한 값입니다.</Shared.QuerySummary>
             <S.SearchBar onSubmit={submitMetrics}>
               <S.FilterGrid>
                 <S.Field>장소 키워드<S.Input value={keyword} placeholder="장소명 또는 주소" onChange={(event) => setKeyword(event.target.value)} /></S.Field>
                 <S.Field>추천 버전<S.Input value={version} placeholder="place-rec-v1" onChange={(event) => setVersion(event.target.value)} /></S.Field>
-                <S.Field>최근 N일<S.Input inputMode="numeric" value={days} placeholder="전체" onChange={(event) => setDays(event.target.value)} /></S.Field>
+                <S.Field>조회 기간(최근 일수)<S.Input inputMode="numeric" value={days} placeholder="전체" onChange={(event) => setDays(event.target.value)} /></S.Field>
                 <S.Field>정렬<AdminSelect aria-label="추천 지표 정렬" value={sortBy} width="100%" onChange={(event) => setSortBy(event.target.value as RecommendationMetricSortBy)}>{SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</AdminSelect></S.Field>
                 <S.FilterActions><Shared.PrimaryButton type="submit" disabled={hook.isLoading}>조회</Shared.PrimaryButton></S.FilterActions>
               </S.FilterGrid>
@@ -175,7 +176,7 @@ function RecommendationMetricsPage() {
             {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
             <Shared.Panel>
               <Shared.PanelHeader><div><Shared.PanelTitle>장소별 추천 성과</Shared.PanelTitle><Shared.PanelDescription>{hook.query.recommendationVersion || '전체 버전'} · {SORT_OPTIONS.find((item) => item.value === hook.query.sortBy)?.label} 순</Shared.PanelDescription></div><Shared.PanelCount>{hook.totalCount.toLocaleString()}개 장소</Shared.PanelCount></Shared.PanelHeader>
-              {hook.isLoading && hook.metrics.length === 0 ? <Shared.EmptyState><strong>추천 성과를 불러오는 중입니다.</strong></Shared.EmptyState> : hook.metrics.length === 0 ? <Shared.EmptyState><strong>조건에 맞는 추천 성과가 없습니다.</strong></Shared.EmptyState> : <S.TableScroll><S.Table><thead><tr><th>장소</th><th>노출</th><th>클릭</th><th>원본 CTR</th><th>보정 CTR</th><th>북마크</th><th>좋아요</th><th>전체 전환율</th><th>갱신</th></tr></thead><tbody>{hook.metrics.map((metric) => <tr key={metric.id}><td><S.TableTitle>{metric.name}</S.TableTitle><S.TableMeta>#{metric.id} · {metric.address}</S.TableMeta></td><td>{metric.exposureCount.toLocaleString()}</td><td>{metric.clickCount.toLocaleString()}</td><td>{percent(metric.rawCtr)}</td><td>{percent(metric.smoothedCtr)}</td><td>{metric.bookmarkConversionCount.toLocaleString()} · {percent(metric.bookmarkConversionRate)}</td><td>{metric.likeConversionCount.toLocaleString()} · {percent(metric.likeConversionRate)}</td><td>{percent(metric.totalConversionRate)}</td><td>{formatDate(metric.snapshotUpdatedAt)}</td></tr>)}</tbody></S.Table></S.TableScroll>}
+              {hook.isLoading && hook.metrics.length === 0 ? <Shared.EmptyState><strong>추천 성과를 불러오는 중입니다.</strong></Shared.EmptyState> : hook.metrics.length === 0 ? <Shared.EmptyState><strong>조건에 맞는 추천 성과가 없습니다.</strong></Shared.EmptyState> : <S.TableScroll><S.Table><thead><tr><th>장소</th><th>노출</th><th>클릭</th><th>클릭률</th><th>보정 클릭률</th><th>북마크</th><th>좋아요</th><th>전체 전환율</th><th>갱신</th></tr></thead><tbody>{hook.metrics.map((metric) => <tr key={metric.id}><td><S.TableTitle>{metric.name}</S.TableTitle><S.TableMeta>#{metric.id} · {metric.address}</S.TableMeta></td><td>{metric.exposureCount.toLocaleString()}</td><td>{metric.clickCount.toLocaleString()}</td><td>{percent(metric.rawCtr)}</td><td>{percent(metric.smoothedCtr)}</td><td>{metric.bookmarkConversionCount.toLocaleString()} · {percent(metric.bookmarkConversionRate)}</td><td>{metric.likeConversionCount.toLocaleString()} · {percent(metric.likeConversionRate)}</td><td>{percent(metric.totalConversionRate)}</td><td>{formatDate(metric.snapshotUpdatedAt)}</td></tr>)}</tbody></S.Table></S.TableScroll>}
               {hook.totalPages > 1 ? <AdminPagination ariaLabel="추천 성과 목록 페이지네이션" page={hook.query.page} totalPages={hook.totalPages} hasNext={hook.hasNext} disabled={hook.isLoading} onPageChange={movePage} /> : null}
             </Shared.Panel>
           </> : null}
@@ -186,7 +187,7 @@ function RecommendationMetricsPage() {
                 <S.Field>기준 버전 *<S.Input value={baselineVersion} placeholder="place-rec-v1" onChange={(event) => setBaselineVersion(event.target.value)} /></S.Field>
                 <S.Field>비교 버전 *<S.Input value={targetVersion} placeholder="place-rec-v2" onChange={(event) => setTargetVersion(event.target.value)} /></S.Field>
                 <S.Field>장소 키워드<S.Input value={compareKeyword} placeholder="전체 장소" onChange={(event) => setCompareKeyword(event.target.value)} /></S.Field>
-                <S.Field>최근 N일<S.Input inputMode="numeric" value={compareDays} placeholder="전체" onChange={(event) => setCompareDays(event.target.value)} /></S.Field>
+                <S.Field>조회 기간(최근 일수)<S.Input inputMode="numeric" value={compareDays} placeholder="전체" onChange={(event) => setCompareDays(event.target.value)} /></S.Field>
                 <S.FilterActions><Shared.PrimaryButton type="submit" disabled={hook.isComparisonLoading}>비교</Shared.PrimaryButton></S.FilterActions>
               </S.FilterGrid>
             </S.SearchBar>
@@ -195,9 +196,9 @@ function RecommendationMetricsPage() {
           </> : null}
 
           {tab === 'explanation' ? <>
-            <S.SearchBar onSubmit={submitExplanation}><S.Field>추천 requestId *<S.SearchInputRow><S.Input value={requestId} placeholder="9f7263d5-65f1-4834-9ca3-86ad2fc4e7d0" onChange={(event) => setRequestId(event.target.value)} /><Shared.PrimaryButton type="submit" disabled={hook.isExplanationLoading}>설명 조회</Shared.PrimaryButton></S.SearchInputRow><small>추천 응답에 기록된 requestId를 그대로 입력하세요.</small></S.Field></S.SearchBar>
+            <S.SearchBar onSubmit={submitExplanation}><S.Field>추천 요청 번호 *<S.SearchInputRow><S.Input value={requestId} placeholder="추천 요청 번호를 붙여넣으세요" onChange={(event) => setRequestId(event.target.value)} /><Shared.PrimaryButton type="submit" disabled={hook.isExplanationLoading}>설명 조회</Shared.PrimaryButton></S.SearchInputRow><small>담당자에게 받은 추천 요청 번호를 그대로 붙여넣으세요. 요청 번호가 없으면 성과 조회와 버전 비교를 이용해주세요.</small></S.Field></S.SearchBar>
             {formError || hook.explanationErrorMessage ? <Shared.Notice $variant="error">{formError || hook.explanationErrorMessage}</Shared.Notice> : null}
-            {hook.isExplanationLoading ? <Shared.EmptyStateCard><strong>추천 설명을 불러오는 중입니다.</strong></Shared.EmptyStateCard> : hook.explanation ? <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>추천 요청 {hook.explanation.requestId}</Shared.PanelTitle><Shared.PanelDescription>노출 순위와 최종 점수 구성 요소입니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.explanation.items.length.toLocaleString()}개 후보</Shared.PanelCount></Shared.PanelHeader><Shared.CompareBody><S.CardList>{hook.explanation.items.map((item) => <S.RecordCard key={`${item.ranking}-${item.placeId}`}><S.RecordHeader><div><S.RecordTitle>{item.ranking}위 · {item.placeName}</S.RecordTitle><S.RecordMeta>장소 #{item.placeId} · 사용자 #{item.userId} · {item.recommendationVersion}</S.RecordMeta></div><S.StatusBadge $tone={item.recommendationStage === 'STABLE' ? 'success' : 'warning'}>{item.recommendationStage === 'STABLE' ? '안정' : '실험'}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>후보 소스</dt><dd>{item.source}</dd></S.DetailItem><S.DetailItem><dt>거리</dt><dd>{item.distanceMeters.toLocaleString()}m</dd></S.DetailItem><S.DetailItem><dt>최종 점수</dt><dd>{item.finalScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>개인화 / 지역</dt><dd>{item.personalScore.toFixed(4)} / {item.geoScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>품질 / 참여</dt><dd>{item.qualityScore.toFixed(4)} / {item.engagementScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>전환 / 탐색</dt><dd>{item.conversionScore.toFixed(4)} / {item.explorationScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>신뢰 / 맥락</dt><dd>{item.trustScore.toFixed(4)} / {item.contextScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>혜택 / 가용 / 부스트</dt><dd>{item.benefitScore.toFixed(4)} / {item.availabilityScore.toFixed(4)} / {item.boostScore.toFixed(4)}</dd></S.DetailItem></S.DetailGrid></S.RecordCard>)}</S.CardList></Shared.CompareBody></Shared.Panel> : <Shared.EmptyStateCard><strong>추천 requestId로 설명 로그를 조회해주세요.</strong></Shared.EmptyStateCard>}
+            {hook.isExplanationLoading ? <Shared.EmptyStateCard><strong>추천 설명을 불러오는 중입니다.</strong></Shared.EmptyStateCard> : hook.explanation ? <Shared.Panel><Shared.PanelHeader><div><Shared.PanelTitle>추천 요청 {hook.explanation.requestId}</Shared.PanelTitle><Shared.PanelDescription>노출 순위와 최종 점수 구성 요소입니다.</Shared.PanelDescription></div><Shared.PanelCount>{hook.explanation.items.length.toLocaleString()}개 후보</Shared.PanelCount></Shared.PanelHeader><Shared.CompareBody><S.CardList>{hook.explanation.items.map((item) => <S.RecordCard key={`${item.ranking}-${item.placeId}`}><S.RecordHeader><div><S.RecordTitle>{item.ranking}위 · {item.placeName}</S.RecordTitle><S.RecordMeta>장소 #{item.placeId} · 사용자 #{item.userId} · {item.recommendationVersion}</S.RecordMeta></div><S.StatusBadge $tone={item.recommendationStage === 'STABLE' ? 'success' : 'warning'}>{item.recommendationStage === 'STABLE' ? '안정' : '실험'}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>추천 후보 기준</dt><dd>{item.source}</dd></S.DetailItem><S.DetailItem><dt>거리</dt><dd>{item.distanceMeters.toLocaleString()}m</dd></S.DetailItem><S.DetailItem><dt>최종 점수</dt><dd>{item.finalScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>개인화 / 지역</dt><dd>{item.personalScore.toFixed(4)} / {item.geoScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>품질 / 참여</dt><dd>{item.qualityScore.toFixed(4)} / {item.engagementScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>전환 / 탐색</dt><dd>{item.conversionScore.toFixed(4)} / {item.explorationScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>신뢰 / 맥락</dt><dd>{item.trustScore.toFixed(4)} / {item.contextScore.toFixed(4)}</dd></S.DetailItem><S.DetailItem><dt>혜택 / 가용 / 부스트</dt><dd>{item.benefitScore.toFixed(4)} / {item.availabilityScore.toFixed(4)} / {item.boostScore.toFixed(4)}</dd></S.DetailItem></S.DetailGrid></S.RecordCard>)}</S.CardList></Shared.CompareBody></Shared.Panel> : <Shared.EmptyStateCard><strong>추천 요청 번호로 설명 로그를 조회해주세요.</strong></Shared.EmptyStateCard>}
           </> : null}
           {tab === 'policy' ? <RecommendationPolicyPanel /> : null}
         </div>

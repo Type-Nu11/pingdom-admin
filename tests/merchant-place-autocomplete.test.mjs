@@ -12,6 +12,7 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const { MerchantPlaceAutocomplete } = await server.ssrLoadModule('/src/pages/merchantPlaceRegistration/MerchantPlaceAutocomplete.tsx')
 const { useMerchantUnifiedPlaceSearch } = await server.ssrLoadModule('/src/hooks/useMerchantUnifiedPlaceSearch.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
+const { adminColors } = await server.ssrLoadModule('/src/styles/theme.ts')
 let root, changes, selected, searches, cancellations, search, disabled, liveSearch, liveState
 const candidates = [
   { kind: 'place', name: '롯데 합성 가게', roadAddress: '서울 합성로 10', jibunAddress: '', postalCode: '', latitude: 37, longitude: 127 },
@@ -59,6 +60,21 @@ test('focus shows named place/address options, address lines and highlighted key
   assert.match(options()[0].textContent, /롯데 합성 가게.*서울 합성로 10/)
   assert.equal(options()[0].querySelector('mark').textContent, '롯데')
   assert.equal(document.getElementById(input().getAttribute('aria-controls')).getAttribute('role'), 'listbox')
+})
+
+test('place and address suggestion markers use the PingDom primary color', async () => {
+  await focus()
+  const expected = document.createElement('span')
+  expected.style.color = adminColors.primary
+  document.body.append(expected)
+  try {
+    assert.equal(options().length, 2)
+    for (const option of options()) {
+      const marker = option.querySelector('[aria-hidden="true"]')
+      assert.equal(marker.textContent, 'location_on')
+      assert.equal(window.getComputedStyle(marker).color, window.getComputedStyle(expected).color)
+    }
+  } finally { expected.remove() }
 })
 
 test('arrow keys and Enter select a candidate without submitting the form; Escape closes', async () => {

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -33,8 +33,7 @@ export const DangerButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.errorAction};
   color: ${neutral.primaryText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {

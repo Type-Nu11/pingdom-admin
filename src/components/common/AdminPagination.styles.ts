@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 export const Pagination = styled.nav`
   display: flex;
@@ -80,8 +80,7 @@ export const PageButton = styled.button<{ $active?: boolean }>`
   background: ${({ $active }) => ($active ? adminColors.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? adminColors.primaryText : adminColors.text)};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
   transition:
     background 160ms ease,

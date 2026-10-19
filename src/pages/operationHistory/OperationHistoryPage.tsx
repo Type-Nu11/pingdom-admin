@@ -13,6 +13,7 @@ import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminOperationHistories } from '../../hooks/useAdminOperationHistories'
 import { useAuth } from '../../hooks/useAuth'
+import { AUDIT_ACTION_LABELS, AUDIT_TARGET_TYPE_LABELS, auditActionCode, auditTargetTypeCode, formatAuditAction, formatAuditTargetType, formatAuditReason, isAuditReadOnly, auditApplicationId } from '../../utils/adminAuditPresentation'
 import type {
   AdminAuditLogItem,
   AdminAuditLogRequest,
@@ -36,28 +37,8 @@ const PRIVACY_ACTION_LABELS: Record<PrivacyProcessingAction, string> = {
   DELETED: '삭제',
 }
 
-const AUDIT_ACTION_LABELS: Record<string, string> = {
-  COMMUNITY_REPORT_ACCEPTED: '커뮤니티 신고 수락',
-  COMMUNITY_REPORT_DECLINED: '커뮤니티 신고 반려',
-  USER_BAN_APPLIED: '사용자 밴 처리',
-  USER_BAN_RELEASED: '사용자 밴 해제',
-  PLACE_CREATED: '장소 등록',
-  PLACE_UPDATED: '장소 정보 수정',
-  PLACE_DELETED: '장소 삭제',
-  PLACE_MERGED: '장소 병합',
-  PLACE_STATUS_CHANGED: '장소 상태 변경',
-  MERCHANT_VERIFICATION_APPROVED: '상점주 검증 승인',
-  MERCHANT_VERIFICATION_REJECTED: '상점주 검증 반려',
-}
-
-const AUDIT_TARGET_TYPE_LABELS: Record<string, string> = {
-  COMMUNITY_REPORT: '커뮤니티 신고',
-  USER: '사용자',
-  PLACE: '장소',
-  MERCHANT: '상점주',
-  MERCHANT_OWNER: '상점주',
-  REVIEW: '리뷰',
-  EVENT: '이벤트',
+const PRIVACY_ACTOR_LABELS: Record<PrivacyProcessingHistoryItem['actorType'], string> = {
+  USER: '사용자', SYSTEM: '시스템 자동 처리', ADMIN: '관리자',
 }
 
 function formatDate(value?: string | null) {
@@ -83,14 +64,6 @@ function formatAuditDate(value?: string | null) {
   const minute = String(date.getMinutes()).padStart(2, '0')
 
   return `${year}.${month}.${day} ${hour}:${minute}`
-}
-
-function formatAuditAction(action: string) {
-  return AUDIT_ACTION_LABELS[action] ?? '기타 관리자 작업'
-}
-
-function formatAuditTargetType(targetType: string) {
-  return AUDIT_TARGET_TYPE_LABELS[targetType] ?? '기타 대상'
 }
 
 function parseUserId(value: string) {
@@ -152,8 +125,8 @@ function OperationHistoryPage() {
     }
     return {
       actorUserId,
-      action: auditAction.trim() || undefined,
-      targetType: targetType.trim() || undefined,
+      action: auditActionCode(auditAction) || undefined,
+      targetType: auditTargetTypeCode(targetType) || undefined,
       targetId: targetId.trim() || undefined,
       from: auditFrom || undefined,
       to: auditTo || undefined,
@@ -313,7 +286,7 @@ function OperationHistoryPage() {
                 <Shared.Eyebrow>대시보드 &gt; 운영 이력</Shared.Eyebrow>
                 <Shared.PageTitle>감사 및 개인정보 처리 이력</Shared.PageTitle>
                 <Shared.PageDescription>
-                  관리자 작업과 개인정보 export·탈퇴·익명화·삭제 처리 결과를 추적합니다.
+                  관리자 작업과 개인정보 내보내기·탈퇴·익명화·삭제 처리 결과를 확인합니다.
                 </Shared.PageDescription>
               </div>
               <Shared.HeaderActions>
@@ -388,12 +361,11 @@ function OperationHistoryPage() {
                           value={auditAction}
                           list="community-audit-actions"
                           aria-label="감사 로그 작업 유형"
-                          placeholder="예: USER_BAN_APPLIED"
+                          placeholder="전체 · 예: 사용자 밴 처리"
                           onChange={(event) => setAuditAction(event.target.value)}
                         />
                         <datalist id="community-audit-actions">
-                          <option value="COMMUNITY_REPORT_ACCEPTED">커뮤니티 신고 수락</option>
-                          <option value="COMMUNITY_REPORT_DECLINED">커뮤니티 신고 반려</option>
+                          {Object.entries(AUDIT_ACTION_LABELS).map(([code, label]) => <option key={code} value={label} />)}
                         </datalist>
                       </S.Field>
                       <S.Field>
@@ -429,10 +401,10 @@ function OperationHistoryPage() {
                               value={targetType}
                               list="community-audit-targets"
                               aria-label="감사 로그 대상 유형"
-                              placeholder="예: USER"
+                              placeholder="전체 · 예: 사용자"
                               onChange={(event) => setTargetType(event.target.value)}
                             />
-                            <datalist id="community-audit-targets"><option value="COMMUNITY_REPORT">커뮤니티 신고</option></datalist>
+                            <datalist id="community-audit-targets">{Object.entries(AUDIT_TARGET_TYPE_LABELS).map(([code, label]) => <option key={code} value={label} />)}</datalist>
                           </S.Field>
                           <S.Field>
                             대상 ID
@@ -474,7 +446,7 @@ function OperationHistoryPage() {
                               onClick={() => setSelectedAudit(item)}
                             >
                               <History.AuditActionCell>
-                                <History.AuditActionTitle>{formatAuditAction(item.action)}</History.AuditActionTitle>
+                                <History.AuditActionTitle>{formatAuditAction(item.action, item.reason)}</History.AuditActionTitle>
                                 <History.AuditTargetText>
                                   <History.AuditTypeTag title={item.targetType}>{formatAuditTargetType(item.targetType)}</History.AuditTypeTag>
                                   <span>#{item.targetId}</span>
@@ -499,7 +471,7 @@ function OperationHistoryPage() {
                         <>
                           <History.AuditDetailHeader>
                             <div>
-                              <History.AuditActionTitle>{formatAuditAction(selectedAudit.action)}</History.AuditActionTitle>
+                              <History.AuditActionTitle>{formatAuditAction(selectedAudit.action, selectedAudit.reason)}</History.AuditActionTitle>
                               <History.AuditDetailMeta>감사 로그 #{selectedAudit.auditLogId} · {formatAuditDate(selectedAudit.createdAt)}</History.AuditDetailMeta>
                             </div>
                             <History.AuditTypeTag title={selectedAudit.targetType}>{formatAuditTargetType(selectedAudit.targetType)}</History.AuditTypeTag>
@@ -507,17 +479,28 @@ function OperationHistoryPage() {
                           <S.DetailGrid>
                             <S.DetailItem><dt>작업 관리자</dt><dd>{selectedAudit.actorUsername} (#{selectedAudit.actorUserId})</dd></S.DetailItem>
                             <S.DetailItem><dt>대상</dt><dd>{formatAuditTargetType(selectedAudit.targetType)} #{selectedAudit.targetId}</dd></S.DetailItem>
-                            <S.DetailItem><dt>요청 ID</dt><dd>{selectedAudit.requestId || '없음'}</dd></S.DetailItem>
-                            <S.DetailItem><dt>작업 코드</dt><dd>{selectedAudit.action}</dd></S.DetailItem>
+                            {auditApplicationId(selectedAudit) !== null ? <S.DetailItem><dt>관련 신청</dt><dd>장소 신청 #{auditApplicationId(selectedAudit)}</dd></S.DetailItem> : null}
                           </S.DetailGrid>
-                          <S.Section><S.SectionTitle>작업 사유</S.SectionTitle><S.RecordDescription>{selectedAudit.reason || '기록된 사유가 없습니다.'}</S.RecordDescription></S.Section>
-                          <History.AuditStateDetails>
+                          {isAuditReadOnly(selectedAudit.action) ? <History.AuditReadNotice role="note">조회·열람 기록입니다. 이 작업 자체는 대상 정보를 변경하지 않습니다.</History.AuditReadNotice> : null}
+                          <S.Section><S.SectionTitle>{isAuditReadOnly(selectedAudit.action) ? '조회 내용' : '작업 사유'}</S.SectionTitle><S.RecordDescription>{formatAuditReason(selectedAudit)}</S.RecordDescription></S.Section>
+                          {!isAuditReadOnly(selectedAudit.action) ? <History.AuditStateDetails>
                             <summary>작업 전 상태 보기</summary>
                             <History.AuditStateContent>{selectedAudit.beforeState || '기록 없음'}</History.AuditStateContent>
-                          </History.AuditStateDetails>
-                          <History.AuditStateDetails>
+                          </History.AuditStateDetails> : null}
+                          {!isAuditReadOnly(selectedAudit.action) ? <History.AuditStateDetails>
                             <summary>작업 후 상태 보기</summary>
                             <History.AuditStateContent>{selectedAudit.afterState || '기록 없음'}</History.AuditStateContent>
+                          </History.AuditStateDetails> : null}
+                          <History.AuditStateDetails>
+                            <summary>기술 정보 보기</summary>
+                            <p>문제 확인에 필요한 원본 기록입니다. 요청 번호는 담당 개발자에게 전달할 때 사용합니다.</p>
+                            <S.DetailGrid>
+                              <S.DetailItem><dt>요청 번호</dt><dd>{selectedAudit.requestId || '없음'}</dd></S.DetailItem>
+                              <S.DetailItem><dt>작업 코드</dt><dd>{selectedAudit.action}</dd></S.DetailItem>
+                              <S.DetailItem><dt>대상 코드</dt><dd>{selectedAudit.targetType}</dd></S.DetailItem>
+                            </S.DetailGrid>
+                            <p>기록된 사유</p><History.AuditStateContent>{selectedAudit.reason || '기록 없음'}</History.AuditStateContent>
+                            {isAuditReadOnly(selectedAudit.action) ? <><p>기록된 이전 값</p><History.AuditStateContent>{selectedAudit.beforeState || '기록 없음'}</History.AuditStateContent><p>기록된 이후 값</p><History.AuditStateContent>{selectedAudit.afterState || '기록 없음'}</History.AuditStateContent></> : null}
                           </History.AuditStateDetails>
                         </>
                       )}
@@ -555,13 +538,13 @@ function OperationHistoryPage() {
                     footer={hook.privacyState.hasResult && (hook.privacy?.totalPages ?? 0) > 1 ? <AdminPagination ariaLabel="개인정보 처리 이력 페이지네이션" page={hook.privacy?.page ?? 1} totalPages={hook.privacy?.totalPages ?? 1} hasNext={hook.privacy?.hasNext} disabled={isLoading} onPageChange={movePrivacy} /> : null}
                   >
                     <ListQueryBoundary state={hook.privacyState} error={hook.errors.privacy} empty={!hook.privacy?.histories.length} onRetry={retryPrivacy} onReset={resetPrivacy}>
-<S.CardList>{hook.privacy?.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>
+<S.CardList>{hook.privacy?.histories.map((item) => <S.RecordButton key={item.id} type="button" $selected={selectedPrivacy?.id === item.id} onClick={() => setSelectedPrivacy(item)}><S.RecordHeader><S.RecordTitle>{PRIVACY_ACTION_LABELS[item.action]}</S.RecordTitle><S.StatusBadge>{PRIVACY_ACTOR_LABELS[item.actorType] || item.actorType}</S.StatusBadge></S.RecordHeader><S.RecordMeta>대상 #{item.subjectUserId} · 수행자 #{item.actorUserId} · {formatDate(item.createdAt)}</S.RecordMeta><S.RecordDescription>{item.details || '처리 상세 없음'}</S.RecordDescription></S.RecordButton>)}</S.CardList>
                     </ListQueryBoundary>
                   </ListPane>
                   <Shared.Panel>
                     <Shared.PanelHeader><Shared.PanelTitle>개인정보 처리 상세</Shared.PanelTitle></Shared.PanelHeader>
                     <Shared.CompareBody>
-                      {!selectedPrivacy ? <Shared.EmptyState><strong>확인할 개인정보 처리 이력을 선택해주세요.</strong></Shared.EmptyState> : <><S.RecordHeader><div><S.RecordTitle>{PRIVACY_ACTION_LABELS[selectedPrivacy.action]}</S.RecordTitle><S.RecordMeta>처리 이력 #{selectedPrivacy.id}</S.RecordMeta></div><S.StatusBadge>{selectedPrivacy.actorType}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>대상 사용자</dt><dd>#{selectedPrivacy.subjectUserId}</dd></S.DetailItem><S.DetailItem><dt>수행 사용자</dt><dd>#{selectedPrivacy.actorUserId}</dd></S.DetailItem><S.DetailItem><dt>요청 ID</dt><dd>{selectedPrivacy.requestId || '없음'}</dd></S.DetailItem><S.DetailItem><dt>처리 시각</dt><dd>{formatDate(selectedPrivacy.createdAt)}</dd></S.DetailItem></S.DetailGrid><S.Section><S.SectionTitle>처리 상세</S.SectionTitle><S.RecordDescription>{selectedPrivacy.details || '기록된 처리 상세가 없습니다.'}</S.RecordDescription></S.Section></>}
+                      {!selectedPrivacy ? <Shared.EmptyState><strong>확인할 개인정보 처리 이력을 선택해주세요.</strong></Shared.EmptyState> : <><S.RecordHeader><div><S.RecordTitle>{PRIVACY_ACTION_LABELS[selectedPrivacy.action]}</S.RecordTitle><S.RecordMeta>처리 이력 #{selectedPrivacy.id}</S.RecordMeta></div><S.StatusBadge>{PRIVACY_ACTOR_LABELS[selectedPrivacy.actorType] || selectedPrivacy.actorType}</S.StatusBadge></S.RecordHeader><S.DetailGrid><S.DetailItem><dt>대상 사용자</dt><dd>#{selectedPrivacy.subjectUserId}</dd></S.DetailItem><S.DetailItem><dt>수행 사용자</dt><dd>#{selectedPrivacy.actorUserId}</dd></S.DetailItem><S.DetailItem><dt>요청 ID</dt><dd>{selectedPrivacy.requestId || '없음'}</dd></S.DetailItem><S.DetailItem><dt>처리 시각</dt><dd>{formatDate(selectedPrivacy.createdAt)}</dd></S.DetailItem></S.DetailGrid><S.Section><S.SectionTitle>처리 상세</S.SectionTitle><S.RecordDescription>{selectedPrivacy.details || '기록된 처리 상세가 없습니다.'}</S.RecordDescription></S.Section></>}
                     </Shared.CompareBody>
                   </Shared.Panel>
                 </ListDetailWorkspace>

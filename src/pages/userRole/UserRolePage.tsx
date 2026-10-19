@@ -174,7 +174,7 @@ function UserRolePage() {
                     value={userIdInput}
                     disabled={hook.isMutating}
                     inputMode="numeric"
-                    placeholder="예: 42"
+                    placeholder="예: 123"
                     onChange={(event) => {
                       setUserIdInput(event.target.value);
                       setTargetName(null); setDialog(null); hook.clearTarget();

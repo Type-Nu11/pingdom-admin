@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../styles/theme'
 
 export const Navigation = styled.div`
   display: grid;
@@ -27,8 +27,7 @@ export const GroupTitle = styled.h2`
   margin: 0;
   padding: 0 10px;
   color: ${adminColors.muted};
-  font-size: 11px;
-  font-weight: 800;
+  ${typo.caption.bold}
   letter-spacing: 0;
 
   @media (max-width: 900px) {
@@ -73,8 +72,7 @@ export const ItemButton = styled.button<{ $active?: boolean }>`
   background: transparent;
   color: ${adminColors.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  ${typo.label.medium}
   text-align: left;
   cursor: pointer;
   transition: background 160ms ease, color 160ms ease;

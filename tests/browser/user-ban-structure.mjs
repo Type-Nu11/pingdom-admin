@@ -25,6 +25,27 @@ try {
     await page.setViewportSize({ width, height })
     await page.goto(url)
     await page.getByRole('button', { name: /합성 사용자 901/ }).waitFor()
+    // Inspect the actual release dialog without submitting any operational write.
+    await page.getByRole('button', { name: /합성 사용자 901/ }).click()
+    await page.getByRole('button', { name: '밴 해제', exact: true }).click()
+    const releaseDialog = page.getByRole('dialog', { name: '이 사용자의 밴을 해제할까요?', exact: true })
+    await releaseDialog.waitFor()
+    const releaseReason = releaseDialog.getByRole('textbox', { name: /해제 사유/ })
+    await releaseReason.fill('합성 검토 사유 — 실제 해제하지 않음')
+    const gaps = await releaseReason.evaluate(textarea => {
+      const field = textarea.closest('label')
+      const description = document.getElementById('ban-release-confirm-description')
+      const meta = field.nextElementSibling
+      return {
+        before: field.getBoundingClientRect().top - description.getBoundingClientRect().bottom,
+        after: meta.getBoundingClientRect().top - field.getBoundingClientRect().bottom,
+      }
+    })
+    assert.ok(Math.abs(gaps.before - 14) < 1, `reason top gap must be 14px: ${gaps.before}`)
+    assert.ok(Math.abs(gaps.before - gaps.after) < 1, `reason gaps differ: ${JSON.stringify(gaps)}`)
+    await page.screenshot({ path: join(output, `ban-release-spacing-${width}.png`) })
+    await releaseDialog.getByRole('button', { name: '취소', exact: true }).click()
+    await releaseDialog.waitFor({ state: 'hidden' })
     const callsBefore = (await listCalls()).length
     await page.getByRole('searchbox', { name: '사용자 ID 또는 닉네임 검색' }).fill('  합성 사용자  ')
     const banType = page.getByRole('button', { name: '밴 유형 필터', exact: true })

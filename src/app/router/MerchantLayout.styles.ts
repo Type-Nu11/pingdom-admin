@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -144,7 +144,7 @@ export const MerchantProfileText = styled.div`
     white-space: nowrap;
   }
 
-  strong { color: ${colors.strongText}; font-size: 14px; font-weight: 700; }
+  strong { color: ${colors.strongText}; ${typo.label.bold} }
   span { color: ${colors.muted}; font-size: 12px; }
 `
 
@@ -161,8 +161,7 @@ export const LogoutButton = styled.button`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  ${typo.label.medium}
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease;
 
@@ -205,12 +204,10 @@ export const TopBar = styled.header`
 export const TopTitle = styled.p`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const TopContext = styled.span`
   color: ${colors.muted};
-  font-size: 13px;
-  font-weight: 600;
+  ${typo.label.medium}
 `

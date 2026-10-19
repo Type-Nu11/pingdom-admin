@@ -312,7 +312,7 @@ function TrustScorePage() {
                       <S.Input
                         inputMode="numeric"
                         value={reporterId}
-                        placeholder="예: 12"
+                        placeholder="예: 123"
                         onChange={(event) => {
                           setReporterId(event.target.value);
                           setFormError(''); hook.dismissActionError();

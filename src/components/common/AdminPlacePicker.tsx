@@ -2,14 +2,14 @@ import { useId, useState } from 'react'
 import styled from 'styled-components'
 import { searchAdminPlaces, type AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminTargetSearch } from './AdminTargetSearch'
-import { adminColors } from '../../styles/theme'
+import { typography, adminColors } from '../../styles/theme'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 import * as Form from '../../pages/placeVerification/PlaceVerificationPage.styles'
 
 const Root = styled.div`display: grid; gap: 8px; min-width: 0;`
 const Actions = styled.div`display: flex; flex-wrap: wrap; gap: 8px;`
 const Selection = styled.div`display: grid; gap: 4px; overflow-wrap: anywhere; font-size: 14px; small { color: ${adminColors.muted}; }`
-const Direct = styled.details`font-size: 13px; summary { cursor: pointer; } input { margin-top: 8px; width: 100%; box-sizing: border-box; }`
+const Direct = styled.details`font-size: ${typography.label.regular.fontSize}px; summary { cursor: pointer; } input { margin-top: 8px; width: 100%; box-sizing: border-box; }`
 
 interface Props {
   value: string

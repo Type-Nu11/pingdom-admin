@@ -1,4 +1,5 @@
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
+import { InlineExample } from '../../components/common/Text.styles'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type Dispatch, type SetStateAction } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUnsavedChanges, useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
@@ -433,7 +434,7 @@ function RegistrationForm({
         <Store.Field>사업자등록번호 (필수)<Store.Input value={businessRegistrationNumber} inputMode="numeric" maxLength={30} placeholder={registration ? '수정·재신청 시 다시 입력하세요.' : '사업자등록번호를 입력하세요.'} disabled={!editable || activeAction !== null} onChange={(event) => setBusinessRegistrationNumber(event.target.value)} /></Store.Field>
         <Store.Field>상점주 노출명 (필수)<Store.Input value={merchantDisplayName} maxLength={100} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantDisplayName(event.target.value)} /></Store.Field>
         <Store.Field>상점주 연락 이메일 (필수)<Store.Input type="email" value={merchantContactEmail} maxLength={255} disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactEmail(event.target.value)} /></Store.Field>
-        <Store.Field>상점주 연락처 (필수)<Store.Input type="tel" inputMode="tel" value={merchantContactPhone} maxLength={30} placeholder="+82-010-1234-5678" disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactPhone(formatPhoneInput(event.target.value))} /><S.SectionHint>국가번호를 포함한 형식으로 입력하세요. 예: +82-010-1234-5678</S.SectionHint></Store.Field>
+        <Store.Field>상점주 연락처 (필수)<Store.Input type="tel" inputMode="tel" value={merchantContactPhone} maxLength={30} placeholder="+82-010-1234-5678" disabled={!editable || activeAction !== null} onChange={(event) => setMerchantContactPhone(formatPhoneInput(event.target.value))} /><S.SectionHint>국가번호를 포함해 입력하세요. <InlineExample>예: +82-010-1234-5678</InlineExample></S.SectionHint></Store.Field>
           </S.Section>
           <S.Section>
             <S.SectionLegend>장소 검색</S.SectionLegend>

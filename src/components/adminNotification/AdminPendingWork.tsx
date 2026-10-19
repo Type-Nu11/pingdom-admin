@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 import type { AdminPendingWorkEntry } from '../../api/adminPendingWorkApi'
-import { adminColors as c, radius } from '../../styles/theme'
+import { typography, adminColors as c, radius } from '../../styles/theme'
 
 export function AdminPendingWork({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
   const navigate = useNavigate()
@@ -47,7 +47,7 @@ export function AdminPendingWork({ compact = false, onNavigate }: { compact?: bo
 const Section = styled.section<{ $compact: boolean }>`
   min-width: 0;
   padding: ${({ $compact }) => $compact ? '14px 16px' : '0'};
-  details > summary { padding: 12px 0; cursor: pointer; font-size: 13px; color: ${c.muted}; }
+  details > summary { padding: 12px 0; cursor: pointer; font-size: ${typography.label.regular.fontSize}px; color: ${c.muted}; }
   details > summary:focus-visible { outline: 2px solid ${c.primary}; outline-offset: 2px; }
 `
 const Header = styled.div`
@@ -79,5 +79,5 @@ const Refresh = styled.button`
   &:disabled { opacity: 0.5; cursor: default; }
   &:focus-visible { outline: 2px solid ${c.primary}; outline-offset: 2px; }
 `
-const Warning = styled.p`margin: 0 0 12px; padding: 12px; border-radius: ${radius.md}; color: ${c.errorText}; background: ${c.errorTint}; font-size: 13px;`
+const Warning = styled.p`margin: 0 0 12px; padding: 12px; border-radius: ${radius.md}; color: ${c.errorText}; background: ${c.errorTint}; font-size: ${typography.label.regular.fontSize}px;`
 const Empty = styled.p`margin: 0; padding: 12px 16px; color: ${c.muted}; background: ${c.surfaceLow}; font-size: 14px;`

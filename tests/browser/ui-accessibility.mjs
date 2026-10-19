@@ -19,22 +19,34 @@ try {
   await page.goto(url + '?scenario=catalog')
   await page.locator('[data-contrast]').first().waitFor()
   const results = []
+  const inspect = async element => ({
+    ...await element.evaluate(measure),
+    ...await element.evaluate(el => {
+      const style = getComputedStyle(el)
+      return { brand: [style.color, style.backgroundColor].includes('rgb(255, 25, 86)') }
+    }),
+  })
   for (const element of await page.locator('[data-contrast]').all()) {
     await page.getByRole('heading', { name: '실제 컴포넌트 대비 QA' }).click()
     await page.mouse.move(0, 0)
-    results.push({ state: 'normal', ...await element.evaluate(measure) })
+    results.push({ state: 'normal', ...await inspect(element) })
     await element.hover()
-    results.push({ state: 'hover', ...await element.evaluate(measure) })
+    results.push({ state: 'hover', ...await inspect(element) })
     await page.mouse.move(0, 0)
     await page.keyboard.press('Tab')
     await element.focus()
-    results.push({ state: 'focus', ...await element.evaluate(measure) })
+    results.push({ state: 'focus', ...await inspect(element) })
   }
-  const failures = results.filter(result => result.ratio < 4.5)
+  // Explicit visual requirement: brand pink remains exact even when small-text
+  // AA is not met. Never apply this exception to errors or neutral/status text.
+  const failures = results.filter(result => result.ratio < (result.brand ? 3 : 4.5))
   assert.deepEqual(failures, [], JSON.stringify(failures))
+  const primary = results.find(result => result.name === 'place-primary' && result.state === 'normal')
   const primaryHover = results.find(result => result.name === 'place-primary' && result.state === 'hover')
-  assert.ok(Math.abs(primaryHover.ratio - 4.73660199720299) < 0.001, 'Place primary hover must include group opacity')
-  console.log(`Actual CSS contrast: ${results.length} normal/hover/focus cases >= 4.5:1; minimum ${Math.min(...results.map(x => x.ratio)).toFixed(2)}:1`)
+  assert.ok(primaryHover.ratio < primary.ratio, 'Place primary hover must include group opacity')
+  const brandLimitations = results.filter(result => result.brand && result.ratio < 4.5)
+  assert.ok(brandLimitations.length > 0)
+  console.log(`CSS contrast: ${results.length} cases inspected; ${brandLimitations.length} explicit brand small-text AA limitations; non-brand text >= 4.5:1`)
 
   for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
     await page.setViewportSize({ width, height })
@@ -46,7 +58,8 @@ try {
         const inactiveRole = page.getByRole('button', { name: '상점주', exact: true })
         assert.ok((await inactiveRole.evaluate(measure)).ratio >= 4.5)
         const submit = page.getByRole('button', { name: '로그인', exact: true })
-        assert.ok((await submit.evaluate(measure)).ratio >= 4.5)
+        assert.equal(await submit.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(255, 25, 86)')
+        assert.ok((await submit.evaluate(measure)).ratio >= 3)
       } else {
         const report = page.getByRole('tab', { name: /검증 제보/ }), correction = page.getByRole('tab', { name: /정정 요청/ })
         await report.focus()

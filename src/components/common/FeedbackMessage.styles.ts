@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 type FeedbackTone = 'error' | 'success' | 'warning' | 'info'
 
@@ -19,8 +19,7 @@ export const Root = styled.div<{ $tone: FeedbackTone }>`
   border-radius: ${radius.md};
   background: ${({ $tone }) => toneColor[$tone].background};
   color: ${({ $tone }) => toneColor[$tone].color};
-  font-size: 13px;
-  font-weight: 600;
+  ${typo.label.medium}
   line-height: 1.5;
 `
 

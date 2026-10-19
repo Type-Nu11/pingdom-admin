@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -12,8 +12,7 @@ export const Warning = styled.p`
   border-radius: 8px;
   background: ${colors.errorTint};
   color: ${colors.errorText};
-  font-size: 13px;
-  font-weight: 600;
+  ${typo.label.medium}
   line-height: 1.55;
 
   span { flex: 0 0 auto; margin-top: 1px; font-family: 'Material Symbols Outlined'; font-size: 19px; }
@@ -27,8 +26,7 @@ export const CancelButton = styled.button`
   background: ${colors.surface};
   color: ${colors.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
@@ -39,7 +37,7 @@ export const CancelButton = styled.button`
 export const ConfirmButton = styled(CancelButton)`
   border-color: ${colors.error};
   background: ${colors.errorAction};
-  color: #fff;
+  color: ${colors.primaryText};
 
-  &:hover:not(:disabled) { border-color: ${colors.errorText}; background: ${colors.errorText}; color: #fff; }
+  &:hover:not(:disabled) { border-color: ${colors.errorText}; background: ${colors.errorText}; color: ${colors.primaryText}; }
 `

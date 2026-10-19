@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { adminColors, radius, typo } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -61,8 +61,7 @@ export const SummaryBar = styled.section`
 export const SummaryBarTitle = styled.strong`
   flex: 0 0 auto;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const SummaryBarItems = styled.div`
@@ -84,16 +83,14 @@ export const SummaryBarItem = styled.div`
   span {
     overflow: hidden;
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
+    ${typo.caption.medium}
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   strong {
     color: ${neutral.strongText};
-    font-size: 24px;
-    font-weight: 700;
+    ${typo.title2.bold}
     white-space: nowrap;
   }
 
@@ -122,9 +119,7 @@ export const FilterPanel = styled.section`
 export const ResultSummary = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.3;
+  ${typo.label.regular}
 
   strong {
     color: ${neutral.strongText};
@@ -158,8 +153,7 @@ export const SegmentButton = styled.button<{ $active?: boolean }>`
     $active ? neutral.primaryTint : neutral.surfaceLow};
   color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.text)};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover {
@@ -239,8 +233,7 @@ export const FilterField = styled.label`
   flex-direction: column;
   gap: 6px;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const FilterGroup = styled.div`
@@ -249,14 +242,12 @@ export const FilterGroup = styled.div`
   flex-direction: column;
   gap: 6px;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const FilterGroupLabel = styled.span`
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const FilterGroupControls = styled.div`
@@ -279,9 +270,7 @@ export const FilterRangeSeparator = styled.span`
 
 export const FilterHelpText = styled.span`
   color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.3;
+  ${typo.caption.regular}
 `
 
 const inputControlStyle = css`
@@ -352,13 +341,15 @@ export const FilterMenuButton = styled.button<{ $open?: boolean }>`
     `}
 
   .filter-menu-label {
-    overflow: hidden;
+    min-width: 0;
+    padding: 9px 0;
     text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .filter-menu-icon {
+    flex-shrink: 0;
     color: ${neutral.muted};
     font-size: 20px;
     line-height: 1;
@@ -393,8 +384,7 @@ export const FilterMenuOption = styled.button<{ $active?: boolean }>`
     $active ? neutral.primaryTint : 'transparent'};
   color: ${({ $active }) => ($active ? neutral.primaryForeground : neutral.text)};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover {
@@ -478,8 +468,7 @@ export const SectionHeader = styled.header`
 export const SectionTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 700;
+  ${typo.body.bold}
 `
 
 export const DetailTabList = styled.div`
@@ -498,8 +487,7 @@ export const DetailTabButton = styled.button<{ $active?: boolean }>`
   background: transparent;
   color: ${({ $active }) => ($active ? neutral.text : neutral.muted)};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover {
@@ -562,8 +550,7 @@ const buttonStyle = css`
   padding: 0 16px;
   border-radius: ${radius.pill};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:disabled {
@@ -688,9 +675,7 @@ export const TableDateCell = styled(TableCell)`
 export const TableStrongText = styled.strong`
   display: block;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.label.medium}
 `
 
 export const TableSubText = styled.span`
@@ -755,8 +740,7 @@ export const TableStatusBadge = styled.span<{
 
     return neutral.errorText
   }};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   white-space: nowrap;
 `
 
@@ -783,9 +767,7 @@ export const Notice = styled.div<{ $variant?: 'error' | 'info' }>`
   background: ${({ $variant }) =>
     $variant === 'error' ? neutral.errorTint : neutral.surfaceLow};
   color: ${({ $variant }) => ($variant === 'error' ? neutral.errorText : neutral.muted)};
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.label.medium}
 `
 
 export const ActionPanel = styled.form`
@@ -803,8 +785,7 @@ export const ActionLabel = styled.label`
   flex-direction: column;
   gap: 7px;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const TextArea = styled.textarea`
@@ -870,8 +851,7 @@ export const DetailEmpty = styled.div`
 
   strong {
     color: ${neutral.strongText};
-    font-size: 16px;
-    font-weight: 500;
+    ${typo.body.medium}
   }
 
   span {
@@ -901,20 +881,17 @@ export const DetailSummaryCard = styled.section`
 
 export const DetailTitle = styled.strong`
   display: block;
-  overflow: hidden;
+  min-width: 0;
   color: ${neutral.strongText};
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  ${typo.headline2.bold}
+  overflow-wrap: anywhere;
+  white-space: normal;
 `
 
 export const DetailMeta = styled.span`
   display: block;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 400;
+  ${typo.caption.regular}
 `
 
 export const DetailStack = styled.div`
@@ -942,8 +919,7 @@ export const DetailActionGroup = styled(DetailGroup)`
 export const DetailGroupTitle = styled.h3`
   margin: 0 0 10px;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const DetailGroupHeader = styled.div`
@@ -974,8 +950,7 @@ export const SanctionHistoryHeader = styled.div`
     min-width: 0;
     overflow: hidden;
     color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 500;
+    ${typo.label.medium}
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1011,17 +986,14 @@ export const DetailRow = styled.div`
 
   dt {
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
+    ${typo.caption.medium}
   }
 
   dd {
     min-width: 0;
     margin: 0;
     color: ${neutral.text};
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.3;
+    ${typo.label.regular}
     overflow-wrap: anywhere;
   }
 `
@@ -1071,9 +1043,7 @@ export const ConfirmIcon = styled.div`
 export const ConfirmTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.headline1.bold}
 `
 
 export const ConfirmDescription = styled.p`
@@ -1081,6 +1051,10 @@ export const ConfirmDescription = styled.p`
   color: ${neutral.muted};
   font-size: 14px;
   line-height: 1.3;
+`
+
+export const ConfirmReasonField = styled(ActionLabel)`
+  margin-top: 14px;
 `
 
 export const ConfirmMeta = styled.div`
@@ -1093,14 +1067,11 @@ export const ConfirmMeta = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.3;
+  ${typo.label.regular}
 
   span {
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
+    ${typo.caption.medium}
   }
 `
 
@@ -1127,8 +1098,7 @@ export const Field = styled.label`
   flex-direction: column;
   gap: 7px;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const FieldInput = styled.input`

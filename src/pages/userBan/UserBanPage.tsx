@@ -1220,7 +1220,7 @@ function UserBanPage() {
             {actionErrorMessage ? (
               <FeedbackMessage tone="error" onDismiss={dismissActionError}>{actionErrorMessage}</FeedbackMessage>
             ) : null}
-            <U.ActionLabel>
+            <U.ConfirmReasonField>
               해제 사유
               <U.TextArea
                 value={releaseReason}
@@ -1229,7 +1229,7 @@ function UserBanPage() {
                 onChange={(event) => setReleaseReason(event.target.value)}
               />
               <U.ActionHelpText>사유는 최대 255자까지 저장됩니다.</U.ActionHelpText>
-            </U.ActionLabel>
+            </U.ConfirmReasonField>
             <U.ConfirmMeta>
               <span>사용자</span>
               {selectedUserDetail.username || '사용자명 없음'} · ID{' '}

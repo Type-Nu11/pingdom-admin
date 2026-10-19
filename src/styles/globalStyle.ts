@@ -17,6 +17,8 @@ export const GlobalStyle = createGlobalStyle`
     margin: 0;
     color: ${adminColors.text};
     background: ${adminColors.background};
+    font-size: ${typography.body.regular.fontSize}px;
+    font-weight: ${typography.body.regular.fontWeight};
     font-family:
       'Pretendard',
       system-ui,
@@ -25,6 +27,9 @@ export const GlobalStyle = createGlobalStyle`
       'Segoe UI',
       sans-serif;
     line-height: ${typography.label.regular.lineHeight};
+    letter-spacing: 0;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

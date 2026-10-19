@@ -45,7 +45,6 @@ export interface AdminMerchantOwnerPlace {
 
 export interface AdminMerchantOwnerReviewRequest {
   reason?: string
-  placeIds?: number[]
 }
 
 export interface AdminMerchantOwnerPlaceUpdateRequest {

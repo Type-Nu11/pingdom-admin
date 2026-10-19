@@ -20,7 +20,6 @@ export interface AdminNotificationItem {
 }
 
 export interface AdminNotificationListRequest {
-  userId?: number
   type?: AdminNotificationType
   read?: boolean
   from?: string

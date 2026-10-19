@@ -19,7 +19,8 @@ const CATEGORY_MESSAGES = {
 export function useAdminS3Orphans() {
   const { clearAuth } = useAuth()
   const [dryRun, setDryRun] = useState<S3OrphanDryRun | null>(null)
-  const [status, setStatus] = useState<S3OrphanReportStatus | null>(null)
+  // A report can update the shared status display but does not contain completedAt.
+  const [status, setStatus] = useState<S3OrphanReportStatus | S3OrphanReport | null>(null)
   const [report, setReport] = useState<S3OrphanReport | null>(null)
   const [result, setResult] = useState<S3OrphanDeleteResult | null>(null)
   const [dryRunState, setDryRunState] = useState<QueryState>('loading')

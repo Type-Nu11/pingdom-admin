@@ -190,6 +190,16 @@ export const AuditStateDetails = styled.details`
   summary::marker { color: ${neutral.primaryForeground}; }
 `
 
+export const AuditReadNotice = styled.p`
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: ${neutral.surfaceLow};
+  color: ${neutral.muted};
+  font-size: 14px;
+  line-height: 1.5;
+`
+
 export const AuditStateContent = styled.pre`
   max-height: 280px;
   margin: 0 0 14px;

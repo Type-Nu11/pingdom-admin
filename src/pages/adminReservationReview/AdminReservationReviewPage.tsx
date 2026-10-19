@@ -274,7 +274,7 @@ function AdminReservationReviewPage() {
                   <S.Input
                     value={placeId}
                     inputMode="numeric"
-                    placeholder="예: 70069"
+                    placeholder="예: 123"
                     disabled={hook.isLoading || hook.activeAction !== null}
                     onChange={(event) => { setPlaceId(event.target.value); setFilterError('') }}
                   />

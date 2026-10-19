@@ -7,6 +7,7 @@ import { AdminNotificationButton } from "../../components/adminNotification/Admi
 import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminNotificationOperations } from "../../hooks/useAdminNotificationOperations";
 import { useAuth } from "../../hooks/useAuth";
+import { NOTIFICATION_TYPE_LABELS, DELIVERY_STATUS_LABELS, OUTBOX_STATUS_LABELS, DELIVERY_CHANNEL_LABELS } from '../../utils/adminNotificationLabels';
 import type {
   AdminNotificationDeliveryStatus,
   AdminOutboxEventItem,
@@ -117,8 +118,8 @@ function NotificationOperationsPage() {
                 <Shared.Eyebrow>시스템 &gt; 알림 발송 현황</Shared.Eyebrow>
                 <Shared.PageTitle>알림 발송 현황</Shared.PageTitle>
                 <Shared.PageDescription>
-                  관리자 알림, 외부 발송 결과, 재처리 대상 이벤트를 분리해
-                  추적하고 복구합니다.
+                  관리자 알림과 발송 성공·실패를 확인합니다. 실패한 처리 작업은
+                  원인을 확인한 뒤 다시 요청할 수 있습니다.
                 </Shared.PageDescription>
               </div>
             </Shared.PageHeader>
@@ -156,7 +157,7 @@ function NotificationOperationsPage() {
               >
                 <option value="">전체</option>
                 {DELIVERY.map((v) => (
-                  <option key={v}>{v}</option>
+                  <option key={v} value={v}>{DELIVERY_STATUS_LABELS[v]}</option>
                 ))}
               </AdminStatusFilter>
             ) : null}
@@ -168,7 +169,7 @@ function NotificationOperationsPage() {
               >
                 <option value="">전체</option>
                 {OUTBOX.map((v) => (
-                  <option key={v}>{v}</option>
+                  <option key={v} value={v}>{OUTBOX_STATUS_LABELS[v]}</option>
                 ))}
               </AdminStatusFilter>
             ) : null}
@@ -213,7 +214,7 @@ function NotificationOperationsPage() {
                               <div>
                                 <S.RecordTitle>{n.title}</S.RecordTitle>
                                 <S.RecordMeta>
-                                  {n.type} · {date(n.createdAt)}
+                                  {NOTIFICATION_TYPE_LABELS[n.type] || `알림 유형 확인 필요 (${n.type})`} · {date(n.createdAt)}
                                 </S.RecordMeta>
                               </div>
                               <S.StatusBadge
@@ -241,7 +242,7 @@ function NotificationOperationsPage() {
                               <S.RecordHeader>
                                 <div>
                                   <S.RecordTitle>
-                                    {d.channel} 발송 #{d.deliveryId}
+                                    {DELIVERY_CHANNEL_LABELS[d.channel] || d.channel} 발송 #{d.deliveryId}
                                   </S.RecordTitle>
                                   <S.RecordMeta>
                                     사용자 #{d.userId} · 시도 {d.attemptCount}회
@@ -257,7 +258,7 @@ function NotificationOperationsPage() {
                                         : "danger"
                                   }
                                 >
-                                  {d.status}
+                                  {DELIVERY_STATUS_LABELS[d.status] || `상태 확인 필요 (${d.status})`}
                                 </S.StatusBadge>
                               </S.RecordHeader>
                               <S.DetailGrid>
@@ -297,7 +298,7 @@ function NotificationOperationsPage() {
                                         : "warning"
                                   }
                                 >
-                                  {e.status}
+                                  {OUTBOX_STATUS_LABELS[e.status] || `상태 확인 필요 (${e.status})`}
                                 </S.StatusBadge>
                               </S.RecordHeader>
                               <S.DetailGrid>
@@ -351,7 +352,7 @@ function NotificationOperationsPage() {
           >
             <Shared.ModalHeader>
               <Shared.ModalTitle id="outbox-retry-title">
-                재처리 이벤트 재실행
+                실패한 작업 다시 요청
               </Shared.ModalTitle>
             </Shared.ModalHeader>
             <Shared.ModalBody>
@@ -391,7 +392,7 @@ function NotificationOperationsPage() {
                 disabled={Boolean(h.retryingId)}
                 onClick={() => void retry()}
               >
-                {h.retryingId ? "예약 중" : "재처리 예약"}
+                {h.retryingId ? "재처리 요청 중" : "재처리 요청"}
               </Shared.PrimaryButton>
             </Shared.ModalFooter>
           </Shared.Modal>

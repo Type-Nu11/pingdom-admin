@@ -9,6 +9,8 @@ export const browserCases = [
   ['detector-probes', 'tests/browser/regression-probes.mjs'],
   ['dashboard', 'tests/browser/dashboard-pending.mjs'],
   ['accessibility', 'tests/browser/ui-accessibility.mjs'],
+  ['web-design-system', 'tests/browser/web-design-system.mjs'],
+  ['admin-readable-copy', 'tests/browser/admin-readable-copy.mjs'],
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],

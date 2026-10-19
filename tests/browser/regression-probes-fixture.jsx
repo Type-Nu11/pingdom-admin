@@ -5,7 +5,7 @@ import { AppDialog } from '../../src/components/common/AppDialog'
 import { AccessibleTabList } from '../../src/components/common/AccessibleTabList'
 import { UnsavedChangesProvider } from '../../src/components/common/UnsavedChangesProvider'
 import { useUnsavedChanges } from '../../src/hooks/useUnsavedChanges'
-import { SubmitButton } from '../../src/pages/login/LoginPage.styles'
+import { FeedbackMessage } from '../../src/components/common/FeedbackMessage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 
@@ -17,7 +17,7 @@ function Probes() {
     try { await observeFixtureAdapter(async () => { throw new Error('injected caught failure') })({ method: 'get', url: '/synthetic' }) } catch { /* Deliberately swallowed: guard must still see it. */ }
   }
   return <main style={{ padding: 24 }}><GlobalStyle /><h1>검사 감지 능력 검증</h1>
-    <SubmitButton data-contrast="production-submit" style={fault === 'contrast' ? { color: '#fff', background: '#fff' } : undefined}>대비 검증</SubmitButton>
+    <FeedbackMessage tone="error" data-contrast="production-error" style={fault === 'contrast' ? { color: '#fff', background: '#fff' } : undefined}>대비 검증</FeedbackMessage>
     <AccessibleTabList panelId="probe-panel" aria-label="검증 탭">{[0, 1].map(index => <button key={index} role="tab" aria-selected={tab === index} onClick={() => setTab(index)}>탭 {index + 1}</button>)}</AccessibleTabList>
     <section id="probe-panel" role="tabpanel" aria-labelledby={`probe-panel-tab-${tab}`}>패널 {tab + 1}</section>
     <label>미저장 입력<input value={value} onChange={event => setValue(event.target.value)} /></label>

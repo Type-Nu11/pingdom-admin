@@ -5,7 +5,7 @@ function page(rows) {
 
 export function paymentFixture(scenario) {
   const payments = scenario === 'empty' ? [] : [{
-    id: 1, reservationId: 2, status: 'PAID', amountMinor: 2050, currency: 'USD',
+    id: 1, reservationId: 2, status: 'PAID', amountMinor: scenario === 'unknown' ? null : 2050, currency: scenario === 'unknown' ? null : 'USD',
     provider: 'SYNTHETIC', providerPaymentId: 'synthetic-only',
     createdAt: '2026-10-05T12:30:00', paidAt: '2026-10-05T12:30:00', refundedAt: null,
   }]
@@ -15,7 +15,7 @@ export function paymentFixture(scenario) {
 export function settlementFixture(scenario) {
   const entries = scenario === 'empty' ? [] : [{
     id: 1, paymentTransactionId: 1, entryType: 'PAYMENT', status: 'SETTLED',
-    grossAmountMinor: 2050, feeAmountMinor: 50, netAmountMinor: 2000, currency: 'USD',
+    grossAmountMinor: scenario === 'unknown' ? null : 2050, feeAmountMinor: scenario === 'unknown' ? null : 50, netAmountMinor: scenario === 'unknown' ? null : 2000, currency: scenario === 'unknown' ? null : 'USD',
     createdAt: '2026-10-05T12:30:00', settledAt: '2026-10-05T12:31:00',
   }]
   return { entries, ...page(entries) }

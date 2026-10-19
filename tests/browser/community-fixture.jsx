@@ -10,7 +10,7 @@ import History from '../../src/pages/operationHistory/OperationHistoryPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 
-window.communityQA = { requests: [], failList: false, failAfterReview: false, holdLists: false }
+window.communityQA = { requests: [], failList: false, failAfterReview: false, holdLists: false, commentCount: 11 }
 const meta = { authorUserId: 44, authorUsername: '테스트 작성자', hidden: false, hiddenByAdminUserId: null, hiddenAt: null, createdAt: '2026-09-17T09:00:00' }
 const posts = Array.from({ length: 11 }, (_, i) => ({ ...meta, postId: i + 1, title: `커뮤니티 글 ${i + 1}`, categoryId: 'local', content: `글 ${i + 1} 원문\n두 번째 줄`, places: [{ placeId: 7, name: '테스트 장소', deleted: false }, { placeId: 8, name: '옛 장소', deleted: true }] }))
 const reports = [
@@ -53,7 +53,7 @@ client.defaults.adapter = async config => {
   if (contentMatch) {
     const postId = Number(contentMatch[1])
     if (config.url.includes('/comments')) {
-      const comments = Array.from({ length: 11 }, (_, i) => ({ ...meta, postId, commentId: 90 + i, content: `댓글 ${90 + i} 원문` }))
+      const comments = Array.from({ length: qa.commentCount }, (_, i) => ({ ...meta, postId, commentId: 90 + i, content: `댓글 ${90 + i} 원문` }))
       if (contentMatch[2]) return response(comments.find(c => c.commentId === Number(contentMatch[2])))
       return response(paged(comments.filter(c => config.params.hidden === undefined || c.hidden === config.params.hidden), 'comments', config.params))
     }

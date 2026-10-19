@@ -17,7 +17,7 @@ let browser, page
 try {
   await server.listen()
   browser = await chromium.launch()
-  for (const width of [1280, 390]) {
+  for (const width of [1449, 1280, 390]) {
     page = await browser.newPage({ viewport: { width, height: 800 } })
     page.setDefaultTimeout(8000)
     const errors = []
@@ -58,6 +58,28 @@ try {
     assert.equal(await page.getByLabel('댓글 상세', { exact: true }).count(), 0)
     await page.screenshot({ path: join(output, `content-${width}.png`), fullPage: true })
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    // Only the comment pager is hidden for empty/single-page results.
+    // Changing the comment filter must still reset to page 1 and allow it to reappear.
+    const commentPager = page.getByRole('navigation', { name: '댓글 페이지네이션', exact: true })
+    const commentFilter = page.getByRole('combobox', { name: '댓글 노출 상태', exact: true })
+    for (const [count, visibility] of [[1, '공개'], [10, '전체'], [0, '공개']]) {
+      await page.evaluate(value => { window.communityQA.commentCount = value }, count)
+      await commentFilter.click()
+      await page.getByRole('option', { name: visibility, exact: true }).click()
+      await page.getByText(`댓글 · ${count}건`, { exact: true }).waitFor()
+      assert.equal(await commentPager.count(), 0)
+      assert.equal(await page.getByRole('navigation', { name: '글 페이지네이션', exact: true }).count(), 1)
+      if (count === 0) {
+        await page.getByText('조건에 맞는 결과가 없습니다.', { exact: true }).waitFor()
+        await page.screenshot({ path: join(output, `empty-comments-${width}.png`), fullPage: true })
+      }
+    }
+    await page.evaluate(() => { window.communityQA.commentCount = 11 })
+    await commentFilter.click()
+    await page.getByRole('option', { name: '전체', exact: true }).click()
+    await page.getByText('댓글 · 11건', { exact: true }).waitFor()
+    assert.equal(await commentPager.count(), 1)
+    assert.equal(await commentPager.locator('[aria-current="page"]').textContent(), '1')
     await page.getByLabel('카테고리 ID').fill('없는분류')
     await page.getByRole('button', { name: '조회', exact: true }).click()
     await page.getByText('조건에 맞는 결과가 없습니다.').waitFor()

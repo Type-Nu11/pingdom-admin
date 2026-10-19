@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -49,8 +49,7 @@ export const ReviewIdentity = styled.div`
 export const ReviewTitle = styled.h3`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   line-height: 1.45;
 `
 
@@ -59,8 +58,7 @@ export const VisibilityBadge = styled.span<{ $visibility: 'VISIBLE' | 'HIDDEN' |
   border-radius: 6px;
   background: ${({ $visibility }) => $visibility === 'VISIBLE' ? colors.successTint : colors.surfaceContainer};
   color: ${({ $visibility }) => $visibility === 'VISIBLE' ? colors.successText : colors.muted};
-  font-size: 12px;
-  font-weight: 600;
+  ${typo.caption.medium}
   line-height: 1.5;
 `
 
@@ -103,7 +101,7 @@ export const ReviewContent = styled.p`
   max-width: 80ch;
   margin: 16px 0 0;
   color: ${colors.text};
-  font-size: 15px;
+  font-size: ${typography.body.regular.fontSize}px;
   line-height: 1.75;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -140,7 +138,7 @@ export const RejectionNote = styled.div`
   border-radius: 6px;
   background: ${colors.errorTint};
   color: ${colors.text};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.6;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -162,8 +160,7 @@ export const RequestButton = styled.button`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -199,14 +196,13 @@ export const RequestedBadge = styled.span<{ $status: 'PENDING' | 'APPROVED' | 'R
     if ($status === 'REJECTED') return colors.errorText
     return colors.warningText
   }};
-  font-size: 11px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const ModalDescription = styled.p`
   margin: 0 0 18px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 `
 
@@ -215,8 +211,7 @@ export const Field = styled.label`
   flex-direction: column;
   gap: 8px;
   color: ${colors.text};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const Textarea = styled.textarea`
@@ -241,7 +236,6 @@ export const Textarea = styled.textarea`
 
 export const CharacterCount = styled.span`
   color: ${colors.softText};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
   text-align: right;
 `

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -20,13 +20,12 @@ export const IntroNotice = styled.div`
 
   strong {
     color: ${colors.primaryForeground};
-    font-size: 13px;
-    font-weight: 700;
+    ${typo.label.bold}
   }
 
   span {
     color: ${colors.text};
-    font-size: 13px;
+    font-size: ${typography.label.regular.fontSize}px;
     line-height: 1.55;
   }
 `
@@ -42,13 +41,12 @@ export const ReadonlySummary = styled.div`
 
   strong {
     color: ${colors.text};
-    font-size: 14px;
-    font-weight: 700;
+    ${typo.label.bold}
   }
 
   span {
     color: ${colors.muted};
-    font-size: 13px;
+    font-size: ${typography.label.regular.fontSize}px;
     line-height: 1.5;
   }
 `
@@ -72,14 +70,13 @@ export const ReviewState = styled.div`
   strong {
     display: block;
     color: ${colors.text};
-    font-size: 14px;
-    font-weight: 700;
+    ${typo.label.bold}
   }
 
   p {
     margin: 5px 0 0;
     color: ${colors.muted};
-    font-size: 13px;
+    font-size: ${typography.label.regular.fontSize}px;
     line-height: 1.55;
   }
 `

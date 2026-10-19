@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -44,6 +44,6 @@ export const ImagePreviewText = styled.figcaption`
     display: block;
     margin-bottom: 4px;
     color: ${colors.text};
-    font-size: 13px;
+    font-size: ${typography.label.regular.fontSize}px;
   }
 `

@@ -1,9 +1,9 @@
 import styled, { css } from 'styled-components'
 import NaverMap from '../../components/map/NaverMap'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
-const mapControlHoverBackground = '#FFF0F4'
+const mapControlHoverBackground = adminColors.primaryTint
 
 const controlStyle = css`
   min-height: 44px;
@@ -154,16 +154,12 @@ export const AdminProfileText = styled.div`
 
   strong {
     color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.3;
+    ${typo.label.bold}
   }
 
   span {
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.3;
+    ${typo.caption.medium}
   }
 `
 
@@ -179,8 +175,7 @@ export const LogoutButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
   transition: background 160ms ease, color 160ms ease;
 
@@ -238,8 +233,7 @@ export const TopTitleGroup = styled.div`
 export const TopTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const TopActions = styled.div`
@@ -281,8 +275,7 @@ export const TopActionButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover {
@@ -387,17 +380,14 @@ export const DetailTitleGroup = styled.div`
 export const DetailEyebrow = styled.p`
   margin: 0 0 4px;
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const DetailTitle = styled.h3`
   overflow: hidden;
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.headline2.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -434,9 +424,7 @@ export const DetailStatus = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
 `
 
 export const DetailErrorState = styled.div`
@@ -452,9 +440,7 @@ export const DetailErrorState = styled.div`
 
   p {
     margin: 0;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.3;
+    ${typo.label.bold}
   }
 `
 
@@ -491,18 +477,14 @@ export const DetailMetaRow = styled.div`
   span {
     display: block;
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.3;
+    ${typo.caption.bold}
   }
 
   strong {
     display: block;
     overflow: hidden;
     color: ${neutral.text};
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.3;
+    ${typo.label.bold}
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -515,9 +497,7 @@ export const DetailSection = styled.section`
 export const DetailSectionTitle = styled.h4`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
 `
 
 export const DetailSectionHeader = styled.div`
@@ -545,8 +525,7 @@ export const DetailInlineButton = styled.button`
   background: ${neutral.primaryTint};
   color: ${neutral.primaryForeground};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
   cursor: pointer;
 
@@ -602,16 +581,13 @@ export const OperatingSummaryLabel = styled.div`
 
   span {
     color: ${neutral.text};
-    font-size: 14px;
-    font-weight: 700;
+    ${typo.label.bold}
   }
 
   small {
     overflow: hidden;
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.3;
+    ${typo.caption.medium}
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -655,8 +631,7 @@ export const OperatingStatusBadge = styled.span<{
         : $tone === 'muted'
           ? neutral.primaryForeground
           : neutral.successText};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
 `
 
@@ -667,9 +642,7 @@ export const OperatingEmptyState = styled.p`
   border-radius: 7px;
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.caption.medium}
 `
 
 export const DetailFooter = styled.footer`
@@ -695,8 +668,7 @@ export const DetailActionButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -859,8 +831,7 @@ export const PanelResultSummary = styled.div`
   justify-content: space-between;
   gap: 12px;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 500;
+  ${typo.caption.medium}
 `
 
 export const ListInlineNotice = styled.div`
@@ -875,9 +846,7 @@ export const ListInlineNotice = styled.div`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.errorText};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
 
   button {
     min-height: 30px;
@@ -894,8 +863,7 @@ export const ClearFilterButton = styled.button`
   border: 0;
   background: transparent;
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1010,8 +978,7 @@ export const ListStatus = styled.div`
   border-bottom: 1px solid ${neutral.border};
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const PlaceItem = styled.button<{ $active?: boolean }>`
@@ -1099,9 +1066,7 @@ export const PlaceName = styled.h3`
   overflow: hidden;
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.body.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -1116,9 +1081,7 @@ export const PlaceCategoryBadge = styled.span`
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.caption.medium}
   white-space: nowrap;
 `
 
@@ -1132,9 +1095,7 @@ export const PlaceDiscoveryStatusBadge = styled.span`
   border-radius: ${radius.pill};
   background: ${neutral.primaryTint};
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
   white-space: nowrap;
 `
 
@@ -1162,9 +1123,7 @@ export const PlaceMetaLine = styled.p`
   align-items: center;
   margin: 9px 0 0;
   color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.caption.medium}
 
   span {
     min-width: 0;
@@ -1207,8 +1166,7 @@ export const RetryButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
 
   &:hover {
@@ -1287,8 +1245,7 @@ export const PageNumberButton = styled.button<{ $active?: boolean }>`
   border-radius: ${radius.pill};
   background: ${({ $active }) => ($active ? neutral.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? neutral.primaryText : neutral.text)};
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -1361,8 +1318,7 @@ export const MapListToggleButton = styled(PanelCollapseButton)`
   align-items: center;
   gap: 6px;
   padding: 0 12px 0 10px;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   &&:hover:not(:disabled) {
     background: ${mapControlHoverBackground};
@@ -1397,8 +1353,7 @@ export const MapInfo = styled.div`
   border-radius: 8px;
   background: ${neutral.surface};
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   box-shadow: 0 8px 22px ${neutral.shadow};
 
   @media (max-width: 720px) {
@@ -1416,9 +1371,7 @@ export const MapInfoText = styled.span`
 
   strong {
     color: ${neutral.text};
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.3;
+    ${typo.caption.bold}
   }
 
 `
@@ -1471,16 +1424,13 @@ export const OperatingDialogHeader = styled.header`
 export const OperatingDialogEyebrow = styled.p`
   margin: 0 0 4px;
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const OperatingDialogTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.headline1.bold}
 `
 
 export const OperatingDialogCloseButton = styled.button`
@@ -1525,9 +1475,7 @@ export const OperatingDialogBody = styled.div`
 export const OperatingDialogDescription = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.label.medium}
   word-break: keep-all;
 `
 
@@ -1536,14 +1484,12 @@ export const OperatingFormField = styled.label`
   flex-direction: column;
   gap: 7px;
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   small {
     align-self: flex-end;
     color: ${neutral.softText};
-    font-size: 12px;
-    font-weight: 500;
+    ${typo.caption.medium}
   }
 
   &:is(fieldset) {
@@ -1599,17 +1545,13 @@ export const OperatingOption = styled.label<{
   strong {
     color: ${({ $selected, $tone }) =>
       $selected && $tone === 'danger' ? neutral.errorText : neutral.strongText};
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.3;
+    ${typo.label.bold}
   }
 
   small {
     align-self: auto;
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.3;
+    ${typo.caption.medium}
   }
 
   &:hover:not(:has(input:disabled)) {
@@ -1636,8 +1578,7 @@ export const OperatingTextInput = styled.input`
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   &::placeholder {
     color: ${neutral.softText};
@@ -1686,8 +1627,7 @@ export const OperatingCoordinateComparison = styled.div`
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   strong {
     color: ${neutral.primaryForeground};
@@ -1708,8 +1648,7 @@ export const OperatingActionTab = styled.button<{ $active?: boolean; $danger?: b
   color: ${({ $active, $danger }) =>
     $active && $danger ? neutral.errorText : $active ? neutral.primaryForeground : neutral.muted};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -1736,9 +1675,7 @@ export const OperatingResultNotice = styled.div`
   border-radius: 8px;
   background: ${neutral.primaryTint};
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
 
   strong {
     color: ${neutral.primaryForeground};
@@ -1756,9 +1693,7 @@ export const OperatingTextArea = styled.textarea`
   background: ${neutral.surface};
   color: ${neutral.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.label.medium}
 
   &::placeholder {
     color: ${neutral.softText};
@@ -1782,9 +1717,7 @@ export const OperatingDangerNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.errorText};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
 `
 
 export const OperatingInfoNotice = styled.p`
@@ -1794,9 +1727,7 @@ export const OperatingInfoNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
 `
 
 export const OperatingFormNotice = styled.p`
@@ -1806,9 +1737,7 @@ export const OperatingFormNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.errorText};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
 `
 
 export const OperatingEditorSection = styled.section`
@@ -1827,14 +1756,12 @@ export const OperatingEditorSectionHeader = styled.div`
 
   strong {
     color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 700;
+    ${typo.label.bold}
   }
 
   > span {
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 500;
+    ${typo.caption.medium}
   }
 `
 
@@ -1882,8 +1809,7 @@ export const OperatingCheckLabel = styled.label`
   align-items: center;
   gap: 7px;
   color: ${neutral.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   input {
@@ -1905,8 +1831,7 @@ export const OperatingTimeControls = styled.div`
   gap: 5px;
   flex-shrink: 0;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const OperatingExceptionEditorList = styled.div`
@@ -1994,8 +1919,7 @@ export const OperatingTextButton = styled.button`
   background: transparent;
   color: ${neutral.primaryForeground};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   ${MaterialIcon} {
@@ -2044,8 +1968,7 @@ export const OperatingPrimaryButton = styled.button<{ $danger?: boolean }>`
   background: ${({ $danger }) => ($danger ? neutral.errorAction : neutral.primaryAction)};
   color: ${neutral.primaryText};
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -2070,8 +1993,7 @@ export const SecondaryButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover {
@@ -2086,8 +2008,7 @@ export const DangerButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.errorAction};
   color: ${neutral.primaryText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover {
@@ -2111,8 +2032,7 @@ export const ActionToast = styled.div`
   background: ${neutral.successToastSurface};
   box-shadow: 0 16px 40px ${neutral.shadow};
   color: ${neutral.successText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   ${MaterialIcon} {
     color: ${neutral.success};
@@ -2170,17 +2090,13 @@ export const DeleteConfirmIcon = styled.div`
 export const DeleteConfirmTitle = styled.h2`
   margin: 0 0 8px;
   color: ${neutral.strongText};
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.headline1.bold}
 `
 
 export const DeleteConfirmDescription = styled.p`
   margin: 0;
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.label.medium}
   word-break: keep-all;
 `
 
@@ -2191,9 +2107,7 @@ export const DeleteConfirmMeta = styled.p`
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
   word-break: break-word;
 `
 
@@ -2204,9 +2118,7 @@ export const DeleteConfirmWarning = styled.p`
   border-radius: 8px;
   background: ${neutral.warningTint};
   color: ${neutral.warningText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
   word-break: keep-all;
 `
 
@@ -2232,9 +2144,7 @@ export const DeleteConfirmNotice = styled.p`
   border-radius: 8px;
   background: ${neutral.errorTint};
   color: ${neutral.errorText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
 `
 
 export const DeleteConfirmActions = styled.div`

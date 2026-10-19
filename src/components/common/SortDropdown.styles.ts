@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 export const DropdownRoot = styled.div<{ $width?: string }>`
   position: relative;
@@ -25,8 +25,7 @@ export const DropdownTrigger = styled.button`
   outline: 1px solid transparent;
   background: ${adminColors.surfaceLow};
   color: ${adminColors.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -126,8 +125,7 @@ export const DropdownOption = styled.button<{
   border-radius: 7px;
   background: transparent;
   color: ${adminColors.text};
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   text-align: left;
   cursor: pointer;
   transition:

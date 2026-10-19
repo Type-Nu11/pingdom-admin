@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -47,16 +47,13 @@ export const PageHeader = styled.header`
 export const Eyebrow = styled.p`
   margin: 0 0 6px;
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const PageTitle = styled.h1`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.title1.bold}
 `
 
 export const PageDescription = styled.p`
@@ -99,8 +96,7 @@ export const HeaderButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -123,9 +119,7 @@ export const Notice = styled.p<{ $variant?: 'error' | 'success' }>`
     $variant === 'success' ? neutral.successTint : neutral.errorTint};
   color: ${({ $variant }) =>
     $variant === 'success' ? neutral.successText : neutral.errorText};
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.label.bold}
 `
 
 export const Workspace = styled.div`
@@ -162,8 +156,7 @@ export const PanelHeader = styled.header`
 export const PanelTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 700;
+  ${typo.body.bold}
 `
 
 export const PanelDescription = styled.p`
@@ -176,8 +169,7 @@ export const PanelDescription = styled.p`
 export const PanelCount = styled.span`
   flex-shrink: 0;
   color: ${neutral.primaryForeground};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const ScrollArea = styled.div`
@@ -235,14 +227,12 @@ export const GroupTopLine = styled.span`
 
 export const GroupLabel = styled.strong`
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const GroupCount = styled.span`
   color: ${neutral.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
 `
 
@@ -311,17 +301,14 @@ export const PlaceCardHeader = styled.div`
 export const PlaceCardLabel = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const PlaceCardTitle = styled.h3`
   overflow: hidden;
   margin: 4px 0 0;
   color: ${neutral.strongText};
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.body.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -349,8 +336,7 @@ export const StatusTag = styled.span<{ $variant?: 'target' | 'source' | 'warning
       : $variant === 'warning'
         ? neutral.warningText
         : neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
 `
 
@@ -369,8 +355,7 @@ export const MetaRow = styled.div`
 
   dt {
     color: ${neutral.softText};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   dd {
@@ -391,8 +376,7 @@ export const CandidateSection = styled.section`
 export const SectionTitle = styled.h3`
   margin: 0 0 9px;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const CandidateList = styled.div`
@@ -431,8 +415,7 @@ export const CandidateName = styled.span`
   display: block;
   overflow: hidden;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -449,8 +432,7 @@ export const CandidateMeta = styled.span`
 
 export const CandidateDistance = styled.span`
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   white-space: nowrap;
 `
 
@@ -488,8 +470,7 @@ export const PrimaryButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -513,8 +494,7 @@ export const SecondaryButton = styled.button`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -597,8 +577,7 @@ export const HistoryItem = styled.article`
 export const HistoryTitle = styled.strong`
   display: block;
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const HistoryMeta = styled.p`
@@ -651,8 +630,7 @@ export const ModalHeader = styled.header`
 export const ModalTitle = styled.h2`
   margin: 0;
   color: ${neutral.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const ModalCloseButton = styled.button`
@@ -711,16 +689,14 @@ export const ModalSummaryItem = styled.div`
 
   dt {
     color: ${neutral.muted};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   dd {
     overflow: hidden;
     margin: 4px 0 0;
     color: ${neutral.strongText};
-    font-size: 14px;
-    font-weight: 700;
+    ${typo.label.bold}
     text-overflow: ellipsis;
     white-space: nowrap;
   }

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 import * as Form from '../placeVerification/PlaceVerificationPage.styles'
 import { PageContent, PageStack } from '../../components/common/ListDetailWorkspace.styles'
 
@@ -114,8 +114,7 @@ export const AttachmentRow = styled.article`
   strong {
     overflow: hidden;
     color: ${colors.strongText};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -140,8 +139,7 @@ export const AttachmentButton = styled.button`
   border-radius: ${radius.pill};
   background: ${colors.surfaceLow};
   color: ${colors.primaryForeground};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
   line-height: 1;
 
@@ -184,14 +182,12 @@ export const OperatingHoursItem = styled.div`
   span {
     flex: 0 0 16px;
     color: ${colors.muted};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   strong {
     color: ${colors.strongText};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
     text-align: left;
   }
 `
@@ -235,8 +231,7 @@ export const FilterTab = styled.button<{ $active: boolean }>`
   border-radius: 6px;
   background: ${({ $active }) => ($active ? colors.primaryAction : 'transparent')};
   color: ${({ $active }) => ($active ? colors.primaryText : colors.muted)};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease;
 
@@ -262,8 +257,7 @@ export const FilterField = styled.label`
   align-items: center;
   gap: 8px;
   color: ${colors.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const HistoryFilters = styled.form`
@@ -296,8 +290,7 @@ export const DangerButton = styled.button`
   border-radius: ${radius.pill};
   background: ${colors.errorAction};
   color: ${colors.primaryText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) {

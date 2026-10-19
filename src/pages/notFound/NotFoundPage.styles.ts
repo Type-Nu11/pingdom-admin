@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { adminColors, radius, typo } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -51,25 +51,19 @@ export const IconBadge = styled.span`
 export const StatusCode = styled.p`
   margin: 0 0 8px;
   color: ${neutral.primaryForeground};
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.title1.bold}
 `
 
 export const Title = styled.h1`
   margin: 0 0 12px;
   color: ${neutral.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.title1.bold}
 `
 
 export const Description = styled.p`
   margin: 0;
   color: ${neutral.muted};
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
+  ${typo.label.medium}
   word-break: keep-all;
 `
 
@@ -80,17 +74,14 @@ export const RequestPath = styled.p`
   border-radius: 8px;
   background: ${neutral.surfaceHighest};
   color: ${neutral.muted};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
+  ${typo.caption.bold}
   text-align: left;
 
   span {
     display: block;
     margin-bottom: 4px;
     color: ${neutral.softText};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
   }
 
   strong {
@@ -123,8 +114,7 @@ export const BackButton = styled.button`
   background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover {
@@ -147,8 +137,7 @@ export const NavLink = styled(Link)`
   border-radius: ${radius.pill};
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   &:hover {
     background: ${neutral.primaryTint};

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -16,8 +16,7 @@ export const HeaderButton = styled.button`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { border-color: ${colors.primary}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
@@ -59,15 +58,13 @@ export const PanelHeader = styled.div`
 export const PanelTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.35;
+  ${typo.headline2.bold}
 `
 
 export const PanelDescription = styled.p`
   margin: 5px 0 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -91,7 +88,7 @@ export const StatusOption = styled.label<{ $selected: boolean; $danger?: boolean
   cursor: pointer;
 
   input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: ${({ $danger }) => ($danger ? colors.error : colors.primary)}; }
-  strong { display: block; color: ${({ $danger, $selected }) => ($selected && $danger ? colors.errorText : colors.text)}; font-size: 13px; }
+  strong { display: block; color: ${({ $danger, $selected }) => ($selected && $danger ? colors.errorText : colors.text)}; font-size: ${typography.label.regular.fontSize}px; }
   small { display: block; margin-top: 3px; color: ${colors.muted}; font-size: 12px; line-height: 1.45; }
 `
 
@@ -102,8 +99,7 @@ export const DangerNotice = styled.p`
   border-radius: 6px;
   background: ${colors.errorTint};
   color: ${colors.errorText};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   line-height: 1.5;
 `
 
@@ -123,8 +119,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   background: ${({ $variant }) => ($variant === 'primary' ? colors.primaryAction : $variant === 'danger' ? colors.errorAction : colors.surface)};
   color: ${({ $variant }) => ($variant === 'primary' || $variant === 'danger' ? colors.primaryText : colors.text)};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { filter: ${({ $variant }) => ($variant === 'primary' ? 'none' : 'brightness(0.96)')}; }
@@ -135,8 +130,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
 export const FormError = styled.p`
   margin: 14px 0 0;
   color: ${colors.errorText};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   line-height: 1.5;
 `
 
@@ -154,8 +148,8 @@ export const ScheduleSectionHeader = styled.div`
   gap: 12px;
   margin-bottom: 12px;
 
-  strong { color: ${colors.strongText}; font-size: 13px; }
-  span { color: ${colors.muted}; font-size: 11px; }
+  strong { color: ${colors.strongText}; font-size: ${typography.label.regular.fontSize}px; }
+  span { color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 `
 
 export const WeekList = styled.div`
@@ -182,8 +176,7 @@ export const CheckLabel = styled.label`
   align-items: center;
   gap: 7px;
   color: ${colors.text};
-  font-size: 12px;
-  font-weight: 600;
+  ${typo.caption.medium}
   cursor: pointer;
 
   input { width: 16px; height: 16px; margin: 0; accent-color: ${colors.primary}; }
@@ -208,8 +201,7 @@ export const TimeControls = styled.div`
   align-items: center;
   gap: 5px;
   color: ${colors.muted};
-  font-size: 12px;
-  font-weight: 800;
+  ${typo.caption.bold}
 `
 
 export const IconButton = styled.button<{ $danger?: boolean }>`
@@ -243,8 +235,7 @@ export const TextButton = styled.button`
   background: transparent;
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 12px;
-  font-weight: 800;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
@@ -279,7 +270,7 @@ export const ExceptionHeader = styled.div`
 export const Empty = styled.p`
   margin: 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 `
 
@@ -319,7 +310,7 @@ export const MediaMeta = styled.div`
   justify-content: space-between;
   gap: 8px;
   color: ${colors.muted};
-  font-size: 11px;
+  font-size: ${typography.caption.regular.fontSize}px;
 `
 
 export const RepresentativeBadge = styled.span`
@@ -330,8 +321,7 @@ export const RepresentativeBadge = styled.span`
   border-radius: 11px;
   background: ${colors.primaryTint};
   color: ${colors.primaryForeground};
-  font-size: 11px;
-  font-weight: 800;
+  ${typo.caption.bold}
 `
 
 export const MediaActions = styled.div`
@@ -380,8 +370,7 @@ export const UploadButton = styled.button`
   border-radius: 6px;
   background: ${colors.surface};
   color: ${colors.primaryForeground};
-  font-size: 12px;
-  font-weight: 800;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover { background: ${colors.primaryAction}; color: ${colors.primaryText}; }
@@ -424,7 +413,7 @@ export const ModalTitle = styled.h2`
 export const ModalBody = styled.div`
   padding: 20px 22px 22px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.6;
 `
 

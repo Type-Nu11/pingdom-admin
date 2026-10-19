@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -36,14 +36,13 @@ export const PanelHeading = styled.div`
 export const PanelTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const PanelDescription = styled.p`
   margin: 6px 0 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -65,8 +64,7 @@ export const HistoryTab = styled.button<{ $active: boolean }>`
   box-shadow: ${({ $active }) => ($active ? `0 1px 3px ${colors.shadow}` : 'none')};
   color: ${({ $active }) => ($active ? colors.text : colors.muted)};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { color: ${colors.primaryForeground}; }
@@ -136,8 +134,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
   padding: 0 8px;
   border: 0;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   ${({ $tone }) => $tone === 'active'
     ? css`background: ${colors.successTint}; color: ${colors.successText};`
@@ -154,7 +151,7 @@ export const Empty = styled.p`
   margin: 0;
   padding: 12px 0 4px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 `
 
@@ -167,8 +164,7 @@ export const NewApplicationButton = styled.button`
   background: ${colors.surface};
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover { background: ${colors.primaryTint}; }
@@ -208,7 +204,7 @@ export const SearchResult = styled.button`
   &:hover { background: ${colors.primaryTint}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
 
-  strong { display: block; color: ${colors.text}; font-size: 13px; font-weight: 700; }
+  strong { display: block; color: ${colors.text}; ${typo.label.bold} }
   span { display: block; margin-top: 4px; overflow: hidden; color: ${colors.muted}; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 `
 
@@ -240,7 +236,7 @@ export const ReadonlyBlock = styled.div`
   border-left: 3px solid ${colors.primary};
   background: ${colors.primaryTint};
   color: ${colors.text};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 
   strong { color: ${colors.primaryForeground}; }
@@ -263,8 +259,7 @@ export const SecondaryButton = styled.button`
   background: ${colors.surface};
   color: ${colors.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
@@ -375,7 +370,7 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
     white-space: nowrap;
   }
   strong { color: ${colors.text}; font-size: 12px; }
-  small { margin-top: 1px; color: ${colors.muted}; font-size: 11px; }
+  small { margin-top: 1px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 
   &:hover { border-color: ${colors.primary}; background: ${colors.primaryTint}; }
   &:focus-within { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
@@ -421,7 +416,7 @@ export const AttachmentFileInfo = styled.div`
   div { min-width: 0; }
   strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   strong { color: ${colors.text}; font-size: 12px; }
-  small { margin-top: 2px; color: ${colors.muted}; font-size: 11px; }
+  small { margin-top: 2px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 `
 
 export const AttachmentActions = styled.div`

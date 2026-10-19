@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -17,8 +17,7 @@ export const HeaderButton = styled.button`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover { border-color: ${colors.primary}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
@@ -55,15 +54,13 @@ export const PanelHeader = styled.div`
 export const PanelTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.35;
+  ${typo.headline2.bold}
 `
 
 export const PanelDescription = styled.p`
   margin: 5px 0 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -75,8 +72,7 @@ export const CreateButton = styled.button`
   background: ${colors.primaryAction};
   color: ${colors.primaryText};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover { border-color: ${colors.primaryHover}; background: ${colors.primaryForeground}; }
@@ -101,8 +97,7 @@ export const FilterButton = styled.button<{ $selected: boolean }>`
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { background: ${colors.primaryTint}; color: ${colors.primaryForeground}; }
@@ -152,8 +147,7 @@ export const CampaignTitle = styled.h3`
   margin: 0;
   overflow: hidden;
   color: ${colors.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -168,8 +162,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'published' | 'closed'
   border-radius: 6px;
   background: ${({ $tone }) => ($tone === 'published' ? colors.successTint : $tone === 'closed' ? colors.warningTint : colors.primaryTint)};
   color: ${({ $tone }) => ($tone === 'published' ? colors.successText : $tone === 'closed' ? colors.warningText : colors.primaryForeground)};
-  font-size: 11px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const CampaignMeta = styled.p`
@@ -185,7 +178,7 @@ export const CampaignMeta = styled.p`
 export const Empty = styled.div`
   padding: 52px 24px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
   text-align: center;
 `
@@ -206,7 +199,7 @@ export const ReadonlyNotice = styled.div`
   border-radius: 6px;
   background: ${colors.surface};
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -226,8 +219,7 @@ export const Field = styled.label<{ $wide?: boolean }>`
   flex-direction: column;
   gap: 8px;
   color: ${colors.text};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
 
   ${({ $wide }) => $wide && css`grid-column: 1 / -1;`}
 `
@@ -239,7 +231,7 @@ const fieldStyle = css`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 14px;
+  ${typo.label.regular}
   outline: 0;
 
   &:focus { border-color: ${colors.primary}; box-shadow: 0 0 0 3px ${colors.primaryTint}; }
@@ -282,8 +274,7 @@ export const FormError = styled.p`
   grid-column: 1 / -1;
   margin: 0;
   color: ${colors.errorText};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const FormActions = styled.div`
@@ -302,8 +293,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   border: 1px solid;
   border-radius: 6px;
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   ${({ $variant = 'secondary' }) => {

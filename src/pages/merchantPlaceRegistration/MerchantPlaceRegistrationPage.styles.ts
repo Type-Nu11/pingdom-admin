@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
 import NaverMap from '../../components/map/NaverMap'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -54,14 +54,13 @@ export const PanelHeading = styled.div`
 export const PanelTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
+  ${typo.headline2.bold}
 `
 
 export const PanelDescription = styled.p`
   margin: 6px 0 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -83,8 +82,7 @@ export const HistoryTab = styled.button<{ $active: boolean }>`
   box-shadow: ${({ $active }) => ($active ? `0 1px 3px ${colors.shadow}` : 'none')};
   color: ${({ $active }) => ($active ? colors.text : colors.muted)};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { color: ${colors.primaryForeground}; }
@@ -157,8 +155,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
   padding: 0 8px;
   border: 0;
   border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   ${({ $tone }) => $tone === 'active'
     ? css`background: ${colors.successTint}; color: ${colors.successText};`
@@ -175,7 +172,7 @@ export const Empty = styled.p`
   margin: 0;
   padding: 12px 0 4px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 `
 
@@ -188,8 +185,7 @@ export const NewApplicationButton = styled.button`
   background: ${colors.surface};
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover { background: ${colors.primaryTint}; }
@@ -215,8 +211,7 @@ export const SectionLegend = styled.legend`
   margin: 0 0 14px;
   padding: 0;
   color: ${colors.text};
-  font-size: 15px;
-  font-weight: 700;
+  ${typo.body.bold}
 `
 
 export const SectionHint = styled.p`
@@ -289,8 +284,8 @@ export const CategoryOption = styled.button<{ $selected: boolean }>`
   background: ${({ $selected }) => ($selected ? colors.primaryTint : 'transparent')};
   color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.text)};
   font: inherit;
-  font-size: 13px;
-  font-weight: ${({ $selected }) => ($selected ? 700 : 600)};
+  font-size: ${typography.label.regular.fontSize}px;
+  font-weight: ${({ $selected }) => ($selected ? typography.label.bold.fontWeight : typography.label.medium.fontWeight)};
   text-align: left;
   cursor: pointer;
 
@@ -337,7 +332,7 @@ export const PlaceSearchInputArea = styled.div<{ $expanded: boolean }>`
     border: 0;
     border-radius: 0;
     background: transparent;
-    font-size: 15px;
+    font-size: ${typography.body.regular.fontSize}px;
     &:focus { outline: none; border: 0; box-shadow: none; }
   }
 `
@@ -410,7 +405,7 @@ export const PlaceSearchResults = styled.div`
 export const PlaceSearchEmpty = styled.p<{ $error?: boolean; $warning?: boolean }>`
   margin: 0;
   padding: 18px 14px;
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
   color: ${({ $error, $warning }) => $error ? colors.errorText : $warning ? colors.warningText : colors.muted};
 `
@@ -446,7 +441,7 @@ export const PlaceSearchResultContent = styled.div`
   min-width: 0;
   display: grid;
   gap: 5px;
-  mark { background: transparent; color: ${colors.primaryForeground}; font-weight: 800; }
+  mark { background: transparent; color: ${colors.primaryForeground}; font-weight: ${typography.label.bold.fontWeight}; }
 `
 
 export const PlaceSearchResultTop = styled.div`
@@ -456,7 +451,7 @@ export const PlaceSearchResultTop = styled.div`
   justify-content: space-between;
   gap: 10px;
 
-  strong { min-width: 0; color: ${colors.text}; font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+  strong { min-width: 0; color: ${colors.text}; ${typo.body.medium} overflow-wrap: anywhere; }
 `
 
 export const PlaceSearchResultAddress = styled.small`
@@ -465,7 +460,7 @@ export const PlaceSearchResultAddress = styled.small`
   align-items: center;
   gap: 4px;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.4;
   overflow-wrap: anywhere;
 
@@ -480,8 +475,8 @@ export const SelectedPlaceSummary = styled.div`
   background: ${colors.primaryTint};
   color: ${colors.text};
 
-  strong { font-size: 12px; font-weight: 700; }
-  span { font-size: 13px; line-height: 1.45; }
+  strong { ${typo.caption.bold} }
+  span { font-size: ${typography.label.regular.fontSize}px; line-height: 1.45; }
   small { color: ${colors.muted}; font-size: 12px; line-height: 1.4; }
 `
 
@@ -490,8 +485,7 @@ export const SelectedPlaceNameField = styled.label`
   flex-direction: column;
   gap: 6px;
   color: ${colors.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const SelectedPlaceAddress = styled.div`
@@ -526,8 +520,7 @@ export const ManualEntryButton = styled.button`
   background: ${colors.surface};
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { border-color: ${colors.primarySoft}; background: ${colors.primaryTint}; }
@@ -544,8 +537,7 @@ export const ContactField = styled.div`
 
 export const ContactFieldLabel = styled.label`
   color: ${colors.text};
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const SameContactCheck = styled.label`
@@ -554,8 +546,7 @@ export const SameContactCheck = styled.label`
   align-items: center;
   gap: 7px;
   color: ${colors.muted};
-  font-size: 12px;
-  font-weight: 600;
+  ${typo.caption.medium}
   cursor: pointer;
 
   input {
@@ -582,8 +573,7 @@ export const TagButton = styled.button<{ $selected: boolean }>`
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
   color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
@@ -635,7 +625,7 @@ export const MapIdleOverlay = styled.div`
     font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
   }
 
-  strong { font-size: 12px; font-weight: 700; }
+  strong { ${typo.caption.bold} }
 `
 
 export const CoordinateText = styled.p`
@@ -697,8 +687,7 @@ export const MapHeading = styled.div`
 export const MapTitle = styled.h3`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 15px;
-  font-weight: 700;
+  ${typo.body.bold}
 `
 
 export const MapDescription = styled.p`
@@ -718,8 +707,7 @@ export const MapStatus = styled.span<{ $hasLocation: boolean }>`
   border-radius: 6px;
   background: ${({ $hasLocation }) => ($hasLocation ? colors.successTint : colors.primaryTint)};
   color: ${({ $hasLocation }) => ($hasLocation ? colors.successText : colors.primaryForeground)};
-  font-size: 11px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const CoordinateDetails = styled.details`
@@ -729,8 +717,7 @@ export const CoordinateDetails = styled.details`
   summary {
     padding: 13px 0 0;
     color: ${colors.muted};
-    font-size: 12px;
-    font-weight: 700;
+    ${typo.caption.bold}
     cursor: pointer;
   }
 `
@@ -770,8 +757,7 @@ export const ScheduleRow = styled.div`
 
 export const DayName = styled.strong`
   color: ${colors.text};
-  font-size: 13px;
-  font-weight: 600;
+  ${typo.label.medium}
 `
 
 export const DayStatus = styled.div`
@@ -787,8 +773,7 @@ export const DayStatusButton = styled.button<{ $selected: boolean }>`
   background: ${({ $selected }) => ($selected ? colors.primaryTint : colors.surface)};
   color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.muted)};
   font: inherit;
-  font-size: 11px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:disabled { cursor: not-allowed; opacity: 0.55; }
@@ -800,8 +785,7 @@ export const ScheduleTimeControls = styled.div`
   gap: 6px;
   justify-self: end;
   color: ${colors.muted};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   @media (max-width: 700px) {
     justify-self: start;
@@ -814,7 +798,7 @@ export const ReadonlyBlock = styled.div`
   border-left: 3px solid ${colors.primary};
   background: ${colors.primaryTint};
   color: ${colors.text};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.55;
 
   strong { color: ${colors.primaryForeground}; }
@@ -849,8 +833,7 @@ export const SecondaryButton = styled.button`
   background: ${colors.surface};
   color: ${colors.muted};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover:not(:disabled) { border-color: ${colors.primarySoft}; color: ${colors.primaryForeground}; background: ${colors.primaryTint}; }
@@ -936,7 +919,7 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
   div { min-width: 0; }
   strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   strong { color: ${colors.text}; font-size: 12px; }
-  small { margin-top: 1px; color: ${colors.muted}; font-size: 11px; }
+  small { margin-top: 1px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 
   &:hover { border-color: ${colors.primary}; background: ${colors.primaryTint}; }
   &:focus-within { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
@@ -982,7 +965,7 @@ export const AttachmentFileInfo = styled.div`
   div { min-width: 0; }
   strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   strong { color: ${colors.text}; font-size: 12px; }
-  small { margin-top: 2px; color: ${colors.muted}; font-size: 11px; }
+  small { margin-top: 2px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
 `
 
 export const AttachmentActions = styled.div`

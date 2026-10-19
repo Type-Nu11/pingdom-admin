@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../styles/theme'
 
 const neutral = adminColors
 
@@ -39,8 +39,7 @@ export const Trigger = styled.button`
   background: ${neutral.surfaceLow};
   color: ${neutral.text};
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  ${typo.label.medium}
   text-align: left;
   cursor: pointer;
 
@@ -100,8 +99,7 @@ export const CalendarHeader = styled.div`
 
 export const CalendarTitle = styled.strong`
   color: ${neutral.strongText};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
 `
 
 export const IconButton = styled.button`
@@ -130,8 +128,7 @@ export const Weekdays = styled.div`
   grid-template-columns: repeat(7, minmax(0, 1fr));
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   text-align: center;
 `
 
@@ -189,8 +186,7 @@ export const SecondaryButton = styled.button`
   background: ${neutral.surfaceLow};
   color: ${neutral.muted};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   cursor: pointer;
 
   &:hover,
@@ -233,8 +229,7 @@ export const TimeMenuTitle = styled.strong`
   display: block;
   margin-bottom: 8px;
   color: ${neutral.strongText};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `
 
 export const TimeColumns = styled.div`
@@ -252,8 +247,7 @@ export const TimeColumnLabel = styled.span`
   display: block;
   margin-bottom: 4px;
   color: ${neutral.softText};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   text-align: center;
 `
 
@@ -295,6 +289,5 @@ export const TimeOption = styled.button<{ $selected?: boolean }>`
 export const TimeSeparator = styled.span`
   align-self: center;
   color: ${neutral.primaryForeground};
-  font-size: 16px;
-  font-weight: 700;
+  ${typo.body.bold}
 `

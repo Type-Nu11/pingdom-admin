@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -21,8 +21,7 @@ export const Trigger = styled.button`
   background: ${colors.surface};
   color: ${colors.text};
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
   text-align: left;
   cursor: pointer;
 
@@ -58,7 +57,7 @@ export const Option = styled.button<{ $selected: boolean }>`
   color: ${({ $selected }) => ($selected ? colors.primaryForeground : colors.text)};
   font: inherit;
   font-size: 12px;
-  font-weight: ${({ $selected }) => ($selected ? 700 : 600)};
+  font-weight: ${({ $selected }) => ($selected ? typography.label.bold.fontWeight : typography.label.medium.fontWeight)};
   text-align: left;
   cursor: pointer;
 

@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, typography, adminColors } from '../../styles/theme'
 
 const colors = adminColors
 
@@ -58,9 +58,7 @@ export const StoreName = styled.h2`
   overflow-wrap: anywhere;
   margin: 0;
   color: ${colors.strongText};
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.35;
+  ${typo.title2.bold}
 `
 
 export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'inactive' }>`
@@ -70,8 +68,7 @@ export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'inactive
   padding: 0 8px;
   border: 0;
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   ${({ $tone }) =>
     $tone === 'active'
@@ -128,8 +125,7 @@ export const WorkflowLink = styled.a`
   min-height: 60px;
   border-bottom: 1px solid ${colors.borderSoft};
   color: ${colors.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   text-decoration: none;
 
   &:hover { color: ${colors.primaryForeground}; }
@@ -167,8 +163,8 @@ export const MetricContent = styled.div`
   flex-direction: column;
   gap: 4px;
 
-  span { color: ${colors.muted}; font-size: 13px; }
-  strong { color: ${colors.strongText}; font-size: 24px; font-weight: 700; line-height: 1.2; }
+  span { color: ${colors.muted}; font-size: ${typography.label.regular.fontSize}px; }
+  strong { color: ${colors.strongText}; ${typo.title2.bold} line-height: 1.2; }
 `
 
 export const PerformanceSection = styled.section`
@@ -191,7 +187,7 @@ export const PerformanceHeading = styled.div`
 export const PerformanceScope = styled.span`
   flex-shrink: 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -221,14 +217,13 @@ export const PerformanceMetric = styled.article`
 
   span {
     color: ${colors.muted};
-    font-size: 13px;
+    font-size: ${typography.label.regular.fontSize}px;
   }
 
   strong {
     margin-top: 7px;
     color: ${colors.strongText};
-    font-size: 24px;
-    font-weight: 700;
+    ${typo.title2.bold}
     line-height: 1.15;
   }
 
@@ -267,8 +262,7 @@ export const PerformanceRetry = styled.button`
   background: ${colors.surface};
   color: ${colors.primaryForeground};
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  ${typo.label.bold}
   cursor: pointer;
 
   &:hover { background: ${colors.primaryTint}; border-color: ${colors.primary}; }
@@ -310,15 +304,13 @@ export const SectionHeading = styled.div`
 export const SectionTitle = styled.h2`
   margin: 0;
   color: ${colors.strongText};
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.35;
+  ${typo.headline2.bold}
 `
 
 export const SectionDescription = styled.p`
   margin: 5px 0 0;
   color: ${colors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 
@@ -348,7 +340,7 @@ export const StatusRow = styled.div`
   border-bottom: 1px solid ${colors.borderSoft};
 
   > div { min-width: 0; flex: 1; }
-  strong { display: block; color: ${colors.text}; font-size: 14px; font-weight: 700; }
+  strong { display: block; color: ${colors.text}; ${typo.label.bold} }
   span { display: block; margin-top: 4px; color: ${colors.muted}; font-size: 12px; line-height: 1.45; }
 `
 
@@ -389,8 +381,7 @@ export const ResourceTitle = styled.h3`
   margin: 0;
   overflow: hidden;
   color: ${colors.text};
-  font-size: 14px;
-  font-weight: 700;
+  ${typo.label.bold}
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -408,6 +399,5 @@ export const ResourceMeta = styled.p`
 export const ResourceBadge = styled.span<{ $active?: boolean }>`
   flex-shrink: 0;
   color: ${({ $active }) => ($active ? colors.successText : colors.primaryForeground)};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 `

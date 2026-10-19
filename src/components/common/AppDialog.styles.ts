@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors, elevation, radius } from '../../styles/theme'
+import { typo, typography, adminColors, elevation, radius } from '../../styles/theme'
 
 export const Overlay = styled.div`
   position: fixed;
@@ -38,16 +38,14 @@ export const Heading = styled.div`
 export const Title = styled.h2`
   margin: 0;
   color: ${adminColors.strongText};
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.35;
+  ${typo.headline2.bold}
 `
 
 export const Description = styled.p`
   margin: 6px 0 0;
   overflow-wrap: anywhere;
   color: ${adminColors.muted};
-  font-size: 13px;
+  font-size: ${typography.label.regular.fontSize}px;
   line-height: 1.5;
 `
 

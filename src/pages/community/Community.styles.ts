@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../styles/theme'
 
 export const Filters = styled.form`
   display: flex;
@@ -30,8 +30,7 @@ export const ReportFilterField = styled.div`
   max-width: 100%;
   min-width: 0;
   color: ${adminColors.text};
-  font-size: 12px;
-  font-weight: 700;
+  ${typo.caption.bold}
 
   [role='combobox'] {
     border: 1px solid ${adminColors.border};

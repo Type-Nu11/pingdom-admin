@@ -38,7 +38,7 @@ type OperationAction =
   | 'delete-media'
   | null
 
-const MAX_MEDIA_FILE_SIZE = 10 * 1024 * 1024
+const MAX_MEDIA_FILE_SIZE = 20 * 1024 * 1024
 
 function sortMedia(response: MerchantPlaceMediaResponse) {
   return {
@@ -251,7 +251,7 @@ export function useMerchantPlaceOperations() {
     }
 
     if (file.size === 0 || file.size > MAX_MEDIA_FILE_SIZE) {
-      setActionErrorMessage('이미지는 10MB 이하의 파일만 업로드할 수 있습니다.')
+      setActionErrorMessage('이미지는 20MB 이하의 파일만 업로드할 수 있습니다.')
       return Promise.resolve(null)
     }
 

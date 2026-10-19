@@ -76,13 +76,13 @@ export const StatusBadge = styled.span<{ $tone: 'active' | 'pending' | 'inactive
   ${({ $tone }) =>
     $tone === 'active'
       ? css`
-          border-color: #76c58a;
+          border-color: ${colors.successBorder};
           background: ${colors.successTint};
           color: ${colors.successText};
         `
       : $tone === 'pending'
         ? css`
-            border-color: #f0c970;
+            border-color: ${colors.warningBorder};
             background: ${colors.warningTint};
             color: ${colors.warningText};
           `

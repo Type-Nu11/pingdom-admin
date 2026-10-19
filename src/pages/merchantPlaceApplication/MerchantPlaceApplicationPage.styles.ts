@@ -62,7 +62,7 @@ export const HistoryTab = styled.button<{ $active: boolean }>`
   border: 0;
   border-radius: 6px;
   background: ${({ $active }) => ($active ? colors.surface : 'transparent')};
-  box-shadow: ${({ $active }) => ($active ? '0 1px 3px rgba(28, 28, 35, 0.1)' : 'none')};
+  box-shadow: ${({ $active }) => ($active ? `0 1px 3px ${colors.shadow}` : 'none')};
   color: ${({ $active }) => ($active ? colors.text : colors.muted)};
   font: inherit;
   font-size: 12px;
@@ -146,7 +146,7 @@ export const StatusBadge = styled.span<{ $tone: 'draft' | 'pending' | 'active' |
       : $tone === 'danger'
         ? css`background: ${colors.primaryTint}; color: ${colors.primaryForeground};`
         : $tone === 'draft'
-          ? css`background: #f5f1ff; color: #7150af;`
+          ? css`background: ${colors.draftTint}; color: ${colors.draftText};`
           : css`background: ${colors.surfaceLow}; color: ${colors.muted};`}
 `
 
@@ -190,7 +190,7 @@ export const SearchResults = styled.div`
   border: 1px solid ${colors.border};
   border-radius: 6px;
   background: ${colors.surface};
-  box-shadow: 0 12px 26px rgba(28, 28, 35, 0.12);
+  box-shadow: 0 12px 26px ${colors.strongShadow};
 `
 
 export const SearchResult = styled.button`
@@ -273,7 +273,7 @@ export const SecondaryButton = styled.button`
 `
 
 export const DangerButton = styled(SecondaryButton)`
-  border-color: #f2b8be;
+  border-color: ${colors.primarySoft};
   color: ${colors.errorText};
 
   &:hover:not(:disabled) { border-color: ${colors.error}; color: ${colors.errorText}; background: ${colors.errorTint}; }

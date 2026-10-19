@@ -298,7 +298,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 's
   font-weight: 700;
   cursor: pointer;
 
-  &:hover:not(:disabled) { filter: brightness(0.96); }
+  &:hover:not(:disabled) { filter: ${({ $variant }) => ($variant === 'primary' ? 'none' : 'brightness(0.96)')}; }
   &:focus-visible { outline: 2px solid ${colors.primary}; outline-offset: 2px; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 `

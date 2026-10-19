@@ -39,7 +39,7 @@ export const CancelButton = styled.button`
 export const ConfirmButton = styled(CancelButton)`
   border-color: ${colors.error};
   background: ${colors.errorAction};
-  color: #fff;
+  color: ${colors.primaryText};
 
-  &:hover:not(:disabled) { border-color: ${colors.errorText}; background: ${colors.errorText}; color: #fff; }
+  &:hover:not(:disabled) { border-color: ${colors.errorText}; background: ${colors.errorText}; color: ${colors.primaryText}; }
 `

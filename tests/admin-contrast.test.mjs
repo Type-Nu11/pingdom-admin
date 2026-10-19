@@ -25,10 +25,14 @@ for (const [name, fg, bg] of [
   ['attachment button', c.primaryForeground, rgb(c.surfaceLow)],
   ['attachment/tab hover', c.primaryForeground, composite(c.primaryTint, c.surfaceLow)],
 ]) {
-  test(name + ' meets 4.5:1', () => {
+  test(name + ' uses the requested brand color and reports its contrast limitation', () => {
     const ratio = contrast(fg, bg)
     console.log(`${name}: ${ratio.toFixed(2)}:1`)
-    assert.ok(ratio >= 4.5)
+    assert.ok(ratio >= 3 && ratio < 4.5, 'Brand treatment is not small-text AA; do not report it as compliant')
   })
 }
 test('brand primary stays unchanged', () => assert.equal(c.primary, '#FF1956'))
+test('error messages retain a distinct red with small-text AA contrast', () => {
+  assert.notEqual(c.errorText, c.primary)
+  assert.ok(contrast(c.errorText, composite(c.errorTint, c.surface)) >= 4.5)
+})

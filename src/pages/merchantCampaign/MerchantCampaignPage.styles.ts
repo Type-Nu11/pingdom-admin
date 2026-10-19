@@ -73,7 +73,7 @@ export const ModalOverlay = styled.div`
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgb(17 24 39 / 40%);
+  background: ${colors.overlay};
 `
 
 export const Modal = styled.section`
@@ -83,7 +83,7 @@ export const Modal = styled.section`
   border: 1px solid ${colors.border};
   border-radius: 8px;
   background: ${colors.surface};
-  box-shadow: 0 20px 45px rgb(15 23 42 / 18%);
+  box-shadow: 0 20px 45px ${colors.strongShadow};
 `
 
 export const ModalHeader = styled.div`

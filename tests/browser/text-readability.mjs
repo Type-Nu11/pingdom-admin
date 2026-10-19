@@ -76,5 +76,33 @@ try {
     }
     console.log(`PASS full text, atomic examples, filters, real forms/input preservation: ${width}×${height}`)
   }
+  // The real sidebar and map reduce field width even at desktop breakpoints.
+  for (const width of [1920, 1366, 1280, 1100, 1024, 981, 980, 901, 900, 620, 390, 320]) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } })
+    const guard = await guardBrowserPage(page, origin)
+    await page.goto(`${origin}/__qa/text/form?new&shell`)
+    await page.getByRole('button', { name: /합성 신청 장소/ }).click()
+    const hint = page.getByText('국가번호를 포함해 입력하세요.', { exact: false })
+    await hint.waitFor()
+    const phone = await hint.evaluate(el => {
+      const example = el.querySelector('span').getBoundingClientRect(), field = el.getBoundingClientRect()
+      const section = el.closest('fieldset')
+      const fieldColumns = new Set([...section.children].filter(child => child.tagName === 'LABEL').map(child => Math.round(child.getBoundingClientRect().left)))
+      return { fieldWidth: field.width, exampleWidth: example.width, contained: example.left >= field.left - 1 && example.right <= field.right + 1,
+        columns: fieldColumns.size, sectionWidth: section.clientWidth }
+    })
+    assert.equal(phone.contained, true, `sidebar/map phone example overflows at ${width}: ${JSON.stringify(phone)}`)
+    assert.equal(phone.columns, width <= 620 || phone.sectionWidth < 496 ? 1 : 2, `fields use one or two readable columns at ${width}: ${JSON.stringify(phone)}`)
+    const name = page.getByLabel(/법적 성명/)
+    await name.fill('화면 크기 변경 입력 보존')
+    await page.setViewportSize({ width: width === 981 ? 1366 : 981, height: 900 })
+    assert.equal(await name.inputValue(), '화면 크기 변경 입력 보존')
+    await page.setViewportSize({ width, height: 900 })
+    assert.equal(await name.inputValue(), '화면 크기 변경 입력 보존')
+    if ([1920, 1024, 981, 390].includes(width)) await page.screenshot({ path: join(output, `registration-sidebar-${width}.png`), fullPage: true })
+    assert.ok((await page.evaluate(() => window.qaCalls)).every(call => call.method === 'get'), 'layout verification never submits an application')
+    guard.assertClean(); await page.close()
+    console.log(`PASS actual merchant sidebar/map, phone containment and resize input preservation: ${width}px`)
+  }
   console.log(`Screenshots: ${output}`)
 } finally { await browser?.close(); await server.close() }

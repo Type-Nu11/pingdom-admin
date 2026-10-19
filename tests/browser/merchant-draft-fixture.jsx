@@ -1,14 +1,16 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AxiosError } from 'axios'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { GlobalStyle } from '../../src/styles/globalStyle'
+import { MerchantLayout } from '../../src/app/router/MerchantLayout'
 import Claim from '../../src/pages/merchantPlaceApplication/MerchantPlaceApplicationPage'
 import Registration from '../../src/pages/merchantPlaceRegistration/MerchantPlaceRegistrationPage'
 import client from '../../src/api/customAxios'
 const isNew = location.search.includes('new')
 const fresh = location.search.includes('fresh')
+const withShell = new URLSearchParams(location.search).has('shell')
 const base = '/users/me/merchant-place-applications'
 window.qaCalls = []
 window.qaFailSave = false
@@ -55,4 +57,5 @@ client.defaults.adapter = async config => {
   return { config, data: structuredClone(data), status: 200, statusText: 'OK', headers: {} }
 }
 const auth = { user: { id: 1, username: 'synthetic', role: 'USER' }, clearAuth() {}, logout() {} }
-createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><BrowserRouter><GlobalStyle/>{isNew ? <Registration/> : <Claim/>}</BrowserRouter></AuthContext.Provider>)
+const page = isNew ? <Registration/> : <Claim/>
+createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><BrowserRouter><GlobalStyle/>{withShell ? <Routes><Route element={<MerchantLayout/>}><Route path="*" element={page}/></Route></Routes> : page}</BrowserRouter></AuthContext.Provider>)

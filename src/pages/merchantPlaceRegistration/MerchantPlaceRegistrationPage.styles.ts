@@ -194,7 +194,8 @@ export const NewApplicationButton = styled.button`
 
 export const Section = styled.fieldset`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 최소 240px을 확보하되, gap 16px을 포함해 두 열까지만 배치합니다. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(240px, calc(50% - 8px))), 1fr));
   gap: 16px;
   min-width: 0;
   margin: 0;

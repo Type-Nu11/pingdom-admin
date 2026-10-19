@@ -10,6 +10,7 @@ export const browserCases = [
   ['dashboard', 'tests/browser/dashboard-pending.mjs'],
   ['accessibility', 'tests/browser/ui-accessibility.mjs'],
   ['web-design-system', 'tests/browser/web-design-system.mjs'],
+  ['text-readability', 'tests/browser/text-readability.mjs'],
   ['admin-readable-copy', 'tests/browser/admin-readable-copy.mjs'],
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],

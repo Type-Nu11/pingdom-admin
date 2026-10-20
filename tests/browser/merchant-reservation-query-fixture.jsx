@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { ThemeProvider } from 'styled-components'
+import { merchantControlTheme } from '../../src/styles/merchantControlTheme'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { MerchantPlaceContext } from '../../src/app/providers/MerchantPlaceContext'
 import { MerchantPlaceIdentityContext } from '../../src/app/providers/MerchantPlaceIdentityContext'
@@ -55,14 +57,14 @@ function Fixture() {
   const [selectedPlaceId, selectPlace] = useState(null)
   return <AuthContext.Provider value={{ user: { id: 1, role: 'MERCHANT_OWNER', username: 'synthetic' }, clearAuth() {}, logout() {} }}>
     <MerchantPlaceIdentityContext.Provider value={identity}><MerchantPlaceContext.Provider value={{ selectedPlaceId, selectPlace, syncPlaces(ids) { return ids[0] } }}>
-      <BrowserRouter><GlobalStyle />
+      <BrowserRouter><ThemeProvider theme={merchantControlTheme}><GlobalStyle />
         <aside aria-label="합성 검증 도구" style={{ padding: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <span>합성 데이터 · 실제 API/저장 요청 없음</span>
           <button type="button" onClick={() => selectPlace(8)}>외부 매장 전환</button>
           <button type="button" aria-label="조회 요청 내역" onClick={event => { event.currentTarget.textContent = JSON.stringify(calls) }}>요청 기록</button>
         </aside>
         <Page />
-      </BrowserRouter>
+      </ThemeProvider></BrowserRouter>
     </MerchantPlaceContext.Provider></MerchantPlaceIdentityContext.Provider>
   </AuthContext.Provider>
 }

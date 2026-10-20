@@ -15,6 +15,7 @@ import {
   ProtectedRoute,
 } from './ProtectedRoute'
 import { MerchantLayout } from './MerchantLayout'
+import { MerchantControlLayout } from './MerchantControlLayout'
 import { MerchantApplicationLayout } from './MerchantApplicationLayout'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
 import { UnsavedChangesProvider } from '../../components/common/UnsavedChangesProvider'
@@ -170,29 +171,31 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route element={<RouteRoot />}>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route element={<MerchantProtectedRoute />}>
-            <Route element={<MerchantLayout />}>
-              <Route path="/merchant" element={<MerchantStorePage />} />
-              <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
-              <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
-              <Route path="/merchant/offers" element={<MerchantOfferPage />} />
-              <Route path="/merchant/menus" element={<MerchantMenuPage />} />
-              <Route path="/merchant/reservations/products" element={<Navigate to="/merchant/reservations/setup" replace state={{ reservationProductsRemoved: true }} />} />
-              <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
-              <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />
-              <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
-              <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
-              <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
-              <Route path="/merchant/reviews" element={<MerchantPlaceReviewPage />} />
-              <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
+          <Route element={<MerchantControlLayout />}>
+            <Route element={<MerchantProtectedRoute />}>
+              <Route element={<MerchantLayout />}>
+                <Route path="/merchant" element={<MerchantStorePage />} />
+                <Route path="/merchant/campaigns" element={<MerchantCampaignPage />} />
+                <Route path="/merchant/operating-notices" element={<MerchantOperatingNoticePage />} />
+                <Route path="/merchant/offers" element={<MerchantOfferPage />} />
+                <Route path="/merchant/menus" element={<MerchantMenuPage />} />
+                <Route path="/merchant/reservations/products" element={<Navigate to="/merchant/reservations/setup" replace state={{ reservationProductsRemoved: true }} />} />
+                <Route path="/merchant/reservations/setup" element={<MerchantReservationSetupPage />} />
+                <Route path="/merchant/reservations" element={<MerchantReservationOperationsPage />} />
+                <Route path="/merchant/payments" element={<MerchantPaymentsPage />} />
+                <Route path="/merchant/place-reverification" element={<MerchantPlaceReverificationPage />} />
+                <Route path="/merchant/place-operations" element={<MerchantPlaceOperationsPage />} />
+                <Route path="/merchant/reviews" element={<MerchantPlaceReviewPage />} />
+                <Route path="/merchant/verified-boost" element={<MerchantVerifiedBoostPage />} />
+              </Route>
             </Route>
-          </Route>
-          <Route element={<MerchantOnboardingRoute />}>
-            <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />
-            <Route element={<MerchantApplicationLayout />}>
-              <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
-              <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
-              <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
+            <Route element={<MerchantOnboardingRoute />}>
+              <Route path="/merchant/onboarding" element={<MerchantOnboardingPage />} />
+              <Route element={<MerchantApplicationLayout />}>
+                <Route path="/merchant/place-application" element={<MerchantPlaceApplicationPage />} />
+                <Route path="/merchant/place-registration" element={<MerchantPlaceRegistrationPage />} />
+                <Route path="/merchant/place-claims" element={<Navigate to="/merchant/place-application" replace />} />
+              </Route>
             </Route>
           </Route>
           <Route element={<ProtectedRoute />}>

@@ -24,6 +24,14 @@ try {
     const guard = await guardBrowserPage(page, base)
     await page.goto(base + '/merchant/reservations')
     await page.getByText('총 24건 · 1페이지', { exact: true }).waitFor()
+    const filterColors = await page.locator('[aria-label="예약 조회 필터"]').evaluate(element => {
+      const parent = getComputedStyle(element).backgroundColor
+      return [...element.querySelectorAll('[role="combobox"], button[aria-haspopup="dialog"]')].map(control => ({
+        parent, background: getComputedStyle(control).backgroundColor, border: getComputedStyle(control).borderTopWidth,
+      }))
+    })
+    assert.equal(filterColors.length, 4)
+    assert.ok(filterColors.every(color => color.background !== color.parent && color.border === '1px'), 'Filter controls remain distinct from their panel')
     const placePicker = page.getByRole('combobox', { name: '예약 조회 매장', exact: true })
     await placePicker.click()
     await page.getByRole('option', { name: '전체 소유 매장', exact: true }).waitFor()

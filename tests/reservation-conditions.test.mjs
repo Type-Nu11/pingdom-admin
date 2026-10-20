@@ -37,6 +37,7 @@ beforeEach(() => {
     if (config.method !== 'get') return handler(config)
     if (config.url.endsWith('/reservations')) return response(config, { reservations: rows, page: 1, limit: 20, totalElements: rows.length, totalPages: 1, hasNext: false })
     if (config.url.endsWith('/availabilities')) return response(config, [{ id: 2, startsAt: '2020-01-01T00:00:00', endsAt: '2020-01-02T00:00:00' }])
+    if (config.url === '/merchant-owner/me') return response(config, { placeIds: [1] })
     throw new Error(`Unexpected read ${config.url}`)
   }
 })

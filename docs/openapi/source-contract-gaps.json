@@ -16,5 +16,23 @@
       "documentation_gap": "Controller has no ApiAudience; ADMIN audience and functional Tag require backend follow-up",
       "verification": "#301/PR #309: 소스·합성 회귀 확인; 인증된 실서버 GET 미수행; 전체 스냅샷 갱신 #302; 공개 Swagger 누락은 API 제거 증거가 아님"
     }
+  },
+  {
+    "method": "GET",
+    "path": "/merchant-owner/reservations/{reservationId}",
+    "file": "src/api/merchantStoreApi.ts",
+    "function": "getMerchantReservation",
+    "callers": [
+      "src/hooks/useMerchantReservationOperations.ts"
+    ],
+    "known_contract": {
+      "method": "GET",
+      "path": "/merchant-owner/reservations/{reservationId}",
+      "success_response_schema": "200:MerchantReservationDetailResponse (server source)",
+      "source_commit": "566c218c2257d0b13b26db348d2bd2927ae45343",
+      "source_file": "src/main/java/com/typenull/pingdom/reservation/api/MerchantReservationController.java",
+      "documentation_gap": "Checked-in snapshot predates server PR #1816; not evidence of a live Swagger grouping omission. Full snapshot and role-transfer reconciliation tracked in #318.",
+      "verification": "#315: 상점주 상세·이력 소스와 합성 조회 회귀 확인 대상; 인증된 실서버 조회·운영 쓰기 미수행; 관리자 처리 API 제거 및 전체 스냅샷 갱신은 #317/#318"
+    }
   }
 ]

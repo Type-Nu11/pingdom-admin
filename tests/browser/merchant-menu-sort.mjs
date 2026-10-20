@@ -17,6 +17,13 @@ const server = await createServer({ cacheDir: join(output, 'cache'), server: { h
 let browser
 const handle = (page, id) => page.getByRole('button', { name: `테스트 메뉴 ${id} 순서 이동`, exact: true })
 const order = page => page.getByRole('list', { name: '메뉴 표시 순서' }).locator('[data-menu-id]').evaluateAll(elements => elements.map(element => Number(element.dataset.menuId)))
+async function assertSingleOutline(page, id) {
+  const outlines = await page.locator(`[data-menu-id="${id}"]`).evaluate(row => ({
+    row: getComputedStyle(row).outlineStyle,
+    buttons: [...row.querySelectorAll('button')].map(button => getComputedStyle(button).outlineStyle),
+  }))
+  assert.deepEqual(outlines, { row: 'solid', buttons: ['none', 'none'] }, 'only the whole row has a focus/drag outline')
+}
 async function requests(page) { const log = page.getByRole('button', { name: '정렬 요청 기록' }); await log.click(); return JSON.parse(await log.innerText()) }
 try {
   await server.listen()
@@ -27,16 +34,58 @@ try {
     const guard = await guardBrowserPage(page, base)
     await page.goto(base + '/menu-sort-qa')
     await handle(page, 1).waitFor()
+    const originalSurface = await page.getByRole('list', { name: '메뉴 표시 순서' }).evaluate(list => {
+      const row = list.querySelector('[data-menu-id]')
+      const style = getComputedStyle(row)
+      return { padding: getComputedStyle(list).padding, background: style.backgroundColor,
+        shadow: style.boxShadow, margin: style.margin, selectionBorder: style.borderLeftWidth }
+    })
+    assert.deepEqual(originalSurface, { padding: '12px', background: 'rgba(0, 0, 0, 0)', shadow: 'none', margin: '0px', selectionBorder: '3px' }, 'original shared list surface is preserved')
     assert.equal(await handle(page, 3).isDisabled(), true)
     const name = page.getByRole('textbox', { name: '메뉴명 (필수)', exact: true })
+    const select = id => page.locator(`[data-menu-id="${id}"]`).getByRole('button').nth(1)
+    await select(1).click(); await select(2).click()
+    assert.equal(await name.inputValue(), '테스트 메뉴 2', 'quick menu selection works without starting a drag')
+    await page.getByRole('button', { name: '새 메뉴', exact: true }).click()
+    // First pointer press and small hand jitter must not activate drag or shift the list.
+    await handle(page, 1).scrollIntoViewIfNeeded()
+    const initial = await handle(page, 1).boundingBox()
+    await page.mouse.move(initial.x + 18, initial.y + 20); await page.mouse.down()
+    await page.mouse.move(initial.x + 21, initial.y + 22)
+    assert.equal(await handle(page, 1).getAttribute('aria-pressed'), 'false')
+    assert.equal(await select(2).isDisabled(), false)
+    assert.equal((await handle(page, 1).boundingBox()).y, initial.y, 'pressing a handle must not move the list')
+    await page.mouse.move(initial.x + 26, initial.y + 20)
+    assert.equal(await handle(page, 1).getAttribute('aria-pressed'), 'true', '6px movement activates dragging')
+    assert.equal((await handle(page, 1).boundingBox()).y, initial.y, 'first pointer activation must not shift the row')
+    assert.equal(await select(2).isDisabled(), true)
+    await assertSingleOutline(page, 1)
+    await page.mouse.up()
+    assert.deepEqual((await order(page)).slice(0, 3), [1, 2, 3], 'dropping at the original index does not reorder')
+    // Plain handle clicks, including immediately after a no-op drag, leave menu selection usable.
+    await handle(page, 1).click()
+    await select(2).click()
+    assert.equal(await name.inputValue(), '테스트 메뉴 2', 'short handle click does not swallow the next selection')
+    assert.equal((await requests(page)).filter(call => call.method !== 'get').length, 0)
+    await page.getByRole('button', { name: '새 메뉴', exact: true }).click()
     await name.fill('작성 중인 새 메뉴')
-    await handle(page, 1).focus(); await page.keyboard.press('Enter'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown')
+    const listTop = () => page.getByRole('list', { name: '메뉴 표시 순서' }).evaluate(list => list.getBoundingClientRect().top + scrollY)
+    const beforeActivation = await listTop()
+    await handle(page, 1).focus()
+    await assertSingleOutline(page, 1)
+    await page.keyboard.press('Enter'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown')
+    await assertSingleOutline(page, 1)
+    assert.equal(await listTop(), beforeActivation, 'activation notice does not shift the list')
     assert.deepEqual((await order(page)).slice(0, 3), [2, 3, 1])
     await page.keyboard.press('Escape')
     await page.waitForFunction(() => document.activeElement?.dataset.handleId === '1')
     assert.deepEqual((await order(page)).slice(0, 3), [1, 2, 3])
     assert.equal((await requests(page)).filter(call => call.method !== 'get').length, 0)
     await handle(page, 1).focus(); await page.keyboard.press('Enter'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter')
+    await page.getByRole('status').filter({ hasText: '순서 저장 중…' }).waitFor()
+    assert.equal(await select(2).isDisabled(), true, 'selection is explicitly locked during write and requery')
+    assert.equal(await handle(page, 2).isDisabled(), true, 'duplicate sorting is blocked while saving')
+    await page.keyboard.press('Enter'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter')
     await page.getByText('메뉴 표시 순서를 변경했습니다.', { exact: true }).waitFor()
     assert.deepEqual((await order(page)).slice(0, 3), [2, 3, 1])
     assert.equal(await name.inputValue(), '작성 중인 새 메뉴', 'new menu draft survives write and requery')
@@ -67,7 +116,7 @@ try {
     await page.screenshot({ path: join(output, `menu-sort-${width}.png`), fullPage: true })
     await guard.assertClean()
     await page.close()
-    console.log(`${width}px keyboard cancel/save, pointer/touch, inactive guard and draft preservation PASS`)
+    console.log(`${width}px click/jitter threshold, stable geometry, saving feedback, keyboard, pointer/touch and draft preservation PASS`)
   }
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } })
   let expectedFailure = false

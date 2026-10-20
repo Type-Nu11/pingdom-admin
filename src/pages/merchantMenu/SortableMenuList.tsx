@@ -5,6 +5,7 @@ import * as S from '../../components/merchant/MerchantWorkspace.styles'
 import * as M from './MerchantMenuPage.styles'
 
 type Drag = { id: number; index: number; mode: 'pointer' | 'keyboard' }
+const POINTER_ACTIVATION_DISTANCE = 6
 const labels = { AVAILABLE: '판매 중', SOLD_OUT: '품절', HIDDEN: '숨김', INACTIVE: '비활성' }
 
 export function SortableMenuList({ menus, selectedId, disabled, onSelect, onMove }: {
@@ -21,6 +22,7 @@ export function SortableMenuList({ menus, selectedId, disabled, onSelect, onMove
   useUnsavedChanges(false, saving || Boolean(drag))
   const listRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<Drag | null>(null)
+  const savingRef = useRef(false)
   const cleanupRef = useRef<() => void>(() => {})
   const mounted = useRef(true)
   useEffect(() => {
@@ -42,7 +44,7 @@ export function SortableMenuList({ menus, selectedId, disabled, onSelect, onMove
 
   const update = (next: Drag) => {
     dragRef.current = next; setDrag(next)
-    setNotice(`${menus.find(item => item.id === next.id)?.name} · ${next.index + 1}/${menus.length}번째 위치`)
+    setNotice(`${next.index + 1}/${menus.length}번째 위치로 이동 중`)
   }
   const cancel = (restoreFocus = true) => {
     const current = dragRef.current
@@ -51,28 +53,34 @@ export function SortableMenuList({ menus, selectedId, disabled, onSelect, onMove
     if (current && restoreFocus) requestAnimationFrame(() => { if (mounted.current) focusHandle(current.id) })
   }
   const finish = async () => {
+    if (savingRef.current) return
     const current = dragRef.current
     cleanupRef.current(); dragRef.current = null
     const source = menus.findIndex(item => item.id === current?.id)
-    if (!current || source < 0 || source === current.index || disabled) { setDrag(null); return }
+    if (!current || source < 0 || source === current.index || disabled) { setDrag(null); setNotice(''); return }
+    savingRef.current = true
     setSaving(true)
+    setNotice('순서 저장 중…')
     let success = false
     try { success = await onMove(menus[source], current.index) }
     catch { success = false }
     finally {
+      savingRef.current = false
       if (mounted.current) {
         setDrag(null); setSaving(false)
-        setNotice(success ? '메뉴 표시 순서를 저장했습니다.' : '순서 저장을 확인하지 못했습니다. 목록을 다시 확인해주세요.')
+        setNotice(success ? '메뉴 표시 순서를 저장했습니다.' : '순서 저장을 확인하지 못했습니다.')
         requestAnimationFrame(() => { if (mounted.current) focusHandle(current.id) })
       }
     }
   }
   const keyboard = (event: KeyboardEvent<HTMLButtonElement>, menu: MerchantPlaceMenu) => {
+    if (savingRef.current) return
     if (event.key === 'Escape' && dragRef.current) { event.preventDefault(); cancel(); return }
     if (disabled || saving || menu.status === 'INACTIVE') return
     if (event.key === ' ' || event.key === 'Enter') {
       event.preventDefault()
       if (dragRef.current) { void finish(); return }
+      cleanupRef.current()
       update({ id: menu.id, index: menus.findIndex(item => item.id === menu.id), mode: 'keyboard' })
       return
     }
@@ -85,11 +93,12 @@ export function SortableMenuList({ menus, selectedId, disabled, onSelect, onMove
     else if (event.key === 'Tab') cancel(false)
   }
   const pointer = (event: PointerEvent<HTMLButtonElement>, menu: MerchantPlaceMenu) => {
-    if (event.button !== 0 || !event.isPrimary || disabled || saving || menu.status === 'INACTIVE') return
+    if (event.button !== 0 || !event.isPrimary || disabled || savingRef.current || dragRef.current || menu.status === 'INACTIVE') return
     event.preventDefault(); event.currentTarget.focus({ preventScroll: true })
     cleanupRef.current()
-    update({ id: menu.id, index: menus.findIndex(item => item.id === menu.id), mode: 'pointer' })
     const pointerId = event.pointerId
+    const startX = event.clientX, startY = event.clientY
+    let started = false
     let y = event.clientY, x = event.clientX, frame = 0
     const list = listRef.current!
     const initialTop = list.getBoundingClientRect().top
@@ -118,34 +127,47 @@ export function SortableMenuList({ menus, selectedId, disabled, onSelect, onMove
     }
     const move = (next: globalThis.PointerEvent) => {
       if (next.pointerId !== pointerId) return
-      next.preventDefault(); y = next.clientY; x = next.clientX; locate()
+      y = next.clientY; x = next.clientX
+      if (!started) {
+        if (Math.hypot(x - startX, y - startY) < POINTER_ACTIVATION_DISTANCE) return
+        started = true
+        update({ id: menu.id, index: menus.findIndex(item => item.id === menu.id), mode: 'pointer' })
+        frame = requestAnimationFrame(autoScroll)
+      }
+      next.preventDefault(); locate()
     }
-    const end = (next: globalThis.PointerEvent) => { if (next.pointerId === pointerId) void finish() }
-    const abort = () => cancel()
-    const escape = (next: globalThis.KeyboardEvent) => { if (next.key === 'Escape') { next.preventDefault(); cancel() } }
+    const end = (next: globalThis.PointerEvent) => {
+      if (next.pointerId !== pointerId) return
+      if (!started) { cleanupRef.current(); return }
+      next.preventDefault()
+      void finish()
+    }
+    const abort = () => { if (started) cancel(); else cleanupRef.current() }
+    const pointerCancel = (next: globalThis.PointerEvent) => { if (next.pointerId === pointerId) abort() }
+    const escape = (next: globalThis.KeyboardEvent) => { if (next.key === 'Escape') { next.preventDefault(); abort() } }
     window.addEventListener('pointermove', move, { passive: false })
     window.addEventListener('pointerup', end)
-    window.addEventListener('pointercancel', abort)
+    window.addEventListener('pointercancel', pointerCancel)
     window.addEventListener('blur', abort)
     window.addEventListener('keydown', escape)
     cleanupRef.current = () => {
       cancelAnimationFrame(frame)
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end)
-      window.removeEventListener('pointercancel', abort); window.removeEventListener('blur', abort); window.removeEventListener('keydown', escape)
+      window.removeEventListener('pointercancel', pointerCancel); window.removeEventListener('blur', abort); window.removeEventListener('keydown', escape)
     }
-    frame = requestAnimationFrame(autoScroll)
   }
   return <>
     <M.SortHint id={hintId}>손잡이를 끌어 순서를 변경하세요. 키보드: Enter로 선택 → 방향키로 이동 → Enter로 저장, Esc로 취소.</M.SortHint>
     <M.SortNotice role="status" aria-live="polite">{notice}</M.SortNotice>
     <M.SortList ref={listRef} role="list" aria-label="메뉴 표시 순서" aria-busy={saving}>
-      {displayed.map((item, index) => <M.SortRow role="listitem" key={item.id} data-menu-id={item.id} $moving={drag?.id === item.id}>
+      {displayed.map((item, index) => <M.SortRow role="listitem" key={item.id} data-menu-id={item.id} $selected={item.id === selectedId} $moving={drag?.id === item.id}>
         <M.DragHandle type="button" data-handle-id={item.id} aria-label={`${item.name} 순서 이동`} aria-describedby={hintId}
+          title="끌어서 순서 변경 · 키보드는 Enter로 시작"
           aria-pressed={drag?.id === item.id} disabled={disabled || saving || item.status === 'INACTIVE'}
           onKeyDown={event => keyboard(event, item)} onPointerDown={event => pointer(event, item)}>
           <span aria-hidden="true">⠿</span>
         </M.DragHandle>
-        <M.MenuSelect type="button" $selected={item.id === selectedId} disabled={disabled || saving || Boolean(drag)} onClick={() => onSelect(item.id)}>
+        <M.MenuSelect type="button" $selected={item.id === selectedId} disabled={disabled || saving || Boolean(drag)} onClick={() => { if (!dragRef.current && !savingRef.current) onSelect(item.id) }}>
           <S.CampaignTop><S.CampaignTitle>{item.name}</S.CampaignTitle><S.StatusBadge $tone={item.status === 'AVAILABLE' ? 'published' : item.status === 'INACTIVE' ? 'closed' : 'draft'}>{labels[item.status]}</S.StatusBadge></S.CampaignTop>
           <S.CampaignMeta>{new Intl.NumberFormat('ko-KR', { style: 'currency', currency: item.currency, maximumFractionDigits: 0 }).format(item.priceAmount)} · 표시 순서 {index + 1}</S.CampaignMeta>
           {item.description ? <S.CampaignMeta title={item.description}>{item.description}</S.CampaignMeta> : null}

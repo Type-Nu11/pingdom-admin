@@ -4,6 +4,8 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { AdminNavigationMenu } from '../../src/components/navigation/AdminNavigationMenu'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import * as Shell from '../../src/pages/place/PlaceManagePage.styles'
+import * as Dashboard from '../../src/pages/dashboard/DashboardPage.styles'
+import * as Merchant from '../../src/app/router/MerchantLayout.styles'
 
 function Fixture() {
   const { pathname } = useLocation()
@@ -17,6 +19,8 @@ function Fixture() {
     <div style={{ marginLeft: 260, padding: 16 }}>
       <output data-testid="route">{pathname}</output>
       <button onClick={() => setGeneration(value => value + 1)}>재마운트</button>
+      <div data-testid="dashboard-logo"><Dashboard.BrandLockup><Dashboard.BrandLogo src="/pingdom-logo.png" alt="PingDom" /></Dashboard.BrandLockup></div>
+      <div data-testid="merchant-logo"><Merchant.BrandLockup to="/merchant"><Merchant.BrandLogo src="/pingdom-logo.png" alt="PingDom" /></Merchant.BrandLockup></div>
     </div>
   </Shell.AppShell>
 }

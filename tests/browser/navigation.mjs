@@ -63,6 +63,16 @@ try {
     await page.keyboard.press('Enter')
     await page.waitForFunction(() => document.querySelector('[data-testid="route"]').textContent === '/places')
     assert.equal(await page.getByRole('button', { name: '장소 관리 하위 메뉴 펼치기' }).getAttribute('aria-expanded'), 'false')
+    for (const [logo, destination] of [
+      [page.getByRole('navigation', { name: '관리자 메뉴', exact: true }).getByRole('link', { name: '대시보드로 이동' }), '/dashboard'],
+      [page.getByTestId('merchant-logo').getByRole('link', { name: '내 가게로 이동' }), '/merchant'],
+      [page.getByTestId('dashboard-logo').getByRole('link', { name: '대시보드로 이동' }), '/dashboard'],
+    ]) {
+      assert.equal(await logo.getAttribute('href'), destination)
+      await logo.focus(); await page.keyboard.press('Enter')
+      await page.waitForFunction(path => document.querySelector('[data-testid="route"]').textContent === path, destination)
+      assert.ok(await logo.locator('img').isVisible())
+    }
     const scroll = page.getByTestId('side-scroll')
     const axis = width > 900 ? 'scrollTop' : 'scrollLeft'
     const before = await scroll.evaluate((el, axis) => { el[axis] = 160; el.dispatchEvent(new Event('scroll')); return el[axis] }, axis)

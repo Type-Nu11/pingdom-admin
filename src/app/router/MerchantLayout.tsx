@@ -33,7 +33,7 @@ export function MerchantLayout() {
       <S.AppShell>
         <S.SideNav aria-label="상점주 메뉴">
           <S.SideHeader>
-            <S.BrandLockup>
+            <S.BrandLockup to="/merchant">
               <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
             </S.BrandLockup>
           </S.SideHeader>

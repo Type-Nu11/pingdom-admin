@@ -9,7 +9,7 @@ const output = await mkdtemp(join(tmpdir(), 'pingdom-162-'))
 const server = await createServer({ cacheDir: join(output, 'cache'), server: { host: '127.0.0.1', port: 0, strictPort: false, open: false },
   plugins: [{ name: 'navigation-fixture', configureServer(vite) {
     vite.middlewares.use(async (req, res, next) => {
-      if (req.url !== '/navigation-qa') return next()
+      if (req.url?.split('?')[0] !== '/navigation-qa') return next()
       res.setHeader('Content-Type', 'text/html')
       const html = (await readFile('index.html', 'utf8')).replace('/src/main.tsx', '/tests/browser/navigation-fixture.jsx')
       res.end(await vite.transformIndexHtml(req.url, html))
@@ -95,6 +95,23 @@ try {
     await page.reload()
     assert.equal(await growth.getAttribute('aria-expanded'), 'false')
     assert.equal(await page.getByRole('button', { name: '장소 관리 하위 메뉴 펼치기' }).getAttribute('aria-expanded'), 'false')
+    // A fresh login in the same document must not reuse the prior admin position.
+    await scroll.evaluate((el, axis) => { el[axis] = 160; el.dispatchEvent(new Event('scroll')) }, axis)
+    await page.getByRole('button', { name: '새 로그인' }).dispatchEvent('click')
+    await page.waitForFunction(axis => document.querySelector('[data-testid="side-scroll"]')[axis] === 0, axis)
+
+    // A tall desktop can fit all merchant links, so exercise actual overflow at laptop height.
+    await page.setViewportSize({ width, height: Math.min(height, 650) })
+    await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/navigation-qa?mode=merchant`)
+    await page.getByRole('button', { name: '결제 · 정산', exact: true }).waitFor({ state: 'attached' })
+    assert.equal(await scroll.evaluate((el, axis) => el[axis], axis), 0, 'merchant deep-link entry starts at beginning')
+    const merchantBefore = await scroll.evaluate((el, axis) => { el[axis] = 160; el.dispatchEvent(new Event('scroll')); return el[axis] }, axis)
+    assert.ok(merchantBefore > 0, 'merchant sidebar overflows')
+    await page.getByRole('button', { name: '재마운트' }).dispatchEvent('click')
+    await page.waitForFunction(() => document.querySelector('[data-testid="side-scroll"]').dataset.generation === '1')
+    assert.equal(await scroll.evaluate((el, axis) => el[axis], axis), merchantBefore)
+    await page.getByRole('button', { name: '새 로그인' }).dispatchEvent('click')
+    await page.waitForFunction(axis => document.querySelector('[data-testid="side-scroll"]')[axis] === 0, axis)
     assert.deepEqual(errors, [])
     await page.close()
     console.log(`${width}px keyboard, collapsed state, routing, remount scroll PASS`)

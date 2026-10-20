@@ -72,8 +72,8 @@ export function useAdminRecommendationPolicy() {
     const data = await runAction(
       'traffic',
       () => updateAdminRecommendationTraffic(request),
-      '추천 트래픽 정책을 변경했습니다.',
-      '추천 트래픽 정책을 변경하지 못했습니다.',
+      '추천 버전별 적용 비율을 변경했습니다.',
+      '추천 버전별 적용 비율을 변경하지 못했습니다.',
       '관리자 추천 트래픽 정책 변경 실패'
     )
     if (data) setTrafficResult(data)
@@ -84,8 +84,8 @@ export function useAdminRecommendationPolicy() {
     const data = await runAction(
       'resync',
       resyncAdminRecommendationSnapshots,
-      '추천 snapshot 재동기화를 완료했습니다.',
-      '추천 snapshot을 재동기화하지 못했습니다.',
+      '추천 정보를 다시 계산했습니다.',
+      '추천 정보를 다시 계산하지 못했습니다.',
       '관리자 추천 snapshot 재동기화 실패'
     )
     if (data) setResyncResult(data)

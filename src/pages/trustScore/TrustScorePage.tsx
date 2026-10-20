@@ -30,7 +30,7 @@ const TRIGGERS: Record<TrustScoreInterventionTrigger, string> = {
   TRUST_SCORE_RANGE: "점수 범위",
   FALSE_REPORT_COUNT: "허위 신고 수",
   ACCEPTANCE_RATE: "승인률",
-  ANOMALY_DETECTED: "이상치 감지",
+  ANOMALY_DETECTED: "이상 징후 감지",
 };
 const ACTIONS: Record<TrustScoreInterventionAction, string> = {
   WARN: "경고",
@@ -243,8 +243,8 @@ function TrustScorePage() {
                 <Shared.Eyebrow>성장 운영 &gt; 신뢰 점수</Shared.Eyebrow>
                 <Shared.PageTitle>신고자 신뢰 점수 운영</Shared.PageTitle>
                 <Shared.PageDescription>
-                  점수 근거와 변경 이력, 이상치, 자동 개입 규칙을 분리해
-                  검토합니다.
+                  신고자의 신뢰 점수와 변경 이력, 이상 징후를 확인합니다.
+                  점수와 신고 내역에 따라 경고·추가 검토·일시 제한을 적용하는 규칙을 관리합니다.
                 </Shared.PageDescription>
               </div>
               <Shared.HeaderActions>
@@ -266,8 +266,8 @@ function TrustScorePage() {
               {(
                 [
                   ["reporter", "신고자 조회", "person_search"],
-                  ["anomalies", "이상치", "warning"],
-                  ["rules", "개입 규칙", "rule"],
+                  ["anomalies", "이상 징후", "warning"],
+                  ["rules", "신뢰 점수 관리 규칙", "rule"],
                 ] as const
               ).map(([value, label, icon]) => (
                 <S.TabButton
@@ -336,7 +336,7 @@ function TrustScorePage() {
                 {hook.isReporterLoading ? <Shared.Notice role="status">신고자 점수를 불러오는 중입니다.{hook.reporter ? ' 현재 표시된 점수는 이전 결과입니다.' : ''}</Shared.Notice> : null}
                 {!hook.reporter && hook.reporterPhase === 'idle' ? (
                   <Shared.EmptyStateCard>
-                    <strong>신고자 ID로 Trust Score를 조회해주세요.</strong>
+                    <strong>신고자 ID로 신뢰 점수를 조회해주세요.</strong>
                   </Shared.EmptyStateCard>
                 ) : hook.reporter ? (
                   <>
@@ -414,7 +414,7 @@ function TrustScorePage() {
                               })
                             }
                           >
-                            개입 규칙 평가
+                            신뢰 점수 관리 규칙 평가
                           </Shared.SecondaryButton>
                           <Shared.PrimaryButton
                             type="button"
@@ -492,7 +492,7 @@ function TrustScorePage() {
                   <Shared.Notice $variant="success" role="status">
                     평가 결과: {hook.evaluation.message}
                     {hook.evaluation.matchedRuleName
-                      ? ` · ${hook.evaluation.matchedRuleName} / ${hook.evaluation.actionType}`
+                      ? ` · ${hook.evaluation.matchedRuleName} / ${hook.evaluation.actionType ? ACTIONS[hook.evaluation.actionType] || '조치 유형 확인 필요' : '적용 조치 없음'}`
                       : ""}
                   </Shared.Notice>
                 ) : null}
@@ -550,7 +550,7 @@ function TrustScorePage() {
                 <Shared.Panel>
                   <Shared.PanelHeader>
                     <div>
-                      <Shared.PanelTitle>Trust Score 이상치</Shared.PanelTitle>
+                      <Shared.PanelTitle>신뢰 점수 이상 징후</Shared.PanelTitle>
                       <Shared.PanelDescription>
                         점수 급락과 허위 신고 증가 패턴을 검토합니다.
                       </Shared.PanelDescription>
@@ -562,11 +562,11 @@ function TrustScorePage() {
                   <S.FormBody>
                     {hook.isAnomaliesLoading ? (
                       <Shared.EmptyState>
-                        <strong>이상치를 불러오는 중입니다.</strong>
+                        <strong>이상 징후를 불러오는 중입니다.</strong>
                       </Shared.EmptyState>
                     ) : hook.anomalies.length === 0 ? (
                       <Shared.EmptyState>
-                        <strong>조건에 맞는 이상치가 없습니다.</strong>
+                        <strong>조건에 맞는 이상 징후가 없습니다.</strong>
                       </Shared.EmptyState>
                     ) : (
                       <S.CardList>
@@ -636,7 +636,7 @@ function TrustScorePage() {
                       </S.CardList>
                     )}
                   </S.FormBody>
-                  {hook.anomalyTotalPages > 1 ? <AdminPagination ariaLabel="신뢰 점수 이상치 목록 페이지네이션" page={hook.anomalyPage} totalPages={hook.anomalyTotalPages} disabled={hook.isAnomaliesLoading} onPageChange={searchAnomalies} /> : null}
+                  {hook.anomalyTotalPages > 1 ? <AdminPagination ariaLabel="신뢰 점수 이상 징후 목록 페이지네이션" page={hook.anomalyPage} totalPages={hook.anomalyTotalPages} disabled={hook.isAnomaliesLoading} onPageChange={searchAnomalies} /> : null}
                 </Shared.Panel>
               </>
             ) : null}
@@ -646,7 +646,7 @@ function TrustScorePage() {
                 <Shared.Panel>
                   <Shared.PanelHeader>
                     <div>
-                      <Shared.PanelTitle>개입 규칙</Shared.PanelTitle>
+                      <Shared.PanelTitle>신뢰 점수 관리 규칙</Shared.PanelTitle>
                       <Shared.PanelDescription>
                         우선순위가 낮은 규칙부터 평가됩니다.
                       </Shared.PanelDescription>
@@ -678,7 +678,7 @@ function TrustScorePage() {
                       </Shared.EmptyState>
                     ) : hook.rules.length === 0 ? (
                       <Shared.EmptyState>
-                        <strong>개입 규칙이 없습니다.</strong>
+                        <strong>신뢰 점수 관리 규칙이 없습니다.</strong>
                       </Shared.EmptyState>
                     ) : (
                       <S.CardList>
@@ -769,16 +769,16 @@ function TrustScorePage() {
             <Shared.ModalHeader>
               <Shared.ModalTitle id="trust-dialog-title">
                 {dialog.type === "resolve"
-                  ? "이상치 해결"
+                  ? "이상 징후 해결"
                   : dialog.type === "rule"
                     ? dialog.rule
-                      ? "개입 규칙 수정"
-                      : "개입 규칙 생성"
+                      ? "신뢰 점수 관리 규칙 수정"
+                      : "신뢰 점수 관리 규칙 생성"
                     : dialog.type === "toggle"
                       ? `규칙 ${dialog.rule.enabled ? "비활성화" : "활성화"}`
                       : dialog.type === "batch"
-                        ? "전체 Trust Score 재계산"
-                        : "개입 규칙 수동 평가"}
+                        ? "전체 신뢰 점수 재계산"
+                        : "신뢰 점수 관리 규칙 수동 평가"}
               </Shared.ModalTitle>
               <Shared.ModalCloseButton
                 type="button"
@@ -911,7 +911,7 @@ function TrustScorePage() {
                   {dialog.type === "toggle"
                     ? `${dialog.rule.ruleName} 규칙을 ${dialog.rule.enabled ? "비활성화" : "활성화"}합니다.`
                     : dialog.type === "batch"
-                      ? "모든 신고자의 Trust Score를 다시 계산하고 변경 이력을 남깁니다."
+                      ? "모든 신고자의 신뢰 점수를 다시 계산하고 변경 이력을 남깁니다."
                       : `신고자 #${dialog.reporterUserId}에게 현재 활성 규칙을 즉시 평가합니다.`}
                 </Shared.ModalWarning>
               )}

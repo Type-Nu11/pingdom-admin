@@ -87,7 +87,7 @@ try {
     await page.getByRole('button', { name: '이력 다시 시도', exact: true }).click()
     await page.getByText('전체 45건 · 1 / 3페이지', { exact: true }).waitFor()
     await page.evaluate(() => window.trustScoreQA.changeAccount(100))
-    await page.getByText('신고자 ID로 Trust Score를 조회해주세요.', { exact: true }).waitFor()
+    await page.getByText('신고자 ID로 신뢰 점수를 조회해주세요.', { exact: true }).waitFor()
     assert.equal(await page.getByText(/합성 이력 3-/).count(), 0)
 
     await search(1)
@@ -95,7 +95,7 @@ try {
     allowed.add(401)
     await page.evaluate(() => { window.trustScoreQA.historyStatus = 401 })
     await nav.getByRole('button', { name: '다음 페이지로 이동', exact: true }).click()
-    await page.getByText('신고자 ID로 Trust Score를 조회해주세요.', { exact: true }).waitFor()
+    await page.getByText('신고자 ID로 신뢰 점수를 조회해주세요.', { exact: true }).waitFor()
     assert.equal(await page.evaluate(() => window.trustScoreQA.clears), 1)
     guard.assertClean()
     assert.ok((await page.evaluate(() => window.trustScoreQA.calls)).every(call => call.method === 'get'))

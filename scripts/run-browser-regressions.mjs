@@ -17,6 +17,7 @@ export const browserCases = [
   ['merchant-reservation-review', 'tests/browser/merchant-reservation-review.mjs'],
   ['merchant-control-surfaces', 'tests/browser/merchant-control-surfaces.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
+  ['merchant-menu-sort', 'tests/browser/merchant-menu-sort.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],
   ['user-ban-structure', 'tests/browser/user-ban-structure.mjs'],
   ['community', 'tests/browser/community.mjs'],

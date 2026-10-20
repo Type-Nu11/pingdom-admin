@@ -30,8 +30,8 @@ const STATUS_LABELS: Record<DataQualityIssueStatus, string> = {
 }
 
 function entityLabel(entityType: string) {
-  const type = entityType.replaceAll('_', ' ').trim()
-  return type || '알 수 없는 대상'
+  const labels: Record<string, string> = { PLACE: '장소', MAP_PLACE: '장소', USER: '사용자', MERCHANT: '상점주', MERCHANT_OWNER: '상점주' }
+  return labels[entityType.toUpperCase()] || '대상 유형 확인 필요'
 }
 
 function entityManagementPath(entityType: string) {
@@ -146,7 +146,7 @@ function DataQualityPage() {
                       $selected={selected === issue} disabled={isLoading}
                       onClick={() => setSelection({ owner, revision, index })}>
                       <S.RecordHeader><S.RecordTitle>{entityLabel(issue.entityType)} #{issue.entityId}</S.RecordTitle><S.StatusBadge $tone={severityTone(issue.severity)}>{SEVERITY_LABELS[issue.severity]}</S.StatusBadge></S.RecordHeader>
-                      <S.RecordMeta>{issue.ruleCode} · 감지 {formatDate(issue.detectedAt)}</S.RecordMeta>
+                      <S.RecordMeta>감지 {formatDate(issue.detectedAt)}</S.RecordMeta>
                       <S.RecordDescription>{issue.details || '상세 사유가 제공되지 않았습니다.'}</S.RecordDescription>
                     </S.RecordButton>
                   ))}</S.CardList>}
@@ -155,18 +155,18 @@ function DataQualityPage() {
             </Shared.Panel>
             <Shared.Panel>
               <Shared.PanelHeader><div><Shared.PanelTitle>이슈 상세</Shared.PanelTitle><Shared.PanelDescription>이 화면은 확인 전용입니다. 수정이 필요한 경우 대상 관리 화면에서 처리해주세요.</Shared.PanelDescription></div></Shared.PanelHeader>
-              <Shared.CompareBody>{!selected ? <Shared.EmptyState><strong>목록에서 이슈를 선택하세요.</strong><p>대상, 규칙 코드, 심각도, 감지 사유를 확인할 수 있습니다.</p></Shared.EmptyState> : <>
+              <Shared.CompareBody>{!selected ? <Shared.EmptyState><strong>목록에서 문제를 선택해주세요.</strong><p>문제가 발견된 대상과 사유, 확인이 필요한 정도를 볼 수 있습니다.</p></Shared.EmptyState> : <>
                 {isPreviousResult ? <Shared.Notice $variant="error">이전에 조회한 이슈 상세입니다.</Shared.Notice> : null}
-                <S.RecordHeader><div><S.RecordTitle>{entityLabel(selected.entityType)} #{selected.entityId}</S.RecordTitle><S.RecordMeta>{selected.ruleCode} · 감지 {formatDate(selected.detectedAt)}</S.RecordMeta></div><S.StatusBadge $tone={statusTone(selected.status)}>{STATUS_LABELS[selected.status]}</S.StatusBadge></S.RecordHeader>
+                <S.RecordHeader><div><S.RecordTitle>{entityLabel(selected.entityType)} #{selected.entityId}</S.RecordTitle><S.RecordMeta>감지 {formatDate(selected.detectedAt)}</S.RecordMeta></div><S.StatusBadge $tone={statusTone(selected.status)}>{STATUS_LABELS[selected.status]}</S.StatusBadge></S.RecordHeader>
                 <S.DetailGrid>
                   <S.DetailItem><dt>대상 유형</dt><dd>{entityLabel(selected.entityType)}</dd></S.DetailItem>
                   <S.DetailItem><dt>대상 ID</dt><dd>{selected.entityId}</dd></S.DetailItem>
-                  <S.DetailItem><dt>규칙 코드</dt><dd>{selected.ruleCode}</dd></S.DetailItem>
                   <S.DetailItem><dt>심각도</dt><dd>{SEVERITY_LABELS[selected.severity]}</dd></S.DetailItem>
                   <S.DetailItem><dt>처리 상태</dt><dd>{STATUS_LABELS[selected.status]}</dd></S.DetailItem>
                   <S.DetailItem><dt>감지 시각</dt><dd>{formatDate(selected.detectedAt)}</dd></S.DetailItem>
                 </S.DetailGrid>
                 <S.Section><S.SectionTitle>감지 사유</S.SectionTitle><S.RecordDescription>{selected.details || '상세 사유가 제공되지 않았습니다.'}</S.RecordDescription></S.Section>
+                <S.Section><details><summary>기술 정보 보기</summary><S.DetailGrid><S.DetailItem><dt>규칙 코드</dt><dd>{selected.ruleCode}</dd></S.DetailItem><S.DetailItem><dt>대상 코드</dt><dd>{selected.entityType}</dd></S.DetailItem></S.DetailGrid></details></S.Section>
                 {entityManagementPath(selected.entityType) ? <S.InlineActions><Shared.SecondaryButton type="button" disabled={isLoading} onClick={() => navigate(entityManagementPath(selected.entityType)!)}>대상 관리 열기</Shared.SecondaryButton></S.InlineActions> : null}
               </>}</Shared.CompareBody>
             </Shared.Panel>

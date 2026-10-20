@@ -128,7 +128,7 @@ function NotificationOperationsPage() {
                 [
                   ["inbox", "관리자 알림"],
                   ["delivery", "발송 결과"],
-                  ["outbox", "재처리 이벤트"],
+                  ["outbox", "처리 작업"],
                 ] as const
               ).map(([v, l]) => (
                 <S.TabButton
@@ -163,7 +163,7 @@ function NotificationOperationsPage() {
             ) : null}
             {tab === "outbox" ? (
               <AdminStatusFilter
-                label="재처리 이벤트 상태"
+                label="처리 작업 상태"
                 value={h.outboxStatus}
                 onChange={(e) => void h.fetchTab("outbox", 1, e.target.value)}
               >
@@ -181,7 +181,7 @@ function NotificationOperationsPage() {
                       ? "관리자 알림"
                       : tab === "delivery"
                         ? "알림 발송 결과"
-                        : "재처리 이벤트"}
+                        : "처리 작업"}
                   </Shared.PanelTitle>
                 </div>
                 <Shared.HeaderActions>
@@ -258,10 +258,10 @@ function NotificationOperationsPage() {
                                         : "danger"
                                   }
                                 >
-                                  {DELIVERY_STATUS_LABELS[d.status] || `상태 확인 필요 (${d.status})`}
+                                  {DELIVERY_STATUS_LABELS[d.status] || '상태 확인 필요'}
                                 </S.StatusBadge>
                               </S.RecordHeader>
-                              <S.DetailGrid>
+                              <details><summary>기술 정보 보기</summary><S.DetailGrid>
                                 <S.DetailItem>
                                   <dt>발송사 오류</dt>
                                   <dd>{d.providerErrorCode || "없음"}</dd>
@@ -270,12 +270,9 @@ function NotificationOperationsPage() {
                                   <dt>내부 오류</dt>
                                   <dd>{d.errorCode || "없음"}</dd>
                                 </S.DetailItem>
-                              </S.DetailGrid>
+                              </S.DetailGrid><p>상태 코드: {d.status}</p>{d.outboxEventId ? <p>관련 작업 번호: {d.outboxEventId}</p> : null}</details>
                               <S.RecordDescription>
-                                {d.failureReason || "실패 사유 없음"}
-                                {d.outboxEventId
-                                  ? ` · 재처리 이벤트 ${d.outboxEventId}`
-                                  : ""}
+                                {d.failureReason || (d.status === 'SUCCEEDED' ? '알림을 정상적으로 발송했습니다.' : '발송 상세 사유가 기록되지 않았습니다.')}
                               </S.RecordDescription>
                             </S.RecordCard>
                           ))
@@ -283,10 +280,9 @@ function NotificationOperationsPage() {
                             <S.RecordCard key={e.eventId}>
                               <S.RecordHeader>
                                 <div>
-                                  <S.RecordTitle>{e.eventType}</S.RecordTitle>
+                                  <S.RecordTitle>{e.status === 'FAILED' ? '실패한 처리 작업' : '처리 작업'}</S.RecordTitle>
                                   <S.RecordMeta>
-                                    {e.eventId} · {e.aggregateType} #
-                                    {e.aggregateId}
+                                    등록 {date(e.createdAt)}
                                   </S.RecordMeta>
                                 </div>
                                 <S.StatusBadge
@@ -298,7 +294,7 @@ function NotificationOperationsPage() {
                                         : "warning"
                                   }
                                 >
-                                  {OUTBOX_STATUS_LABELS[e.status] || `상태 확인 필요 (${e.status})`}
+                                  {OUTBOX_STATUS_LABELS[e.status] || '상태 확인 필요'}
                                 </S.StatusBadge>
                               </S.RecordHeader>
                               <S.DetailGrid>
@@ -311,9 +307,15 @@ function NotificationOperationsPage() {
                                   <dd>{date(e.nextAttemptAt)}</dd>
                                 </S.DetailItem>
                               </S.DetailGrid>
-                              <S.RecordDescription>
-                                {e.lastError || "마지막 오류 없음"}
-                              </S.RecordDescription>
+                              {e.status === 'FAILED' ? <S.RecordDescription>처리하지 못한 작업입니다. 원인을 확인한 뒤 다시 요청해주세요.</S.RecordDescription> : null}
+                              <details><summary>기술 정보 보기</summary><S.DetailGrid>
+                                <S.DetailItem><dt>작업 코드</dt><dd>{e.eventType}</dd></S.DetailItem>
+                                <S.DetailItem><dt>작업 번호</dt><dd>{e.eventId}</dd></S.DetailItem>
+                                <S.DetailItem><dt>대상 코드</dt><dd>{e.aggregateType}</dd></S.DetailItem>
+                                <S.DetailItem><dt>대상 번호</dt><dd>{e.aggregateId}</dd></S.DetailItem>
+                                <S.DetailItem><dt>상태 코드</dt><dd>{e.status}</dd></S.DetailItem>
+                                <S.DetailItem><dt>마지막 오류</dt><dd>{e.lastError || '기록 없음'}</dd></S.DetailItem>
+                              </S.DetailGrid></details>
                               {e.status === "FAILED" ? (
                                 <S.InlineActions>
                                   <Shared.PrimaryButton
@@ -357,8 +359,7 @@ function NotificationOperationsPage() {
             </Shared.ModalHeader>
             <Shared.ModalBody>
               <Shared.ModalWarning>
-                장애 원인 제거와 중복 처리 안전성을 확인한 경우에만{" "}
-                {target.eventId} 이벤트를 재실행하세요.
+                실패 원인이 해결되었는지, 이미 처리된 내용이 중복 반영되지 않는지 담당자에게 확인한 뒤 다시 요청해주세요.
               </Shared.ModalWarning>
               <S.Section>
                 <S.Field>

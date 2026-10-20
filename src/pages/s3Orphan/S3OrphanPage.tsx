@@ -356,8 +356,8 @@ function S3OrphanPage() {
             </Shared.ModalHeader>
             <Shared.ModalBody>
               <Shared.ModalWarning>
-                선택한 {selectedKeys.length}개 객체를 영구 삭제합니다. 복구할 수
-                없으며 서버가 DB 참조를 다시 확인합니다.
+                선택한 파일 {selectedKeys.length}개를 영구 삭제합니다. 복구할 수 없습니다.
+                삭제 전에 현재 사용 중인 파일인지 다시 확인합니다.
               </Shared.ModalWarning>
               <S.Section>
                 <S.Field>

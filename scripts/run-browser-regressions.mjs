@@ -14,6 +14,7 @@ export const browserCases = [
   ['admin-readable-copy', 'tests/browser/admin-readable-copy.mjs'],
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
   ['merchant-reservation-query', 'tests/browser/merchant-reservation-query.mjs'],
+  ['merchant-reservation-review', 'tests/browser/merchant-reservation-review.mjs'],
   ['merchant-control-surfaces', 'tests/browser/merchant-control-surfaces.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],

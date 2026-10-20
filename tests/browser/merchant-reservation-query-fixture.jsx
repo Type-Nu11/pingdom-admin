@@ -26,9 +26,18 @@ const calls = []
 const availability = [7, 8].map(id => ({ id, placeId: id, startsAt: '2030-10-24T05:00:00', endsAt: '2030-10-24T06:00:00' }))
 const reject = (config, status) => { throw Object.assign(new Error('Synthetic query failure'), { isAxiosError: true, config, response: { config, status, data: { code: status === 403 ? 'RESERVATION_FORBIDDEN' : '' }, headers: {} } }) }
 client.defaults.adapter = observeFixtureAdapter(async config => {
-  calls.push({ path: config.url, params: { ...config.params }, method: config.method })
+  calls.push({ path: config.url, params: { ...config.params }, method: config.method, data: config.data ? JSON.parse(config.data) : null })
   const response = data => ({ config, data, status: 200, statusText: 'OK', headers: {} })
-  if (config.method !== 'get') throw new Error('This query fixture forbids all mutations')
+  if (config.method !== 'get') {
+    if (!scenario.startsWith('review') || !/\/reservations\/\d+\/(confirm|reject)$/.test(config.url)) throw new Error('This query fixture forbids all mutations')
+    await new Promise(resolve => setTimeout(resolve, 500))
+    const row = rows.find(item => item.id === Number(config.url.split('/').at(-2)))
+    if (scenario === 'review-conflict') { row.status = 'CONFIRMED'; return reject(config, 409) }
+    row.status = config.url.endsWith('/confirm') ? 'CONFIRMED' : 'REJECTED'
+    row.reviewReason = config.data ? JSON.parse(config.data).reason : null
+    row.reviewedAt = '2030-10-20T11:00:00'
+    return response(row)
+  }
   if (config.url === '/merchant-owner/me') return response({ placeIds: [7, 8] })
   if (config.url === '/merchant-owner/availabilities') return response(availability)
   if (config.url === '/merchant-owner/reservations') {

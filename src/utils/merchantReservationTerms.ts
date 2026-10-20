@@ -20,7 +20,7 @@ export function parseReservationTerms(draft: ReservationTermsDraft): MerchantRes
     if (!draft.timezone || draft.timezone.length > 64 || /^[+-]/.test(draft.timezone)) throw new Error('Invalid timezone')
     new Intl.DateTimeFormat('ko', { timeZone: draft.timezone }).format()
   } catch {
-    return 'Asia/Seoul과 같은 유효한 IANA 시간대를 입력해주세요.'
+    return '시간대 이름을 확인해주세요. 한국 시간은 Asia/Seoul을 입력하세요.'
   }
   if (!['allowed', 'disallowed'].includes(draft.cancellation)) return '취소 가능 여부를 선택해주세요.'
   if (draft.cancellation === 'allowed' && (!wholeMinutes(draft.cancellationCutoffMinutes) || Number(draft.cancellationCutoffMinutes) > 2147483647)) return '취소 기한은 0 이상 2,147,483,647 이하의 정수(분)로 입력해주세요.'

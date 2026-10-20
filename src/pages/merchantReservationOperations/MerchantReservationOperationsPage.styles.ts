@@ -62,6 +62,7 @@ export const Meta = styled(Shared.CampaignMeta)`
   overflow-wrap: anywhere;
 `
 export const HistoryTitle = styled(Title)`margin-top: 24px;`
+export const ReviewActions = styled(Shared.FormActions)`margin-top: 24px;`
 export const Detail = styled.div`
   padding: 24px;
   min-width: 0;

@@ -115,18 +115,18 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
               {detailReservation.reviewReason ? <R.Wide><dt>처리 사유</dt><dd>{detailReservation.reviewReason}</dd></R.Wide> : null}
             </R.Info>
             <ReservationConditions confirmation={detailReservation.confirmation} now={now} />
-            {detailReservation.status === 'PENDING' ? <S.FormActions>
-              {(['confirm', 'reject'] as const).map(action => <S.ActionButton key={action} type="button"
-                disabled={busy || Boolean(operations.sectionErrorMessage)} $variant={action === 'confirm' ? 'primary' : 'danger'}
-                onClick={() => { operations.clearActionError(); setReviewTarget({ detail: selected, action }) }}>
-                {action === 'confirm' ? '예약 승인' : '예약 반려'}
-              </S.ActionButton>)}
-            </S.FormActions> : null}
             <R.HistoryTitle>처리 이력</R.HistoryTitle>
             {selected.statusHistory.length === 0 ? <R.Meta>등록된 처리 이력이 없습니다.</R.Meta> : <R.History aria-label="예약 상태 변경 이력">{selected.statusHistory.map(history => <li key={history.id}>
               <strong>{STATUS[history.status].label}</strong><R.Meta as="div">{formatDateTime(history.changedAt)} · {history.changedBy != null ? '처리자 사용자 #' + history.changedBy : '처리자 정보 없음'}</R.Meta>
               {history.reason ? <p>{history.reason}</p> : null}
             </li>)}</R.History>}
+            {detailReservation.status === 'PENDING' ? <R.ReviewActions role="group" aria-label="예약 처리">
+              {(['confirm', 'reject'] as const).map(action => <S.ActionButton key={action} type="button"
+                disabled={busy || Boolean(operations.sectionErrorMessage)} $variant={action === 'confirm' ? 'primary' : 'danger'}
+                onClick={() => { operations.clearActionError(); setReviewTarget({ detail: selected, action }) }}>
+                {action === 'confirm' ? '예약 승인' : '예약 반려'}
+              </S.ActionButton>)}
+            </R.ReviewActions> : null}
           </R.Detail> : <S.Empty>목록을 다시 확인한 뒤 상세를 조회해주세요.</S.Empty>}
       </S.Panel>
     </R.Workspace>

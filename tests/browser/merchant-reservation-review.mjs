@@ -9,6 +9,11 @@ let browser
 const details = page => page.locator('[aria-label="예약 상세와 처리 이력"]')
 async function open(page, action) {
   await page.getByRole('button', { name: '예약 #1 상세 보기', exact: true }).click()
+  const actions = details(page).getByRole('group', { name: '예약 처리', exact: true })
+  await actions.waitFor()
+  assert.equal(await actions.evaluate(element => element === element.parentElement.lastElementChild), true, 'review buttons are the last section of the detail panel')
+  const history = await details(page).getByRole('heading', { name: '처리 이력', exact: true }).boundingBox()
+  assert.ok((await actions.boundingBox()).y >= history.y + history.height, 'review actions follow history')
   await details(page).getByRole('button', { name: '예약 ' + action, exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '예약 #1 ' + action, exact: true })
   await dialog.waitFor()

@@ -12,6 +12,8 @@ import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 const scenario = new URLSearchParams(location.search).get('scenario') || 'normal'
 let rows = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, placeId: 1, name: `테스트 메뉴 ${i + 1}`, description: '', priceAmount: 10000, currency: 'KRW', imageUrl: null, displayOrder: i * 10, status: i === 2 ? 'INACTIVE' : 'AVAILABLE' }))
 const calls = []
+// Observe requests without clicking the log button and moving focus/scroll during a drag.
+window.menuSortQA = { calls }
 client.defaults.adapter = observeFixtureAdapter(async config => {
   calls.push({ method: config.method, path: config.url, data: config.data ? JSON.parse(config.data) : null })
   const response = data => ({ config, data: structuredClone(data), status: 200, statusText: 'OK', headers: {} })

@@ -6,6 +6,7 @@ import { AdminNotificationContext } from '../../src/app/providers/AdminNotificat
 import RolePage from '../../src/pages/userRole/UserRolePage'
 import ReservationPage from '../../src/pages/adminReservationReview/AdminReservationReviewPage'
 import PlacePage from '../../src/pages/place/PlaceManagePage'
+import VerificationPage from '../../src/pages/placeVerification/PlaceVerificationPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 import { AxiosError } from 'axios'
@@ -19,6 +20,9 @@ client.defaults.adapter=async config=>{
   else if(config.url.endsWith('/roles'))data=[]
   else if(config.url==='/admin/places')data={places:[place(1)],page:1,limit:10,totalCount:1,totalPages:1,hasNext:false}
   else if(/^\/admin\/places\/\d+$/.test(config.url))data=place(Number(config.url.split('/').at(-1)))
+  else if(config.url==='/admin/place-information-reports')data={reports:[],page:1,limit:20,totalCount:0,totalPages:0,hasNext:false}
+  else if(config.url.endsWith('/information-evidence'))data={placeId:1,evidences:[]}
+  else if(config.url.endsWith('/information-reverification-requests'))data={requests:[],page:1,limit:20,totalCount:0,totalPages:0,hasNext:false}
   else if(config.url==='/admin/reservations'){
     if(window.qaReservationStatus)throw new AxiosError('Synthetic failure','ERR_BAD_RESPONSE',config,undefined,{config,data:{},status:window.qaReservationStatus,statusText:'Synthetic failure',headers:{}})
     const count=window.qaEmptyReservations?0:config.params.page===3?1:10
@@ -29,4 +33,4 @@ client.defaults.adapter=async config=>{
 }
 const auth={clearAuth(){},logout(){},user:{id:99,username:'synthetic',role:'ADMIN'},isAuthenticated:true,isAuthReady:true}
 const notifications={notifications:[],unreadCount:0,pendingWorkItems:[],pendingWorkCount:0,status:'success',pendingWorkStatus:'success'}
-createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><AdminNotificationContext.Provider value={notifications}><BrowserRouter><GlobalStyle/><Routes><Route path="/roles" element={<RolePage/>}/><Route path="/reservations/review" element={<ReservationPage/>}/><Route path="/places" element={<PlacePage/>}/></Routes></BrowserRouter></AdminNotificationContext.Provider></AuthContext.Provider>)
+createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><AdminNotificationContext.Provider value={notifications}><BrowserRouter><GlobalStyle/><Routes><Route path="/roles" element={<RolePage/>}/><Route path="/reservations/review" element={<ReservationPage/>}/><Route path="/places" element={<PlacePage/>}/><Route path="/places/information-verification" element={<VerificationPage/>}/></Routes></BrowserRouter></AdminNotificationContext.Provider></AuthContext.Provider>)

@@ -27,9 +27,11 @@ const ACTION_LABELS: Record<RequestAction, string> = {
 export function PlaceInformationReverificationPanel({
   verificationHook,
   loadedPlaceId,
+  hasSelectedPlace = false,
 }: {
   verificationHook: VerificationHook
   loadedPlaceId: number | null
+  hasSelectedPlace?: boolean
 }) {
   const {
     reverificationRequests,
@@ -95,15 +97,15 @@ export function PlaceInformationReverificationPanel({
       {!loadedPlaceId ? (
         <Shared.EmptyStateCard>
           <Shell.MaterialIcon aria-hidden="true">sync_problem</Shell.MaterialIcon>
-          <strong>장소 ID를 조회해주세요.</strong>
-          <p>업주에게 요청한 정보 재확인 상태를 추적할 수 있습니다.</p>
+          <strong>{hasSelectedPlace ? '선택한 장소의 정보를 조회해주세요.' : '확인할 장소를 선택해주세요.'}</strong>
+          <p>상점주에게 요청한 정보 재확인 상태를 추적할 수 있습니다.</p>
         </Shared.EmptyStateCard>
       ) : (
         <Shared.Panel>
           <Shared.PanelHeader>
             <div>
               <Shared.PanelTitle>장소 #{loadedPlaceId} 재확인 요청</Shared.PanelTitle>
-              <Shared.PanelDescription>업주 응답 기한과 후속 조치를 관리합니다.</Shared.PanelDescription>
+              <Shared.PanelDescription>상점주 응답 기한과 후속 조치를 관리합니다.</Shared.PanelDescription>
             </div>
             <Shared.HeaderActions>
               <Shared.SecondaryButton type="button" disabled={isReverificationLoading || activeAction !== null} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage)}>새로고침</Shared.SecondaryButton>
@@ -111,11 +113,10 @@ export function PlaceInformationReverificationPanel({
             </Shared.HeaderActions>
           </Shared.PanelHeader>
           <Shared.CompareBody>
-            {reverificationErrorMessage ? <Shared.Notice $variant="error" role="alert">{reverificationErrorMessage}</Shared.Notice> : null}
-            {isReverificationLoading ? (
+            {reverificationErrorMessage ? <Shared.Notice $variant="error" role="alert">{reverificationErrorMessage}<Shared.SecondaryButton type="button" disabled={isReverificationLoading || activeAction !== null} onClick={() => void fetchReverificationRequests(loadedPlaceId, reverificationPage)}>다시 시도</Shared.SecondaryButton></Shared.Notice> : isReverificationLoading ? (
               <Shared.EmptyState><strong>재확인 요청을 불러오는 중입니다.</strong></Shared.EmptyState>
             ) : reverificationRequests.length === 0 ? (
-              <Shared.EmptyState><strong>재확인 요청이 없습니다.</strong><p>정보 갱신이 필요하면 업주에게 새 요청을 보내주세요.</p></Shared.EmptyState>
+              <Shared.EmptyState><strong>재확인 요청이 없습니다.</strong><p>정보 갱신이 필요하면 상점주에게 새 요청을 보내주세요.</p></Shared.EmptyState>
             ) : (
               <S.CardList>
                 {reverificationRequests.map((request) => (
@@ -123,7 +124,7 @@ export function PlaceInformationReverificationPanel({
                     <S.RecordHeader>
                       <div>
                         <S.RecordTitle>재확인 요청 #{request.requestId}</S.RecordTitle>
-                        <S.RecordMeta>업주 #{request.merchantOwnerUserId} · 요청 {formatVerificationDate(request.requestedAt)}</S.RecordMeta>
+                        <S.RecordMeta>상점주 #{request.merchantOwnerUserId} · 요청 {formatVerificationDate(request.requestedAt)}</S.RecordMeta>
                       </div>
                       <S.StatusBadge $tone={getStatusTone(request.status)}>{REVERIFICATION_STATUS_LABELS[request.status]}</S.StatusBadge>
                     </S.RecordHeader>

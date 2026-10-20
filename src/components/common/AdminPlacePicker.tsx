@@ -1,24 +1,43 @@
 import { useId, useState } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { searchAdminPlaces, type AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminTargetSearch } from './AdminTargetSearch'
 import { typography, adminColors } from '../../styles/theme'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 import * as Form from '../../pages/placeVerification/PlaceVerificationPage.styles'
 
-const Root = styled.div`display: grid; gap: 8px; min-width: 0;`
+const Root = styled.div<{ $wide: boolean }>`
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  ${({ $wide }) => $wide && css`
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    > div:first-child { flex: 1 1 240px; }
+    > details { flex: 0 0 100%; }
+    > details input { max-width: 360px; }
+  `}
+`
 const Actions = styled.div`display: flex; flex-wrap: wrap; gap: 8px;`
 const Selection = styled.div`display: grid; gap: 4px; overflow-wrap: anywhere; font-size: 14px; small { color: ${adminColors.muted}; }`
-const Direct = styled.details`font-size: ${typography.label.regular.fontSize}px; summary { cursor: pointer; } input { margin-top: 8px; width: 100%; box-sizing: border-box; }`
+const Direct = styled.details`
+  font-size: ${typography.label.regular.fontSize}px;
+  summary { cursor: pointer; }
+  > label { display: block; margin-top: 12px; }
+  > input { display: block; margin-top: 6px; width: 100%; box-sizing: border-box; }
+`
 
 interface Props {
   value: string
   selectedPlace?: AdminTarget | null
   onChange: (value: string, place: AdminTarget | null) => void
   disabled?: boolean
+  layout?: 'stacked' | 'wide'
 }
 
-export function AdminPlacePicker({ value, selectedPlace, onChange, disabled = false }: Props) {
+export function AdminPlacePicker({ value, selectedPlace, onChange, disabled = false, layout = 'stacked' }: Props) {
   const id = useId()
   const [open, setOpen] = useState(false)
   const [localSelected, setLocalSelected] = useState<AdminTarget | null>(null)
@@ -29,7 +48,7 @@ export function AdminPlacePicker({ value, selectedPlace, onChange, disabled = fa
     onChange(next, place)
   }
 
-  return <Root>
+  return <Root $wide={layout === 'wide'}>
     <Selection aria-live="polite">
       <strong>{target ? `${target.name || '이름 없음'} · #${target.id}` : value ? `장소 #${value}` : '선택한 장소 없음'}</strong>
       {target?.description ? <small>{target.description}</small> : null}

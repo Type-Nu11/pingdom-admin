@@ -45,12 +45,20 @@ export const SearchBar = styled.form`
 `
 
 export const PlaceLookupRow = styled.div`
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
-  > div { flex: 1 1 240px; max-width: 480px; }
-  > button { flex: 0 0 auto; }
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 24px;
+  min-width: 0;
+  > div { min-width: 0; }
+  > button {
+    align-self: start;
+    margin-top: 22px;
+  }
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+    > button { justify-self: end; margin-top: 0; }
+  }
 `
 
 export const Field = styled.label`

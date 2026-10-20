@@ -1,10 +1,47 @@
 # EC2 정적 웹 배포
 
+## 플랫폼 인스턴스의 GitHub Actions 배포
+
+`Deploy administrator web`은 `release` push의 `Release verification`이 성공한 뒤 실행됩니다.
+동일 저장소의 검증 커밋을 빌드하며, 빌드 전과 교체 전에 최신 `release`인지 확인합니다.
+작업 브랜치·PR에서는 운영 Secret을 사용하거나 서버를 변경하지 않습니다.
+
+기존 조직 Secret `DOCKER_USERNAME`, `DOCKER_TOKEN`, `HOST`, `USERNAME`, `KEY`를 그대로 참조합니다.
+admin 저장소에 같은 이름의 Secret이 있으면 그 값이 우선합니다. 백엔드는 이 이름들을
+저장소 Secret으로 덮어쓰므로 백엔드 배포 성공만으로 조직 값의 유효성이 확인되지는 않습니다.
+Actions의 수동 `Run workflow`는 `release`에서 SSH 대상·빌드 설정·Docker Hub 로그인만 검사합니다.
+수동 검사는 이미지 push 권한이나 실제 배포 성공까지 보장하지 않습니다.
+
+자동 배포 순서:
+
+1. 고정한 SSH 호스트 키로 플랫폼 인스턴스인지 확인합니다. 대상은 `ubuntu`, 사설 IP `172.31.46.247`입니다.
+2. 서버의 `/home/ubuntu/pingdom-ops/admin/.env.ec2.local`에서 기존 **공개 지도 Client ID**,
+   `/console/` 경로와 CPU 아키텍처를 읽습니다. 별도 지도 Secret을 추가하지 않습니다.
+3. Actions에서 `${DOCKER_USERNAME}/pingdom-admin:<commit SHA>`를 빌드·push합니다.
+   Docker Hub 계정/토큰에 해당 이미지 저장소를 생성하거나 push할 권한이 있어야 합니다.
+4. 공개 배포 파일만 서버에 전달하고, EC2에서 **digest로 고정된 이미지**를 pull합니다.
+   EC2에서는 소스 빌드나 Git checkout 변경을 하지 않습니다.
+5. 기존 이미지·실행 Compose 설정·마운트 파일을 백업하고 `web`만 교체합니다.
+6. `/healthz`, 공개 `/console/login`·JS 자산, `/consulting/`, 비로그인 `/api/users/me`의 JSON 401을 확인합니다.
+   교체나 HTTP 확인이 실패하면 직전 이미지·설정으로 자동 복구하고 workflow는 실패 처리합니다.
+
+`deploy/compose.registry.yml`은 레지스트리 실행 전용이며 기존 로컬 빌드용 `compose.yml`은 유지합니다.
+`/console/`, 웹 바인딩 `172.31.46.247:8082`, 인증 게이트웨이 `172.31.36.40:8081`,
+컨설팅 전달 `172.31.46.247:8083`은 현재 확인한 플랫폼 계약과 다르면 배포를 중단합니다.
+SSH 호스트 키가 변경되면 기존 신뢰 경로에서 지문을 확인하고 `deploy/platform-known-hosts`를 갱신합니다.
+
+백업은 `/home/ubuntu/pingdom-ops/admin/registry-backups/`에 남고 성공한 배포 정보는
+`/home/ubuntu/pingdom-ops/admin/registry-current.json`에 기록됩니다. 수동 복구는 해당 백업의
+`rollback.sh`를 실행합니다. 이미지·설정 백업에는 운영 연결 정보가 있으므로 접근 권한을 유지합니다.
+레지스트리 인증은 실행별 임시 Docker 설정에 보관하고 workflow 종료 시 삭제합니다.
+runner 강제 종료 등으로 정리 단계가 실행되지 않으면 `registry-auth-<run ID>-<attempt>`가 남을 수 있습니다.
+로그인·토큰 갱신·지도 등 실제 브라우저 기능 검증은 별도로 수행합니다.
+
 ## 범위와 선행 조건
 
 Node 24에서 `npm ci`·`npm run build` 후 `dist`만 Nginx 이미지로 복사합니다.
 운영에서 Vite 개발 서버를 띄우지 않습니다. 이 저장소는 웹 컨테이너를 준비하며,
-실제 EC2 접속·DNS·TLS·HAProxy 변경은 자동 실행하지 않습니다.
+아래 수동 배포 안내에서는 실제 EC2 접속·DNS·TLS·HAProxy 변경을 자동 실행하지 않습니다.
 
 배포 요구에 따라 웹 컨테이너의 기본 호스트 포트는 **127.0.0.1:8082**입니다.
 컨테이너 내부 Nginx는 8080, API upstream의 기본 웹 인증 게이트웨이는 8081을 유지합니다.

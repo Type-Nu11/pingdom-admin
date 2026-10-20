@@ -500,10 +500,10 @@ export async function reviewMerchantReservation(
   reason?: string,
 ) {
   const normalized = reservationReviewReason(action, reason)
-  const { data } = await customAxios.post<MerchantReservation>(
-    `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/${action}`,
-    normalized === undefined ? undefined : { reason: normalized },
-  )
+  const body = normalized === undefined ? undefined : { reason: normalized }
+  const { data } = action === 'confirm'
+    ? await customAxios.post<MerchantReservation>(`${MERCHANT_OWNER_PATH}/reservations/${reservationId}/confirm`, body)
+    : await customAxios.post<MerchantReservation>(`${MERCHANT_OWNER_PATH}/reservations/${reservationId}/reject`, body)
   if (!isReservation(data) || data.id !== reservationId
     || data.status !== (action === 'confirm' ? 'CONFIRMED' : 'REJECTED')) {
     throw new Error('예약 처리 결과를 확인할 수 없습니다. 목록을 다시 조회해주세요.')

@@ -16,6 +16,41 @@ try {
   })
   const listCalls = () => page.evaluate(() => window.banQa.calls.filter(call => call.path === '/admin/users/banned'))
   const historyCalls = () => page.evaluate(() => window.banQa.calls.filter(call => call.path.endsWith('/sanctions')))
+  async function checkHover(control, { row = false, selected = false, disabled = false } = {}) {
+    await page.mouse.move(0, 0)
+    const appearance = locator => locator.evaluate(element => {
+      const style = getComputedStyle(element)
+      return { background: style.backgroundColor, color: style.color, shadow: style.boxShadow }
+    })
+    const before = await appearance(control)
+    await control.hover()
+    const after = await appearance(control)
+    if (disabled) assert.deepEqual(after, before, 'disabled controls do not pretend to be interactive on hover')
+    else {
+      assert.notEqual(after.background, before.background, 'hover visibly changes the background')
+      if (row) {
+        const [red, green, blue] = after.background.match(/[\d.]+/g).map(Number)
+        assert.ok(red > green && red > blue, 'list hover is a light brand pink instead of white')
+      } else if (!selected) assert.equal(after.background, 'rgb(255, 255, 255)', 'control hover is white against the gray panel')
+      if (!row) assert.notEqual(after.shadow, 'none', 'filter hover has a visible brand outline')
+    }
+    await page.mouse.move(0, 0)
+    assert.deepEqual(await appearance(control), before, 'pointer exit restores the normal or selected appearance')
+  }
+  async function checkReleaseAlignment(reference) {
+    const heading = page.getByRole('heading', { name: '밴 해제', exact: true })
+    const button = page.getByRole('button', { name: '밴 해제', exact: true })
+    const positions = await Promise.all([reference, heading, button].map(locator => locator.boundingBox()))
+    assert.ok(Math.abs(positions[0].x - positions[1].x) < 1, 'release title shares the account/history heading left edge')
+    const [title, action] = positions.slice(1)
+    assert.ok(Math.abs(title.y + title.height / 2 - action.y - action.height / 2) < 1, 'release title and action share one centered row')
+    assert.ok(action.x >= title.x + title.width, 'release action remains on the right')
+    const inset = await button.evaluate(element => {
+      const group = element.closest('section')
+      return group.getBoundingClientRect().right - element.getBoundingClientRect().right
+    })
+    assert.ok(Math.abs(inset - 14) < 1, 'release action uses the same section padding instead of the far panel edge')
+  }
   async function openHistory() {
     await page.getByRole('button', { name: /합성 사용자 901/ }).click()
     await page.getByRole('tab', { name: '제재 이력', exact: true }).waitFor()
@@ -25,8 +60,20 @@ try {
     await page.setViewportSize({ width, height })
     await page.goto(url)
     await page.getByRole('button', { name: /합성 사용자 901/ }).waitFor()
+    await checkHover(page.getByRole('button', { name: '밴 유형 필터', exact: true }))
+    await checkHover(page.getByRole('button', { name: '밴 사용자 정렬 기준', exact: true }))
+    await checkHover(page.getByRole('button', { name: '밴 사용자 정렬 방향', exact: true }))
+    await checkHover(page.getByRole('button', { name: /^밴 처리 시작일,/ }))
+    await checkHover(page.getByRole('button', { name: /^밴 처리 종료일,/ }))
+    await checkHover(page.getByRole('button', { name: '조회', exact: true }))
+    await checkHover(page.getByRole('button', { name: '필터 초기화', exact: true }), { disabled: true })
+    for (const id of [901, 902]) await checkHover(page.getByRole('button', { name: new RegExp(`합성 사용자 ${id}`) }), { row: true })
     // Inspect the actual release dialog without submitting any operational write.
     await page.getByRole('button', { name: /합성 사용자 901/ }).click()
+    await page.getByRole('heading', { name: '계정 정보', exact: true }).waitFor()
+    await checkHover(page.getByRole('button', { name: /합성 사용자 901/ }), { row: true, selected: true })
+    assert.equal(await page.getByRole('button', { name: /합성 사용자 901/ }).getAttribute('aria-current'), 'true')
+    await checkReleaseAlignment(page.getByRole('heading', { name: '계정 정보', exact: true }))
     await page.getByRole('button', { name: '밴 해제', exact: true }).click()
     const releaseDialog = page.getByRole('dialog', { name: '이 사용자의 밴을 해제할까요?', exact: true })
     await releaseDialog.waitFor()
@@ -74,11 +121,19 @@ try {
     assert.equal(await page.getByRole('searchbox').inputValue(), '')
     await openHistory()
     await page.getByText('합성 이력 901 페이지 1', { exact: true }).waitFor()
+    await checkReleaseAlignment(page.getByRole('heading', { name: /^제재 이력 \d+건$/ }))
     const panel = page.getByRole('tabpanel')
     await panel.getByRole('button', { name: '2페이지로 이동' }).click()
     await page.getByText('합성 이력 901 페이지 2', { exact: true }).waitFor()
     assert.equal((await historyCalls()).at(-1).params.page, 2)
     await panel.getByRole('button', { name: '필터', exact: true }).click()
+    await checkHover(panel.getByRole('button', { name: '제재 이력 유형 필터', exact: true }))
+    await checkHover(panel.getByRole('button', { name: '제재 이력 처리 상태 필터', exact: true }))
+    await checkHover(panel.getByRole('button', { name: /^제재 이력 처리 시작일,/ }))
+    await checkHover(panel.getByRole('button', { name: /^제재 이력 처리 종료일,/ }))
+    await checkHover(panel.getByRole('button', { name: '조회', exact: true }))
+    await checkReleaseAlignment(page.getByRole('heading', { name: /^제재 이력 \d+건$/ }))
+    await panel.screenshot({ path: join(output, `ban-history-hover-alignment-${width}.png`) })
     const before = (await historyCalls()).length
     await panel.getByRole('button', { name: '제재 이력 처리 상태 필터' }).click()
     await panel.getByRole('option', { name: '밴 해제', exact: true }).click()

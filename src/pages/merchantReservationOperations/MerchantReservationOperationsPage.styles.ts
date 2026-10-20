@@ -14,11 +14,25 @@ export const Filters = styled.form`
   @media (max-width: 620px) { grid-template-columns: minmax(0, 1fr); }
 `
 
-export const Workspace = styled(Shared.Workspace)`align-items: start;`
+export const Workspace = styled(Shared.Workspace)`align-items: stretch;`
+
+export const ListPanel = styled(Shared.Panel)`
+  display: flex;
+  flex-direction: column;
+`
 
 export const List = styled(Shared.CampaignList)`
-  max-height: 65vh;
+  flex: 1;
+  min-height: 65vh;
+  contain: size;
   overflow-y: auto;
+
+  @media (max-width: 980px) {
+    flex: none;
+    min-height: 0;
+    max-height: 65vh;
+    contain: none;
+  }
 `
 
 export const PanelTitle = styled(Shared.PanelTitle)`scroll-margin-top: 80px;`
@@ -45,6 +59,7 @@ export const Hint = styled.p`
 `
 export const Applied = styled(Hint)`margin: 0 0 18px;`
 export const ListItem = styled.div<{ $selected: boolean }>`
+  flex-shrink: 0;
   padding: 18px;
   border: 1px solid ${({ $selected }) => $selected ? colors.primary : colors.borderSoft};
   border-radius: 8px;

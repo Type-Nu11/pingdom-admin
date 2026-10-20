@@ -28,6 +28,19 @@ try {
     for (const action of ['승인', '반려']) assert.equal(await page.getByRole('button', { name: action, exact: true }).count(), 0)
     await page.getByRole('heading', { name: '예약 관리 이력', exact: true, level: 1 }).waitFor()
     await page.getByText('승인·반려는 해당 장소의 상점주가 처리합니다.', { exact: false }).waitFor()
+    const filters = [
+      page.getByRole('combobox', { name: '예약 상태', exact: true }),
+      page.getByRole('textbox', { name: '장소 ID', exact: true }),
+      page.getByRole('button', { name: '장소 검색', exact: true }),
+      page.getByRole('button', { name: '초기화', exact: true }),
+      page.getByRole('button', { name: '조회', exact: true }),
+    ]
+    if (width > 920) {
+      const rects = await Promise.all(filters.map(control => control.boundingBox()))
+      for (const rect of rects) assert.ok(Math.abs(rect.y + rect.height - rects[0].y - rects[0].height) < 1, 'desktop reservation filters and all actions share one bottom-aligned row')
+      for (let index = 1; index < rects.length; index++) assert.ok(rects[index].x >= rects[index - 1].x + rects[index - 1].width, 'filters and actions do not overlap')
+    }
+    await filters[0].locator('xpath=ancestor::form').screenshot({ path: join(output, `reservation-filter-row-${width}.png`) })
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
     await page.screenshot({ path: join(output, `restored-${width}.png`) })
     const link = page.getByRole('link', { name: '합성 장소 7 · #7', exact: true })

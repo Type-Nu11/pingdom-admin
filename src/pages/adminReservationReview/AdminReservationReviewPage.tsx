@@ -219,7 +219,7 @@ function ReservationHistoryWorkspace() {
             {typeof notice === 'string' && noticeMessages[notice] ? <FeedbackMessage tone="warning" onDismiss={() => updateContext(query, selectedReservationId, true)}>{noticeMessages[notice]}</FeedbackMessage> : null}
 
             <S.SearchBar onSubmit={(event) => { event.preventDefault(); search() }}>
-              <S.SearchFilterGrid>
+              <ReviewUI.FilterGrid>
                 <S.Field>
                   예약 상태
                   <AdminSelect
@@ -244,11 +244,11 @@ function ReservationHistoryWorkspace() {
                   />
                 </S.Field>
                 <ReviewUI.PlaceSearchButton type="button" disabled={hook.isLoading} onClick={() => setPlaceSearchOpen(true)}>장소 검색</ReviewUI.PlaceSearchButton>
-                <S.SearchFilterActions>
+                <S.SearchFilterActions $inline>
                   <Shared.SecondaryButton type="button" disabled={hook.isLoading} onClick={resetFilters}>초기화</Shared.SecondaryButton>
                   <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>조회</Shared.PrimaryButton>
                 </S.SearchFilterActions>
-              </S.SearchFilterGrid>
+              </ReviewUI.FilterGrid>
             </S.SearchBar>
             <Shared.QuerySummary aria-label="예약 조회 조건">
               조회 조건: {hook.query.status ? STATUS[hook.query.status].label : '전체 상태'} · {hook.query.placeId ? `장소 #${hook.query.placeId}` : '전체 장소'}

@@ -1499,6 +1499,7 @@ export const OperatingFormField = styled.label`
   }
 
   legend {
+    margin: 0 0 7px;
     padding: 0;
   }
 `

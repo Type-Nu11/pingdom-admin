@@ -14,7 +14,7 @@ let browser, server, page
 try {
   browser = await chromium.launch()
   console.log(`Screenshots: ${output}`)
-  for (const mode of ['before', 'after']) {
+  for (const mode of process.argv.includes('--current-only') ? ['after'] : ['before', 'after']) {
     server = await createServer({ cacheDir: join(output, mode), server: { host: '127.0.0.1', port: 0, open: false }, plugins: [{
       name: 'place-qa', enforce: 'pre',
       resolveId(source) {
@@ -62,7 +62,7 @@ try {
       await page.screenshot({ path: join(output, `${mode}-${key}.png`) })
       if (mode === 'before') measurements.set(key, metrics)
       else {
-        assert.ok(metrics.neededScroll < measurements.get(key).neededScroll, 'operations require less scrolling')
+        if (measurements.has(key)) assert.ok(metrics.neededScroll < measurements.get(key).neededScroll, 'operations require less scrolling')
         assert.equal(metrics.overflow, false)
         assert.ok(metrics.bodyHeight >= 120)
         assert.equal(await panel.locator('details').evaluate(el => el.open), false)
@@ -76,6 +76,30 @@ try {
         assert.ok(await image.evaluate(el => el === document.activeElement))
         await panel.getByRole('button', { name: '위치 보기' }).click()
         assert.equal(await page.evaluate(() => window.qaMapFocus.latitude), 37.01)
+        for (const [index, title] of ['운영 상태', '탐색 상태'].entries()) {
+          await panel.getByRole('button', { name: '상태 변경', exact: true }).nth(index).click()
+          const statusDialog = page.getByRole('dialog')
+          await statusDialog.waitFor()
+          const spacing = await statusDialog.evaluate(dialog => {
+            const legend = dialog.querySelector('legend')
+            const options = legend.parentElement.querySelector('div')
+            const textarea = dialog.querySelector('textarea')
+            const reasonLabel = textarea.parentElement.querySelector('span')
+            return {
+              title: legend.textContent,
+              optionsGap: options.getBoundingClientRect().top - legend.getBoundingClientRect().bottom,
+              reasonGap: textarea.getBoundingClientRect().top - reasonLabel.getBoundingClientRect().bottom,
+              overflow: dialog.scrollWidth > dialog.clientWidth,
+            }
+          })
+          assert.equal(spacing.title, title)
+          assert.equal(spacing.optionsGap, 7, `${title}: legend needs explicit spacing in a fieldset`)
+          assert.equal(spacing.optionsGap, spacing.reasonGap, 'status and reason label spacing match')
+          assert.equal(spacing.overflow, false)
+          await page.screenshot({ path: join(output, `status-${index}-${key}.png`) })
+          await page.keyboard.press('Escape')
+          await statusDialog.waitFor({ state: 'hidden' })
+        }
         await hours.click()
         await page.getByRole('dialog').waitFor()
         await page.waitForFunction(() => document.querySelector('[role="dialog"]')?.contains(document.activeElement))

@@ -55,6 +55,34 @@ try {
     await page.evaluate(() => document.fonts.ready)
     await page.getByRole('button').filter({ hasText: '합성 장소 1' }).click()
     const open = page.getByRole('button', { name: '미리보기', exact: true })
+    await open.first().waitFor()
+    const rows = page.locator('article').filter({ has: page.getByRole('button', { name: '미리보기', exact: true }) })
+    for (const row of await rows.all()) {
+      const layout = await row.evaluate(element => {
+        const info = element.querySelector(':scope > div').getBoundingClientRect()
+        const buttons = [...element.querySelectorAll(':scope > button')].map(button => button.getBoundingClientRect())
+        const style = getComputedStyle(element)
+        const icon = element.querySelector('button > span')
+        return {
+          stacked: element.parentElement.clientWidth <= 480,
+          infoCenter: info.top + info.height / 2,
+          buttonCenters: buttons.map(rect => rect.top + rect.height / 2),
+          infoBottom: info.bottom,
+          buttonTop: buttons[0].top,
+          paddingTop: style.paddingTop,
+          paddingBottom: style.paddingBottom,
+          iconMarginTop: icon ? getComputedStyle(icon).marginTop : '0px',
+          overflow: element.scrollWidth > element.clientWidth,
+        }
+      })
+      assert.equal(layout.paddingTop, layout.paddingBottom, 'attachment row has equal vertical padding')
+      assert.equal(layout.overflow, false, 'long filenames do not overflow the row')
+      assert.equal(layout.iconMarginTop, '0px', 'file metadata spacing does not shift the download icon')
+      assert.ok(Math.abs(layout.buttonCenters[0] - layout.buttonCenters[1]) < 1, 'action buttons align vertically')
+      if (layout.stacked) assert.ok(layout.buttonTop >= layout.infoBottom + 13, 'narrow cards keep actions below file information')
+      else for (const center of layout.buttonCenters) assert.ok(Math.abs(center - layout.infoCenter) < 1, 'file information and actions are vertically centered')
+    }
+    await rows.nth(1).screenshot({ path: join(output, `attachment-row-${width}.png`) })
     await open.first().click()
     const dialog = page.getByRole('dialog')
     await dialog.getByRole('img').waitFor()

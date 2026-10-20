@@ -13,6 +13,7 @@ export const browserCases = [
   ['text-readability', 'tests/browser/text-readability.mjs'],
   ['admin-readable-copy', 'tests/browser/admin-readable-copy.mjs'],
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
+  ['merchant-reservation-query', 'tests/browser/merchant-reservation-query.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],
   ['user-ban-structure', 'tests/browser/user-ban-structure.mjs'],

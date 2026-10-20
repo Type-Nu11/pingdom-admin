@@ -63,7 +63,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
         RESERVATION_NOT_FOUND: '예약 정보를 찾을 수 없습니다.',
         INVALID_RESERVATION_STATUS: '현재 상태에서는 처리할 수 없는 예약입니다.',
         INVALID_RESERVATION_STATE: '예약 상태가 변경되었습니다. 목록을 다시 확인해주세요.',
-        CANCELLATION_NOT_ALLOWED: '수락한 취소 정책 또는 기한에 따라 취소할 수 없습니다. 예약 조건을 확인해주세요.',
+        CANCELLATION_NOT_ALLOWED: '이 예약에 적용된 취소 정책 또는 기한에 따라 취소할 수 없습니다. 예약 조건을 확인해주세요.',
         RESERVATION_REFUND_REQUIRED: '결제 처리 중이거나 환불되지 않은 결제가 있습니다. 결제·환불 내역을 확인하고 필요한 환불을 완료한 뒤 다시 시도해주세요.',
       },
     })

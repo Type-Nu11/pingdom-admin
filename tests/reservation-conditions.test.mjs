@@ -53,13 +53,13 @@ test('accepted policy blocks locally, but deadline and missing conditions need s
   const deadline = Date.parse(conditions.cancellationDeadline)
   assert.equal(reservationCancellationRestriction(conditions), null)
   assert.equal(reservationCancellationDeadlineNotice(conditions, deadline - 1), null)
-  assert.match(reservationCancellationDeadlineNotice(conditions, deadline), /기기 시각.*서버/)
+  assert.match(reservationCancellationDeadlineNotice(conditions, deadline), /기기 시각.*취소 요청/)
   assert.match(reservationCancellationRestriction({ ...conditions, cancellable: false }), /정책/)
   for (const confirmation of [null, { ...conditions, cancellable: undefined }, { ...conditions, cancellationDeadline: null }, { ...conditions, cancellationDeadline: 'invalid' }]) assert.equal(reservationCancellationRestriction(confirmation), null)
 })
 test('null conditions and explicit noncancellable conditions remain distinct without inventing prices', async () => {
   await mount(h(ReservationConditions, { confirmation: null, now: 0 }))
-  assert.match(document.body.textContent, /수락 조건 정보 없음/)
+  assert.match(document.body.textContent, /이 예약의 취소 조건을 확인할 수 없습니다/)
   assert.ok(!document.body.textContent.includes('결제 불필요'))
   await mount(h(ReservationConditions, { confirmation: { ...conditions, cancellable: false }, now: 0 }))
   assert.doesNotMatch(document.body.textContent, /금액|총액|무료|0원|결제 불필요|상품/)
@@ -68,7 +68,7 @@ test('null conditions and explicit noncancellable conditions remain distinct wit
 test('current response renders accepted place/time/quantity without retired fields and disables forbidden cancellation', async () => {
   rows = [reservation, { ...reservation, id: 2, confirmation: { ...conditions, cancellable: false } }]
   await mount(h(Page))
-  assert.match(document.body.textContent, /수락 당시 매장.*2명.*수락 조건 v1/)
+  assert.match(document.body.textContent, /수락 당시 매장.*2명.*예약 당시 적용된 조건.*버전 1/)
   assert.match(document.body.textContent, /2099.*10.*01.*09:00.*Asia\/Seoul/)
   assert.doesNotMatch(document.body.textContent, /상품|금액|총액|무료|0원|결제 불필요|undefined/)
   const buttons = [...document.querySelectorAll('button')].filter(button => button.textContent === '예약 취소')
@@ -77,7 +77,7 @@ test('current response renders accepted place/time/quantity without retired fiel
 })
 test('missing cancellation deadline stays unknown rather than unlimited cancellation', async () => {
   await mount(h(ReservationConditions, { confirmation: { ...conditions, cancellationDeadline: null }, now: 0 }))
-  assert.match(document.body.textContent, /취소 기한 정보 없음.*서버 확인/)
+  assert.match(document.body.textContent, /이 예약의 취소 기한을 확인할 수 없습니다/)
   assert.doesNotMatch(document.body.textContent, /언제든|무제한|무료|결제 불필요/)
 })
 test('pending, confirmed, rejected and canceled reservations remain distinct without product fields', async () => {
@@ -156,7 +156,7 @@ test('a fast device clock cannot block a cancellation that the server accepts', 
   Date.now = () => serverNow + 120_000
   try {
     await mount(h(Page))
-    assert.match(document.body.textContent, /기기 시각.*서버/)
+    assert.match(document.body.textContent, /기기 시각.*취소 요청/)
     const button = [...document.querySelectorAll('button')].find(button => button.textContent === '예약 취소')
     assert.equal(button.disabled, false)
     await act(async () => button.click())

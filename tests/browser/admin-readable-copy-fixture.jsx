@@ -11,6 +11,7 @@ import client from '../../src/api/customAxios'
 import { observeFixtureAdapter } from '../helpers/fixture-adapter.mjs'
 
 const screen = new URLSearchParams(location.search).get('screen') || 'history'
+const multipleFailures = new URLSearchParams(location.search).has('multipleFailures')
 const paths = { history: '/operations/history', notifications: '/operations/notifications', recommendations: '/recommendation-metrics' }
 const date = '2026-10-19T10:00:00'
 const auditRows = [
@@ -29,7 +30,12 @@ client.defaults.adapter = observeFixtureAdapter(async config => {
   else if (config.url === '/admin/privacy-processing-histories') data = paged([{ id: 1, subjectUserId: 123, actorUserId: 123, actorType: 'USER', action: params.action || 'DELETED', details: '합성 개인정보 처리 기록', createdAt: date }], 'histories', params)
   else if (config.url === '/admin/notifications') data = paged([{ notificationId: 1, userId: 1, type: 'ADMIN_REPORT_RECEIVED', title: '합성 신고 접수', body: '실제 알림이 아닙니다.', read: true, createdAt: date }], 'notifications', params)
   else if (config.url === '/admin/notification-deliveries') data = paged(['SUCCEEDED', 'FAILED', 'RETRY_SCHEDULED', 'FINAL_FAILED'].filter(status => !params.status || status === params.status).map((status, index) => ({ deliveryId: index + 1, channel: 'FCM', userId: 1, status, retryable: status === 'FAILED', attemptCount: 1, createdAt: date, updatedAt: date })), 'deliveries', params)
-  else if (config.url === '/admin/outbox-events') data = paged(['PENDING', 'PROCESSING', 'RETRY', 'SUCCEEDED', 'FAILED'].filter(status => !params.status || status === params.status).map((status, index) => ({ eventId: `synthetic-${index + 1}`, eventType: 'SYNTHETIC_EVENT', aggregateType: 'SYNTHETIC', aggregateId: '1', status, attemptCount: 1, createdAt: date, updatedAt: date })), 'events', params)
+  else if (config.url === '/admin/outbox-events') data = paged(multipleFailures
+    ? [
+      { eventId: 'synthetic-user-task-12345678-1234-1234-1234-123456789012', eventType: 'SYNTHETIC_EVENT', aggregateType: 'USER', aggregateId: '123', status: 'FAILED', attemptCount: 1, createdAt: date, updatedAt: date },
+      { eventId: 'synthetic-future-task-87654321-4321-4321-4321-210987654321', eventType: 'SYNTHETIC_EVENT', aggregateType: 'FUTURE_TARGET', aggregateId: '456', status: 'FAILED', attemptCount: 1, createdAt: date, updatedAt: date },
+    ].filter(event => !params.status || event.status === params.status)
+    : ['PENDING', 'PROCESSING', 'RETRY', 'SUCCEEDED', 'FAILED'].filter(status => !params.status || status === params.status).map((status, index) => ({ eventId: `synthetic-${index + 1}`, eventType: 'SYNTHETIC_EVENT', aggregateType: 'SYNTHETIC', aggregateId: '1', status, attemptCount: 1, createdAt: date, updatedAt: date })), 'events', params)
   else if (config.url === '/admin/places/recommendation-metrics') data = { ...paged([], 'metrics', params), sortBy: params.sortBy, days: null, recommendationVersion: 'test-v1' }
   else throw new Error(`Unexpected copy fixture GET ${config.url}`)
   return { config, data, status: 200, statusText: 'OK', headers: {} }

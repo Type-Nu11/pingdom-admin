@@ -8,6 +8,7 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminNotificationOperations } from "../../hooks/useAdminNotificationOperations";
 import { useAuth } from "../../hooks/useAuth";
 import { NOTIFICATION_TYPE_LABELS, DELIVERY_STATUS_LABELS, OUTBOX_STATUS_LABELS, DELIVERY_CHANNEL_LABELS } from '../../utils/adminNotificationLabels';
+import { formatAuditTargetType } from '../../utils/adminAuditPresentation';
 import type {
   AdminNotificationDeliveryStatus,
   AdminOutboxEventItem,
@@ -361,6 +362,11 @@ function NotificationOperationsPage() {
               <Shared.ModalWarning>
                 실패 원인이 해결되었는지, 이미 처리된 내용이 중복 반영되지 않는지 담당자에게 확인한 뒤 다시 요청해주세요.
               </Shared.ModalWarning>
+              <S.DetailGrid aria-label="다시 요청할 작업">
+                <S.DetailItem><dt>작업 번호</dt><dd>{target.eventId}</dd></S.DetailItem>
+                <S.DetailItem><dt>대상</dt><dd>{formatAuditTargetType(target.aggregateType)} · #{target.aggregateId}</dd></S.DetailItem>
+                <S.DetailItem><dt>등록 일시</dt><dd>{date(target.createdAt)}</dd></S.DetailItem>
+              </S.DetailGrid>
               <S.Section>
                 <S.Field>
                   재처리 사유 *

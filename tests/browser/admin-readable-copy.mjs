@@ -105,6 +105,28 @@ try {
     await page.screenshot({ path: join(output, `notifications-${width}.png`), fullPage: true })
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
 
+    await page.goto(`${base}/__qa/admin-copy?screen=notifications&multipleFailures`)
+    await page.getByRole('button', { name: '처리 작업', exact: true }).click()
+    const retryButtons = page.getByRole('button', { name: '재처리', exact: true })
+    await retryButtons.nth(1).waitFor()
+    for (const [index, eventId, target] of [
+      [0, 'synthetic-user-task-12345678-1234-1234-1234-123456789012', '사용자 · #123'],
+      [1, 'synthetic-future-task-87654321-4321-4321-4321-210987654321', '대상 유형 확인 필요 · #456'],
+    ]) {
+      await retryButtons.nth(index).click()
+      const retryDialog = page.getByRole('dialog', { name: '실패한 작업 다시 요청', exact: true })
+      const summary = retryDialog.locator('dl[aria-label="다시 요청할 작업"]')
+      await summary.getByText(eventId, { exact: true }).waitFor()
+      await summary.getByText(target, { exact: true }).waitFor()
+      assert.equal(await summary.locator('dt').allTextContents().then(labels => labels.includes('등록 일시')), true)
+      assert.equal(await summary.locator('dd').evaluateAll(items => items.every(item => item.scrollWidth <= item.clientWidth + 1)), true, 'long task identifiers wrap inside the confirmation')
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+      await page.screenshot({ path: join(output, `retry-target-${index}-${width}.png`), fullPage: true })
+      await retryDialog.getByRole('button', { name: '취소', exact: true }).click()
+      await retryDialog.waitFor({ state: 'detached' })
+    }
+    assert.ok((await page.evaluate(() => window.copyQA.calls)).every(call => call.method === 'get'), 'opening and cancelling a task confirmation never retries it')
+
     await page.goto(`${base}/__qa/admin-copy?screen=recommendations`)
     await page.getByText('클릭률은 노출 대비 클릭 비율이며, 보정 클릭률은 시스템의 보정 기준을 적용한 값입니다.', { exact: true }).waitFor()
     await page.getByRole('tab', { name: '추천 설명', exact: true }).click()

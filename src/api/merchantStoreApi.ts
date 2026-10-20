@@ -1,4 +1,5 @@
 import customAxios from './customAxios'
+import { reservationReviewReason, type ReservationReviewAction } from '../utils/reservationReview'
 import { getAuthSessionId } from '../utils/authStorage'
 import type {
   MerchantCampaignPageResponse,
@@ -47,6 +48,8 @@ import type {
   MerchantReservationTerms,
   MerchantReservation,
   MerchantReservationPageResponse,
+  MerchantReservationQuery,
+  MerchantReservationDetail,
   MerchantPlaceReverificationPageResponse,
   MerchantPlaceReverificationRequest,
   MerchantPlaceReverificationResponseRequest,
@@ -453,11 +456,58 @@ export async function deactivateMerchantAvailability(availabilityId: number) {
   return data
 }
 
-export async function getMerchantReservations(page = 1, limit = 20) {
+function isReservation(value: MerchantReservation) {
+  return value && Number.isSafeInteger(value.id) && value.id > 0
+    && ['PENDING', 'CONFIRMED', 'REJECTED', 'CANCELED'].includes(value.status)
+    && Number.isSafeInteger(value.quantity) && value.quantity > 0
+    && [value.bookerName, value.bookerPhone, value.requestNote, value.reviewReason]
+      .every(field => field == null || typeof field === 'string')
+}
+
+export async function getMerchantReservations(query: MerchantReservationQuery = {}) {
   const { data } = await customAxios.get<MerchantReservationPageResponse>(
     `${MERCHANT_OWNER_PATH}/reservations`,
-    { params: { page, limit } },
+    { params: { page: 1, limit: 20, ...query } },
   )
+  if (!data || !Array.isArray(data.reservations) || !data.reservations.every(isReservation)
+    || !Number.isSafeInteger(data.page) || data.page < 1
+    || !Number.isSafeInteger(data.limit) || data.limit < 1
+    || !Number.isSafeInteger(data.totalElements) || data.totalElements < 0
+    || !Number.isSafeInteger(data.totalPages) || data.totalPages < 0
+    || typeof data.hasNext !== 'boolean') throw new Error('예약 목록 응답 형식을 확인할 수 없습니다.')
+  return data
+}
+
+export async function getMerchantReservation(reservationId: number) {
+  const { data } = await customAxios.get<MerchantReservationDetail>(
+    `${MERCHANT_OWNER_PATH}/reservations/${reservationId}`,
+  )
+  if (!data || !isReservation(data.reservation) || data.reservation.id !== reservationId
+    || !Number.isSafeInteger(data.placeId) || data.placeId < 1
+    || !(data.placeName === null || typeof data.placeName === 'string')
+    || !Array.isArray(data.statusHistory)
+    || !data.statusHistory.every(item => item && Number.isSafeInteger(item.id)
+      && ['PENDING', 'CONFIRMED', 'REJECTED', 'CANCELED'].includes(item.status)
+      && (item.changedBy === null || Number.isSafeInteger(item.changedBy))
+      && (item.reason === null || typeof item.reason === 'string')
+      && typeof item.changedAt === 'string')) throw new Error('예약 상세 응답 형식을 확인할 수 없습니다.')
+  return data
+}
+
+export async function reviewMerchantReservation(
+  reservationId: number,
+  action: ReservationReviewAction,
+  reason?: string,
+) {
+  const normalized = reservationReviewReason(action, reason)
+  const body = normalized === undefined ? undefined : { reason: normalized }
+  const { data } = action === 'confirm'
+    ? await customAxios.post<MerchantReservation>(`${MERCHANT_OWNER_PATH}/reservations/${reservationId}/confirm`, body)
+    : await customAxios.post<MerchantReservation>(`${MERCHANT_OWNER_PATH}/reservations/${reservationId}/reject`, body)
+  if (!isReservation(data) || data.id !== reservationId
+    || data.status !== (action === 'confirm' ? 'CONFIRMED' : 'REJECTED')) {
+    throw new Error('예약 처리 결과를 확인할 수 없습니다. 목록을 다시 조회해주세요.')
+  }
   return data
 }
 

@@ -22,7 +22,7 @@ const DEFAULT_CATEGORY_MESSAGES: CategoryMessageMap = {
   timeout: '응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
   offline: '인터넷 연결이 끊겨 있습니다. 네트워크 상태를 확인해주세요.',
   'request-blocked':
-    '서버 응답을 읽지 못했습니다. CORS 설정 또는 서버 연결 상태를 확인해주세요.',
+    '정보를 불러오지 못했습니다. 다시 시도하고, 계속되면 담당자에게 문의해주세요.',
   network: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
   'bad-request': '입력값을 다시 확인해주세요.',
   unauthorized: '로그인이 필요합니다. 다시 로그인해주세요.',

@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { typo, adminColors, radius } from '../../styles/theme'
+import { outlinedControlSurface } from '../../styles/merchantControlTheme'
 
 const neutral = adminColors
 
@@ -74,6 +75,7 @@ export const Trigger = styled.button`
     background: ${neutral.surfaceContainer};
     color: ${neutral.softText};
   }
+  ${outlinedControlSurface}
 `
 
 export const Popover = styled.div`

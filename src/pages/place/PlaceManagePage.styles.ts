@@ -1,6 +1,7 @@
 import styled, { css } from 'styled-components'
 import NaverMap from '../../components/map/NaverMap'
 import { typo, adminColors, radius } from '../../styles/theme'
+import { BrandHomeLink } from '../../components/navigation/BrandHomeLink'
 
 const neutral = adminColors
 const mapControlHoverBackground = adminColors.primaryTint
@@ -69,7 +70,7 @@ export const SideHeader = styled.div`
   border-bottom: 1px solid ${neutral.border};
 `
 
-export const BrandLockup = styled.div`
+export const BrandLockup = styled(BrandHomeLink)`
   position: relative;
   width: min(168px, 100%);
   display: flex;
@@ -1498,6 +1499,7 @@ export const OperatingFormField = styled.label`
   }
 
   legend {
+    margin: 0 0 7px;
     padding: 0;
   }
 `

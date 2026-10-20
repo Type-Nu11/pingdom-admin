@@ -11,11 +11,13 @@ installAuthLocks(window)
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
-const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
+const { MemoryRouter } = await import('react-router-dom')
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const auth = await server.ssrLoadModule('/src/utils/authStorage.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { useLogin } = await server.ssrLoadModule('/src/hooks/useLogin.ts')
+const { default: LoginPage } = await server.ssrLoadModule('/src/pages/login/LoginPage.tsx')
 const originalAdapter = axios.defaults.adapter
 let root, latest, profile, calls, profileAction
 function response(config, data) { return { config, data, status: 200, statusText: 'OK', headers: {} } }
@@ -78,4 +80,23 @@ test('temporary profile outage permits a later explicit login without trusting p
   profileAction = null
   await act(async () => { assert.equal(await latest.handleLogin(), 'success') })
   assert.equal(auth.getStoredAuthState().user.id, 1)
+})
+
+test('both login modes link support to Gmail compose in a safe new tab', async () => {
+  await act(async () => root.render(h(AuthContext.Provider, {
+    value: { login: auth.saveLoginAuth, clearAuth() {}, isAuthReady: true, isAuthenticated: false, user: null },
+  }, h(MemoryRouter, null, h(LoginPage)))))
+  const assertSupportLink = () => {
+    const link = [...document.querySelectorAll('a')].find(element => element.textContent === '고객센터에 문의하기')
+    assert.ok(link)
+    assert.equal(link.href, 'https://mail.google.com/mail/?view=cm&fs=1&to=azunox9%40gmail.com')
+    assert.equal(link.target, '_blank')
+    assert.equal(link.rel, 'noopener noreferrer')
+  }
+  assertSupportLink()
+  const merchantMode = [...document.querySelectorAll('button')].find(element => element.textContent.endsWith('상점주'))
+  await act(async () => merchantMode.click())
+  assert.match(document.querySelector('h1').textContent, /상점주 로그인/)
+  assertSupportLink()
+  assert.deepEqual(calls, [])
 })

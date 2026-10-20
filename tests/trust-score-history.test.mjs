@@ -224,7 +224,7 @@ test('failed score refresh labels retained score and disables actions based on s
   adapter = config => /reporters\/1$/.test(config.url) ? reject(config, 500) : standard(config)
   await act(async () => button('조회').click()); await settle()
   assert.match(document.body.textContent, /표시된 점수는 이전 결과입니다/)
-  assert.equal(button('개입 규칙 평가').disabled, true)
+  assert.equal(button('신뢰 점수 관리 규칙 평가').disabled, true)
   assert.equal(button('전체 점수 재계산').disabled, true)
 })
 
@@ -275,4 +275,13 @@ test('actual page shows pagination and preserves a failed page attempt without c
   assert.doesNotMatch(document.body.textContent, /전체 0건|변경 이력이 없습니다/)
   adapter = standard; await act(async () => button('이력 다시 시도').click()); await settle()
   assert.match(document.body.textContent, /전체 45건 · 2 \/ 3페이지/)
+})
+
+test('rule read exceptions show a single trust-score label in the actual page', async () => {
+  adapter = config => config.url.endsWith('/intervention-rules') ? response(config, null) : standard(config)
+  await mount(h(Page))
+  assert.match(document.body.textContent, /신뢰 점수 관리 규칙을 불러오지 못했습니다\./)
+  assert.doesNotMatch(document.body.textContent, /신뢰 점수 신뢰 점수/)
+  assert.ok(calls.some(config => config.url.endsWith('/intervention-rules')))
+  assert.ok(calls.every(config => config.method === 'get'))
 })

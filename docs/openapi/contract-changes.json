@@ -1,87 +1,321 @@
 {
-  "baseline_ref": "40d0a3102fe23434a953b141399a5dc5be27bb97",
+  "baseline_ref": "bd4fe35d3dec7d990caacb58e3ce314d6ccc37b9",
   "groups": {
     "admin": {
       "operations": {
         "added": [],
-        "removed": [],
+        "removed": [
+          "POST /admin/reservations/{reservationId}/confirm",
+          "POST /admin/reservations/{reservationId}/reject"
+        ],
         "changed": [
           {
             "key": "GET /admin/reservations",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/summary",
+                "kind": "changed",
+                "before": "관리자 예약 심사 목록 조회",
+                "after": "관리자 예약 기록 목록 조회",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "GET /admin/reservations/{reservationId}",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/summary",
+                "kind": "changed",
+                "before": "관리자 예약 심사 상세 조회",
+                "after": "관리자 예약 기록 상세 조회",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "POST /admin/merchant-owners/{userId}/reject",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "reject_3",
+                "after": "reject_2",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "POST /admin/merchant-place-applications/{id}/reject",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "reject_2",
+                "after": "reject_1",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "POST /admin/report-appeals/{id}/reject",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "reject_1",
+                "after": "reject",
+                "classification": "documentation"
+              }
+            ]
+          }
+        ]
+      },
+      "schemas": {
+        "added": [],
+        "removed": [
+          "ReservationReviewRequest"
+        ],
+        "changed": []
+      },
+      "document": [
+        {
+          "pointer": "/tags",
+          "kind": "changed",
+          "before": [
+            {
+              "name": "대시보드",
+              "description": "운영 현황, 최근 활동 및 처리 대기 항목"
+            },
+            {
+              "name": "회원·권한",
+              "description": "회원 제재 및 관리자 역할 관리"
+            },
+            {
+              "name": "사업자 관리",
+              "description": "사업자 심사 및 연결 장소 관리"
+            },
+            {
+              "name": "장소 등록 심사",
+              "description": "장소 등록 신청과 증빙 확인 및 심사"
+            },
+            {
+              "name": "장소 조회",
+              "description": "운영 대상 장소 목록 및 상세 조회"
+            },
+            {
+              "name": "장소 정보·품질",
+              "description": "장소 정보 보정, 근거 검토 및 노출 상태 관리"
+            },
+            {
+              "name": "중복·추천 관리",
+              "description": "중복 장소 검토·병합 및 추천 운영"
+            },
+            {
+              "name": "제보·재검증",
+              "description": "장소 정보 제보 심사 및 재검증 요청 관리"
+            },
+            {
+              "name": "행사·운영 공지",
+              "description": "행사 발행 및 운영 공지 관리"
+            },
+            {
+              "name": "리뷰 삭제 심사",
+              "description": "장소 리뷰 삭제 요청 확인 및 심사"
+            },
+            {
+              "name": "커뮤니티 관리",
+              "description": "게시글과 댓글 운영 조회"
+            },
+            {
+              "name": "신고·이의신청",
+              "description": "신고 및 이의신청 검토·처리, 신고 콘텐츠 삭제"
+            },
+            {
+              "name": "신뢰 점수",
+              "description": "신뢰 점수·이상 징후 및 개입 규칙 관리"
+            },
+            {
+              "name": "방문 인증·스카우트",
+              "description": "방문 보고 심사 및 스카우트 자격 관리"
+            },
+            {
+              "name": "예약",
+              "description": "예약 조회 및 승인·거절"
+            },
+            {
+              "name": "Verified Boost",
+              "description": "Verified Boost 상품 등록 및 활성 상태 관리"
+            },
+            {
+              "name": "알림·발송 이력",
+              "description": "운영 알림 확인 및 발송 이력 조회"
+            },
+            {
+              "name": "감사·개인정보 처리 이력",
+              "description": "관리자 작업 감사 및 개인정보 처리 이력 조회"
+            },
+            {
+              "name": "Outbox·스토리지 운영",
+              "description": "Outbox 재처리 및 스토리지 고아 객체 관리"
+            }
+          ],
+          "after": [
+            {
+              "name": "대시보드",
+              "description": "운영 현황, 최근 활동 및 처리 대기 항목"
+            },
+            {
+              "name": "회원·권한",
+              "description": "회원 제재 및 관리자 역할 관리"
+            },
+            {
+              "name": "사업자 관리",
+              "description": "사업자 심사 및 연결 장소 관리"
+            },
+            {
+              "name": "장소 등록 심사",
+              "description": "장소 등록 신청과 증빙 확인 및 심사"
+            },
+            {
+              "name": "장소 조회",
+              "description": "운영 대상 장소 목록 및 상세 조회"
+            },
+            {
+              "name": "장소 정보·품질",
+              "description": "장소 정보 보정, 근거 검토 및 노출 상태 관리"
+            },
+            {
+              "name": "중복·추천 관리",
+              "description": "중복 장소 검토·병합 및 추천 운영"
+            },
+            {
+              "name": "제보·재검증",
+              "description": "장소 정보 제보 심사 및 재검증 요청 관리"
+            },
+            {
+              "name": "행사·운영 공지",
+              "description": "행사 발행 및 운영 공지 관리"
+            },
+            {
+              "name": "리뷰 삭제 심사",
+              "description": "장소 리뷰 삭제 요청 확인 및 심사"
+            },
+            {
+              "name": "커뮤니티 관리",
+              "description": "게시글과 댓글 운영 조회"
+            },
+            {
+              "name": "신고·이의신청",
+              "description": "신고 및 이의신청 검토·처리, 신고 콘텐츠 삭제"
+            },
+            {
+              "name": "신뢰 점수",
+              "description": "신뢰 점수·이상 징후 및 개입 규칙 관리"
+            },
+            {
+              "name": "방문 인증·스카우트",
+              "description": "방문 보고 심사 및 스카우트 자격 관리"
+            },
+            {
+              "name": "예약",
+              "description": "예약 및 처리 이력 조회"
+            },
+            {
+              "name": "Verified Boost",
+              "description": "Verified Boost 상품 등록 및 활성 상태 관리"
+            },
+            {
+              "name": "알림·발송 이력",
+              "description": "운영 알림 확인 및 발송 이력 조회"
+            },
+            {
+              "name": "감사·개인정보 처리 이력",
+              "description": "관리자 작업 감사 및 개인정보 처리 이력 조회"
+            },
+            {
+              "name": "Outbox·스토리지 운영",
+              "description": "Outbox 재처리 및 스토리지 고아 객체 관리"
+            }
+          ],
+          "classification": "documentation"
+        }
+      ]
+    },
+    "merchant": {
+      "operations": {
+        "added": [
+          "GET /merchant-owner/reservations/{reservationId}",
+          "POST /merchant-owner/reservations/{reservationId}/confirm",
+          "POST /merchant-owner/reservations/{reservationId}/reject"
+        ],
+        "removed": [],
+        "changed": [
+          {
+            "key": "GET /merchant-owner/offers/{offerId}",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "get_5",
+                "after": "get_6",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "GET /merchant-owner/performance",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "get_4",
+                "after": "get_5",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "GET /merchant-owner/places/{placeId}/information",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "get_3",
+                "after": "get_4",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "GET /merchant-owner/places/{placeId}/menus/{menuId}",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "get_2",
+                "after": "get_3",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "GET /merchant-owner/reservations",
             "contract": [
               {
                 "pointer": "/parameters",
                 "kind": "changed",
                 "before": [
                   {
-                    "name": "status",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "string",
-                      "enum": [
-                        "PENDING",
-                        "CONFIRMED",
-                        "REJECTED",
-                        "CANCELED"
-                      ]
-                    }
-                  },
-                  {
-                    "name": "placeId",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  },
-                  {
-                    "name": "merchantOwnerUserId",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  },
-                  {
-                    "name": "touristUserId",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  },
-                  {
-                    "name": "productId",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  },
-                  {
-                    "name": "reservationFrom",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  },
-                  {
-                    "name": "reservationTo",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  },
-                  {
                     "name": "page",
                     "in": "query",
                     "required": false,
@@ -122,24 +356,6 @@
                   },
                   {
                     "name": "placeId",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  },
-                  {
-                    "name": "merchantOwnerUserId",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  },
-                  {
-                    "name": "touristUserId",
                     "in": "query",
                     "required": false,
                     "schema": {
@@ -197,729 +413,61 @@
         ]
       },
       "schemas": {
-        "added": [],
+        "added": [
+          "MerchantReservationDetailResponse",
+          "ReservationReviewRequest",
+          "ReservationStatusHistoryResponse"
+        ],
         "removed": [],
         "changed": [
           {
-            "key": "AdminReservationResponse",
+            "key": "MerchantOwnerMediaUploadRequest",
             "contract": [
               {
-                "pointer": "/properties/productId",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productName",
-                "kind": "removed",
-                "before": {
-                  "type": "string"
-                },
-                "after": null,
+                "pointer": "/properties/fileSize/maximum",
+                "kind": "changed",
+                "before": 10485760,
+                "after": 20971520,
                 "classification": "contract"
               }
             ],
             "documentation": []
-          }
-        ]
-      },
-      "document": []
-    },
-    "merchant": {
-      "operations": {
-        "added": [],
-        "removed": [
-          "GET /merchant-owner/reservable-products",
-          "POST /merchant-owner/reservable-products",
-          "POST /merchant-owner/reservable-products/{productId}/activate",
-          "POST /merchant-owner/reservable-products/{productId}/deactivate"
-        ],
-        "changed": [
-          {
-            "key": "GET /merchant-owner/availabilities",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "list_11",
-                "after": "list_10",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "GET /merchant-owner/offers",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "list_10",
-                "after": "list_9",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "GET /merchant-owner/payments",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "list_9",
-                "after": "list_8",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "GET /merchant-owner/places/{placeId}/members",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "list_8",
-                "after": "list_7",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "GET /merchant-owner/places/{placeId}/menus",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "list_7",
-                "after": "list_6",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "POST /merchant-owner/availabilities",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/description",
-                "kind": "added",
-                "before": null,
-                "after": "productId, productType을 보내면 null이어도 400 INVALID_REQUEST_BODY로 거절합니다. 상품 필드를 제거한 단일 예약 슬롯 본문을 사용하세요.",
-                "classification": "documentation"
-              },
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "create_4",
-                "after": "create_3",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "POST /merchant-owner/availabilities/{availabilityId}/activate",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "activate_1",
-                "after": "activate",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "POST /merchant-owner/availabilities/{availabilityId}/deactivate",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "deactivate_2",
-                "after": "deactivate_1",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "POST /merchant-owner/offers",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "create_3",
-                "after": "create_2",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "POST /merchant-owner/places/{placeId}/menus",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "create_2",
-                "after": "create_1",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "POST /merchant-owner/places/{placeId}/menus/{menuId}/deactivate",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/operationId",
-                "kind": "changed",
-                "before": "deactivate_1",
-                "after": "deactivate",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "PUT /merchant-owner/availabilities/{availabilityId}",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/description",
-                "kind": "added",
-                "before": null,
-                "after": "productId, productType을 보내면 null이어도 400 INVALID_REQUEST_BODY로 거절합니다. 상품 필드를 제거한 단일 예약 슬롯 본문을 사용하세요.",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "PUT /merchant-owner/availabilities/{availabilityId}/reservation-terms",
-            "contract": [],
-            "documentation": [
-              {
-                "pointer": "/description",
-                "kind": "changed",
-                "before": "가격은 통화의 최소 단위 정수입니다. 추가 비용은 예약당 한 번 적용합니다. 취소 정책은 명시적 취소 불가 또는 기한 내 수수료 0·전액 환불입니다. 기존 예약의 수락 조건은 변경하지 않습니다.",
-                "after": "취소 정책은 명시적 취소 불가 또는 시작 전 지정 기한까지 취소 가능입니다. 기존 예약의 수락 조건은 변경하지 않습니다. unitAmountMinor, additionalAmountMinor, currency를 보내면 null이어도 400 INVALID_REQUEST_BODY로 거절합니다.",
-                "classification": "documentation"
-              },
-              {
-                "pointer": "/summary",
-                "kind": "changed",
-                "before": "예약 가격·취소 조건 설정",
-                "after": "예약 시간대·취소 조건 설정",
-                "classification": "documentation"
-              }
-            ]
-          }
-        ]
-      },
-      "schemas": {
-        "added": [],
-        "removed": [
-          "ReservableProductCreateRequest",
-          "ReservableProductResponse"
-        ],
-        "changed": [
-          {
-            "key": "AvailabilityResponse",
-            "contract": [
-              {
-                "pointer": "/properties/productId",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "description": "GENERAL은 null이며 TICKET/CLASS는 상품 ID입니다.",
-                  "format": "int64",
-                  "nullable": true,
-                  "example": 12
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productName",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "description": "GENERAL은 null이며 TICKET/CLASS는 상품명입니다.",
-                  "nullable": true,
-                  "example": "이월드 오후 입장권"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productType",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "description": "예약 대상 유형",
-                  "example": "TICKET",
-                  "enum": [
-                    "GENERAL",
-                    "TICKET",
-                    "CLASS"
-                  ]
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/required",
-                "kind": "changed",
-                "before": [
-                  "conditionsVersion",
-                  "endsAt",
-                  "id",
-                  "placeId",
-                  "productId",
-                  "productName",
-                  "productType",
-                  "remainingCapacity",
-                  "reservationTerms",
-                  "startsAt",
-                  "status",
-                  "totalCapacity"
-                ],
-                "after": [
-                  "conditionsVersion",
-                  "endsAt",
-                  "id",
-                  "placeId",
-                  "remainingCapacity",
-                  "reservationTerms",
-                  "startsAt",
-                  "status",
-                  "totalCapacity"
-                ],
-                "classification": "contract"
-              }
-            ],
-            "documentation": [
-              {
-                "pointer": "/properties/conditionsVersion/description",
-                "kind": "changed",
-                "before": "가격·취소 조건 변경 버전. 조건이 미설정이어도 반환합니다.",
-                "after": "시간대·취소 조건 변경 버전. 조건이 미설정이어도 반환합니다.",
-                "classification": "documentation"
-              }
-            ]
-          },
-          {
-            "key": "AvailabilityUpsertRequest",
-            "contract": [
-              {
-                "pointer": "/properties/productId",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productType",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "enum": [
-                    "GENERAL",
-                    "TICKET",
-                    "CLASS"
-                  ]
-                },
-                "after": null,
-                "classification": "contract"
-              }
-            ],
-            "documentation": []
-          },
-          {
-            "key": "ReservationConfirmation",
-            "contract": [
-              {
-                "pointer": "/properties/additionalAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/cancellationFeeMinor",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "description": "기한 내 취소 수수료. 현재 지원 정책은 0인 전액 환불",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/currency",
-                "kind": "removed",
-                "before": {
-                  "type": "string"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/currencyFractionDigits",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int32"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/paymentRequired",
-                "kind": "removed",
-                "before": {
-                  "type": "boolean"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productId",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64",
-                  "nullable": true
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productName",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "nullable": true
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productType",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "enum": [
-                    "GENERAL",
-                    "TICKET",
-                    "CLASS"
-                  ]
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/productVersion",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64",
-                  "nullable": true
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/refundableAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "description": "기한 내 취소 환불액. 취소 불가이면 0",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/totalAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/unitAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/required",
-                "kind": "changed",
-                "before": [
-                  "additionalAmountMinor",
-                  "availabilityId",
-                  "cancellable",
-                  "cancellationDeadline",
-                  "cancellationFeeMinor",
-                  "conditionsVersion",
-                  "currency",
-                  "currencyFractionDigits",
-                  "endsAt",
-                  "expiresAt",
-                  "paymentRequired",
-                  "placeId",
-                  "placeName",
-                  "productId",
-                  "productName",
-                  "productType",
-                  "productVersion",
-                  "quantity",
-                  "refundableAmountMinor",
-                  "startsAt",
-                  "timezone",
-                  "totalAmountMinor",
-                  "unitAmountMinor"
-                ],
-                "after": [
-                  "availabilityId",
-                  "cancellable",
-                  "cancellationDeadline",
-                  "conditionsVersion",
-                  "endsAt",
-                  "expiresAt",
-                  "placeId",
-                  "placeName",
-                  "quantity",
-                  "startsAt",
-                  "timezone"
-                ],
-                "classification": "contract"
-              }
-            ],
-            "documentation": [
-              {
-                "pointer": "/description",
-                "kind": "changed",
-                "before": "사용자가 확인할 예약 조건. 금액은 최소 통화 단위 정수이며 반올림 없이 단가×인원+예약당 추가 비용으로 계산",
-                "after": "사용자가 확인할 예약 대상·시간·인원·취소 조건",
-                "classification": "documentation"
-              }
-            ]
           },
           {
             "key": "ReservationResponse",
             "contract": [
               {
-                "pointer": "/properties/productId",
+                "pointer": "/properties/confirmation/$ref",
                 "kind": "removed",
-                "before": {
-                  "type": "integer",
-                  "description": "상품 스냅샷이 없는 예약에서는 null입니다.",
-                  "format": "int64",
-                  "nullable": true
-                },
+                "before": "#/components/schemas/ReservationConfirmation",
                 "after": null,
                 "classification": "contract"
               },
               {
-                "pointer": "/properties/productType",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "enum": [
-                    "GENERAL",
-                    "TICKET",
-                    "CLASS"
-                  ]
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/required",
-                "kind": "changed",
-                "before": [
-                  "availabilityId",
-                  "bookerName",
-                  "bookerPhone",
-                  "canceledAt",
-                  "confirmation",
-                  "confirmedAt",
-                  "createdAt",
-                  "id",
-                  "productId",
-                  "productType",
-                  "quantity",
-                  "requestNote",
-                  "reservationEndsAt",
-                  "reservationStartsAt",
-                  "status",
-                  "touristUserId",
-                  "updatedAt"
-                ],
+                "pointer": "/properties/confirmation/allOf",
+                "kind": "added",
+                "before": null,
                 "after": [
-                  "availabilityId",
-                  "bookerName",
-                  "bookerPhone",
-                  "canceledAt",
-                  "confirmation",
-                  "confirmedAt",
-                  "createdAt",
-                  "id",
-                  "quantity",
-                  "requestNote",
-                  "reservationEndsAt",
-                  "reservationStartsAt",
-                  "status",
-                  "touristUserId",
-                  "updatedAt"
+                  {
+                    "$ref": "#/components/schemas/ReservationConfirmation"
+                  }
                 ],
                 "classification": "contract"
-              }
-            ],
-            "documentation": []
-          },
-          {
-            "key": "ReservationTermsRequest",
-            "contract": [
-              {
-                "pointer": "/properties/additionalAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "minimum": 0,
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
               },
               {
-                "pointer": "/properties/currency",
-                "kind": "removed",
-                "before": {
-                  "pattern": "^[A-Z]{3}$",
-                  "type": "string"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/unitAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "minimum": 0,
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/required",
-                "kind": "changed",
-                "before": [
-                  "additionalAmountMinor",
-                  "cancellable",
-                  "currency",
-                  "timezone",
-                  "unitAmountMinor"
-                ],
-                "after": [
-                  "cancellable",
-                  "timezone"
-                ],
-                "classification": "contract"
-              }
-            ],
-            "documentation": []
-          },
-          {
-            "key": "ReservationTermsResponse",
-            "contract": [
-              {
-                "pointer": "/properties/additionalAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "minimum": 0,
-                  "type": "integer",
-                  "description": "예약당 한 번 적용하는 통화 최소 단위의 추가 금액",
-                  "format": "int64",
-                  "example": 50
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/currency",
-                "kind": "removed",
-                "before": {
-                  "type": "string",
-                  "example": "KRW"
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/properties/unitAmountMinor",
-                "kind": "removed",
-                "before": {
-                  "minimum": 0,
-                  "type": "integer",
-                  "description": "통화 최소 단위의 1인당 금액",
-                  "format": "int64",
-                  "example": 1000
-                },
-                "after": null,
-                "classification": "contract"
-              },
-              {
-                "pointer": "/required",
-                "kind": "changed",
-                "before": [
-                  "additionalAmountMinor",
-                  "cancellable",
-                  "cancellationCutoffMinutes",
-                  "currency",
-                  "timezone",
-                  "unitAmountMinor"
-                ],
-                "after": [
-                  "cancellable",
-                  "cancellationCutoffMinutes",
-                  "timezone"
-                ],
+                "pointer": "/properties/confirmation/nullable",
+                "kind": "added",
+                "before": null,
+                "after": true,
                 "classification": "contract"
               }
             ],
             "documentation": [
               {
-                "pointer": "/description",
-                "kind": "changed",
-                "before": "저장된 예약 가격·취소 조건",
-                "after": "저장된 예약 시간대·취소 조건",
+                "pointer": "/properties/confirmation/description",
+                "kind": "added",
+                "before": null,
+                "after": "실제 수락한 확인 조건. 구버전 예약이면 null",
                 "classification": "documentation"
               }
             ]
@@ -954,10 +502,6 @@
             {
               "name": "리뷰 관리",
               "description": "장소 리뷰 확인 및 삭제 심사 요청"
-            },
-            {
-              "name": "예약 상품",
-              "description": "예약 상품 등록 및 활성 상태 관리"
             },
             {
               "name": "예약 가능 시간",
@@ -1015,7 +559,7 @@
             },
             {
               "name": "예약 관리",
-              "description": "사업자 예약 조회 및 취소"
+              "description": "사업자 예약 조회·승인·반려 및 취소"
             },
             {
               "name": "결제",
@@ -1039,10 +583,217 @@
       ]
     },
     "app": {
-      "initial_collection": true
+      "operations": {
+        "added": [
+          "DELETE /community/posts/{postId}",
+          "GET /users/me/community/posts",
+          "PATCH /community/posts/{postId}"
+        ],
+        "removed": [],
+        "changed": [
+          {
+            "key": "DELETE /analysis/reports/{reportId}",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "delete_1",
+                "after": "delete_2",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "DELETE /community/images/{imageId}",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "delete",
+                "after": "delete_1",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "PATCH /analysis/reports/{reportId}",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/operationId",
+                "kind": "changed",
+                "before": "update_1",
+                "after": "update_2",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "POST /community/images",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/description",
+                "kind": "changed",
+                "before": "JPEG/PNG 10MiB 이하. 검증 후 메타데이터를 제거해 저장하며 최대 10개의 본인 imageId를 게시글에 입력 순서대로 연결합니다. 미사용 이미지는 24시간 후 삭제 Outbox로 정리합니다.",
+                "after": "JPEG/PNG 20MiB 이하. 검증 후 메타데이터를 제거해 저장하며 최대 10개의 본인 imageId를 게시글에 입력 순서대로 연결합니다. 미사용 이미지는 24시간 후 삭제 Outbox로 정리합니다.",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "POST /reservations",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/description",
+                "kind": "changed",
+                "before": "confirmationToken을 제공하면 확인한 대상·시간·인원·취소 정책을 원자적으로 검증합니다. 토큰 생략은 기존 터치 계약이며 확인 조건 보장은 없습니다. 성공은 예약 생성(PENDING)이며 관리자 확정을 의미하지 않습니다. 응답 유실에는 동일 키·토큰·본문을 재전송하세요. 사용자별 키는 예약 또는 거절 기록이 보존되는 동안 만료하지 않습니다. 동일 요청의 성공은 견적 만료 후에도 201로 복구하며, 확정 거절은 같은 오류로 복구합니다. timeout/5xx는 결과 불명이므로 실패로 확정하거나 새 키를 만들지 않습니다. 조건 재확인 후 새 의도는 새 토큰·키로 제출합니다.",
+                "after": "confirmationToken을 제공하면 확인한 대상·시간·인원·취소 정책을 원자적으로 검증합니다. 토큰 생략은 기존 터치 계약이며 확인 조건 보장은 없습니다. 성공은 예약 생성(PENDING)이며 상점주 승인 대기 상태입니다. 응답 유실에는 동일 키·토큰·본문을 재전송하세요. 사용자별 키는 예약 또는 거절 기록이 보존되는 동안 만료하지 않습니다. 동일 요청의 성공은 견적 만료 후에도 201로 복구하며, 확정 거절은 같은 오류로 복구합니다. timeout/5xx는 결과 불명이므로 실패로 확정하거나 새 키를 만들지 않습니다. 조건 재확인 후 새 의도는 새 토큰·키로 제출합니다.",
+                "classification": "documentation"
+              }
+            ]
+          }
+        ]
+      },
+      "schemas": {
+        "added": [
+          "CommunityPostUpdateRequest",
+          "CommunityPostUpdateResponse",
+          "MyCommunityPostListResponse",
+          "MyCommunityPostSummary"
+        ],
+        "removed": [],
+        "changed": [
+          {
+            "key": "Category",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/properties/categoryName/example",
+                "kind": "changed",
+                "before": "여행",
+                "after": "다이어리",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "CommunityCategoryItem",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/properties/categoryName/example",
+                "kind": "changed",
+                "before": "장소",
+                "after": "스팟",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "CommunityPostCreateRequest",
+            "contract": [],
+            "documentation": [
+              {
+                "pointer": "/properties/placeIds/description",
+                "kind": "changed",
+                "before": "연결할 장소 ID 목록. 장소 카테고리에서는 1개 이상 필수입니다.",
+                "after": "연결할 장소 ID 목록. 스팟(PLACE) 카테고리에서는 1개 이상 필수입니다.",
+                "classification": "documentation"
+              },
+              {
+                "pointer": "/properties/placeIds/items/description",
+                "kind": "changed",
+                "before": "연결할 장소 ID 목록. 장소 카테고리에서는 1개 이상 필수입니다.",
+                "after": "연결할 장소 ID 목록. 스팟(PLACE) 카테고리에서는 1개 이상 필수입니다.",
+                "classification": "documentation"
+              }
+            ]
+          },
+          {
+            "key": "CommunityPostDetailResponse",
+            "contract": [
+              {
+                "pointer": "/properties/updatedAt",
+                "kind": "added",
+                "before": null,
+                "after": {
+                  "type": "string",
+                  "description": "마지막 본인 수정 시각. 수정 이력이 없으면 null",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "classification": "contract"
+              }
+            ],
+            "documentation": []
+          },
+          {
+            "key": "ReservationResponse",
+            "contract": [
+              {
+                "pointer": "/properties/confirmation/$ref",
+                "kind": "removed",
+                "before": "#/components/schemas/ReservationConfirmation",
+                "after": null,
+                "classification": "contract"
+              },
+              {
+                "pointer": "/properties/confirmation/allOf",
+                "kind": "added",
+                "before": null,
+                "after": [
+                  {
+                    "$ref": "#/components/schemas/ReservationConfirmation"
+                  }
+                ],
+                "classification": "contract"
+              },
+              {
+                "pointer": "/properties/confirmation/nullable",
+                "kind": "added",
+                "before": null,
+                "after": true,
+                "classification": "contract"
+              }
+            ],
+            "documentation": [
+              {
+                "pointer": "/properties/confirmation/description",
+                "kind": "added",
+                "before": null,
+                "after": "실제 수락한 확인 조건. 구버전 예약이면 null",
+                "classification": "documentation"
+              }
+            ]
+          }
+        ]
+      },
+      "document": []
     },
     "common": {
-      "initial_collection": true
+      "operations": {
+        "added": [
+          "DELETE /places/{placeId}/reviews/{reviewId}",
+          "GET /places/{placeId}/reviews/summary",
+          "PATCH /places/{placeId}/reviews/{reviewId}"
+        ],
+        "removed": [],
+        "changed": []
+      },
+      "schemas": {
+        "added": [
+          "PlaceReviewSummaryResponse",
+          "PlaceReviewUpdateRequest",
+          "ReasonCount"
+        ],
+        "removed": [],
+        "changed": []
+      },
+      "document": []
     }
   }
 }

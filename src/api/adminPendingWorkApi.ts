@@ -4,7 +4,6 @@ import { getAdminScoutFieldReports, getAdminScoutProfiles } from './adminScoutAp
 import { getAdminTrustScoreAnomalies } from './adminTrustScoreApi'
 import { getAdminVisitorVerificationCorrections, getAdminVisitorVerificationReports } from './adminVisitorVerificationApi'
 import { getAdminMerchantPlaceApplications } from './adminMerchantPlaceApplicationApi'
-import { getAdminReservations } from './adminReservationApi'
 import { getAdminPlaceReviewDeletionRequests } from './adminPlaceReviewDeletionApi'
 import { getCommunityReports } from './adminCommunityApi'
 
@@ -29,7 +28,6 @@ interface PendingWorkDefinition extends Omit<AdminPendingWorkItem, 'count'> {
 
 // Failed and empty checks keep their category and navigation target.
 const definitions: PendingWorkDefinition[] = [
-  { key: 'reservations', title: '예약 심사', description: '심사 대기 예약', path: '/reservations/review', load: async () => (await getAdminReservations({ status: 'PENDING', page: 1, limit: 1 })).totalElements },
   { key: 'merchant-place-applications', title: '상점주 장소 신청 심사', description: '심사 대기 신규 장소 등록·장소 권한 신청', path: '/merchant-place-applications', load: async () => (await getAdminMerchantPlaceApplications({ status: 'PENDING', page: 1, limit: 1 })).total },
   { key: 'review-deletion-requests', title: '리뷰 삭제 요청', description: '심사 대기 리뷰 삭제 요청', path: '/review-deletion-requests', load: async () => (await getAdminPlaceReviewDeletionRequests({ status: 'PENDING', page: 1, limit: 1 })).totalElements },
   { key: 'community-reports', title: '커뮤니티 신고', description: '심사 대기 글·댓글 신고', path: '/community-reports', load: async () => (await getCommunityReports({ status: 'PENDING', page: 1 })).totalCount },

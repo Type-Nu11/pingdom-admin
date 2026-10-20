@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSidebarScroll } from './useSidebarScroll'
 import { readNavigationState, saveNavigationState } from './adminNavigationState'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './AdminNavigationMenu.styles'
@@ -33,7 +34,7 @@ const NAVIGATION_GROUPS: NavigationGroup[] = [
     items: [
       { label: '커뮤니티 신고 심사', icon: 'flag', path: '/community-reports' },
       { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', path: '/merchant-place-applications' },
-      { label: '예약 심사', icon: 'event_available', path: '/reservations/review' },
+      { label: '예약 관리 이력', icon: 'event_available', path: '/reservations/review' },
       { label: '리뷰 삭제 요청', icon: 'rate_review', path: '/review-deletion-requests' },
       { label: '장소 정보 검증', icon: 'fact_check', path: '/places/information-verification' },
       { label: '방문자 제보·정정 심사', icon: 'person_check', path: '/visitor-verifications' },
@@ -77,13 +78,10 @@ const isCurrentPath = (pathname: string, path: string) =>
 const isPlaceManagementPath = (pathname: string) =>
   pathname === '/places' || PLACE_MANAGEMENT_CHILDREN.some((item) => isCurrentPath(pathname, item.path))
 
-let savedSideMenuScrollTop = 0
-let savedSideMenuScrollLeft = 0
-
 export function AdminNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const navigationRef = useRef<HTMLDivElement | null>(null)
+  const { navigationRef } = useSidebarScroll('admin')
   const [navigationState, setNavigationState] = useState(() => readNavigationState({
     closedGroups: NAVIGATION_GROUPS.filter(group => !(group.id === 'places'
       ? isPlaceManagementPath(pathname)
@@ -95,26 +93,6 @@ export function AdminNavigationMenu() {
 
   const dashboardActive = isCurrentPath(pathname, '/dashboard')
   const placeManagementActive = isPlaceManagementPath(pathname)
-
-  useLayoutEffect(() => {
-    const sideMenu = navigationRef.current?.parentElement
-    if (!sideMenu) return
-
-    sideMenu.scrollTop = savedSideMenuScrollTop
-    sideMenu.scrollLeft = savedSideMenuScrollLeft
-
-    const saveScrollPosition = () => {
-      savedSideMenuScrollTop = sideMenu.scrollTop
-      savedSideMenuScrollLeft = sideMenu.scrollLeft
-    }
-
-    sideMenu.addEventListener('scroll', saveScrollPosition, { passive: true })
-
-    return () => {
-      // Removal can reset geometry before cleanup; keep the last scroll event's position.
-      sideMenu.removeEventListener('scroll', saveScrollPosition)
-    }
-  }, [])
 
   return (
     <S.Navigation ref={navigationRef} aria-label="세부 관리자 메뉴">

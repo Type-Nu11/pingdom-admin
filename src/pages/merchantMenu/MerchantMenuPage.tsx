@@ -17,6 +17,7 @@ import type {
 import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from '../../components/merchant/MerchantWorkspace.styles'
 import * as MenuStyles from './MerchantMenuPage.styles'
+import { SortableMenuList } from './SortableMenuList'
 
 const STATUS: Record<MerchantPlaceMenuStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   AVAILABLE: { label: '판매 중', tone: 'published' },
@@ -33,10 +34,6 @@ const CURRENCY_LABEL: Record<MerchantPlaceMenuCurrency, string> = {
   EUR: '유로 (EUR)',
 }
 
-function formatPrice(priceAmount: number, currency: MerchantPlaceMenuCurrency) {
-  return new Intl.NumberFormat('ko-KR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(priceAmount)
-}
-
 function MenuEditor({
   menu,
   nextDisplayOrder,
@@ -45,9 +42,6 @@ function MenuEditor({
   onUpdate,
   onStatusChange,
   onRequestDeactivate,
-  canMoveUp,
-  canMoveDown,
-  onMove,
   onSelect,
 }: {
   menu: MerchantPlaceMenu | null
@@ -57,9 +51,6 @@ function MenuEditor({
   onUpdate: (menuId: number, request: MerchantPlaceMenuUpdateRequest) => Promise<MerchantPlaceMenu | null>
   onStatusChange: (menuId: number, status: Exclude<MerchantPlaceMenuStatus, 'INACTIVE'>) => Promise<MerchantPlaceMenu | null>
   onRequestDeactivate: (menu: MerchantPlaceMenu) => void
-  canMoveUp: boolean
-  canMoveDown: boolean
-  onMove: (direction: -1 | 1) => void
   onSelect: (menuId: number | null) => void
 }) {
   const [name, setName] = useState(menu?.name ?? '')
@@ -163,8 +154,6 @@ function MenuEditor({
       {formError ? <S.FormError role="alert">{formError}</S.FormError> : null}
       <S.FormActions>
         {!isInactive ? <S.ActionButton type="submit" disabled={isBusy} $variant="primary">{activeAction === 'create' || activeAction === 'update' ? '저장 중' : menu ? '변경 사항 저장' : '메뉴 등록'}</S.ActionButton> : null}
-        {menu && !isInactive ? <S.ActionButton type="button" disabled={isBusy || !canMoveUp} onClick={() => onMove(-1)}>위로 이동</S.ActionButton> : null}
-        {menu && !isInactive ? <S.ActionButton type="button" disabled={isBusy || !canMoveDown} onClick={() => onMove(1)}>아래로 이동</S.ActionButton> : null}
         {menu && !isInactive ? <S.ActionButton type="button" disabled={isBusy} $variant="danger" onClick={() => void deactivate()}>{activeAction === 'deactivate' ? '비활성화 중' : '메뉴 비활성화'}</S.ActionButton> : null}
       </S.FormActions>
     </S.Form>
@@ -178,18 +167,11 @@ function MerchantMenuPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [pendingDeactivation, setPendingDeactivation] = useState<MerchantPlaceMenu | null>(null)
   const selectedMenu = menu.menus.find((item) => item.id === selectedId) ?? null
-  const selectedMenuIndex = selectedMenu ? menu.menus.findIndex((item) => item.id === selectedMenu.id) : -1
   const isBusy = menu.activeAction !== null
   const availableMenus = useMemo(() => menu.menus.filter((item) => item.status === 'AVAILABLE'), [menu.menus])
 
   const startNew = () => setSelectedId(null)
   const selectMenu = (id: number) => { if (id !== selectedId) requestTransition(() => setSelectedId(id)) }
-  const moveMenu = (item: MerchantPlaceMenu, direction: -1 | 1) => {
-    const currentIndex = menu.menus.findIndex((menuItem) => menuItem.id === item.id)
-    const target = menu.menus[currentIndex + direction]
-    if (!target) return
-    requestTransition(() => { void menu.moveMenu(item, target.displayOrder) })
-  }
   const confirmDeactivation = async () => {
     if (!pendingDeactivation) return
     const deactivated = await menu.deactivateMenu(pendingDeactivation.id)
@@ -219,9 +201,11 @@ function MerchantMenuPage() {
     {menu.sectionErrorMessage ? <FeedbackMessage tone="error" style={{ marginBottom: 16 }}>{menu.sectionErrorMessage}</FeedbackMessage> : null}
     {menu.actionErrorMessage ? <FeedbackMessage tone="error" style={{ marginBottom: 16 }}>{menu.actionErrorMessage}</FeedbackMessage> : null}
     {menu.successMessage ? <FeedbackMessage tone="success" style={{ marginBottom: 16 }}>{menu.successMessage}</FeedbackMessage> : null}
-    {menu.status === 'loading' || menu.isLoading ? <Store.LoadingSummary aria-label="메뉴를 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : !menu.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">restaurant_menu</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 메뉴를 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Workspace>
-      <S.Panel><S.PanelHeader><div><S.PanelTitle>등록 메뉴</S.PanelTitle><S.PanelDescription>판매 상태와 고객에게 표시되는 순서를 확인합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy} onClick={() => { if (selectedId !== null) requestTransition(startNew) }}>새 메뉴</S.CreateButton></S.PanelHeader><S.ResultMeta>총 {menu.menus.length}개 · 판매 중 {availableMenus.length}개</S.ResultMeta>{menu.menus.length === 0 ? <S.Empty>등록된 메뉴가 없습니다. 첫 메뉴를 등록해보세요.</S.Empty> : <S.CampaignList>{menu.menus.map((item) => <S.CampaignItem type="button" key={item.id} $selected={item.id === selectedId} onClick={() => selectMenu(item.id)}><S.CampaignTop><S.CampaignTitle title={item.name}>{item.name}</S.CampaignTitle><S.StatusBadge $tone={STATUS[item.status].tone}>{STATUS[item.status].label}</S.StatusBadge></S.CampaignTop><S.CampaignMeta>{formatPrice(item.priceAmount, item.currency)} · 표시 순서 {item.displayOrder + 1}</S.CampaignMeta>{item.description ? <S.CampaignMeta title={item.description}>{item.description}</S.CampaignMeta> : null}</S.CampaignItem>)}</S.CampaignList>}</S.Panel>
-      <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedMenu ? '메뉴 상세' : '새 메뉴 등록'}</S.PanelTitle><S.PanelDescription>{selectedMenu ? `메뉴 #${selectedMenu.id} · 표시 순서 ${selectedMenu.displayOrder + 1}` : '메뉴 정보를 입력하면 목록 마지막 순서로 등록됩니다.'}</S.PanelDescription></div>{selectedMenu ? <S.StatusBadge $tone={STATUS[selectedMenu.status].tone}>{STATUS[selectedMenu.status].label}</S.StatusBadge> : null}</S.PanelHeader><MenuEditor key={selectedMenu?.id ?? `new-${menu.menus.length}`} menu={selectedMenu} nextDisplayOrder={menu.menus.length} activeAction={menu.activeAction} onCreate={menu.createMenu} onUpdate={menu.updateMenu} onStatusChange={menu.updateMenuStatus} onRequestDeactivate={setPendingDeactivation} canMoveUp={selectedMenuIndex > 0} canMoveDown={selectedMenuIndex >= 0 && selectedMenuIndex < menu.menus.length - 1} onMove={(direction) => selectedMenu && moveMenu(selectedMenu, direction)} onSelect={setSelectedId} /></S.Panel>
+    {menu.status === 'loading' || (menu.isLoading && menu.activeAction !== 'order') ? <Store.LoadingSummary aria-label="메뉴를 불러오는 중"><Store.Skeleton $height={420} /></Store.LoadingSummary> : !menu.selectedPlaceId ? <Store.EmptyStoreState><Store.EmptyStoreIcon aria-hidden="true">restaurant_menu</Store.EmptyStoreIcon><div><Store.EmptyStoreTitle>관리할 장소가 아직 없습니다.</Store.EmptyStoreTitle><Store.EmptyStoreDescription>운영할 장소를 신청하거나 새 장소를 등록한 뒤, 승인되면 메뉴를 관리할 수 있습니다.</Store.EmptyStoreDescription></div><Store.EmptyStoreActions><Store.EmptyStoreAction type="button" onClick={() => navigate('/merchant/place-application')}>기존 장소 신청</Store.EmptyStoreAction><Store.EmptyStoreSecondaryAction type="button" onClick={() => navigate('/merchant/place-registration')}>새 장소 등록</Store.EmptyStoreSecondaryAction></Store.EmptyStoreActions></Store.EmptyStoreState> : <S.Workspace>
+      <S.Panel><S.PanelHeader><div><S.PanelTitle>등록 메뉴</S.PanelTitle><S.PanelDescription>판매 상태와 고객에게 표시되는 순서를 확인합니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={isBusy} onClick={() => { if (selectedId !== null) requestTransition(startNew) }}>새 메뉴</S.CreateButton></S.PanelHeader><S.ResultMeta>총 {menu.menus.length}개 · 판매 중 {availableMenus.length}개</S.ResultMeta>{menu.menus.length === 0 ? <S.Empty>등록된 메뉴가 없습니다. 첫 메뉴를 등록해보세요.</S.Empty> : <SortableMenuList key={menu.selectedPlaceId} menus={menu.menus} selectedId={selectedId}
+        disabled={isBusy || menu.isLoading || Boolean(menu.sectionErrorMessage) || Boolean(pendingDeactivation)} onSelect={selectMenu}
+        onMove={async (item, index) => Boolean(await menu.moveMenu(item, index))} />}</S.Panel>
+      <S.Panel><S.PanelHeader><div><S.PanelTitle>{selectedMenu ? '메뉴 상세' : '새 메뉴 등록'}</S.PanelTitle><S.PanelDescription>{selectedMenu ? `메뉴 #${selectedMenu.id} · 표시 순서 ${selectedMenu.displayOrder + 1}` : '메뉴 정보를 입력하면 목록 마지막 순서로 등록됩니다.'}</S.PanelDescription></div>{selectedMenu ? <S.StatusBadge $tone={STATUS[selectedMenu.status].tone}>{STATUS[selectedMenu.status].label}</S.StatusBadge> : null}</S.PanelHeader><MenuEditor key={selectedMenu?.id ?? `new-${menu.menus.length}`} menu={selectedMenu} nextDisplayOrder={menu.menus.length} activeAction={menu.activeAction} onCreate={menu.createMenu} onUpdate={menu.updateMenu} onStatusChange={menu.updateMenuStatus} onRequestDeactivate={setPendingDeactivation} onSelect={setSelectedId} /></S.Panel>
     </S.Workspace>}
     {pendingDeactivation ? <MerchantConfirmationDialog title="메뉴를 비활성화할까요?" description={`'${pendingDeactivation.name}' 메뉴는 고객에게 더 이상 노출되지 않으며 다시 활성화할 수 없습니다.`} cancelLabel="유지하기" confirmLabel="메뉴 비활성화" isPending={menu.activeAction === 'deactivate'} onClose={() => setPendingDeactivation(null)} onConfirm={() => void confirmDeactivation()} /> : null}
   </MerchantPageShell>

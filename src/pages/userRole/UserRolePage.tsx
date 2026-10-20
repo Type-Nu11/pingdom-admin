@@ -78,7 +78,7 @@ function UserRolePage() {
     event.preventDefault();
     const id = Number(userIdInput);
     if (!Number.isSafeInteger(id) || id <= 0) {
-      setFormError("관리자 사용자 ID를 양의 정수로 입력해주세요.");
+      setFormError("관리자 계정 ID를 양의 정수로 입력해주세요.");
       return;
     }
     setFormError(''); hook.dismissActionError();
@@ -150,7 +150,7 @@ function UserRolePage() {
                 <Shared.Eyebrow>사용자 관리 &gt; 관리자 역할</Shared.Eyebrow>
                 <Shared.PageTitle>관리자 역할 및 권한 이력</Shared.PageTitle>
                 <Shared.PageDescription>
-                  관리자 사용자 ID를 조회하고 활성 역할과 변경 이력을 확인한 뒤
+                  관리자 계정 ID를 조회하고 활성 역할과 변경 이력을 확인한 뒤
                   권한을 부여하거나 회수합니다.
                 </Shared.PageDescription>
               </div>
@@ -163,12 +163,11 @@ function UserRolePage() {
                 </Shared.HeaderButton>
               </Shared.HeaderActions>
             </Shared.PageHeader>
-            <Shared.SecondaryButton type="button" disabled={hook.isMutating || hook.isLoading} onClick={() => setTargetSearchOpen(true)}>관리자 사용자명 검색</Shared.SecondaryButton>
-            {targetSearchOpen ? <AdminTargetSearch title="관리자 사용자명 검색" load={searchAdminRoleTargets} onClose={() => setTargetSearchOpen(false)} onSelect={target => { focusSelectedTargetRef.current = true; setUserIdInput(String(target.id)); setTargetName(target); setDialog(null); setFormError(""); void hook.fetchRoles(target.id) }} /> : null}
+            {targetSearchOpen ? <AdminTargetSearch title="관리자 계정명 검색" load={searchAdminRoleTargets} onClose={() => setTargetSearchOpen(false)} onSelect={target => { focusSelectedTargetRef.current = true; setUserIdInput(String(target.id)); setTargetName(target); setDialog(null); setFormError(""); void hook.fetchRoles(target.id) }} /> : null}
             <S.SearchBar as="form" onSubmit={search}>
               <S.InlineSearchControls>
                 <S.Field>
-                  관리자 사용자 ID
+                  관리자 계정 ID
                   <S.Input
                     ref={userIdInputRef}
                     value={userIdInput}
@@ -185,6 +184,7 @@ function UserRolePage() {
                 <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.isMutating}>
                   {hook.isLoading ? "조회 중" : "역할 조회"}
                 </Shared.PrimaryButton>
+                <Shared.SecondaryButton type="button" disabled={hook.isMutating || hook.isLoading} onClick={() => setTargetSearchOpen(true)}>관리자 계정명 검색</Shared.SecondaryButton>
               </S.InlineSearchControls>
             </S.SearchBar>
             {formError ? (
@@ -221,7 +221,7 @@ function UserRolePage() {
                   <Shared.PanelDescription>
                     {hook.targetUserId
                       ? `${targetName?.id === hook.targetUserId ? targetName.name + " · " : ""}관리자 #${hook.targetUserId}의 역할을 관리합니다.`
-                      : "먼저 관리자 사용자 ID를 조회해주세요."}
+                      : "먼저 관리자 계정 ID를 조회해주세요."}
                   </Shared.PanelDescription>
                 </div>
                 <Shared.PanelCount>{activeRoles.size}개 활성</Shared.PanelCount>
@@ -229,7 +229,7 @@ function UserRolePage() {
               <Shared.CompareBody>
                 {!hook.targetUserId ? (
                   <Shared.EmptyState>
-                    <strong>관리자 사용자를 조회해주세요.</strong>
+                    <strong>확인할 관리자 계정을 조회해주세요.</strong>
                   </Shared.EmptyState>
                 ) : (
                   <S.CardList>

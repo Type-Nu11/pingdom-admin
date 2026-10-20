@@ -1,5 +1,15 @@
 # EC2 정적 웹 배포
 
+## 2026-10-20 확인 기록 (#321)
+
+- release 배포 변경의 workflow·레지스트리 Compose·호스트 키·배포/복구 스크립트·회귀 검사를 후속 개발 브랜치에 동기화했습니다. 이 브랜치가 아직 develop에 병합됐다는 뜻은 아닙니다.
+- 기존 [배포 실행 39365559003](https://github.com/Type-Nu11/pingdom-admin/actions/runs/39365559003)은 커밋 `16022ff601f7ce81b78412701e1e3a3b3d197644`에서 Docker Hub 인증·이미지 빌드/push·EC2 교체가 성공했습니다. 이슈에 남은 최초 인증 실패 기록과 구분합니다.
+- `2026-10-20T14:04:09.036Z` 비로그인 GET으로 `/console/login` HTML 200, 연결된 JS 200, `/consulting/` HTML 200, `/api/users/me` JSON 401을 확인했습니다.
+- 인증 실패 원인이 어떤 자격증명 값이었는지와 담당자의 구체 조치 내역은 확인하지 않았습니다. 성공 결과만으로 원인이나 Secret 변경 내용을 추정하지 않습니다.
+- 이번 작업에서 SSH 접속·Secret 조회/변경·배포 재실행·운영 컨테이너 변경은 하지 않았습니다. 배포 거부 조건과 복구 경계는 격리된 Python mock 검사로 확인합니다.
+- 새 코드의 develop/release 병합·후속 CI와 실제 배포, 로그인 후 지도·조회 동작은 별도 확인이 필요합니다. 개발용 주소·컨테이너·핑차 경로가 확정됐다는 의미도 아닙니다.
+- 로컬 Docker 엔진 소켓이 없어 실제 컨테이너 이미지 검사는 이번 실행에서 수행하지 못했습니다. mock 배포 검사나 과거 운영 배포 성공을 새 이미지 검증으로 대체하지 않습니다.
+
 ## 플랫폼 인스턴스의 GitHub Actions 배포
 
 `Deploy administrator web`은 `release` push의 `Release verification`이 성공한 뒤 실행됩니다.

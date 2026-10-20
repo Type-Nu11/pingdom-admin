@@ -85,7 +85,7 @@ export function useAdminPlaceVerification() {
       } catch (error) {
         if (requestId === latestEvidenceRequestIdRef.current) {
           setEvidences([])
-          setEvidenceErrorMessage(getErrorMessage(error, '장소 정보 증빙을 불러오지 못했습니다.'))
+          setEvidenceErrorMessage(getErrorMessage(error, '장소 증빙을 불러오지 못했습니다.'))
           if (shouldClearAuth(error)) clearAuth()
         }
         logDebugError('관리자 장소 정보 증빙 조회 실패', error)
@@ -178,8 +178,8 @@ export function useAdminPlaceVerification() {
         'create-evidence',
         () => createAdminPlaceInformationEvidence(targetPlaceId, request),
         () => fetchEvidence(targetPlaceId),
-        '장소 정보 증빙을 등록했습니다.',
-        '장소 정보 증빙을 등록하지 못했습니다.',
+        '장소 증빙을 등록했습니다.',
+        '장소 증빙을 등록하지 못했습니다.',
         '관리자 장소 정보 증빙 등록 실패'
       ),
     [fetchEvidence, runAction]

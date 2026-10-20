@@ -6,6 +6,9 @@ export function observeFixtureAdapter(adapter) {
   return async config => {
     const info = { kind: 'fixture-api', method: (config.method || 'get').toUpperCase(), path: config.url?.split('?')[0] }
     try {
+      if (info.method !== 'GET' && /^\/admin\/reservations(?:\/|$)/.test(info.path ?? '')) {
+        throw new Error('Retired administrator reservation mutation is forbidden')
+      }
       if (typeof config.data === 'string') {
         // Only reservation endpoints are inspected by this guard; no payment policy changes.
         const path = config.url?.split('?')[0]

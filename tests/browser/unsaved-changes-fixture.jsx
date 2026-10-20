@@ -22,9 +22,10 @@ client.defaults.adapter = async config => {
   if (isMenuOrder) {
     const input = typeof config.data === 'string' ? JSON.parse(config.data) : config.data
     const id = Number(config.url.split('/').at(-2))
-    const moved = menus.find(menu => menu.id === id)
-    data = { ...moved, displayOrder: input.displayOrder }
-    menus = menus.map(menu => menu.id === id ? data : menu.displayOrder === input.displayOrder ? { ...menu, displayOrder: moved.displayOrder } : menu)
+    const [moved] = menus.splice(menus.findIndex(menu => menu.id === id), 1)
+    menus.splice(input.displayOrder, 0, moved)
+    menus = menus.map((menu, index) => ({ ...menu, displayOrder: index }))
+    data = menus.find(menu => menu.id === id)
   } else if (isMenuWrite) {
     const input = typeof config.data === 'string' ? JSON.parse(config.data) : config.data
     data = { ...menus[0], ...input, id: config.method === 'post' ? 3 : Number(config.url.split('/').at(-1)) }

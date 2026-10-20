@@ -1,11 +1,8 @@
 import { useListQueryState, listQueryKey } from './useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
-  confirmAdminReservation,
   getAdminReservation,
   getAdminReservations,
-  rejectAdminReservation,
 } from '../api/adminReservationApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
@@ -13,7 +10,6 @@ import type {
   AdminReservation,
   AdminReservationErrorResponse,
   AdminReservationQuery,
-  AdminReservationReviewRequest,
 } from '../types/adminReservation.types'
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
@@ -21,7 +17,6 @@ import { DEFAULT_RESERVATION_QUERY, type ReservationReviewQuery } from '../utils
 
 export const ADMIN_RESERVATION_PAGE_SIZE = 10
 const LIMIT = ADMIN_RESERVATION_PAGE_SIZE
-export type AdminReservationAction = 'confirm' | 'reject'
 
 type ReservationQueryState = ReservationReviewQuery
 
@@ -74,17 +69,12 @@ export function useAdminReservations(initialQuery = DEFAULT_RESERVATION_QUERY) {
   const [hasNext, setHasNext] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
-  const [activeAction, setActiveAction] = useState<AdminReservationAction | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [detailErrorMessage, setDetailErrorMessage] = useState('')
   const [detailUnavailable, setDetailUnavailable] = useState(false)
   const [detailReservationId, setDetailReservationId] = useState<number | null>(null)
-  const [actionErrorMessage, setActionErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  useAutoDismissMessage(successMessage, setSuccessMessage)
   const listRef = useRef(0)
   const detailRef = useRef(0)
-  const actionRef = useRef<AdminReservationAction | null>(null)
   const queryRef = useRef(query)
 
   const fetchReservations = useCallback(async (nextQuery = queryRef.current) => {
@@ -145,7 +135,6 @@ export function useAdminReservations(initialQuery = DEFAULT_RESERVATION_QUERY) {
     setDetailUnavailable(false)
     setReservation(null)
     setDetailReservationId(reservationId)
-    setActionErrorMessage('')
     try {
       const data = await getAdminReservation(reservationId)
       if (requestId === detailRef.current) setReservation(data)
@@ -173,40 +162,6 @@ export function useAdminReservations(initialQuery = DEFAULT_RESERVATION_QUERY) {
     setDetailReservationId(null)
   }, [])
 
-  const runAction = useCallback(async (
-    action: AdminReservationAction,
-    reservationId: number,
-    request: AdminReservationReviewRequest | undefined,
-  ) => {
-    if (actionRef.current) return null
-    actionRef.current = action
-    setActiveAction(action)
-    setActionErrorMessage('')
-    setSuccessMessage('')
-    try {
-      const data = action === 'confirm'
-        ? await confirmAdminReservation(reservationId, request)
-        : await rejectAdminReservation(reservationId, request ?? { reason: '' })
-      setSuccessMessage(action === 'confirm' ? '예약을 승인했습니다.' : '예약을 반려했습니다.')
-      await Promise.all([
-        fetchReservations(queryRef.current),
-        fetchDetail(reservationId),
-      ])
-      return data
-    } catch (error) {
-      setActionErrorMessage(getErrorMessage(
-        error,
-        action === 'confirm' ? '예약 승인에 실패했습니다.' : '예약 반려에 실패했습니다.',
-      ))
-      if (shouldClearAuth(error)) clearAuth()
-      logDebugError(`관리자 예약 ${action} 실패`, error)
-      return null
-    } finally {
-      actionRef.current = null
-      setActiveAction(null)
-    }
-  }, [clearAuth, fetchDetail, fetchReservations])
-
   useEffect(() => {
     const requests = listRef
     void fetchReservations({ status: initialQuery.status, placeId: initialQuery.placeId, page: initialQuery.page })
@@ -226,20 +181,12 @@ export function useAdminReservations(initialQuery = DEFAULT_RESERVATION_QUERY) {
     hasNext,
     isLoading,
     isDetailLoading,
-    activeAction,
     errorMessage,
     detailErrorMessage,
     detailUnavailable,
     detailReservationId,
-    actionErrorMessage,
-    dismissActionError: () => setActionErrorMessage(''),
-    successMessage,
     fetchReservations,
     fetchDetail,
     clearDetail,
-    confirm: (reservationId: number, request?: AdminReservationReviewRequest) =>
-      runAction('confirm', reservationId, request),
-    reject: (reservationId: number, request: AdminReservationReviewRequest) =>
-      runAction('reject', reservationId, request),
   }
 }

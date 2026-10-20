@@ -146,6 +146,8 @@ async function main() {
   }
   const baselineSha = execFileSync('git', ['rev-parse', '--verify', `${baseline}^{commit}`], { encoding: 'utf8' }).trim()
   const oldMetadata = JSON.parse(await readFile('docs/openapi/metadata.json', 'utf8'))
+  const issue = process.argv.includes('--issue') ? process.argv[process.argv.indexOf('--issue') + 1] : '#302'
+  if (!/^#[1-9]\d*$/.test(issue ?? '')) throw new Error('Issue reference must use # followed by a positive issue number')
   const serverRef = process.argv.includes('--server-ref') ? process.argv[process.argv.indexOf('--server-ref') + 1] : null
   if (serverRef !== null && !/^[a-f0-9]{40}$/.test(serverRef ?? '')) throw new Error('Server source reference must be a full commit SHA')
   const sources = { ...oldMetadata.sources,
@@ -167,7 +169,7 @@ async function main() {
     ...oldMetadata, sources, scope: groups, reference_scope: references, excluded: ['consulting'],
     collected_at: snapshots.map(s => s.collectedAt).sort().at(-1),
     source_commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
-    issue: '#302', comparison_baseline: baselineSha,
+    issue, comparison_baseline: baselineSha,
     server_source_reference: serverRef,
     server_source_verification: 'Source reference is separate from deployed version; OpenAPI info.version is not release provenance',
     snapshots: Object.fromEntries(snapshots.map(s => [s.group, { collected_at: s.collectedAt, url: s.url, sha256: digest(s.raw), baseline_sha256: s.baselineSha256 ?? null, operations: Object.keys(operations(s.doc)).length }])),

@@ -38,10 +38,10 @@ export function ReservationTermsEditor({ availability, busy, error, onSave, onCl
     <S.Form onSubmit={submit}>
       <S.Field $wide><S.FieldHint>{availability.reservationTerms ? '저장된 조건을 수정합니다.' : '예약 취소 조건이 아직 설정되지 않았습니다. 취소 불가로 간주하지 않습니다.'}</S.FieldHint></S.Field>
       <S.Field>기준 시간대<S.Input aria-label="기준 시간대" value={draft.timezone} maxLength={64} disabled={busy} onChange={event => change('timezone', event.target.value)} /></S.Field>
-      <S.Field $wide><S.FieldHint>Asia/Seoul과 같은 IANA 시간대를 입력해주세요. 시간대를 바꿔도 등록된 예약 시작·종료 시각은 이동하지 않습니다.</S.FieldHint></S.Field>
       <S.Field>취소 가능 여부<AdminSelect aria-label="취소 가능 여부" width="100%" value={draft.cancellation} disabled={busy} onChange={event => change('cancellation', event.target.value as ReservationTermsDraft['cancellation'])}><option value="">선택해주세요</option><option value="allowed">기한 내 취소 가능</option><option value="disallowed">취소 불가</option></AdminSelect></S.Field>
-      {draft.cancellation === 'allowed' ? <S.Field>시작 전 취소 기한(분)<S.Input aria-label="시작 전 취소 기한(분)" type="number" min="0" step="1" max="2147483647" value={draft.cancellationCutoffMinutes} disabled={busy} onChange={event => change('cancellationCutoffMinutes', event.target.value)} /><S.FieldHint>60분은 예약 시작 1시간 전까지, 0분은 시작 시각까지 취소할 수 있다는 뜻입니다.</S.FieldHint></S.Field> : null}
-      <S.Field $wide><S.FieldHint>변경한 조건은 이후 새로 발급되는 예약 견적에 적용됩니다. 기존 예약의 수락 조건은 변경되지 않습니다.</S.FieldHint></S.Field>
+      <S.Field $wide><S.FieldHint>한국 시간은 Asia/Seoul을 입력하세요. 시간대를 바꿔도 이미 등록된 예약의 시작·종료 시각은 바뀌지 않습니다.</S.FieldHint></S.Field>
+      {draft.cancellation === 'allowed' ? <S.Field $wide>시작 전 취소 기한(분)<S.Input aria-label="시작 전 취소 기한(분)" type="number" min="0" step="1" max="2147483647" value={draft.cancellationCutoffMinutes} disabled={busy} onChange={event => change('cancellationCutoffMinutes', event.target.value)} /><S.FieldHint>60분은 예약 시작 1시간 전까지, 0분은 시작 시각까지 취소할 수 있다는 뜻입니다.</S.FieldHint></S.Field> : null}
+      <S.Field $wide><S.FieldHint>변경한 조건은 앞으로 새로 안내되는 예약 조건에 적용됩니다. 이미 발급된 예약 견적과 기존 예약에 적용된 조건은 바뀌지 않습니다.</S.FieldHint></S.Field>
       {validation || error ? <S.FormError role="alert">{validation || error}</S.FormError> : null}
       <S.FormActions><S.ActionButton type="button" disabled={busy} onClick={() => protection.request(onClose)}>닫기</S.ActionButton><S.ActionButton type="submit" $variant="primary" disabled={busy}>{busy ? '저장 중' : '조건 저장'}</S.ActionButton></S.FormActions>
     </S.Form>

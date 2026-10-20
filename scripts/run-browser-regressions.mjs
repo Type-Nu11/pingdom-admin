@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { createWriteStream } from 'node:fs'
 import { join, resolve, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -13,7 +13,12 @@ export const browserCases = [
   ['text-readability', 'tests/browser/text-readability.mjs'],
   ['admin-readable-copy', 'tests/browser/admin-readable-copy.mjs'],
   ['reservation-context', 'tests/browser/reservation-context.mjs'],
+  ['merchant-reservation-query', 'tests/browser/merchant-reservation-query.mjs'],
+  ['merchant-reservation-review', 'tests/browser/merchant-reservation-review.mjs'],
+  ['merchant-brand', 'tests/browser/merchant-brand.mjs'],
+  ['merchant-control-surfaces', 'tests/browser/merchant-control-surfaces.mjs'],
   ['merchant-safety', 'tests/browser/merchant-safety.mjs'],
+  ['merchant-menu-sort', 'tests/browser/merchant-menu-sort.mjs'],
   ['merchant-identity', 'tests/browser/merchant-identity-extension.mjs'],
   ['user-ban-structure', 'tests/browser/user-ban-structure.mjs'],
   ['community', 'tests/browser/community.mjs'],
@@ -52,6 +57,16 @@ export function runBrowserProcess(file, { cwd, log, timeoutMs = 180_000, args = 
   })
 }
 
+export async function browserFailureLog(log, maxChars = 16000) {
+  try {
+    const content = await readFile(log, 'utf8')
+    if (!content) return 'Browser process produced no output.'
+    return content.length > maxChars ? `[Earlier output truncated; showing last ${maxChars} characters]\n${content.slice(-maxChars)}` : content
+  } catch (error) {
+    return `Unable to read browser failure log: ${error.message}`
+  }
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
   const output = process.env.PINGDOM_QA_OUTPUT ? resolve(process.env.PINGDOM_QA_OUTPUT) : await mkdtemp(join(tmpdir(), 'pingdom-release-qa-'))
@@ -59,10 +74,17 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const report = { kind: 'synthetic Chromium regression; not real-server/device/deployment QA', results: [] }
   console.log(`Browser regression logs: ${output}`)
   for (const [name, file] of browserCases) {
-    const result = await runBrowserProcess(file, { cwd: root, log: join(output, `${name}.log`) })
+    const log = join(output, `${name}.log`)
+    const result = await runBrowserProcess(file, { cwd: root, log })
     report.results.push({ name, ...result })
     console.log(`${name}: ${result.passed ? 'PASS' : 'FAIL'}${result.timedOut ? ' (timeout)' : ''}`)
-    if (!result.passed) break // Fail closed; do not present unexecuted suites as passing.
+    if (!result.passed) {
+      // The CI runner's temporary files disappear after the job. Preserve the
+      // assertion/stack in Actions output, while keeping the complete local log.
+      console.error(`Browser failure: ${name} (${file}) ${JSON.stringify(result)}`)
+      console.error(await browserFailureLog(log))
+      break // Fail closed; do not present unexecuted suites as passing.
+    }
   }
   const passed = report.results.length === browserCases.length && report.results.every(result => result.passed)
   report.passed = passed

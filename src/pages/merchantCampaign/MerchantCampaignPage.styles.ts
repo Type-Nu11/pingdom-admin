@@ -49,6 +49,23 @@ export const BrandField = styled.div`
   }
 `
 
+export const SelectedBrand = styled.div`
+  display: flex; gap: 12px; align-items: center; min-width: 0;
+  padding: 12px; border-radius: 6px; background: ${colors.surface};
+  > div { min-width: 0; overflow-wrap: anywhere; }
+  p, small { color: ${colors.muted}; ${typo.caption.regular} }
+  p { margin: 4px 0; }
+  small { display: block; color: ${colors.muted}; }
+`
+export const BrandLogo = styled.img`
+  flex: 0 0 44px; width: 44px; height: 44px; object-fit: contain; border-radius: 6px;
+`
+export const BrandLogoPlaceholder = styled.span`
+  flex: 0 0 44px; display: grid; place-items: center; height: 44px;
+  border-radius: 6px; background: ${colors.surfaceLow}; color: ${colors.muted};
+  ${typo.caption.regular}
+`
+
 export const BrandButton = styled.button`
   min-height: 42px;
   padding: 0 10px;

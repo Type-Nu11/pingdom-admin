@@ -175,11 +175,11 @@ export function useAdminNotificationOperations() {
       try {
         await retryAdminOutboxEvent(eventId, reason);
         if (!mountedRef.current) return false;
-        setSuccessMessage("재처리 이벤트 재실행을 예약했습니다.");
+        setSuccessMessage("처리 작업 재실행을 예약했습니다.");
         await fetchTab("outbox", queryRef.current.outbox.page);
         return true;
       } catch (e) {
-        setErrorMessage(msg(e, "재처리 이벤트를 재실행하지 못했습니다."));
+        setErrorMessage(msg(e, "처리 작업를 재실행하지 못했습니다."));
         return false;
       } finally {
         retryRef.current = false;

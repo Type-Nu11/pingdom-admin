@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as S from './MerchantNavigationMenu.styles'
+import { useSidebarScroll } from './useSidebarScroll'
 
 interface NavigationItem {
   label: string
@@ -60,17 +61,24 @@ const getActiveNavigationPath = (pathname: string) =>
 export function MerchantNavigationMenu() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { navigationRef, sessionKey } = useSidebarScroll('merchant')
   const activeItemRef = useRef<HTMLButtonElement>(null)
   const activeNavigationPath = getActiveNavigationPath(pathname)
+  const previousNavigation = useRef({ sessionKey, pathname })
 
   useEffect(() => {
-    activeItemRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [pathname])
+    const previous = previousNavigation.current
+    previousNavigation.current = { sessionKey, pathname }
+    // Login/deep-link entry starts at the top; reveal the active item only on later navigation.
+    if (previous.sessionKey === sessionKey && previous.pathname !== pathname) {
+      activeItemRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
+  }, [pathname, sessionKey])
 
   const storeActive = isCurrentPath(pathname, '/merchant')
 
   return (
-    <S.Navigation aria-label="세부 상점주 메뉴">
+    <S.Navigation ref={navigationRef} aria-label="세부 상점주 메뉴">
       <S.StoreButton
         type="button"
         $active={storeActive}

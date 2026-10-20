@@ -34,6 +34,19 @@ try {
     for (const label of ['1인당 가격', '예약당 추가 비용', '통화']) assert.equal(await dialog.getByLabel(label, { exact: true }).count(), 0)
     assert.equal(await dialog.getByLabel('기준 시간대', { exact: true }).inputValue(), 'Asia/Seoul')
     const cancellation = dialog.getByLabel('취소 가능 여부', { exact: true })
+    async function checkLayout() {
+      const timezone = await dialog.getByLabel('기준 시간대', { exact: true }).boundingBox()
+      const choice = await cancellation.boundingBox()
+      if (width > 620) assert.equal(timezone.y, choice.y, 'always-visible fields share the first row')
+      else assert.ok(choice.y >= timezone.y + timezone.height, 'narrow screens stack the always-visible fields')
+      const cutoff = dialog.getByLabel('시작 전 취소 기한(분)', { exact: true })
+      if (await cutoff.count()) {
+        const rect = await cutoff.boundingBox()
+        assert.ok(rect.y > Math.max(timezone.y + timezone.height, choice.y + choice.height), 'conditional cutoff appears below both fixed fields')
+        if (width > 620) assert.ok(rect.width > timezone.width, 'cutoff uses its own full-width row')
+      }
+    }
+    await checkLayout()
     const unsavedDialog = page.getByRole('dialog', { name: '저장하지 않은 변경 사항이 있습니다' })
     await cancellation.click()
     await page.getByRole('listbox', { name: '취소 가능 여부', exact: true }).waitFor()
@@ -50,6 +63,7 @@ try {
     await dialog.getByLabel('취소 가능 여부', { exact: true }).click()
     await page.getByRole('option', { name: '기한 내 취소 가능', exact: true }).click()
     await dialog.getByLabel('시작 전 취소 기한(분)', { exact: true }).fill('60')
+    await checkLayout()
     assert.equal(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth), true)
     const bounds = await dialog.boundingBox()
     assert.ok(bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= width && bounds.y + bounds.height <= height)
@@ -94,6 +108,8 @@ try {
     await dialog.getByText('저장된 조건을 수정합니다.').waitFor()
     assert.match(await dialog.getByLabel('취소 가능 여부', { exact: true }).innerText(), /취소 불가/)
     assert.equal(await dialog.getByLabel('시작 전 취소 기한(분)', { exact: true }).count(), 0)
+    await checkLayout()
+    await page.screenshot({ path: join(output, `terms-disallowed-${width}.png`), fullPage: true })
     await cancellation.click()
     await page.getByRole('option', { name: '기한 내 취소 가능', exact: true }).click()
     await dialog.getByLabel('시작 전 취소 기한(분)', { exact: true }).fill('120')

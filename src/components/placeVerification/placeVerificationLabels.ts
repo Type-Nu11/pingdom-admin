@@ -50,7 +50,7 @@ export const REASON_TYPE_LABELS: Record<PlaceInformationReportReasonType, string
 export const SOURCE_TYPE_LABELS: Record<PlaceInformationSourceType, string> = {
   LEGACY: '기존 데이터',
   KAKAO: 'Kakao',
-  MERCHANT_OWNER: '업주 제출',
+  MERCHANT_OWNER: '상점주 제출',
   ADMIN: '관리자 확인',
   USER_REPORT: '사용자 신고',
   SYSTEM: '시스템',
@@ -69,7 +69,7 @@ export const EVIDENCE_TYPE_LABELS: Record<PlaceInformationEvidenceType, string> 
 export const VERIFICATION_STATUS_LABELS: Record<PlaceInformationVerificationStatus, string> = {
   UNVERIFIED: '미검증',
   SOURCE_CONFIRMED: '출처 확인',
-  OWNER_SUBMITTED: '업주 제출',
+  OWNER_SUBMITTED: '상점주 제출',
   ADMIN_VERIFIED: '관리자 검증',
   REJECTED: '반려',
   DISPUTED: '이의 제기',

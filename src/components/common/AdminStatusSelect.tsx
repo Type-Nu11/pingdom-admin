@@ -9,6 +9,7 @@ import SortDropdown, { type SortDropdownOption } from './SortDropdown'
 
 interface AdminStatusSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   width?: string
+  selectedLabel?: string
 }
 
 function optionLabel(children: ReactNode) {
@@ -36,6 +37,7 @@ export function AdminSelect({
   disabled,
   onChange,
   width,
+  selectedLabel,
   'aria-label': ariaLabel,
 }: AdminStatusSelectProps) {
   const options = toOptions(children)
@@ -46,6 +48,7 @@ export function AdminSelect({
       ariaLabel={ariaLabel ?? '선택'}
       value={selectedValue}
       options={options}
+      selectedLabel={selectedLabel}
       disabled={disabled}
       width={width ?? '164px'}
       onChange={(nextValue) => {

@@ -105,7 +105,7 @@ export function useAdminTrustScoreReporter(onError: OnError) {
         selected.current = null
       }
       setState(prev => ({ ...prev, reporterPhase: 'error', ...(isRestricted(error) ? { reporter: null, history: [], historyPageInfo: null, historyPhase: 'idle', historyError: '' } : {}) }))
-      onError(error, '신고자 Trust Score를 불러오지 못했습니다.', '관리자 Trust Score 신고자 조회 실패', reporterError => {
+      onError(error, '신고자 신뢰 점수를 불러오지 못했습니다.', '관리자 Trust Score 신고자 조회 실패', reporterError => {
         setState(prev => ({ ...prev, reporterError }))
       })
       return null

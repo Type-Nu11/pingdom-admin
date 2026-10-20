@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { typo, adminColors } from '../../styles/theme'
+import { BrandHomeLink } from '../../components/navigation/BrandHomeLink'
 
 const colors = adminColors
 
@@ -59,7 +60,7 @@ export const SideHeader = styled.div`
   border-bottom: 1px solid ${colors.border};
 `
 
-export const BrandLockup = styled.div`
+export const BrandLockup = styled(BrandHomeLink)`
   width: min(168px, 100%);
 `
 

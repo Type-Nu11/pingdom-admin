@@ -87,7 +87,7 @@ try {
     await page.getByRole('button', { name: '공개 중', exact: true }).click()
     await page.getByText('총 1건', { exact: true }).waitFor()
     await page.getByRole('combobox', { name: '혜택을 관리할 장소 선택' }).click()
-    await page.getByRole('option', { name: '합성 매장 2 · 주소 2 · #2', exact: true }).click()
+    await page.getByRole('option', { name: '합성 매장 2 · #2', exact: true }).click()
     await page.getByText('총 0건', { exact: true }).waitFor()
     await page.getByRole('button', { name: '전체', exact: true }).click()
     await page.getByText('총 20건', { exact: true }).waitFor()

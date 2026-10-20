@@ -480,11 +480,11 @@ function RegistrationForm({
                   <input ref={attachmentInputRef} type="file" disabled={activeAction !== null} onChange={(event) => setAttachmentFile(event.target.files?.[0] ?? null)} />
                   <span aria-hidden="true">{attachmentFile ? 'description' : 'upload_file'}</span>
                   <div>
-                    <strong>{attachmentFile?.name || '증빙 파일 선택'}</strong>
-                    <small>{attachmentFile ? `${formatFileSize(attachmentFile.size)} · 다시 클릭해 파일 변경` : '심사 요청 때 함께 업로드됩니다.'}</small>
+                    <strong title={attachmentFile?.name}>{attachmentFile?.name || '증빙 파일 선택'}</strong>
                   </div>
                 </S.FilePicker>
                 <S.SecondaryButton type="button" disabled={activeAction !== null || !attachmentFile} onClick={addStagedAttachment}>파일 추가</S.SecondaryButton>
+                <S.AttachmentUploadHint>{attachmentFile ? `${attachmentFile.name} · ${formatFileSize(attachmentFile.size)} · 다시 클릭해 파일 변경` : '심사 요청 때 함께 업로드됩니다.'}</S.AttachmentUploadHint>
               </S.AttachmentUploader> : null}
               {stagedAttachments.length > 0 ? <S.AttachmentList>{stagedAttachments.map((attachment, index) => <li key={`${attachment.documentType}-${attachment.file.name}-${index}`}>
                 <S.AttachmentFileInfo>

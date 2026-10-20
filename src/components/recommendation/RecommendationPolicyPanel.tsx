@@ -109,7 +109,7 @@ export function RecommendationPolicyPanel() {
       {hook.successMessage ? <Shared.Notice $variant="success">{hook.successMessage}</Shared.Notice> : null}
       <Shared.DetailNotice>
         <Shell.MaterialIcon aria-hidden="true">info</Shell.MaterialIcon>
-        <div><strong>현재 서버에는 정책 조회 GET API가 없습니다.</strong>변경 시 서버가 지원하는 모든 추천 버전을 빠짐없이 입력해야 하며, 성공 응답 이후부터 적용된 정책을 화면에 유지합니다.</div>
+        <div><strong>현재 적용 중인 추천 설정은 불러올 수 없습니다.</strong>설정을 변경하려면 사용 가능한 모든 추천 버전을 빠짐없이 입력해주세요. 이 화면에는 여기서 저장에 성공한 설정만 표시됩니다.</div>
       </Shared.DetailNotice>
       <Shared.Panel>
         <Shared.PanelHeader><div><Shared.PanelTitle>추천 버전 트래픽 정책</Shared.PanelTitle><Shared.PanelDescription>전체 정책을 한 번에 교체합니다. 합계는 정확히 100%여야 합니다.</Shared.PanelDescription></div><Shared.HeaderActions><Shared.PanelCount>합계 {total}%</Shared.PanelCount><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setPolicies((current) => [...current, { key: policyKey++, recommendationVersion: '', trafficPercentage: '0', enabled: true, fallbackVersion: '' }])}>버전 추가</Shared.SecondaryButton></Shared.HeaderActions></Shared.PanelHeader>

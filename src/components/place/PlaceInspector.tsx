@@ -211,7 +211,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                               ? '공개 탐색·자동완성·북마크 목록·추천 후보에서 제외됩니다.'
                               : placeDetail.discoveryStatus === 'VISIBLE'
                                 ? '공개 탐색과 자동완성, 추천 후보에 노출됩니다.'
-                                : '서버 응답에서 탐색 상태를 확인하지 못했습니다.'}
+                                : '이 장소가 검색과 추천에 표시되는지 확인할 수 없습니다.'}
                           </small>
                         </S.OperatingSummaryLabel>
                         <S.OperatingSummaryAction>

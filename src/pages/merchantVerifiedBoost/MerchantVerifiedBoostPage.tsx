@@ -99,7 +99,7 @@ function BoostSelectionDialog({
     </>}>
     <S.Form id={formId} onSubmit={(event) => void submit(event)}>
       <S.Field>상품<S.Select value={productId} disabled={isBusy} onChange={(event) => { setProductId(Number(event.target.value)); resetRequest() }}>{products.map((item) => <option value={item.productId} key={item.productId}>{item.name} · {item.durationDays}일 · {formatCurrency(item.priceAmount, item.currency)}</option>)}</S.Select></S.Field>
-      <S.Field as="div"><span>적용 장소</span><MerchantPlaceSelect compact fullWidth showSelectedName aria-label="적용 장소" value={placeId} disabled={isBusy} onChange={(event) => { setPlaceId(Number(event.target.value)); resetRequest() }}>{placeIds.map((id) => <option value={id} key={id}>장소 #{id}</option>)}</MerchantPlaceSelect></S.Field>
+      <S.Field as="div"><span>적용 장소</span><MerchantPlaceSelect compact fullWidth aria-label="적용 장소" value={placeId} disabled={isBusy} onChange={(event) => { setPlaceId(Number(event.target.value)); resetRequest() }}>{placeIds.map((id) => <option value={id} key={id}>장소 #{id}</option>)}</MerchantPlaceSelect></S.Field>
       {product ? <S.ReadonlyNotice style={{ gridColumn: '1 / -1', margin: 0 }}>{product.description || '상품 설명이 없습니다.'}</S.ReadonlyNotice> : null}
     </S.Form>
   </AppDialog>

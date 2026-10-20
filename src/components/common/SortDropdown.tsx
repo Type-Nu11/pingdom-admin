@@ -17,6 +17,7 @@ interface SortDropdownProps {
   ariaLabel: string
   value: string
   options: SortDropdownOption[]
+  selectedLabel?: string
   disabled?: boolean
   width?: string
   onChange: (value: string) => void
@@ -26,6 +27,7 @@ function SortDropdown({
   ariaLabel,
   value,
   options,
+  selectedLabel,
   disabled = false,
   width,
   onChange,
@@ -190,7 +192,7 @@ function SortDropdown({
         onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
       >
-        <span>{selectedOption.label}</span>
+        <span>{selectedLabel ?? selectedOption.label}</span>
         <S.DropdownChevron aria-hidden="true" $open={isOpen}>
           expand_more
         </S.DropdownChevron>

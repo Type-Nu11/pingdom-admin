@@ -1,7 +1,6 @@
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminPlaces } from '../../api/adminTargetSearchApi'
 import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
-import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -35,13 +34,12 @@ import * as S from '../placeVerification/PlaceVerificationPage.styles'
 import * as ReviewUI from './AdminReservationReviewPage.styles'
 
 const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 'warning' | 'danger' }> = {
-  PENDING: { label: '심사 대기', tone: 'warning' },
-  CONFIRMED: { label: '승인', tone: 'success' },
+  PENDING: { label: '승인 대기', tone: 'warning' },
+  CONFIRMED: { label: '확정', tone: 'success' },
   REJECTED: { label: '반려', tone: 'danger' },
   CANCELED: { label: '취소', tone: 'danger' },
 }
 
-type Dialog = { action: 'confirm' | 'reject'; target: AdminReservation } | null
 
 function formatSchedule(reservation: AdminReservation) {
   if (!reservation.reservationStartsAt && !reservation.reservationEndsAt) return '예약 시간 정보 없음'
@@ -60,7 +58,7 @@ function parsePlaceId(value: string) {
   return Number.isSafeInteger(placeId) && placeId > 0 ? placeId : null
 }
 
-function AdminReservationReviewPage() {
+function ReservationHistoryWorkspace() {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout, user } = useAuth()
@@ -81,9 +79,6 @@ function AdminReservationReviewPage() {
   const setPlaceId = (value: string, name = '') => setDraft({ ...currentDraft, placeId: value, placeName: name })
   const [placeSearchOpen, setPlaceSearchOpen] = useState(false)
   const [filterError, setFilterError] = useState('')
-  const [dialog, setDialog] = useState<Dialog>(null)
-  const [reason, setReason] = useState('')
-  const [formError, setFormError] = useState('')
   const adminIdentifier = user?.username || (typeof user?.id === 'number' ? `ID ${user.id}` : '관리자 계정')
   const canonicalSearch = writeReservationReviewContext(context)
   const notice = ownerMismatch ? 'account' : location.state?.reservationReviewNotice
@@ -115,7 +110,6 @@ function AdminReservationReviewPage() {
   }, [selectedReservationId, selectionVerified, hook.reservations, fetchDetail, clearDetail])
 
   useEffect(() => {
-    if (hook.activeAction !== null) return
     if (hook.listState.restricted && appliedKey === queryKey && selectedReservationId !== null) {
       updateContext(query, null, true, 'unavailable')
       return
@@ -135,7 +129,7 @@ function AdminReservationReviewPage() {
       && ((query.status && hook.reservation.status !== query.status) || (query.placeId !== undefined && hook.reservation.placeId !== query.placeId))) {
       updateContext(query, null, true, 'changed')
     }
-  }, [hook.activeAction, hook.listState.phase, hook.listState.hasResult, hook.listState.restricted, hook.resultRequestKey, hook.query, hook.reservation,
+  }, [hook.listState.phase, hook.listState.hasResult, hook.listState.restricted, hook.resultRequestKey, hook.query, hook.reservation,
     hook.detailReservationId, hook.detailUnavailable, appliedKey, queryKey, query, selectedReservationId, selectionVerified, updateContext])
 
   const search = () => {
@@ -145,7 +139,6 @@ function AdminReservationReviewPage() {
       return
     }
     setFilterError('')
-    setDialog(null)
     hook.clearDetail()
     setDraft({ ...currentDraft, key: listQueryKey({ status, placeId: nextPlaceId, page: 1 }) })
     updateContext({ status, placeId: nextPlaceId, page: 1 }, null)
@@ -153,7 +146,6 @@ function AdminReservationReviewPage() {
   }
 
   const changePage = (page: number) => {
-    setDialog(null)
     hook.clearDetail()
     updateContext({ ...hook.query, page }, null)
   }
@@ -161,7 +153,6 @@ function AdminReservationReviewPage() {
   const resetFilters = () => {
     setDraft({ key: listQueryKey(DEFAULT_RESERVATION_QUERY), status: 'PENDING', placeId: '', placeName: '' })
     setFilterError('')
-    setDialog(null)
     hook.clearDetail()
     updateContext(DEFAULT_RESERVATION_QUERY, null)
     if (queryKey === listQueryKey(DEFAULT_RESERVATION_QUERY)) void hook.fetchReservations(DEFAULT_RESERVATION_QUERY)
@@ -172,33 +163,8 @@ function AdminReservationReviewPage() {
       void hook.fetchDetail(reservationId)
       return
     }
-    setDialog(null)
     hook.clearDetail()
     updateContext(query, reservationId, true)
-  }
-
-  const openDialog = (action: 'confirm' | 'reject') => {
-    if (!selectionVerified || hook.isDetailLoading || !hook.reservation || hook.reservation.id !== selectedReservationId || hook.reservation.status !== 'PENDING') return
-    setReason('')
-    setFormError(''); hook.dismissActionError()
-    setDialog({ action, target: { ...hook.reservation } })
-  }
-
-  const submitReview = async () => {
-    if (!dialog || hook.activeAction) return
-    if (!selectionVerified || hook.isDetailLoading || selectedReservationId !== dialog.target.id || hook.reservation?.id !== dialog.target.id || hook.reservation.status !== 'PENDING') {
-      setFormError('예약 상태가 변경되었습니다. 확인창을 닫고 예약을 다시 조회해주세요.')
-      return
-    }
-    const trimmedReason = reason.trim()
-    if (dialog.action === 'reject' && !trimmedReason) {
-      setFormError('반려 사유를 입력해주세요.')
-      return
-    }
-    const result = dialog.action === 'confirm'
-      ? await hook.confirm(dialog.target.id, trimmedReason ? { reason: trimmedReason } : undefined)
-      : await hook.reject(dialog.target.id, { reason: trimmedReason })
-    if (result) setDialog(null)
   }
 
   const selectedStatus = hook.reservation ? STATUS[hook.reservation.status] : null
@@ -226,14 +192,14 @@ function AdminReservationReviewPage() {
 
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar>
-          <Shell.TopTitleGroup><Shell.TopTitle>예약 심사</Shell.TopTitle></Shell.TopTitleGroup>
+          <Shell.TopTitleGroup><Shell.TopTitle>예약 관리 이력</Shell.TopTitle></Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
             <Shell.IconButton
               type="button"
               aria-label="목록 새로고침"
               title="목록 새로고침"
-              disabled={hook.isLoading || hook.activeAction !== null}
+              disabled={hook.isLoading}
               onClick={() => void hook.fetchReservations(hook.query)}
             >
               <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
@@ -244,14 +210,12 @@ function AdminReservationReviewPage() {
         <ListDetailPage>
             <Shared.PageHeader>
               <div>
-                <Shared.Eyebrow>검토함 &gt; 예약 심사</Shared.Eyebrow>
-                <Shared.PageTitle>예약 신청 심사</Shared.PageTitle>
-                <Shared.PageDescription>관광객 예약 신청을 검토하고 승인 또는 반려합니다.</Shared.PageDescription>
+                <Shared.Eyebrow>검토함 &gt; 예약 관리 이력</Shared.Eyebrow>
+                <Shared.PageTitle>예약 관리 이력</Shared.PageTitle>
+                <Shared.PageDescription>예약 상태와 처리 이력을 조회합니다. 승인·반려는 해당 장소의 상점주가 처리합니다.</Shared.PageDescription>
               </div>
             </Shared.PageHeader>
 
-            {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
-            {hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
             {typeof notice === 'string' && noticeMessages[notice] ? <FeedbackMessage tone="warning" onDismiss={() => updateContext(query, selectedReservationId, true)}>{noticeMessages[notice]}</FeedbackMessage> : null}
 
             <S.SearchBar onSubmit={(event) => { event.preventDefault(); search() }}>
@@ -262,7 +226,7 @@ function AdminReservationReviewPage() {
                     aria-label="예약 상태"
                     value={status}
                     width="100%"
-                    disabled={hook.isLoading || hook.activeAction !== null}
+                    disabled={hook.isLoading}
                     onChange={(event) => setStatus(event.target.value as AdminReservationStatus | '')}
                   >
                     <option value="">전체</option>
@@ -275,14 +239,14 @@ function AdminReservationReviewPage() {
                     value={placeId}
                     inputMode="numeric"
                     placeholder="예: 123"
-                    disabled={hook.isLoading || hook.activeAction !== null}
+                    disabled={hook.isLoading}
                     onChange={(event) => { setPlaceId(event.target.value); setFilterError('') }}
                   />
                 </S.Field>
-                <ReviewUI.PlaceSearchButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => setPlaceSearchOpen(true)}>장소 검색</ReviewUI.PlaceSearchButton>
+                <ReviewUI.PlaceSearchButton type="button" disabled={hook.isLoading} onClick={() => setPlaceSearchOpen(true)}>장소 검색</ReviewUI.PlaceSearchButton>
                 <S.SearchFilterActions>
-                  <Shared.SecondaryButton type="button" disabled={hook.isLoading || hook.activeAction !== null} onClick={resetFilters}>초기화</Shared.SecondaryButton>
-                  <Shared.PrimaryButton type="submit" disabled={hook.isLoading || hook.activeAction !== null}>조회</Shared.PrimaryButton>
+                  <Shared.SecondaryButton type="button" disabled={hook.isLoading} onClick={resetFilters}>초기화</Shared.SecondaryButton>
+                  <Shared.PrimaryButton type="submit" disabled={hook.isLoading}>조회</Shared.PrimaryButton>
                 </S.SearchFilterActions>
               </S.SearchFilterGrid>
             </S.SearchBar>
@@ -305,7 +269,7 @@ function AdminReservationReviewPage() {
                     page={hook.query.page}
                     totalPages={hook.totalPages}
                     hasNext={hook.hasNext}
-                    disabled={hook.isLoading || hook.activeAction !== null}
+                    disabled={hook.isLoading}
                     onPageChange={changePage}
                     ariaLabel="예약 목록 페이지네이션"
                   />
@@ -320,8 +284,7 @@ function AdminReservationReviewPage() {
                     const nextQuery: ReservationReviewQuery = { status: '', placeId: undefined, page: 1 }
                     setDraft({ key: listQueryKey(nextQuery), status: '', placeId: '', placeName: '' })
                     setFilterError('')
-                    setDialog(null)
-                    hook.clearDetail()
+                                    hook.clearDetail()
                     updateContext(nextQuery, null)
                     if (queryKey === listQueryKey(nextQuery)) void hook.fetchReservations(nextQuery)
                   }}
@@ -353,7 +316,7 @@ function AdminReservationReviewPage() {
                 <Shared.PanelHeader>
                   <div>
                     <Shared.PanelTitle>예약 상세</Shared.PanelTitle>
-                    <Shared.PanelDescription>예약자, 장소, 시간·인원과 처리 이력을 확인합니다.</Shared.PanelDescription>
+                    <Shared.PanelDescription>현재 상점주와 당시 처리자는 다를 수 있습니다. 처리자 번호만으로 역할을 구분하지 않습니다.</Shared.PanelDescription>
                   </div>
                 </Shared.PanelHeader>
                 <Shared.CompareBody>
@@ -380,11 +343,11 @@ function AdminReservationReviewPage() {
                       <S.DetailGrid>
                         <S.DetailItem><dt>예약자</dt><dd>{formatPerson(hook.reservation.touristUsername, hook.reservation.touristUserId)}</dd></S.DetailItem>
                         <S.DetailItem><dt>장소</dt><dd><PlaceDetailLink id={hook.reservation.placeId} name={hook.reservation.placeName} /></dd></S.DetailItem>
-                        <S.DetailItem><dt>상점주</dt><dd>{formatPerson(hook.reservation.merchantOwnerUsername, hook.reservation.merchantOwnerUserId)}</dd></S.DetailItem>
+                        <S.DetailItem><dt>현재 상점주</dt><dd>{formatPerson(hook.reservation.merchantOwnerUsername, hook.reservation.merchantOwnerUserId)}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 시간</dt><dd>{formatSchedule(hook.reservation)}</dd></S.DetailItem>
                         <S.DetailItem><dt>예약 인원</dt><dd>{hook.reservation.quantity.toLocaleString()}명</dd></S.DetailItem>
-                        <S.DetailItem><dt>검토 관리자</dt><dd>{hook.reservation.reviewedBy === null ? '미처리' : `관리자 #${hook.reservation.reviewedBy}`}</dd></S.DetailItem>
-                        <S.DetailItem><dt>검토 일시</dt><dd>{formatDate(hook.reservation.reviewedAt)}</dd></S.DetailItem>
+                        <S.DetailItem><dt>처리자</dt><dd>{hook.reservation.reviewedBy === null ? '처리 기록 없음' : `사용자 #${hook.reservation.reviewedBy}`}</dd></S.DetailItem>
+                        <S.DetailItem><dt>처리 일시</dt><dd>{formatDate(hook.reservation.reviewedAt)}</dd></S.DetailItem>
                       </S.DetailGrid>
                       {hook.reservation.reviewReason ? <S.RecordDescription>처리 사유: {hook.reservation.reviewReason}</S.RecordDescription> : null}
                       <S.Section>
@@ -414,12 +377,6 @@ function AdminReservationReviewPage() {
                           </S.CardList>
                         )}
                       </S.Section>
-                      {hook.reservation.status === 'PENDING' ? (
-                        <S.InlineActions>
-                          <Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog('reject')}>반려</Shared.SecondaryButton>
-                          <Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => openDialog('confirm')}>승인</Shared.PrimaryButton>
-                        </S.InlineActions>
-                      ) : null}
                     </>
                   ) : null}
                 </Shared.CompareBody>
@@ -428,43 +385,11 @@ function AdminReservationReviewPage() {
         </ListDetailPage>
       </Shell.MainArea>
 
-      {dialog ? (
-        <AppDialog
-          title={`예약 ${dialog.action === 'confirm' ? '승인' : '반려'}`}
-          isDismissible={hook.activeAction === null}
-          onClose={() => setDialog(null)}
-          footer={<>
-            <Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton>
-            <Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void submitReview()}>
-              {hook.activeAction ? '처리 중' : dialog.action === 'confirm' ? '승인 확정' : '반려 확정'}
-            </Shared.PrimaryButton>
-          </>}
-        >
-          <S.DetailGrid>
-            <S.DetailItem><dt>예약 번호</dt><dd>#{dialog.target.id}</dd></S.DetailItem>
-            <S.DetailItem><dt>장소</dt><dd>{dialog.target.placeName || '정보 없음'} · #{dialog.target.placeId}</dd></S.DetailItem>
-            <S.DetailItem><dt>예약자</dt><dd>{formatPerson(dialog.target.touristUsername, dialog.target.touristUserId)}</dd></S.DetailItem>
-            <S.DetailItem><dt>예약 일정</dt><dd>{formatSchedule(dialog.target)}</dd></S.DetailItem>
-            <S.DetailItem><dt>예약 인원</dt><dd>{dialog.target.quantity.toLocaleString()}명</dd></S.DetailItem>
-          </S.DetailGrid>
-          <S.FormGrid>
-            <S.WideField>
-              {dialog.action === 'reject' ? '반려 사유 *' : '승인 메모'}
-              <S.TextArea
-                value={reason}
-                maxLength={500}
-                disabled={hook.activeAction !== null}
-                placeholder={dialog.action === 'reject' ? '예약을 반려하는 사유를 입력해주세요.' : '승인 메모가 있으면 입력해주세요.'}
-                onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }}
-              />
-              <small>{reason.length}/500</small>
-            </S.WideField>
-          </S.FormGrid>
-          {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
-        </AppDialog>
-      ) : null}
     </Shell.AppShell>
   )
 }
 
-export default AdminReservationReviewPage
+export default function AdminReservationReviewPage() {
+  const { user } = useAuth()
+  return <ReservationHistoryWorkspace key={`${user?.id ?? ''}:${user?.role ?? ''}`} />
+}

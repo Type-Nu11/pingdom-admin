@@ -221,72 +221,40 @@ test('selecting the already-selected row refreshes its detail instead of leaving
   assert.equal(calls.filter(c => c.url === '/admin/reservations/1').length, 2)
 })
 
-test('review failure keeps its dialog error and blocks closing while the synthetic request is pending', async () => {
-  let release
-  adapter = config => config.method === 'post'
-    ? new Promise((_resolve, rejectPromise) => { release = () => { try { reject(config, 409) } catch (error) { rejectPromise(error) } } })
-    : defaultAdapter(config)
-  await mount('/reservations/review?reservationId=1')
-  await click(button('승인'))
-  assert.match(document.querySelector('[role="dialog"]').textContent, /예약 인원.*1명/)
-  assert.doesNotMatch(document.querySelector('[role="dialog"]').textContent, /상품|결제 불필요/)
-  await click(button('승인 확정'))
-  const dialog = document.querySelector('[role="dialog"]')
-  assert.equal(dialog.querySelector('[aria-label="닫기"]').disabled, true)
-  await act(async () => dialog.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
-  assert.ok(document.querySelector('[role="dialog"]'))
-  assert.equal(calls.filter(c => c.method === 'post').length, 1)
-  await act(async () => release())
-  await settle()
-  assert.match(document.querySelector('[role="dialog"]').textContent, /예약 상태가 이미 변경/)
-  assert.equal(location.search, '?reservationId=1')
-})
-
-test('successful synthetic review keeps the target and clears a selection no longer in the applied pending list', async () => {
-  let reviewed = false
-  adapter = config => {
-    if (config.method === 'post') {
-      assert.equal(config.url, '/admin/reservations/1/confirm')
-      reviewed = true
-      return respond(config, reservation(1, { status: 'CONFIRMED' }))
-    }
-    if (reviewed && config.url === '/admin/reservations') return respond(config, reservationPage(config.params, { reservations: [reservation(2)] }))
-    if (reviewed && config.url === '/admin/reservations/1') return respond(config, reservation(1, { status: 'CONFIRMED' }))
-    return defaultAdapter(config)
+test('administrator reservation screen is read-only for every status', async () => {
+  for (const status of ['PENDING', 'CONFIRMED', 'REJECTED', 'CANCELED']) {
+    adapter = config => /^\/admin\/reservations\/\d+$/.test(config.url)
+      ? respond(config, reservation(1, { status })) : defaultAdapter(config)
+    await mount('/reservations/review?status=' + status + '&reservationId=1')
+    assert.match(document.body.textContent, /예약 관리 이력/)
+    assert.match(document.body.textContent, /승인·반려는 해당 장소의 상점주가 처리/)
+    assert.match(document.body.textContent, /예약 #1 · 신청/)
+    for (const label of ['승인', '반려', '승인 확정', '반려 확정']) assert.equal(button(label), undefined)
+    assert.ok(calls.every(call => call.method === 'get'))
+    assert.equal(document.querySelector('[role="dialog"]'), null)
   }
+})
+test('current owner and historical actor stay distinct without guessing actor role', async () => {
+  adapter = config => config.url === '/admin/reservations/1' ? respond(config, reservation(1, {
+    reviewedBy: 45, reviewedAt: '2026-10-01T01:00:00Z',
+    statusHistory: [{ id: 1, status: 'PENDING', changedBy: 45, changedAt: '2026-10-01T01:00:00Z', reason: '과거 관리자 처리 기록' }],
+  })) : defaultAdapter(config)
   await mount('/reservations/review?reservationId=1')
-  await click(button('승인'))
-  await click(button('승인 확정'))
+  assert.match(document.body.textContent, /현재 상점주.*합성 상점주.*사용자 #8/)
+  assert.match(document.body.textContent, /처리자.*사용자 #45/)
+  assert.match(document.body.textContent, /과거 관리자 처리 기록/)
+  assert.doesNotMatch(document.body.textContent, /검토 관리자|관리자 #45|상점주 #45/)
+})
+test('externally changed status is refreshed through GET without an administrator write', async () => {
+  await mount('/reservations/review?reservationId=1')
+  adapter = config => config.url === '/admin/reservations'
+    ? respond(config, reservationPage(config.params, { reservations: [reservation(2)] })) : defaultAdapter(config)
+  await click(document.querySelector('[aria-label="목록 새로고침"]'))
   assert.equal(location.search, '')
-  assert.equal(document.querySelector('[role="dialog"]'), null)
-  assert.match(document.body.textContent, /예약을 승인했습니다/)
-  assert.equal(calls.filter(c => c.method === 'post').length, 1)
+  assert.match(document.body.textContent, /현재 조회 조건 또는 페이지에 없어/)
+  assert.ok(calls.every(call => call.method === 'get'))
 })
-
-test('synthetic rejection without product fields retains review reason and never confirms a reservation', async () => {
-  adapter = config => {
-    if (config.method === 'post') {
-      assert.equal(config.url, '/admin/reservations/1/reject')
-      assert.equal(JSON.parse(config.data).reason, '합성 반려 사유')
-      return respond(config, reservation(1, { status: 'REJECTED', reviewReason: '합성 반려 사유' }))
-    }
-    return defaultAdapter(config)
-  }
-  await mount('/reservations/review?reservationId=1')
-  await click(button('반려'))
-  const dialog = document.querySelector('[role="dialog"]')
-  assert.match(dialog.textContent, /예약 일정.*예약 인원.*1명/)
-  assert.doesNotMatch(dialog.textContent, /상품|무료|결제 불필요/)
-  await click(button('반려 확정'))
-  assert.match(dialog.textContent, /반려 사유를 입력/)
-  assert.equal(calls.filter(call => call.method === 'post').length, 0)
-  await act(async () => {
-    const textarea = dialog.querySelector('textarea')
-    Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(textarea, '합성 반려 사유')
-    textarea.dispatchEvent(new window.Event('input', { bubbles: true }))
-  })
-  await click(button('반려 확정'))
-  assert.equal(document.querySelector('[role="dialog"]'), null)
-  assert.match(document.body.textContent, /예약을 반려했습니다/)
-  assert.equal(calls.filter(call => call.method === 'post').length, 1)
+test('retired administrator mutation functions are not exported', async () => {
+  const api = await server.ssrLoadModule('/src/api/adminReservationApi.ts')
+  assert.deepEqual(Object.keys(api).filter(name => !name.startsWith('__')).sort(), ['getAdminReservation', 'getAdminReservations'])
 })

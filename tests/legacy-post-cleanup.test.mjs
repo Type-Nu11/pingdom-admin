@@ -42,9 +42,10 @@ test('notification pending checks never query retired reports, preserving suppor
     return { config, status: 200, statusText: 'OK', headers: {}, data: { totalCount: 0, totalElements: 0, total: 0, groups: [], candidates: [], page: 1, limit: 1, totalPages: 0, hasNext: false } }
   }
   const result = await getAdminPendingWorkSummary()
-  assert.equal(result.checkedCount, 12)
+  assert.equal(result.checkedCount, 11)
   assert.equal(result.failedCount, 0)
   assert.equal(result.totalCount, 0)
   assert.ok(requests.includes('/admin/merchant-place-applications'))
+  assert.ok(!requests.includes('/admin/reservations'))
   assert.ok(!requests.some(path => path.startsWith('/admin/reports/') || path.startsWith('/admin/report-appeals')))
 })

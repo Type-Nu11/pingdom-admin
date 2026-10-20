@@ -107,7 +107,7 @@ const OPERATIONAL_METRICS: DashboardOperationalMetric[] = [
 ]
 
 const QUICK_ACTIONS = [
-  { label: '예약 심사', icon: 'event_available', route: '/reservations/review' },
+  { label: '예약 관리 이력', icon: 'event_available', route: '/reservations/review' },
   { label: '상점주 장소 신청 심사', icon: 'assignment_turned_in', route: '/merchant-place-applications' },
   { label: '커뮤니티 신고 심사', icon: 'flag', route: '/community-reports' },
   { label: '장소 정보 검증', icon: 'fact_check', route: '/places/information-verification' },

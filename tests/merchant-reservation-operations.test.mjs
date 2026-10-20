@@ -18,6 +18,7 @@ const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts'
 const api = await server.ssrLoadModule('/src/api/merchantStoreApi.ts')
 const { clearStoredAuth } = await server.ssrLoadModule('/src/utils/authStorage.ts')
 const { reservationFilterQuery } = await server.ssrLoadModule('/src/utils/merchantReservationQuery.ts')
+const { reservationReviewReason } = await server.ssrLoadModule('/src/utils/reservationReview.ts')
 const row = (id = 1, status = 'PENDING') => ({ id, touristUserId: 10, availabilityId: 20, quantity: 2, status,
   reservationStartsAt: '2030-10-01T05:00:00', reservationEndsAt: '2030-10-01T06:00:00',
   createdAt: '2030-09-01T09:00:00', confirmedAt: null, reviewedBy: null, reviewedAt: null, reviewReason: null,
@@ -51,6 +52,40 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()) })
 after(async () => { await server.close(); dom.window.close() })
+
+async function reviewBase(config) {
+  if (config.method === 'post') {
+    const id = Number(config.url.split('/').at(-2))
+    const status = config.url.endsWith('/confirm') ? 'CONFIRMED' : 'REJECTED'
+    rows = rows.map(item => item.id === id ? { ...item, status, reviewReason: config.data ? JSON.parse(config.data).reason : null } : item)
+    return response(config, rows.find(item => item.id === id))
+  }
+  if (/\/reservations\/\d+$/.test(config.url)) {
+    const id = Number(config.url.split('/').at(-1))
+    return response(config, { ...detail(id), reservation: rows.find(item => item.id === id) ?? row(id),
+      statusHistory: [{ id: 1, status: rows.find(item => item.id === id)?.status ?? 'PENDING', changedBy: 1, reason: null, changedAt: row().createdAt }] })
+  }
+  if (config.url.endsWith('/reservations')) return response(config, page(rows.filter(item => !config.params.status || item.status === config.params.status), config))
+  return base(config)
+}
+
+test('review reason validates trimmed required/optional/500 character boundaries', () => {
+  assert.equal(reservationReviewReason('confirm', '  '), undefined)
+  assert.throws(() => reservationReviewReason('reject', '  '), /입력/)
+  assert.equal(reservationReviewReason('reject', '  사유  '), '사유')
+  assert.equal(reservationReviewReason('confirm', '가'.repeat(500)).length, 500)
+  for (const action of ['confirm', 'reject']) assert.throws(() => reservationReviewReason(action, '가'.repeat(501)), /500/)
+})
+for (const [action, input, body] of [['confirm', '', undefined], ['confirm', '  안내 사유  ', { reason: '안내 사유' }], ['reject', '  영업 일정  ', { reason: '영업 일정' }]]) {
+  test(`${action} sends exact optional/required body: ${input}`, async () => {
+    adapter = reviewBase
+    await api.reviewMerchantReservation(1, action, input)
+    const config = calls.at(-1)
+    assert.equal(config.url, `/merchant-owner/reservations/1/${action}`)
+    assert.equal(config.method, 'post')
+    assert.deepEqual(config.data ? JSON.parse(config.data) : undefined, body)
+  })
+}
 
 test('filter periods convert Korean wall time to UTC independent of device timezone', () => {
   const previous = process.env.TZ

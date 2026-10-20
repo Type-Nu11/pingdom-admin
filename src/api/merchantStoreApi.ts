@@ -1,4 +1,5 @@
 import customAxios from './customAxios'
+import { reservationReviewReason, type ReservationReviewAction } from '../utils/reservationReview'
 import { getAuthSessionId } from '../utils/authStorage'
 import type {
   MerchantCampaignPageResponse,
@@ -490,6 +491,23 @@ export async function getMerchantReservation(reservationId: number) {
       && (item.changedBy === null || Number.isSafeInteger(item.changedBy))
       && (item.reason === null || typeof item.reason === 'string')
       && typeof item.changedAt === 'string')) throw new Error('예약 상세 응답 형식을 확인할 수 없습니다.')
+  return data
+}
+
+export async function reviewMerchantReservation(
+  reservationId: number,
+  action: ReservationReviewAction,
+  reason?: string,
+) {
+  const normalized = reservationReviewReason(action, reason)
+  const { data } = await customAxios.post<MerchantReservation>(
+    `${MERCHANT_OWNER_PATH}/reservations/${reservationId}/${action}`,
+    normalized === undefined ? undefined : { reason: normalized },
+  )
+  if (!isReservation(data) || data.id !== reservationId
+    || data.status !== (action === 'confirm' ? 'CONFIRMED' : 'REJECTED')) {
+    throw new Error('예약 처리 결과를 확인할 수 없습니다. 목록을 다시 조회해주세요.')
+  }
   return data
 }
 

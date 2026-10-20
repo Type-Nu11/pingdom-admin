@@ -86,11 +86,12 @@ export const AttachmentList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  container-type: inline-size;
 `
 
 export const AttachmentRow = styled.article`
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
@@ -100,25 +101,27 @@ export const AttachmentRow = styled.article`
   background: ${colors.surfaceLow};
 
   > div {
-    grid-column: 1 / -1;
     min-width: 0;
   }
 
-  > button:first-of-type { grid-column: 2; }
+  @container (max-width: 480px) {
+    > div { grid-column: 1 / -1; }
+    > button:first-of-type { grid-column: 2; }
+  }
 
-  strong,
-  span {
+  > div > strong,
+  > div > span {
     display: block;
   }
 
-  strong {
+  > div > strong {
     color: ${colors.strongText};
     ${typo.caption.bold}
     overflow-wrap: anywhere;
     white-space: normal;
   }
 
-  span {
+  > div > span {
     margin-top: 4px;
     color: ${colors.muted};
     font-size: 12px;

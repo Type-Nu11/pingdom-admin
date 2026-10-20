@@ -44,7 +44,7 @@ test('deployment, quota, timeout and auth errors have distinct user guidance', (
   for (const [code, expected] of [['NAVER_ADDRESS_SEARCH_UNAVAILABLE', '사용할 수 없습니다'], ['NAVER_ADDRESS_SEARCH_TIMEOUT', '초과'], ['NAVER_ADDRESS_SEARCH_RATE_LIMITED', '너무 많습니다'], ['NAVER_ADDRESS_SEARCH_FAILED', '조회하지'], ['PLACE_SEARCH_CONDITION_INVALID', '1~100']]) {
     assert.match(message({ isAxiosError: true, response: { data: { code } } }), new RegExp(expected))
   }
-  for (const status of [404, 405]) assert.match(message({ isAxiosError: true, response: { status } }), /배포/)
+  for (const status of [404, 405]) assert.match(message({ isAxiosError: true, response: { status } }), /주소 검색.*직접 입력/)
   assert.match(message({ isAxiosError: true, category: 'unauthorized' }), /로그인/)
   assert.match(message({ isAxiosError: true, category: 'forbidden' }), /권한/)
   assert.match(message({ isAxiosError: true, category: 'network' }), /연결/)

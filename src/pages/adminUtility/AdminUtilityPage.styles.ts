@@ -1,7 +1,22 @@
 import styled, { css } from 'styled-components'
 import { adminColors, radius, typo } from '../../styles/theme'
+import { Trigger as DateTimeTrigger } from '../../components/common/AdminDateTimePicker.styles'
 
 const neutral = adminColors
+
+const filterControlHover = css`
+  &:hover:not(:disabled) {
+    background: ${neutral.surface};
+    color: ${neutral.primaryForeground};
+    box-shadow: inset 0 0 0 1px ${neutral.primary};
+  }
+`
+
+const filterDateHover = css`
+  ${DateTimeTrigger} {
+    ${filterControlHover}
+  }
+`
 
 export const Content = styled.main`
   min-height: 0;
@@ -107,6 +122,7 @@ export const SummaryBarItem = styled.div`
 `
 
 export const FilterPanel = styled.section`
+  ${filterDateHover}
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -211,6 +227,7 @@ export const AdvancedFilterPanel = styled.div`
 `
 
 export const DetailFilterPanel = styled.div`
+  ${filterDateHover}
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-column: 1 / -1;
@@ -326,6 +343,7 @@ export const FilterMenuRoot = styled.div`
 
 export const FilterMenuButton = styled.button<{ $open?: boolean }>`
   ${inputControlStyle}
+  ${filterControlHover}
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -564,10 +582,7 @@ export const PrimaryButton = styled.button`
   border: 0;
   background: ${neutral.primaryAction};
   color: ${neutral.primaryText};
-
-  &:hover:not(:disabled) {
-    background: ${neutral.primaryForeground};
-  }
+  ${filterControlHover}
 `
 
 export const SecondaryButton = styled.button`
@@ -645,7 +660,7 @@ export const TableRow = styled.tr<{ $active?: boolean }>`
 
   &:hover {
     background: ${({ $active }) =>
-      $active ? neutral.primaryTint : neutral.surfaceLow};
+      $active ? neutral.primarySoft : neutral.primaryTint};
   }
 
   &:focus-visible {
@@ -909,11 +924,23 @@ export const DetailGroup = styled.section`
 `
 
 export const DetailActionGroup = styled(DetailGroup)`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   margin-top: 4px;
-  padding: 18px 0 0;
+  padding: 18px 14px 0;
   border-width: 1px 0 0;
   border-radius: 0;
   background: transparent;
+
+  > h3 { margin-bottom: 0; }
+
+  > ${FilterActions} {
+    justify-content: flex-end;
+  }
+
+  > ${Notice} { grid-column: 1 / -1; }
 `
 
 export const DetailGroupTitle = styled.h3`

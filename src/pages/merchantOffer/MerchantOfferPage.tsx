@@ -175,7 +175,7 @@ function CouponRedeemer({
     event.preventDefault()
     const normalizedCode = code.trim()
     if (!UUID_PATTERN.test(normalizedCode)) {
-      setFormError('관광객이 제시한 쿠폰 코드(UUID) 형식을 확인해주세요.')
+      setFormError('쿠폰 코드를 확인해주세요. 고객이 제시한 코드를 빠짐없이 입력해야 합니다.')
       return
     }
     if (!window.confirm(`쿠폰 ${normalizedCode}을 사용 처리할까요? 이 작업은 되돌릴 수 없습니다.`)) return

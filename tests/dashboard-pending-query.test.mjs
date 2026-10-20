@@ -40,15 +40,15 @@ async function finish(start=0,{fail,code=500,count=6,invalid,duplicateTotal=0}={
       if(fail?.(config.url)){
         reject(new AxiosError('Synthetic failure','ERR_BAD_RESPONSE',config,null,{config,status:code,statusText:'Error',headers:{},data:{}}));continue
       }
-      const n=config.url==='/admin/reservations'?count:0
+      const n=config.url==='/admin/merchant-place-applications'?count:0
       const duplicate=config.url==='/admin/places/duplicates'||config.url==='/admin/places/duplicate-candidates'
       const data=duplicate?{groups:[],candidates:[],page:1,limit:1,total:duplicateTotal,totalPages:Math.ceil(duplicateTotal),hasNext:duplicateTotal>1}:config.url.endsWith('/summary')?{placeCount:1,bannedUserCount:0}:config.url.endsWith('/recent-activities')?{places:[],userSanctions:[]}:
-        {count:0,unreadCount:0,totalElements:invalid!==undefined?invalid:n,totalCount:0,total:0}
+        {count:0,unreadCount:0,totalElements:invalid!==undefined?invalid:n,totalCount:0,total:invalid!==undefined?invalid:n}
       resolve({config,status:200,statusText:'OK',headers:{},data})
     }
   })
 }
-const reservation=()=>state.pendingWorkEntries.find(x=>x.key==='reservations')
+const application=()=>state.pendingWorkEntries.find(x=>x.key==='merchant-place-applications')
 test('duplicate checks use server total and request only one item',async()=>{
   assert.deepEqual(requests.find(x=>x.config.url==='/admin/places/duplicates').config.params,{page:1,limit:1})
   assert.deepEqual(requests.find(x=>x.config.url==='/admin/places/duplicate-candidates').config.params,{status:'PENDING',page:1,limit:1})
@@ -67,36 +67,37 @@ for(const duplicateTotal of [-1,1.5,'6',NaN]) test('invalid duplicate total '+du
   }
   assert.equal(state.pendingWorkCount,6)
 })
-test('dashboard and notifications share twelve checks, reservation filter and overlap guard',async()=>{
+test('dashboard and notifications share eleven checks, application filter and overlap guard',async()=>{
   assert.equal(requests.filter(x=>x.config.url==='/admin/merchant-place-applications').length,1)
-  const r=requests.find(x=>x.config.url==='/admin/reservations')
+  assert.ok(!requests.some(x=>x.config.url==='/admin/reservations'))
+  const r=requests.find(x=>x.config.url==='/admin/merchant-place-applications')
   assert.deepEqual(r.config.params,{status:'PENDING',page:1,limit:1})
-  assert.equal(state.pendingWorkEntries.length,12)
+  assert.equal(state.pendingWorkEntries.length,11)
   const count=requests.length
   await act(async()=>{void state.refreshPendingWork();void state.refreshPendingWork();void dashboard.fetchSummary()})
   assert.equal(requests.length,count)
   await finish()
-  assert.equal(reservation().count,6);assert.equal(state.pendingWorkCount,6)
-  assert.equal(state.pendingWorkEntries.filter(x=>x.status==='success').length,12)
+  assert.equal(application().count,6);assert.equal(state.pendingWorkCount,6)
+  assert.equal(state.pendingWorkEntries.filter(x=>x.status==='success').length,11)
   assert.equal(dashboard.status,'success')
 })
 for(const code of [401,403,500]) test(code+' distinguishes authentication from per-work failure',async()=>{
-  await finish(0,{fail:url=>url==='/admin/reservations',code})
+  await finish(0,{fail:url=>url==='/admin/merchant-place-applications',code})
   assert.equal(clears,code===401?1:0)
   assert.equal(state.pendingWorkCount,code===401?null:0)
-  assert.equal(reservation().status,code===401?'loading':'error')
+  assert.equal(application().status,code===401?'loading':'error')
   assert.equal(dashboard.status,'success')
 })
 test('failure preserves prior per-work count without including it in current total, retry clears stale data',async()=>{
   await finish()
   let start=requests.length
   await act(async()=>{void state.refreshPendingWork()})
-  assert.equal(reservation().status,'loading');assert.equal(reservation().count,6);assert.equal(state.pendingWorkCount,null)
-  await finish(start,{fail:url=>url==='/admin/reservations'})
-  assert.equal(reservation().count,6);assert.equal(reservation().status,'error');assert.equal(state.pendingWorkCount,0)
+  assert.equal(application().status,'loading');assert.equal(application().count,6);assert.equal(state.pendingWorkCount,null)
+  await finish(start,{fail:url=>url==='/admin/merchant-place-applications'})
+  assert.equal(application().count,6);assert.equal(application().status,'error');assert.equal(state.pendingWorkCount,0)
   start=requests.length
   await act(async()=>{void state.refreshPendingWork()});await finish(start,{count:0})
-  assert.equal(reservation().count,0);assert.equal(reservation().status,'success')
+  assert.equal(application().count,0);assert.equal(application().status,'success')
 })
 test('total failure is unknown, not an empty successful result',async()=>{
   await finish(0,{fail:url=>!url.includes('/dashboard/')&&!url.includes('/notifications/')})
@@ -118,7 +119,7 @@ test('one shared minute poll refreshes work and hidden tabs suspend it',async()=
   assert.equal(polls.length,1)
   const start=requests.length
   await act(async()=>polls[0].callback())
-  assert.equal(requests.slice(start).filter(x=>x.config.url==='/admin/reservations').length,1)
+  assert.equal(requests.slice(start).filter(x=>x.config.url==='/admin/merchant-place-applications').length,1)
   await finish(start)
   Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'})
   await act(async()=>document.dispatchEvent(new dom.window.Event('visibilitychange')))
@@ -127,7 +128,7 @@ test('one shared minute poll refreshes work and hidden tabs suspend it',async()=
 })
 for(const invalid of [-1,1.5,'6',NaN]) test('invalid count '+invalid+' is an error rather than zero',async()=>{
   await finish(0,{invalid})
-  assert.equal(reservation().status,'error');assert.equal(reservation().count,null)
+  assert.equal(application().status,'error');assert.equal(application().count,null)
 })
 test('session reset invalidates old responses and releases only its own in-flight guard',async()=>{
   const first=requests.length
@@ -135,11 +136,11 @@ test('session reset invalidates old responses and releases only its own in-fligh
   const current=requests.slice(first)
   const old=requests.slice(0,first);requests=old
   await finish(0,{count:9});requests=[...old,...current]
-  assert.equal(reservation().count,null)
+  assert.equal(application().count,null)
   const count=requests.length
   await act(async()=>{void state.refreshPendingWork()})
   assert.equal(requests.length,count)
-  await finish(first,{count:2});assert.equal(reservation().count,2)
+  await finish(first,{count:2});assert.equal(application().count,2)
 })
 test('visibility refresh is shared and ignores repeated events while in flight',async()=>{
   await finish()
@@ -148,7 +149,7 @@ test('visibility refresh is shared and ignores repeated events while in flight',
     document.dispatchEvent(new dom.window.Event('visibilitychange'))
     document.dispatchEvent(new dom.window.Event('visibilitychange'))
   })
-  assert.equal(requests.slice(start).filter(x=>x.config.url==='/admin/reservations').length,1)
+  assert.equal(requests.slice(start).filter(x=>x.config.url==='/admin/merchant-place-applications').length,1)
   assert.equal(requests.slice(start).filter(x=>x.config.url==='/admin/merchant-place-applications').length,1)
   await finish(start)
 })

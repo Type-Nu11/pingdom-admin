@@ -60,7 +60,7 @@ def main():
                            success_response_schema='|'.join(f'{s}:{content(v)}' for s, v in operation.get('responses', {}).items() if s.startswith('2')) or '-',
                            error_response_schemas='|'.join(f'{s}:{content(v)}' for s, v in operation.get('responses', {}).items() if not s.startswith('2')) or '-',
                            last_verified=metadata['collected_at'], canonical_status=f'{group}: documented',
-                           issue=previous.get('issue') or '#302', backend_prerequisite=previous.get('backend_prerequisite') or '계약 존재; 실서버 QA 미수행')
+                           issue=previous.get('issue') or metadata.get('issue', '#302'), backend_prerequisite=previous.get('backend_prerequisite') or '계약 존재; 실서버 QA 미수행')
                 row['frontend_target'] = '; '.join(f"{c['file']}::{c['function']} -> {','.join(c['callers']) or 'no callers'}" for c in calls) or '호출 근거 없음'
                 row['status'] = 'partial' if connected else 'missing'
                 row['destructive'] = previous.get('destructive') or ('no' if method == 'get' else 'review-required')
@@ -69,7 +69,7 @@ def main():
                     row['status'] = 'implemented'
                 if path == '/admin/dashboard/pending-items':
                     row.update(status='alternative', issue='#207',
-                               frontend_target='src/api/adminPendingWorkApi.ts: 예약·장소 신청·리뷰 삭제·커뮤니티 신고·검증·중복·Scout·Trust Score의 개별 API 집계',
+                               frontend_target='src/api/adminPendingWorkApi.ts: 장소 신청·리뷰 삭제·커뮤니티 신고·검증·중복·Scout·Trust Score의 개별 API 집계; 예약은 상점주 처리 업무로 제외',
                                backend_prerequisite='옛 게시글 혼합 집계 대신 장소 신청 전용 조회; 서버 API 삭제 의미 아님')
                 if '/members' in path or '/invitations/' in path:
                     if not connected:
@@ -92,6 +92,10 @@ def main():
                     for field in ['issue', 'confirmation', 'backend_prerequisite', 'frontend_target']:
                         if previous.get(field):
                             row[field] = previous[field]
+                if connected and path.startswith(('/admin/reservations', '/merchant-owner/reservations')):
+                    row.update(status='implemented', issue='#317; #318' if group == 'admin' else '#315; #316; #318',
+                               confirmation='관리자 조회 전용·상점주 승인/반려/취소 합성 회귀; 실서버 쓰기 미수행',
+                               backend_prerequisite='최신 공개 계약 및 별도 고정한 서버 소스 기준 대조; 인증된 운영 QA 미수행')
                 rows.append(row)
     for previous in old:
         key = (previous['method'], normalize(previous['path']))
@@ -114,6 +118,11 @@ def main():
                            confirmation=previous['confirmation'], frontend_target=previous['frontend_target'],
                            backend_prerequisite=source_contract['verification'],
                            canonical_status='현재 Admin/Merchant 문서에 없음; 서버 소스 구현 확인; 알려진 문서 그룹 누락')
+            if key[0] == 'POST' and re.fullmatch(r'/admin/reservations/\{[^}]+\}/(confirm|reject)', row['path']):
+                row.update(status='removed', issue='#317; #318',
+                           canonical_status='retired: 현재 Admin 문서 및 고정 서버 소스에서 제거 확인',
+                           backend_prerequisite='관리자 승인·반려 폐기; 상점주 예약 처리 API로 이관',
+                           frontend_target='호출 함수·hook action·관리자 UI 제거', confirmation='정적 호출 부재·관리자 읽기 전용 회귀 검사')
         else:
             row['canonical_status'] = 'out-of-scope: 기존 기록 보존, 이번 확인 대상 아님'
         rows.append(row)

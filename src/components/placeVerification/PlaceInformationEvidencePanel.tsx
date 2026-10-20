@@ -39,9 +39,11 @@ function isValidHttpUrl(value: string) {
 export function PlaceInformationEvidencePanel({
   verificationHook,
   loadedPlaceId,
+  hasSelectedPlace = false,
 }: {
   verificationHook: VerificationHook
   loadedPlaceId: number | null
+  hasSelectedPlace?: boolean
 }) {
   const {
     evidences,
@@ -95,7 +97,7 @@ export function PlaceInformationEvidencePanel({
 
     if (dialog.type === 'create') {
       if (!isValidHttpUrl(referenceUrl.trim())) {
-        setFormError('참조 URL은 http 또는 https 형식으로 입력해주세요.')
+        setFormError('참고 링크은 http 또는 https 형식으로 입력해주세요.')
         return
       }
       const parsedUserId = submittedByUserId ? Number(submittedByUserId) : undefined
@@ -134,15 +136,15 @@ export function PlaceInformationEvidencePanel({
       {!loadedPlaceId ? (
         <Shared.EmptyStateCard>
           <Shell.MaterialIcon aria-hidden="true">fact_check</Shell.MaterialIcon>
-          <strong>장소 ID를 조회해주세요.</strong>
+          <strong>{hasSelectedPlace ? '선택한 장소의 정보를 조회해주세요.' : '확인할 장소를 선택해주세요.'}</strong>
           <p>장소별 출처와 증빙 검토 이력을 확인할 수 있습니다.</p>
         </Shared.EmptyStateCard>
       ) : (
         <Shared.Panel>
           <Shared.PanelHeader>
             <div>
-              <Shared.PanelTitle>장소 #{loadedPlaceId} 정보 증빙</Shared.PanelTitle>
-              <Shared.PanelDescription>증빙을 추가하거나 관리자 검증 결과를 기록합니다.</Shared.PanelDescription>
+              <Shared.PanelTitle>장소 #{loadedPlaceId} 증빙</Shared.PanelTitle>
+              <Shared.PanelDescription>장소 정보 증빙을 추가하고 검토 결과를 기록합니다.</Shared.PanelDescription>
             </div>
             <Shared.HeaderActions>
               <Shared.SecondaryButton type="button" disabled={isEvidenceLoading || activeAction !== null} onClick={() => void fetchEvidence(loadedPlaceId)}>새로고침</Shared.SecondaryButton>
@@ -150,8 +152,7 @@ export function PlaceInformationEvidencePanel({
             </Shared.HeaderActions>
           </Shared.PanelHeader>
           <Shared.CompareBody>
-            {evidenceErrorMessage ? <Shared.Notice $variant="error" role="alert">{evidenceErrorMessage}</Shared.Notice> : null}
-            {isEvidenceLoading ? (
+            {evidenceErrorMessage ? <Shared.Notice $variant="error" role="alert">{evidenceErrorMessage}<Shared.SecondaryButton type="button" disabled={isEvidenceLoading || activeAction !== null} onClick={() => void fetchEvidence(loadedPlaceId)}>다시 시도</Shared.SecondaryButton></Shared.Notice> : isEvidenceLoading ? (
               <Shared.EmptyState><strong>증빙을 불러오는 중입니다.</strong></Shared.EmptyState>
             ) : evidences.length === 0 ? (
               <Shared.EmptyState><strong>등록된 증빙이 없습니다.</strong><p>출처를 확인한 뒤 첫 증빙을 등록해주세요.</p></Shared.EmptyState>
@@ -168,7 +169,7 @@ export function PlaceInformationEvidencePanel({
                     </S.RecordHeader>
                     {evidence.description ? <S.RecordDescription>{evidence.description}</S.RecordDescription> : null}
                     <S.DetailGrid>
-                      <S.DetailItem><dt>외부 참조</dt><dd>{evidence.externalReference || '없음'}</dd></S.DetailItem>
+                      <S.DetailItem><dt>관련 자료 번호</dt><dd>{evidence.externalReference || '없음'}</dd></S.DetailItem>
                       <S.DetailItem><dt>제출 사용자</dt><dd>{evidence.submittedByUserId ? `ID ${evidence.submittedByUserId}` : '관리자'}</dd></S.DetailItem>
                       <S.DetailItem><dt>검토 관리자</dt><dd>{evidence.reviewedByAdminUserId ? `ID ${evidence.reviewedByAdminUserId}` : '미검토'}</dd></S.DetailItem>
                       <S.DetailItem><dt>검토 근거</dt><dd>{evidence.reviewReason || '아직 입력되지 않음'}</dd></S.DetailItem>
@@ -191,7 +192,7 @@ export function PlaceInformationEvidencePanel({
         <Shared.ModalOverlay role="presentation" onKeyDown={(event) => { if (event.key === 'Escape' && activeAction === null) { event.stopPropagation(); closeDialog() } }} onMouseDown={() => activeAction === null && closeDialog()}>
           <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="evidence-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
             <Shared.ModalHeader>
-              <Shared.ModalTitle id="evidence-dialog-title">{dialog.type === 'create' ? '정보 증빙 등록' : `증빙 #${dialog.evidence.evidenceId} 검토`}</Shared.ModalTitle>
+              <Shared.ModalTitle id="evidence-dialog-title">{dialog.type === 'create' ? '증빙 등록' : `증빙 #${dialog.evidence.evidenceId} 검토`}</Shared.ModalTitle>
               <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>
@@ -203,13 +204,13 @@ export function PlaceInformationEvidencePanel({
                   <S.Field>증빙 유형 *
                     <AdminSelect aria-label="증빙 유형" value={evidenceType} disabled={activeAction !== null} width="100%" onChange={(event) => setEvidenceType(event.target.value as PlaceInformationEvidenceType)}>{EVIDENCE_TYPES.map((value) => <option key={value} value={value}>{EVIDENCE_TYPE_LABELS[value]}</option>)}</AdminSelect>
                   </S.Field>
-                  <S.Field>외부 참조
+                  <S.Field>관련 자료 번호
                     <S.Input value={externalReference} maxLength={100} disabled={activeAction !== null} onChange={(event) => setExternalReference(event.target.value)} />
                   </S.Field>
                   <S.Field>제출 사용자 ID
                     <S.Input inputMode="numeric" value={submittedByUserId} disabled={activeAction !== null} placeholder="비우면 현재 관리자" onChange={(event) => setSubmittedByUserId(event.target.value)} />
                   </S.Field>
-                  <S.WideField>참조 URL
+                  <S.WideField>참고 링크
                     <S.Input type="url" value={referenceUrl} maxLength={500} disabled={activeAction !== null} placeholder="https://" onChange={(event) => setReferenceUrl(event.target.value)} />
                   </S.WideField>
                   <S.WideField>설명

@@ -1,0 +1,19 @@
+name: pingdom-admin
+services:
+  web:
+    # CI가 전달한 digest로 실행합니다. EC2에서는 소스 이미지를 빌드하지 않습니다.
+    image: ${PINGDOM_WEB_IMAGE:?Set the verified registry image digest}
+    ports:
+      - '${PINGDOM_WEB_BIND_ADDRESS:?}:${PINGDOM_WEB_PORT:-8082}:8080'
+    environment:
+      PINGDOM_API_UPSTREAM: ${PINGDOM_API_UPSTREAM:?}
+    volumes:
+      - '${PINGDOM_RUNTIME_TEMPLATE:?}:/etc/nginx/templates/default.conf.template:ro'
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'

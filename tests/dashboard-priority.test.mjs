@@ -14,7 +14,7 @@ const {AdminNotificationContext}=await server.ssrLoadModule('/src/app/providers/
 const {default:Page}=await server.ssrLoadModule('/src/pages/dashboard/DashboardPage.tsx')
 const {AdminPendingWork}=await server.ssrLoadModule('/src/components/adminNotification/AdminPendingWork.tsx')
 let root,location,work
-const emptyWork = {key:'reservations',title:'예약 심사',description:'심사 대기 예약',path:'/reservations/review',status:'success',count:0,updatedAt:1}
+const emptyWork = {key:'community-reports',title:'커뮤니티 신고',description:'심사 대기 신고',path:'/community-reports',status:'success',count:0,updatedAt:1}
 function Location(){location=useLocation();return null}
 const metrics={duplicatePlaceGroupCount:0,expiringBannedUserCount:0,missingLocationPlaceCount:0,today:{placeRegistrationCount:0},last7Days:{placeRegistrationCount:0}}
 beforeEach(()=>{work=[{...emptyWork}];root=createRoot(document.getElementById('root'));globalThis.dashboardState={summary:{placeCount:10,bannedUserCount:0,operationalMetrics:metrics},recentActivities:null,pendingItems:{items:[],totalCount:0},status:'success',recentActivitiesStatus:'empty',pendingItemsStatus:'empty',isLoading:false,lastUpdatedAt:1,fetchSummary(){}}})
@@ -47,12 +47,12 @@ test('work sections precede summary and valid zero is concise',async()=>{
   assert.ok(text.indexOf('우선 확인')<text.indexOf('관리 요약'))
   assert.match(text,/조회한 1개 업무에 처리 대기 항목이 없습니다/)
 })
-test('pending reservation opens the review route and uses the server count',async()=>{
+test('pending community report opens the review route and uses the server count',async()=>{
   work=[{...emptyWork,count:6}]
   await render()
-  const b=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('예약 심사'))
+  const b=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('커뮤니티 신고'))
   await act(async()=>b.click())
-  assert.equal(location.pathname,'/reservations/review')
+  assert.equal(location.pathname,'/community-reports')
   assert.match(document.body.textContent,/확인된 대기 6건/)
 })
 for(const status of ['error','loading']) test(status+' never reports no work and labels cached counts',async()=>{
@@ -75,7 +75,7 @@ test('dashboard fills the first row with a zero-count task without duplicating i
   const section=document.querySelector('[aria-label="처리 대기 업무"]')
   const rows=[...section.querySelectorAll('button')].filter(button=>!button.hasAttribute('aria-label')&&!button.closest('details'))
   assert.equal(rows.length,2)
-  assert.match(rows[0].textContent,/예약 심사.*6건/)
+  assert.match(rows[0].textContent,/커뮤니티 신고.*6건/)
   assert.match(rows[1].textContent,/장소 신청 심사.*0건/)
   assert.match(section.querySelector('summary').textContent,/대기 없음 · 1개 업무/)
   assert.equal([...section.querySelectorAll('button')].filter(button=>button.textContent.includes('장소 신청 심사')).length,1)
@@ -84,7 +84,7 @@ test('dashboard fills the first row with a zero-count task without duplicating i
   assert.equal(location.pathname,'/merchant-place-applications')
 })
 test('all-zero dashboard still previews two tasks and hides only the remainder',async()=>{
-  work=['예약 심사','장소 신청 심사','신고 심사'].map((title,index)=>({...emptyWork,key:String(index),title}))
+  work=['커뮤니티 신고','장소 신청 심사','신고 심사'].map((title,index)=>({...emptyWork,key:String(index),title}))
   await render()
   const section=document.querySelector('[aria-label="처리 대기 업무"]')
   assert.equal([...section.querySelectorAll('button')].filter(button=>!button.hasAttribute('aria-label')&&!button.closest('details')).length,2)
@@ -109,7 +109,7 @@ test('compact notification list keeps zero-count tasks collapsed',async()=>{
   assert.equal(section.querySelector('details').open,false)
 })
 test('previous zero can fill the preview while reloading without claiming current zero',async()=>{
-  work=['예약 심사','장소 신청 심사','신고 심사'].map((title,index)=>({...emptyWork,key:String(index),title,status:'loading'}))
+  work=['커뮤니티 신고','장소 신청 심사','신고 심사'].map((title,index)=>({...emptyWork,key:String(index),title,status:'loading'}))
   await render()
   const section=document.querySelector('[aria-label="처리 대기 업무"]')
   assert.ok(section.querySelector('details button'))

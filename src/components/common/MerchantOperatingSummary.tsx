@@ -25,9 +25,9 @@ export function MerchantOperatingSummary({ loading, failed, value, checkedAt, di
   const label = loading ? '영업 상태를 확인하는 중입니다.' : !known ? '현재 영업 상태를 확인할 수 없습니다.' : value ? '현재 영업시간입니다.' : '현재 영업시간 외입니다.'
   return <Summary aria-label="현재 영업 상태">
     <div role="status"><strong>{label}</strong>
-      {known ? <small>{confirmationTime ? <>서버 확인 시각 (한국): <time dateTime={confirmationTime.dateTime}>{confirmationTime.label}</time></> : '확인 시각 정보 없음'}</small> : null}
+      {known ? <small>{confirmationTime ? <>정보 확인 시각 (한국): <time dateTime={confirmationTime.dateTime}>{confirmationTime.label}</time></> : '확인 시각 정보 없음'}</small> : null}
       {!loading && failed ? <small>조회에 실패했습니다. 다시 시도해주세요.</small> : null}
-      {!loading && !failed && !known ? <small>서버에서 영업 여부를 확인하지 못했습니다.</small> : null}
+      {!loading && !failed && !known ? <small>영업 상태 정보가 없습니다. 다시 확인해주세요.</small> : null}
     </div>
     {!loading && !known ? <button type="button" disabled={disabled} onClick={onRetry}>다시 확인</button> : null}
   </Summary>

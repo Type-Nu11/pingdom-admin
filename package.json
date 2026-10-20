@@ -14,6 +14,7 @@
     "test:ec2-image": "node scripts/verify-ec2-image.mjs",
     "test:release-browser": "node scripts/run-browser-regressions.mjs",
     "test:reservation-context-browser": "node tests/browser/reservation-context.mjs",
+    "test:merchant-reservation-query-browser": "node tests/browser/merchant-reservation-query.mjs",
     "test:ui-accessibility-browser": "node tests/browser/ui-accessibility.mjs",
     "test:merchant-naver-map-browser": "node tests/browser/merchant-naver-map.mjs",
     "test:admin-naver-map-browser": "node tests/browser/admin-naver-map.mjs",

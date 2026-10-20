@@ -335,7 +335,7 @@ function OperationHistoryPage() {
 
             {tab === 'audit' ? (
               <>
-                <Shared.Panel>
+                <History.FilterPanel>
                   <Shared.PanelHeader>
                     <div>
                       <Shared.PanelTitle>감사 로그 필터</Shared.PanelTitle>
@@ -426,7 +426,7 @@ function OperationHistoryPage() {
                       </History.AuditFilterActions>
                     </S.FormGrid>
                   </S.FormBody>
-                </Shared.Panel>
+                </History.FilterPanel>
 
                 <ListDetailWorkspace constrained>
                   <ListPane
@@ -510,7 +510,7 @@ function OperationHistoryPage() {
               </>
             ) : (
               <>
-                <Shared.Panel>
+                <History.FilterPanel>
                   <Shared.PanelHeader>
                     <div>
                       <Shared.PanelTitle>개인정보 처리 필터</Shared.PanelTitle>
@@ -527,7 +527,7 @@ function OperationHistoryPage() {
                       <S.InlineActions><Shared.SecondaryButton type="button" onClick={resetPrivacy}>초기화</Shared.SecondaryButton><Shared.PrimaryButton type="submit" disabled={isLoading}>조회</Shared.PrimaryButton></S.InlineActions>
                     </S.FormGrid>
                   </S.FormBody>
-                </Shared.Panel>
+                </History.FilterPanel>
 
                 <ListDetailWorkspace constrained>
                   <ListPane

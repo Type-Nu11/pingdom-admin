@@ -47,8 +47,20 @@ function getMerchantStoreErrorMessage(error: unknown, fallbackMessage: string) {
 function isMissingPlaceInformation(error: unknown) {
   return (
     isApiError<MerchantStoreErrorResponse>(error) &&
+    !error.isRefreshFailure &&
+    (error.response?.status ?? error.status) === 404 &&
     error.response?.data?.code === 'PLACE_INFORMATION_NOT_FOUND'
   )
+}
+
+async function getOptionalPlaceInformation(placeId: number) {
+  try {
+    return await getMerchantPlaceInformation(placeId)
+  } catch (error) {
+    // Only this endpoint's explicit "not registered yet" response is an empty state.
+    if (isMissingPlaceInformation(error)) return null
+    throw error
+  }
 }
 
 function emptyOptionalValue(value: string) {
@@ -147,7 +159,7 @@ export function useMerchantStore() {
       setSectionErrorMessage('')
 
       const [informationResult, campaignsResult, offersResult, availabilitiesResult, noticesResult] = await Promise.allSettled([
-        getMerchantPlaceInformation(placeId),
+        getOptionalPlaceInformation(placeId),
         getMerchantCampaigns(),
         getMerchantOffers(),
         getMerchantAvailabilities(),
@@ -160,7 +172,7 @@ export function useMerchantStore() {
 
       const failures = [informationResult, campaignsResult, offersResult, availabilitiesResult, noticesResult].filter(
         (result): result is PromiseRejectedResult =>
-          result.status === 'rejected' && !isMissingPlaceInformation(result.reason)
+          result.status === 'rejected'
       )
 
       if (informationResult.status === 'fulfilled') {

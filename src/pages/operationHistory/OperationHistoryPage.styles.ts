@@ -1,7 +1,14 @@
 import styled from 'styled-components'
 import { typo, adminColors, radius } from '../../styles/theme'
+import { Panel } from '../placeMerge/PlaceMergePage.styles'
 
 const neutral = adminColors
+
+export const FilterPanel = styled(Panel)`
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+`
 
 export const AuditFilterDisclosure = styled.div`
   grid-column: 1 / -1;

@@ -125,7 +125,7 @@ function PlaceVerificationPage() {
               <div>
                 <Shared.Eyebrow>장소 관리 &gt; 정보 검증</Shared.Eyebrow>
                 <Shared.PageTitle>장소 정보 신고 및 재확인</Shared.PageTitle>
-                <Shared.PageDescription>사용자 신고와 반박을 판정하고, 장소별 증빙 및 업주 재확인 요청을 한 흐름에서 관리합니다.</Shared.PageDescription>
+                <Shared.PageDescription>사용자 신고와 반박을 판정하고, 장소별 증빙 및 상점주 재확인 요청을 한 흐름에서 관리합니다.</Shared.PageDescription>
               </div>
               <Shared.HeaderActions>
                 <Shared.HeaderButton type="button" onClick={() => navigate('/places')}>장소 관리</Shared.HeaderButton>
@@ -143,7 +143,7 @@ function PlaceVerificationPage() {
               <S.SearchBar onSubmit={handlePlaceSearch}>
                 <S.PlaceLookupRow>
                 <S.Field as="div">장소
-                    <AdminPlacePicker value={placeIdInput} selectedPlace={selectedPlace} disabled={verificationHook.activeAction !== null} onChange={(value, place) => {
+                    <AdminPlacePicker layout="wide" value={placeIdInput} selectedPlace={selectedPlace} disabled={verificationHook.activeAction !== null} onChange={(value, place) => {
                       requestTransition(() => {
                         setPlaceIdInput(value)
                         setSelectedPlace(place)
@@ -161,8 +161,8 @@ function PlaceVerificationPage() {
             {searchError ? <Shared.Notice $variant="error">{searchError}</Shared.Notice> : null}
 
             {activeTab === 'reports' ? <PlaceInformationReportPanel reportHook={reportHook} /> : null}
-            {activeTab === 'evidence' ? <PlaceInformationEvidencePanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
-            {activeTab === 'reverification' ? <PlaceInformationReverificationPanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} /> : null}
+            {activeTab === 'evidence' ? <PlaceInformationEvidencePanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} hasSelectedPlace={parsePlaceId(placeIdInput) !== null} /> : null}
+            {activeTab === 'reverification' ? <PlaceInformationReverificationPanel key={loadedPlaceId ?? 'empty'} verificationHook={verificationHook} loadedPlaceId={loadedPlaceId} hasSelectedPlace={parsePlaceId(placeIdInput) !== null} /> : null}
           </div>
           </Shared.PageStack>
         </Shared.Content>

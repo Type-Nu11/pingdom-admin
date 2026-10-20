@@ -15,7 +15,7 @@ function Fixture() {
   const [dialog, setDialog] = useState(false)
   return <><GlobalStyle /><main style={{ maxWidth: 1100, margin: 'auto' }}>
     <Admin.PageTitle data-testid="admin-title">관리자 디자인 시스템 확인</Admin.PageTitle>
-    <AdminNav.ItemButton $active data-testid="admin-nav">예약 심사</AdminNav.ItemButton>
+    <AdminNav.ItemButton $active data-testid="admin-nav">예약 관리 이력</AdminNav.ItemButton>
     <Merchant.Title data-testid="merchant-title">상점주 디자인 시스템 확인</Merchant.Title>
     <MerchantNav.ItemButton $active data-testid="merchant-nav">신규 장소 등록</MerchantNav.ItemButton>
     <Merchant.Description>조회와 입력 기능은 실제 공통 컴포넌트로 확인합니다.</Merchant.Description>

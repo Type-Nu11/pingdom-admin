@@ -202,7 +202,14 @@ function LoginPage() {
         </S.LoginPanel>
 
         <S.FooterText>
-          도움이 필요하신가요? <S.FooterLink href="#support">고객센터에 문의하기</S.FooterLink>
+          도움이 필요하신가요?{' '}
+          <S.FooterLink
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=azunox9%40gmail.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            고객센터에 문의하기
+          </S.FooterLink>
         </S.FooterText>
       </S.StartShell>
     </S.Page>

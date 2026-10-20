@@ -224,7 +224,7 @@ test('failed score refresh labels retained score and disables actions based on s
   adapter = config => /reporters\/1$/.test(config.url) ? reject(config, 500) : standard(config)
   await act(async () => button('조회').click()); await settle()
   assert.match(document.body.textContent, /표시된 점수는 이전 결과입니다/)
-  assert.equal(button('개입 규칙 평가').disabled, true)
+  assert.equal(button('신뢰 점수 관리 규칙 평가').disabled, true)
   assert.equal(button('전체 점수 재계산').disabled, true)
 })
 

@@ -32,7 +32,7 @@ export async function searchNaverAddresses(query: string, signal?: AbortSignal):
 export function getNaverAddressSearchError(error: unknown): string {
   if (isApiError<AuthErrorResponse>(error)) {
     if (!error.isRefreshFailure && (error.response?.status === 404 || error.response?.status === 405)) {
-      return '서버 주소 검색 API를 사용할 수 없습니다. 배포 상태를 확인하거나 주소와 좌표를 직접 입력해주세요.'
+      return '주소 검색을 이용할 수 없습니다. 잠시 후 다시 시도하거나 주소와 위치를 직접 입력해주세요.'
     }
     return getAuthErrorMessage(error, {
       fallbackMessage: '주소를 조회하지 못했습니다. 다시 검색하거나 직접 입력해주세요.',

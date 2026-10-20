@@ -892,6 +892,8 @@ export const AttachmentUploader = styled.div`
   gap: 8px;
   margin-top: 14px;
 
+  > ${SecondaryButton} { min-height: 50px; }
+
   @media (max-width: 400px) {
     grid-template-columns: minmax(0, 1fr) auto;
 
@@ -899,10 +901,19 @@ export const AttachmentUploader = styled.div`
   }
 `
 
+export const AttachmentUploadHint = styled.p`
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: ${colors.muted};
+`
+
 export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }>`
   position: relative;
   min-width: 0;
-  min-height: 42px;
+  height: 50px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -931,9 +942,7 @@ export const FilePicker = styled.label<{ $hasFile: boolean; $disabled: boolean }
   }
 
   div { min-width: 0; }
-  strong, small { display: block; overflow-wrap: anywhere; white-space: normal; }
-  strong { color: ${colors.text}; font-size: 12px; }
-  small { margin-top: 1px; color: ${colors.muted}; font-size: ${typography.caption.regular.fontSize}px; }
+  strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${colors.text}; font-size: 12px; }
 
   &:hover { border-color: ${colors.primary}; background: ${colors.primaryTint}; }
   &:focus-within { outline: 2px solid ${colors.primary}; outline-offset: 2px; }

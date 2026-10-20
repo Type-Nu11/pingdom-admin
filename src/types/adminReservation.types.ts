@@ -49,8 +49,4 @@ export interface AdminReservationQuery {
   limit?: number
 }
 
-export interface AdminReservationReviewRequest {
-  reason: string
-}
-
 export type AdminReservationErrorResponse = AuthErrorResponse<string>

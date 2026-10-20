@@ -13,7 +13,7 @@ import { reporter, historyPage } from '../helpers/trust-score-data.mjs'
 const qa = window.trustScoreQA = { calls: [], historyStatus: 0, reporterStatus: 0, delayHistory: false, malformed: false, clears: 0 }
 client.defaults.adapter = observeFixtureAdapter(async config => {
   qa.calls.push({ method: config.method, path: config.url, params: config.params })
-  if (config.method !== 'get') throw Error('Trust Score browser QA forbids mutations')
+  if (config.method !== 'get') throw Error('신뢰 점수 browser QA forbids mutations')
   let data, status = 0
   const match = config.url.match(/^\/admin\/trust-score\/reporters\/(\d+)(\/history)?$/)
   if (match) {

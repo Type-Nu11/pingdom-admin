@@ -22,6 +22,7 @@ import type {
 import { logDebugError } from '../utils/debugLogger'
 import { useAuth } from './useAuth'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { getAuthSessionId } from '../utils/authStorage'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type MenuAction = 'create' | 'update' | 'status' | 'order' | 'deactivate' | null
@@ -37,7 +38,8 @@ function replaceById(items: MerchantPlaceMenu[], next: MerchantPlaceMenu) {
 }
 
 export function useMerchantPlaceMenus() {
-  const { clearAuth } = useAuth()
+  const { clearAuth, user } = useAuth()
+  const owner = `${user?.id ?? ''}:${user?.role ?? ''}`
   const { selectedPlaceId, selectPlace: selectSharedPlace, syncPlaces } = useMerchantPlaceSelection()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [profile, setProfile] = useState<MerchantOwnerProfile | null>(null)
@@ -50,7 +52,13 @@ export function useMerchantPlaceMenus() {
   const [activeAction, setActiveAction] = useState<MenuAction>(null)
   const mountedRef = useRef(true)
   const requestRef = useRef(0)
+  const initialRequestRef = useRef(0)
   const actionRef = useRef<MenuAction>(null)
+  const selectedPlaceRef = useRef(selectedPlaceId)
+  const ownerRef = useRef(owner)
+  const loadedPlaceRef = useRef<number | null>(null)
+  selectedPlaceRef.current = selectedPlaceId
+  ownerRef.current = owner
 
   useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   useAutoDismissMessage(successMessage, setSuccessMessage)
@@ -70,6 +78,8 @@ export function useMerchantPlaceMenus() {
   }, [clearAuth])
 
   const fetchMenusForPlace = useCallback(async (placeId: number) => {
+    const session = getAuthSessionId()
+    loadedPlaceRef.current = placeId
     const requestId = requestRef.current + 1
     requestRef.current = requestId
     setIsLoading(true)
@@ -77,11 +87,11 @@ export function useMerchantPlaceMenus() {
 
     try {
       const next = await getMerchantPlaceMenus(placeId)
-      if (!mountedRef.current || requestId !== requestRef.current) return false
+      if (!mountedRef.current || requestId !== requestRef.current || session !== getAuthSessionId()) return false
       setMenus(sortMenus(next))
       return true
     } catch (error) {
-      if (mountedRef.current && requestId === requestRef.current) {
+      if (mountedRef.current && requestId === requestRef.current && session === getAuthSessionId()) {
         const message = getErrorMessage(error, '메뉴 목록을 불러오지 못했습니다.')
         setSectionErrorMessage(message)
         setErrorMessage(message)
@@ -89,7 +99,7 @@ export function useMerchantPlaceMenus() {
       }
       return false
     } finally {
-      if (mountedRef.current && requestId === requestRef.current) setIsLoading(false)
+      if (mountedRef.current && requestId === requestRef.current && session === getAuthSessionId()) setIsLoading(false)
     }
   }, [getErrorMessage])
 
@@ -102,12 +112,16 @@ export function useMerchantPlaceMenus() {
   }, [fetchMenusForPlace, selectedPlaceId])
 
   const fetchInitialData = useCallback(async () => {
+    const request = ++initialRequestRef.current
+    const session = getAuthSessionId()
+    const current = () => mountedRef.current && request === initialRequestRef.current
+      && session === getAuthSessionId() && owner === ownerRef.current
     setStatus('loading')
     setErrorMessage('')
 
     try {
       const nextProfile = await getMerchantOwnerProfile()
-      if (!mountedRef.current) return
+      if (!current()) return
       setProfile(nextProfile)
       const placeId = syncPlaces(nextProfile.placeIds)
       if (!placeId) {
@@ -117,29 +131,45 @@ export function useMerchantPlaceMenus() {
       }
 
       const loaded = await fetchMenusForPlace(placeId)
-      if (mountedRef.current) setStatus(loaded ? 'ready' : 'error')
+      if (current()) setStatus(loaded ? 'ready' : 'error')
     } catch (error) {
-      if (!mountedRef.current) return
+      if (!current()) return
       setStatus('error')
       setErrorMessage(getErrorMessage(error, '메뉴 관리 정보를 불러오지 못했습니다.'))
       logDebugError('상점주 메뉴 관리 초기 조회 실패', error)
     }
-  }, [fetchMenusForPlace, getErrorMessage, syncPlaces])
+  }, [fetchMenusForPlace, getErrorMessage, syncPlaces, owner])
+
+  const invalidateRequests = useCallback(() => {
+    ++requestRef.current
+    ++initialRequestRef.current
+    loadedPlaceRef.current = null
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
-    return () => { mountedRef.current = false }
-  }, [fetchInitialData])
+    return () => { mountedRef.current = false; invalidateRequests() }
+  }, [fetchInitialData, owner, invalidateRequests])
+
+  useEffect(() => {
+    if (selectedPlaceId && loadedPlaceRef.current !== selectedPlaceId) {
+      setMenus([])
+      void fetchMenusForPlace(selectedPlaceId)
+    }
+  }, [fetchMenusForPlace, selectedPlaceId])
 
   const runAction = useCallback(async <T,>(
     action: Exclude<MenuAction, null>,
     request: () => Promise<T>,
-    apply: (value: T) => void | Promise<void>,
+    apply: (value: T) => void | boolean | Promise<void | boolean>,
     successText: string,
     fallbackMessage: string,
   ) => {
-    if (actionRef.current) return null
+    if (actionRef.current || owner !== ownerRef.current || selectedPlaceId !== selectedPlaceRef.current) return null
+    const session = getAuthSessionId()
+    const place = selectedPlaceId
+    const current = () => mountedRef.current && session === getAuthSessionId() && selectedPlaceRef.current === place && ownerRef.current === owner
     actionRef.current = action
     setActiveAction(action)
     setActionErrorMessage('')
@@ -147,13 +177,17 @@ export function useMerchantPlaceMenus() {
 
     try {
       const result = await request()
-      if (!mountedRef.current) return null
-      await apply(result)
-      if (mountedRef.current) setSuccessMessage(successText)
+      if (!current()) return null
+      const applied = await apply(result)
+      if (!current()) return null
+      if (applied === false) return null
+      setSuccessMessage(successText)
       return result
     } catch (error) {
-      if (mountedRef.current) {
+      if (current()) {
         setActionErrorMessage(getErrorMessage(error, fallbackMessage))
+        // A failed/timeout response does not prove that the server left the order unchanged.
+        if (action === 'order' && place && current() && !shouldClearAuth(error)) await fetchMenusForPlace(place)
         logDebugError(`상점주 메뉴 ${action} 실패`, error)
       }
       return null
@@ -161,7 +195,7 @@ export function useMerchantPlaceMenus() {
       actionRef.current = null
       if (mountedRef.current) setActiveAction(null)
     }
-  }, [getErrorMessage])
+  }, [fetchMenusForPlace, getErrorMessage, owner, selectedPlaceId])
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return
@@ -205,15 +239,17 @@ export function useMerchantPlaceMenus() {
   }, [runAction, selectedPlaceId])
 
   const moveMenu = useCallback((menu: MerchantPlaceMenu, displayOrder: number) => {
-    if (!selectedPlaceId || displayOrder < 0) return Promise.resolve(null)
+    if (!selectedPlaceId || loadedPlaceRef.current !== selectedPlaceId || isLoading || sectionErrorMessage || menu.status === 'INACTIVE'
+      || !menus.some(item => item.id === menu.id && item.status !== 'INACTIVE')
+      || !Number.isSafeInteger(displayOrder) || displayOrder < 0 || displayOrder >= menus.length) return Promise.resolve(null)
     return runAction(
       'order',
       () => updateMerchantPlaceMenuOrder(selectedPlaceId, menu.id, displayOrder),
-      async () => { await fetchMenusForPlace(selectedPlaceId) },
+      async () => fetchMenusForPlace(selectedPlaceId),
       '메뉴 표시 순서를 변경했습니다.',
       '메뉴 표시 순서를 변경하지 못했습니다.',
     )
-  }, [fetchMenusForPlace, runAction, selectedPlaceId])
+  }, [fetchMenusForPlace, runAction, selectedPlaceId, isLoading, sectionErrorMessage, menus])
 
   const deactivateMenu = useCallback((menuId: number) => {
     if (!selectedPlaceId) return Promise.resolve(null)

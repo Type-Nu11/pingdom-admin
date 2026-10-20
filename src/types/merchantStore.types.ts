@@ -285,6 +285,9 @@ export interface MerchantReservation {
   availabilityId: number
   reservationStartsAt?: string | null
   reservationEndsAt?: string | null
+  bookerName?: string | null
+  bookerPhone?: string | null
+  requestNote?: string | null
   quantity: number
   status: MerchantReservationStatus
   createdAt: string
@@ -306,6 +309,30 @@ export interface MerchantReservationPageResponse {
   totalElements: number
   totalPages: number
   hasNext: boolean
+}
+
+export interface MerchantReservationQuery {
+  status?: MerchantReservationStatus
+  placeId?: number
+  reservationFrom?: string
+  reservationTo?: string
+  page?: number
+  limit?: number
+}
+
+export interface MerchantReservationHistory {
+  id: number
+  status: MerchantReservationStatus
+  changedBy: number | null
+  reason: string | null
+  changedAt: string
+}
+
+export interface MerchantReservationDetail {
+  reservation: MerchantReservation
+  placeId: number
+  placeName: string | null
+  statusHistory: MerchantReservationHistory[]
 }
 
 export interface MerchantPayment {

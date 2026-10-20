@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components'
 import { typo, adminColors, radius } from '../../styles/theme'
+import { outlinedControlSurface } from '../../styles/merchantControlTheme'
 
 export const DropdownRoot = styled.div<{ $width?: string }>`
   position: relative;
@@ -54,6 +55,7 @@ export const DropdownTrigger = styled.button`
     cursor: not-allowed;
     opacity: 0.45;
   }
+  ${outlinedControlSurface}
 `
 
 export const DropdownIcon = styled.span`

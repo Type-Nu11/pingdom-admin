@@ -1,5 +1,6 @@
 import styled, { css, keyframes } from 'styled-components'
 import { typo, adminColors, radius } from '../../styles/theme'
+import { BrandHomeLink } from '../../components/navigation/BrandHomeLink'
 
 const neutral = adminColors
 const loadingShimmer = keyframes`
@@ -72,7 +73,7 @@ export const SideHeader = styled.div`
   border-bottom: 1px solid ${neutral.border};
 `
 
-export const BrandLockup = styled.div`
+export const BrandLockup = styled(BrandHomeLink)`
   width: min(168px, 100%);
 `
 

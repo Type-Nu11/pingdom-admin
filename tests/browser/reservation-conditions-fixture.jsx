@@ -51,6 +51,7 @@ client.defaults.adapter = observeFixtureAdapter(async config => {
   }
   if (config.url.endsWith('/reservations')) return response({ reservations: rows, page: 1, limit: 20, totalElements: rows.length, totalPages: 1, hasNext: false })
   if (config.url === '/merchant-owner/availabilities') return response([])
+  if (config.url === '/merchant-owner/me') return response({ placeIds: [1] })
   if (config.url === '/merchant-owner/payments') return response(pageData('payments', [payment]))
   if (config.url === '/merchant-owner/payments/settlements') return response(pageData('entries', []))
   throw new Error(`Unexpected synthetic GET ${config.url}`)

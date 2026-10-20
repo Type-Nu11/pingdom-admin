@@ -25,6 +25,7 @@ try {
     const allowed = new Set()
     const guard = await guardBrowserPage(page, base, event => {
       if (event.kind === 'fixture-api') return allowed.has(event.status) && event.method === 'GET' && /reporters\/\d+\/history$/.test(event.path) && event.text === '합성 이력 조회 실패'
+      if (event.kind === 'console' && allowed.has('rules') && event.level === 'error' && event.text.startsWith('관리자 Trust Score 규칙 조회 실패') && event.text.includes("reading 'rules'")) return true
       return event.kind === 'console' && event.level === 'error' && event.text.startsWith('관리자 Trust Score 이력 조회 실패') && (event.text.includes('합성 이력 조회 실패') || (allowed.has('malformed') && event.text.includes('신뢰 점수 이력 응답 형식')))
     })
     await page.goto(`${base}/trust-score`)
@@ -100,6 +101,17 @@ try {
     guard.assertClean()
     assert.ok((await page.evaluate(() => window.trustScoreQA.calls)).every(call => call.method === 'get'))
     console.log(`PASS trust-score history pagination/error/retry/loading/empty/permission/account/auth ${width}×${height}`)
+    allowed.add('rules')
+    await page.goto(`${base}/trust-score?malformedRules=1`)
+    const rulesError = page.getByRole('alert').filter({ hasText: '신뢰 점수 관리 규칙을 불러오지 못했습니다.' })
+    await rulesError.waitFor()
+    assert.equal(await rulesError.innerText(), '신뢰 점수 관리 규칙을 불러오지 못했습니다.')
+    assert.doesNotMatch(await page.locator('body').innerText(), /신뢰 점수 신뢰 점수/)
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    assert.ok((await page.evaluate(() => window.trustScoreQA.calls)).every(call => call.method === 'get'))
+    await page.screenshot({ path: join(output, `rules-error-${width}.png`), fullPage: true })
+    guard.assertClean()
+    console.log(`PASS trust-score rule error copy ${width}×${height}`)
     await page.close()
   }
   console.log(`Synthetic screenshots: ${output}; no real API or mutations.`)

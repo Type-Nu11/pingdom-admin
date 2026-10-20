@@ -70,7 +70,7 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
     {operations.actionErrorMessage && !cancelTarget && !reviewTarget ? <Store.Notice $tone="error" role="alert">{operations.actionErrorMessage}</Store.Notice> : null}
     {operations.successMessage ? <Store.Notice $tone="success" role="status">{operations.successMessage}</Store.Notice> : null}
     <R.Workspace>
-      <S.Panel aria-label="예약 신청 목록">
+      <R.ListPanel aria-label="예약 신청 목록">
         <S.PanelHeader><div><R.PanelTitle ref={listHeading} tabIndex={-1}>예약 신청 목록</R.PanelTitle><S.PanelDescription>상세 보기에서 예약자와 요청사항, 처리 이력을 확인하세요.</S.PanelDescription></div></S.PanelHeader>
         <S.ResultMeta>{operations.hasListResult ? '총 ' + operations.pageInfo.totalElements.toLocaleString() + '건 · ' + operations.pageInfo.page + '페이지' + (operations.sectionErrorMessage || operations.isLoading ? ' (이전 결과)' : '') : '조회 결과 미확인'}</S.ResultMeta>
         {operations.isLoading || operations.status === 'loading' ? <S.ListLoading role="status" aria-label="예약 신청을 불러오는 중"><Store.Skeleton $height={180} /></S.ListLoading>
@@ -94,7 +94,7 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
             </R.ListItem>
           })}</R.List>}
         {operations.hasListResult && operations.pageInfo.totalPages > 1 ? <AdminPagination ariaLabel="상점주 예약 신청 목록 페이지네이션" page={operations.pageInfo.page} totalPages={operations.pageInfo.totalPages} hasNext={operations.pageInfo.hasNext} disabled={busy} onPageChange={page => void operations.fetchReservations(page)} /> : null}
-      </S.Panel>
+      </R.ListPanel>
       <S.Panel aria-label="예약 상세와 처리 이력">
         <S.PanelHeader><div><R.PanelTitle ref={detailHeading} tabIndex={-1}>예약 상세</R.PanelTitle><S.PanelDescription>당시 처리자와 현재 상태를 구분해 확인합니다.</S.PanelDescription></div><R.BackToList type="button" onClick={() => { listHeading.current?.focus({ preventScroll: true }); listHeading.current?.scrollIntoView({ block: 'start' }) }}>목록으로</R.BackToList></S.PanelHeader>
         {!operations.selectedReservationId ? <S.Empty>목록에서 예약의 상세 보기를 선택해주세요.</S.Empty>

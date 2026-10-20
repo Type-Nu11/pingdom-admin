@@ -18,6 +18,7 @@ const auditRows = [
   { auditLogId: 1, action: 'MERCHANT_PLACE_APPLICATION_ATTACHMENT_VIEWED', targetType: 'MERCHANT_PLACE_APPLICATION_ATTACHMENT', targetId: '2', reason: '통합 신청 민감 첨부 메타데이터 조회: REPRESENTATIVE_IMAGE', beforeState: '{}', afterState: '{"applicationId":1}' },
   { auditLogId: 2, action: 'USER_BAN_APPLIED', targetType: 'USER', targetId: '123', reason: '합성 검토 사유', beforeState: '{"banned":false}', afterState: '{"banned":true}' },
   { auditLogId: 3, action: 'FUTURE_OPERATION', targetType: 'FUTURE_TARGET', targetId: '3', reason: '알 수 없는 작업의 원본 사유', afterState: '{"applicationId":999}' },
+  { auditLogId: 4, action: 'TRUST_SCORE_INTERVENTION_RULE_CREATED', targetType: 'TRUST_SCORE_INTERVENTION_RULE', targetId: '1', reason: '합성 규칙 등록', beforeState: '{}', afterState: '{}' },
 ].map(row => ({ ...row, actorUserId: 1, actorUsername: '합성 관리자', requestId: 'synthetic-request', createdAt: date }))
 window.copyQA = { calls: [] }
 const paged = (rows, key, params) => ({ [key]: rows, page: params?.page || 1, limit: params?.limit || 5, totalCount: rows.length, totalPages: rows.length ? 1 : 0, hasNext: false })

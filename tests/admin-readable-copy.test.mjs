@@ -43,6 +43,22 @@ test('all displayed filter labels round-trip to their exact API codes', () => {
   assert.equal(audit.auditActionCode(''), '')
 })
 
+test('trust rule audit labels use one prefix and preserve exact filter codes', () => {
+  for (const [code, suffix] of [
+    ['TRUST_SCORE_INTERVENTION_RULE_CREATED', '등록'],
+    ['TRUST_SCORE_INTERVENTION_RULE_UPDATED', '수정'],
+    ['TRUST_SCORE_INTERVENTION_RULE_ENABLED', '활성화'],
+    ['TRUST_SCORE_INTERVENTION_RULE_DISABLED', '비활성화'],
+    ['TRUST_SCORE_INTERVENTION_EVALUATED', '평가'],
+  ]) {
+    const label = `신뢰 점수 관리 규칙 ${suffix}`
+    assert.equal(audit.formatAuditAction(code), label)
+    assert.equal(audit.auditActionCode(label), code)
+  }
+  assert.equal(audit.formatAuditTargetType('TRUST_SCORE_INTERVENTION_RULE'), '신뢰 점수 관리 규칙')
+  assert.equal(audit.auditTargetTypeCode('신뢰 점수 관리 규칙'), 'TRUST_SCORE_INTERVENTION_RULE')
+})
+
 for (const afterState of [null, '', 'not json', 'null', '[]', '1', '{"applicationId":"1"}', '{"applicationId":0}', '{"applicationId":-1}', '{"applicationId":1.5}', '{"applicationId":9007199254740992}']) {
   test(`invalid/missing related application does not invent an ID: ${afterState}`, () => assert.equal(audit.auditApplicationId({ ...view, afterState }), null))
 }

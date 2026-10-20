@@ -92,6 +92,46 @@ try {
     guard.assertClean()
     await page.close()
   }
+  for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
+    const page = await browser.newPage({ viewport: { width, height } })
+    const guard = await guardBrowserPage(page, base)
+    await page.goto(base + '/merchant/reservations?scenario=long-detail')
+    await page.getByText('총 24건 · 1페이지', { exact: true }).waitFor()
+    const panel = page.locator('[aria-label="예약 신청 목록"]')
+    const first = page.getByRole('button', { name: '예약 #1 상세 보기', exact: true })
+    const list = panel.locator(':scope > div').filter({ has: first })
+    const initialHeight = (await list.boundingBox()).height
+    await page.getByRole('button', { name: '예약 #2 상세 보기', exact: true }).click()
+    await detail(page).getByText('테스트 예약자 2', { exact: true }).waitFor()
+    assert.equal(await detail(page).locator('[aria-label="예약 상태 변경 이력"] li').count(), 12)
+    const left = await panel.boundingBox(), right = await detail(page).boundingBox()
+    const expandedHeight = (await list.boundingBox()).height
+    if (width > 980) {
+      assert.ok(Math.abs(left.y - right.y) <= 1 && Math.abs(left.height - right.height) <= 1, 'Desktop list and detail panels share top and bottom edges')
+      assert.ok(expandedHeight > initialHeight + 100, `The scroll viewport expands with a longer detail, not just the panel background: ${JSON.stringify({ initialHeight, expandedHeight, left, right })}`)
+    } else {
+      assert.ok(right.y >= left.y + left.height, 'Mobile retains stacked panels')
+      assert.ok(expandedHeight <= height * 0.65 + 1, 'Mobile retains the bounded list scroll viewport')
+    }
+    const scroll = await list.evaluate(element => {
+      element.scrollTop = element.scrollHeight
+      const rows = [...element.children]
+      return { top: element.scrollTop, height: element.clientHeight, content: element.scrollHeight,
+        uncompressed: rows.every(row => row.scrollHeight <= row.clientHeight + 1) }
+    })
+    assert.ok(scroll.content > scroll.height && scroll.top > 0, 'Overflow remains independently scrollable')
+    assert.equal(scroll.uncompressed, true, 'Reservation cards do not shrink or clip their contents')
+    await page.getByRole('button', { name: '예약 #20 상세 보기', exact: true }).click()
+    await detail(page).getByText('테스트 예약자 20', { exact: true }).waitFor()
+    await page.screenshot({ path: join(output, `panel-height-${width}.png`), fullPage: true })
+    await page.getByRole('button', { name: '다음 페이지로 이동', exact: true }).click()
+    await page.getByText('총 24건 · 2페이지', { exact: true }).waitFor()
+    await page.getByRole('button', { name: '예약 #21 상세 보기', exact: true }).waitFor()
+    assert.equal((await readCalls(page)).every(call => call.method === 'get'), true)
+    await assertFits(page)
+    guard.assertClean()
+    await page.close()
+  }
   for (const scenario of ['empty', 'list-error', 'detail-error', 'forbidden']) {
     const page = await browser.newPage({ viewport: { width: 1366, height: 768 } })
     const expected = event => {

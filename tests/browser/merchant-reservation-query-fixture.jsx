@@ -55,7 +55,10 @@ client.defaults.adapter = observeFixtureAdapter(async config => {
     if (scenario === 'forbidden') return reject(config, 403)
     const row = rows.find(row => row.id === Number(config.url.split('/').at(-1)))
     return response({ reservation: row, placeId: row.availabilityId, placeName: row.availabilityId === 7 ? '핑덤 테스트 식당' : '핑덤 테스트 카페',
-      statusHistory: [{ id: 1, status: 'PENDING', changedBy: row.touristUserId, reason: '예약 신청', changedAt: row.createdAt },
+      statusHistory: scenario === 'long-detail' ? Array.from({ length: 12 }, (_, i) => ({
+        id: i + 1, status: row.status, changedBy: 3, changedAt: row.reviewedAt,
+        reason: '긴 처리 이력에서도 목록이 상세 높이에 맞춰지고 예약 카드는 압축되지 않습니다. '.repeat(3),
+      })) : [{ id: 1, status: 'PENDING', changedBy: row.touristUserId, reason: '예약 신청', changedAt: row.createdAt },
         ...(row.reviewedAt ? [{ id: 2, status: row.status, changedBy: 3, reason: row.reviewReason || '확인 완료', changedAt: row.reviewedAt }] : [])] })
   }
   throw new Error('Unexpected synthetic GET ' + config.url)

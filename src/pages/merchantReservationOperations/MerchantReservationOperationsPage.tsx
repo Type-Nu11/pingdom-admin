@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
 import { MerchantPlaceContext } from '../../app/providers/MerchantPlaceContext'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AppDialog } from '../../components/common/AppDialog'
@@ -10,7 +11,9 @@ import { reservationCancellationRestriction } from '../../utils/reservationCondi
 import { formatReservationSchedule, formatReservationEventTime as formatDateTime } from '../../utils/reservationTime'
 import { useMerchantReservationOperations } from '../../hooks/useMerchantReservationOperations'
 import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
-import type { MerchantReservation, MerchantReservationStatus } from '../../types/merchantStore.types'
+import type { MerchantReservation, MerchantReservationDetail, MerchantReservationStatus } from '../../types/merchantStore.types'
+import type { ReservationReviewAction } from '../../utils/reservationReview'
+import { ReservationReviewDialog } from './ReservationReviewDialog'
 import { MerchantReservationFilters } from './MerchantReservationFilters'
 import * as Store from '../../components/merchant/MerchantSurface.styles'
 import * as S from '../../components/merchant/MerchantWorkspace.styles'
@@ -28,24 +31,26 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
   const operations = useMerchantReservationOperations(initialPlaceId)
   const identity = useMerchantPlaceIdentity(operations.placeIds)
   const [cancelTarget, setCancelTarget] = useState<MerchantReservation | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<{ detail: MerchantReservationDetail; action: ReservationReviewAction } | null>(null)
   const [now, setNow] = useState(Date.now)
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
   const pending = operations.activeAction !== null
-  const busy = pending || operations.isLoading || Boolean(cancelTarget)
+  useUnsavedChanges(false, pending)
+  const busy = pending || operations.isLoading || Boolean(cancelTarget) || Boolean(reviewTarget)
   const closeCancelDialog = () => { if (!pending) setCancelTarget(null) }
   const availabilityById = useMemo(() => new Map(operations.availabilities.map(item => [item.id, item])), [operations.availabilities])
   const selected = operations.detail
   const listHeading = useRef<HTMLHeadingElement>(null)
   const detailHeading = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
-    if (operations.selectedReservationId && (selected || operations.detailErrorMessage) && window.matchMedia?.('(max-width: 980px)').matches) {
+    if (!reviewTarget && !cancelTarget && operations.selectedReservationId && (selected || operations.detailErrorMessage) && window.matchMedia?.('(max-width: 980px)').matches) {
       detailHeading.current?.focus({ preventScroll: true })
       detailHeading.current?.scrollIntoView({ block: 'start' })
     }
-  }, [operations.selectedReservationId, selected, operations.detailErrorMessage])
+  }, [operations.selectedReservationId, selected, operations.detailErrorMessage, reviewTarget, cancelTarget])
   const detailReservation = selected?.reservation
   const appliedStatus = operations.query.status ? STATUS[operations.query.status].label : '전체 상태'
   const restriction = reservationCancellationRestriction(cancelTarget?.confirmation)
@@ -54,7 +59,7 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
     return formatReservationSchedule(reservation.reservationStartsAt ?? availability?.startsAt) + ' – ' + formatReservationSchedule(reservation.reservationEndsAt ?? availability?.endsAt)
   }
   return <MerchantPageShell title="예약 신청 조회" description="고객 예약 신청의 장소·시간·인원과 처리 기록을 확인합니다."
-    actions={<S.HeaderActions><S.HeaderButton type="button" onClick={() => navigate('/merchant/reservations/setup')}>예약 가능 시간</S.HeaderButton><S.HeaderButton type="button" disabled={busy} onClick={() => { void operations.fetchReservations(); void operations.fetchReferences() }}>새로고침</S.HeaderButton></S.HeaderActions>}>
+    actions={<S.HeaderActions><S.HeaderButton type="button" disabled={busy} onClick={() => navigate('/merchant/reservations/setup')}>예약 가능 시간</S.HeaderButton><S.HeaderButton type="button" disabled={busy} onClick={() => { void operations.fetchReservations(); void operations.fetchReferences() }}>새로고침</S.HeaderButton></S.HeaderActions>}>
     <MerchantReservationFilters initialPlaceId={initialPlaceId} placeIds={operations.placeIds} busy={busy} onApply={query => { void operations.fetchReservations(query) }} />
     <R.Applied aria-label="적용된 예약 조회 조건">적용 조건: {appliedStatus} · {operations.query.placeId ? '매장 #' + operations.query.placeId : '전체 소유 매장'}
       {operations.query.reservationFrom ? ' · ' + formatReservationSchedule(operations.query.reservationFrom) + ' 이상' : ''}
@@ -62,7 +67,7 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
     </R.Applied>
     {operations.referenceErrorMessage ? <S.ReadonlyNotice role="status">{operations.referenceErrorMessage}<S.HeaderButton type="button" disabled={busy} onClick={() => void operations.fetchReferences()}>참조 정보 다시 시도</S.HeaderButton></S.ReadonlyNotice> : null}
     {operations.sectionErrorMessage || operations.errorMessage ? <Store.Notice $tone="error" role="alert">{operations.sectionErrorMessage || operations.errorMessage}<S.HeaderButton type="button" disabled={busy} onClick={() => void operations.fetchReservations()}>목록 다시 시도</S.HeaderButton></Store.Notice> : null}
-    {operations.actionErrorMessage && !cancelTarget ? <Store.Notice $tone="error" role="alert">{operations.actionErrorMessage}</Store.Notice> : null}
+    {operations.actionErrorMessage && !cancelTarget && !reviewTarget ? <Store.Notice $tone="error" role="alert">{operations.actionErrorMessage}</Store.Notice> : null}
     {operations.successMessage ? <Store.Notice $tone="success" role="status">{operations.successMessage}</Store.Notice> : null}
     <R.Workspace>
       <S.Panel aria-label="예약 신청 목록">
@@ -110,6 +115,13 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
               {detailReservation.reviewReason ? <R.Wide><dt>처리 사유</dt><dd>{detailReservation.reviewReason}</dd></R.Wide> : null}
             </R.Info>
             <ReservationConditions confirmation={detailReservation.confirmation} now={now} />
+            {detailReservation.status === 'PENDING' ? <S.FormActions>
+              {(['confirm', 'reject'] as const).map(action => <S.ActionButton key={action} type="button"
+                disabled={busy || Boolean(operations.sectionErrorMessage)} $variant={action === 'confirm' ? 'primary' : 'danger'}
+                onClick={() => { operations.clearActionError(); setReviewTarget({ detail: selected, action }) }}>
+                {action === 'confirm' ? '예약 승인' : '예약 반려'}
+              </S.ActionButton>)}
+            </S.FormActions> : null}
             <R.HistoryTitle>처리 이력</R.HistoryTitle>
             {selected.statusHistory.length === 0 ? <R.Meta>등록된 처리 이력이 없습니다.</R.Meta> : <R.History aria-label="예약 상태 변경 이력">{selected.statusHistory.map(history => <li key={history.id}>
               <strong>{STATUS[history.status].label}</strong><R.Meta as="div">{formatDateTime(history.changedAt)} · {history.changedBy != null ? '처리자 사용자 #' + history.changedBy : '처리자 정보 없음'}</R.Meta>
@@ -118,6 +130,13 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
           </R.Detail> : <S.Empty>목록을 다시 확인한 뒤 상세를 조회해주세요.</S.Empty>}
       </S.Panel>
     </R.Workspace>
+    {reviewTarget ? <ReservationReviewDialog key={reviewTarget.detail.reservation.id + ':' + reviewTarget.action}
+      detail={reviewTarget.detail} action={reviewTarget.action} pending={pending}
+      available={!operations.isLoading && !operations.isDetailLoading && !operations.sectionErrorMessage && !operations.detailErrorMessage
+        && selected?.reservation.id === reviewTarget.detail.reservation.id && selected.reservation.status === 'PENDING'}
+      error={operations.actionErrorMessage} fallbackFocusRef={detailHeading}
+      onClose={() => { if (!pending) setReviewTarget(null) }}
+      onSubmit={async reason => { if (await operations.reviewReservation(reviewTarget.detail.reservation.id, reviewTarget.action, reason)) setReviewTarget(null) }} /> : null}
     {cancelTarget ? <AppDialog title={'예약 #' + cancelTarget.id + ' 취소'} isDismissible={!pending} onClose={closeCancelDialog} description="취소 정책과 결제·환불 내역을 확인해주세요."
       footer={<><S.ActionButton type="button" disabled={pending} onClick={closeCancelDialog}>닫기</S.ActionButton><S.ActionButton type="button" disabled={pending || Boolean(restriction)} $variant="danger" onClick={async () => { const result = await operations.cancelReservation(cancelTarget); if (result) setCancelTarget(null) }}>{pending ? '처리 중' : '예약 취소'}</S.ActionButton></>}>
       <ReservationConditions confirmation={cancelTarget.confirmation} now={now} />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
-import { cancelMerchantReservation, getMerchantAvailabilities, getMerchantOwnerProfile, getMerchantReservation, getMerchantReservations } from '../api/merchantStoreApi'
+import { cancelMerchantReservation, getMerchantAvailabilities, getMerchantOwnerProfile, getMerchantReservation, getMerchantReservations, reviewMerchantReservation } from '../api/merchantStoreApi'
 import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
 import { isApiError } from '../api/customAxios'
 import type { MerchantAvailability, MerchantReservation, MerchantReservationDetail, MerchantReservationPageResponse, MerchantReservationQuery, MerchantStoreErrorResponse } from '../types/merchantStore.types'
@@ -10,6 +10,7 @@ import { useAuth } from './useAuth'
 import { reservationCancellationRestriction } from '../utils/reservationConditions'
 import { MERCHANT_RESERVATION_LIMIT, merchantReservationQueryKey } from '../utils/merchantReservationQuery'
 import { reservationTimestamp } from '../utils/reservationTime'
+import { reservationReviewReason, type ReservationReviewAction } from '../utils/reservationReview'
 
 const emptyPage = { page: 1, limit: MERCHANT_RESERVATION_LIMIT, totalElements: 0, totalPages: 0, hasNext: false }
 type PageInfo = Omit<MerchantReservationPageResponse, 'reservations'>
@@ -37,7 +38,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
   const [actionErrorKind, setActionErrorKind] = useState<'policy' | 'refund' | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [activeReservationId, setActiveReservationId] = useState<number | null>(null)
-  const [activeAction, setActiveAction] = useState<'cancel' | null>(null)
+  const [activeAction, setActiveAction] = useState<'cancel' | ReservationReviewAction | null>(null)
   const lifecycle = useRef(0)
   const ownerRef = useRef(owner)
   const listRef = useRef(0)
@@ -48,6 +49,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
   const rowsRef = useRef<MerchantReservation[]>([])
   const readableRef = useRef(false)
   const actionRef = useRef<object | null>(null)
+  const detailDataRef = useRef<MerchantReservationDetail | null>(null)
   useAutoDismissMessage(successMessage, setSuccessMessage)
 
   const getErrorMessage = useCallback((error: unknown, fallbackMessage: string) => {
@@ -69,6 +71,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
 
   const clearDetail = useCallback((clearSelection = true) => {
     ++detailRef.current
+    detailDataRef.current = null
     if (clearSelection) { selectedRef.current = null; setSelectedReservationId(null) }
     setDetail(null)
     setDetailErrorMessage('')
@@ -82,6 +85,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
     const session = getAuthSessionId()
     const current = () => generation === lifecycle.current && request === detailRef.current && session === getAuthSessionId()
     selectedRef.current = id
+    detailDataRef.current = null
     setSelectedReservationId(id)
     setDetail(null)
     setDetailErrorMessage('')
@@ -98,6 +102,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
         setDetailErrorMessage('예약 상태 또는 연결 매장이 변경되었습니다. 목록을 새로고침해주세요.')
         return null
       }
+      detailDataRef.current = next
       setDetail(next)
       return next
     } catch (error) {
@@ -260,6 +265,55 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
     }
   }, [fetchDetail, fetchReservations, getErrorMessage, owner])
 
+  const reviewReservation = useCallback(async (id: number, action: ReservationReviewAction, input: string) => {
+    if (owner !== ownerRef.current || actionRef.current || !readableRef.current) return null
+    const target = detailDataRef.current
+    if (selectedRef.current !== id || target?.reservation.id !== id || target.reservation.status !== 'PENDING'
+      || !rowsRef.current.some(row => row.id === id && row.status === 'PENDING')) {
+      setActionErrorMessage('현재 상세를 다시 조회한 뒤 대기 예약을 처리해주세요.')
+      return null
+    }
+    let reason: string | undefined
+    try { reason = reservationReviewReason(action, input) }
+    catch (error) { setActionErrorMessage((error as Error).message); return null }
+    const token = {}
+    actionRef.current = token
+    const generation = lifecycle.current
+    const session = getAuthSessionId()
+    const key = merchantReservationQueryKey(queryRef.current)
+    const sameScope = () => generation === lifecycle.current && session === getAuthSessionId()
+    const current = () => sameScope() && selectedRef.current === id && merchantReservationQueryKey(queryRef.current) === key
+    setActiveReservationId(id)
+    setActiveAction(action)
+    setActionErrorMessage('')
+    setActionErrorKind(null)
+    setSuccessMessage('')
+    try {
+      const result = await reviewMerchantReservation(id, action, reason)
+      if (!current()) return null
+      setSuccessMessage(action === 'confirm' ? '예약을 승인했습니다.' : '예약을 반려했습니다.')
+      // A successful write and a failed follow-up read are different outcomes.
+      await fetchReservations()
+      return sameScope() ? result : null
+    } catch (error) {
+      if (!current()) return null
+      const status = isApiError(error) ? error.response?.status ?? error.status : undefined
+      const message = isApiError(error)
+        ? getErrorMessage(error, '예약을 처리하지 못했습니다. 처리 이력을 확인한 뒤 다시 시도해주세요.')
+        : error instanceof Error ? error.message : '예약 처리 결과를 확인하지 못했습니다.'
+      setActionErrorMessage(message)
+      // A timed-out write may already have succeeded. Never retry it automatically.
+      detailDataRef.current = null
+      await fetchReservations()
+      if (sameScope() && [401, 403, 404].includes(status ?? 0)) clearDetail()
+      logDebugError('상점주 예약 승인·반려 실패', error)
+      return null
+    } finally {
+      if (actionRef.current === token) actionRef.current = null
+      if (sameScope()) { setActiveReservationId(null); setActiveAction(null) }
+    }
+  }, [clearDetail, fetchReservations, getErrorMessage, owner])
+
   const clearActionError = () => { setActionErrorMessage(''); setActionErrorKind(null) }
   const sameOwner = resultOwner === owner
   return {
@@ -270,6 +324,6 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
     detail: sameOwner ? detail : null, selectedReservationId: sameOwner ? selectedReservationId : null,
     isDetailLoading, detailErrorMessage, actionErrorMessage, actionErrorKind, clearActionError,
     successMessage, activeReservationId, activeAction,
-    fetchReservations, fetchReferences, fetchDetail, clearDetail, cancelReservation,
+    fetchReservations, fetchReferences, fetchDetail, clearDetail, cancelReservation, reviewReservation,
   }
 }

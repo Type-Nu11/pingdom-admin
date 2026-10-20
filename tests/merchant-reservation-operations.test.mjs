@@ -12,6 +12,7 @@ const { MemoryRouter } = await import('react-router-dom')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { MerchantPlaceContext } = await server.ssrLoadModule('/src/app/providers/MerchantPlaceContext.ts')
+const { UnsavedChangesContext } = await server.ssrLoadModule('/src/components/common/UnsavedChangesContext.ts')
 const { useMerchantReservationOperations } = await server.ssrLoadModule('/src/hooks/useMerchantReservationOperations.ts')
 const { default: Page } = await server.ssrLoadModule('/src/pages/merchantReservationOperations/MerchantReservationOperationsPage.tsx')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
@@ -86,6 +87,99 @@ for (const [action, input, body] of [['confirm', '', undefined], ['confirm', '  
     assert.deepEqual(config.data ? JSON.parse(config.data) : undefined, body)
   })
 }
+test('review requires a freshly read pending detail, not just a list item', async () => {
+  adapter = reviewBase; await render()
+  await act(async () => assert.equal(await hook.reviewReservation(1, 'confirm', ''), null))
+  assert.equal(calls.some(config => config.method === 'post'), false)
+  await act(async () => hook.fetchDetail(1))
+  await act(async () => assert.ok(await hook.reviewReservation(1, 'confirm', '')))
+  assert.equal(hook.reservations[0].status, 'CONFIRMED')
+  assert.equal(hook.detail.reservation.status, 'CONFIRMED')
+  assert.equal(hook.detail.statusHistory[0].status, 'CONFIRMED')
+})
+test('review removes processed pending row and clears inaccessible detail under pending filter', async () => {
+  adapter = reviewBase; await render()
+  await act(async () => hook.fetchReservations({ status: 'PENDING' }))
+  await act(async () => hook.fetchDetail(1))
+  await act(async () => hook.reviewReservation(1, 'reject', '영업 일정'))
+  assert.equal(hook.query.status, 'PENDING')
+  assert.deepEqual(hook.reservations.map(item => item.id), [2])
+  assert.equal(hook.selectedReservationId, null)
+})
+test('concurrent reviews send only one write', async () => {
+  adapter = reviewBase; await render(); await act(async () => hook.fetchDetail(1))
+  const gate = defer()
+  adapter = async config => { if (config.method === 'post') await gate.promise; return reviewBase(config) }
+  let pending
+  await act(async () => { pending = hook.reviewReservation(1, 'confirm', '') })
+  await act(async () => assert.equal(await hook.reviewReservation(1, 'reject', '사유'), null))
+  assert.equal(hook.activeAction, 'confirm')
+  assert.equal(calls.filter(config => config.method === 'post').length, 1)
+  await act(async () => { gate.resolve(); await pending })
+  assert.equal(hook.activeAction, null)
+})
+for (const status of [401, 403, 404, 409, 500]) test(`review HTTP ${status} stays failure and revalidates instead of retrying write`, async () => {
+  adapter = reviewBase; await render(); await act(async () => hook.fetchDetail(1))
+  adapter = config => config.method === 'post' ? fail(config, status) : reviewBase(config)
+  await act(async () => assert.equal(await hook.reviewReservation(1, 'confirm', ''), null))
+  assert.equal(hook.successMessage, '')
+  assert.ok(hook.actionErrorMessage)
+  assert.equal(hook.activeAction, null)
+  assert.equal(calls.filter(config => config.method === 'post').length, 1)
+  assert.equal(clears > 0, status === 401)
+})
+test('a timed out review can have succeeded: requery authoritative status and never retry automatically', async () => {
+  adapter = reviewBase; await render(); await act(async () => hook.fetchDetail(1))
+  adapter = async config => {
+    if (config.method === 'post') { await reviewBase(config); throw Object.assign(new Error('timeout'), { isAxiosError: true, code: 'ECONNABORTED', config }) }
+    return reviewBase(config)
+  }
+  await act(async () => assert.equal(await hook.reviewReservation(1, 'confirm', ''), null))
+  assert.equal(hook.successMessage, '')
+  assert.ok(hook.actionErrorMessage)
+  assert.equal(hook.detail.reservation.status, 'CONFIRMED')
+  await act(async () => assert.equal(await hook.reviewReservation(1, 'confirm', ''), null))
+  assert.equal(calls.filter(config => config.method === 'post').length, 1)
+})
+test('successful review remains successful when follow-up list read fails', async () => {
+  adapter = reviewBase; await render(); await act(async () => hook.fetchDetail(1))
+  let written = false
+  adapter = async config => {
+    if (config.method === 'post') { written = true; return reviewBase(config) }
+    if (written && config.url.endsWith('/reservations')) return fail(config, 500)
+    return reviewBase(config)
+  }
+  await act(async () => assert.ok(await hook.reviewReservation(1, 'confirm', '')))
+  assert.ok(hook.successMessage)
+  assert.ok(hook.sectionErrorMessage)
+  assert.equal(hook.actionErrorMessage, '')
+  assert.equal(hook.detail, null)
+})
+test('old-session review cannot publish success or trigger follow-up reads', async () => {
+  adapter = reviewBase; await render(); await act(async () => hook.fetchDetail(1))
+  const gate = defer()
+  adapter = async config => { if (config.method === 'post') await gate.promise; return reviewBase(config) }
+  let pending
+  await act(async () => { pending = hook.reviewReservation(1, 'confirm', '') })
+  const before = calls.length
+  await act(async () => { clearStoredAuth(); gate.resolve(); assert.equal(await pending, null) })
+  assert.equal(hook.successMessage, '')
+  assert.equal(calls.length, before)
+})
+test('review pending state registers navigation protection and releases it after completion', async () => {
+  adapter = reviewBase
+  const protections = new Map()
+  const value = { update(id, protection) { if (protection) protections.set(id, protection); else protections.delete(id) }, request(action) { action() } }
+  await render(h(UnsavedChangesContext.Provider, { value }, h(Page)))
+  await act(async () => document.querySelector('[aria-label="예약 #1 상세 보기"]').click())
+  await act(async () => [...document.querySelectorAll('button')].find(button => button.textContent === '예약 승인').click())
+  const gate = defer()
+  adapter = async config => { if (config.method === 'post') await gate.promise; return reviewBase(config) }
+  await act(async () => document.querySelector('[role="dialog"] button[type="submit"]').click())
+  assert.equal([...protections.values()].some(protection => protection.busy), true)
+  await act(async () => { gate.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
+  assert.equal([...protections.values()].some(protection => protection.busy), false)
+})
 
 test('filter periods convert Korean wall time to UTC independent of device timezone', () => {
   const previous = process.env.TZ

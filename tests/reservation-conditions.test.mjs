@@ -83,9 +83,10 @@ test('missing cancellation deadline stays unknown rather than unlimited cancella
 test('pending, confirmed, rejected and canceled reservations remain distinct without product fields', async () => {
   rows = ['PENDING', 'CONFIRMED', 'REJECTED', 'CANCELED'].map((status, i) => ({ ...reservation, id: i + 1, status, reviewReason: status === 'REJECTED' ? '합성 반려 사유' : null }))
   await mount(h(Page))
-  assert.match(document.body.textContent, /관리자 심사 대기/)
-  assert.match(document.body.textContent, /관리자 승인/)
-  assert.match(document.body.textContent, /관리자 반려.*합성 반려 사유/)
+  assert.match(document.body.textContent, /승인 대기/)
+  assert.match(document.body.textContent, /확정/)
+  assert.match(document.body.textContent, /반려.*합성 반려 사유/)
+  assert.doesNotMatch(document.body.textContent, /관리자 심사|관리자 승인|관리자 반려/)
   assert.equal([...document.querySelectorAll('button')].filter(button => button.textContent === '예약 취소').length, 1)
   assert.doesNotMatch(document.body.textContent, /상품|결제 불필요|금액 정보 없음/)
 })

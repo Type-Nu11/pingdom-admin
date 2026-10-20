@@ -26,8 +26,8 @@ try {
     await page.getByLabel('수락한 예약 조건').first().waitFor()
     const text = await page.locator('body').innerText()
     assert.match(text, /테스트 매장.*2명.*수락 조건 v1/s)
-    assert.match(text, /관리자 심사 대기/)
-    assert.match(text, /관리자 반려.*합성 반려 사유/s)
+    assert.match(text, /승인 대기/)
+    assert.match(text, /반려.*합성 반려 사유/s)
     assert.doesNotMatch(text, /상품|총액|금액|무료|0원|결제 불필요|undefined/)
     const cancel = page.getByRole('button', { name: '예약 취소', exact: true })
     assert.equal(await cancel.nth(3).isDisabled(), true)
@@ -105,7 +105,7 @@ try {
       await page.getByRole('status').filter({ hasText: '예약을 취소했습니다.' }).waitFor()
     } else {
       await dialog.getByRole('alert').filter({ hasText: '수락한 취소 정책' }).waitFor()
-      assert.equal(await page.getByText('관리자 승인', { exact: true }).count(), 5)
+      assert.equal(await page.getByText('확정', { exact: true }).count(), 5)
       await page.screenshot({ path: join(output, 'server-deadline-1366.png'), fullPage: true })
     }
     assert.equal(await page.evaluate(() => window.qaWrites.length), 1)

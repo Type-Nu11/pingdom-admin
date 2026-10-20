@@ -1,0 +1,148 @@
+name: Deploy administrator web
+
+on:
+  workflow_run:
+    workflows: [Release verification]
+    branches: [release]
+    types: [completed]
+  # 수동 실행은 조직 Secret 인증과 서버 설정만 검사하며 웹을 교체하지 않습니다.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pingdom-admin-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'release' &&
+       github.event.workflow_run.head_repository.full_name == github.repository) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      IMAGE_REPOSITORY: ${{ secrets.DOCKER_USERNAME }}/pingdom-admin
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - name: Require the current release commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git ls-remote origin refs/heads/release | cut -f1)" = "$RELEASE_SHA"
+      - name: Prepare SSH with existing organization secrets
+        shell: bash
+        env:
+          EC2_HOST: ${{ secrets.HOST }}
+          EC2_USERNAME: ${{ secrets.USERNAME }}
+          EC2_KEY: ${{ secrets.KEY }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$EC2_HOST" =~ ^[A-Za-z0-9.-]+$ ]]
+          test "$EC2_USERNAME" = ubuntu
+          [[ "$DOCKER_USERNAME" =~ ^[a-z0-9][a-z0-9_-]+$ ]]
+          test -n "$DOCKER_TOKEN"
+          mkdir -p "$RUNNER_TEMP/pingdom-ssh"
+          printf '%s\n' "$EC2_KEY" | tr -d '\r' > "$RUNNER_TEMP/pingdom-ssh/key"
+          ssh-keygen -y -P '' -f "$RUNNER_TEMP/pingdom-ssh/key" > /dev/null
+          cat > "$RUNNER_TEMP/pingdom-ssh/config" <<EOF
+          Host pingdom-platform
+            HostName $EC2_HOST
+            User $EC2_USERNAME
+            IdentityFile $RUNNER_TEMP/pingdom-ssh/key
+            UserKnownHostsFile $GITHUB_WORKSPACE/deploy/platform-known-hosts
+            HostKeyAlias 54.116.166.107
+            StrictHostKeyChecking yes
+            IdentitiesOnly yes
+            BatchMode yes
+            ConnectTimeout 15
+          EOF
+      - name: Validate SSH target and read existing public build settings
+        id: platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$RUNNER_TEMP/pingdom-ssh/config" pingdom-platform \
+            'python3 - check' < scripts/deploy-registry-image.py > "$RUNNER_TEMP/platform.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          config = json.loads((Path(os.environ['RUNNER_TEMP']) / 'platform.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for name in ('maps_client_id', 'maps_client_id_hash', 'app_base_path', 'platform'):
+                  output.write(f'{name}={config[name]}\n')
+          PY
+      - name: Authenticate with existing Docker Hub secrets
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Configure image builder
+        if: github.event_name == 'workflow_run'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build and push verified release image
+        if: github.event_name == 'workflow_run'
+        id: image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          platforms: ${{ steps.platform.outputs.platform }}
+          tags: ${{ env.IMAGE_REPOSITORY }}:${{ env.RELEASE_SHA }}
+          build-args: |
+            VITE_PUBLIC_API_BASE_URL=/api
+            VITE_APP_BASE_PATH=${{ steps.platform.outputs.app_base_path }}
+            VITE_NAVER_MAP_CLIENT_ID=${{ steps.platform.outputs.maps_client_id }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.RELEASE_SHA }}
+            io.pingdom.app-base-path=${{ steps.platform.outputs.app_base_path }}
+            io.pingdom.maps-client-id-sha256=${{ steps.platform.outputs.maps_client_id_hash }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Pull and deploy on the platform instance
+        if: github.event_name == 'workflow_run'
+        shell: bash
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/release | cut -f1)" = "$RELEASE_SHA"
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          image="$IMAGE_REPOSITORY@$IMAGE_DIGEST"
+          bundle="/home/ubuntu/pingdom-ops/admin/registry-releases/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/$RELEASE_SHA"
+          auth="/home/ubuntu/pingdom-ops/admin/registry-auth-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          ssh_cmd=(ssh -F "$RUNNER_TEMP/pingdom-ssh/config" pingdom-platform)
+          "${ssh_cmd[@]}" "umask 077; mkdir -p '$bundle' '$auth'"
+          # 공개 배포 파일만 전달합니다. .env와 SSH 개인키는 번들에 포함하지 않습니다.
+          tar -czf "$RUNNER_TEMP/admin-deployment.tgz" \
+            deploy/compose.registry.yml deploy/nginx/default.conf.template scripts/deploy-registry-image.py
+          "${ssh_cmd[@]}" "tar -xzf - -C '$bundle'" < "$RUNNER_TEMP/admin-deployment.tgz"
+          # EC2의 임시 Docker 설정에만 로그인하고 작업 종료 시 삭제합니다.
+          printf '%s' "$DOCKER_TOKEN" | "${ssh_cmd[@]}" \
+            "docker --config '$auth' login --username '$DOCKER_USERNAME' --password-stdin"
+          "${ssh_cmd[@]}" "DOCKER_CONFIG='$auth' python3 '$bundle/scripts/deploy-registry-image.py' deploy '$image' '$RELEASE_SHA'"
+      - name: Remove temporary registry credentials and SSH key
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f "$RUNNER_TEMP/pingdom-ssh/config"; then
+            ssh -F "$RUNNER_TEMP/pingdom-ssh/config" pingdom-platform \
+              "rm -rf -- '/home/ubuntu/pingdom-ops/admin/registry-auth-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT'" || true
+          fi
+          rm -rf -- "$RUNNER_TEMP/pingdom-ssh"

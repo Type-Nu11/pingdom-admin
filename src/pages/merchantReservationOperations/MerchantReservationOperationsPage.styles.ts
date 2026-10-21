@@ -58,13 +58,29 @@ export const Hint = styled.p`
   overflow-wrap: anywhere;
 `
 export const Applied = styled(Hint)`margin: 0 0 18px;`
-export const ListItem = styled.div<{ $selected: boolean }>`
+export const ListItem = styled.div<{ $selected: boolean; $disabled: boolean }>`
+  position: relative;
   flex-shrink: 0;
   padding: 18px;
   border: 1px solid ${({ $selected }) => $selected ? colors.primary : colors.borderSoft};
   border-radius: 8px;
   background: ${colors.surface};
+  &:hover { background: ${({ $disabled }) => $disabled ? colors.surface : colors.primaryTint}; }
   & + & { margin-top: 12px; }
+`
+export const DetailButton = styled(Shared.ActionButton)`
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+  &:focus-visible { outline: none; }
+  &:focus-visible::after { outline: 2px solid ${colors.primary}; outline-offset: -2px; }
+`
+export const CancelButton = styled(Shared.ActionButton)`
+  position: relative;
+  z-index: 1;
 `
 export const Title = styled.h3`
   margin: 0;

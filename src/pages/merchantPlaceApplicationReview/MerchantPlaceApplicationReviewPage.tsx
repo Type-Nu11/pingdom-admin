@@ -11,7 +11,6 @@ import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { EMPTY_HISTORY_FILTERS, type ApplicationHistoryFilters } from '../../hooks/useAdminMerchantPlaceApplications'
 import { ListPane } from '../../components/common/ListPane'
-import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { APPLICATION_REVIEW_PAGE_SIZE, useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
@@ -300,7 +299,7 @@ function MerchantPlaceApplicationReviewPage() {
             {hook.historyFilters ? <S.AppliedFilters role="status">적용 조건: {hook.historyFilters.result === 'ALL' ? '전체 결과' : STATUS_LABELS[hook.historyFilters.result]} · {hook.historyFilters.keyword || '전체 대상'} · {hook.historyFilters.submittedFrom || '시작 제한 없음'} ~ {hook.historyFilters.submittedTo || '종료 제한 없음'}</S.AppliedFilters> : null}
           </S.HistoryFilters> : null}
           {hook.errorMessage ? <Shared.Notice $variant="error" role="alert">{hook.errorMessage}</Shared.Notice> : null}
-          <ListDetailWorkspace>
+          <S.ReviewWorkspace>
             <ListPane title={listTitle} range={!hook.isLoading && !hook.errorMessage ? { page: hook.page, pageSize: APPLICATION_REVIEW_PAGE_SIZE, itemCount: hook.items.length, total: hook.total } : undefined} page={hook.page} ariaLabel="장소 신청 목록" footer={safeTotalPages > 1 ? <AdminPagination ariaLabel="장소 신청 목록 페이지네이션" page={hook.page} totalPages={safeTotalPages} hasNext={hook.hasNext} disabled={hook.isLoading || hook.isReviewing} onPageChange={changePage} /> : null}>
               {hook.isLoading && hook.items.length === 0 ? <Shared.EmptyState><strong>{loadingMessage}</strong></Shared.EmptyState> : null}
               {!hook.isLoading && !hook.errorMessage && hook.items.length === 0 ? <Shared.EmptyState><strong>{isHistoryView ? '조회 조건에 맞는 처리 이력이 없습니다.' : emptyMessage}</strong></Shared.EmptyState> : null}
@@ -349,7 +348,7 @@ function MerchantPlaceApplicationReviewPage() {
               </S.ReviewActions>
             ) : null}
             </Shared.Panel>
-          </ListDetailWorkspace>
+          </S.ReviewWorkspace>
         </div>
         </S.ReviewPageStack></S.ReviewContent>
       </Shell.MainArea>

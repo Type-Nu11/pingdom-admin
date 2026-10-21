@@ -14,10 +14,22 @@ const server = await createServer({ server: { port: 0, host: '127.0.0.1', open: 
   })
 } }] })
 let browser
+async function assertHeaders(page, width) {
+  const headers = await page.locator('#application-review-panel section > header').evaluateAll(elements => elements.map(element => {
+    const bounds = element.getBoundingClientRect()
+    return { top: bounds.top, bottom: bounds.bottom, titleTop: element.querySelector('h2').getBoundingClientRect().top,
+      clipped: element.scrollHeight > element.clientHeight + 1 }
+  }))
+  assert.equal(headers.length, 2)
+  assert.ok(headers.every(header => !header.clipped), 'Header descriptions are not clipped')
+  if (width > 1080) {
+    for (const edge of ['top', 'bottom', 'titleTop']) assert.ok(Math.abs(headers[0][edge] - headers[1][edge]) <= 1, `Application headers align at ${edge}: ${JSON.stringify(headers)}`)
+  }
+}
 try {
   await server.listen()
   browser = await chromium.launch()
-  for (const width of [1280, 390]) {
+  for (const width of [1920, 1366, 1280, 1081, 1080, 390]) {
     const page = await browser.newPage({ viewport: { width, height: 800 } })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
@@ -26,6 +38,8 @@ try {
       return (url.hostname === '127.0.0.1' && !url.pathname.startsWith('/api')) || ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(url.hostname) ? route.continue() : route.abort()
     })
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/history-qa`)
+    await page.getByText('현재 검토할 신청이 없습니다.', { exact: true }).waitFor()
+    await assertHeaders(page, width)
     await page.getByRole('tab', { name: '처리 이력' }).click()
     await page.getByLabel('장소명·신청자 아이디').fill(' 서울 ')
     await page.getByLabel('장소명·신청자 아이디').press('Enter')
@@ -33,6 +47,7 @@ try {
     await page.getByRole('button', { name: '초기화', exact: true }).click()
     assert.equal(await page.getByLabel('장소명·신청자 아이디').inputValue(), '')
     await page.getByText('조회 조건에 맞는 처리 이력이 없습니다.', { exact: true }).waitFor()
+    await assertHeaders(page, width)
     const form = page.getByRole('form', { name: '처리 이력 검색' })
     await form.scrollIntoViewIfNeeded()
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
@@ -40,5 +55,5 @@ try {
     assert.deepEqual(errors, [])
     await page.close()
   }
-  console.log(`PASS: search Enter, reset, empty state, responsive layout; screenshots ${output}`)
+  console.log(`PASS: aligned application headers, search Enter, reset, empty state, responsive layout; screenshots ${output}`)
 } finally { await browser?.close(); await server.close() }

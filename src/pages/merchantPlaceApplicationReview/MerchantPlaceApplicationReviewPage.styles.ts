@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import { typo, adminColors, radius } from '../../styles/theme'
 import * as Form from '../placeVerification/PlaceVerificationPage.styles'
 import { PageContent, PageStack } from '../../components/common/ListDetailWorkspace.styles'
+import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 
 const colors = adminColors
 
@@ -59,6 +60,15 @@ export const ActionButtons = styled.div`
 
 export const ReviewContent = PageContent
 export const ReviewPageStack = PageStack
+
+export const ReviewWorkspace = styled(ListDetailWorkspace)`
+  @media (min-width: 1081px) {
+    > section > header {
+      min-height: 72px;
+      flex-shrink: 0;
+    }
+  }
+`
 
 export const ApplicationList = styled.div`
   display: flex;

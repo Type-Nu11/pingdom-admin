@@ -15,6 +15,7 @@ import type {
 } from '../../types/merchantStore.types'
 import * as S from '../../components/merchant/MerchantWorkspace.styles'
 import * as Store from '../../components/merchant/MerchantSurface.styles'
+import * as Boost from './MerchantVerifiedBoostPage.styles'
 
 const EXECUTION_STATUS: Record<MerchantVerifiedBoostExecutionStatus, { label: string; tone: 'draft' | 'published' | 'closed' }> = {
   ACTIVE: { label: '집행 중', tone: 'published' },
@@ -143,6 +144,15 @@ function MerchantVerifiedBoostPage() {
   const isActionPending = boost.activeAction !== null
   const closeStopDialog = () => { if (!isActionPending) setPendingStop(null) }
   const canOpenSelection = boost.productState === 'ready' && boost.profileState === 'ready' && boost.products.length > 0 && (boost.profile?.placeIds.length ?? 0) > 0
+  const isSelectionEmpty = boost.selectionState === 'ready' && boost.selections.length === 0
+  const availabilityMessage = boost.productState === 'loading' || boost.profileState === 'loading'
+    ? '선택 가능한 상품과 관리 장소를 확인하고 있습니다.'
+    : boost.productState === 'error' ? boost.productErrorMessage
+    : boost.profileState === 'error' ? boost.profileErrorMessage
+    : boost.products.length === 0 ? '현재 선택 가능한 Verified Boost 상품이 없습니다.'
+    : (boost.profile?.placeIds.length ?? 0) === 0 ? '관리 권한이 연결된 장소가 없어 상품을 선택할 수 없습니다.'
+    : ''
+  const isCatalogEmpty = boost.productState === 'ready' && boost.profileState === 'ready' && boost.products.length === 0
 
   return <Store.Page><Store.Header><Store.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /><Store.HeaderUser><Store.AccountIcon aria-hidden="true">storefront</Store.AccountIcon><strong>{user?.username || '상점주'}</strong><Store.LogoutButton type="button" onClick={handleLogout}>로그아웃</Store.LogoutButton></Store.HeaderUser></Store.Header><Store.Content><Store.PageIntro><div><Store.PageTitle ref={headingRef} tabIndex={-1}>Verified Boost 관리</Store.PageTitle><Store.PageDescription>가게 노출을 높이는 상품을 선택하고 집행 상태를 관리합니다.</Store.PageDescription></div><S.HeaderActions><S.HeaderButton type="button" disabled={isActionPending} onClick={() => { void boost.fetchSelections(boost.selectionPageInfo.page); void boost.fetchExecutions(boost.executionPageInfo.page); void boost.fetchProducts(); void boost.fetchProfile() }}>새로고침</S.HeaderButton></S.HeaderActions></Store.PageIntro>
     {!isSelectionOpen && !pendingStop && boost.actionErrorMessage ? <Store.Notice $tone="error" role="alert" style={{ marginBottom: 16 }}><Store.NoticeIcon aria-hidden="true">error_outline</Store.NoticeIcon>{boost.actionErrorMessage}</Store.Notice> : null}
@@ -150,8 +160,11 @@ function MerchantVerifiedBoostPage() {
     <S.Workspace>
       <S.Panel>
         <S.PanelHeader><div><S.PanelTitle>선택한 부스트</S.PanelTitle><S.PanelDescription>활성 상품을 장소에 연결한 뒤 집행을 시작할 수 있습니다.</S.PanelDescription></div><S.CreateButton type="button" disabled={isActionPending || !canOpenSelection} onClick={() => { boost.clearActionError(); setIsSelectionOpen(true) }}>상품 선택</S.CreateButton></S.PanelHeader>
-        {boost.productState === 'loading' || boost.profileState === 'loading' ? <S.ReadonlyNotice>선택 가능한 상품과 관리 장소를 확인하고 있습니다.</S.ReadonlyNotice> : boost.productState === 'error' ? <S.ReadonlyNotice>{boost.productErrorMessage}</S.ReadonlyNotice> : boost.profileState === 'error' ? <S.ReadonlyNotice>{boost.profileErrorMessage}</S.ReadonlyNotice> : boost.products.length === 0 ? <S.ReadonlyNotice>현재 선택 가능한 Verified Boost 상품이 없습니다.</S.ReadonlyNotice> : (boost.profile?.placeIds.length ?? 0) === 0 ? <S.ReadonlyNotice>관리 권한이 연결된 장소가 없어 상품을 선택할 수 없습니다.</S.ReadonlyNotice> : null}
-        {boost.selectionState === 'loading' ? <S.ListLoading><Store.Skeleton $height={92} /><Store.Skeleton $height={92} /></S.ListLoading> : boost.selectionState === 'error' ? <S.Empty>{boost.selectionErrorMessage}<div style={{ marginTop: 14 }}><S.HeaderButton type="button" onClick={() => void boost.fetchSelections(boost.selectionPageInfo.page)}>다시 시도</S.HeaderButton></div></S.Empty> : boost.selections.length === 0 ? <S.Empty>선택된 Verified Boost가 없습니다.</S.Empty> : <S.CampaignList>{boost.selections.map((selection) => {
+        {!isSelectionEmpty && availabilityMessage ? <Boost.AvailabilityNotice>{availabilityMessage}</Boost.AvailabilityNotice> : null}
+        {boost.selectionState === 'loading' ? <S.ListLoading><Store.Skeleton $height={92} /><Store.Skeleton $height={92} /></S.ListLoading> : boost.selectionState === 'error' ? <S.Empty>{boost.selectionErrorMessage}<div style={{ marginTop: 14 }}><S.HeaderButton type="button" onClick={() => void boost.fetchSelections(boost.selectionPageInfo.page)}>다시 시도</S.HeaderButton></div></S.Empty> : isSelectionEmpty ? <Boost.EmptyState>
+          <strong>{availabilityMessage || '선택된 Verified Boost가 없습니다.'}</strong>
+          {isCatalogEmpty ? <p>선택 가능한 상품이 등록되면 이곳에 표시됩니다.</p> : canOpenSelection ? <p>상품 선택 버튼으로 가게에 적용할 상품을 선택해주세요.</p> : null}
+        </Boost.EmptyState> : <S.CampaignList>{boost.selections.map((selection) => {
           const hasActiveExecution = activeSelectionIds.has(selection.id)
           const isStarting = boost.activeAction === 'start' && boost.activeTargetId === selection.id
           const product = productById.get(selection.productId)

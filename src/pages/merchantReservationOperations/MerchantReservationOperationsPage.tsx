@@ -71,7 +71,7 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
     {operations.successMessage ? <Store.Notice $tone="success" role="status">{operations.successMessage}</Store.Notice> : null}
     <R.Workspace>
       <R.ListPanel aria-label="예약 신청 목록">
-        <S.PanelHeader><div><R.PanelTitle ref={listHeading} tabIndex={-1}>예약 신청 목록</R.PanelTitle><S.PanelDescription>상세 보기에서 예약자와 요청사항, 처리 이력을 확인하세요.</S.PanelDescription></div></S.PanelHeader>
+        <S.PanelHeader><div><R.PanelTitle ref={listHeading} tabIndex={-1}>예약 신청 목록</R.PanelTitle><S.PanelDescription>예약 카드를 선택해 예약자와 요청사항, 처리 이력을 확인하세요.</S.PanelDescription></div></S.PanelHeader>
         <S.ResultMeta>{operations.hasListResult ? '총 ' + operations.pageInfo.totalElements.toLocaleString() + '건 · ' + operations.pageInfo.page + '페이지' + (operations.sectionErrorMessage || operations.isLoading ? ' (이전 결과)' : '') : '조회 결과 미확인'}</S.ResultMeta>
         {operations.isLoading || operations.status === 'loading' ? <S.ListLoading role="status" aria-label="예약 신청을 불러오는 중"><Store.Skeleton $height={180} /></S.ListLoading>
           : !operations.hasListResult ? <S.Empty>예약 목록 조회를 완료하지 못했습니다. 다시 시도해주세요.</S.Empty>
@@ -81,15 +81,15 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
             const state = STATUS[reservation.status]
             const place = reservation.confirmation?.placeName || (availability?.placeId ? identity.label(availability.placeId) : '예약 #' + reservation.id)
             const blocked = reservationCancellationRestriction(reservation.confirmation)
-            return <R.ListItem key={reservation.id} $selected={operations.selectedReservationId === reservation.id}>
+            return <R.ListItem key={reservation.id} data-reservation-id={reservation.id} $selected={operations.selectedReservationId === reservation.id} $disabled={busy || Boolean(operations.sectionErrorMessage)}>
               <S.CampaignTop><R.Title>{place}</R.Title><S.StatusBadge $tone={state.tone}>{state.label}</S.StatusBadge></S.CampaignTop>
               <R.Meta>예약 #{reservation.id} · {reservation.quantity}명</R.Meta>
               {!reservation.confirmation ? <R.Meta>{schedule(reservation)}</R.Meta> : null}
               <ReservationConditions confirmation={reservation.confirmation} now={now} />
               <R.Meta>신청 {formatDateTime(reservation.createdAt)}{reservation.confirmedAt ? ' · 확정 ' + formatDateTime(reservation.confirmedAt) : ''}{reservation.status === 'REJECTED' ? ' · 반려 ' + formatDateTime(reservation.rejectedAt ?? reservation.reviewedAt) + (reservation.reviewReason ? ' · 반려 사유: ' + reservation.reviewReason : '') : ''}{reservation.canceledAt ? ' · 취소 ' + formatDateTime(reservation.canceledAt) : ''}</R.Meta>
               <S.FormActions>
-                <S.ActionButton type="button" aria-label={'예약 #' + reservation.id + ' 상세 보기'} aria-pressed={operations.selectedReservationId === reservation.id} disabled={busy || Boolean(operations.sectionErrorMessage)} onClick={() => void operations.fetchDetail(reservation.id)}>상세 보기</S.ActionButton>
-                {reservation.status === 'CONFIRMED' ? <S.ActionButton type="button" disabled={busy || Boolean(operations.sectionErrorMessage) || Boolean(blocked)} $variant="danger" onClick={() => { operations.clearActionError(); setNow(Date.now()); setCancelTarget(reservation) }}>예약 취소</S.ActionButton> : null}
+                <R.DetailButton type="button" aria-label={'예약 #' + reservation.id + ' 상세 보기'} aria-pressed={operations.selectedReservationId === reservation.id} disabled={busy || Boolean(operations.sectionErrorMessage)} onClick={() => void operations.fetchDetail(reservation.id)}>상세 보기</R.DetailButton>
+                {reservation.status === 'CONFIRMED' ? <R.CancelButton type="button" disabled={busy || Boolean(operations.sectionErrorMessage) || Boolean(blocked)} $variant="danger" onClick={() => { operations.clearActionError(); setNow(Date.now()); setCancelTarget(reservation) }}>예약 취소</R.CancelButton> : null}
               </S.FormActions>
             </R.ListItem>
           })}</R.List>}
@@ -97,7 +97,7 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
       </R.ListPanel>
       <S.Panel aria-label="예약 상세와 처리 이력">
         <S.PanelHeader><div><R.PanelTitle ref={detailHeading} tabIndex={-1}>예약 상세</R.PanelTitle><S.PanelDescription>당시 처리자와 현재 상태를 구분해 확인합니다.</S.PanelDescription></div><R.BackToList type="button" onClick={() => { listHeading.current?.focus({ preventScroll: true }); listHeading.current?.scrollIntoView({ block: 'start' }) }}>목록으로</R.BackToList></S.PanelHeader>
-        {!operations.selectedReservationId ? <S.Empty>목록에서 예약의 상세 보기를 선택해주세요.</S.Empty>
+        {!operations.selectedReservationId ? <S.Empty>목록에서 예약을 선택해주세요.</S.Empty>
           : operations.isDetailLoading || operations.isLoading ? <S.Empty role="status">예약 상세를 확인하는 중입니다.</S.Empty>
           : operations.detailErrorMessage ? <R.Detail><Store.Notice $tone="error" role="alert">{operations.detailErrorMessage}</Store.Notice><S.HeaderButton type="button" disabled={busy} onClick={() => { if (operations.sectionErrorMessage) void operations.fetchReservations(); else void operations.fetchDetail(operations.selectedReservationId!) }}>다시 확인</S.HeaderButton></R.Detail>
           : selected && detailReservation ? <R.Detail>

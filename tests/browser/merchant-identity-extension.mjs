@@ -11,9 +11,12 @@ try {
   browser = await chromium.launch()
   for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
     const page = await browser.newPage({ viewport: { width, height } })
-    const guard = await guardBrowserPage(page, base, event => page.url().includes('?fail') &&
+    const guard = await guardBrowserPage(page, base, event => (page.url().includes('product-error') && (
+      event.kind === 'fixture-api' && event.method === 'GET' && event.path === '/merchant-owner/verified-boost-products' &&
+      event.status === 0 && event.text === 'Synthetic product failure' ||
+      event.kind === 'console' && event.level === 'error' && event.text.startsWith('상점주 Verified Boost 상품 목록 조회 실패 Error: Synthetic product failure'))) || (page.url().includes('?fail') &&
       event.kind === 'fixture-api' && event.method === 'GET' && event.path === '/merchant-owner/places/2' &&
-      event.status === 0 && event.text === 'Synthetic detail failure')
+      event.status === 0 && event.text === 'Synthetic detail failure'))
     const summary = scope => scope.locator('[aria-label="장소 #2 정보"]')
     const noOverflow = async scope => {
       const bounds = await scope.evaluate(element => ({ scroll: element.scrollWidth, client: element.clientWidth }))
@@ -78,7 +81,7 @@ try {
         await page.goto(`${base}/merchant/${path}?count=${count}`)
         await page.getByRole('heading', { name: path === 'verified-boost' ? 'Verified Boost 관리' : '정보 재확인', exact: true }).waitFor()
         if (count) await page.locator('[aria-label="장소 #1 정보"]').first().getByText('같은 매장명', { exact: true }).waitFor()
-        else await page.getByText(path === 'verified-boost' ? '선택된 Verified Boost가 없습니다.' : '현재 확인할 재확인 요청이 없습니다.', { exact: true }).waitFor()
+        else await page.getByText(path === 'verified-boost' ? '관리 권한이 연결된 장소가 없어 상품을 선택할 수 없습니다.' : '현재 확인할 재확인 요청이 없습니다.', { exact: true }).waitFor()
         assert.equal(await page.evaluate(details), count)
       }
       await page.goto(`${base}/merchant/${path}?fail`)
@@ -89,6 +92,27 @@ try {
       await summary(dialog()).getByText('같은 매장명', { exact: true }).waitFor()
       assert.equal(await page.evaluate(details), 3)
       await dialog().getByRole('button', { name: '닫기', exact: true }).click()
+    }
+    const noProductsMessage = '현재 선택 가능한 Verified Boost 상품이 없습니다.'
+    for (const scenario of ['no-products&no-selections', 'no-selections', 'no-products', 'product-error&no-selections']) {
+      await page.goto(`${base}/merchant/verified-boost?count=1&${scenario}`)
+      const panel = page.locator('section').filter({ has: page.getByRole('heading', { name: '선택한 부스트', exact: true }) })
+      const message = scenario.includes('product-error') ? '선택 가능한 Verified Boost 상품을 불러오지 못했습니다.'
+        : scenario.includes('no-products') ? noProductsMessage : '선택된 Verified Boost가 없습니다.'
+      await panel.getByText(message, { exact: true }).waitFor()
+      assert.equal(await panel.getByText(message, { exact: true }).count(), 1, 'availability guidance appears once')
+      assert.equal(await panel.getByRole('button', { name: '상품 선택', exact: true }).isDisabled(), scenario !== 'no-selections')
+      if (scenario.includes('no-selections')) {
+        assert.equal(await panel.getByText('선택된 Verified Boost가 없습니다.', { exact: true }).count(), scenario === 'no-selections' ? 1 : 0, 'no duplicate empty notice')
+        const empty = panel.getByText(message, { exact: true }).locator('..')
+        assert.equal(await empty.evaluate(element => getComputedStyle(element).backgroundColor), 'rgba(0, 0, 0, 0)', 'empty state inherits the panel background')
+        await noOverflow(panel)
+      } else {
+        await panel.getByRole('button', { name: '집행 중', exact: true }).waitFor()
+        assert.equal(await panel.locator('[aria-label="장소 #1 정보"]').count(), 1, 'existing selections stay visible without catalog products')
+      }
+      if (scenario === 'no-products&no-selections') await page.screenshot({ path: join(output, `boost-empty-${width}.png`), fullPage: true })
+      assert.ok(await page.evaluate(() => window.qaRequests.every(config => config.method === 'get')))
     }
     guard.assertClean()
     console.log(`PASS identity extension: real layout/navigation, long text, keyboard, modals, 0/1/2 places, retry ${width}x${height}`)

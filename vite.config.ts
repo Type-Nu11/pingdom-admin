@@ -1,4 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { pdfCMapAssets } from './build/pdfCMapAssets.ts'
 import { normalizeAppBasePath } from './src/utils/appBasePath.ts'
@@ -22,6 +25,9 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_PROXY_TARGET || 'http://localhost:8080'
 
   return {
+    // Node's test runner starts independent workers. Their Vite optimizers must
+    // not delete/rebuild the same node_modules/.vite/deps directory concurrently.
+    ...(process.env.NODE_TEST_CONTEXT ? { cacheDir: mkdtempSync(join(tmpdir(), 'pingdom-unit-vite-')) } : {}),
     base: normalizeAppBasePath(env.VITE_APP_BASE_PATH),
     plugins: [react(), pdfCMapAssets()],
     build: {

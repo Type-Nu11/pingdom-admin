@@ -2,10 +2,10 @@ import assert from 'node:assert/strict'
 import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createServer } from 'vite'
+import { createServer } from '../helpers/isolated-vite.mjs'
 import { chromium } from 'playwright'
 const output = await mkdtemp(join(tmpdir(), 'pingdom-165-'))
-const server = await createServer({ server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'history-fixture', configureServer(vite) {
+const server = await createServer({ cacheDir: join(output, 'cache'), server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{ name: 'history-fixture', configureServer(vite) {
   vite.middlewares.use(async (req, res, next) => {
     if (req.url !== '/history-qa') return next()
     res.setHeader('Content-Type', 'text/html')
@@ -35,7 +35,8 @@ try {
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
-      return (url.hostname === '127.0.0.1' && !url.pathname.startsWith('/api')) || ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(url.hostname) ? route.continue() : route.abort()
+      if (route.request().resourceType() === 'stylesheet' && ['fonts.googleapis.com', 'cdn.jsdelivr.net'].includes(url.hostname)) return route.fulfill({ status: 200, contentType: 'text/css', body: '' })
+      return url.hostname === '127.0.0.1' && !url.pathname.startsWith('/api') ? route.continue() : route.abort()
     })
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/history-qa`)
     await page.getByText('현재 검토할 신청이 없습니다.', { exact: true }).waitFor()

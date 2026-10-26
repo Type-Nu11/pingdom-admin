@@ -1,8 +1,5 @@
 <img width="7680" height="4320" alt="image" src="https://github.com/user-attachments/assets/1de387e0-c1fa-4797-a864-2e48f4ec1dcc" />
 
-
----
-
 ## Overview
 
 이 저장소는 Pingdom 프로젝트의 **관리자 웹 애플리케이션**을 관리합니다.
@@ -96,7 +93,7 @@ npm run dev
 
 기본 개발 서버는 Vite 설정에 따라 5173 포트를 사용합니다.
 
-### Configuration
+## Configuration
 
 설정에 필요한 환경 변수는 `.env` 파일에 구성합니다. 로컬 개발에서는 Axios가
 `/api` same-origin 경로를 사용하므로 프록시 대상만 지정합니다. Production build는
@@ -121,7 +118,7 @@ VITE_NAVER_MAP_CLIENT_ID=
 동일 EC2의 기존 앱 게이트웨이 8082와 충돌하지 않도록 배포 구성을 확인해야 합니다. 컨테이너 실행만으로 외부 TLS·앱 분기까지
 완료되는 것은 아닙니다.
 
-### Verification
+## Verification
 
 저장소 변경사항은 다음 방법으로 검증합니다.
 
@@ -134,7 +131,7 @@ VITE_NAVER_MAP_CLIENT_ID=
 | `npm run test:ec2-image` | Docker 이미지·Nginx·가짜 게이트웨이 검증 |
 | `npm run preview` | 빌드 결과물 로컬 미리보기 |
 
-### Repository Structure
+## Repository Structure
 
 ```text
 .
@@ -157,13 +154,36 @@ VITE_NAVER_MAP_CLIENT_ID=
 └── README.md
 ```
 
-### Release and Compatibility
+## Related Repositories
+
+| Repository | Relationship |
+|---|---|
+| [pingdom-api](https://github.com/Type-Nu11/pingdom-api) | 인증 및 서비스 API 제공 |
+| [pingdom-app](https://github.com/Type-Nu11/pingdom-app) | 사용자·사업자 모바일 애플리케이션 |
+| [pingdom-infra](https://github.com/Type-Nu11/pingdom-infra) | 서비스 요청 라우팅과 프록시 구성 |
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [EC2 Deployment](docs/ec2-deployment.md) | Docker 배포, 환경변수 및 복구 절차 |
+| [NAVER Maps](docs/naver-map-cleanup.md) | 지도 설정과 검증 범위 |
+| [Web API Contract](docs/web-api-contract-management.md) | 관리자 웹 API 계약 관리 |
+
+## Release and Compatibility
 
 현재 버전은 GA(General Availability) 단계입니다.
 호환성에 영향을 주는 변경사항은 Release와 관련 문서를 통해 안내합니다.
 변경사항은 저장소의 Release 또는 변경 이력을 기준으로 확인합니다.
 
+## License
+
+이 저장소에는 별도의 프로젝트 `LICENSE` 파일이 없습니다. 사용 및 배포 조건은 관리 팀에 확인하세요.
+
+---
+
 <div align="center">
 
-Part of Pingdom
+Part of **Pingdom**
+
 </div>

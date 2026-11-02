@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   createMerchantPlaceMenu,
   deactivateMerchantPlaceMenu,
@@ -57,8 +57,10 @@ export function useMerchantPlaceMenus() {
   const selectedPlaceRef = useRef(selectedPlaceId)
   const ownerRef = useRef(owner)
   const loadedPlaceRef = useRef<number | null>(null)
-  selectedPlaceRef.current = selectedPlaceId
-  ownerRef.current = owner
+  useLayoutEffect(() => {
+    selectedPlaceRef.current = selectedPlaceId
+    ownerRef.current = owner
+  }, [selectedPlaceId, owner])
 
   useAutoDismissMessage(actionErrorMessage, setActionErrorMessage)
   useAutoDismissMessage(successMessage, setSuccessMessage)
@@ -146,11 +148,13 @@ export function useMerchantPlaceMenus() {
     loadedPlaceRef.current = null
   }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
     return () => { mountedRef.current = false; invalidateRequests() }
   }, [fetchInitialData, owner, invalidateRequests])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (selectedPlaceId && loadedPlaceRef.current !== selectedPlaceId) {

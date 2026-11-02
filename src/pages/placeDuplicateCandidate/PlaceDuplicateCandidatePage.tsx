@@ -167,11 +167,13 @@ function PlaceDuplicateCandidatePage() {
     }
   }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start the selected candidate request with its loading/reset state and request-id guard. */
   useEffect(() => {
     if (candidateDetail) {
       void loadComparedPlaces(candidateDetail)
     }
   }, [candidateDetail, loadComparedPlaces])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!dialogState) {

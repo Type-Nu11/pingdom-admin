@@ -133,6 +133,7 @@ export function useMerchantReservationSetup() {
     }
   }, [fetchReservationSetup, getErrorMessage, syncPlaces])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
@@ -142,6 +143,7 @@ export function useMerchantReservationSetup() {
       requestRef.current += 1
     }
   }, [fetchInitialData])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return

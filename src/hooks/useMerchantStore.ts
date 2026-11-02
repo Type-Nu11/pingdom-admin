@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useAutoDismissMessage } from './useAutoDismissMessage'
 import {
   getMerchantCampaigns,
@@ -90,7 +90,9 @@ export function useMerchantStore() {
   const saveInFlightRef = useRef(false)
   const placeRequestRef = useRef(0)
   const selectedPlaceRef = useRef(selectedPlaceId)
-  selectedPlaceRef.current = selectedPlaceId
+  useLayoutEffect(() => {
+    selectedPlaceRef.current = selectedPlaceId
+  }, [selectedPlaceId])
 
   const clearUnauthorizedSession = useCallback(
     (error: unknown) => {
@@ -202,6 +204,7 @@ export function useMerchantStore() {
     [clearUnauthorizedSession]
   )
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchStore()
@@ -210,7 +213,9 @@ export function useMerchantStore() {
       mountedRef.current = false
     }
   }, [fetchStore])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Clear the previous place while starting its replacement request; retain stale-response guards. */
   useEffect(() => {
     if (selectedPlaceId) {
       void fetchPlaceData(selectedPlaceId)
@@ -223,6 +228,7 @@ export function useMerchantStore() {
       setReservationAvailabilities([])
     }
   }, [fetchPlaceData, selectedPlaceId])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const saveInformation = useCallback(
     async (values: {

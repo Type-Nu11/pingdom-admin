@@ -7,11 +7,10 @@ import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 
 export function UnsavedChangesProvider({ children }: PropsWithChildren) {
   const forms = useRef(new Map<string, FormProtection>())
-  const [, setRevision] = useState(0)
+  const [protections, setProtections] = useState<FormProtection[]>([])
   const [pending, setPending] = useState<{ action: () => void; id?: string } | null>(null)
   const pendingRef = useRef(pending)
   const allowingTransition = useRef(false)
-  const protections = [...forms.current.values()]
   const dirty = protections.some(form => form.dirty)
   const busy = protections.some(form => form.busy)
   const blocker = useBlocker(({ currentLocation, nextLocation }) => nextLocation.pathname !== '/login'
@@ -24,7 +23,7 @@ export function UnsavedChangesProvider({ children }: PropsWithChildren) {
     if (protection ? previous?.dirty === protection.dirty && previous?.busy === protection.busy : !previous) return
     if (protection) forms.current.set(id, protection)
     else forms.current.delete(id)
-    setRevision(value => value + 1)
+    setProtections([...forms.current.values()])
   }, [])
   const request = useCallback((action: () => void, id?: string) => {
     if (pendingRef.current) return

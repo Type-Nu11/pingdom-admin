@@ -14,10 +14,10 @@ const { MerchantPlaceContext } = await server.ssrLoadModule('/src/app/providers/
 const { useMerchantPlaceMenus } = await server.ssrLoadModule('/src/hooks/useMerchantPlaceMenus.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { clearStoredAuth } = await server.ssrLoadModule('/src/utils/authStorage.ts')
-let root, hook, rows, calls, handler, place
+let root, hook, rows, calls, handler, place, userId
 const places = { selectedPlaceId: 1, selectPlace() {}, syncPlaces() { return 1 } }
 function Probe() { hook = useMerchantPlaceMenus(); return null }
-async function mount() { await act(async () => root.render(h(AuthContext.Provider, { value: { clearAuth() {}, user: { id: 1, role: 'MERCHANT_OWNER' } } }, h(MerchantPlaceContext.Provider, { value: { ...places, selectedPlaceId: place } }, h(Probe))))) }
+async function mount() { await act(async () => root.render(h(AuthContext.Provider, { value: { clearAuth() {}, user: { id: userId, role: 'MERCHANT_OWNER' } } }, h(MerchantPlaceContext.Provider, { value: { ...places, selectedPlaceId: place } }, h(Probe))))) }
 const defer = () => { let resolve; const promise = new Promise(r => { resolve = r }); return { resolve, promise } }
 async function base(config) {
   let data
@@ -33,7 +33,7 @@ async function base(config) {
   return { config, data, status: 200, statusText: 'OK', headers: {} }
 }
 beforeEach(() => {
-  root = createRoot(document.getElementById('root')); calls = []; place = 1
+  root = createRoot(document.getElementById('root')); calls = []; place = 1; userId = 1
   rows = [1, 2, 3].map((id, i) => ({ id, placeId: 1, name: '메뉴 ' + id, displayOrder: i * 10, status: id === 3 ? 'INACTIVE' : 'AVAILABLE' }))
   handler = base
   client.defaults.adapter = config => { calls.push(config); return handler(config) }
@@ -96,13 +96,14 @@ test('timeout after persisted order reconciles with server without another write
   assert.equal(calls.filter(item => item.method !== 'get').length, 1)
   assert.ok(hook.actionErrorMessage); assert.equal(hook.successMessage, '')
 })
-for (const transition of ['session', 'place']) test(`late order result after ${transition} change is ignored`, async () => {
+for (const transition of ['session', 'place', 'owner']) test(`late order result after ${transition} change is ignored`, async () => {
   await mount(); const gate = defer()
   handler = async config => { if (config.method !== 'get') await gate.promise; return base(config) }
   let pending
   await act(async () => { pending = hook.moveMenu(hook.menus[0], 2) })
   if (transition === 'session') clearStoredAuth()
-  else { place = 2; await mount() }
+  else if (transition === 'place') { place = 2; await mount() }
+  else { userId = 2; await mount() }
   const before = calls.length
   await act(async () => { gate.resolve(); assert.equal(await pending, null) })
   assert.equal(calls.length, before)

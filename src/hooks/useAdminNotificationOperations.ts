@@ -188,6 +188,7 @@ export function useAdminNotificationOperations() {
     },
     [fetchTab, msg],
   );
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true;
     const requests = requestRef.current;
@@ -201,6 +202,7 @@ export function useAdminNotificationOperations() {
       requests.outbox += 1;
     };
   }, [fetchTab]);
+  /* eslint-enable react-hooks/set-state-in-effect */
   return {
     notifications,
     deliveries,

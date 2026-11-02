@@ -186,6 +186,7 @@ export function useMerchantVerifiedBoost({ persistActionError = false } = {}) {
     }
   }, [getErrorMessage])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchSelections(1, true)
@@ -197,6 +198,7 @@ export function useMerchantVerifiedBoost({ persistActionError = false } = {}) {
       mountedRef.current = false
     }
   }, [fetchExecutions, fetchProducts, fetchProfile, fetchSelections])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const createSelection = useCallback(async (request: MerchantVerifiedBoostSelectionCreateRequest) => {
     if (actionRef.current) return null

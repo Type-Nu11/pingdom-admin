@@ -97,11 +97,13 @@ export function useMerchantPlaceReverification({ persistActionError = false } = 
     }
   }, [getErrorMessage])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchRequests(1, true)
     return () => { mountedRef.current = false }
   }, [fetchRequests])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const submitResponse = useCallback(async (request: MerchantPlaceReverificationRequest, responseNote: string) => {
     if (request.status !== 'REQUESTED' || !responseNote.trim() || actionRef.current !== null) return null

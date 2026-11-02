@@ -158,6 +158,7 @@ export function useMerchantOffers() {
     ++detailRequestRef.current
   }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
@@ -166,6 +167,7 @@ export function useMerchantOffers() {
       invalidateRequests()
     }
   }, [fetchInitialData, invalidateRequests])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!profile || status !== 'ready' || selectedPlaceId === queryRef.current.placeId) return

@@ -271,6 +271,7 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
     }
   }, [clearAuth, isActionLoading])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Clear signed-out notification state before starting authenticated polling. */
   useEffect(() => {
     if (!isAuthReady || !isAuthenticated) {
       notificationRequestIdRef.current += 1
@@ -341,6 +342,7 @@ export function AdminNotificationProvider({ children }: PropsWithChildren) {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [isAuthReady, isAuthenticated, refreshPendingWork, refreshUnreadCount])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const value: AdminNotificationContextValue = {
     notifications,

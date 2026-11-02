@@ -59,10 +59,10 @@ export function useAdminPlaceReviewDeletionRequests() {
   const reviewRequestRef = useRef(false)
   const queryRef = useRef({ status, page })
 
-  const fetchItems = useCallback(async (
+  const fetchItems = useCallback(async function fetchPage(
     nextStatus = queryRef.current.status,
     nextPage = queryRef.current.page
-  ) => {
+  ): Promise<boolean> {
     const requestId = ++listRequestRef.current
     if (!begin(listQueryKey({ status: nextStatus, page: nextPage }), Boolean(nextStatus))) {
       setItems([])
@@ -84,7 +84,7 @@ export function useAdminPlaceReviewDeletionRequests() {
       if (requestId !== listRequestRef.current) return false
 
       const resolvedPage = Math.min(nextPage, Math.max(data.totalPages, 1))
-      if (resolvedPage !== nextPage) return fetchItems(nextStatus, resolvedPage)
+      if (resolvedPage !== nextPage) return fetchPage(nextStatus, resolvedPage)
 
       succeed(listQueryKey({ status: nextStatus, page: nextPage }))
       setItems(data.deletionRequests)

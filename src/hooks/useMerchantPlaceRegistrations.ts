@@ -202,11 +202,13 @@ export function useMerchantPlaceRegistrations() {
     setStatus('ready')
   }, [clearUnauthorizedSession])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchRegistrations()
     return () => { mountedRef.current = false }
   }, [fetchRegistrations])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const runAction = useCallback(async <T,>(
     action: Exclude<Action, null>,

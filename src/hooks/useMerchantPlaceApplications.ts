@@ -105,11 +105,13 @@ export function useMerchantPlaceApplications() {
     setStatus('ready')
   }, [clearUnauthorizedSession])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchApplications()
     return () => { mountedRef.current = false; searchRequestRef.current += 1 }
   }, [fetchApplications])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const resetSearch = useCallback(() => {
     searchRequestRef.current += 1

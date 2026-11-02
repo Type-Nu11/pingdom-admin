@@ -129,7 +129,9 @@ export function useAdminVerifiedBoostProducts() {
     }
   }, [errorText, fetchProducts, page])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => { void fetchProducts(1) }, [fetchProducts])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return {
     products, selectedProduct, page, totalElements, totalPages, hasNext,

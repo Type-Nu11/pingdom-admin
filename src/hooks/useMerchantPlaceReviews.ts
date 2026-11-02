@@ -124,11 +124,13 @@ export function useMerchantPlaceReviews({ persistActionError = false } = {}) {
     }
   }, [fetchReviews, getErrorMessage, syncPlaces])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
     return () => { mountedRef.current = false }
   }, [fetchInitialData])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectPlace = useCallback((placeId: number) => {
     if (!profile?.placeIds.includes(placeId) || placeId === selectedPlaceId) return

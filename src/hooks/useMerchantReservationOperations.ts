@@ -204,6 +204,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
     readableRef.current = false
   }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Reset the previous owner and invalidate requests before loading this reservation context. */
   useEffect(() => {
     ++lifecycle.current
     ownerRef.current = owner
@@ -219,6 +220,7 @@ export function useMerchantReservationOperations(initialPlaceId?: number) {
     void fetchReferences()
     return invalidateRequests
   }, [owner, initialPlaceId, fetchReservations, fetchReferences, invalidateRequests])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const cancelReservation = useCallback(async (reservation: MerchantReservation) => {
     if (owner !== ownerRef.current || actionRef.current !== null || !readableRef.current) return null

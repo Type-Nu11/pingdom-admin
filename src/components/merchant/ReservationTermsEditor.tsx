@@ -14,11 +14,11 @@ export function ReservationTermsEditor({ availability, busy, error, onSave, onCl
   onSave: (id: number, terms: MerchantReservationTerms) => Promise<unknown | null>
   onClose: () => void
 }) {
-  const initial = useRef(reservationTermsDraft(availability.reservationTerms ?? null))
-  const [draft, setDraft] = useState(initial.current)
+  const [initial] = useState(() => reservationTermsDraft(availability.reservationTerms ?? null))
+  const [draft, setDraft] = useState(initial)
   const [validation, setValidation] = useState('')
   const saving = useRef(false)
-  const protection = useUnsavedChanges(JSON.stringify(initial.current) !== JSON.stringify(draft), busy)
+  const protection = useUnsavedChanges(JSON.stringify(initial) !== JSON.stringify(draft), busy)
   const change = <K extends keyof ReservationTermsDraft>(key: K, value: ReservationTermsDraft[K]) => {
     setDraft(current => ({ ...current, [key]: value }))
     setValidation('')

@@ -286,10 +286,12 @@ export function useAdminMerchantPlaceApplications() {
     }
   }, [detail, fetchApplications, fetchDetail, message])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     void fetchApplications(1)
     return () => { listRequestRef.current += 1; detailRequestRef.current += 1 }
   }, [fetchApplications])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return {
     items,

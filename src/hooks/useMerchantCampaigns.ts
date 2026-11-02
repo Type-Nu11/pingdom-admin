@@ -194,6 +194,7 @@ export function useMerchantCampaigns() {
     }
   }, [fetchCampaigns, fetchBrands, getErrorMessage])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchInitialData()
@@ -204,6 +205,7 @@ export function useMerchantCampaigns() {
       brandRequestRef.current += 1
     }
   }, [fetchInitialData])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const runAction = useCallback(async <T,>(
     action: Exclude<CampaignAction, null>,

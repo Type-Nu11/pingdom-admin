@@ -133,6 +133,7 @@ export function useMerchantPayments({ persistActionError = false } = {}) {
     }
   }, [getErrorMessage])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     mountedRef.current = true
     void fetchPayments(1)
@@ -142,6 +143,7 @@ export function useMerchantPayments({ persistActionError = false } = {}) {
       mountedRef.current = false
     }
   }, [fetchPayments, fetchSettlements])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const refundPayment = useCallback(async (payment: MerchantPayment) => {
     if (payment.status !== 'PAID' || refundingRef.current !== null) return null

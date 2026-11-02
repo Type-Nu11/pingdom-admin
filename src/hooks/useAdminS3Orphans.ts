@@ -186,6 +186,7 @@ export function useAdminS3Orphans() {
     }
   }, [fetchReport, message, report, reportState, statusState])
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     const requests = [dryRunRequest, statusRequest, reportRequest]
     mounted.current = true
@@ -196,6 +197,7 @@ export function useAdminS3Orphans() {
       for (const request of requests) ++request.current
     }
   }, [fetchDryRun, fetchStatus])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (status?.status !== 'RUNNING' || statusState !== 'ready' || activeAction !== null) return

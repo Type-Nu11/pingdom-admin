@@ -59,6 +59,8 @@ export function useAdminTrustScore() {
     return data
   }, [fetchReporterQuery, reporterState.owner, run])
   const recalculate = useCallback(async () => { const data = await run('batch', api.recalculateAdminTrustScores, '신뢰 점수 일괄 재계산을 완료했습니다.', () => fetchAnomalies()); if (data) setBatchResult(data); return data }, [fetchAnomalies, run])
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => { void fetchAnomalies(); void fetchRules(false) }, [fetchAnomalies, fetchRules])
+  /* eslint-enable react-hooks/set-state-in-effect */
   return { ...reporterState, anomalies, anomalyPage, anomalyTotalCount, anomalyTotalPages, rules, evaluation, batchResult, isAnomaliesLoading, isRulesLoading, activeAction, errorMessage, actionErrorMessage, dismissActionError: () => setActionErrorMessage(''), successMessage, fetchReporter, fetchAnomalies, fetchRules, resolveAnomaly, saveRule, toggleRule, evaluateReporter, recalculate }
 }

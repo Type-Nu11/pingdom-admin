@@ -470,6 +470,7 @@ export function useAdminBannedUsers({
     [clearAuth, fetchAdminBannedUsers, fetchUserSanctionHistories, page, users.length]
   )
 
+  const selectedUserId = selectedUserDetail?.userId
   const applyUserBan = useCallback(
     async (userId: number, payload: AdminUserBanRequest = {}) => {
       if (banningUserIdRef.current !== null) {
@@ -494,7 +495,7 @@ export function useAdminBannedUsers({
           resetActionMessage: false,
         })
 
-        if (selectedUserDetail?.userId === userId) {
+        if (selectedUserId === userId) {
           await fetchUserSanctionHistories(userId, {
             page: DEFAULT_ADMIN_USER_SANCTION_HISTORY_PAGE,
           })
@@ -525,13 +526,15 @@ export function useAdminBannedUsers({
       fetchAdminBannedUsers,
       fetchBanTargetStatus,
       fetchUserSanctionHistories,
-      selectedUserDetail?.userId,
+      selectedUserId,
     ]
   )
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Start external data loading with the existing loading/error reset; retain request cleanup and retry behavior. */
   useEffect(() => {
     void fetchAdminBannedUsers()
   }, [fetchAdminBannedUsers])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return {
     users,

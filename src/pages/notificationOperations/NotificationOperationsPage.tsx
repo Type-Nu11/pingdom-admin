@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
 import { AdminPagination } from "../../components/common/AdminPagination";
@@ -14,7 +15,7 @@ import type {
   AdminOutboxEventItem,
   AdminOutboxEventStatus,
 } from "../../types/adminNotification.types";
-import * as Shell from "../place/PlaceManagePage.styles";
+import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 type Tab = "inbox" | "delivery" | "outbox";
@@ -84,7 +85,7 @@ function NotificationOperationsPage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon>admin_panel_settings</Shell.MaterialIcon>
+              <MaterialIcon>admin_panel_settings</MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{admin}</strong>
@@ -98,7 +99,7 @@ function NotificationOperationsPage() {
               navigate("/login", { replace: true });
             }}
           >
-            <Shell.MaterialIcon>logout</Shell.MaterialIcon>
+            <MaterialIcon>logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>

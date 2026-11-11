@@ -1,3 +1,5 @@
+import * as AdminShell from '../../app/layouts/AdminShell.styles'
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -667,69 +669,69 @@ function PlaceManagePage() {
 
 
   return (
-    <S.AppShell>
-      <S.SideNav aria-label="관리자 메뉴">
-        <S.SideHeader>
-          <S.BrandLockup>
-            <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </S.BrandLockup>
-        </S.SideHeader>
+    <AdminShell.AppShell>
+      <AdminShell.SideNav aria-label="관리자 메뉴">
+        <AdminShell.SideHeader>
+          <AdminShell.BrandLockup>
+            <AdminShell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
+          </AdminShell.BrandLockup>
+        </AdminShell.SideHeader>
 
-        <S.SideMenu>
+        <AdminShell.SideMenu>
           <AdminNavigationMenu />
-        </S.SideMenu>
+        </AdminShell.SideMenu>
 
-        <S.SideFooter>
-          <S.AdminProfile aria-label="관리자 계정">
-            <S.AdminProfileIcon>
-              <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
-            </S.AdminProfileIcon>
-            <S.AdminProfileText>
+        <AdminShell.SideFooter>
+          <AdminShell.AdminProfile aria-label="관리자 계정">
+            <AdminShell.AdminProfileIcon>
+              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
+            </AdminShell.AdminProfileIcon>
+            <AdminShell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
               <span>관리자</span>
-            </S.AdminProfileText>
-          </S.AdminProfile>
-          <S.LogoutButton
+            </AdminShell.AdminProfileText>
+          </AdminShell.AdminProfile>
+          <AdminShell.LogoutButton
             type="button"
             onClick={() => {
               void logout()
               navigate('/login', { replace: true })
             }}
           >
-            <S.MaterialIcon aria-hidden="true">logout</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
-          </S.LogoutButton>
-        </S.SideFooter>
-      </S.SideNav>
+          </AdminShell.LogoutButton>
+        </AdminShell.SideFooter>
+      </AdminShell.SideNav>
 
-      <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <S.TopBar>
-          <S.TopTitleGroup>
-            <S.TopTitle>장소 관리</S.TopTitle>
-          </S.TopTitleGroup>
-          <S.TopActions>
-            <S.TopActionButton
+      <AdminShell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
+        <AdminShell.TopBar>
+          <AdminShell.TopTitleGroup>
+            <AdminShell.TopTitle>장소 관리</AdminShell.TopTitle>
+          </AdminShell.TopTitleGroup>
+          <AdminShell.TopActions>
+            <AdminShell.TopActionButton
               type="button"
               onClick={() => navigate('/recommendations/metrics')}
             >
-              <S.MaterialIcon aria-hidden="true">monitoring</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">monitoring</MaterialIcon>
               추천 성과
-            </S.TopActionButton>
-            <S.TopActionButton
+            </AdminShell.TopActionButton>
+            <AdminShell.TopActionButton
               type="button"
               onClick={() => navigate('/places/information-verification')}
             >
-              <S.MaterialIcon aria-hidden="true">fact_check</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">fact_check</MaterialIcon>
               정보 검증
-            </S.TopActionButton>
-            <S.TopActionButton
+            </AdminShell.TopActionButton>
+            <AdminShell.TopActionButton
               type="button"
               onClick={() => navigate('/places/duplicate-candidates')}
             >
-              <S.MaterialIcon aria-hidden="true">merge_type</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">merge_type</MaterialIcon>
               중복 후보 검토
-            </S.TopActionButton>
-            <S.TopActionButton
+            </AdminShell.TopActionButton>
+            <AdminShell.TopActionButton
               type="button"
               disabled={!placeDetail || isDetailLoading || isDeletingSelectedPlace}
               onClick={handleOpenDeleteConfirm}
@@ -739,12 +741,12 @@ function PlaceManagePage() {
                   : '장소를 선택한 뒤 삭제할 수 있습니다.'
               }
             >
-              <S.MaterialIcon aria-hidden="true">warning</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">warning</MaterialIcon>
               장소 삭제
-            </S.TopActionButton>
+            </AdminShell.TopActionButton>
             <AdminNotificationButton />
-          </S.TopActions>
-        </S.TopBar>
+          </AdminShell.TopActions>
+        </AdminShell.TopBar>
 
         <S.SplitContent $isPanelCollapsed={isPlacePanelCollapsed}>
           <PlaceListPanel
@@ -807,11 +809,11 @@ function PlaceManagePage() {
             }
           />
         </S.SplitContent>
-      </S.MainArea>
+      </AdminShell.MainArea>
 
       {actionSuccessMessage ? (
         <S.ActionToast role="status">
-          <S.MaterialIcon aria-hidden="true">check_circle</S.MaterialIcon>
+          <MaterialIcon aria-hidden="true">check_circle</MaterialIcon>
           <span>{actionSuccessMessage}</span>
         </S.ActionToast>
       ) : null}
@@ -881,7 +883,7 @@ function PlaceManagePage() {
           onDeleted={handleDeleteCompleted}
         />
       ) : null}
-    </S.AppShell>
+    </AdminShell.AppShell>
   )
 }
 

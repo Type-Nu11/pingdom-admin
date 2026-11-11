@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState, type FormEvent } from "react";
@@ -14,7 +15,7 @@ import type {
   TrustScoreInterventionRule,
   TrustScoreInterventionTrigger,
 } from "../../types/adminTrustScore.types";
-import * as Shell from "../place/PlaceManagePage.styles";
+import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 
@@ -206,9 +207,9 @@ function TrustScorePage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">
+              <MaterialIcon aria-hidden="true">
                 admin_panel_settings
-              </Shell.MaterialIcon>
+              </MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -222,7 +223,7 @@ function TrustScorePage() {
               navigate("/login", { replace: true });
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -281,9 +282,9 @@ function TrustScorePage() {
                     setFormError(''); hook.dismissActionError();
                   }}
                 >
-                  <Shell.MaterialIcon aria-hidden="true">
+                  <MaterialIcon aria-hidden="true">
                     {icon}
-                  </Shell.MaterialIcon>
+                  </MaterialIcon>
                   {label}
                 </S.TabButton>
               ))}
@@ -786,9 +787,9 @@ function TrustScorePage() {
                 disabled={hook.activeAction !== null}
                 onClick={() => setDialog(null)}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   close
-                </Shell.MaterialIcon>
+                </MaterialIcon>
               </Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>

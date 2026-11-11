@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
 import type {
   AdminPlaceDetail,
@@ -102,7 +103,7 @@ export function PlaceTouristInfoDialog({
             disabled={isSaving}
             onClick={handleClose}
           >
-            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">close</MaterialIcon>
           </S.OperatingDialogCloseButton>
         </S.OperatingDialogHeader>
 

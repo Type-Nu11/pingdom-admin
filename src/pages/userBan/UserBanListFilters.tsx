@@ -1,10 +1,10 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import type { FormEvent } from 'react'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import type { AdminBanType, AdminBannedUserListSortBy, AdminSortDirection } from '../../types/adminUserBan.types'
 import { AdminFilterMenu } from './UserBanFilterMenu'
 import { BAN_TYPE_FILTER_OPTIONS, BAN_LIST_SORT_OPTIONS, SORT_DIRECTION_OPTIONS } from './userBan.options'
 import * as U from '../adminUtility/AdminUtilityPage.styles'
-import * as S from '../place/PlaceManagePage.styles'
 
 interface UserBanListFiltersProps {
   banSearchQuery: string
@@ -63,7 +63,7 @@ export function UserBanListFilters({
         </U.FilterField>
         <U.FilterActions $alignWithField>
           <U.PrimaryButton type="submit" disabled={isLoading}>
-            <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">search</MaterialIcon>
             {isLoading ? '조회 중' : '조회'}
           </U.PrimaryButton>
         </U.FilterActions>
@@ -133,7 +133,7 @@ export function UserBanListFilters({
               disabled={isLoading}
               onClick={handleRefresh}
             >
-              <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </U.IconActionButton>
           </U.FilterActions>
         </U.AdvancedFilterPanel>

@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminPlaces } from '../../api/adminTargetSearchApi'
 import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
@@ -28,7 +29,7 @@ import type {
   AdminReservation,
   AdminReservationStatus,
 } from '../../types/adminReservation.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 import * as ReviewUI from './AdminReservationReviewPage.styles'
@@ -181,11 +182,11 @@ function ReservationHistoryWorkspace() {
         <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile aria-label="관리자 계정">
-            <Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon>
+            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
             <Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText>
           </Shell.AdminProfile>
           <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}>
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon><span>로그아웃</span>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
       </Shell.SideNav>
@@ -202,7 +203,7 @@ function ReservationHistoryWorkspace() {
               disabled={hook.isLoading}
               onClick={() => void hook.fetchReservations(hook.query)}
             >
-              <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+              <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>

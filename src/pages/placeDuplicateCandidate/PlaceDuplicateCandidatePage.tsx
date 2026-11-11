@@ -1,3 +1,5 @@
+import * as AdminShell from '../../app/layouts/AdminShell.styles'
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -296,56 +298,56 @@ function PlaceDuplicateCandidatePage() {
     : undefined
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
+    <AdminShell.AppShell>
+      <AdminShell.SideNav aria-label="관리자 메뉴">
+        <AdminShell.SideHeader>
+          <AdminShell.BrandLockup>
+            <AdminShell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
+          </AdminShell.BrandLockup>
+        </AdminShell.SideHeader>
+        <AdminShell.SideMenu>
           <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile aria-label="관리자 계정">
-            <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
+        </AdminShell.SideMenu>
+        <AdminShell.SideFooter>
+          <AdminShell.AdminProfile aria-label="관리자 계정">
+            <AdminShell.AdminProfileIcon>
+              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
+            </AdminShell.AdminProfileIcon>
+            <AdminShell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
               <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
+            </AdminShell.AdminProfileText>
+          </AdminShell.AdminProfile>
+          <AdminShell.LogoutButton
             type="button"
             onClick={() => {
               void logout()
               navigate('/login', { replace: true })
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
+          </AdminShell.LogoutButton>
+        </AdminShell.SideFooter>
+      </AdminShell.SideNav>
 
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
-            <Shell.TopTitle>중복 후보 검토</Shell.TopTitle>
-          </Shell.TopTitleGroup>
-          <Shell.TopActions>
+      <AdminShell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
+        <AdminShell.TopBar>
+          <AdminShell.TopTitleGroup>
+            <AdminShell.TopTitle>중복 후보 검토</AdminShell.TopTitle>
+          </AdminShell.TopTitleGroup>
+          <AdminShell.TopActions>
             <AdminNotificationButton />
-            <Shell.IconButton
+            <AdminShell.IconButton
               type="button"
               aria-label="후보 새로고침"
               disabled={isLoading || activeAction !== null}
               onClick={() => void fetchCandidates(status)}
             >
-              <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
-            </Shell.IconButton>
-          </Shell.TopActions>
-        </Shell.TopBar>
+              <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
+            </AdminShell.IconButton>
+          </AdminShell.TopActions>
+        </AdminShell.TopBar>
 
         <S.Content>
           <S.PageStack>
@@ -395,7 +397,7 @@ function PlaceDuplicateCandidatePage() {
               <S.EmptyStateCard><strong>중복 후보를 불러오는 중입니다.</strong></S.EmptyStateCard>
             ) : !errorMessage && candidates.length === 0 ? (
               <S.EmptyStateCard>
-                <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
+                <MaterialIcon aria-hidden="true">task_alt</MaterialIcon>
                 <strong>{getStatusLabel(status)} 후보가 없습니다.</strong>
               </S.EmptyStateCard>
             ) : (
@@ -464,7 +466,7 @@ function PlaceDuplicateCandidatePage() {
                     ) : candidateDetail && leftPlace && rightPlace ? (
                       <>
                         <S.DetailNotice>
-                          <Shell.MaterialIcon aria-hidden="true">info</Shell.MaterialIcon>
+                          <MaterialIcon aria-hidden="true">info</MaterialIcon>
                           <div>
                             <strong>{candidateDetail.matchReason}</strong>
                             신뢰도 {getConfidenceLabel(candidateDetail.confidenceScore)} · 거리 {candidateDetail.distanceMeters.toLocaleString()}m · 탐지 {formatDate(candidateDetail.detectedAt)}
@@ -489,7 +491,7 @@ function PlaceDuplicateCandidatePage() {
                               </>
                             ) : candidateDetail.status === 'CONFIRMED' ? (
                               <S.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => openDialog('merge')}>
-                                <Shell.MaterialIcon aria-hidden="true">merge_type</Shell.MaterialIcon>
+                                <MaterialIcon aria-hidden="true">merge_type</MaterialIcon>
                                 병합 검토
                               </S.PrimaryButton>
                             ) : null}
@@ -503,7 +505,7 @@ function PlaceDuplicateCandidatePage() {
             )}
           </S.PageStack>
         </S.Content>
-      </Shell.MainArea>
+      </AdminShell.MainArea>
 
       {dialogState && candidateDetail ? (
         <S.ModalOverlay role="presentation" onMouseDown={closeDialog}>
@@ -513,7 +515,7 @@ function PlaceDuplicateCandidatePage() {
                 {dialogState === 'confirm' ? '중복 후보 확정' : dialogState === 'reject' ? '중복 후보 거절' : '확정 후보 병합'}
               </S.ModalTitle>
               <S.ModalCloseButton ref={dialogCloseButtonRef} type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}>
-                <Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon>
+                <MaterialIcon aria-hidden="true">close</MaterialIcon>
               </S.ModalCloseButton>
             </S.ModalHeader>
             <S.ModalBody>
@@ -545,7 +547,7 @@ function PlaceDuplicateCandidatePage() {
           </S.Modal>
         </S.ModalOverlay>
       ) : null}
-    </Shell.AppShell>
+    </AdminShell.AppShell>
   )
 }
 

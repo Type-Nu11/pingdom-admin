@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type {
@@ -350,7 +351,7 @@ export function PlaceDataCorrectionDialog({
             disabled={isSubmitting}
             onClick={handleClose}
           >
-            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">close</MaterialIcon>
           </S.OperatingDialogCloseButton>
         </S.OperatingDialogHeader>
 
@@ -495,7 +496,7 @@ export function PlaceDataCorrectionDialog({
                 <span>
                   현재 {formatCoordinate(place.latitude)}, {formatCoordinate(place.longitude)}
                 </span>
-                <S.MaterialIcon aria-hidden="true">arrow_forward</S.MaterialIcon>
+                <MaterialIcon aria-hidden="true">arrow_forward</MaterialIcon>
                 <strong>
                   변경 {latitude || '-'}, {longitude || '-'}
                 </strong>

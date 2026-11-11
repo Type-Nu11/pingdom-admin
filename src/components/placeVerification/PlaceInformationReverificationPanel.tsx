@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
@@ -5,7 +6,6 @@ import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
 import { AdminPagination } from '../common/AdminPagination'
 import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
 import type { PlaceInformationReverificationRequest } from '../../types/adminPlaceVerification.types'
-import * as Shell from '../../pages/place/PlaceManagePage.styles'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
 import {
@@ -96,7 +96,7 @@ export function PlaceInformationReverificationPanel({
       {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
       {!loadedPlaceId ? (
         <Shared.EmptyStateCard>
-          <Shell.MaterialIcon aria-hidden="true">sync_problem</Shell.MaterialIcon>
+          <MaterialIcon aria-hidden="true">sync_problem</MaterialIcon>
           <strong>{hasSelectedPlace ? '선택한 장소의 정보를 조회해주세요.' : '확인할 장소를 선택해주세요.'}</strong>
           <p>상점주에게 요청한 정보 재확인 상태를 추적할 수 있습니다.</p>
         </Shared.EmptyStateCard>
@@ -158,7 +158,7 @@ export function PlaceInformationReverificationPanel({
           <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="reverification-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
             <Shared.ModalHeader>
               <Shared.ModalTitle id="reverification-dialog-title">{dialog.type === 'create' ? '장소 정보 재확인 요청' : ACTION_LABELS[dialog.action]}</Shared.ModalTitle>
-              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
+              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>
               {dialog.type === 'create' ? (

@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { ReviewReasons, ReviewPhotos } from '../../components/common/ReviewPresentation'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
@@ -13,7 +14,7 @@ import { useAuth } from '../../hooks/useAuth'
 import type {
   PlaceReviewDeletionRequestStatus,
 } from '../../types/adminPlaceReviewDeletion.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as Form from '../placeVerification/PlaceVerificationPage.styles'
 import * as S from './PlaceReviewDeletionPage.styles'
@@ -92,14 +93,14 @@ function PlaceReviewDeletionPage() {
         <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
         <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
         <Shell.SideFooter>
-          <Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile>
-          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
+          <Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile>
+          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
         </Shell.SideFooter>
       </Shell.SideNav>
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar>
           <Shell.TopTitleGroup><Shell.TopTitle>리뷰 삭제 요청</Shell.TopTitle></Shell.TopTitleGroup>
-          <Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchItems(hook.status, hook.page)}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton></Shell.TopActions>
+          <Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchItems(hook.status, hook.page)}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton></Shell.TopActions>
         </Shell.TopBar>
         <Shared.Content>
           <Shared.PageStack>
@@ -160,7 +161,7 @@ function PlaceReviewDeletionPage() {
         </Shared.Content>
       </Shell.MainArea>
 
-      {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="review-deletion-decision-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="review-deletion-decision-title">리뷰 삭제 요청 {decision === 'APPROVED' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>{decision === 'APPROVED' ? '승인하면 해당 리뷰가 삭제되며 복구할 수 없습니다.' : '반려하면 상점주의 삭제 요청은 처리되지 않습니다.'}</Shared.ModalWarning><Form.FormGrid><Form.WideField>검토 메모 *<Form.TextArea value={reviewNote} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReviewNote(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reviewNote.length}/500</small></Form.WideField></Form.FormGrid>{formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'APPROVED' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '삭제 처리 중' : '삭제 승인 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
+      {decision && hook.detail ? <Shared.ModalOverlay role="presentation" onMouseDown={() => !hook.isReviewing && setDecision(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="review-deletion-decision-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="review-deletion-decision-title">리뷰 삭제 요청 {decision === 'APPROVED' ? '승인' : '반려'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.isReviewing} onClick={() => setDecision(null)}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>{decision === 'APPROVED' ? '승인하면 해당 리뷰가 삭제되며 복구할 수 없습니다.' : '반려하면 상점주의 삭제 요청은 처리되지 않습니다.'}</Shared.ModalWarning><Form.FormGrid><Form.WideField>검토 메모 *<Form.TextArea value={reviewNote} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReviewNote(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reviewNote.length}/500</small></Form.WideField></Form.FormGrid>{formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>{decision === 'APPROVED' ? <S.DangerButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '삭제 처리 중' : '삭제 승인 확정'}</S.DangerButton> : <Shared.PrimaryButton type="button" disabled={hook.isReviewing} onClick={() => void submitReview()}>{hook.isReviewing ? '처리 중' : '반려 확정'}</Shared.PrimaryButton>}</Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
     </Shell.AppShell>
   )
 }

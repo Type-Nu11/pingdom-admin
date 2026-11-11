@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../common/FeedbackMessage'
 import { useState } from 'react'
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
@@ -9,7 +10,6 @@ import type {
   PlaceInformationSourceType,
   PlaceInformationVerificationStatus,
 } from '../../types/adminPlaceVerification.types'
-import * as Shell from '../../pages/place/PlaceManagePage.styles'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
 import {
@@ -135,7 +135,7 @@ export function PlaceInformationEvidencePanel({
       {actionSuccessMessage ? <Shared.Notice $variant="success" role="status">{actionSuccessMessage}</Shared.Notice> : null}
       {!loadedPlaceId ? (
         <Shared.EmptyStateCard>
-          <Shell.MaterialIcon aria-hidden="true">fact_check</Shell.MaterialIcon>
+          <MaterialIcon aria-hidden="true">fact_check</MaterialIcon>
           <strong>{hasSelectedPlace ? '선택한 장소의 정보를 조회해주세요.' : '확인할 장소를 선택해주세요.'}</strong>
           <p>장소별 출처와 증빙 검토 이력을 확인할 수 있습니다.</p>
         </Shared.EmptyStateCard>
@@ -193,7 +193,7 @@ export function PlaceInformationEvidencePanel({
           <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="evidence-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
             <Shared.ModalHeader>
               <Shared.ModalTitle id="evidence-dialog-title">{dialog.type === 'create' ? '증빙 등록' : `증빙 #${dialog.evidence.evidenceId} 검토`}</Shared.ModalTitle>
-              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton>
+              <Shared.ModalCloseButton type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>
               {dialog.type === 'create' ? (

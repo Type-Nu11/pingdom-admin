@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -12,7 +13,7 @@ import type {
   AdminPlaceDuplicateGroupItem,
   AdminPlaceMergeHistoryItem,
 } from '../../types/adminPlaceMerge.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as S from './PlaceMergePage.styles'
 
 type ConfirmationState =
@@ -299,9 +300,9 @@ function PlaceMergePage() {
         <Shell.SideFooter>
           <Shell.AdminProfile aria-label="관리자 계정">
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">
+              <MaterialIcon aria-hidden="true">
                 admin_panel_settings
-              </Shell.MaterialIcon>
+              </MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -315,7 +316,7 @@ function PlaceMergePage() {
               navigate('/login', { replace: true })
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -335,7 +336,7 @@ function PlaceMergePage() {
               disabled={isGroupsLoading || isHistoriesLoading || activeAction !== null}
               onClick={handleRefresh}
             >
-              <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+              <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>
@@ -352,7 +353,7 @@ function PlaceMergePage() {
               </div>
               <S.HeaderActions>
                 <S.HeaderButton type="button" onClick={() => navigate('/places')}>
-                  <Shell.MaterialIcon aria-hidden="true">arrow_back</Shell.MaterialIcon>
+                  <MaterialIcon aria-hidden="true">arrow_back</MaterialIcon>
                   장소 관리
                 </S.HeaderButton>
               </S.HeaderActions>
@@ -368,12 +369,12 @@ function PlaceMergePage() {
 
             {isGroupsLoading && duplicateGroups.length === 0 ? (
               <S.EmptyStateCard>
-                <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
+                <MaterialIcon aria-hidden="true">progress_activity</MaterialIcon>
                 <strong>중복 후보를 확인하는 중입니다.</strong>
               </S.EmptyStateCard>
             ) : errorMessage && !hasDuplicateGroups ? (
               <S.EmptyStateCard>
-                <Shell.MaterialIcon aria-hidden="true">error_outline</Shell.MaterialIcon>
+                <MaterialIcon aria-hidden="true">error_outline</MaterialIcon>
                 <strong>중복 후보를 불러오지 못했습니다.</strong>
                 <S.SecondaryButton
                   type="button"
@@ -384,12 +385,12 @@ function PlaceMergePage() {
               </S.EmptyStateCard>
             ) : !hasDuplicateGroups ? (
               <S.EmptyStateCard>
-                <Shell.MaterialIcon aria-hidden="true">task_alt</Shell.MaterialIcon>
+                <MaterialIcon aria-hidden="true">task_alt</MaterialIcon>
                 <strong>중복 장소 후보가 없습니다.</strong>
                 <p>현재 탐지된 중복 장소가 없습니다. 새로 등록된 장소가 있다면 다시 확인해보세요.</p>
                 <S.EmptyStateActions>
                   <S.PrimaryButton type="button" onClick={handleRefresh}>
-                    <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+                    <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
                     탐지 결과 새로고침
                   </S.PrimaryButton>
                 </S.EmptyStateActions>
@@ -467,13 +468,13 @@ function PlaceMergePage() {
                 <S.CompareBody>
                   {!activeGroup ? (
                     <S.EmptyState>
-                      <Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>
+                      <MaterialIcon aria-hidden="true">compare_arrows</MaterialIcon>
                       <strong>중복 장소를 선택해주세요.</strong>
                       <p>왼쪽 목록에서 비교할 중복 장소 그룹을 선택하면 상세 정보가 표시됩니다.</p>
                     </S.EmptyState>
                   ) : isDetailLoading ? (
                     <S.EmptyState>
-                      <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
+                      <MaterialIcon aria-hidden="true">progress_activity</MaterialIcon>
                       <strong>후보 장소를 불러오는 중입니다.</strong>
                     </S.EmptyState>
                   ) : detailErrorMessage ? (
@@ -489,7 +490,7 @@ function PlaceMergePage() {
                   ) : duplicateDetail && targetPlace ? (
                     <>
                       <S.DetailNotice>
-                        <Shell.MaterialIcon aria-hidden="true">info</Shell.MaterialIcon>
+                        <MaterialIcon aria-hidden="true">info</MaterialIcon>
                         <div>
                           <strong>병합 대상 확인</strong>
                           병합 후 원본 장소의 연결 데이터가 대표 장소로 이동됩니다. 서버가 반환하는 병합 결과와 이력으로 처리 결과를 확인하세요.
@@ -564,7 +565,7 @@ function PlaceMergePage() {
                           disabled={!canMerge || activeAction !== null}
                           onClick={() => setConfirmation({ type: 'merge' })}
                         >
-                          <Shell.MaterialIcon aria-hidden="true">merge_type</Shell.MaterialIcon>
+                          <MaterialIcon aria-hidden="true">merge_type</MaterialIcon>
                           {activeAction === 'merge' ? '병합 중' : '병합 검토'}
                         </S.PrimaryButton>
                       </S.ActionBar>
@@ -574,7 +575,7 @@ function PlaceMergePage() {
                   </S.Panel>
                 ) : (
                   <S.SelectionPrompt>
-                    <Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>
+                    <MaterialIcon aria-hidden="true">compare_arrows</MaterialIcon>
                     <strong>비교할 중복 후보를 선택해주세요.</strong>
                     <p>왼쪽 목록에서 후보를 선택하면 장소 정보와 병합 대상을 확인할 수 있습니다.</p>
                   </S.SelectionPrompt>
@@ -594,7 +595,7 @@ function PlaceMergePage() {
               </S.PanelHeader>
               {isHistoriesLoading && mergeHistories.length === 0 ? (
                 <S.EmptyState>
-                  <Shell.MaterialIcon aria-hidden="true">progress_activity</Shell.MaterialIcon>
+                  <MaterialIcon aria-hidden="true">progress_activity</MaterialIcon>
                   <strong>병합 이력을 불러오는 중입니다.</strong>
                 </S.EmptyState>
               ) : historyErrorMessage ? (
@@ -606,7 +607,7 @@ function PlaceMergePage() {
                 </S.EmptyState>
               ) : mergeHistories.length === 0 ? (
                 <S.EmptyState>
-                  <Shell.MaterialIcon aria-hidden="true">history</Shell.MaterialIcon>
+                  <MaterialIcon aria-hidden="true">history</MaterialIcon>
                   <strong>병합 이력이 없습니다.</strong>
                 </S.EmptyState>
               ) : (
@@ -636,7 +637,7 @@ function PlaceMergePage() {
                           }
                           onClick={() => setConfirmation({ type: 'restore', history })}
                         >
-                          <Shell.MaterialIcon aria-hidden="true">restore</Shell.MaterialIcon>
+                          <MaterialIcon aria-hidden="true">restore</MaterialIcon>
                           {activeAction === 'restore' ? '복구 중' : '복구'}
                         </S.SecondaryButton>
                       </S.HistoryActions>
@@ -674,14 +675,14 @@ function PlaceMergePage() {
                 disabled={activeAction !== null}
                 onClick={() => setConfirmation(null)}
               >
-                <Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon>
+                <MaterialIcon aria-hidden="true">close</MaterialIcon>
               </S.ModalCloseButton>
             </S.ModalHeader>
             <S.ModalBody>
               {confirmation.type === 'merge' && targetPlace && selectedSource ? (
                 <>
                   <S.ModalWarning>
-                    <Shell.MaterialIcon aria-hidden="true">warning</Shell.MaterialIcon>
+                    <MaterialIcon aria-hidden="true">warning</MaterialIcon>
                     <span>
                       병합 후 후보 장소는 대표 장소로 통합됩니다. 실제 영향 범위는 서버 병합 결과와 이력에서 최종 확인해주세요.
                     </span>
@@ -703,7 +704,7 @@ function PlaceMergePage() {
                 </>
               ) : confirmation.type === 'restore' ? (
                 <S.ModalWarning>
-                  <Shell.MaterialIcon aria-hidden="true">restore</Shell.MaterialIcon>
+                  <MaterialIcon aria-hidden="true">restore</MaterialIcon>
                   <span>
                     병합 이력 #{confirmation.history.historyId}를 복구합니다. 복구 후에는 중복 장소 목록과 장소 관리 화면에서 결과를 확인해야 합니다.
                   </span>
@@ -727,9 +728,9 @@ function PlaceMergePage() {
                     : handleConfirmRestore
                 }
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   {confirmation.type === 'merge' ? 'merge_type' : 'restore'}
-                </Shell.MaterialIcon>
+                </MaterialIcon>
                 {activeAction !== null
                   ? '처리 중'
                   : confirmation.type === 'merge'

@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from "react";
@@ -14,7 +15,7 @@ import type {
   VisitorVerificationReport,
   VisitorVerificationStatus,
 } from "../../types/adminVisitorVerification.types";
-import * as Shell from "../place/PlaceManagePage.styles";
+import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 
@@ -115,9 +116,9 @@ function VisitorVerificationPage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">
+              <MaterialIcon aria-hidden="true">
                 admin_panel_settings
-              </Shell.MaterialIcon>
+              </MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -131,7 +132,7 @@ function VisitorVerificationPage() {
               navigate("/login", { replace: true });
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -149,9 +150,9 @@ function VisitorVerificationPage() {
               disabled={hook.isLoading || hook.isReviewing}
               onClick={() => void hook.fetchItems(tab, status, page)}
             >
-              <Shell.MaterialIcon aria-hidden="true">
+              <MaterialIcon aria-hidden="true">
                 refresh
-              </Shell.MaterialIcon>
+              </MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>
@@ -191,9 +192,9 @@ function VisitorVerificationPage() {
                   setSelected(null);
                 }}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   fact_check
-                </Shell.MaterialIcon>
+                </MaterialIcon>
                 검증 제보
               </S.TabButton>
               <S.TabButton
@@ -205,9 +206,9 @@ function VisitorVerificationPage() {
                   setSelected(null);
                 }}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   edit_note
-                </Shell.MaterialIcon>
+                </MaterialIcon>
                 정정 요청
               </S.TabButton>
             </S.TabList>
@@ -455,9 +456,9 @@ function VisitorVerificationPage() {
                 disabled={hook.isReviewing}
                 onClick={() => setDecision(null)}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   close
-                </Shell.MaterialIcon>
+                </MaterialIcon>
               </Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>

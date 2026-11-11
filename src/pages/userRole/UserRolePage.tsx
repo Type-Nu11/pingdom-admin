@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminRoleTargets } from '../../api/adminTargetSearchApi'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
@@ -9,7 +10,7 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminUserRoles } from "../../hooks/useAdminUserRoles";
 import { useAuth } from "../../hooks/useAuth";
 import type { AdminRole } from "../../types/adminUserRole.types";
-import * as Shell from "../place/PlaceManagePage.styles";
+import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 
@@ -113,9 +114,9 @@ function UserRolePage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">
+              <MaterialIcon aria-hidden="true">
                 admin_panel_settings
-              </Shell.MaterialIcon>
+              </MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -129,7 +130,7 @@ function UserRolePage() {
               navigate("/login", { replace: true });
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -205,9 +206,9 @@ function UserRolePage() {
             ) : null}
             {hook.targetUserId && user?.id === hook.targetUserId ? (
               <Shared.DetailNotice>
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   warning
-                </Shell.MaterialIcon>
+                </MaterialIcon>
                 <div>
                   <strong>현재 로그인한 계정입니다.</strong>자기 역할을 회수하면
                   관리 기능에 다시 접근하지 못할 수 있습니다.
@@ -361,9 +362,9 @@ function UserRolePage() {
                 disabled={hook.isMutating}
                 onClick={() => setDialog(null)}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   close
-                </Shell.MaterialIcon>
+                </MaterialIcon>
               </Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>

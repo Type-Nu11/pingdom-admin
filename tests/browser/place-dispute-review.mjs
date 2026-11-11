@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { chromium } from 'playwright'
@@ -7,6 +7,8 @@ import { createServer } from '../helpers/isolated-vite.mjs'
 import { guardBrowserPage } from '../helpers/browser-regression-guard.mjs'
 
 const output = await mkdtemp(join(tmpdir(), 'pingdom-300-'))
+const cpuRate = Number(process.env.PINGDOM_QA_CPU_RATE ?? 1)
+assert.ok(Number.isFinite(cpuRate) && cpuRate >= 1 && cpuRate <= 8, 'CPU stress rate must be between 1 and 8')
 const server = await createServer({ cacheDir: join(output, 'cache'),
   server: { port: 0, host: '127.0.0.1', open: false }, plugins: [{
     name: 'place-dispute-review-fixture', configureServer(vite) {
@@ -18,12 +20,17 @@ const server = await createServer({ cacheDir: join(output, 'cache'),
       })
     },
   }] })
-let browser
+let browser, page, currentViewport
 try {
   await server.listen(); browser = await chromium.launch()
   const base = `http://127.0.0.1:${server.httpServer.address().port}`
   for (const [width, height] of [[1920, 1080], [1366, 768], [390, 844]]) {
-    const page = await browser.newPage({ viewport: { width, height } })
+    currentViewport = { width, height }
+    page = await browser.newPage({ viewport: currentViewport })
+    if (cpuRate > 1) {
+      const session = await page.context().newCDPSession(page)
+      await session.send('Emulation.setCPUThrottlingRate', { rate: cpuRate })
+    }
     const allowed = new Set()
     const guard = await guardBrowserPage(page, base, event => {
       if (event.kind === 'fixture-api') return allowed.has(event.status)
@@ -169,11 +176,42 @@ try {
     await page.getByRole('button', { name: '목록 다시 조회', exact: true }).waitFor()
     assert.equal(await page.getByText('조건에 맞는 신고가 없습니다.', { exact: true }).count(), 0)
     allowed.add(401)
+    const clearsBefore = await page.evaluate(() => window.placeReviewQA.clears)
     await page.evaluate(() => { window.placeReviewQA.listStatus = 401 })
     await page.getByRole('button', { name: '목록 다시 조회', exact: true }).click()
-    await page.waitForFunction(() => window.placeReviewQA.clears >= 1)
+    // A clearAuth call is not a committed logout. Wait for protected content to unmount.
+    await page.getByTestId('qa-logged-out').waitFor()
+    await page.waitForFunction(() => window.placeReviewQA.accountId === null && window.placeReviewQA.pending === 0)
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    assert.equal(await page.evaluate(() => window.placeReviewQA.clears), clearsBefore + 1)
+    assert.equal(await page.evaluate(() => window.placeReviewQA.trace.filter(event =>
+      event.event === 'request-start' && event.accountId === null).length), 0,
+    'logged-out fixture must not keep fetching a protected page')
     await page.evaluate(() => { window.placeReviewQA.listStatus = 0; window.placeReviewQA.changeAccount(102) })
+    await page.waitForFunction(() => window.placeReviewQA.accountId === 102 && window.placeReviewQA.pending === 0)
     await page.getByText('조건에 맞는 신고가 없습니다.', { exact: true }).waitFor()
+
+    // An older account's delayed 401 must not log out the freshly committed account.
+    await page.evaluate(() => { window.placeReviewQA.listStatus = 401; window.placeReviewQA.delayList = true })
+    await page.getByRole('button', { name: '현재 작업 새로고침', exact: true }).click()
+    await page.waitForFunction(() => window.placeReviewQA.pending === 1 && typeof window.placeReviewQA.releaseList === 'function')
+    const oldRequest = await page.evaluate(() => window.placeReviewQA.trace
+      .filter(event => event.event === 'request-start' && event.path === '/admin/place-information-reports').at(-1).requestId)
+    await page.evaluate(() => {
+      window.placeReviewQA.listStatus = 0; window.placeReviewQA.delayList = false
+      window.placeReviewQA.changeAccount(103)
+    })
+    await page.waitForFunction(() => window.placeReviewQA.accountId === 103)
+    await page.getByText('조건에 맞는 신고가 없습니다.', { exact: true }).waitFor()
+    await page.evaluate(() => window.placeReviewQA.releaseList())
+    await page.waitForFunction(id => window.placeReviewQA.trace.some(event =>
+      event.event === 'response-rejected' && event.requestId === id), oldRequest)
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    assert.equal(await page.evaluate(() => window.placeReviewQA.accountId), 103)
+    assert.equal(await page.evaluate(() => window.placeReviewQA.clears), clearsBefore + 1)
+    await page.getByTestId('qa-logged-out').waitFor({ state: 'detached' })
+    await page.getByText('조건에 맞는 신고가 없습니다.', { exact: true }).waitFor()
+    assert.equal(await page.evaluate(() => window.placeReviewQA.pending), 0)
     guard.assertClean()
     const writes = (await page.evaluate(() => window.placeReviewQA.calls)).filter(c => c.method !== 'get')
     assert.equal(writes.length, 7)
@@ -182,4 +220,16 @@ try {
     await page.close()
   }
   console.log(`Synthetic screenshots: ${output}; no real API or operational mutations.`)
+} catch (error) {
+  // This fixture uses synthetic accounts/API data only. Never dump request bodies or tokens.
+  try {
+    const diagnostic = await page.evaluate(() => ({ accountId: window.placeReviewQA.accountId,
+      clears: window.placeReviewQA.clears, pending: window.placeReviewQA.pending,
+      trace: window.placeReviewQA.trace.slice(-40), text: document.body.innerText.slice(0, 2000) }))
+    console.error('Place dispute failure diagnostics:', JSON.stringify({ viewport: currentViewport, ...diagnostic }))
+    await writeFile(join(output, 'failure.json'), JSON.stringify({ viewport: currentViewport, ...diagnostic }, null, 2))
+    await page.screenshot({ path: join(output, 'failure.png'), fullPage: true })
+    console.error(`Failure artifacts: ${output}`)
+  } catch (diagnosticError) { console.error('Unable to capture fixture diagnostics:', diagnosticError.message) }
+  throw error
 } finally { await browser?.close(); await server.close() }

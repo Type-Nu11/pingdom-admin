@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import type { RefObject } from 'react'
 import SortDropdown from '../common/SortDropdown'
 import type {
@@ -125,7 +126,7 @@ export function PlaceListPanel({
             title="장소 목록 접기"
             onClick={onCollapse}
           >
-            <S.MaterialIcon aria-hidden="true">keyboard_double_arrow_left</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">keyboard_double_arrow_left</MaterialIcon>
           </S.PanelCollapseButton>
         </S.PanelSummary>
 
@@ -145,7 +146,7 @@ export function PlaceListPanel({
               onMouseDown={(event) => event.preventDefault()}
               onClick={onClearSearch}
             >
-              <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">close</MaterialIcon>
             </S.SearchClearButton>
           ) : null}
         </S.SearchField>
@@ -174,7 +175,7 @@ export function PlaceListPanel({
             disabled={isLoading}
             onClick={onRefresh}
           >
-            <S.MaterialIcon aria-hidden="true">refresh</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
           </S.IconFilterButton>
         </S.PanelActionGroup>
 
@@ -257,7 +258,7 @@ export function PlaceListPanel({
                     </S.PlaceTitleBadges>
                   </S.PlaceTitleRow>
                   <S.PlaceMeta>
-                    <S.MaterialIcon aria-hidden="true">map</S.MaterialIcon>
+                    <MaterialIcon aria-hidden="true">map</MaterialIcon>
                     <span title={place.address || '주소 정보 없음'}>
                       {place.address || '주소 정보 없음'}
                     </span>
@@ -290,7 +291,7 @@ export function PlaceListPanel({
               disabled={isLoading || page <= 1}
               onClick={() => onPageChange(1)}
             >
-              <S.MaterialIcon aria-hidden="true">first_page</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">first_page</MaterialIcon>
             </S.PageButton>
           ) : null}
           <S.PageButton
@@ -299,7 +300,7 @@ export function PlaceListPanel({
             disabled={isLoading || page <= 1}
             onClick={() => onPageChange(page - 1)}
           >
-            <S.MaterialIcon aria-hidden="true">chevron_left</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">chevron_left</MaterialIcon>
           </S.PageButton>
           <S.PageNumberList>
             {visiblePageNumbers.map((pageNumber) => (
@@ -321,7 +322,7 @@ export function PlaceListPanel({
             disabled={isLoading || !hasNext}
             onClick={() => onPageChange(page + 1)}
           >
-            <S.MaterialIcon aria-hidden="true">chevron_right</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">chevron_right</MaterialIcon>
           </S.PageButton>
           {showEdgePageButtons ? (
             <S.PageButton
@@ -330,7 +331,7 @@ export function PlaceListPanel({
               disabled={isLoading || page >= totalPages}
               onClick={() => onPageChange(totalPages)}
             >
-              <S.MaterialIcon aria-hidden="true">last_page</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">last_page</MaterialIcon>
             </S.PageButton>
           ) : null}
         </S.PanelPagination>

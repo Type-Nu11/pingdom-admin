@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
 import { useState } from 'react'
@@ -18,7 +19,7 @@ import type {
   AdminPlaceEventScheduleStatus,
   AdminPlaceEventType,
 } from '../../types/adminPlaceEvent.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 
@@ -271,11 +272,11 @@ function PlaceEventPage() {
         <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile>
-            <Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon>
+            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
             <Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText>
           </Shell.AdminProfile>
           <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}>
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon><span>로그아웃</span>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
       </Shell.SideNav>
@@ -285,7 +286,7 @@ function PlaceEventPage() {
           <Shell.TopActions>
             <AdminNotificationButton />
             <Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || isBusy} onClick={() => void hook.fetchEvents(hook.query)}>
-              <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+              <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>
@@ -374,7 +375,7 @@ function PlaceEventPage() {
 
       {dialog ? <Shared.ModalOverlay role="presentation" onKeyDown={(event) => { if (event.key === 'Escape' && !isBusy) { event.stopPropagation(); closeDialog() } }} onMouseDown={() => !isBusy && closeDialog()}>
         <Shared.Modal role="dialog" aria-modal="true" aria-labelledby="place-event-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
-          <Shared.ModalHeader><Shared.ModalTitle id="place-event-dialog-title">{dialogTitle}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={closeDialog}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
+          <Shared.ModalHeader><Shared.ModalTitle id="place-event-dialog-title">{dialogTitle}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={isBusy} onClick={closeDialog}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader>
           <Shared.ModalBody>
             {dialog.type === 'create' || dialog.type === 'edit' ? <S.FormGrid>
               <S.WideField as="div">장소 *{dialog.type === 'edit' ? <div>{dialog.event.placeName} · #{dialog.event.placeId}<small>{dialog.event.placeAddress}</small></div> : <AdminPlacePicker value={formPlaceId} disabled={isBusy} onChange={value => { setFormPlaceId(value); setFormError(''); hook.dismissActionError() }} />}</S.WideField>

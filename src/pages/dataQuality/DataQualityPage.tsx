@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
@@ -13,7 +14,7 @@ import type {
   DataQualityIssueSeverity,
   DataQualityIssueStatus,
 } from '../../types/adminDataQuality.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 
@@ -95,17 +96,17 @@ function DataQualityPage() {
         <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile>
-            <Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon>
+            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
             <Shell.AdminProfileText><strong>{admin}</strong><span>관리자</span></Shell.AdminProfileText>
           </Shell.AdminProfile>
-          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
+          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
         </Shell.SideFooter>
       </Shell.SideNav>
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar>
           <Shell.TopTitleGroup><Shell.TopTitle>데이터 품질</Shell.TopTitle></Shell.TopTitleGroup>
           <Shell.TopActions><AdminNotificationButton />
-            <Shell.IconButton type="button" aria-label="이슈 목록 새로고침" disabled={isLoading} onClick={() => void fetchIssues()}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton>
+            <Shell.IconButton type="button" aria-label="이슈 목록 새로고침" disabled={isLoading} onClick={() => void fetchIssues()}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>
         <Shared.Content><Shared.PageStack>

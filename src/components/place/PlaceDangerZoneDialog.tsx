@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
 import type { AdminPlaceDetail } from '../../types/adminPlace.types'
 import * as S from '../../pages/place/PlaceManagePage.styles'
@@ -73,7 +74,7 @@ export function PlaceDangerZoneDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <S.DeleteConfirmIcon aria-hidden="true">
-          <S.MaterialIcon>delete</S.MaterialIcon>
+          <MaterialIcon>delete</MaterialIcon>
         </S.DeleteConfirmIcon>
         <S.DeleteConfirmTitle id="place-delete-confirm-title">
           장소를 삭제할까요?

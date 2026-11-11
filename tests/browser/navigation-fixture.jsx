@@ -5,7 +5,7 @@ import { AdminNavigationMenu } from '../../src/components/navigation/AdminNaviga
 import { MerchantNavigationMenu } from '../../src/components/navigation/MerchantNavigationMenu'
 import { beginLoginAttempt } from '../../src/utils/authStorage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
-import * as Shell from '../../src/pages/place/PlaceManagePage.styles'
+import * as Shell from '../../src/app/layouts/AdminShell.styles'
 import * as Dashboard from '../../src/pages/dashboard/DashboardPage.styles'
 import * as Merchant from '../../src/app/router/MerchantLayout.styles'
 

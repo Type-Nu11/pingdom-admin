@@ -7,7 +7,7 @@ import { browserCases, browserFailureLog, runBrowserProcess } from '../scripts/r
 
 test('release browser list protects operational regression boundaries', () => {
   assert.equal(new Set(browserCases.map(([name]) => name)).size, browserCases.length)
-  for (const name of ['web-design-system', 'text-readability', 'admin-readable-copy']) assert.ok(browserCases.some(([key]) => key === name))
+  for (const name of ['workspace-layout', 'web-design-system', 'text-readability', 'admin-readable-copy']) assert.ok(browserCases.some(([key]) => key === name))
   for (const name of ['detector-probes', 'dashboard', 'accessibility', 'reservation-context', 'merchant-safety', 'merchant-identity', 'user-ban-structure', 'community', 'merchant-draft', 'reservation-setup', 'reservation-timezone', 'trust-score-history', 'place-dispute-review', 'data-quality', 'residual-contract']) assert.ok(browserCases.some(([key]) => key === name))
 })
 for (const [name, source, expected] of [

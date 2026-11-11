@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -5,8 +6,6 @@ import { AdminNotificationButton } from '../../components/adminNotification/Admi
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminStatusSelect } from '../../components/common/AdminStatusSelect'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminDataQualityIssues } from '../../hooks/useAdminDataQualityIssues'
 import { useAuth } from '../../hooks/useAuth'
 import { formatLocalDateTime as formatDate } from '../../utils/displayFormat'
@@ -64,7 +63,7 @@ function statusTone(status: DataQualityIssueStatus) {
 
 function DataQualityPage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const {
     owner, revision, result, phase, issues, page, limit, total, totalPages, hasNext,
     requestedPage, isLoading, isPreviousResult, errorMessage, fetchIssues,
@@ -90,25 +89,13 @@ function DataQualityPage() {
     : phase === 'error' ? '조회 결과를 확인할 수 없습니다.' : '아직 조회 결과가 없습니다.'
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
-        <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
-            <Shell.AdminProfileText><strong>{admin}</strong><span>관리자</span></Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup><Shell.TopTitle>데이터 품질</Shell.TopTitle></Shell.TopTitleGroup>
+    <AdminLayout identifier={admin}
+      header={<>
+        <Shell.TopTitleGroup><Shell.TopTitle>데이터 품질</Shell.TopTitle></Shell.TopTitleGroup>
           <Shell.TopActions><AdminNotificationButton />
             <Shell.IconButton type="button" aria-label="이슈 목록 새로고침" disabled={isLoading} onClick={() => void fetchIssues()}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton>
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}>
         <Shared.Content><Shared.PageStack>
           <Shared.PageHeader>
             <div><Shared.Eyebrow>운영 · 시스템 &gt; 데이터 품질</Shared.Eyebrow>
@@ -173,8 +160,7 @@ function DataQualityPage() {
             </Shared.Panel>
           </Shared.Workspace>
         </Shared.PageStack></Shared.Content>
-      </Shell.MainArea>
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
@@ -5,10 +6,8 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
 import { AdminPagination } from "../../components/common/AdminPagination";
-import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { AdminDateTimePicker } from "../../components/common/AdminDateTimePicker";
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
-import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminScouts } from "../../hooks/useAdminScouts";
 import { useAuth } from "../../hooks/useAuth";
 import type {
@@ -68,7 +67,7 @@ function date(value?: string | null) {
 function ScoutPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const hook = useAdminScouts();
   const tab: Tab =
     searchParams.get("tab") === "reports" ? "reports" : "profiles";
@@ -163,55 +162,106 @@ function ScoutPage() {
     )
       setDialog(null);
   };
-  const shell = (
-    <>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">
-                admin_panel_settings
-              </MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-    </>
-  );
   return (
-    <Shell.AppShell>
-      {shell}
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>탐색 후보 운영</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {dialog ? (
+        <Shared.ModalOverlay
+          role="presentation"
+          onMouseDown={() => hook.activeAction === null && setDialog(null)}
+        >
+          <Shared.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scout-action-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <Shared.ModalHeader>
+              <Shared.ModalTitle id="scout-action-title">
+                탐색 후보 운영 작업 확인
+              </Shared.ModalTitle>
+              <Shared.ModalCloseButton
+                type="button"
+                aria-label="닫기"
+                disabled={hook.activeAction !== null}
+                onClick={() => setDialog(null)}
+              >
+                <MaterialIcon aria-hidden="true">
+                  close
+                </MaterialIcon>
+              </Shared.ModalCloseButton>
+            </Shared.ModalHeader>
+            <Shared.ModalBody>
+              {dialog.type !== "report" ? (
+                <S.RecordDescription>
+                  {dialog.target.displayName} · 사용자 #{dialog.target.userId}
+                </S.RecordDescription>
+              ) : null}
+              <S.FormGrid>
+                {dialog.type === "eligibility" && dialog.action === "grant" ? (
+                  <>
+                    <S.Field>
+                      활동 시작 *
+                      <AdminDateTimePicker
+                        ariaLabel="탐색 후보 활동 시작"
+                        value={eligibleFrom}
+                        onChange={setEligibleFrom}
+                      />
+                    </S.Field>
+                    <S.Field>
+                      활동 종료
+                      <AdminDateTimePicker
+                        ariaLabel="탐색 후보 활동 종료"
+                        value={eligibleUntil}
+                        onChange={setEligibleUntil}
+                      />
+                    </S.Field>
+                  </>
+                ) : null}
+                <S.WideField>
+                  처리 사유 *
+                  <S.TextArea
+                    value={reason}
+                    maxLength={500}
+                    onChange={(event) => {
+                      setReason(event.target.value);
+                      setFormError(''); hook.dismissActionError();
+                    }}
+                  />
+                </S.WideField>
+              </S.FormGrid>
+              {formError || hook.actionErrorMessage ? (
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
+              ) : null}
+            </Shared.ModalBody>
+            <Shared.ModalFooter>
+              <Shared.SecondaryButton
+                type="button"
+                disabled={hook.activeAction !== null}
+                onClick={() => setDialog(null)}
+              >
+                취소
+              </Shared.SecondaryButton>
+              <Shared.PrimaryButton
+                type="button"
+                disabled={hook.activeAction !== null}
+                onClick={() => void submit()}
+              >
+                {hook.activeAction ? "처리 중" : "확정"}
+              </Shared.PrimaryButton>
+            </Shared.ModalFooter>
+          </Shared.Modal>
+        </Shared.ModalOverlay>
+      ) : null}
+      </>}>
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
@@ -682,96 +732,7 @@ function ScoutPage() {
             ) : null}
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-      {dialog ? (
-        <Shared.ModalOverlay
-          role="presentation"
-          onMouseDown={() => hook.activeAction === null && setDialog(null)}
-        >
-          <Shared.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="scout-action-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="scout-action-title">
-                탐색 후보 운영 작업 확인
-              </Shared.ModalTitle>
-              <Shared.ModalCloseButton
-                type="button"
-                aria-label="닫기"
-                disabled={hook.activeAction !== null}
-                onClick={() => setDialog(null)}
-              >
-                <MaterialIcon aria-hidden="true">
-                  close
-                </MaterialIcon>
-              </Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              {dialog.type !== "report" ? (
-                <S.RecordDescription>
-                  {dialog.target.displayName} · 사용자 #{dialog.target.userId}
-                </S.RecordDescription>
-              ) : null}
-              <S.FormGrid>
-                {dialog.type === "eligibility" && dialog.action === "grant" ? (
-                  <>
-                    <S.Field>
-                      활동 시작 *
-                      <AdminDateTimePicker
-                        ariaLabel="탐색 후보 활동 시작"
-                        value={eligibleFrom}
-                        onChange={setEligibleFrom}
-                      />
-                    </S.Field>
-                    <S.Field>
-                      활동 종료
-                      <AdminDateTimePicker
-                        ariaLabel="탐색 후보 활동 종료"
-                        value={eligibleUntil}
-                        onChange={setEligibleUntil}
-                      />
-                    </S.Field>
-                  </>
-                ) : null}
-                <S.WideField>
-                  처리 사유 *
-                  <S.TextArea
-                    value={reason}
-                    maxLength={500}
-                    onChange={(event) => {
-                      setReason(event.target.value);
-                      setFormError(''); hook.dismissActionError();
-                    }}
-                  />
-                </S.WideField>
-              </S.FormGrid>
-              {formError || hook.actionErrorMessage ? (
-                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
-              ) : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton
-                type="button"
-                disabled={hook.activeAction !== null}
-                onClick={() => setDialog(null)}
-              >
-                취소
-              </Shared.SecondaryButton>
-              <Shared.PrimaryButton
-                type="button"
-                disabled={hook.activeAction !== null}
-                onClick={() => void submit()}
-              >
-                {hook.activeAction ? "처리 중" : "확정"}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   );
 }
 

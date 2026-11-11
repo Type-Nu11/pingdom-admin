@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useState, type FormEvent } from 'react'
@@ -5,9 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminPagination } from '../../components/common/AdminPagination'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { RecommendationPolicyPanel } from '../../components/recommendation/RecommendationPolicyPanel'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import {
   type RecommendationMetricQuery,
   useAdminRecommendationMetrics,
@@ -66,7 +65,7 @@ function SummaryCards({ summary, delta }: { summary: AdminRecommendationMetricSu
 
 function RecommendationMetricsPage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const hook = useAdminRecommendationMetrics()
   const [tab, setTab] = useState<Tab>('metrics')
   const [keyword, setKeyword] = useState('')
@@ -142,16 +141,10 @@ function RecommendationMetricsPage() {
   }
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter><Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile><Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton></Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>추천 성과 분석</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /></Shell.TopActions></Shell.TopBar>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <Shell.TopTitleGroup><Shell.TopTitle>추천 성과 분석</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /></Shell.TopActions>
+      </>}>
         <Shared.Content><Shared.PageStack>
           <Shared.PageHeader><div><Shared.Eyebrow>성장 운영 &gt; 추천 성과</Shared.Eyebrow><Shared.PageTitle>추천 성과 및 버전 비교</Shared.PageTitle><Shared.PageDescription>장소별 추천 성과를 조회하고 동일 조건에서 버전 차이와 추천 근거를 확인합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/places')}>장소 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           <S.TabList as={AccessibleTabList} panelId="recommendation-panel" role="tablist" aria-label="추천 분석 작업">
@@ -204,8 +197,7 @@ function RecommendationMetricsPage() {
           {tab === 'policy' ? <RecommendationPolicyPanel /> : null}
         </div>
           </Shared.PageStack></Shared.Content>
-      </Shell.MainArea>
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

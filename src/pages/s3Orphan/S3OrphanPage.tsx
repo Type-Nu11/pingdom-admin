@@ -1,10 +1,8 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
 import { AdminPagination } from "../../components/common/AdminPagination";
-import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminS3Orphans } from "../../hooks/useAdminS3Orphans";
 import { useAuth } from "../../hooks/useAuth";
 import { formatLocalDateTime as date } from "../../utils/displayFormat";
@@ -12,8 +10,8 @@ import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 function S3OrphanPage() {
-  const navigate = useNavigate();
-  const { logout, user } = useAuth();
+
+  const { user } = useAuth();
   const h = useAdminS3Orphans();
   const [prefix, setPrefix] = useState("map/");
   const [limit, setLimit] = useState("1000");
@@ -63,47 +61,85 @@ function S3OrphanPage() {
     }
   };
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon>admin_panel_settings</MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{admin}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            <MaterialIcon>logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={admin}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>미연결 파일 관리</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {deleteOpen && report ? (
+        <Shared.ModalOverlay
+          role="presentation"
+          onMouseDown={() => h.activeAction === null && setDeleteOpen(false)}
+        >
+          <Shared.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="s3-delete-title"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <Shared.ModalHeader>
+              <Shared.ModalTitle id="s3-delete-title">
+                미연결 파일 영구 삭제
+              </Shared.ModalTitle>
+              <Shared.ModalCloseButton
+                type="button"
+                aria-label="닫기"
+                onClick={() => setDeleteOpen(false)}
+              >
+                <MaterialIcon>close</MaterialIcon>
+              </Shared.ModalCloseButton>
+            </Shared.ModalHeader>
+            <Shared.ModalBody>
+              <Shared.ModalWarning>
+                선택한 파일 {selectedKeys.length}개를 영구 삭제합니다. 복구할 수 없습니다.
+                삭제 전에 현재 사용 중인 파일인지 다시 확인합니다.
+              </Shared.ModalWarning>
+              <S.Section>
+                <S.Field>
+                  리포트 ID 재입력 *
+                  <S.Input
+                    value={confirm}
+                    placeholder={report.reportId}
+                    onChange={(e) => {
+                      setConfirm(e.target.value);
+                      setFormError("");
+                    }}
+                  />
+                </S.Field>
+              </S.Section>
+              {formError || h.errorMessage ? (
+                <Shared.Notice $variant="error">
+                  {formError || h.errorMessage}
+                </Shared.Notice>
+              ) : null}
+            </Shared.ModalBody>
+            <Shared.ModalFooter>
+              <Shared.SecondaryButton
+                type="button"
+                disabled={h.activeAction !== null}
+                onClick={() => setDeleteOpen(false)}
+              >
+                취소
+              </Shared.SecondaryButton>
+              <Shared.PrimaryButton
+                type="button"
+                disabled={
+                  !canDelete || confirm !== report.reportId
+                }
+                onClick={() => void remove()}
+              >
+                {h.activeAction === "delete" ? "삭제 중" : "영구 삭제"}
+              </Shared.PrimaryButton>
+            </Shared.ModalFooter>
+          </Shared.Modal>
+        </Shared.ModalOverlay>
+      ) : null}
+      </>}>
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
@@ -331,76 +367,7 @@ function S3OrphanPage() {
             ) : null}
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-      {deleteOpen && report ? (
-        <Shared.ModalOverlay
-          role="presentation"
-          onMouseDown={() => h.activeAction === null && setDeleteOpen(false)}
-        >
-          <Shared.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="s3-delete-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="s3-delete-title">
-                미연결 파일 영구 삭제
-              </Shared.ModalTitle>
-              <Shared.ModalCloseButton
-                type="button"
-                aria-label="닫기"
-                onClick={() => setDeleteOpen(false)}
-              >
-                <MaterialIcon>close</MaterialIcon>
-              </Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              <Shared.ModalWarning>
-                선택한 파일 {selectedKeys.length}개를 영구 삭제합니다. 복구할 수 없습니다.
-                삭제 전에 현재 사용 중인 파일인지 다시 확인합니다.
-              </Shared.ModalWarning>
-              <S.Section>
-                <S.Field>
-                  리포트 ID 재입력 *
-                  <S.Input
-                    value={confirm}
-                    placeholder={report.reportId}
-                    onChange={(e) => {
-                      setConfirm(e.target.value);
-                      setFormError("");
-                    }}
-                  />
-                </S.Field>
-              </S.Section>
-              {formError || h.errorMessage ? (
-                <Shared.Notice $variant="error">
-                  {formError || h.errorMessage}
-                </Shared.Notice>
-              ) : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton
-                type="button"
-                disabled={h.activeAction !== null}
-                onClick={() => setDeleteOpen(false)}
-              >
-                취소
-              </Shared.SecondaryButton>
-              <Shared.PrimaryButton
-                type="button"
-                disabled={
-                  !canDelete || confirm !== report.reportId
-                }
-                onClick={() => void remove()}
-              >
-                {h.activeAction === "delete" ? "삭제 중" : "영구 삭제"}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   );
 }
 export default S3OrphanPage;

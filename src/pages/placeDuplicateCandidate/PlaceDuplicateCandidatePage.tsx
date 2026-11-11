@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import * as AdminShell from '../../app/layouts/AdminShell.styles'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
@@ -7,8 +8,6 @@ import { getAdminPlace } from '../../api/adminPlaceApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminPagination } from '../../components/common/AdminPagination'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import {
   useAdminPlaceDuplicateCandidates,
   type AdminPlaceDuplicateReviewAction,
@@ -105,7 +104,7 @@ function PlaceDetailCard({
 
 function PlaceDuplicateCandidatePage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null)
   const [placeDetails, setPlaceDetails] = useState<Record<number, AdminPlaceDetail>>({})
   const [isPlacesLoading, setIsPlacesLoading] = useState(false)
@@ -298,42 +297,9 @@ function PlaceDuplicateCandidatePage() {
     : undefined
 
   return (
-    <AdminShell.AppShell>
-      <AdminShell.SideNav aria-label="관리자 메뉴">
-        <AdminShell.SideHeader>
-          <AdminShell.BrandLockup>
-            <AdminShell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </AdminShell.BrandLockup>
-        </AdminShell.SideHeader>
-        <AdminShell.SideMenu>
-          <AdminNavigationMenu />
-        </AdminShell.SideMenu>
-        <AdminShell.SideFooter>
-          <AdminShell.AdminProfile aria-label="관리자 계정">
-            <AdminShell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
-            </AdminShell.AdminProfileIcon>
-            <AdminShell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </AdminShell.AdminProfileText>
-          </AdminShell.AdminProfile>
-          <AdminShell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout()
-              navigate('/login', { replace: true })
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </AdminShell.LogoutButton>
-        </AdminShell.SideFooter>
-      </AdminShell.SideNav>
-
-      <AdminShell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <AdminShell.TopBar>
-          <AdminShell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <AdminShell.TopTitleGroup>
             <AdminShell.TopTitle>중복 후보 검토</AdminShell.TopTitle>
           </AdminShell.TopTitleGroup>
           <AdminShell.TopActions>
@@ -347,7 +313,49 @@ function PlaceDuplicateCandidatePage() {
               <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </AdminShell.IconButton>
           </AdminShell.TopActions>
-        </AdminShell.TopBar>
+      </>}
+      overlays={<>
+        {dialogState && candidateDetail ? (
+        <S.ModalOverlay role="presentation" onMouseDown={closeDialog}>
+          <S.Modal role="dialog" aria-modal="true" aria-labelledby="duplicate-review-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
+            <S.ModalHeader>
+              <S.ModalTitle id="duplicate-review-dialog-title">
+                {dialogState === 'confirm' ? '중복 후보 확정' : dialogState === 'reject' ? '중복 후보 거절' : '확정 후보 병합'}
+              </S.ModalTitle>
+              <S.ModalCloseButton ref={dialogCloseButtonRef} type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}>
+                <MaterialIcon aria-hidden="true">close</MaterialIcon>
+              </S.ModalCloseButton>
+            </S.ModalHeader>
+            <S.ModalBody>
+              {dialogState === 'merge' ? (
+                <>
+                  <S.ModalWarning>
+                    병합 후 유지 장소 #{targetPlaceId}. 다른 장소의 연결 데이터가 이동하며 병합 이력이 생성됩니다.
+                  </S.ModalWarning>
+                  <Shell.OperatingCheckLabel>
+                    <input type="checkbox" checked={hasConfirmedMerge} disabled={activeAction !== null} onChange={(event) => { setHasConfirmedMerge(event.target.checked); setFormError(''); dismissActionError() }} />
+                    <span>두 장소의 기본 정보와 유지 대상을 확인했습니다.</span>
+                  </Shell.OperatingCheckLabel>
+                </>
+              ) : (
+                <Shell.OperatingFormField>
+                  <span>판정 사유 *</span>
+                  <Shell.OperatingTextArea value={reviewNote} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewNote(event.target.value); setFormError(''); dismissActionError() }} />
+                  <small>{reviewNote.length}/500</small>
+                </Shell.OperatingFormField>
+              )}
+              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
+            </S.ModalBody>
+            <S.ModalFooter>
+              <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</S.SecondaryButton>
+              <S.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => void handleSubmitAction()}>
+                {activeAction ? '처리 중' : dialogState === 'confirm' ? '중복 확정' : dialogState === 'reject' ? '중복 아님으로 처리' : '병합 실행'}
+              </S.PrimaryButton>
+            </S.ModalFooter>
+          </S.Modal>
+        </S.ModalOverlay>
+      ) : null}
+      </>}>
 
         <S.Content>
           <S.PageStack>
@@ -505,49 +513,7 @@ function PlaceDuplicateCandidatePage() {
             )}
           </S.PageStack>
         </S.Content>
-      </AdminShell.MainArea>
-
-      {dialogState && candidateDetail ? (
-        <S.ModalOverlay role="presentation" onMouseDown={closeDialog}>
-          <S.Modal role="dialog" aria-modal="true" aria-labelledby="duplicate-review-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
-            <S.ModalHeader>
-              <S.ModalTitle id="duplicate-review-dialog-title">
-                {dialogState === 'confirm' ? '중복 후보 확정' : dialogState === 'reject' ? '중복 후보 거절' : '확정 후보 병합'}
-              </S.ModalTitle>
-              <S.ModalCloseButton ref={dialogCloseButtonRef} type="button" aria-label="닫기" disabled={activeAction !== null} onClick={closeDialog}>
-                <MaterialIcon aria-hidden="true">close</MaterialIcon>
-              </S.ModalCloseButton>
-            </S.ModalHeader>
-            <S.ModalBody>
-              {dialogState === 'merge' ? (
-                <>
-                  <S.ModalWarning>
-                    병합 후 유지 장소 #{targetPlaceId}. 다른 장소의 연결 데이터가 이동하며 병합 이력이 생성됩니다.
-                  </S.ModalWarning>
-                  <Shell.OperatingCheckLabel>
-                    <input type="checkbox" checked={hasConfirmedMerge} disabled={activeAction !== null} onChange={(event) => { setHasConfirmedMerge(event.target.checked); setFormError(''); dismissActionError() }} />
-                    <span>두 장소의 기본 정보와 유지 대상을 확인했습니다.</span>
-                  </Shell.OperatingCheckLabel>
-                </>
-              ) : (
-                <Shell.OperatingFormField>
-                  <span>판정 사유 *</span>
-                  <Shell.OperatingTextArea value={reviewNote} maxLength={500} disabled={activeAction !== null} onChange={(event) => { setReviewNote(event.target.value); setFormError(''); dismissActionError() }} />
-                  <small>{reviewNote.length}/500</small>
-                </Shell.OperatingFormField>
-              )}
-              {formError || actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); dismissActionError() }}>{formError || actionErrorMessage}</FeedbackMessage> : null}
-            </S.ModalBody>
-            <S.ModalFooter>
-              <S.SecondaryButton type="button" disabled={activeAction !== null} onClick={closeDialog}>취소</S.SecondaryButton>
-              <S.PrimaryButton type="button" disabled={activeAction !== null} onClick={() => void handleSubmitAction()}>
-                {activeAction ? '처리 중' : dialogState === 'confirm' ? '중복 확정' : dialogState === 'reject' ? '중복 아님으로 처리' : '병합 실행'}
-              </S.PrimaryButton>
-            </S.ModalFooter>
-          </S.Modal>
-        </S.ModalOverlay>
-      ) : null}
-    </AdminShell.AppShell>
+      </AdminLayout>
   )
 }
 

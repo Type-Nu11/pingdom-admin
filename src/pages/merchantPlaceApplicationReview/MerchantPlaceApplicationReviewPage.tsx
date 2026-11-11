@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
@@ -12,8 +13,6 @@ import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { EMPTY_HISTORY_FILTERS, type ApplicationHistoryFilters } from '../../hooks/useAdminMerchantPlaceApplications'
 import { ListPane } from '../../components/common/ListPane'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { APPLICATION_REVIEW_PAGE_SIZE, useAdminMerchantPlaceApplications } from '../../hooks/useAdminMerchantPlaceApplications'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -145,7 +144,7 @@ function getApplicationIdFromNavigationState(state: unknown) {
 function MerchantPlaceApplicationReviewPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const hook = useAdminMerchantPlaceApplications()
   const [draftFilters, setDraftFilters] = useState<ApplicationHistoryFilters>(EMPTY_HISTORY_FILTERS)
   const [filterError, setFilterError] = useState('')
@@ -263,14 +262,46 @@ function MerchantPlaceApplicationReviewPage() {
     : '선택한 신청의 사업자 정보, 장소 정보, 증빙 파일을 확인할 수 있습니다.'
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader>
-        <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
-        <Shell.SideFooter><Shell.AdminProfile><Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{admin}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile><Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton></Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>검토함</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchApplications(hook.page)}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton></Shell.TopActions></Shell.TopBar>
+    <AdminLayout identifier={admin}
+      header={<>
+        <Shell.TopTitleGroup><Shell.TopTitle>검토함</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.isReviewing} onClick={() => void hook.fetchApplications(hook.page)}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton></Shell.TopActions>
+      </>}
+      overlays={<>
+        {preview && visibleDetail?.id === preview.applicationId ? <AttachmentPreview
+        key={`${preview.applicationId}:${preview.attachment.id}`}
+        applicationId={preview.applicationId}
+        attachment={preview.attachment}
+        onClose={() => setPreview(null)}
+        onDownload={() => hook.downloadAttachment(preview.applicationId, preview.attachment)}
+      /> : null}
+      {decision && reviewTarget ? (
+        <AppDialog
+          title={`장소 신청 ${decision === 'approve' ? '승인' : '반려'}`}
+          isDismissible={!hook.isReviewing}
+          onClose={() => setDecision(null)}
+          footer={<>
+            <Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>
+            <ReviewButton type="button" disabled={hook.isReviewing || (decision === 'approve' && Boolean(approvalBlockMessage))} onClick={() => void submitReview()}>
+              {hook.isReviewing ? '처리 중' : decision === 'approve' ? '승인 확정' : '반려 확정'}
+            </ReviewButton>
+          </>}
+        >
+          <Form.DetailGrid>
+            <Form.DetailItem><dt>신청 번호</dt><dd>#{reviewTarget.id}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>신청 유형</dt><dd>{TYPE_LABELS[reviewTarget.applicationType]}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>장소</dt><dd>{reviewTarget.placeName || reviewTarget.newPlace?.placeName || '장소명 정보 없음'}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>신청자</dt><dd>{reviewTarget.legalName || '이름 정보 없음'} · #{reviewTarget.applicantUserId}</dd></Form.DetailItem>
+            <Form.DetailItem><dt>상호</dt><dd>{reviewTarget.businessName || '정보 없음'}</dd></Form.DetailItem>
+          </Form.DetailGrid>
+          <p>이 신청을 {decision === 'approve' ? '승인' : '반려'}합니다. 대상과 심사 사유를 확인해주세요.</p>
+          <Form.Field>심사 사유 *
+            <Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} />
+            <small>{reason.length}/500</small>
+          </Form.Field>
+          {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
+        </AppDialog>
+      ) : null}
+      </>}>
         <S.ReviewContent><S.ReviewPageStack>
           <Shared.PageHeader><Shared.PageTitle>상점주 장소 신청 심사</Shared.PageTitle><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-owners')}>상점주 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}
@@ -352,42 +383,7 @@ function MerchantPlaceApplicationReviewPage() {
           </S.ReviewWorkspace>
         </div>
         </S.ReviewPageStack></S.ReviewContent>
-      </Shell.MainArea>
-      {preview && visibleDetail?.id === preview.applicationId ? <AttachmentPreview
-        key={`${preview.applicationId}:${preview.attachment.id}`}
-        applicationId={preview.applicationId}
-        attachment={preview.attachment}
-        onClose={() => setPreview(null)}
-        onDownload={() => hook.downloadAttachment(preview.applicationId, preview.attachment)}
-      /> : null}
-      {decision && reviewTarget ? (
-        <AppDialog
-          title={`장소 신청 ${decision === 'approve' ? '승인' : '반려'}`}
-          isDismissible={!hook.isReviewing}
-          onClose={() => setDecision(null)}
-          footer={<>
-            <Shared.SecondaryButton type="button" disabled={hook.isReviewing} onClick={() => setDecision(null)}>취소</Shared.SecondaryButton>
-            <ReviewButton type="button" disabled={hook.isReviewing || (decision === 'approve' && Boolean(approvalBlockMessage))} onClick={() => void submitReview()}>
-              {hook.isReviewing ? '처리 중' : decision === 'approve' ? '승인 확정' : '반려 확정'}
-            </ReviewButton>
-          </>}
-        >
-          <Form.DetailGrid>
-            <Form.DetailItem><dt>신청 번호</dt><dd>#{reviewTarget.id}</dd></Form.DetailItem>
-            <Form.DetailItem><dt>신청 유형</dt><dd>{TYPE_LABELS[reviewTarget.applicationType]}</dd></Form.DetailItem>
-            <Form.DetailItem><dt>장소</dt><dd>{reviewTarget.placeName || reviewTarget.newPlace?.placeName || '장소명 정보 없음'}</dd></Form.DetailItem>
-            <Form.DetailItem><dt>신청자</dt><dd>{reviewTarget.legalName || '이름 정보 없음'} · #{reviewTarget.applicantUserId}</dd></Form.DetailItem>
-            <Form.DetailItem><dt>상호</dt><dd>{reviewTarget.businessName || '정보 없음'}</dd></Form.DetailItem>
-          </Form.DetailGrid>
-          <p>이 신청을 {decision === 'approve' ? '승인' : '반려'}합니다. 대상과 심사 사유를 확인해주세요.</p>
-          <Form.Field>심사 사유 *
-            <Form.TextArea value={reason} maxLength={500} disabled={hook.isReviewing} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} />
-            <small>{reason.length}/500</small>
-          </Form.Field>
-          {formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}
-        </AppDialog>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

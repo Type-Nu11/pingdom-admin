@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
@@ -5,8 +6,6 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
 import { AdminPagination } from "../../components/common/AdminPagination";
-import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
-import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminTrustScore } from "../../hooks/useAdminTrustScore";
 import { useAuth } from "../../hooks/useAuth";
 import type {
@@ -59,7 +58,7 @@ function int(value: string, min = 0, max = Number.MAX_SAFE_INTEGER) {
 function TrustScorePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const hook = useAdminTrustScore();
   const requestedTab = searchParams.get("tab");
   const tab: Tab =
@@ -194,49 +193,200 @@ function TrustScorePage() {
   };
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">
-                admin_panel_settings
-              </MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>신뢰 점수 운영</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {dialog ? (
+        <Shared.ModalOverlay
+          role="presentation"
+          onMouseDown={() => hook.activeAction === null && setDialog(null)}
+        >
+          <Shared.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="trust-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <Shared.ModalHeader>
+              <Shared.ModalTitle id="trust-dialog-title">
+                {dialog.type === "resolve"
+                  ? "이상 징후 해결"
+                  : dialog.type === "rule"
+                    ? dialog.rule
+                      ? "신뢰 점수 관리 규칙 수정"
+                      : "신뢰 점수 관리 규칙 생성"
+                    : dialog.type === "toggle"
+                      ? `규칙 ${dialog.rule.enabled ? "비활성화" : "활성화"}`
+                      : dialog.type === "batch"
+                        ? "전체 신뢰 점수 재계산"
+                        : "신뢰 점수 관리 규칙 수동 평가"}
+              </Shared.ModalTitle>
+              <Shared.ModalCloseButton
+                type="button"
+                aria-label="닫기"
+                disabled={hook.activeAction !== null}
+                onClick={() => setDialog(null)}
+              >
+                <MaterialIcon aria-hidden="true">
+                  close
+                </MaterialIcon>
+              </Shared.ModalCloseButton>
+            </Shared.ModalHeader>
+            <Shared.ModalBody>
+              {dialog.type === "rule" ? (
+                <S.FormGrid>
+                  <S.WideField>
+                    규칙 이름 *
+                    <S.Input
+                      value={ruleName}
+                      maxLength={100}
+                      onChange={(event) => setRuleName(event.target.value)}
+                    />
+                  </S.WideField>
+                  <S.Field>
+                    트리거
+                    <S.Select
+                      value={triggerType}
+                      onChange={(event) =>
+                        setTriggerType(
+                          event.target.value as TrustScoreInterventionTrigger,
+                        )
+                      }
+                    >
+                      {Object.entries(TRIGGERS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </S.Select>
+                  </S.Field>
+                  <S.Field>
+                    액션
+                    <S.Select
+                      value={actionType}
+                      onChange={(event) =>
+                        setActionType(
+                          event.target.value as TrustScoreInterventionAction,
+                        )
+                      }
+                    >
+                      {Object.entries(ACTIONS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </S.Select>
+                  </S.Field>
+                  <S.Field>
+                    최소 점수
+                    <S.Input
+                      value={minScore}
+                      inputMode="numeric"
+                      onChange={(event) => setMinScore(event.target.value)}
+                    />
+                  </S.Field>
+                  <S.Field>
+                    최대 점수
+                    <S.Input
+                      value={maxScore}
+                      inputMode="numeric"
+                      onChange={(event) => setMaxScore(event.target.value)}
+                    />
+                  </S.Field>
+                  <S.Field>
+                    최소 신고 수
+                    <S.Input
+                      value={minSubmitted}
+                      inputMode="numeric"
+                      onChange={(event) => setMinSubmitted(event.target.value)}
+                    />
+                  </S.Field>
+                  <S.Field>
+                    최소 허위 신고 수
+                    <S.Input
+                      value={minFalse}
+                      inputMode="numeric"
+                      onChange={(event) => setMinFalse(event.target.value)}
+                    />
+                  </S.Field>
+                  <S.Field>
+                    제한 기간(일)
+                    <S.Input
+                      value={durationDays}
+                      inputMode="numeric"
+                      disabled={actionType !== "TEMPORARY_RESTRICT"}
+                      onChange={(event) => setDurationDays(event.target.value)}
+                    />
+                  </S.Field>
+                  <S.Field>
+                    우선순위
+                    <S.Input
+                      value={priority}
+                      inputMode="numeric"
+                      onChange={(event) => setPriority(event.target.value)}
+                    />
+                  </S.Field>
+                  <S.WideField>
+                    적용 사유 *
+                    <S.TextArea
+                      value={reason}
+                      maxLength={500}
+                      onChange={(event) => setReason(event.target.value)}
+                    />
+                  </S.WideField>
+                </S.FormGrid>
+              ) : dialog.type === "resolve" ? (
+                <S.Field>
+                  해결 사유 *
+                  <S.TextArea
+                    value={reason}
+                    maxLength={500}
+                    onChange={(event) => {
+                      setReason(event.target.value);
+                      setFormError(''); hook.dismissActionError();
+                    }}
+                  />
+                </S.Field>
+              ) : (
+                <Shared.ModalWarning>
+                  {dialog.type === "toggle"
+                    ? `${dialog.rule.ruleName} 규칙을 ${dialog.rule.enabled ? "비활성화" : "활성화"}합니다.`
+                    : dialog.type === "batch"
+                      ? "모든 신고자의 신뢰 점수를 다시 계산하고 변경 이력을 남깁니다."
+                      : `신고자 #${dialog.reporterUserId}에게 현재 활성 규칙을 즉시 평가합니다.`}
+                </Shared.ModalWarning>
+              )}
+              {formError || hook.actionErrorMessage ? (
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
+              ) : null}
+            </Shared.ModalBody>
+            <Shared.ModalFooter>
+              <Shared.SecondaryButton
+                type="button"
+                disabled={hook.activeAction !== null}
+                onClick={() => setDialog(null)}
+              >
+                취소
+              </Shared.SecondaryButton>
+              <Shared.PrimaryButton
+                type="button"
+                disabled={hook.activeAction !== null}
+                onClick={() => void submitDialog()}
+              >
+                {hook.activeAction ? "처리 중" : "확정"}
+              </Shared.PrimaryButton>
+            </Shared.ModalFooter>
+          </Shared.Modal>
+        </Shared.ModalOverlay>
+      ) : null}
+      </>}>
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
@@ -754,192 +904,7 @@ function TrustScorePage() {
           </div>
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-
-      {dialog ? (
-        <Shared.ModalOverlay
-          role="presentation"
-          onMouseDown={() => hook.activeAction === null && setDialog(null)}
-        >
-          <Shared.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="trust-dialog-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="trust-dialog-title">
-                {dialog.type === "resolve"
-                  ? "이상 징후 해결"
-                  : dialog.type === "rule"
-                    ? dialog.rule
-                      ? "신뢰 점수 관리 규칙 수정"
-                      : "신뢰 점수 관리 규칙 생성"
-                    : dialog.type === "toggle"
-                      ? `규칙 ${dialog.rule.enabled ? "비활성화" : "활성화"}`
-                      : dialog.type === "batch"
-                        ? "전체 신뢰 점수 재계산"
-                        : "신뢰 점수 관리 규칙 수동 평가"}
-              </Shared.ModalTitle>
-              <Shared.ModalCloseButton
-                type="button"
-                aria-label="닫기"
-                disabled={hook.activeAction !== null}
-                onClick={() => setDialog(null)}
-              >
-                <MaterialIcon aria-hidden="true">
-                  close
-                </MaterialIcon>
-              </Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              {dialog.type === "rule" ? (
-                <S.FormGrid>
-                  <S.WideField>
-                    규칙 이름 *
-                    <S.Input
-                      value={ruleName}
-                      maxLength={100}
-                      onChange={(event) => setRuleName(event.target.value)}
-                    />
-                  </S.WideField>
-                  <S.Field>
-                    트리거
-                    <S.Select
-                      value={triggerType}
-                      onChange={(event) =>
-                        setTriggerType(
-                          event.target.value as TrustScoreInterventionTrigger,
-                        )
-                      }
-                    >
-                      {Object.entries(TRIGGERS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </S.Select>
-                  </S.Field>
-                  <S.Field>
-                    액션
-                    <S.Select
-                      value={actionType}
-                      onChange={(event) =>
-                        setActionType(
-                          event.target.value as TrustScoreInterventionAction,
-                        )
-                      }
-                    >
-                      {Object.entries(ACTIONS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </S.Select>
-                  </S.Field>
-                  <S.Field>
-                    최소 점수
-                    <S.Input
-                      value={minScore}
-                      inputMode="numeric"
-                      onChange={(event) => setMinScore(event.target.value)}
-                    />
-                  </S.Field>
-                  <S.Field>
-                    최대 점수
-                    <S.Input
-                      value={maxScore}
-                      inputMode="numeric"
-                      onChange={(event) => setMaxScore(event.target.value)}
-                    />
-                  </S.Field>
-                  <S.Field>
-                    최소 신고 수
-                    <S.Input
-                      value={minSubmitted}
-                      inputMode="numeric"
-                      onChange={(event) => setMinSubmitted(event.target.value)}
-                    />
-                  </S.Field>
-                  <S.Field>
-                    최소 허위 신고 수
-                    <S.Input
-                      value={minFalse}
-                      inputMode="numeric"
-                      onChange={(event) => setMinFalse(event.target.value)}
-                    />
-                  </S.Field>
-                  <S.Field>
-                    제한 기간(일)
-                    <S.Input
-                      value={durationDays}
-                      inputMode="numeric"
-                      disabled={actionType !== "TEMPORARY_RESTRICT"}
-                      onChange={(event) => setDurationDays(event.target.value)}
-                    />
-                  </S.Field>
-                  <S.Field>
-                    우선순위
-                    <S.Input
-                      value={priority}
-                      inputMode="numeric"
-                      onChange={(event) => setPriority(event.target.value)}
-                    />
-                  </S.Field>
-                  <S.WideField>
-                    적용 사유 *
-                    <S.TextArea
-                      value={reason}
-                      maxLength={500}
-                      onChange={(event) => setReason(event.target.value)}
-                    />
-                  </S.WideField>
-                </S.FormGrid>
-              ) : dialog.type === "resolve" ? (
-                <S.Field>
-                  해결 사유 *
-                  <S.TextArea
-                    value={reason}
-                    maxLength={500}
-                    onChange={(event) => {
-                      setReason(event.target.value);
-                      setFormError(''); hook.dismissActionError();
-                    }}
-                  />
-                </S.Field>
-              ) : (
-                <Shared.ModalWarning>
-                  {dialog.type === "toggle"
-                    ? `${dialog.rule.ruleName} 규칙을 ${dialog.rule.enabled ? "비활성화" : "활성화"}합니다.`
-                    : dialog.type === "batch"
-                      ? "모든 신고자의 신뢰 점수를 다시 계산하고 변경 이력을 남깁니다."
-                      : `신고자 #${dialog.reporterUserId}에게 현재 활성 규칙을 즉시 평가합니다.`}
-                </Shared.ModalWarning>
-              )}
-              {formError || hook.actionErrorMessage ? (
-                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
-              ) : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton
-                type="button"
-                disabled={hook.activeAction !== null}
-                onClick={() => setDialog(null)}
-              >
-                취소
-              </Shared.SecondaryButton>
-              <Shared.PrimaryButton
-                type="button"
-                disabled={hook.activeAction !== null}
-                onClick={() => void submitDialog()}
-              >
-                {hook.activeAction ? "처리 중" : "확정"}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   );
 }
 

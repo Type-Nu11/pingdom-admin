@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
@@ -5,13 +6,11 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import { ListPane } from '../../components/common/ListPane'
 import { formatListRange } from '../../utils/listRange'
 import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminOperationHistories } from '../../hooks/useAdminOperationHistories'
 import { useAuth } from '../../hooks/useAuth'
 import { AUDIT_ACTION_LABELS, AUDIT_TARGET_TYPE_LABELS, auditActionCode, auditTargetTypeCode, formatAuditAction, formatAuditTargetType, formatAuditReason, isAuditReadOnly, auditApplicationId } from '../../utils/adminAuditPresentation'
@@ -79,7 +78,7 @@ function validatePeriod(from: string, to: string) {
 
 function OperationHistoryPage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const hook = useAdminOperationHistories()
   const { fetchPrivacy } = hook
   const [tab, setTab] = useState<Tab>('audit')
@@ -229,42 +228,9 @@ function OperationHistoryPage() {
     else retryPrivacy()
   }
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout()
-              navigate('/login', { replace: true })
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>관리자 운영 이력</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
@@ -278,7 +244,7 @@ function OperationHistoryPage() {
               <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}>
 
         <Shared.Content>
           <Shared.PageStack>
@@ -554,8 +520,7 @@ function OperationHistoryPage() {
           </div>
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

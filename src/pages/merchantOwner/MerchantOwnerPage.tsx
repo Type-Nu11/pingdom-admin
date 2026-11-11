@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from 'react'
@@ -8,9 +9,7 @@ import { ListPane } from '../../components/common/ListPane'
 import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { ListDetailPage, ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ADMIN_OWNER_PAGE_SIZE, useAdminMerchantOwners } from '../../hooks/useAdminMerchantOwners'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -50,7 +49,7 @@ function rate(value: string) {
 
 function MerchantOwnerPage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const hook = useAdminMerchantOwners()
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [dialog, setDialog] = useState<Dialog>(null)
@@ -117,9 +116,18 @@ function MerchantOwnerPage() {
   }
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴"><Shell.SideHeader><Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup></Shell.SideHeader><Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu><Shell.SideFooter><Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile><Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton></Shell.SideFooter></Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}><Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>상점주 관리</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => void hook.fetchProfiles(hook.status, hook.page)}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton></Shell.TopActions></Shell.TopBar>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <Shell.TopTitleGroup><Shell.TopTitle>상점주 관리</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /><Shell.IconButton type="button" aria-label="목록 새로고침" disabled={hook.isLoading || hook.activeAction !== null} onClick={() => void hook.fetchProfiles(hook.status, hook.page)}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton></Shell.TopActions>
+      </>}
+      overlays={<>
+        {dialog && hook.profile ? <Shared.ModalOverlay role="presentation" onMouseDown={() => hook.activeAction === null && setDialog(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-owner-dialog-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-owner-dialog-title">{dialog.type === 'review' ? dialog.action === 'approve' ? '상점주 신청 승인' : dialog.action === 'reject' ? '상점주 신청 반려' : '상점주 권한 회수' : dialog.type === 'places' ? '연결 장소 변경' : dialog.type === 'onboarding' ? '온보딩 변경' : `장소 #${dialog.place.placeId} 운영 품질`}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><S.FormGrid>
+        {dialog.type === 'places' ? <S.WideField>연결 장소 ID<S.Input value={placeIds} placeholder="101, 102, 103" disabled={hook.activeAction !== null} onChange={(event) => { setPlaceIds(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>쉼표로 구분하며, 비우면 연결 장소가 없는 상태입니다.</small></S.WideField> : null}
+        {dialog.type === 'onboarding' ? <><S.Field>온보딩 상태<AdminSelect aria-label="온보딩 상태" value={onboardingStatus} disabled={hook.activeAction !== null} width="100%" onChange={(event) => setOnboardingStatus(event.target.value as MerchantOnboardingStatus)}>{Object.entries(ONBOARDING_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field><S.Field>완료율<S.Input inputMode="numeric" value={completionRate} disabled={hook.activeAction !== null} onChange={(event) => setCompletionRate(event.target.value)} /></S.Field><S.WideField>완료 시각<AdminDateTimePicker ariaLabel="온보딩 완료 시각" value={completedAt} disabled={hook.activeAction !== null} onChange={setCompletedAt} /></S.WideField></> : null}
+        {dialog.type === 'quality' ? <><S.WideField>품질 상태<AdminSelect aria-label="운영 품질 상태" value={qualityStatus} disabled={hook.activeAction !== null} width="100%" onChange={(event) => setQualityStatus(event.target.value as MerchantOperationalQualityStatus)}>{Object.entries(QUALITY_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.WideField><S.Field>예약 응답률<S.Input inputMode="numeric" value={responseRate} disabled={hook.activeAction !== null} onChange={(event) => setResponseRate(event.target.value)} /></S.Field><S.Field>예약 취소율<S.Input inputMode="numeric" value={cancellationRate} disabled={hook.activeAction !== null} onChange={(event) => setCancellationRate(event.target.value)} /></S.Field><S.Field>노쇼율<S.Input inputMode="numeric" value={noShowRate} disabled={hook.activeAction !== null} onChange={(event) => setNoShowRate(event.target.value)} /></S.Field><S.Field>평가 시각<AdminDateTimePicker ariaLabel="운영 품질 평가 시각" value={evaluatedAt} disabled={hook.activeAction !== null} onChange={setEvaluatedAt} /></S.Field></> : null}
+        <S.WideField>처리 사유 *<S.TextArea value={reason} maxLength={500} disabled={hook.activeAction !== null} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reason.length}/500</small></S.WideField>
+      </S.FormGrid>{formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void submit()}>{hook.activeAction ? '처리 중' : dialog.type === 'review' ? dialog.action === 'approve' ? '승인 확정' : dialog.action === 'reject' ? '반려 확정' : '권한 회수 확정' : '변경 확정'}</Shared.PrimaryButton></Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
+      </>}>
         <ListDetailPage>
           <Shared.PageHeader><Shared.PageTitle>상점주 심사·운영 관리</Shared.PageTitle><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/merchant-place-applications')}>상점주 장소 신청 심사</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           {hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={hook.dismissActionError}>{hook.actionErrorMessage}</FeedbackMessage> : null}{hook.successMessage ? <Shared.Notice $variant="success" role="status">{hook.successMessage}</Shared.Notice> : null}
@@ -136,15 +144,7 @@ function MerchantOwnerPage() {
             </> : null}</Shared.CompareBody></Shared.Panel>
           </ListDetailWorkspace>
         </ListDetailPage>
-      </Shell.MainArea>
-
-      {dialog && hook.profile ? <Shared.ModalOverlay role="presentation" onMouseDown={() => hook.activeAction === null && setDialog(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="merchant-owner-dialog-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="merchant-owner-dialog-title">{dialog.type === 'review' ? dialog.action === 'approve' ? '상점주 신청 승인' : dialog.action === 'reject' ? '상점주 신청 반려' : '상점주 권한 회수' : dialog.type === 'places' ? '연결 장소 변경' : dialog.type === 'onboarding' ? '온보딩 변경' : `장소 #${dialog.place.placeId} 운영 품질`}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><S.FormGrid>
-        {dialog.type === 'places' ? <S.WideField>연결 장소 ID<S.Input value={placeIds} placeholder="101, 102, 103" disabled={hook.activeAction !== null} onChange={(event) => { setPlaceIds(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>쉼표로 구분하며, 비우면 연결 장소가 없는 상태입니다.</small></S.WideField> : null}
-        {dialog.type === 'onboarding' ? <><S.Field>온보딩 상태<AdminSelect aria-label="온보딩 상태" value={onboardingStatus} disabled={hook.activeAction !== null} width="100%" onChange={(event) => setOnboardingStatus(event.target.value as MerchantOnboardingStatus)}>{Object.entries(ONBOARDING_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.Field><S.Field>완료율<S.Input inputMode="numeric" value={completionRate} disabled={hook.activeAction !== null} onChange={(event) => setCompletionRate(event.target.value)} /></S.Field><S.WideField>완료 시각<AdminDateTimePicker ariaLabel="온보딩 완료 시각" value={completedAt} disabled={hook.activeAction !== null} onChange={setCompletedAt} /></S.WideField></> : null}
-        {dialog.type === 'quality' ? <><S.WideField>품질 상태<AdminSelect aria-label="운영 품질 상태" value={qualityStatus} disabled={hook.activeAction !== null} width="100%" onChange={(event) => setQualityStatus(event.target.value as MerchantOperationalQualityStatus)}>{Object.entries(QUALITY_STATUS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</AdminSelect></S.WideField><S.Field>예약 응답률<S.Input inputMode="numeric" value={responseRate} disabled={hook.activeAction !== null} onChange={(event) => setResponseRate(event.target.value)} /></S.Field><S.Field>예약 취소율<S.Input inputMode="numeric" value={cancellationRate} disabled={hook.activeAction !== null} onChange={(event) => setCancellationRate(event.target.value)} /></S.Field><S.Field>노쇼율<S.Input inputMode="numeric" value={noShowRate} disabled={hook.activeAction !== null} onChange={(event) => setNoShowRate(event.target.value)} /></S.Field><S.Field>평가 시각<AdminDateTimePicker ariaLabel="운영 품질 평가 시각" value={evaluatedAt} disabled={hook.activeAction !== null} onChange={setEvaluatedAt} /></S.Field></> : null}
-        <S.WideField>처리 사유 *<S.TextArea value={reason} maxLength={500} disabled={hook.activeAction !== null} onChange={(event) => { setReason(event.target.value); setFormError(''); hook.dismissActionError() }} /><small>{reason.length}/500</small></S.WideField>
-      </S.FormGrid>{formError || hook.actionErrorMessage ? <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void submit()}>{hook.activeAction ? '처리 중' : dialog.type === 'review' ? dialog.action === 'approve' ? '승인 확정' : dialog.action === 'reject' ? '반려 확정' : '권한 회수 확정' : '변경 확정'}</Shared.PrimaryButton></Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

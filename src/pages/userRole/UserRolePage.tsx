@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminRoleTargets } from '../../api/adminTargetSearchApi'
@@ -5,8 +6,6 @@ import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
-import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
-import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminUserRoles } from "../../hooks/useAdminUserRoles";
 import { useAuth } from "../../hooks/useAuth";
 import type { AdminRole } from "../../types/adminUserRole.types";
@@ -48,7 +47,7 @@ function date(value?: string | null) {
 
 function UserRolePage() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const hook = useAdminUserRoles();
   const [userIdInput, setUserIdInput] = useState("");
   const [targetSearchOpen, setTargetSearchOpen] = useState(false);
@@ -101,49 +100,86 @@ function UserRolePage() {
   };
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">
-                admin_panel_settings
-              </MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>관리자 역할 관리</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {dialog ? (
+        <Shared.ModalOverlay
+          role="presentation"
+          onMouseDown={() => !hook.isMutating && setDialog(null)}
+        >
+          <Shared.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="role-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <Shared.ModalHeader>
+              <Shared.ModalTitle id="role-dialog-title">
+                관리자 역할 {dialog.action === "assign" ? "부여" : "회수"}
+              </Shared.ModalTitle>
+              <Shared.ModalCloseButton
+                type="button"
+                aria-label="닫기"
+                disabled={hook.isMutating}
+                onClick={() => setDialog(null)}
+              >
+                <MaterialIcon aria-hidden="true">
+                  close
+                </MaterialIcon>
+              </Shared.ModalCloseButton>
+            </Shared.ModalHeader>
+            <Shared.ModalBody>
+              <Shared.ModalWarning>
+                관리자 #{hook.targetUserId}의 {ROLES[dialog.role]} 역할을{" "}
+                {dialog.action === "assign" ? "부여" : "회수"}합니다. 권한
+                범위가 즉시 변경될 수 있습니다.
+              </Shared.ModalWarning>
+              <S.Section>
+                <S.Field>
+                  변경 사유 *
+                  <S.TextArea
+                    value={reason}
+                    maxLength={500}
+                    onChange={(event) => {
+                      setReason(event.target.value);
+                      setFormError(''); hook.dismissActionError();
+                    }}
+                  />
+                  <small>{reason.length}/500</small>
+                </S.Field>
+              </S.Section>
+              {formError || hook.actionErrorMessage ? (
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
+              ) : null}
+            </Shared.ModalBody>
+            <Shared.ModalFooter>
+              <Shared.SecondaryButton
+                type="button"
+                disabled={hook.isMutating}
+                onClick={() => setDialog(null)}
+              >
+                취소
+              </Shared.SecondaryButton>
+              <Shared.PrimaryButton
+                type="button"
+                disabled={hook.isMutating}
+                onClick={() => void submit()}
+              >
+                {hook.isMutating ? "처리 중" : "변경 확정"}
+              </Shared.PrimaryButton>
+            </Shared.ModalFooter>
+          </Shared.Modal>
+        </Shared.ModalOverlay>
+      ) : null}
+      </>}>
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
@@ -340,77 +376,7 @@ function UserRolePage() {
             </Shared.Panel>
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-      {dialog ? (
-        <Shared.ModalOverlay
-          role="presentation"
-          onMouseDown={() => !hook.isMutating && setDialog(null)}
-        >
-          <Shared.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="role-dialog-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="role-dialog-title">
-                관리자 역할 {dialog.action === "assign" ? "부여" : "회수"}
-              </Shared.ModalTitle>
-              <Shared.ModalCloseButton
-                type="button"
-                aria-label="닫기"
-                disabled={hook.isMutating}
-                onClick={() => setDialog(null)}
-              >
-                <MaterialIcon aria-hidden="true">
-                  close
-                </MaterialIcon>
-              </Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              <Shared.ModalWarning>
-                관리자 #{hook.targetUserId}의 {ROLES[dialog.role]} 역할을{" "}
-                {dialog.action === "assign" ? "부여" : "회수"}합니다. 권한
-                범위가 즉시 변경될 수 있습니다.
-              </Shared.ModalWarning>
-              <S.Section>
-                <S.Field>
-                  변경 사유 *
-                  <S.TextArea
-                    value={reason}
-                    maxLength={500}
-                    onChange={(event) => {
-                      setReason(event.target.value);
-                      setFormError(''); hook.dismissActionError();
-                    }}
-                  />
-                  <small>{reason.length}/500</small>
-                </S.Field>
-              </S.Section>
-              {formError || hook.actionErrorMessage ? (
-                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
-              ) : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton
-                type="button"
-                disabled={hook.isMutating}
-                onClick={() => setDialog(null)}
-              >
-                취소
-              </Shared.SecondaryButton>
-              <Shared.PrimaryButton
-                type="button"
-                disabled={hook.isMutating}
-                onClick={() => void submit()}
-              >
-                {hook.isMutating ? "처리 중" : "변경 확정"}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   );
 }
 

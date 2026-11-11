@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useUnsavedNavigation } from '../../hooks/useUnsavedChanges'
@@ -13,7 +14,7 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
 import { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
 import { useAuth } from '../../hooks/useAuth'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from './PlaceVerificationPage.styles'
 
@@ -99,10 +100,10 @@ function PlaceVerificationPage() {
         </Shell.SideMenu>
         <Shell.SideFooter>
           <Shell.AdminProfile aria-label="관리자 계정">
-            <Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon>
+            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
             <Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText>
           </Shell.AdminProfile>
-          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
+          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
         </Shell.SideFooter>
       </Shell.SideNav>
 
@@ -115,7 +116,7 @@ function PlaceVerificationPage() {
               if (activeTab === 'reports') void reportHook.fetchReports(reportHook.status, reportHook.page)
               else if (loadedPlaceId && activeTab === 'evidence') void verificationHook.fetchEvidence(loadedPlaceId)
               else if (loadedPlaceId) void verificationHook.fetchReverificationRequests(loadedPlaceId, verificationHook.reverificationPage)
-            }}><Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon></Shell.IconButton>
+            }}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>
 
@@ -133,9 +134,9 @@ function PlaceVerificationPage() {
             </Shared.PageHeader>
 
             <S.TabList as={AccessibleTabList} panelId="place-verification-panel" role="tablist" aria-label="정보 검증 작업">
-              <S.TabButton type="button" role="tab" aria-selected={activeTab === 'reports'} $active={activeTab === 'reports'} onClick={() => selectTab('reports')}><Shell.MaterialIcon aria-hidden="true">report</Shell.MaterialIcon>신고·반박</S.TabButton>
-              <S.TabButton type="button" role="tab" aria-selected={activeTab === 'evidence'} $active={activeTab === 'evidence'} onClick={() => selectTab('evidence')}><Shell.MaterialIcon aria-hidden="true">fact_check</Shell.MaterialIcon>증빙</S.TabButton>
-              <S.TabButton type="button" role="tab" aria-selected={activeTab === 'reverification'} $active={activeTab === 'reverification'} onClick={() => selectTab('reverification')}><Shell.MaterialIcon aria-hidden="true">sync_problem</Shell.MaterialIcon>재확인</S.TabButton>
+              <S.TabButton type="button" role="tab" aria-selected={activeTab === 'reports'} $active={activeTab === 'reports'} onClick={() => selectTab('reports')}><MaterialIcon aria-hidden="true">report</MaterialIcon>신고·반박</S.TabButton>
+              <S.TabButton type="button" role="tab" aria-selected={activeTab === 'evidence'} $active={activeTab === 'evidence'} onClick={() => selectTab('evidence')}><MaterialIcon aria-hidden="true">fact_check</MaterialIcon>증빙</S.TabButton>
+              <S.TabButton type="button" role="tab" aria-selected={activeTab === 'reverification'} $active={activeTab === 'reverification'} onClick={() => selectTab('reverification')}><MaterialIcon aria-hidden="true">sync_problem</MaterialIcon>재확인</S.TabButton>
             </S.TabList>
             <div id="place-verification-panel" role="tabpanel" aria-labelledby={`place-verification-panel-tab-${['reports', 'evidence', 'reverification'].indexOf(activeTab)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 

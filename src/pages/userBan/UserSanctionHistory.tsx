@@ -1,8 +1,8 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminPagination } from '../../components/common/AdminPagination'
 import type { AdminUserSanctionHistoryItem } from '../../types/adminUserBan.types'
 import { formatBanType, formatBanReason, formatSanctionAction, getSanctionActionTone, formatSanctionHistoryPeriod, formatSanctionHistorySummary } from './userBan.format'
 import * as U from '../adminUtility/AdminUtilityPage.styles'
-import * as S from '../place/PlaceManagePage.styles'
 
 interface UserSanctionHistoryProps {
   sanctionHistories: AdminUserSanctionHistoryItem[]
@@ -25,7 +25,7 @@ export function UserSanctionHistory({
 }: UserSanctionHistoryProps) {
   return isSanctionHistoryLoading ? (
     <U.DetailEmpty>
-      <S.MaterialIcon aria-hidden="true">hourglass_empty</S.MaterialIcon>
+      <MaterialIcon aria-hidden="true">hourglass_empty</MaterialIcon>
       <strong>제재 이력을 불러오는 중입니다.</strong>
     </U.DetailEmpty>
   ) : sanctionHistoryErrorMessage ? (
@@ -65,7 +65,7 @@ export function UserSanctionHistory({
     </>
   ) : (
     <U.DetailEmpty>
-      <S.MaterialIcon aria-hidden="true">history</S.MaterialIcon>
+      <MaterialIcon aria-hidden="true">history</MaterialIcon>
       <strong>제재 이력이 없습니다.</strong>
       <span>이 사용자에게 기록된 밴 처리, 해제, 만료 이력이 없습니다.</span>
     </U.DetailEmpty>

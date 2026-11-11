@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { forwardRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AppDialog } from '../common/AppDialog'
@@ -84,7 +85,7 @@ function RepresentativeImage({ imageUrl, placeName }: { imageUrl?: string | null
   if (!imageUrl || isUnavailable) {
     return (
       <L.ImagePlaceholder role="status">
-        <S.MaterialIcon aria-hidden="true">image_not_supported</S.MaterialIcon>
+        <MaterialIcon aria-hidden="true">image_not_supported</MaterialIcon>
         <span>대표 이미지 없음</span>
       </L.ImagePlaceholder>
     )
@@ -143,7 +144,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                 aria-label="장소 상세 닫기"
                 onClick={onClose}
               >
-                <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+                <MaterialIcon aria-hidden="true">close</MaterialIcon>
               </S.DetailCloseButton>
             </S.DetailHeader>
 
@@ -359,7 +360,7 @@ export const PlaceInspector = forwardRef<HTMLElement, PlaceInspectorProps>(
                 disabled={!hasValidCoordinate(selectedPlace)}
                 onClick={() => onFocusMap(selectedPlace)}
               >
-                <S.MaterialIcon aria-hidden="true">my_location</S.MaterialIcon>
+                <MaterialIcon aria-hidden="true">my_location</MaterialIcon>
                 <span>위치 보기</span>
               </S.DetailActionButton>
             </S.DetailFooter>

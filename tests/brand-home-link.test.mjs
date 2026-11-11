@@ -15,7 +15,7 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const { UnsavedChangesProvider } = await server.ssrLoadModule('/src/components/common/UnsavedChangesProvider.tsx')
 const { useUnsavedChanges } = await server.ssrLoadModule('/src/hooks/useUnsavedChanges.ts')
 const dashboard = await server.ssrLoadModule('/src/pages/dashboard/DashboardPage.styles.ts')
-const place = await server.ssrLoadModule('/src/pages/place/PlaceManagePage.styles.ts')
+const shell = await server.ssrLoadModule('/src/app/layouts/AdminShell.styles.ts')
 const merchant = await server.ssrLoadModule('/src/app/router/MerchantLayout.styles.ts')
 let root, router, setDraft
 function Draft() {
@@ -30,7 +30,7 @@ after(async () => { await server.close(); dom.window.close() })
 const button = label => [...document.querySelectorAll('button')].find(element => element.textContent === label)
 const logoCases = [
   ['admin dashboard shell', dashboard.BrandLockup, undefined, '/dashboard', '대시보드로 이동'],
-  ['admin place shell', place.BrandLockup, undefined, '/dashboard', '대시보드로 이동'],
+  ['admin shared shell', shell.BrandLockup, undefined, '/dashboard', '대시보드로 이동'],
   ['merchant shell', merchant.BrandLockup, '/merchant', '/merchant', '내 가게로 이동'],
 ]
 for (const [name, Logo, to, destination, label] of logoCases) {

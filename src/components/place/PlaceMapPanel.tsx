@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import type { ReactNode, RefObject } from 'react'
 import type { MapHandle, MapMarker } from '../map/map.types'
 import * as S from '../../pages/place/PlaceManagePage.styles'
@@ -46,7 +47,7 @@ export function PlaceMapPanel({
           aria-label="장소 목록 열기"
           onClick={onOpenList}
         >
-          <S.MaterialIcon aria-hidden="true">keyboard_double_arrow_right</S.MaterialIcon>
+          <MaterialIcon aria-hidden="true">keyboard_double_arrow_right</MaterialIcon>
           <span>목록</span>
         </S.MapListToggleButton>
       ) : null}
@@ -56,14 +57,14 @@ export function PlaceMapPanel({
           aria-label="지도 확대"
           onClick={() => mapRef.current?.zoomIn()}
         >
-          <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+          <MaterialIcon aria-hidden="true">add</MaterialIcon>
         </S.MapControlButton>
         <S.MapControlButton
           type="button"
           aria-label="지도 축소"
           onClick={() => mapRef.current?.zoomOut()}
         >
-          <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
+          <MaterialIcon aria-hidden="true">remove</MaterialIcon>
         </S.MapControlButton>
       </S.MapControlGroup>
       <S.MapInfo>

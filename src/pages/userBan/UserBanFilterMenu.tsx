@@ -1,6 +1,6 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
 import * as U from '../adminUtility/AdminUtilityPage.styles'
-import * as S from '../place/PlaceManagePage.styles'
 
 interface FilterMenuOption {
   value: string
@@ -58,9 +58,9 @@ export function AdminFilterMenu({
         <span className="filter-menu-label">
           {selectedOption?.label ?? options[0]?.label ?? '-'}
         </span>
-        <S.MaterialIcon className="filter-menu-icon" aria-hidden="true">
+        <MaterialIcon className="filter-menu-icon" aria-hidden="true">
           expand_more
-        </S.MaterialIcon>
+        </MaterialIcon>
       </U.FilterMenuButton>
       {isOpen ? (
         <U.FilterMenuList role="listbox" aria-label={ariaLabel}>
@@ -78,9 +78,9 @@ export function AdminFilterMenu({
             >
               {option.label}
               {option.value === value ? (
-                <S.MaterialIcon className="filter-menu-icon" aria-hidden="true">
+                <MaterialIcon className="filter-menu-icon" aria-hidden="true">
                   check
-                </S.MaterialIcon>
+                </MaterialIcon>
               ) : null}
             </U.FilterMenuOption>
           ))}

@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +8,7 @@ import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminS3Orphans } from "../../hooks/useAdminS3Orphans";
 import { useAuth } from "../../hooks/useAuth";
 import { formatLocalDateTime as date } from "../../utils/displayFormat";
-import * as Shell from "../place/PlaceManagePage.styles";
+import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 function S3OrphanPage() {
@@ -75,7 +76,7 @@ function S3OrphanPage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon>admin_panel_settings</Shell.MaterialIcon>
+              <MaterialIcon>admin_panel_settings</MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{admin}</strong>
@@ -89,7 +90,7 @@ function S3OrphanPage() {
               navigate("/login", { replace: true });
             }}
           >
-            <Shell.MaterialIcon>logout</Shell.MaterialIcon>
+            <MaterialIcon>logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -351,7 +352,7 @@ function S3OrphanPage() {
                 aria-label="닫기"
                 onClick={() => setDeleteOpen(false)}
               >
-                <Shell.MaterialIcon>close</Shell.MaterialIcon>
+                <MaterialIcon>close</MaterialIcon>
               </Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>

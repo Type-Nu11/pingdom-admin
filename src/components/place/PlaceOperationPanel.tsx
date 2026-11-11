@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
 import {
   AdminDatePicker,
@@ -466,7 +467,7 @@ export function PlaceOperationPanel({
             disabled={isSaving}
             onClick={handleClose}
           >
-            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">close</MaterialIcon>
           </S.OperatingDialogCloseButton>
         </S.OperatingDialogHeader>
 
@@ -608,7 +609,7 @@ export function PlaceOperationPanel({
                                 disabled={isSaving}
                                 onClick={() => removeRegularHour(day.dayOfWeek, hour.id)}
                               >
-                                <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
+                                <MaterialIcon aria-hidden="true">remove</MaterialIcon>
                               </S.OperatingIconButton>
                             </S.OperatingExceptionTimeRow>
                           ))}
@@ -617,7 +618,7 @@ export function PlaceOperationPanel({
                             disabled={isSaving}
                             onClick={() => addRegularHour(day.dayOfWeek)}
                           >
-                            <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                            <MaterialIcon aria-hidden="true">add</MaterialIcon>
                             시간대 추가
                           </S.OperatingTextButton>
                         </S.OperatingExceptionHours>
@@ -640,7 +641,7 @@ export function PlaceOperationPanel({
                       ])
                     }
                   >
-                    <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                    <MaterialIcon aria-hidden="true">add</MaterialIcon>
                     일정 추가
                   </S.DetailInlineButton>
                 </S.OperatingEditorSectionHeader>
@@ -668,7 +669,7 @@ export function PlaceOperationPanel({
                               )
                             }
                           >
-                            <S.MaterialIcon aria-hidden="true">delete</S.MaterialIcon>
+                            <MaterialIcon aria-hidden="true">delete</MaterialIcon>
                           </S.OperatingIconButton>
                         </S.OperatingExceptionEditorHeader>
                         <S.OperatingCheckLabel>
@@ -731,7 +732,7 @@ export function PlaceOperationPanel({
                                     )
                                   }
                                 >
-                                  <S.MaterialIcon aria-hidden="true">remove</S.MaterialIcon>
+                                  <MaterialIcon aria-hidden="true">remove</MaterialIcon>
                                 </S.OperatingIconButton>
                               </S.OperatingExceptionTimeRow>
                             ))}
@@ -758,7 +759,7 @@ export function PlaceOperationPanel({
                                 )
                               }
                             >
-                              <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                              <MaterialIcon aria-hidden="true">add</MaterialIcon>
                               시간대 추가
                             </S.OperatingTextButton>
                           </S.OperatingExceptionHours>

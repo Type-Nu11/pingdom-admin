@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -21,7 +22,7 @@ import type {
   PrivacyProcessingHistoryItem,
   PrivacyProcessingHistoryRequest,
 } from '../../types/adminOperationHistory.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 import * as History from './OperationHistoryPage.styles'
@@ -241,7 +242,7 @@ function OperationHistoryPage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon>
+              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -255,7 +256,7 @@ function OperationHistoryPage() {
               navigate('/login', { replace: true })
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -274,7 +275,7 @@ function OperationHistoryPage() {
               disabled={isLoading}
               onClick={refresh}
             >
-              <Shell.MaterialIcon aria-hidden="true">refresh</Shell.MaterialIcon>
+              <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
         </Shell.TopBar>

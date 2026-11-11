@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useRef, useState } from 'react'
 import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
@@ -302,7 +303,7 @@ export function PlaceOperatingNoticeDialog({
             disabled={isRunning}
             onClick={handleClose}
           >
-            <S.MaterialIcon aria-hidden="true">close</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">close</MaterialIcon>
           </S.OperatingDialogCloseButton>
         </S.OperatingDialogHeader>
 

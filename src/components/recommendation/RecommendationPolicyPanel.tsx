@@ -1,7 +1,7 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useState } from 'react'
 import { useAdminRecommendationPolicy } from '../../hooks/useAdminRecommendationPolicy'
 import type { AdminRecommendationTrafficPolicyUpdateItem } from '../../types/adminRecommendationPolicy.types'
-import * as Shell from '../../pages/place/PlaceManagePage.styles'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
 
@@ -108,7 +108,7 @@ export function RecommendationPolicyPanel() {
       {hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}
       {hook.successMessage ? <Shared.Notice $variant="success">{hook.successMessage}</Shared.Notice> : null}
       <Shared.DetailNotice>
-        <Shell.MaterialIcon aria-hidden="true">info</Shell.MaterialIcon>
+        <MaterialIcon aria-hidden="true">info</MaterialIcon>
         <div><strong>현재 적용 중인 추천 설정은 불러올 수 없습니다.</strong>설정을 변경하려면 사용 가능한 모든 추천 버전을 빠짐없이 입력해주세요. 이 화면에는 여기서 저장에 성공한 설정만 표시됩니다.</div>
       </Shared.DetailNotice>
       <Shared.Panel>
@@ -138,7 +138,7 @@ export function RecommendationPolicyPanel() {
         {hook.resyncResult ? <S.FormBody><S.MetricGrid><S.MetricCard><span>대상 장소</span><strong>{hook.resyncResult.placeCount.toLocaleString()}</strong></S.MetricCard><S.MetricCard><span>기본 동기화 / 삭제</span><strong>{hook.resyncResult.synchronizedSnapshotCount.toLocaleString()} / {hook.resyncResult.deletedSnapshotCount.toLocaleString()}</strong></S.MetricCard><S.MetricCard><span>유사도 동기화 / 삭제</span><strong>{hook.resyncResult.synchronizedSimilaritySnapshotCount.toLocaleString()} / {hook.resyncResult.deletedSimilaritySnapshotCount.toLocaleString()}</strong></S.MetricCard><S.MetricCard><span>버전 동기화 / 삭제</span><strong>{hook.resyncResult.synchronizedVersionSnapshotCount.toLocaleString()} / {hook.resyncResult.deletedVersionSnapshotCount.toLocaleString()}</strong></S.MetricCard></S.MetricGrid></S.FormBody> : null}
       </Shared.Panel>
 
-      {dialog ? <Shared.ModalOverlay role="presentation" onMouseDown={() => hook.activeAction === null && setDialog(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="recommendation-policy-confirm-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="recommendation-policy-confirm-title">{dialog === 'traffic' ? '적용 비율 설정 변경 확인' : '추천 정보 다시 계산 확인'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}><Shell.MaterialIcon aria-hidden="true">close</Shell.MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>{dialog === 'traffic' ? `${policies.length}개 버전의 적용 비율 설정 전체를 합계 ${total}%로 교체합니다.` : '모든 장소의 추천 정보를 다시 계산합니다. 처리 시간이 길어질 수 있습니다.'}</Shared.ModalWarning>{hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void (dialog === 'traffic' ? submitTraffic() : submitResync())}>{hook.activeAction ? '처리 중' : dialog === 'traffic' ? '정책 변경' : '다시 계산'}</Shared.PrimaryButton></Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
+      {dialog ? <Shared.ModalOverlay role="presentation" onMouseDown={() => hook.activeAction === null && setDialog(null)}><Shared.Modal role="dialog" aria-modal="true" aria-labelledby="recommendation-policy-confirm-title" onMouseDown={(event) => event.stopPropagation()}><Shared.ModalHeader><Shared.ModalTitle id="recommendation-policy-confirm-title">{dialog === 'traffic' ? '적용 비율 설정 변경 확인' : '추천 정보 다시 계산 확인'}</Shared.ModalTitle><Shared.ModalCloseButton type="button" aria-label="닫기" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}><MaterialIcon aria-hidden="true">close</MaterialIcon></Shared.ModalCloseButton></Shared.ModalHeader><Shared.ModalBody><Shared.ModalWarning>{dialog === 'traffic' ? `${policies.length}개 버전의 적용 비율 설정 전체를 합계 ${total}%로 교체합니다.` : '모든 장소의 추천 정보를 다시 계산합니다. 처리 시간이 길어질 수 있습니다.'}</Shared.ModalWarning>{hook.errorMessage ? <Shared.Notice $variant="error">{hook.errorMessage}</Shared.Notice> : null}</Shared.ModalBody><Shared.ModalFooter><Shared.SecondaryButton type="button" disabled={hook.activeAction !== null} onClick={() => setDialog(null)}>취소</Shared.SecondaryButton><Shared.PrimaryButton type="button" disabled={hook.activeAction !== null} onClick={() => void (dialog === 'traffic' ? submitTraffic() : submitResync())}>{hook.activeAction ? '처리 중' : dialog === 'traffic' ? '정책 변경' : '다시 계산'}</Shared.PrimaryButton></Shared.ModalFooter></Shared.Modal></Shared.ModalOverlay> : null}
     </>
   )
 }

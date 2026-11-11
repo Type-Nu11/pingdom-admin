@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useState } from "react";
@@ -15,7 +16,7 @@ import type {
   ScoutFieldReportStatus,
   ScoutProfileStatus,
 } from "../../types/adminScout.types";
-import * as Shell from "../place/PlaceManagePage.styles";
+import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
 import * as S from "../placeVerification/PlaceVerificationPage.styles";
 
@@ -176,9 +177,9 @@ function ScoutPage() {
         <Shell.SideFooter>
           <Shell.AdminProfile>
             <Shell.AdminProfileIcon>
-              <Shell.MaterialIcon aria-hidden="true">
+              <MaterialIcon aria-hidden="true">
                 admin_panel_settings
-              </Shell.MaterialIcon>
+              </MaterialIcon>
             </Shell.AdminProfileIcon>
             <Shell.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -192,7 +193,7 @@ function ScoutPage() {
               navigate("/login", { replace: true });
             }}
           >
-            <Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </Shell.LogoutButton>
         </Shell.SideFooter>
@@ -251,9 +252,9 @@ function ScoutPage() {
                 $active={tab === "profiles"}
                 onClick={() => setTab("profiles")}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   badge
-                </Shell.MaterialIcon>
+                </MaterialIcon>
                 탐색 후보 프로필
               </S.TabButton>
               <S.TabButton
@@ -261,9 +262,9 @@ function ScoutPage() {
                 $active={tab === "reports"}
                 onClick={() => setTab("reports")}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   travel_explore
-                </Shell.MaterialIcon>
+                </MaterialIcon>
                 현장 제보
               </S.TabButton>
             </S.TabList>
@@ -703,9 +704,9 @@ function ScoutPage() {
                 disabled={hook.activeAction !== null}
                 onClick={() => setDialog(null)}
               >
-                <Shell.MaterialIcon aria-hidden="true">
+                <MaterialIcon aria-hidden="true">
                   close
-                </Shell.MaterialIcon>
+                </MaterialIcon>
               </Shared.ModalCloseButton>
             </Shared.ModalHeader>
             <Shared.ModalBody>

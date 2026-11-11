@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { UserBanListFilters } from './UserBanListFilters'
 import { AdminFilterMenu } from './UserBanFilterMenu'
 import { UserSanctionHistory } from './UserSanctionHistory'
@@ -23,7 +24,7 @@ import type {
   AdminUserSanctionAction,
 } from '../../types/adminUserBan.types'
 import * as U from '../adminUtility/AdminUtilityPage.styles'
-import * as S from '../place/PlaceManagePage.styles'
+import * as S from '../../app/layouts/AdminShell.styles'
 
 const ADMIN_BANNED_USER_PAGE_SIZE = 20
 const DEFAULT_TEMPORARY_BAN_DURATION_DAYS = '7'
@@ -514,7 +515,7 @@ function UserBanPage() {
         <S.SideFooter>
           <S.AdminProfile aria-label="관리자 계정">
             <S.AdminProfileIcon>
-              <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
+              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
             </S.AdminProfileIcon>
             <S.AdminProfileText>
               <strong>{adminIdentifier}</strong>
@@ -528,7 +529,7 @@ function UserBanPage() {
               navigate('/login', { replace: true })
             }}
           >
-            <S.MaterialIcon aria-hidden="true">logout</S.MaterialIcon>
+            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
             <span>로그아웃</span>
           </S.LogoutButton>
         </S.SideFooter>
@@ -553,7 +554,7 @@ function UserBanPage() {
                 </U.IntroDescription>
               </U.IntroText>
               <U.SecondaryButton type="button" onClick={() => navigate('/users/roles')}>
-                <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>
+                <MaterialIcon aria-hidden="true">manage_accounts</MaterialIcon>
                 관리자 역할 관리
               </U.SecondaryButton>
             </U.IntroBand>
@@ -626,7 +627,7 @@ function UserBanPage() {
                       setIsBanFormOpen(true)
                     }}
                   >
-                    <S.MaterialIcon aria-hidden="true">add</S.MaterialIcon>
+                    <MaterialIcon aria-hidden="true">add</MaterialIcon>
                     새 밴 처리
                   </U.CompactButton>
                 </U.SectionHeader>
@@ -735,13 +736,13 @@ function UserBanPage() {
                 <U.WorkSectionBody>
                   {!selectedUserId ? (
                     <U.DetailEmpty>
-                      <S.MaterialIcon aria-hidden="true">manage_accounts</S.MaterialIcon>
+                      <MaterialIcon aria-hidden="true">manage_accounts</MaterialIcon>
                       <strong>사용자를 선택해 주세요.</strong>
                       <span>목록에서 선택하면 제재 정보와 이력이 표시됩니다.</span>
                     </U.DetailEmpty>
                   ) : isDetailLoading ? (
                     <U.DetailEmpty>
-                      <S.MaterialIcon aria-hidden="true">hourglass_empty</S.MaterialIcon>
+                      <MaterialIcon aria-hidden="true">hourglass_empty</MaterialIcon>
                       <strong>상세 정보를 불러오는 중입니다.</strong>
                     </U.DetailEmpty>
                   ) : detailErrorMessage ? (
@@ -871,9 +872,9 @@ function UserBanPage() {
                               setIsSanctionHistoryFilterOpen((isOpen) => !isOpen)
                             }
                           >
-                            <S.MaterialIcon aria-hidden="true">
+                            <MaterialIcon aria-hidden="true">
                               {isSanctionHistoryFilterOpen ? 'expand_less' : 'tune'}
-                            </S.MaterialIcon>
+                            </MaterialIcon>
                             {isSanctionHistoryFilterOpen
                               ? '필터 닫기'
                               : `필터${
@@ -931,7 +932,7 @@ function UserBanPage() {
                                 type="submit"
                                 disabled={isSanctionHistoryLoading}
                               >
-                                <S.MaterialIcon aria-hidden="true">search</S.MaterialIcon>
+                                <MaterialIcon aria-hidden="true">search</MaterialIcon>
                                 {isSanctionHistoryLoading ? '조회 중' : '조회'}
                               </U.PrimaryButton>
                               <U.SecondaryButton
@@ -980,7 +981,7 @@ function UserBanPage() {
                               disabled={releasingUserId === selectedUserDetail.userId}
                               onClick={() => setIsReleaseConfirmOpen(true)}
                             >
-                              <S.MaterialIcon aria-hidden="true">lock_open</S.MaterialIcon>
+                              <MaterialIcon aria-hidden="true">lock_open</MaterialIcon>
                               밴 해제
                             </U.SecondaryButton>
                           </U.FilterActions>
@@ -1009,7 +1010,7 @@ function UserBanPage() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <U.ConfirmIcon aria-hidden="true">
-              <S.MaterialIcon>block</S.MaterialIcon>
+              <MaterialIcon>block</MaterialIcon>
             </U.ConfirmIcon>
             <U.ConfirmTitle id="ban-form-title">새 사용자 밴 처리</U.ConfirmTitle>
             <U.ConfirmDescription>
@@ -1115,7 +1116,7 @@ function UserBanPage() {
                 </U.DetailSummaryCard>
               ) : null}
               <U.ActionInfoText>
-                <S.MaterialIcon aria-hidden="true">info</S.MaterialIcon>
+                <MaterialIcon aria-hidden="true">info</MaterialIcon>
                 <span>
                   기간 밴은 입력한 일수 동안 적용됩니다. 영구 밴은 만료일이 없습니다.
                   <br />
@@ -1128,14 +1129,14 @@ function UserBanPage() {
                   disabled={isBanTargetStatusLoading || !banTargetUserId.trim()}
                   onClick={handleCheckBanTargetStatus}
                 >
-                  <S.MaterialIcon aria-hidden="true">policy</S.MaterialIcon>
+                  <MaterialIcon aria-hidden="true">policy</MaterialIcon>
                   {isBanTargetStatusLoading ? '확인 중' : '상태 확인'}
                 </U.SecondaryButton>
                 <U.PrimaryButton
                   type="submit"
                   disabled={banningUserId !== null || isBanTargetAlreadyBanned}
                 >
-                  <S.MaterialIcon aria-hidden="true">block</S.MaterialIcon>
+                  <MaterialIcon aria-hidden="true">block</MaterialIcon>
                   {banningUserId !== null ? '처리 중' : '밴 처리'}
                 </U.PrimaryButton>
               </U.FilterActions>
@@ -1154,7 +1155,7 @@ function UserBanPage() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <U.ConfirmIcon aria-hidden="true">
-              <S.MaterialIcon>block</S.MaterialIcon>
+              <MaterialIcon>block</MaterialIcon>
             </U.ConfirmIcon>
             <U.ConfirmTitle id="ban-confirm-title">
               이 사용자를 밴 처리할까요?
@@ -1208,7 +1209,7 @@ function UserBanPage() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <U.ConfirmIcon aria-hidden="true">
-              <S.MaterialIcon>lock_open</S.MaterialIcon>
+              <MaterialIcon>lock_open</MaterialIcon>
             </U.ConfirmIcon>
             <U.ConfirmTitle id="ban-release-confirm-title">
               이 사용자의 밴을 해제할까요?

@@ -1,3 +1,4 @@
+import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -16,7 +17,7 @@ import type {
   AdminRecommendationMetricSummary,
   RecommendationMetricSortBy,
 } from '../../types/adminRecommendationMetric.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
 import * as S from '../placeVerification/PlaceVerificationPage.styles'
 
@@ -147,17 +148,17 @@ function RecommendationMetricsPage() {
         <Shell.SideMenu>
           <AdminNavigationMenu />
         </Shell.SideMenu>
-        <Shell.SideFooter><Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><Shell.MaterialIcon aria-hidden="true">admin_panel_settings</Shell.MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile><Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><Shell.MaterialIcon aria-hidden="true">logout</Shell.MaterialIcon><span>로그아웃</span></Shell.LogoutButton></Shell.SideFooter>
+        <Shell.SideFooter><Shell.AdminProfile aria-label="관리자 계정"><Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon><Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText></Shell.AdminProfile><Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton></Shell.SideFooter>
       </Shell.SideNav>
       <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
         <Shell.TopBar><Shell.TopTitleGroup><Shell.TopTitle>추천 성과 분석</Shell.TopTitle></Shell.TopTitleGroup><Shell.TopActions><AdminNotificationButton /></Shell.TopActions></Shell.TopBar>
         <Shared.Content><Shared.PageStack>
           <Shared.PageHeader><div><Shared.Eyebrow>성장 운영 &gt; 추천 성과</Shared.Eyebrow><Shared.PageTitle>추천 성과 및 버전 비교</Shared.PageTitle><Shared.PageDescription>장소별 추천 성과를 조회하고 동일 조건에서 버전 차이와 추천 근거를 확인합니다.</Shared.PageDescription></div><Shared.HeaderActions><Shared.HeaderButton type="button" onClick={() => navigate('/places')}>장소 관리</Shared.HeaderButton></Shared.HeaderActions></Shared.PageHeader>
           <S.TabList as={AccessibleTabList} panelId="recommendation-panel" role="tablist" aria-label="추천 분석 작업">
-            <S.TabButton type="button" role="tab" $active={tab === 'metrics'} aria-selected={tab === 'metrics'} onClick={() => { setTab('metrics'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">monitoring</Shell.MaterialIcon>성과 조회</S.TabButton>
-            <S.TabButton type="button" role="tab" $active={tab === 'compare'} aria-selected={tab === 'compare'} onClick={() => { setTab('compare'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">compare_arrows</Shell.MaterialIcon>버전 비교</S.TabButton>
-            <S.TabButton type="button" role="tab" $active={tab === 'explanation'} aria-selected={tab === 'explanation'} onClick={() => { setTab('explanation'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">manage_search</Shell.MaterialIcon>추천 설명</S.TabButton>
-            <S.TabButton type="button" role="tab" $active={tab === 'policy'} aria-selected={tab === 'policy'} onClick={() => { setTab('policy'); setFormError('') }}><Shell.MaterialIcon aria-hidden="true">tune</Shell.MaterialIcon>운영 정책</S.TabButton>
+            <S.TabButton type="button" role="tab" $active={tab === 'metrics'} aria-selected={tab === 'metrics'} onClick={() => { setTab('metrics'); setFormError('') }}><MaterialIcon aria-hidden="true">monitoring</MaterialIcon>성과 조회</S.TabButton>
+            <S.TabButton type="button" role="tab" $active={tab === 'compare'} aria-selected={tab === 'compare'} onClick={() => { setTab('compare'); setFormError('') }}><MaterialIcon aria-hidden="true">compare_arrows</MaterialIcon>버전 비교</S.TabButton>
+            <S.TabButton type="button" role="tab" $active={tab === 'explanation'} aria-selected={tab === 'explanation'} onClick={() => { setTab('explanation'); setFormError('') }}><MaterialIcon aria-hidden="true">manage_search</MaterialIcon>추천 설명</S.TabButton>
+            <S.TabButton type="button" role="tab" $active={tab === 'policy'} aria-selected={tab === 'policy'} onClick={() => { setTab('policy'); setFormError('') }}><MaterialIcon aria-hidden="true">tune</MaterialIcon>운영 정책</S.TabButton>
           </S.TabList>
             <div id="recommendation-panel" role="tabpanel" aria-labelledby={`recommendation-panel-tab-${['metrics', 'compare', 'explanation', 'policy'].indexOf(tab)}`} tabIndex={0} style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', minWidth: 0 }}>
 

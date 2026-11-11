@@ -1,0 +1,19 @@
+{
+  "src/pages/place/PlaceManagePage.tsx": "src/features/admin/places/pages/PlaceManagePage.tsx",
+  "src/pages/place/PlaceManagePage.styles.ts": "src/features/admin/places/pages/PlaceManagePage.styles.ts",
+  "src/hooks/useAdminPlaces.ts": "src/features/admin/places/hooks/useAdminPlaces.ts",
+  "src/hooks/useAdminPlaceOperatingNotices.ts": "src/features/admin/places/hooks/useAdminPlaceOperatingNotices.ts",
+  "src/api/adminPlaceApi.ts": "src/features/admin/places/api/adminPlaceApi.ts",
+  "src/api/adminPlaceOperatingNoticeApi.ts": "src/features/admin/places/api/adminPlaceOperatingNoticeApi.ts",
+  "src/types/adminPlace.types.ts": "src/features/admin/places/types/adminPlace.types.ts",
+  "src/components/place/PlaceMapPanel.tsx": "src/features/admin/places/components/PlaceMapPanel.tsx",
+  "src/components/place/PlaceDangerZoneDialog.tsx": "src/features/admin/places/components/PlaceDangerZoneDialog.tsx",
+  "src/components/place/PlaceListPanel.tsx": "src/features/admin/places/components/PlaceListPanel.tsx",
+  "src/components/place/PlaceInspector.tsx": "src/features/admin/places/components/PlaceInspector.tsx",
+  "src/components/place/PlaceTouristInfoDialog.tsx": "src/features/admin/places/components/PlaceTouristInfoDialog.tsx",
+  "src/components/place/PlaceOperatingNoticeDialog.tsx": "src/features/admin/places/components/PlaceOperatingNoticeDialog.tsx",
+  "src/components/place/PlaceDetailLink.tsx": "src/features/admin/places/components/PlaceDetailLink.tsx",
+  "src/components/place/PlaceOperationPanel.tsx": "src/features/admin/places/components/PlaceOperationPanel.tsx",
+  "src/components/place/PlaceDataCorrectionDialog.tsx": "src/features/admin/places/components/PlaceDataCorrectionDialog.tsx",
+  "src/components/place/PlaceInspector.styles.ts": "src/features/admin/places/components/PlaceInspector.styles.ts"
+}

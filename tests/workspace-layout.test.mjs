@@ -113,12 +113,12 @@ function sourceFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? sourceFiles(`${directory}/${entry.name}`) : [`${directory}/${entry.name}`])
 }
 test('all 22 admin page shells delegate to AdminLayout; shared layouts never import page modules', () => {
-  const pages = sourceFiles('src/pages').filter(file => file.endsWith('.tsx'))
+  const pages = [...sourceFiles('src/pages'), ...sourceFiles('src/features')].filter(file => file.endsWith('.tsx'))
   const consumers = pages.filter(file => /import \{ AdminLayout \}/.test(readFileSync(file, 'utf8')))
   assert.equal(consumers.length, 22)
   for (const file of pages) assert.doesNotMatch(readFileSync(file, 'utf8'), /<(?:Shell|AdminShell|S)\.(?:AppShell|SideNav|MainArea|TopBar)\b/, file)
   for (const file of ['src/app/layouts/AdminLayout.tsx', 'src/app/layouts/WorkspaceFrame.tsx']) {
-    assert.doesNotMatch(readFileSync(file, 'utf8'), /from ['"][^'"]*pages\//, file)
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /from ['"][^'"]*(?:pages|features)\//, file)
   }
   const merchant = readFileSync('src/app/router/MerchantLayout.tsx', 'utf8')
   assert.match(merchant, /<MerchantPlaceProvider>\s*<WorkspaceFrame/)

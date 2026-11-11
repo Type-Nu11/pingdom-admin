@@ -5,8 +5,8 @@ import {
   expireAdminPlaceOperatingNotices,
   updateAdminPlaceOperatingNotice,
 } from '../api/adminPlaceOperatingNoticeApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceUpdateErrorResponse,
   AdminPlaceOperatingNoticeCancelRequest,
@@ -14,8 +14,8 @@ import type {
   AdminPlaceOperatingNoticeResponse,
   AdminPlaceOperatingNoticeUpdateRequest,
 } from '../types/adminPlace.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 export type AdminPlaceNoticeAction = 'create' | 'update' | 'cancel' | 'expire'
 

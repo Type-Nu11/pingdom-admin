@@ -1,18 +1,18 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { forwardRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { AppDialog } from '../common/AppDialog'
+import { AppDialog } from '../../../../components/common/AppDialog'
 import * as L from './PlaceInspector.styles'
 import type {
   AdminPlaceDetail,
   AdminPlaceDiscoveryStatus,
   AdminPlaceItem,
   AdminPlaceOperatingStatus,
-} from '../../types/adminPlace.types'
-import { getPlaceCategoryLabel } from '../../utils/placeCategory'
+} from '../types/adminPlace.types'
+import { getPlaceCategoryLabel } from '../../../../utils/placeCategory'
 import type { PlaceOperation } from './PlaceOperationPanel'
 import type { PlaceDataCorrectionAction } from './PlaceDataCorrectionDialog'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+import * as S from '../pages/PlaceManagePage.styles'
 
 const OPERATING_STATUS_LABELS: Record<AdminPlaceOperatingStatus, string> = {
   OPERATING: '운영 중',

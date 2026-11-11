@@ -29,10 +29,10 @@ test('application source has no Kakao SDK, loader or client key dependency', asy
 })
 
 test('legacy source/merge metadata remain compatible without a nonexistent detail Kakao ID', async () => {
-  const types = await readFile(new URL('src/types/adminPlace.types.ts', root), 'utf8')
+  const types = await readFile(new URL('src/features/admin/places/types/adminPlace.types.ts', root), 'utf8')
   assert.doesNotMatch(types, /kakaoPlaceId\??:/)
   assert.match(types, /AdminPlaceGeocodingSource = 'KAKAO'/)
-  const api = await readFile(new URL('src/api/adminPlaceApi.ts', root), 'utf8')
+  const api = await readFile(new URL('src/features/admin/places/api/adminPlaceApi.ts', root), 'utf8')
   assert.doesNotMatch(api, /kakao-place-id|updateAdminPlaceKakaoPlaceId/)
   assert.doesNotMatch(types, /AdminPlaceKakaoPlaceIdUpdate(?:Request|Response)/)
   const mergeTypes = await readFile(new URL('src/types/adminPlaceMerge.types.ts', root), 'utf8')

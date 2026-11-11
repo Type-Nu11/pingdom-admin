@@ -1,9 +1,9 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
 import {
   AdminDatePicker,
   AdminTimePicker,
-} from '../common/AdminDateTimePicker'
+} from '../../../../components/common/AdminDateTimePicker'
 import type {
   AdminPlaceDayOfWeek,
   AdminPlaceDetail,
@@ -14,8 +14,8 @@ import type {
   AdminPlaceOperatingStatus,
   AdminPlaceOperatingStatusUpdateRequest,
   AdminPlaceRegularOperatingHour,
-} from '../../types/adminPlace.types'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+} from '../types/adminPlace.types'
+import * as S from '../pages/PlaceManagePage.styles'
 
 export type PlaceOperation =
   | 'operating-status'

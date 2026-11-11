@@ -10,10 +10,10 @@ const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const { AxiosError } = await import('axios')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
-const { PlaceDataCorrectionDialog } = await server.ssrLoadModule('/src/components/place/PlaceDataCorrectionDialog.tsx')
+const { PlaceDataCorrectionDialog } = await server.ssrLoadModule('/src/features/admin/places/components/PlaceDataCorrectionDialog.tsx')
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
-const { useAdminPlaces } = await server.ssrLoadModule('/src/hooks/useAdminPlaces.ts')
-const api = await server.ssrLoadModule('/src/api/adminPlaceApi.ts')
+const { useAdminPlaces } = await server.ssrLoadModule('/src/features/admin/places/hooks/useAdminPlaces.ts')
+const api = await server.ssrLoadModule('/src/features/admin/places/api/adminPlaceApi.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const place = { id: 1, name: '합성 장소', address: '합성 주소 123', category: 'CAFE', latitude: 37, longitude: 127, kakaoPlaceId: 'legacy-id-not-for-display' }
 let root, calls, requests, closeCount, state, failed

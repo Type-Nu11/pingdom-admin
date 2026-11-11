@@ -1,7 +1,7 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import type { ReactNode, RefObject } from 'react'
-import type { MapHandle, MapMarker } from '../map/map.types'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+import type { MapHandle, MapMarker } from '../../../../components/map/map.types'
+import * as S from '../pages/PlaceManagePage.styles'
 
 interface PlaceMapPanelProps {
   panelRef: RefObject<HTMLElement | null>

@@ -1,32 +1,32 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import * as AdminShell from '../../app/layouts/AdminShell.styles'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import * as AdminShell from '../../../../app/layouts/AdminShell.styles'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
 import {
   PlaceOperationPanel,
   type PlaceOperation,
-} from '../../components/place/PlaceOperationPanel'
-import { PlaceOperatingNoticeDialog } from '../../components/place/PlaceOperatingNoticeDialog'
-import { PlaceTouristInfoDialog } from '../../components/place/PlaceTouristInfoDialog'
+} from '../components/PlaceOperationPanel'
+import { PlaceOperatingNoticeDialog } from '../components/PlaceOperatingNoticeDialog'
+import { PlaceTouristInfoDialog } from '../components/PlaceTouristInfoDialog'
 import {
   PlaceDataCorrectionDialog,
   type PlaceDataCorrectionAction,
-} from '../../components/place/PlaceDataCorrectionDialog'
-import { PlaceDangerZoneDialog } from '../../components/place/PlaceDangerZoneDialog'
-import { PlaceInspector } from '../../components/place/PlaceInspector'
-import { PlaceMapPanel } from '../../components/place/PlaceMapPanel'
-import { PlaceListPanel } from '../../components/place/PlaceListPanel'
+} from '../components/PlaceDataCorrectionDialog'
+import { PlaceDangerZoneDialog } from '../components/PlaceDangerZoneDialog'
+import { PlaceInspector } from '../components/PlaceInspector'
+import { PlaceMapPanel } from '../components/PlaceMapPanel'
+import { PlaceListPanel } from '../components/PlaceListPanel'
 import type {
   MapHandle,
   MapMarker,
-} from '../../components/map/map.types'
-import { isValidMapCoordinate } from '../../components/map/map.types'
-import { useAdminPlaceOperatingNotices } from '../../hooks/useAdminPlaceOperatingNotices'
-import { useAdminPlaces } from '../../hooks/useAdminPlaces'
-import { useAuth } from '../../hooks/useAuth'
-import { getPlaceCategoryLabel } from '../../utils/placeCategory'
+} from '../../../../components/map/map.types'
+import { isValidMapCoordinate } from '../../../../components/map/map.types'
+import { useAdminPlaceOperatingNotices } from '../hooks/useAdminPlaceOperatingNotices'
+import { useAdminPlaces } from '../hooks/useAdminPlaces'
+import { useAuth } from '../../../../hooks/useAuth'
+import { getPlaceCategoryLabel } from '../../../../utils/placeCategory'
 import type {
   AdminPlaceBasicInformationUpdateRequest,
   AdminPlaceCategory,
@@ -36,7 +36,7 @@ import type {
   AdminPlaceGeocodingUpdateRequest,
   AdminPlaceItem,
   AdminPlaceListSortParam,
-} from '../../types/adminPlace.types'
+} from '../types/adminPlace.types'
 import * as S from './PlaceManagePage.styles'
 
 const ADMIN_PLACE_PAGE_SIZE = 10

@@ -8,7 +8,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const server = await createServer({server:{middlewareMode:true,ws:false},appType:'custom',ssr:{noExternal:['styled-components']}})
-const { PlaceInspector } = await server.ssrLoadModule('/src/components/place/PlaceInspector.tsx')
+const { PlaceInspector } = await server.ssrLoadModule('/src/features/admin/places/components/PlaceInspector.tsx')
 let root, calls
 const place = {id:1,name:'테스트 장소',address:'테스트 주소',category:'CAFE',latitude:37,longitude:127,operatingStatus:'OPERATING',discoveryStatus:'VISIBLE'}
 async function render(extra={}) { await act(async()=>root.render(h(PlaceInspector, {selectedPlace:place,placeDetail:place,isLoading:false,errorMessage:'',updatingPlaceIds:new Proxy({}, {get:()=>null}),onClose(){},onRetry(){},onFocusMap:p=>calls.push(p.id),onOpenOperation:a=>calls.push(a),onOpenTouristInfo(){},onOpenOperatingNotices(){},onOpenDataCorrection:()=>calls.push('correction'),...extra}))) }

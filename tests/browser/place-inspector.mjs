@@ -9,6 +9,11 @@ import { chromium } from 'playwright'
 const output = await mkdtemp(join(tmpdir(), 'pingdom-172-'))
 // Compare the pre-#190 inspector within the same current page shell and data.
 const baseline = execFileSync('git', ['show', 'f09c4cb9135d6b9ac949eeb31f3dbf0424d15d7f:src/components/place/PlaceInspector.tsx'], { encoding: 'utf8' })
+  // Rebase only imports from the historical component's original directory.
+  // Keep its JSX/handlers and original commit/path as the comparison reference.
+  .replaceAll('../../types/adminPlace.types', '../types/adminPlace.types')
+  .replaceAll('../../utils/placeCategory', '../../../../utils/placeCategory')
+  .replaceAll('../../pages/place/PlaceManagePage.styles', '../pages/PlaceManagePage.styles')
 const measurements = new Map()
 let browser, server, page
 try {
@@ -21,7 +26,7 @@ try {
         if (source.endsWith('/map/NaverMap')) return resolve('tests/browser/place-map-fixture.jsx')
       },
       load(id) {
-        if (mode === 'before' && id.endsWith('/src/components/place/PlaceInspector.tsx')) return baseline
+        if (mode === 'before' && id.endsWith('/src/features/admin/places/components/PlaceInspector.tsx')) return baseline
       },
       configureServer(vite) {
         vite.middlewares.use(async (req, res, next) => {

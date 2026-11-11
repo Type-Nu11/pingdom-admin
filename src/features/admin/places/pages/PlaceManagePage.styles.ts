@@ -1,7 +1,7 @@
 import styled, { css } from 'styled-components'
-import NaverMap from '../../components/map/NaverMap'
-import { typo, adminColors, radius } from '../../styles/theme'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import NaverMap from '../../../../components/map/NaverMap'
+import { typo, adminColors, radius } from '../../../../styles/theme'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 
 const neutral = adminColors
 const mapControlHoverBackground = adminColors.primaryTint

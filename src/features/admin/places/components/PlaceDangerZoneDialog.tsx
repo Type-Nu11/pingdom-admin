@@ -1,7 +1,7 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
-import type { AdminPlaceDetail } from '../../types/adminPlace.types'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+import type { AdminPlaceDetail } from '../types/adminPlace.types'
+import * as S from '../pages/PlaceManagePage.styles'
 
 interface PlaceDangerZoneDialogProps {
   place: AdminPlaceDetail

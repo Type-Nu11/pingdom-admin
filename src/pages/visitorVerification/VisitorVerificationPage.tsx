@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
@@ -6,8 +7,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
 import { AdminPagination } from "../../components/common/AdminPagination";
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
-import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
-import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminVisitorVerifications } from "../../hooks/useAdminVisitorVerifications";
 import { useAuth } from "../../hooks/useAuth";
 import type {
@@ -54,7 +53,7 @@ function formatDate(value?: string | null) {
 function VisitorVerificationPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const hook = useAdminVisitorVerifications();
   const tab: Tab =
     searchParams.get("tab") === "corrections" ? "corrections" : "reports";
@@ -103,43 +102,9 @@ function VisitorVerificationPage() {
   };
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">
-                admin_panel_settings
-              </MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>방문자 제보·정정 심사</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
@@ -155,7 +120,78 @@ function VisitorVerificationPage() {
               </MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {decision && selected ? (
+        <Shared.ModalOverlay
+          role="presentation"
+          onMouseDown={() => !hook.isReviewing && setDecision(null)}
+        >
+          <Shared.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="visitor-review-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <Shared.ModalHeader>
+              <Shared.ModalTitle id="visitor-review-title">
+                {selected.kind === "reports" ? "검증 제보" : "정정 요청"}{" "}
+                {decision === "ACCEPTED" ? "승인" : "반려"}
+              </Shared.ModalTitle>
+              <Shared.ModalCloseButton
+                type="button"
+                aria-label="닫기"
+                disabled={hook.isReviewing}
+                onClick={() => setDecision(null)}
+              >
+                <MaterialIcon aria-hidden="true">
+                  close
+                </MaterialIcon>
+              </Shared.ModalCloseButton>
+            </Shared.ModalHeader>
+            <Shared.ModalBody>
+              <Shared.ModalWarning>
+                장소 #{selected.item.placeId}의 현장 정보에 심사 결과가
+                반영됩니다.
+              </Shared.ModalWarning>
+              <S.Section>
+                <S.Field>
+                  심사 근거 *
+                  <S.TextArea
+                    value={reviewNote}
+                    maxLength={500}
+                    disabled={hook.isReviewing}
+                    onChange={(event) => {
+                      setReviewNote(event.target.value);
+                      setFormError(''); hook.dismissActionError();
+                    }}
+                  />
+                </S.Field>
+              </S.Section>
+              {formError || hook.actionErrorMessage ? (
+                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
+              ) : null}
+            </Shared.ModalBody>
+            <Shared.ModalFooter>
+              <Shared.SecondaryButton
+                type="button"
+                disabled={hook.isReviewing}
+                onClick={() => setDecision(null)}
+              >
+                취소
+              </Shared.SecondaryButton>
+              <Shared.PrimaryButton
+                type="button"
+                disabled={hook.isReviewing}
+                onClick={() => void submit()}
+              >
+                {hook.isReviewing ? "처리 중" : "심사 확정"}
+              </Shared.PrimaryButton>
+            </Shared.ModalFooter>
+          </Shared.Modal>
+        </Shared.ModalOverlay>
+      ) : null}
+      </>}>
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
@@ -433,77 +469,7 @@ function VisitorVerificationPage() {
           </div>
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-      {decision && selected ? (
-        <Shared.ModalOverlay
-          role="presentation"
-          onMouseDown={() => !hook.isReviewing && setDecision(null)}
-        >
-          <Shared.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="visitor-review-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="visitor-review-title">
-                {selected.kind === "reports" ? "검증 제보" : "정정 요청"}{" "}
-                {decision === "ACCEPTED" ? "승인" : "반려"}
-              </Shared.ModalTitle>
-              <Shared.ModalCloseButton
-                type="button"
-                aria-label="닫기"
-                disabled={hook.isReviewing}
-                onClick={() => setDecision(null)}
-              >
-                <MaterialIcon aria-hidden="true">
-                  close
-                </MaterialIcon>
-              </Shared.ModalCloseButton>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              <Shared.ModalWarning>
-                장소 #{selected.item.placeId}의 현장 정보에 심사 결과가
-                반영됩니다.
-              </Shared.ModalWarning>
-              <S.Section>
-                <S.Field>
-                  심사 근거 *
-                  <S.TextArea
-                    value={reviewNote}
-                    maxLength={500}
-                    disabled={hook.isReviewing}
-                    onChange={(event) => {
-                      setReviewNote(event.target.value);
-                      setFormError(''); hook.dismissActionError();
-                    }}
-                  />
-                </S.Field>
-              </S.Section>
-              {formError || hook.actionErrorMessage ? (
-                <FeedbackMessage tone="error" onDismiss={() => { setFormError(''); hook.dismissActionError() }}>{formError || hook.actionErrorMessage}</FeedbackMessage>
-              ) : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton
-                type="button"
-                disabled={hook.isReviewing}
-                onClick={() => setDecision(null)}
-              >
-                취소
-              </Shared.SecondaryButton>
-              <Shared.PrimaryButton
-                type="button"
-                disabled={hook.isReviewing}
-                onClick={() => void submit()}
-              >
-                {hook.isReviewing ? "처리 중" : "심사 확정"}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   );
 }
 

@@ -1,11 +1,10 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { useAuth } from '../../hooks/useAuth'
 import { useAdminDashboard } from '../../hooks/useAdminDashboard'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import * as S from './DashboardPage.styles'
 import { AdminPendingWork } from '../../components/adminNotification/AdminPendingWork'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
@@ -115,7 +114,7 @@ const QUICK_ACTIONS = [
 
 function DashboardPage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const {
     summary,
     recentActivities,
@@ -497,44 +496,14 @@ function DashboardPage() {
   }
 
   return (
-    <S.AppShell>
-      <S.SideNav aria-label="관리자 메뉴">
-        <S.SideHeader>
-          <S.BrandLockup>
-            <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </S.BrandLockup>
-        </S.SideHeader>
-
-        <S.SideMenu>
-          <AdminNavigationMenu />
-        </S.SideMenu>
-
-        <S.SideFooter>
-          <S.AdminProfile aria-label="관리자 계정">
-            <S.AdminProfileIcon>
-              <S.MaterialIcon aria-hidden="true">admin_panel_settings</S.MaterialIcon>
-            </S.AdminProfileIcon>
-            <S.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </S.AdminProfileText>
-          </S.AdminProfile>
-          <S.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout()
-              navigate('/login', { replace: true })
-            }}
-          >
-            <S.MaterialIcon aria-hidden="true">logout</S.MaterialIcon>
-            <span>로그아웃</span>
-          </S.LogoutButton>
-        </S.SideFooter>
-      </S.SideNav>
-
-      <S.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-          <S.TopBar>
-            <S.TopTitle as="h1">대시보드</S.TopTitle>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      parts={{ AppShell: S.AppShell, MainArea: S.MainArea, TopBar: S.TopBar,
+        SideNav: S.SideNav, SideHeader: S.SideHeader, BrandLockup: S.BrandLockup,
+        BrandLogo: S.BrandLogo, SideMenu: S.SideMenu, SideFooter: S.SideFooter,
+        AdminProfile: S.AdminProfile, AdminProfileIcon: S.AdminProfileIcon,
+        AdminProfileText: S.AdminProfileText, LogoutButton: S.LogoutButton }} icon={S.MaterialIcon}
+      header={<>
+        <S.TopTitle as="h1">대시보드</S.TopTitle>
             <S.TopActions>
             <S.RefreshButton
               type="button"
@@ -548,7 +517,7 @@ function DashboardPage() {
             </S.RefreshButton>
             <AdminNotificationButton />
           </S.TopActions>
-        </S.TopBar>
+      </>}>
 
         <S.PageContent>
           <S.PageHeader>
@@ -644,8 +613,7 @@ function DashboardPage() {
             </S.Section>
           </S.DashboardBottomGrid>
         </S.PageContent>
-      </S.MainArea>
-    </S.AppShell>
+      </AdminLayout>
   )
 }
 

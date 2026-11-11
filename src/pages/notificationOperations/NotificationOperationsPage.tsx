@@ -1,11 +1,8 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AdminNavigationMenu } from "../../components/navigation/AdminNavigationMenu";
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
 import { AdminPagination } from "../../components/common/AdminPagination";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
-import { ADMIN_MAIN_SCROLL_AREA_ID } from "../../constants/layout";
 import { useAdminNotificationOperations } from "../../hooks/useAdminNotificationOperations";
 import { useAuth } from "../../hooks/useAuth";
 import { NOTIFICATION_TYPE_LABELS, DELIVERY_STATUS_LABELS, OUTBOX_STATUS_LABELS, DELIVERY_CHANNEL_LABELS } from '../../utils/adminNotificationLabels';
@@ -43,8 +40,8 @@ function date(v?: string | null) {
       }).format(d);
 }
 function NotificationOperationsPage() {
-  const navigate = useNavigate();
-  const { logout, user } = useAuth();
+
+  const { user } = useAuth();
   const h = useAdminNotificationOperations();
   const [tab, setTab] = useState<Tab>("inbox");
   const [target, setTarget] = useState<AdminOutboxEventItem | null>(null);
@@ -72,47 +69,80 @@ function NotificationOperationsPage() {
     if (await h.retry(target.eventId, reason.trim())) setTarget(null);
   };
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile>
-            <Shell.AdminProfileIcon>
-              <MaterialIcon>admin_panel_settings</MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{admin}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            <MaterialIcon>logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={admin}
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>알림 발송 현황</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {target ? (
+        <Shared.ModalOverlay
+          role="presentation"
+          onMouseDown={() => !h.retryingId && setTarget(null)}
+        >
+          <Shared.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="outbox-retry-title"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <Shared.ModalHeader>
+              <Shared.ModalTitle id="outbox-retry-title">
+                실패한 작업 다시 요청
+              </Shared.ModalTitle>
+            </Shared.ModalHeader>
+            <Shared.ModalBody>
+              <Shared.ModalWarning>
+                실패 원인이 해결되었는지, 이미 처리된 내용이 중복 반영되지 않는지 담당자에게 확인한 뒤 다시 요청해주세요.
+              </Shared.ModalWarning>
+              <S.DetailGrid aria-label="다시 요청할 작업">
+                <S.DetailItem><dt>작업 번호</dt><dd>{target.eventId}</dd></S.DetailItem>
+                <S.DetailItem><dt>대상</dt><dd>{formatAuditTargetType(target.aggregateType)} · #{target.aggregateId}</dd></S.DetailItem>
+                <S.DetailItem><dt>등록 일시</dt><dd>{date(target.createdAt)}</dd></S.DetailItem>
+              </S.DetailGrid>
+              <S.Section>
+                <S.Field>
+                  재처리 사유 *
+                  <S.TextArea
+                    value={reason}
+                    maxLength={500}
+                    onChange={(e) => {
+                      setReason(e.target.value);
+                      setFormError("");
+                    }}
+                  />
+                </S.Field>
+              </S.Section>
+              {formError || h.errorMessage ? (
+                <Shared.Notice $variant="error">
+                  {formError || h.errorMessage}
+                </Shared.Notice>
+              ) : null}
+            </Shared.ModalBody>
+            <Shared.ModalFooter>
+              <Shared.SecondaryButton
+                type="button"
+                disabled={Boolean(h.retryingId)}
+                onClick={() => setTarget(null)}
+              >
+                취소
+              </Shared.SecondaryButton>
+              <Shared.PrimaryButton
+                type="button"
+                disabled={Boolean(h.retryingId)}
+                onClick={() => void retry()}
+              >
+                {h.retryingId ? "재처리 요청 중" : "재처리 요청"}
+              </Shared.PrimaryButton>
+            </Shared.ModalFooter>
+          </Shared.Modal>
+        </Shared.ModalOverlay>
+      ) : null}
+      </>}>
         <Shared.Content>
           <Shared.PageStack>
             <Shared.PageHeader>
@@ -342,71 +372,7 @@ function NotificationOperationsPage() {
             </Shared.Panel>
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-      {target ? (
-        <Shared.ModalOverlay
-          role="presentation"
-          onMouseDown={() => !h.retryingId && setTarget(null)}
-        >
-          <Shared.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="outbox-retry-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <Shared.ModalHeader>
-              <Shared.ModalTitle id="outbox-retry-title">
-                실패한 작업 다시 요청
-              </Shared.ModalTitle>
-            </Shared.ModalHeader>
-            <Shared.ModalBody>
-              <Shared.ModalWarning>
-                실패 원인이 해결되었는지, 이미 처리된 내용이 중복 반영되지 않는지 담당자에게 확인한 뒤 다시 요청해주세요.
-              </Shared.ModalWarning>
-              <S.DetailGrid aria-label="다시 요청할 작업">
-                <S.DetailItem><dt>작업 번호</dt><dd>{target.eventId}</dd></S.DetailItem>
-                <S.DetailItem><dt>대상</dt><dd>{formatAuditTargetType(target.aggregateType)} · #{target.aggregateId}</dd></S.DetailItem>
-                <S.DetailItem><dt>등록 일시</dt><dd>{date(target.createdAt)}</dd></S.DetailItem>
-              </S.DetailGrid>
-              <S.Section>
-                <S.Field>
-                  재처리 사유 *
-                  <S.TextArea
-                    value={reason}
-                    maxLength={500}
-                    onChange={(e) => {
-                      setReason(e.target.value);
-                      setFormError("");
-                    }}
-                  />
-                </S.Field>
-              </S.Section>
-              {formError || h.errorMessage ? (
-                <Shared.Notice $variant="error">
-                  {formError || h.errorMessage}
-                </Shared.Notice>
-              ) : null}
-            </Shared.ModalBody>
-            <Shared.ModalFooter>
-              <Shared.SecondaryButton
-                type="button"
-                disabled={Boolean(h.retryingId)}
-                onClick={() => setTarget(null)}
-              >
-                취소
-              </Shared.SecondaryButton>
-              <Shared.PrimaryButton
-                type="button"
-                disabled={Boolean(h.retryingId)}
-                onClick={() => void retry()}
-              >
-                {h.retryingId ? "재처리 요청 중" : "재처리 요청"}
-              </Shared.PrimaryButton>
-            </Shared.ModalFooter>
-          </Shared.Modal>
-        </Shared.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   );
 }
 export default NotificationOperationsPage;

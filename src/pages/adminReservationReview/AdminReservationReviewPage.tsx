@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
 import { searchAdminPlaces } from '../../api/adminTargetSearchApi'
@@ -11,8 +12,6 @@ import { AdminSelect } from '../../components/common/AdminStatusSelect'
 import { ListPane } from '../../components/common/ListPane'
 import { ListDetailPage, ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations } from '../../hooks/useAdminReservations'
 import { formatListRange } from '../../utils/listRange'
 import { formatReservationSchedule, formatReservationEventTime as formatDate } from '../../utils/reservationTime'
@@ -62,7 +61,7 @@ function parsePlaceId(value: string) {
 function ReservationHistoryWorkspace() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const ownerMismatch = reservationReviewOwnerMismatch(location.state, user?.id, user?.role)
   const context = useMemo(() => ownerMismatch
     ? { query: DEFAULT_RESERVATION_QUERY, selectedReservationId: null }
@@ -172,28 +171,9 @@ function ReservationHistoryWorkspace() {
   const statusHistory = hook.reservation?.statusHistory ?? []
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu><AdminNavigationMenu /></Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile aria-label="관리자 계정">
-            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
-            <Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}>
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup><Shell.TopTitle>예약 관리 이력</Shell.TopTitle></Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <Shell.TopTitleGroup><Shell.TopTitle>예약 관리 이력</Shell.TopTitle></Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
             <Shell.IconButton
@@ -206,7 +186,7 @@ function ReservationHistoryWorkspace() {
               <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}>
 
         <ListDetailPage>
             <Shared.PageHeader>
@@ -384,9 +364,7 @@ function ReservationHistoryWorkspace() {
               </Shared.Panel>
             </ListDetailWorkspace>
         </ListDetailPage>
-      </Shell.MainArea>
-
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

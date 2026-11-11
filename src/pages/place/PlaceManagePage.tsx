@@ -1,9 +1,9 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import * as AdminShell from '../../app/layouts/AdminShell.styles'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import {
   PlaceOperationPanel,
   type PlaceOperation,
@@ -23,7 +23,6 @@ import type {
   MapMarker,
 } from '../../components/map/map.types'
 import { isValidMapCoordinate } from '../../components/map/map.types'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceOperatingNotices } from '../../hooks/useAdminPlaceOperatingNotices'
 import { useAdminPlaces } from '../../hooks/useAdminPlaces'
 import { useAuth } from '../../hooks/useAuth'
@@ -75,7 +74,7 @@ function PlaceManagePage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const linkedPlaceId = searchParams.get('placeId')
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const mapRef = useRef<MapHandle | null>(null)
   const [mapRevision, setMapRevision] = useState(0)
   const mapPanelRef = useRef<HTMLElement | null>(null)
@@ -669,44 +668,9 @@ function PlaceManagePage() {
 
 
   return (
-    <AdminShell.AppShell>
-      <AdminShell.SideNav aria-label="관리자 메뉴">
-        <AdminShell.SideHeader>
-          <AdminShell.BrandLockup>
-            <AdminShell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </AdminShell.BrandLockup>
-        </AdminShell.SideHeader>
-
-        <AdminShell.SideMenu>
-          <AdminNavigationMenu />
-        </AdminShell.SideMenu>
-
-        <AdminShell.SideFooter>
-          <AdminShell.AdminProfile aria-label="관리자 계정">
-            <AdminShell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon>
-            </AdminShell.AdminProfileIcon>
-            <AdminShell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </AdminShell.AdminProfileText>
-          </AdminShell.AdminProfile>
-          <AdminShell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout()
-              navigate('/login', { replace: true })
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </AdminShell.LogoutButton>
-        </AdminShell.SideFooter>
-      </AdminShell.SideNav>
-
-      <AdminShell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <AdminShell.TopBar>
-          <AdminShell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <AdminShell.TopTitleGroup>
             <AdminShell.TopTitle>장소 관리</AdminShell.TopTitle>
           </AdminShell.TopTitleGroup>
           <AdminShell.TopActions>
@@ -746,72 +710,9 @@ function PlaceManagePage() {
             </AdminShell.TopActionButton>
             <AdminNotificationButton />
           </AdminShell.TopActions>
-        </AdminShell.TopBar>
-
-        <S.SplitContent $isPanelCollapsed={isPlacePanelCollapsed}>
-          <PlaceListPanel
-            listRef={placeListRef}
-            collapsed={isPlacePanelCollapsed}
-            places={places}
-            selectedPlaceId={selectedPlace?.id ?? null}
-            searchQuery={placeSearchQuery}
-            sortParam={selectedSortParam}
-            category={selectedCategory}
-            page={page}
-            totalCount={totalCount}
-            totalPages={safeTotalPages}
-            hasNext={hasNext}
-            isLoading={isLoading}
-            hasListResult={hasListResult}
-            isError={isError}
-            errorMessage={errorMessage}
-            pageRangeLabel={pageRangeLabel}
-            visiblePageNumbers={visiblePageNumbers}
-            hasActiveFilter={hasActivePlaceFilter}
-            onCollapse={() => setIsPlacePanelCollapsed(true)}
-            onSearchChange={handleSearchQueryChange}
-            onClearSearch={handleClearPlaceSearch}
-            onSortChange={handleSortChange}
-            onCategoryChange={handleCategoryChange}
-            onRefresh={handleRefresh}
-            onClearFilters={handleClearPlaceFilters}
-            onSelectPlace={handleSelectPlace}
-            onPageChange={handlePageChange}
-          />
-
-          <PlaceMapPanel
-            panelRef={mapPanelRef}
-            mapRef={mapRef}
-            markers={placeMapMarkers}
-            displayCount={placeMapMarkers.length}
-            fitBoundsKey={placeMapFitBoundsKey}
-            selectedPlaceId={selectedPlace?.id ?? null}
-            isListCollapsed={isPlacePanelCollapsed}
-            onMarkerSelect={handleSelectMapMarker}
-            onMapReady={handleMapReady}
-            onOpenList={() => setIsPlacePanelCollapsed(false)}
-            inspector={
-              <PlaceInspector
-                ref={placeDetailPanelRef}
-                selectedPlace={selectedPlace}
-                placeDetail={placeDetail}
-                isLoading={isDetailLoading}
-                errorMessage={detailErrorMessage}
-                updatingPlaceIds={updatingPlaceIds}
-                onClose={handleClosePlaceDetail}
-                onRetry={(placeId) => { void fetchAdminPlaceDetail(placeId).then(detail => { if (detail?.id === placeId) setSelectedPlace(current => current?.id === placeId ? detail : current) }) }}
-                onFocusMap={focusPlaceOnVisibleMap}
-                onOpenOperation={handleOpenPlaceOperation}
-                onOpenTouristInfo={handleOpenTouristInfo}
-                onOpenOperatingNotices={handleOpenOperatingNotices}
-                onOpenDataCorrection={handleOpenDataCorrection}
-              />
-            }
-          />
-        </S.SplitContent>
-      </AdminShell.MainArea>
-
-      {actionSuccessMessage ? (
+      </>}
+      overlays={<>
+        {actionSuccessMessage ? (
         <S.ActionToast role="status">
           <MaterialIcon aria-hidden="true">check_circle</MaterialIcon>
           <span>{actionSuccessMessage}</span>
@@ -883,7 +784,70 @@ function PlaceManagePage() {
           onDeleted={handleDeleteCompleted}
         />
       ) : null}
-    </AdminShell.AppShell>
+      </>}>
+
+        <S.SplitContent $isPanelCollapsed={isPlacePanelCollapsed}>
+          <PlaceListPanel
+            listRef={placeListRef}
+            collapsed={isPlacePanelCollapsed}
+            places={places}
+            selectedPlaceId={selectedPlace?.id ?? null}
+            searchQuery={placeSearchQuery}
+            sortParam={selectedSortParam}
+            category={selectedCategory}
+            page={page}
+            totalCount={totalCount}
+            totalPages={safeTotalPages}
+            hasNext={hasNext}
+            isLoading={isLoading}
+            hasListResult={hasListResult}
+            isError={isError}
+            errorMessage={errorMessage}
+            pageRangeLabel={pageRangeLabel}
+            visiblePageNumbers={visiblePageNumbers}
+            hasActiveFilter={hasActivePlaceFilter}
+            onCollapse={() => setIsPlacePanelCollapsed(true)}
+            onSearchChange={handleSearchQueryChange}
+            onClearSearch={handleClearPlaceSearch}
+            onSortChange={handleSortChange}
+            onCategoryChange={handleCategoryChange}
+            onRefresh={handleRefresh}
+            onClearFilters={handleClearPlaceFilters}
+            onSelectPlace={handleSelectPlace}
+            onPageChange={handlePageChange}
+          />
+
+          <PlaceMapPanel
+            panelRef={mapPanelRef}
+            mapRef={mapRef}
+            markers={placeMapMarkers}
+            displayCount={placeMapMarkers.length}
+            fitBoundsKey={placeMapFitBoundsKey}
+            selectedPlaceId={selectedPlace?.id ?? null}
+            isListCollapsed={isPlacePanelCollapsed}
+            onMarkerSelect={handleSelectMapMarker}
+            onMapReady={handleMapReady}
+            onOpenList={() => setIsPlacePanelCollapsed(false)}
+            inspector={
+              <PlaceInspector
+                ref={placeDetailPanelRef}
+                selectedPlace={selectedPlace}
+                placeDetail={placeDetail}
+                isLoading={isDetailLoading}
+                errorMessage={detailErrorMessage}
+                updatingPlaceIds={updatingPlaceIds}
+                onClose={handleClosePlaceDetail}
+                onRetry={(placeId) => { void fetchAdminPlaceDetail(placeId).then(detail => { if (detail?.id === placeId) setSelectedPlace(current => current?.id === placeId ? detail : current) }) }}
+                onFocusMap={focusPlaceOnVisibleMap}
+                onOpenOperation={handleOpenPlaceOperation}
+                onOpenTouristInfo={handleOpenTouristInfo}
+                onOpenOperatingNotices={handleOpenOperatingNotices}
+                onOpenDataCorrection={handleOpenDataCorrection}
+              />
+            }
+          />
+        </S.SplitContent>
+      </AdminLayout>
   )
 }
 

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 export const browserCases = [
   ['detector-probes', 'tests/browser/regression-probes.mjs'],
   ['dashboard', 'tests/browser/dashboard-pending.mjs'],
+  ['workspace-layout', 'tests/browser/workspace-layout.mjs'],
   ['accessibility', 'tests/browser/ui-accessibility.mjs'],
   ['web-design-system', 'tests/browser/web-design-system.mjs'],
   ['text-readability', 'tests/browser/text-readability.mjs'],

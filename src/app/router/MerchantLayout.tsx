@@ -3,7 +3,10 @@ import { MerchantNavigationMenu } from '../../components/navigation/MerchantNavi
 import { MERCHANT_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { MerchantPlaceProvider } from '../providers/MerchantPlaceProvider'
 import { useAuth } from '../../hooks/useAuth'
+import { WorkspaceFrame } from '../layouts/WorkspaceFrame'
 import * as S from './MerchantLayout.styles'
+
+const frameParts = { AppShell: S.AppShell, MainArea: S.MainArea, TopBar: S.TopBar }
 
 const getSectionTitle = (pathname: string) => {
   if (pathname.startsWith('/merchant/place-')) return '장소 관리'
@@ -30,8 +33,9 @@ export function MerchantLayout() {
 
   return (
     <MerchantPlaceProvider>
-      <S.AppShell>
-        <S.SideNav aria-label="상점주 메뉴">
+      <WorkspaceFrame parts={frameParts} mainId={MERCHANT_MAIN_SCROLL_AREA_ID} mainClassName="merchant-layout-content"
+        header={<><S.TopTitle>{getSectionTitle(pathname)}</S.TopTitle><S.TopContext>상점주 센터</S.TopContext></>}
+        sidebar={<S.SideNav aria-label="상점주 메뉴">
           <S.SideHeader>
             <S.BrandLockup to="/merchant">
               <S.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
@@ -53,15 +57,9 @@ export function MerchantLayout() {
               <span>로그아웃</span>
             </S.LogoutButton>
           </S.SideFooter>
-        </S.SideNav>
-        <S.MainArea id={MERCHANT_MAIN_SCROLL_AREA_ID} className="merchant-layout-content">
-          <S.TopBar>
-            <S.TopTitle>{getSectionTitle(pathname)}</S.TopTitle>
-            <S.TopContext>상점주 센터</S.TopContext>
-          </S.TopBar>
-          <Outlet />
-        </S.MainArea>
-      </S.AppShell>
+        </S.SideNav>}>
+        <Outlet />
+      </WorkspaceFrame>
     </MerchantPlaceProvider>
   )
 }

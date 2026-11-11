@@ -1,11 +1,10 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { AdminPagination } from '../../components/common/AdminPagination'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
 import { useAuth } from '../../hooks/useAuth'
 import type {
@@ -130,7 +129,7 @@ function PlaceComparisonCard({
 
 function PlaceMergePage() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const [selectedGroup, setSelectedGroup] =
     useState<AdminPlaceDuplicateGroupItem | null>(null)
   const [selectedSourceId, setSelectedSourceId] = useState<number | null>(null)
@@ -285,46 +284,9 @@ function PlaceMergePage() {
   const hasDuplicateGroups = duplicateGroups.length > 0
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup>
-            <Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" />
-          </Shell.BrandLockup>
-        </Shell.SideHeader>
-
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-
-        <Shell.SideFooter>
-          <Shell.AdminProfile aria-label="관리자 계정">
-            <Shell.AdminProfileIcon>
-              <MaterialIcon aria-hidden="true">
-                admin_panel_settings
-              </MaterialIcon>
-            </Shell.AdminProfileIcon>
-            <Shell.AdminProfileText>
-              <strong>{adminIdentifier}</strong>
-              <span>관리자</span>
-            </Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton
-            type="button"
-            onClick={() => {
-              void logout()
-              navigate('/login', { replace: true })
-            }}
-          >
-            <MaterialIcon aria-hidden="true">logout</MaterialIcon>
-            <span>로그아웃</span>
-          </Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <Shell.TopTitleGroup>
             <Shell.TopTitle>장소 병합·복구</Shell.TopTitle>
           </Shell.TopTitleGroup>
           <Shell.TopActions>
@@ -339,7 +301,100 @@ function PlaceMergePage() {
               <MaterialIcon aria-hidden="true">refresh</MaterialIcon>
             </Shell.IconButton>
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}
+      overlays={<>
+        {confirmation ? (
+        <S.ModalOverlay
+          role="presentation"
+          onMouseDown={() => {
+            if (activeAction === null) {
+              setConfirmation(null)
+            }
+          }}
+        >
+          <S.Modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="place-merge-confirm-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <S.ModalHeader>
+              <S.ModalTitle id="place-merge-confirm-title">
+                {confirmation.type === 'merge' ? '장소 병합 확인' : '병합 복구 확인'}
+              </S.ModalTitle>
+              <S.ModalCloseButton
+                type="button"
+                aria-label="닫기"
+                disabled={activeAction !== null}
+                onClick={() => setConfirmation(null)}
+              >
+                <MaterialIcon aria-hidden="true">close</MaterialIcon>
+              </S.ModalCloseButton>
+            </S.ModalHeader>
+            <S.ModalBody>
+              {confirmation.type === 'merge' && targetPlace && selectedSource ? (
+                <>
+                  <S.ModalWarning>
+                    <MaterialIcon aria-hidden="true">warning</MaterialIcon>
+                    <span>
+                      병합 후 후보 장소는 대표 장소로 통합됩니다. 실제 영향 범위는 서버 병합 결과와 이력에서 최종 확인해주세요.
+                    </span>
+                  </S.ModalWarning>
+                  <S.ModalSummary>
+                    <S.ModalSummaryItem>
+                      <dt>유지할 장소</dt>
+                      <dd title={targetPlace.name}>
+                        #{targetPlace.id} · {getPlaceName(targetPlace.name, targetPlace.address)}
+                      </dd>
+                    </S.ModalSummaryItem>
+                    <S.ModalSummaryItem>
+                      <dt>병합될 장소</dt>
+                      <dd title={selectedSource.name}>
+                        #{selectedSource.id} · {getPlaceName(selectedSource.name, selectedSource.address)}
+                      </dd>
+                    </S.ModalSummaryItem>
+                  </S.ModalSummary>
+                </>
+              ) : confirmation.type === 'restore' ? (
+                <S.ModalWarning>
+                  <MaterialIcon aria-hidden="true">restore</MaterialIcon>
+                  <span>
+                    병합 이력 #{confirmation.history.historyId}를 복구합니다. 복구 후에는 중복 장소 목록과 장소 관리 화면에서 결과를 확인해야 합니다.
+                  </span>
+                </S.ModalWarning>
+              ) : null}
+            </S.ModalBody>
+            <S.ModalFooter>
+              <S.SecondaryButton
+                type="button"
+                disabled={activeAction !== null}
+                onClick={() => setConfirmation(null)}
+              >
+                취소
+              </S.SecondaryButton>
+              <S.PrimaryButton
+                type="button"
+                disabled={activeAction !== null}
+                onClick={
+                  confirmation.type === 'merge'
+                    ? handleConfirmMerge
+                    : handleConfirmRestore
+                }
+              >
+                <MaterialIcon aria-hidden="true">
+                  {confirmation.type === 'merge' ? 'merge_type' : 'restore'}
+                </MaterialIcon>
+                {activeAction !== null
+                  ? '처리 중'
+                  : confirmation.type === 'merge'
+                    ? '병합 실행'
+                    : '복구 실행'}
+              </S.PrimaryButton>
+            </S.ModalFooter>
+          </S.Modal>
+        </S.ModalOverlay>
+      ) : null}
+      </>}>
 
         <S.Content>
           <S.PageStack>
@@ -648,100 +703,7 @@ function PlaceMergePage() {
             </S.HistoryPanel> : null}
           </S.PageStack>
         </S.Content>
-      </Shell.MainArea>
-
-      {confirmation ? (
-        <S.ModalOverlay
-          role="presentation"
-          onMouseDown={() => {
-            if (activeAction === null) {
-              setConfirmation(null)
-            }
-          }}
-        >
-          <S.Modal
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="place-merge-confirm-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <S.ModalHeader>
-              <S.ModalTitle id="place-merge-confirm-title">
-                {confirmation.type === 'merge' ? '장소 병합 확인' : '병합 복구 확인'}
-              </S.ModalTitle>
-              <S.ModalCloseButton
-                type="button"
-                aria-label="닫기"
-                disabled={activeAction !== null}
-                onClick={() => setConfirmation(null)}
-              >
-                <MaterialIcon aria-hidden="true">close</MaterialIcon>
-              </S.ModalCloseButton>
-            </S.ModalHeader>
-            <S.ModalBody>
-              {confirmation.type === 'merge' && targetPlace && selectedSource ? (
-                <>
-                  <S.ModalWarning>
-                    <MaterialIcon aria-hidden="true">warning</MaterialIcon>
-                    <span>
-                      병합 후 후보 장소는 대표 장소로 통합됩니다. 실제 영향 범위는 서버 병합 결과와 이력에서 최종 확인해주세요.
-                    </span>
-                  </S.ModalWarning>
-                  <S.ModalSummary>
-                    <S.ModalSummaryItem>
-                      <dt>유지할 장소</dt>
-                      <dd title={targetPlace.name}>
-                        #{targetPlace.id} · {getPlaceName(targetPlace.name, targetPlace.address)}
-                      </dd>
-                    </S.ModalSummaryItem>
-                    <S.ModalSummaryItem>
-                      <dt>병합될 장소</dt>
-                      <dd title={selectedSource.name}>
-                        #{selectedSource.id} · {getPlaceName(selectedSource.name, selectedSource.address)}
-                      </dd>
-                    </S.ModalSummaryItem>
-                  </S.ModalSummary>
-                </>
-              ) : confirmation.type === 'restore' ? (
-                <S.ModalWarning>
-                  <MaterialIcon aria-hidden="true">restore</MaterialIcon>
-                  <span>
-                    병합 이력 #{confirmation.history.historyId}를 복구합니다. 복구 후에는 중복 장소 목록과 장소 관리 화면에서 결과를 확인해야 합니다.
-                  </span>
-                </S.ModalWarning>
-              ) : null}
-            </S.ModalBody>
-            <S.ModalFooter>
-              <S.SecondaryButton
-                type="button"
-                disabled={activeAction !== null}
-                onClick={() => setConfirmation(null)}
-              >
-                취소
-              </S.SecondaryButton>
-              <S.PrimaryButton
-                type="button"
-                disabled={activeAction !== null}
-                onClick={
-                  confirmation.type === 'merge'
-                    ? handleConfirmMerge
-                    : handleConfirmRestore
-                }
-              >
-                <MaterialIcon aria-hidden="true">
-                  {confirmation.type === 'merge' ? 'merge_type' : 'restore'}
-                </MaterialIcon>
-                {activeAction !== null
-                  ? '처리 중'
-                  : confirmation.type === 'merge'
-                    ? '병합 실행'
-                    : '복구 실행'}
-              </S.PrimaryButton>
-            </S.ModalFooter>
-          </S.Modal>
-        </S.ModalOverlay>
-      ) : null}
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

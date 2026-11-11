@@ -1,3 +1,4 @@
+import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -6,11 +7,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
-import { AdminNavigationMenu } from '../../components/navigation/AdminNavigationMenu'
 import { PlaceInformationEvidencePanel } from '../../components/placeVerification/PlaceInformationEvidencePanel'
 import { PlaceInformationReportPanel } from '../../components/placeVerification/PlaceInformationReportPanel'
 import { PlaceInformationReverificationPanel } from '../../components/placeVerification/PlaceInformationReverificationPanel'
-import { ADMIN_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
 import { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
 import { useAuth } from '../../hooks/useAuth'
@@ -30,7 +29,7 @@ function PlaceVerificationPage() {
   const requestTransition = useUnsavedNavigation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const reportHook = useAdminPlaceInformationReports()
   const verificationHook = useAdminPlaceVerification()
   const initialPlaceId = parsePlaceId(searchParams.get('placeId'))
@@ -90,26 +89,9 @@ function PlaceVerificationPage() {
   }
 
   return (
-    <Shell.AppShell>
-      <Shell.SideNav aria-label="관리자 메뉴">
-        <Shell.SideHeader>
-          <Shell.BrandLockup><Shell.BrandLogo src={`${import.meta.env.BASE_URL}pingdom-logo.png`} alt="PingDom" /></Shell.BrandLockup>
-        </Shell.SideHeader>
-        <Shell.SideMenu>
-          <AdminNavigationMenu />
-        </Shell.SideMenu>
-        <Shell.SideFooter>
-          <Shell.AdminProfile aria-label="관리자 계정">
-            <Shell.AdminProfileIcon><MaterialIcon aria-hidden="true">admin_panel_settings</MaterialIcon></Shell.AdminProfileIcon>
-            <Shell.AdminProfileText><strong>{adminIdentifier}</strong><span>관리자</span></Shell.AdminProfileText>
-          </Shell.AdminProfile>
-          <Shell.LogoutButton type="button" onClick={() => { void logout(); navigate('/login', { replace: true }) }}><MaterialIcon aria-hidden="true">logout</MaterialIcon><span>로그아웃</span></Shell.LogoutButton>
-        </Shell.SideFooter>
-      </Shell.SideNav>
-
-      <Shell.MainArea id={ADMIN_MAIN_SCROLL_AREA_ID}>
-        <Shell.TopBar>
-          <Shell.TopTitleGroup><Shell.TopTitle>장소 정보 검증</Shell.TopTitle></Shell.TopTitleGroup>
+    <AdminLayout identifier={adminIdentifier} profileLabel="관리자 계정"
+      header={<>
+        <Shell.TopTitleGroup><Shell.TopTitle>장소 정보 검증</Shell.TopTitle></Shell.TopTitleGroup>
           <Shell.TopActions>
             <AdminNotificationButton />
             <Shell.IconButton type="button" aria-label="현재 작업 새로고침" onClick={() => {
@@ -118,7 +100,7 @@ function PlaceVerificationPage() {
               else if (loadedPlaceId) void verificationHook.fetchReverificationRequests(loadedPlaceId, verificationHook.reverificationPage)
             }}><MaterialIcon aria-hidden="true">refresh</MaterialIcon></Shell.IconButton>
           </Shell.TopActions>
-        </Shell.TopBar>
+      </>}>
 
         <Shared.Content>
           <Shared.PageStack>
@@ -167,8 +149,7 @@ function PlaceVerificationPage() {
           </div>
           </Shared.PageStack>
         </Shared.Content>
-      </Shell.MainArea>
-    </Shell.AppShell>
+      </AdminLayout>
   )
 }
 

@@ -1,19 +1,19 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { UserBanListFilters } from './UserBanListFilters'
-import { AdminFilterMenu } from './UserBanFilterMenu'
-import { UserSanctionHistory } from './UserSanctionHistory'
-import { formatBanType, getBanTypeTone, getBanStatusTone, formatBanDate, formatBanExpiresAt, formatOptionalText, formatRole, formatCountry, formatBanReason, formatCountWithUnit } from './userBan.format'
-import { BAN_TYPE_FILTER_OPTIONS, SANCTION_ACTION_FILTER_OPTIONS } from './userBan.options'
-import { AccessibleTabList } from '../../components/common/AccessibleTabList'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { UserBanListFilters } from '../components/UserBanListFilters'
+import { AdminFilterMenu } from '../components/UserBanFilterMenu'
+import { UserSanctionHistory } from '../components/UserSanctionHistory'
+import { formatBanType, getBanTypeTone, getBanStatusTone, formatBanDate, formatBanExpiresAt, formatOptionalText, formatRole, formatCountry, formatBanReason, formatCountWithUnit } from '../model/userBan.format'
+import { BAN_TYPE_FILTER_OPTIONS, SANCTION_ACTION_FILTER_OPTIONS } from '../model/userBan.options'
+import { AccessibleTabList } from '../../../../components/common/AccessibleTabList'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
-import { useAdminBannedUsers } from '../../hooks/useAdminBannedUsers'
-import { useAuth } from '../../hooks/useAuth'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import { AdminDateTimePicker } from '../../../../components/common/AdminDateTimePicker'
+import { useAdminBannedUsers } from '../hooks/useAdminBannedUsers'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminBanType,
   AdminBannedUserListRequest,
@@ -21,9 +21,9 @@ import type {
   AdminUserBanRequest,
   AdminSortDirection,
   AdminUserSanctionAction,
-} from '../../types/adminUserBan.types'
-import * as U from '../adminUtility/AdminUtilityPage.styles'
-import * as S from '../../app/layouts/AdminShell.styles'
+} from '../types/adminUserBan.types'
+import * as U from '../../../../pages/adminUtility/AdminUtilityPage.styles'
+import * as S from '../../../../app/layouts/AdminShell.styles'
 
 const ADMIN_BANNED_USER_PAGE_SIZE = 20
 const DEFAULT_TEMPORARY_BAN_DURATION_DAYS = '7'

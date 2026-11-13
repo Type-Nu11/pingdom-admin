@@ -12,7 +12,7 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const { PlaceInformationEvidencePanel: Evidence } = await server.ssrLoadModule('/src/components/placeVerification/PlaceInformationEvidencePanel.tsx')
 const { PlaceInformationReverificationPanel: Reverification } = await server.ssrLoadModule('/src/components/placeVerification/PlaceInformationReverificationPanel.tsx')
 const labels = await server.ssrLoadModule('/src/components/placeVerification/placeVerificationLabels.ts')
-const formats = await server.ssrLoadModule('/src/pages/userBan/userBan.format.ts')
+const formats = await server.ssrLoadModule('/src/features/admin/userBans/model/userBan.format.ts')
 let root, reads
 beforeEach(() => { root = createRoot(document.getElementById('root')); reads = [] })
 afterEach(async () => { await act(async () => root.unmount()) })

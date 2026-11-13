@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   banAdminUser,
   getAdminBannedUser,
@@ -8,10 +8,10 @@ import {
   getAdminUserSanctionStatus,
   releaseAdminUserBan,
 } from '../api/adminUserBanApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminBannedUserDetail,
   AdminBannedUserDetailErrorResponse,

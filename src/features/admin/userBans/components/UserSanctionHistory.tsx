@@ -1,8 +1,8 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import type { AdminUserSanctionHistoryItem } from '../../types/adminUserBan.types'
-import { formatBanType, formatBanReason, formatSanctionAction, getSanctionActionTone, formatSanctionHistoryPeriod, formatSanctionHistorySummary } from './userBan.format'
-import * as U from '../adminUtility/AdminUtilityPage.styles'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import type { AdminUserSanctionHistoryItem } from '../types/adminUserBan.types'
+import { formatBanType, formatBanReason, formatSanctionAction, getSanctionActionTone, formatSanctionHistoryPeriod, formatSanctionHistorySummary } from '../model/userBan.format'
+import * as U from '../../../../pages/adminUtility/AdminUtilityPage.styles'
 
 interface UserSanctionHistoryProps {
   sanctionHistories: AdminUserSanctionHistoryItem[]

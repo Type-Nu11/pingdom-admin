@@ -1,6 +1,6 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
-import * as U from '../adminUtility/AdminUtilityPage.styles'
+import * as U from '../../../../pages/adminUtility/AdminUtilityPage.styles'
 
 interface FilterMenuOption {
   value: string

@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type AdminRole = 'SUPER_ADMIN' | 'CONTENT_MODERATOR' | 'MERCHANT_OPERATOR' | 'SUPPORT_OPERATOR' | 'ANALYST'
 export type AdminRoleAssignmentStatus = 'ACTIVE' | 'REVOKED'

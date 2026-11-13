@@ -1,4 +1,4 @@
-import type { AdminUserSanctionAction, AdminUserSanctionHistoryItem } from '../../types/adminUserBan.types'
+import type { AdminUserSanctionAction, AdminUserSanctionHistoryItem } from '../types/adminUserBan.types'
 
 const ADMIN_ROLE_LABELS: Record<string, string> = {
   ADMIN: '관리자',

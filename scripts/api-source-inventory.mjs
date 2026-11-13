@@ -7,7 +7,7 @@ const files = walk('src').filter(p => /\.tsx?$/.test(p))
 const sources = new Map(files.map(p => [p, fs.readFileSync(p, 'utf8')]))
 const result = []
 for (const [file, text] of sources) {
-  if (!file.startsWith('src/api/')) continue
+  if (!file.startsWith('src/api/') && !/^src\/features\/.+\/api\//.test(file)) continue
   const ast = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
   const constants = new Map()
   const helpers = new Map()

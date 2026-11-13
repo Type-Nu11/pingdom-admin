@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { typo, typography, adminColors as c } from '../../styles/theme'
+import { typo, typography, adminColors as c } from '../../../../styles/theme'
 
 export const Summary = styled.div`
   display: grid;

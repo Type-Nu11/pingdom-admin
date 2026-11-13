@@ -25,7 +25,7 @@ const CommunityContentPage = lazy(() => import('../../pages/community/CommunityC
 const CommunityReportsPage = lazy(() => import('../../pages/community/CommunityReportsPage'))
 const DashboardPage = lazy(() => import('../../pages/dashboard/DashboardPage'))
 const NotFoundPage = lazy(() => import('../../pages/notFound/NotFoundPage'))
-const PlaceManagePage = lazy(() => import('../../pages/place/PlaceManagePage'))
+const PlaceManagePage = lazy(() => import('../../features/admin/places/pages/PlaceManagePage'))
 const PlaceMergePage = lazy(() => import('../../pages/placeMerge/PlaceMergePage'))
 const PlaceDuplicateCandidatePage = lazy(
   () => import('../../pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage'),

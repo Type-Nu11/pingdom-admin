@@ -1,10 +1,10 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useEffect, useRef, useState } from 'react'
 import type {
   AdminPlaceDetail,
   AdminPlaceTouristInfoUpdateRequest,
-} from '../../types/adminPlace.types'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+} from '../types/adminPlace.types'
+import * as S from '../pages/PlaceManagePage.styles'
 
 interface PlaceTouristInfoDialogProps {
   place: AdminPlaceDetail

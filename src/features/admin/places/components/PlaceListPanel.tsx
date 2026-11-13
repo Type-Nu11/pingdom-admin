@@ -1,16 +1,16 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import type { RefObject } from 'react'
-import SortDropdown from '../common/SortDropdown'
+import SortDropdown from '../../../../components/common/SortDropdown'
 import type {
   AdminPlaceCategory,
   AdminPlaceItem,
   AdminPlaceListSortParam,
-} from '../../types/adminPlace.types'
+} from '../types/adminPlace.types'
 import {
   getPlaceCategoryLabel,
   getPlaceCategoryListIconImageUrl,
-} from '../../utils/placeCategory'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+} from '../../../../utils/placeCategory'
+import * as S from '../pages/PlaceManagePage.styles'
 
 const SORT_OPTIONS = [
   { value: 'LATEST', label: '최신순' },

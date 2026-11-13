@@ -1,5 +1,5 @@
 import customAxios from './customAxios'
-import { getAdminPlaces } from './adminPlaceApi'
+import { getAdminPlaces } from '../features/admin/places/api/adminPlaceApi'
 
 export interface AdminTarget { id: number; name: string; description?: string }
 export interface AdminTargetPage { items: AdminTarget[]; totalCount: number; totalPages: number; hasNext: boolean }

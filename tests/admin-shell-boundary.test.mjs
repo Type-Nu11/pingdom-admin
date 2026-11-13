@@ -10,7 +10,7 @@ const root = fileURLToPath(new URL('../', import.meta.url))
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/admin-shell-css.json', import.meta.url), 'utf8'))
 const shellPath = 'src/app/layouts/AdminShell.styles.ts'
 const iconPath = 'src/shared/ui/MaterialIcon.ts'
-const placePath = 'src/pages/place/PlaceManagePage.styles.ts'
+const placePath = 'src/features/admin/places/pages/PlaceManagePage.styles.ts'
 const shellNames = Object.keys(baseline.initializers).filter(name => name !== 'MaterialIcon')
 const reserved = new Set(Object.keys(baseline.initializers))
 function parse(path) {

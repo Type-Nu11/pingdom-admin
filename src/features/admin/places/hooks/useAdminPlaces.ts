@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   deleteAdminPlace,
   getAdminPlace,
@@ -12,11 +12,11 @@ import {
   updateAdminPlaceOperatingStatus,
   updateAdminPlaceTouristInfo,
 } from '../api/adminPlaceApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
-import { logDebugError } from '../utils/debugLogger'
-import { getPlaceCategoryLabel } from '../utils/placeCategory'
-import { useAuth } from './useAuth'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { getPlaceCategoryLabel } from '../../../../utils/placeCategory'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminPlaceCategory,
   AdminPlaceBasicInformationUpdateRequest,

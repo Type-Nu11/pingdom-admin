@@ -1,5 +1,5 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AccessibleTabList } from '../../components/common/AccessibleTabList'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { AccessibleTabList } from '../../../../components/common/AccessibleTabList'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type {
   AdminPlaceBasicInformationUpdateRequest,
@@ -7,9 +7,9 @@ import type {
   AdminPlaceDetail,
   AdminPlaceGeocodingUpdateRequest,
   AdminPlaceStandardCategory,
-} from '../../types/adminPlace.types'
-import { AdminSelect } from '../common/AdminStatusSelect'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+} from '../types/adminPlace.types'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import * as S from '../pages/PlaceManagePage.styles'
 
 export type PlaceDataCorrectionAction =
   | 'basic-information'

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { AdminNotificationContext } from '../../src/app/providers/AdminNotificationContext'
-import Page from '../../src/pages/place/PlaceManagePage'
+import Page from '../../src/features/admin/places/pages/PlaceManagePage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 

@@ -46,7 +46,7 @@ test('five residual types match their distinct query/request/response contracts'
   assert.ok(members('src/types/adminNotification.types.ts', 'AdminNotificationDeliveryListRequest').includes('userId'))
   assert.deepEqual(members('src/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerReviewRequest'), ['reason'])
   assert.ok(members('src/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerPlaceUpdateRequest').includes('placeIds'))
-  assert.ok(!members('src/types/adminPlace.types.ts', 'AdminPlaceDetail').includes('kakaoPlaceId'))
+  assert.ok(!members('src/features/admin/places/types/adminPlace.types.ts', 'AdminPlaceDetail').includes('kakaoPlaceId'))
   assert.ok(members('src/types/adminMerchantPlaceApplication.types.ts', 'AdminMerchantPlaceApplication').includes('businessRegistrationNumber'))
   assert.match(readFileSync('src/types/adminS3Orphan.types.ts', 'utf8'), /S3OrphanReport extends Omit<S3OrphanReportStatus, 'completedAt'>/)
 })

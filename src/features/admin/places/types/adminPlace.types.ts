@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type AdminPlaceListSortParam = 'LATEST' | 'OLDEST'
 export type AdminPlaceCategory =

@@ -4,7 +4,7 @@ import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAdminPlace } from '../../api/adminPlaceApi'
+import { getAdminPlace } from '../../features/admin/places/api/adminPlaceApi'
 import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
 import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
 import { AdminPagination } from '../../components/common/AdminPagination'
@@ -13,12 +13,12 @@ import {
   type AdminPlaceDuplicateReviewAction,
 } from '../../hooks/useAdminPlaceDuplicateCandidates'
 import { useAuth } from '../../hooks/useAuth'
-import type { AdminPlaceDetail } from '../../types/adminPlace.types'
+import type { AdminPlaceDetail } from '../../features/admin/places/types/adminPlace.types'
 import type {
   AdminPlaceDuplicateCandidateStatus,
   AdminPlaceDuplicateReviewCandidate,
 } from '../../types/adminPlaceMerge.types'
-import * as Shell from '../place/PlaceManagePage.styles'
+import * as Shell from '../../features/admin/places/pages/PlaceManagePage.styles'
 import * as S from '../placeMerge/PlaceMergePage.styles'
 
 const STATUS_OPTIONS: Array<{

@@ -1,9 +1,9 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AccessibleTabList } from '../../components/common/AccessibleTabList'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { AccessibleTabList } from '../../../../components/common/AccessibleTabList'
 import { useEffect, useRef, useState } from 'react'
-import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
-import { AdminSelect } from '../common/AdminStatusSelect'
-import type { AdminPlaceNoticeAction } from '../../hooks/useAdminPlaceOperatingNotices'
+import { AdminDateTimePicker } from '../../../../components/common/AdminDateTimePicker'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import type { AdminPlaceNoticeAction } from '../hooks/useAdminPlaceOperatingNotices'
 import type {
   AdminPlaceDetail,
   AdminPlaceOperatingNoticeCancelRequest,
@@ -13,8 +13,8 @@ import type {
   AdminPlaceOperatingNoticeSeverity,
   AdminPlaceOperatingNoticeType,
   AdminPlaceOperatingNoticeUpdateRequest,
-} from '../../types/adminPlace.types'
-import * as S from '../../pages/place/PlaceManagePage.styles'
+} from '../types/adminPlace.types'
+import * as S from '../pages/PlaceManagePage.styles'
 
 const NOTICE_ACTIONS: Array<{
   value: AdminPlaceNoticeAction

@@ -16,7 +16,7 @@ import * as Nav from '../../src/components/navigation/AdminNavigationMenu.styles
 import * as MerchantNav from '../../src/components/navigation/MerchantNavigationMenu.styles'
 import * as Verification from '../../src/pages/placeVerification/PlaceVerificationPage.styles'
 import * as Utility from '../../src/pages/adminUtility/AdminUtilityPage.styles'
-import * as Place from '../../src/pages/place/PlaceManagePage.styles'
+import * as Place from '../../src/features/admin/places/pages/PlaceManagePage.styles'
 import * as Merge from '../../src/pages/placeMerge/PlaceMergePage.styles'
 import * as Review from '../../src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.styles'
 import * as Campaign from '../../src/components/merchant/MerchantWorkspace.styles'

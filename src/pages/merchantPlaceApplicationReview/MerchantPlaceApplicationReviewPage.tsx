@@ -1,7 +1,7 @@
 import { AdminLayout } from '../../app/layouts/AdminLayout'
 import { MaterialIcon } from '../../shared/ui/MaterialIcon'
 import { AccessibleTabList } from '../../components/common/AccessibleTabList'
-import { PlaceDetailLink } from '../../components/place/PlaceDetailLink'
+import { PlaceDetailLink } from '../../features/admin/places/components/PlaceDetailLink'
 import { AttachmentPreview } from '../../components/common/AttachmentPreview'
 import { AppDialog } from '../../components/common/AppDialog'
 import { FeedbackMessage } from '../../components/common/FeedbackMessage'

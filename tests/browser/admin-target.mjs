@@ -65,6 +65,33 @@ try{
     await page.waitForFunction(()=>document.activeElement?.tagName==='BUTTON'&&document.activeElement.textContent==='관리자 계정명 검색')
     assert.equal(await page.getByRole('button',{name:'관리자 계정명 검색',exact:true}).evaluate(el => el === document.activeElement),true)
     assert.ok(await page.evaluate(()=>window.qaRequests.some(r=>r.url==='/admin/users/8/roles')))
+    // Confirmations remain read-only here; mutation payloads use the synthetic
+    // hook tests. Opening/cancelling or rejecting a blank reason must not write.
+    for (const action of ['부여', '회수']) {
+      if (action === '회수') {
+        await page.evaluate(async () => {
+          const { default: client } = await import('/src/api/customAxios.ts')
+          const original = client.defaults.adapter
+          client.defaults.adapter = async config => {
+            if (config.method !== 'get' || !config.url.endsWith('/roles')) return original(config)
+            window.qaRequests.push({ url: config.url, params: config.params, method: config.method })
+            return { config, status: 200, statusText: 'OK', headers: {}, data: [{ id: 1, adminUserId: 8, role: 'ANALYST', status: 'ACTIVE', assignedByUserId: 99, assignedAt: '2026-10-01T00:00:00Z', revokedAt: null, permissions: ['DASHBOARD_READ'] }] }
+          }
+        })
+        await roleLookup.click()
+        await page.getByRole('button', { name: '역할 회수', exact: true }).waitFor()
+      }
+      const callsBeforeDialog = await page.evaluate(() => window.qaRequests.length)
+      await page.getByRole('button', { name: `역할 ${action}`, exact: true }).first().click()
+      const confirmation = page.getByRole('dialog', { name: `관리자 역할 ${action}`, exact: true })
+      await confirmation.waitFor()
+      await confirmation.getByRole('button', { name: '변경 확정', exact: true }).click()
+      await confirmation.getByRole('alert').filter({ hasText: '권한 변경 사유를 입력해주세요.' }).waitFor()
+      await confirmation.getByRole('textbox', { name: /변경 사유/ }).fill('합성 사유 — 실제 변경하지 않음')
+      assert.equal(await page.evaluate(() => window.qaRequests.length), callsBeforeDialog)
+      await confirmation.getByRole('button', { name: '취소', exact: true }).click()
+      await confirmation.waitFor({ state: 'hidden' })
+    }
     await page.goto(`${base}/reservations/review`)
     await page.getByRole('button',{name:'장소 검색',exact:true}).click()
     await dialog.getByRole('button',{name:'합성 장소 1 · #1 · 동명 구분용 주소',exact:true}).click()

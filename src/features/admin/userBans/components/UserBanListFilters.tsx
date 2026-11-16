@@ -1,10 +1,10 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import type { FormEvent } from 'react'
-import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
-import type { AdminBanType, AdminBannedUserListSortBy, AdminSortDirection } from '../../types/adminUserBan.types'
+import { AdminDateTimePicker } from '../../../../components/common/AdminDateTimePicker'
+import type { AdminBanType, AdminBannedUserListSortBy, AdminSortDirection } from '../types/adminUserBan.types'
 import { AdminFilterMenu } from './UserBanFilterMenu'
-import { BAN_TYPE_FILTER_OPTIONS, BAN_LIST_SORT_OPTIONS, SORT_DIRECTION_OPTIONS } from './userBan.options'
-import * as U from '../adminUtility/AdminUtilityPage.styles'
+import { BAN_TYPE_FILTER_OPTIONS, BAN_LIST_SORT_OPTIONS, SORT_DIRECTION_OPTIONS } from '../model/userBan.options'
+import * as U from '../../../../pages/adminUtility/AdminUtilityPage.styles'
 
 interface UserBanListFiltersProps {
   banSearchQuery: string

@@ -12,7 +12,7 @@ const {AuthContext}=await server.ssrLoadModule('/src/app/providers/AuthContext.t
 const {AdminTargetSearch}=await server.ssrLoadModule('/src/components/common/AdminTargetSearch.tsx')
 const {AdminPlacePicker}=await server.ssrLoadModule('/src/components/common/AdminPlacePicker.tsx')
 const {useAdminPlaceVerification}=await server.ssrLoadModule('/src/hooks/useAdminPlaceVerification.ts')
-const {useAdminUserRoles}=await server.ssrLoadModule('/src/hooks/useAdminUserRoles.ts')
+const {useAdminUserRoles}=await server.ssrLoadModule('/src/features/admin/userRoles/hooks/useAdminUserRoles.ts')
 const {default:client}=await server.ssrLoadModule('/src/api/customAxios.ts')
 const {searchAdminPlaces,searchAdminRoleTargets}=await server.ssrLoadModule('/src/api/adminTargetSearchApi.ts')
 let root,requests,selected,closed,roles

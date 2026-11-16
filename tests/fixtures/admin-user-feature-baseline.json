@@ -1,0 +1,368 @@
+{
+  "baseCommit": "af6a7f46bf6ccaef5bc38df31cbb2f9e5f150124",
+  "moves": {
+    "src/pages/userBan/UserBanPage.tsx": "src/features/admin/userBans/pages/UserBanPage.tsx",
+    "src/pages/userBan/UserBanListFilters.tsx": "src/features/admin/userBans/components/UserBanListFilters.tsx",
+    "src/pages/userBan/UserSanctionHistory.tsx": "src/features/admin/userBans/components/UserSanctionHistory.tsx",
+    "src/pages/userBan/UserBanFilterMenu.tsx": "src/features/admin/userBans/components/UserBanFilterMenu.tsx",
+    "src/pages/userBan/userBan.format.ts": "src/features/admin/userBans/model/userBan.format.ts",
+    "src/pages/userBan/userBan.options.ts": "src/features/admin/userBans/model/userBan.options.ts",
+    "src/hooks/useAdminBannedUsers.ts": "src/features/admin/userBans/hooks/useAdminBannedUsers.ts",
+    "src/api/adminUserBanApi.ts": "src/features/admin/userBans/api/adminUserBanApi.ts",
+    "src/types/adminUserBan.types.ts": "src/features/admin/userBans/types/adminUserBan.types.ts",
+    "src/pages/userRole/UserRolePage.tsx": "src/features/admin/userRoles/pages/UserRolePage.tsx",
+    "src/hooks/useAdminUserRoles.ts": "src/features/admin/userRoles/hooks/useAdminUserRoles.ts",
+    "src/api/adminUserRoleApi.ts": "src/features/admin/userRoles/api/adminUserRoleApi.ts",
+    "src/types/adminUserRole.types.ts": "src/features/admin/userRoles/types/adminUserRole.types.ts"
+  },
+  "files": {
+    "src/features/admin/userBans/api/adminUserBanApi.ts": {
+      "nonImportHash": "5e2f0ed5056b6ecd62e0f8dbc6185846c00b96ca33fbc74ae793e095419fd20a",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminBannedUserDetail, AdminBannedUserListRequest, AdminBannedUserListResponse, AdminUserBanRequest, AdminUserBanResponse, AdminUserBanReleaseRequest, AdminUserBanReleaseResponse, AdminUserSanctionHistoryRequest, AdminUserSanctionHistoryResponse, AdminUserSanctionStatus, }",
+          "target": "src/features/admin/userBans/types/adminUserBan.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/userRoles/api/adminUserRoleApi.ts": {
+      "nonImportHash": "a58e436812c5aa68dd8ec37692af4dc8040504ee8d113b5498bcdf62df29781d",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminRole, AdminRoleAssignment }",
+          "target": "src/features/admin/userRoles/types/adminUserRole.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/hooks/useAdminBannedUsers.ts": {
+      "nonImportHash": "43d18a3c82bcea8b763762f1811aeeaedf0f41cf2411e10157f8f0605f279dfb",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "{ banAdminUser, getAdminBannedUser, getAdminBannedUsers, getAdminUserSanctionHistories, getAdminUserSanctionStatus, releaseAdminUserBan, }",
+          "target": "src/features/admin/userBans/api/adminUserBanApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { AdminBannedUserDetail, AdminBannedUserDetailErrorResponse, AdminBannedUserCounts, AdminBannedUserItem, AdminBannedUserListErrorResponse, AdminBannedUserListRequest, AdminUserBanErrorResponse, AdminUserBanRequest, AdminUserBanReleaseErrorResponse, AdminUserBanReleaseRequest, AdminUserSanctionHistoryItem, AdminUserSanctionHistoryRequest, AdminUserSanctionStatus, }",
+          "target": "src/features/admin/userBans/types/adminUserBan.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/userRoles/hooks/useAdminUserRoles.ts": {
+      "nonImportHash": "7e3cd6cac4002f073b6d9fced8cbd518ff2efe257f730b964f41ea56789e78ab",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "* as api",
+          "target": "src/features/admin/userRoles/api/adminUserRoleApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminRole, AdminRoleAssignment, AdminUserRoleErrorResponse }",
+          "target": "src/features/admin/userRoles/types/adminUserRole.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/components/UserBanFilterMenu.tsx": {
+      "nonImportHash": "6a6ac7a0fcfabfc68887bc60784545b1610780a66a892ee41b553d480785822f",
+      "imports": [
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "* as U",
+          "target": "src/pages/adminUtility/AdminUtilityPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/components/UserBanListFilters.tsx": {
+      "nonImportHash": "c82c13791f9045b32fd84bdbb0555c6db096f88d5ef49acd1cbf00b6758cd142",
+      "imports": [
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "type { FormEvent }",
+          "target": "react"
+        },
+        {
+          "clause": "{ AdminDateTimePicker }",
+          "target": "src/components/common/AdminDateTimePicker.tsx"
+        },
+        {
+          "clause": "type { AdminBanType, AdminBannedUserListSortBy, AdminSortDirection }",
+          "target": "src/features/admin/userBans/types/adminUserBan.types.ts"
+        },
+        {
+          "clause": "{ AdminFilterMenu }",
+          "target": "src/features/admin/userBans/components/UserBanFilterMenu.tsx"
+        },
+        {
+          "clause": "{ BAN_TYPE_FILTER_OPTIONS, BAN_LIST_SORT_OPTIONS, SORT_DIRECTION_OPTIONS }",
+          "target": "src/features/admin/userBans/model/userBan.options.ts"
+        },
+        {
+          "clause": "* as U",
+          "target": "src/pages/adminUtility/AdminUtilityPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/pages/UserBanPage.tsx": {
+      "nonImportHash": "82594b18cbf8297d270f8d1dc600dcd0993d5d190e442dc79e444101819e32d0",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ UserBanListFilters }",
+          "target": "src/features/admin/userBans/components/UserBanListFilters.tsx"
+        },
+        {
+          "clause": "{ AdminFilterMenu }",
+          "target": "src/features/admin/userBans/components/UserBanFilterMenu.tsx"
+        },
+        {
+          "clause": "{ UserSanctionHistory }",
+          "target": "src/features/admin/userBans/components/UserSanctionHistory.tsx"
+        },
+        {
+          "clause": "{ formatBanType, getBanTypeTone, getBanStatusTone, formatBanDate, formatBanExpiresAt, formatOptionalText, formatRole, formatCountry, formatBanReason, formatCountWithUnit }",
+          "target": "src/features/admin/userBans/model/userBan.format.ts"
+        },
+        {
+          "clause": "{ BAN_TYPE_FILTER_OPTIONS, SANCTION_ACTION_FILTER_OPTIONS }",
+          "target": "src/features/admin/userBans/model/userBan.options.ts"
+        },
+        {
+          "clause": "{ AccessibleTabList }",
+          "target": "src/components/common/AccessibleTabList.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useState, type FormEvent }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ AdminDateTimePicker }",
+          "target": "src/components/common/AdminDateTimePicker.tsx"
+        },
+        {
+          "clause": "{ useAdminBannedUsers }",
+          "target": "src/features/admin/userBans/hooks/useAdminBannedUsers.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { AdminBanType, AdminBannedUserListRequest, AdminBannedUserListSortBy, AdminUserBanRequest, AdminSortDirection, AdminUserSanctionAction, }",
+          "target": "src/features/admin/userBans/types/adminUserBan.types.ts"
+        },
+        {
+          "clause": "* as U",
+          "target": "src/pages/adminUtility/AdminUtilityPage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/components/UserSanctionHistory.tsx": {
+      "nonImportHash": "cacad9b4c53d1066bf8ddd2c3705308c11ab4c38717dfd3e2419016c2b2c05d2",
+      "imports": [
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "type { AdminUserSanctionHistoryItem }",
+          "target": "src/features/admin/userBans/types/adminUserBan.types.ts"
+        },
+        {
+          "clause": "{ formatBanType, formatBanReason, formatSanctionAction, getSanctionActionTone, formatSanctionHistoryPeriod, formatSanctionHistorySummary }",
+          "target": "src/features/admin/userBans/model/userBan.format.ts"
+        },
+        {
+          "clause": "* as U",
+          "target": "src/pages/adminUtility/AdminUtilityPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/model/userBan.format.ts": {
+      "nonImportHash": "f55b7342c1b814dab12ef0f281239ca2a095e618b44c052708ce256a27e7ca09",
+      "imports": [
+        {
+          "clause": "type { AdminUserSanctionAction, AdminUserSanctionHistoryItem }",
+          "target": "src/features/admin/userBans/types/adminUserBan.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/model/userBan.options.ts": {
+      "nonImportHash": "3c725ae386c6f59c313ef385e9fbb08b1363433b081d14429d05daa7a4a1bf7e",
+      "imports": []
+    },
+    "src/features/admin/userRoles/pages/UserRolePage.tsx": {
+      "nonImportHash": "6d4e6c2ed9b11687e33fe286644fe157f3ffc6958f0dc01b9951fe51a38084e5",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AdminTargetSearch }",
+          "target": "src/components/common/AdminTargetSearch.tsx"
+        },
+        {
+          "clause": "{ searchAdminRoleTargets }",
+          "target": "src/api/adminTargetSearchApi.ts"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useEffect, useRef, useState, type FormEvent }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ useAdminUserRoles }",
+          "target": "src/features/admin/userRoles/hooks/useAdminUserRoles.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { AdminRole }",
+          "target": "src/features/admin/userRoles/types/adminUserRole.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/userBans/types/adminUserBan.types.ts": {
+      "nonImportHash": "7e32226e03feb1d5440055d8134e1391cc4c051dd0bf18e439054481fd187dca",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/userRoles/types/adminUserRole.types.ts": {
+      "nonImportHash": "7d46be224f1e8a128e4b7cea9cbd528b6fca1dcce199c7737bfd7449c0d7a2eb",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    }
+  }
+}

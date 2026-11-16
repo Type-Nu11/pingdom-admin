@@ -1,17 +1,17 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
-import { searchAdminRoleTargets } from '../../api/adminTargetSearchApi'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { AdminTargetSearch } from '../../../../components/common/AdminTargetSearch'
+import { searchAdminRoleTargets } from '../../../../api/adminTargetSearchApi'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
-import { useAdminUserRoles } from "../../hooks/useAdminUserRoles";
-import { useAuth } from "../../hooks/useAuth";
-import type { AdminRole } from "../../types/adminUserRole.types";
-import * as Shell from "../../app/layouts/AdminShell.styles";
-import * as Shared from "../placeMerge/PlaceMergePage.styles";
-import * as S from "../placeVerification/PlaceVerificationPage.styles";
+import { AdminNotificationButton } from "../../../../components/adminNotification/AdminNotificationButton";
+import { useAdminUserRoles } from "../hooks/useAdminUserRoles";
+import { useAuth } from "../../../../hooks/useAuth";
+import type { AdminRole } from "../types/adminUserRole.types";
+import * as Shell from "../../../../app/layouts/AdminShell.styles";
+import * as Shared from "../../../../pages/placeMerge/PlaceMergePage.styles";
+import * as S from "../../../../pages/placeVerification/PlaceVerificationPage.styles";
 
 const ROLES: Record<AdminRole, string> = {
   SUPER_ADMIN: "최고 관리자",

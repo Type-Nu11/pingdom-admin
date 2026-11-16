@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type AdminBanType = 'PERMANENT' | 'TEMPORARY'
 export type AdminUserSanctionAction = 'APPLIED' | 'RELEASED' | 'EXPIRED'

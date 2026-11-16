@@ -33,7 +33,7 @@ const PlaceDuplicateCandidatePage = lazy(
 const PlaceVerificationPage = lazy(
   () => import('../../pages/placeVerification/PlaceVerificationPage'),
 )
-const UserBanPage = lazy(() => import('../../pages/userBan/UserBanPage'))
+const UserBanPage = lazy(() => import('../../features/admin/userBans/pages/UserBanPage'))
 const RecommendationMetricsPage = lazy(
   () => import('../../pages/recommendationMetrics/RecommendationMetricsPage'),
 )
@@ -49,7 +49,7 @@ const ScoutPage = lazy(() => import('../../pages/scout/ScoutPage'))
 const VerifiedBoostProductPage = lazy(
   () => import('../../pages/verifiedBoostProduct/VerifiedBoostProductPage'),
 )
-const UserRolePage = lazy(() => import('../../pages/userRole/UserRolePage'))
+const UserRolePage = lazy(() => import('../../features/admin/userRoles/pages/UserRolePage'))
 const MerchantPlaceApplicationReviewPage = lazy(
   () => import('../../pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'),
 )

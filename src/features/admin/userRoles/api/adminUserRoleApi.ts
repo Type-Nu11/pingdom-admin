@@ -1,4 +1,4 @@
-import customAxios from './customAxios'
+import customAxios from '../../../../api/customAxios'
 import type { AdminRole, AdminRoleAssignment } from '../types/adminUserRole.types'
 
 function path(userId: number) { return `/admin/users/${userId}/roles` }

@@ -41,13 +41,13 @@ test('common merchant modules and consumers never depend on external page-owned 
 })
 
 test('UserBan state, selection, request building and mutation handlers remain unchanged', () => {
-  const source = parse('src/pages/userBan/UserBanPage.tsx')
+  const source = parse('src/features/admin/userBans/pages/UserBanPage.tsx')
   const parent = source.statements.find(statement => statement.name?.text === 'UserBanPage')
   assert.equal(hash(parent.body.statements.filter(node => !ts.isReturnStatement(node)).map(node => canonical(node, source)).join('\n')), banBaseline.parentStateAndHandlers)
 })
 
 test('display format extraction preserves missing/invalid/unknown-value behavior', () => {
-  const source = parse('src/pages/userBan/userBan.format.ts')
+  const source = parse('src/features/admin/userBans/model/userBan.format.ts')
   for (const [name, expected] of Object.entries(banBaseline.formatters)) {
     const node = source.statements.find(statement => statement.name?.text === name)
     assert.ok(node, name)
@@ -57,7 +57,7 @@ test('display format extraction preserves missing/invalid/unknown-value behavior
 
 test('extracted list/history views cannot issue API requests or sanctions', () => {
   for (const name of ['UserBanListFilters', 'UserSanctionHistory', 'UserBanFilterMenu']) {
-    const source = parse(`src/pages/userBan/${name}.tsx`)
+    const source = parse(`src/features/admin/userBans/components/${name}.tsx`)
     for (const node of source.statements.filter(ts.isImportDeclaration)) assert.ok(!/\/api\/|useAdminBannedUsers|useAuth/.test(node.moduleSpecifier.text))
     assert.ok(!/fetch\(|\.post\(|\.delete\(/.test(source.text))
   }

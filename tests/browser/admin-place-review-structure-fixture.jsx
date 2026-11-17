@@ -17,11 +17,12 @@ client.defaults.adapter = async config => {
   }
   const { page, limit, status = 'SUBMITTED' } = config.params
   const item = {
-    id: (corrections ? 2900 : 1900) + page, reporterUserId: 901, requesterUserId: 902,
-    reportId: 1901, placeId: 70001, reportType: 'OPERATING_HOURS',
+    id: (corrections ? 2900 : 1900) + page,
+    ...(corrections ? { reportId: 1901, requesterUserId: 902, reportStatus: 'ACCEPTED' } : { reporterUserId: 901 }),
+    placeId: 70001, reportType: 'OPERATING_HOURS',
     description: '합성 방문자 근거 — 실제 운영 데이터가 아닙니다.', evidenceUrl: null,
     waitTimeMinutes: null, languageCode: null, couponUsageStatus: null, crowdLevel: null,
-    reportStatus: 'ACCEPTED', status: status || 'SUBMITTED', reviewerAdminUserId: null,
+    status: status || 'SUBMITTED', reviewerAdminUserId: null,
     reviewNote: null, createdAt: '2026-01-01T00:00:00Z', reviewedAt: null, updatedAt: '2026-01-01T00:00:00Z',
   }
   const data = { [corrections ? 'corrections' : 'reports']: [item], page, limit, totalElements: 21, totalPages: 3, hasNext: page < 3 }

@@ -36,6 +36,8 @@ try {
       await dialog.getByRole('button', { name: '취소', exact: true }).click()
       await dialog.waitFor({ state: 'hidden' })
     }
+    await record(1901).waitFor()
+    assert.match(await record(1901).textContent(), /사용자 #901/)
     await record(1901).focus(); await page.keyboard.press('Enter')
     await page.getByRole('button', { name: '승인', exact: true }).waitFor()
     assert.equal((await latest('reports')).params.limit, 10)
@@ -59,6 +61,7 @@ try {
     assert.equal(await tab.getAttribute('aria-selected'), 'true', 'arrows move focus without triggering the manual-activation tab')
     await page.keyboard.press('Enter')
     await record(2901).waitFor()
+    assert.match(await record(2901).textContent(), /사용자 #902/, 'corrections must use requesterUserId, not the original reporter')
     assert.equal(new URL(page.url()).searchParams.get('tab'), 'corrections')
     await record(2901).click()
     assert.equal((await latest('corrections')).params.status, 'SUBMITTED')

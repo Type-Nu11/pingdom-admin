@@ -342,7 +342,7 @@
         },
         {
           "clause": "* as S",
-          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
         },
         {
           "clause": "* as ReviewUI",
@@ -423,7 +423,7 @@
         },
         {
           "clause": "* as S",
-          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
         }
       ]
     },
@@ -440,7 +440,7 @@
         },
         {
           "clause": "* as Form",
-          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
         },
         {
           "clause": "{ PageContent, PageStack }",
@@ -541,7 +541,7 @@
         },
         {
           "clause": "* as Form",
-          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
         },
         {
           "clause": "* as S",

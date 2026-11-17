@@ -8,7 +8,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { formatLocalDateTime as date } from "../../utils/displayFormat";
 import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
-import * as S from "../placeVerification/PlaceVerificationPage.styles";
+import * as S from "../../features/admin/placeVerification/pages/PlaceVerificationPage.styles";
 function S3OrphanPage() {
 
   const { user } = useAuth();

@@ -6,7 +6,7 @@ import { AdminPagination } from './AdminPagination'
 import type { AdminTarget, AdminTargetPage } from '../../api/adminTargetSearchApi'
 import { shouldClearAuth } from '../../api/authError'
 import { useAuth } from '../../hooks/useAuth'
-import * as Form from '../../pages/placeVerification/PlaceVerificationPage.styles'
+import * as Form from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
 
 const SearchControls = styled.div`display: flex; gap: 8px; min-width: 0; > input { min-width: 0; flex: 1; }`

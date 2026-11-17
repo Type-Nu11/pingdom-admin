@@ -31,7 +31,7 @@ const PlaceDuplicateCandidatePage = lazy(
   () => import('../../pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage'),
 )
 const PlaceVerificationPage = lazy(
-  () => import('../../pages/placeVerification/PlaceVerificationPage'),
+  () => import('../../features/admin/placeVerification/pages/PlaceVerificationPage'),
 )
 const UserBanPage = lazy(() => import('../../features/admin/userBans/pages/UserBanPage'))
 const RecommendationMetricsPage = lazy(
@@ -43,7 +43,7 @@ const AdminReservationReviewPage = lazy(
 )
 const TrustScorePage = lazy(() => import('../../pages/trustScore/TrustScorePage'))
 const VisitorVerificationPage = lazy(
-  () => import('../../pages/visitorVerification/VisitorVerificationPage'),
+  () => import('../../features/admin/visitorVerification/pages/VisitorVerificationPage'),
 )
 const ScoutPage = lazy(() => import('../../pages/scout/ScoutPage'))
 const VerifiedBoostProductPage = lazy(
@@ -54,7 +54,7 @@ const MerchantPlaceApplicationReviewPage = lazy(
   () => import('../../features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage'),
 )
 const PlaceReviewDeletionPage = lazy(
-  () => import('../../pages/placeReviewDeletion/PlaceReviewDeletionPage'),
+  () => import('../../features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage'),
 )
 const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
 const NotificationOperationsPage = lazy(

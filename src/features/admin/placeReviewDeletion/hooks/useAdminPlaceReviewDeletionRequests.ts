@@ -1,21 +1,21 @@
-import { useListQueryState, listQueryKey } from './useListQueryState'
+import { useListQueryState, listQueryKey } from '../../../../hooks/useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   getAdminPlaceReviewDeletionRequest,
   getAdminPlaceReviewDeletionRequests,
   reviewAdminPlaceReviewDeletionRequest,
 } from '../api/adminPlaceReviewDeletionApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceReviewDeletionErrorResponse,
   AdminPlaceReviewDeletionRequest,
   AdminPlaceReviewDeletionRequestReviewRequest,
   PlaceReviewDeletionRequestStatus,
 } from '../types/adminPlaceReviewDeletion.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 const LIMIT = 10
 

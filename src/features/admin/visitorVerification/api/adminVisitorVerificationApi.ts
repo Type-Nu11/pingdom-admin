@@ -1,4 +1,4 @@
-import customAxios from './customAxios'
+import customAxios from '../../../../api/customAxios'
 import type { VisitorVerificationCorrection, VisitorVerificationCorrectionPage, VisitorVerificationReport, VisitorVerificationReportPage, VisitorVerificationStatus } from '../types/adminVisitorVerification.types'
 
 const PATH = '/admin/visitor-verification-reports'

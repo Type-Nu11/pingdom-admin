@@ -11,7 +11,7 @@ import { useAuth } from "../../../../hooks/useAuth";
 import type { AdminRole } from "../types/adminUserRole.types";
 import * as Shell from "../../../../app/layouts/AdminShell.styles";
 import * as Shared from "../../../../pages/placeMerge/PlaceMergePage.styles";
-import * as S from "../../../../pages/placeVerification/PlaceVerificationPage.styles";
+import * as S from "../../placeVerification/pages/PlaceVerificationPage.styles";
 
 const ROLES: Record<AdminRole, string> = {
   SUPER_ADMIN: "최고 관리자",

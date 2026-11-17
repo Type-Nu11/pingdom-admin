@@ -17,7 +17,7 @@ import type {
 } from "../../types/adminScout.types";
 import * as Shell from "../../app/layouts/AdminShell.styles";
 import * as Shared from "../placeMerge/PlaceMergePage.styles";
-import * as S from "../placeVerification/PlaceVerificationPage.styles";
+import * as S from "../../features/admin/placeVerification/pages/PlaceVerificationPage.styles";
 
 type Tab = "profiles" | "reports";
 type DialogRequest =

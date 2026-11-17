@@ -18,8 +18,8 @@ const vite = await createServer({ cacheDir, server: { middlewareMode: true, ws: 
   appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await vite.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { default: client } = await vite.ssrLoadModule('/src/api/customAxios.ts')
-const { useAdminPlaceInformationReports } = await vite.ssrLoadModule('/src/hooks/useAdminPlaceInformationReports.ts')
-const { PlaceInformationReportPanel } = await vite.ssrLoadModule('/src/components/placeVerification/PlaceInformationReportPanel.tsx')
+const { useAdminPlaceInformationReports } = await vite.ssrLoadModule('/src/features/admin/placeVerification/hooks/useAdminPlaceInformationReports.ts')
+const { PlaceInformationReportPanel } = await vite.ssrLoadModule('/src/features/admin/placeVerification/components/PlaceInformationReportPanel.tsx')
 const { clearStoredAuth } = await vite.ssrLoadModule('/src/utils/authStorage.ts')
 const path = '/admin/place-information-reports'
 const response = (config, data) => ({ config, data: structuredClone(data), status: 200, statusText: 'OK', headers: {} })

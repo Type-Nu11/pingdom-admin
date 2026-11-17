@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { typo, adminColors, radius } from '../../styles/theme'
+import { typo, adminColors, radius } from '../../../../styles/theme'
 
 const neutral = adminColors
 

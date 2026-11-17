@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   cancelAdminPlaceInformationReverificationRequest,
   completeAdminPlaceInformationReverificationRequest,
@@ -10,8 +10,8 @@ import {
   remindAdminPlaceInformationReverificationRequest,
   reviewAdminPlaceInformationEvidence,
 } from '../api/adminPlaceVerificationApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceVerificationErrorResponse,
   PlaceInformationEvidence,
@@ -20,8 +20,8 @@ import type {
   PlaceInformationReverificationCreateRequest,
   PlaceInformationReverificationRequest,
 } from '../types/adminPlaceVerification.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 export type PlaceVerificationAction =
   | 'create-evidence'

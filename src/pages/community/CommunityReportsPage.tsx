@@ -12,7 +12,7 @@ import { ListDetailWorkspace } from '../../components/common/ListDetailWorkspace
 import { ListPane } from '../../components/common/ListPane'
 import { CommunityShell, CommunityContentView, CommunityPagination, QueryMessage } from './CommunityShared'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as Form from '../placeVerification/PlaceVerificationPage.styles'
+import * as Form from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 import * as S from './Community.styles'
 
 export default function CommunityReportsPage() {

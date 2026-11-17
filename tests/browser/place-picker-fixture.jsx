@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { AdminNotificationContext } from '../../src/app/providers/AdminNotificationContext'
 import EventPage from '../../src/pages/placeEvent/PlaceEventPage'
-import VerificationPage from '../../src/pages/placeVerification/PlaceVerificationPage'
+import VerificationPage from '../../src/features/admin/placeVerification/pages/PlaceVerificationPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 window.qaRequests=[]

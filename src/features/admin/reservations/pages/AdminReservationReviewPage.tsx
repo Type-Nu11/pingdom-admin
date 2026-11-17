@@ -30,7 +30,7 @@ import type {
 } from '../types/adminReservation.types'
 import * as Shell from '../../../../app/layouts/AdminShell.styles'
 import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
-import * as S from '../../../../pages/placeVerification/PlaceVerificationPage.styles'
+import * as S from '../../placeVerification/pages/PlaceVerificationPage.styles'
 import * as ReviewUI from './AdminReservationReviewPage.styles'
 
 const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 'warning' | 'danger' }> = {

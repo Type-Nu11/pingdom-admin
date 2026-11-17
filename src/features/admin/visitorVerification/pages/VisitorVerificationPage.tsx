@@ -1,22 +1,22 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AccessibleTabList } from '../../components/common/AccessibleTabList'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { AccessibleTabList } from '../../../../components/common/AccessibleTabList'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
-import { AdminPagination } from "../../components/common/AdminPagination";
-import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
-import { useAdminVisitorVerifications } from "../../hooks/useAdminVisitorVerifications";
-import { useAuth } from "../../hooks/useAuth";
+import { AdminNotificationButton } from "../../../../components/adminNotification/AdminNotificationButton";
+import { AdminPagination } from "../../../../components/common/AdminPagination";
+import { AdminStatusFilter } from "../../../../components/common/AdminStatusFilter";
+import { useAdminVisitorVerifications } from "../hooks/useAdminVisitorVerifications";
+import { useAuth } from "../../../../hooks/useAuth";
 import type {
   VisitorVerificationCorrection,
   VisitorVerificationReport,
   VisitorVerificationStatus,
-} from "../../types/adminVisitorVerification.types";
-import * as Shell from "../../app/layouts/AdminShell.styles";
-import * as Shared from "../placeMerge/PlaceMergePage.styles";
-import * as S from "../placeVerification/PlaceVerificationPage.styles";
+} from "../types/adminVisitorVerification.types";
+import * as Shell from "../../../../app/layouts/AdminShell.styles";
+import * as Shared from "../../../../pages/placeMerge/PlaceMergePage.styles";
+import * as S from "../../placeVerification/pages/PlaceVerificationPage.styles";
 
 type Tab = "reports" | "corrections";
 type Selected = {

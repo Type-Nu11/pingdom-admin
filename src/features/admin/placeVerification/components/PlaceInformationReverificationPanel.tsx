@@ -1,18 +1,18 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { FeedbackMessage } from '../common/FeedbackMessage'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useState } from 'react'
-import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
-import { AdminDateTimePicker } from '../common/AdminDateTimePicker'
-import { AdminPagination } from '../common/AdminPagination'
-import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
-import type { PlaceInformationReverificationRequest } from '../../types/adminPlaceVerification.types'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
-import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
+import { useUnsavedChanges } from '../../../../hooks/useUnsavedChanges'
+import { AdminDateTimePicker } from '../../../../components/common/AdminDateTimePicker'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import type { useAdminPlaceVerification } from '../hooks/useAdminPlaceVerification'
+import type { PlaceInformationReverificationRequest } from '../types/adminPlaceVerification.types'
+import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as S from '../pages/PlaceVerificationPage.styles'
 import {
   REVERIFICATION_STATUS_LABELS,
   formatVerificationDate,
   getStatusTone,
-} from './placeVerificationLabels'
+} from '../model/placeVerificationLabels'
 
 type VerificationHook = ReturnType<typeof useAdminPlaceVerification>
 type RequestAction = 'cancel-reverification' | 'complete-reverification' | 'remind-reverification'

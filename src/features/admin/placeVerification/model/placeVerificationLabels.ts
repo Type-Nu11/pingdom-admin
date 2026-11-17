@@ -7,7 +7,7 @@ import type {
   PlaceInformationReverificationStatus,
   PlaceInformationSourceType,
   PlaceInformationVerificationStatus,
-} from '../../types/adminPlaceVerification.types'
+} from '../types/adminPlaceVerification.types'
 
 export const REPORT_STATUS_LABELS: Record<PlaceInformationReportStatus, string> = {
   SUBMITTED: '접수',

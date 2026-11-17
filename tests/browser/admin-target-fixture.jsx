@@ -6,7 +6,7 @@ import { AdminNotificationContext } from '../../src/app/providers/AdminNotificat
 import RolePage from '../../src/features/admin/userRoles/pages/UserRolePage'
 import ReservationPage from '../../src/features/admin/reservations/pages/AdminReservationReviewPage'
 import PlacePage from '../../src/features/admin/places/pages/PlaceManagePage'
-import VerificationPage from '../../src/pages/placeVerification/PlaceVerificationPage'
+import VerificationPage from '../../src/features/admin/placeVerification/pages/PlaceVerificationPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 import { AxiosError } from 'axios'

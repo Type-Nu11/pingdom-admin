@@ -5,7 +5,7 @@ import { getAdminTrustScoreAnomalies } from './adminTrustScoreApi'
 import { getAdminVisitorVerificationCorrections, getAdminVisitorVerificationReports } from '../features/admin/visitorVerification/api/adminVisitorVerificationApi'
 import { getAdminMerchantPlaceApplications } from '../features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi'
 import { getAdminPlaceReviewDeletionRequests } from '../features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi'
-import { getCommunityReports } from './adminCommunityApi'
+import { getCommunityReports } from '../features/admin/community/api/adminCommunityApi'
 
 export interface AdminPendingWorkItem {
   key: string

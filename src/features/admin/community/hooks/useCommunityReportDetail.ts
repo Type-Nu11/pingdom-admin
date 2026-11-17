@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import { getCommunityComment, getCommunityPost, getCommunityReport } from '../api/adminCommunityApi'
-import { reportPostId } from '../utils/community'
+import { reportPostId } from '../model/community'
 import { communityError, useCommunityQuery } from './useCommunityQuery'
-import { shouldClearAuth } from '../api/authError'
+import { shouldClearAuth } from '../../../../api/authError'
 import type { CommunityReportDetail } from '../types/adminCommunity.types'
 
 export function useCommunityReportDetail(reportId: number | null) {

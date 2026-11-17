@@ -21,8 +21,8 @@ import { RouteLoadingFallback } from './RouteLoadingFallback'
 import { UnsavedChangesProvider } from '../../components/common/UnsavedChangesProvider'
 
 const LoginPage = lazy(() => import('../../pages/login/LoginPage'))
-const CommunityContentPage = lazy(() => import('../../pages/community/CommunityContentPage'))
-const CommunityReportsPage = lazy(() => import('../../pages/community/CommunityReportsPage'))
+const CommunityContentPage = lazy(() => import('../../features/admin/community/pages/CommunityContentPage'))
+const CommunityReportsPage = lazy(() => import('../../features/admin/community/pages/CommunityReportsPage'))
 const DashboardPage = lazy(() => import('../../pages/dashboard/DashboardPage'))
 const NotFoundPage = lazy(() => import('../../pages/notFound/NotFoundPage'))
 const PlaceManagePage = lazy(() => import('../../features/admin/places/pages/PlaceManagePage'))

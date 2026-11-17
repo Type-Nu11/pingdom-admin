@@ -1,0 +1,681 @@
+{
+  "baseCommit": "c3cd42c4bee7c5a0cf85b0ebc4e79d985aba2002",
+  "moves": {
+    "src/pages/placeVerification/PlaceVerificationPage.styles.ts": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/placeVerification/PlaceVerificationPage.tsx": "src/features/admin/placeVerification/pages/PlaceVerificationPage.tsx",
+    "src/components/placeVerification/PlaceInformationEvidencePanel.tsx": "src/features/admin/placeVerification/components/PlaceInformationEvidencePanel.tsx",
+    "src/components/placeVerification/PlaceInformationReportPanel.tsx": "src/features/admin/placeVerification/components/PlaceInformationReportPanel.tsx",
+    "src/components/placeVerification/PlaceInformationReverificationPanel.tsx": "src/features/admin/placeVerification/components/PlaceInformationReverificationPanel.tsx",
+    "src/components/placeVerification/placeVerificationLabels.ts": "src/features/admin/placeVerification/model/placeVerificationLabels.ts",
+    "src/hooks/useAdminPlaceVerification.ts": "src/features/admin/placeVerification/hooks/useAdminPlaceVerification.ts",
+    "src/hooks/useAdminPlaceInformationReports.ts": "src/features/admin/placeVerification/hooks/useAdminPlaceInformationReports.ts",
+    "src/api/adminPlaceVerificationApi.ts": "src/features/admin/placeVerification/api/adminPlaceVerificationApi.ts",
+    "src/types/adminPlaceVerification.types.ts": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts",
+    "src/pages/placeReviewDeletion/PlaceReviewDeletionPage.styles.ts": "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.styles.ts",
+    "src/pages/placeReviewDeletion/PlaceReviewDeletionPage.tsx": "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.tsx",
+    "src/hooks/useAdminPlaceReviewDeletionRequests.ts": "src/features/admin/placeReviewDeletion/hooks/useAdminPlaceReviewDeletionRequests.ts",
+    "src/api/adminPlaceReviewDeletionApi.ts": "src/features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi.ts",
+    "src/types/adminPlaceReviewDeletion.types.ts": "src/features/admin/placeReviewDeletion/types/adminPlaceReviewDeletion.types.ts",
+    "src/pages/visitorVerification/VisitorVerificationPage.tsx": "src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx",
+    "src/hooks/useAdminVisitorVerifications.ts": "src/features/admin/visitorVerification/hooks/useAdminVisitorVerifications.ts",
+    "src/api/adminVisitorVerificationApi.ts": "src/features/admin/visitorVerification/api/adminVisitorVerificationApi.ts",
+    "src/types/adminVisitorVerification.types.ts": "src/features/admin/visitorVerification/types/adminVisitorVerification.types.ts"
+  },
+  "files": {
+    "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts": {
+      "nonImportHash": "ded1ebc1fe3d6b53efa8c09251843134ecd1435abffd51530d79884817f18e4e",
+      "imports": [
+        {
+          "clause": "styled, { css }",
+          "target": "styled-components"
+        },
+        {
+          "clause": "{ typo, adminColors, radius }",
+          "target": "src/styles/theme.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/pages/PlaceVerificationPage.tsx": {
+      "nonImportHash": "1f2abb5643981358a1537a070f301274b8e568d69fb54802d680551cb3e09d2c",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AccessibleTabList }",
+          "target": "src/components/common/AccessibleTabList.tsx"
+        },
+        {
+          "clause": "{ useEffect, useState, type FormEvent }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useUnsavedNavigation }",
+          "target": "src/hooks/useUnsavedChanges.ts"
+        },
+        {
+          "clause": "{ useNavigate, useSearchParams }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "type { AdminTarget }",
+          "target": "src/api/adminTargetSearchApi.ts"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPlacePicker }",
+          "target": "src/components/common/AdminPlacePicker.tsx"
+        },
+        {
+          "clause": "{ PlaceInformationEvidencePanel }",
+          "target": "src/features/admin/placeVerification/components/PlaceInformationEvidencePanel.tsx"
+        },
+        {
+          "clause": "{ PlaceInformationReportPanel }",
+          "target": "src/features/admin/placeVerification/components/PlaceInformationReportPanel.tsx"
+        },
+        {
+          "clause": "{ PlaceInformationReverificationPanel }",
+          "target": "src/features/admin/placeVerification/components/PlaceInformationReverificationPanel.tsx"
+        },
+        {
+          "clause": "{ useAdminPlaceInformationReports }",
+          "target": "src/features/admin/placeVerification/hooks/useAdminPlaceInformationReports.ts"
+        },
+        {
+          "clause": "{ useAdminPlaceVerification }",
+          "target": "src/features/admin/placeVerification/hooks/useAdminPlaceVerification.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/components/PlaceInformationEvidencePanel.tsx": {
+      "nonImportHash": "2b3a4d1b0bb6465af526f7cc2000afc134dfec9fd57bb29b8cb4166fb5ff8192",
+      "imports": [
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useUnsavedChanges }",
+          "target": "src/hooks/useUnsavedChanges.ts"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "type { useAdminPlaceVerification }",
+          "target": "src/features/admin/placeVerification/hooks/useAdminPlaceVerification.ts"
+        },
+        {
+          "clause": "type { PlaceInformationEvidence, PlaceInformationEvidenceType, PlaceInformationSourceType, PlaceInformationVerificationStatus, }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "{ EVIDENCE_TYPE_LABELS, SOURCE_TYPE_LABELS, VERIFICATION_STATUS_LABELS, formatVerificationDate, getStatusTone, }",
+          "target": "src/features/admin/placeVerification/model/placeVerificationLabels.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/components/PlaceInformationReportPanel.tsx": {
+      "nonImportHash": "93774f3c36a4a1618c828db035c4cb8df65964d141352213bf5b412ed0a76aa3",
+      "imports": [
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useLayoutEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ AppDialog }",
+          "target": "src/components/common/AppDialog.tsx"
+        },
+        {
+          "clause": "{ useUnsavedChanges }",
+          "target": "src/hooks/useUnsavedChanges.ts"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ AdminStatusFilter }",
+          "target": "src/components/common/AdminStatusFilter.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "type { useAdminPlaceInformationReports }",
+          "target": "src/features/admin/placeVerification/hooks/useAdminPlaceInformationReports.ts"
+        },
+        {
+          "clause": "type { PlaceInformationDispute, PlaceInformationReportReviewRequest, PlaceInformationReportStatus, }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "{ DISPUTE_STATUS_LABELS, REASON_TYPE_LABELS, REPORT_STATUS_LABELS, TARGET_TYPE_LABELS, formatVerificationDate, getStatusTone, }",
+          "target": "src/features/admin/placeVerification/model/placeVerificationLabels.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/components/PlaceInformationReverificationPanel.tsx": {
+      "nonImportHash": "9f2fa3aad1ab7fe21a58719e1a01f508ff39bfcfa4f5fa117a707a979b181dbe",
+      "imports": [
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useUnsavedChanges }",
+          "target": "src/hooks/useUnsavedChanges.ts"
+        },
+        {
+          "clause": "{ AdminDateTimePicker }",
+          "target": "src/components/common/AdminDateTimePicker.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "type { useAdminPlaceVerification }",
+          "target": "src/features/admin/placeVerification/hooks/useAdminPlaceVerification.ts"
+        },
+        {
+          "clause": "type { PlaceInformationReverificationRequest }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "{ REVERIFICATION_STATUS_LABELS, formatVerificationDate, getStatusTone, }",
+          "target": "src/features/admin/placeVerification/model/placeVerificationLabels.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/model/placeVerificationLabels.ts": {
+      "nonImportHash": "b135fa3ea2d6013bd6d9ba9857e6bc8ab3295e9c65d9e1064f57e1a07ebdf08a",
+      "imports": [
+        {
+          "clause": "type { PlaceInformationDisputeStatus, PlaceInformationEvidenceType, PlaceInformationReportReasonType, PlaceInformationReportStatus, PlaceInformationReportTargetType, PlaceInformationReverificationStatus, PlaceInformationSourceType, PlaceInformationVerificationStatus, }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/hooks/useAdminPlaceVerification.ts": {
+      "nonImportHash": "954aaf2324dbac62ca5472728dc53153db95fa81408429815921a0ecf483beb8",
+      "imports": [
+        {
+          "clause": "{ useCallback, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "{ cancelAdminPlaceInformationReverificationRequest, completeAdminPlaceInformationReverificationRequest, createAdminPlaceInformationEvidence, createAdminPlaceInformationReverificationRequest, getAdminPlaceInformationEvidence, getAdminPlaceInformationReverificationRequests, remindAdminPlaceInformationReverificationRequest, reviewAdminPlaceInformationEvidence, }",
+          "target": "src/features/admin/placeVerification/api/adminPlaceVerificationApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminPlaceVerificationErrorResponse, PlaceInformationEvidence, PlaceInformationEvidenceCreateRequest, PlaceInformationEvidenceReviewRequest, PlaceInformationReverificationCreateRequest, PlaceInformationReverificationRequest, }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/hooks/useAdminPlaceInformationReports.ts": {
+      "nonImportHash": "27bc54c481ca964cf12cc6cf4cc34a27ee8b9b3e949a7131cbc56075ef691a74",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "{ getAdminPlaceInformationReport, getAdminPlaceInformationReports, reviewAdminPlaceInformationDispute, reviewAdminPlaceInformationReport, }",
+          "target": "src/features/admin/placeVerification/api/adminPlaceVerificationApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminPlaceVerificationErrorResponse, PlaceInformationDispute, PlaceInformationDisputeReviewRequest, PlaceInformationReport, PlaceInformationReportReviewRequest, PlaceInformationReportStatus, }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        },
+        {
+          "clause": "{ getAuthSessionId }",
+          "target": "src/utils/authStorage.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/api/adminPlaceVerificationApi.ts": {
+      "nonImportHash": "bd4359483ee034c32d5ccee32c443fd5a95d75953ae71d70959086f33416b20a",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { PlaceInformationDispute, PlaceInformationDisputeReviewRequest, PlaceInformationEvidenceCreateRequest, PlaceInformationEvidenceResponse, PlaceInformationEvidenceReviewRequest, PlaceInformationEvidenceUpdateResponse, PlaceInformationReport, PlaceInformationReportPageResponse, PlaceInformationReportReviewRequest, PlaceInformationReportStatus, PlaceInformationReverificationCreateRequest, PlaceInformationReverificationListResponse, PlaceInformationReverificationRequest, }",
+          "target": "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeVerification/types/adminPlaceVerification.types.ts": {
+      "nonImportHash": "a5e5c4516e1009edb03b3fe7376bd103d2cadf0753c39ba7a548039fbedcd2e6",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.styles.ts": {
+      "nonImportHash": "f28f7d2b32002dff0025474968db8277384eb310b3079937d1bd98e071cfa7d2",
+      "imports": [
+        {
+          "clause": "styled",
+          "target": "styled-components"
+        },
+        {
+          "clause": "{ typo, adminColors, radius }",
+          "target": "src/styles/theme.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.tsx": {
+      "nonImportHash": "e048ef76b151f72169dde9aab8c8eda74d06361c02753ac44076b00e95a0d27c",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ ReviewReasons, ReviewPhotos }",
+          "target": "src/components/common/ReviewPresentation.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ ListQueryBoundary }",
+          "target": "src/components/common/ListQueryBoundary.tsx"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ AdminStatusFilter }",
+          "target": "src/components/common/AdminStatusFilter.tsx"
+        },
+        {
+          "clause": "{ useAdminPlaceReviewDeletionRequests }",
+          "target": "src/features/admin/placeReviewDeletion/hooks/useAdminPlaceReviewDeletionRequests.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { PlaceReviewDeletionRequestStatus, }",
+          "target": "src/features/admin/placeReviewDeletion/types/adminPlaceReviewDeletion.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as Form",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeReviewDeletion/hooks/useAdminPlaceReviewDeletionRequests.ts": {
+      "nonImportHash": "38d781e648e17beb9f9afa2a2ed0671a04d45779e085fc07ca7597dc7609de47",
+      "imports": [
+        {
+          "clause": "{ useListQueryState, listQueryKey }",
+          "target": "src/hooks/useListQueryState.ts"
+        },
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "{ getAdminPlaceReviewDeletionRequest, getAdminPlaceReviewDeletionRequests, reviewAdminPlaceReviewDeletionRequest, }",
+          "target": "src/features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminPlaceReviewDeletionErrorResponse, AdminPlaceReviewDeletionRequest, AdminPlaceReviewDeletionRequestReviewRequest, PlaceReviewDeletionRequestStatus, }",
+          "target": "src/features/admin/placeReviewDeletion/types/adminPlaceReviewDeletion.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi.ts": {
+      "nonImportHash": "eec054ff5349fe64807cb0bf1cdcbeaf4ed86fea6d7d1d1228e67cae2473447c",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminPlaceReviewDeletionRequest, AdminPlaceReviewDeletionRequestPage, AdminPlaceReviewDeletionRequestReviewRequest, PlaceReviewDeletionRequestStatus, }",
+          "target": "src/features/admin/placeReviewDeletion/types/adminPlaceReviewDeletion.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/placeReviewDeletion/types/adminPlaceReviewDeletion.types.ts": {
+      "nonImportHash": "b6d11a2904524f0ea3b217866524a677e6abb8376c8994c46b0be73275efeab2",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        },
+        {
+          "clause": "type { ReviewPresentation }",
+          "target": "src/types/reviewPresentation.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx": {
+      "nonImportHash": "e629ddcba4f265df5eeb7ea869596a09241f907c07c6c652cac760f22a9d079c",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AccessibleTabList }",
+          "target": "src/components/common/AccessibleTabList.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate, useSearchParams }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ AdminStatusFilter }",
+          "target": "src/components/common/AdminStatusFilter.tsx"
+        },
+        {
+          "clause": "{ useAdminVisitorVerifications }",
+          "target": "src/features/admin/visitorVerification/hooks/useAdminVisitorVerifications.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { VisitorVerificationCorrection, VisitorVerificationReport, VisitorVerificationStatus, }",
+          "target": "src/features/admin/visitorVerification/types/adminVisitorVerification.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/visitorVerification/hooks/useAdminVisitorVerifications.ts": {
+      "nonImportHash": "6331305556e8472c6de9f78ee86e056a90c9b3c4358d6058700c07d05b48eb57",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "* as api",
+          "target": "src/features/admin/visitorVerification/api/adminVisitorVerificationApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminVisitorVerificationErrorResponse, VisitorVerificationCorrection, VisitorVerificationReport, VisitorVerificationStatus }",
+          "target": "src/features/admin/visitorVerification/types/adminVisitorVerification.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/visitorVerification/api/adminVisitorVerificationApi.ts": {
+      "nonImportHash": "3bbced5811fedea4f1840afedb2e57c5cdf78109573085ebdc7b9830ff368b90",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { VisitorVerificationCorrection, VisitorVerificationCorrectionPage, VisitorVerificationReport, VisitorVerificationReportPage, VisitorVerificationStatus }",
+          "target": "src/features/admin/visitorVerification/types/adminVisitorVerification.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/visitorVerification/types/adminVisitorVerification.types.ts": {
+      "nonImportHash": "030b9de49de571420187f422c76eb78f30542a9c59da8f42b600472f177da824",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    }
+  },
+  "externalConsumers": [
+    "src/api/adminPendingWorkApi.ts -> src/features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi.ts",
+    "src/api/adminPendingWorkApi.ts -> src/features/admin/placeVerification/api/adminPlaceVerificationApi.ts",
+    "src/api/adminPendingWorkApi.ts -> src/features/admin/visitorVerification/api/adminVisitorVerificationApi.ts",
+    "src/app/router/Router.tsx -> src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.tsx",
+    "src/app/router/Router.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.tsx",
+    "src/app/router/Router.tsx -> src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx",
+    "src/components/common/AdminPlacePicker.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/components/common/AdminTargetSearch.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/components/recommendation/RecommendationPolicyPanel.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles.ts -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/merchantOwners/pages/MerchantOwnerPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/reservations/pages/AdminReservationReviewPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/userRoles/pages/UserRolePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/community/CommunityContentPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/community/CommunityReportsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/community/CommunityShared.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/dataQuality/DataQualityPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/notificationOperations/NotificationOperationsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/operationHistory/OperationHistoryPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/placeEvent/PlaceEventPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/recommendationMetrics/RecommendationMetricsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/s3Orphan/S3OrphanPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/scout/ScoutPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/trustScore/TrustScorePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/pages/verifiedBoostProduct/VerifiedBoostProductPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+  ],
+  "apiInventoryCount": 202,
+  "apiInventoryHash": "5f9e7690ddf6d21174ba67f8a2e745cc38790216f1884ca068a86c54fdcffdc6"
+}

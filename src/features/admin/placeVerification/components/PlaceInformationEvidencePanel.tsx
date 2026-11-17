@@ -1,24 +1,24 @@
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { FeedbackMessage } from '../common/FeedbackMessage'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useState } from 'react'
-import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
-import { AdminSelect } from '../common/AdminStatusSelect'
-import type { useAdminPlaceVerification } from '../../hooks/useAdminPlaceVerification'
+import { useUnsavedChanges } from '../../../../hooks/useUnsavedChanges'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import type { useAdminPlaceVerification } from '../hooks/useAdminPlaceVerification'
 import type {
   PlaceInformationEvidence,
   PlaceInformationEvidenceType,
   PlaceInformationSourceType,
   PlaceInformationVerificationStatus,
-} from '../../types/adminPlaceVerification.types'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
-import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
+} from '../types/adminPlaceVerification.types'
+import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as S from '../pages/PlaceVerificationPage.styles'
 import {
   EVIDENCE_TYPE_LABELS,
   SOURCE_TYPE_LABELS,
   VERIFICATION_STATUS_LABELS,
   formatVerificationDate,
   getStatusTone,
-} from './placeVerificationLabels'
+} from '../model/placeVerificationLabels'
 
 type VerificationHook = ReturnType<typeof useAdminPlaceVerification>
 type EvidenceDialog = { type: 'create' } | { type: 'review'; evidence: PlaceInformationEvidence } | null

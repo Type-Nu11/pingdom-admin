@@ -9,9 +9,9 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
-const { PlaceInformationEvidencePanel: Evidence } = await server.ssrLoadModule('/src/components/placeVerification/PlaceInformationEvidencePanel.tsx')
-const { PlaceInformationReverificationPanel: Reverification } = await server.ssrLoadModule('/src/components/placeVerification/PlaceInformationReverificationPanel.tsx')
-const labels = await server.ssrLoadModule('/src/components/placeVerification/placeVerificationLabels.ts')
+const { PlaceInformationEvidencePanel: Evidence } = await server.ssrLoadModule('/src/features/admin/placeVerification/components/PlaceInformationEvidencePanel.tsx')
+const { PlaceInformationReverificationPanel: Reverification } = await server.ssrLoadModule('/src/features/admin/placeVerification/components/PlaceInformationReverificationPanel.tsx')
+const labels = await server.ssrLoadModule('/src/features/admin/placeVerification/model/placeVerificationLabels.ts')
 const formats = await server.ssrLoadModule('/src/features/admin/userBans/model/userBan.format.ts')
 let root, reads
 beforeEach(() => { root = createRoot(document.getElementById('root')); reads = [] })

@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type VisitorVerificationStatus = 'SUBMITTED' | 'ACCEPTED' | 'REJECTED'
 export type VisitorVerificationReportType = 'PLACE_INFORMATION' | 'OPERATING_HOURS' | 'LOCATION' | 'CLOSED_PLACE' | 'WAIT_TIME' | 'LANGUAGE_SUPPORT' | 'COUPON_USAGE' | 'CROWD_LEVEL' | 'OTHER'

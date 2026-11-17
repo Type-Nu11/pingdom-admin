@@ -1,5 +1,5 @@
-import type { AuthErrorResponse } from './auth.types'
-import type { ReviewPresentation } from './reviewPresentation.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
+import type { ReviewPresentation } from '../../../../types/reviewPresentation.types'
 
 export type PlaceReviewDeletionRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 

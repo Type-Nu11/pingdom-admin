@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import * as api from '../api/adminVisitorVerificationApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type { AdminVisitorVerificationErrorResponse, VisitorVerificationCorrection, VisitorVerificationReport, VisitorVerificationStatus } from '../types/adminVisitorVerification.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 type Kind = 'reports' | 'corrections'
 const CATEGORY_MESSAGES = { unauthorized: '로그인이 필요합니다.', forbidden: '관리자 권한이 필요합니다.', 'not-found': '제보 또는 정정 요청을 찾을 수 없습니다.', conflict: '이미 심사되었거나 현재 제보 상태와 충돌합니다.', network: '서버에 연결할 수 없습니다.', 'request-blocked': '서버 응답을 읽지 못했습니다.', timeout: '응답이 지연되고 있습니다.', server: '서버 오류가 발생했습니다.' }

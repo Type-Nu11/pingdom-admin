@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useAdminRecommendationPolicy } from '../../hooks/useAdminRecommendationPolicy'
 import type { AdminRecommendationTrafficPolicyUpdateItem } from '../../types/adminRecommendationPolicy.types'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
-import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
+import * as S from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 
 interface PolicyDraft extends Omit<AdminRecommendationTrafficPolicyUpdateItem, 'trafficPercentage'> {
   key: number

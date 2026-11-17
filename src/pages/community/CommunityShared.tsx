@@ -10,7 +10,7 @@ import { communityDate } from '../../utils/community'
 import type { AdminCommunityPost, AdminCommunityComment, CommunityPage } from '../../types/adminCommunity.types'
 import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as Form from '../placeVerification/PlaceVerificationPage.styles'
+import * as Form from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 import * as S from './Community.styles'
 
 export function CommunityShell({ title, children }: { title: string; children: ReactNode }) {

@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   getAdminPlaceInformationReport, getAdminPlaceInformationReports,
   reviewAdminPlaceInformationDispute, reviewAdminPlaceInformationReport,
 } from '../api/adminPlaceVerificationApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceVerificationErrorResponse, PlaceInformationDispute,
   PlaceInformationDisputeReviewRequest, PlaceInformationReport,
   PlaceInformationReportReviewRequest, PlaceInformationReportStatus,
 } from '../types/adminPlaceVerification.types'
-import { getAuthSessionId } from '../utils/authStorage'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { getAuthSessionId } from '../../../../utils/authStorage'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 const PAGE_LIMIT = 10
 const CATEGORY_MESSAGES = {

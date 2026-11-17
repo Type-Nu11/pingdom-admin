@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import type { VerifiedBoostProductStatus } from '../../types/adminVerifiedBoostProduct.types'
 import * as Shell from '../../app/layouts/AdminShell.styles'
 import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as S from '../placeVerification/PlaceVerificationPage.styles'
+import * as S from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 
 type Dialog = 'create' | 'activate' | 'deactivate' | null
 const STATUS: Record<VerifiedBoostProductStatus, string> = {

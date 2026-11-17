@@ -4,7 +4,7 @@ import { searchAdminPlaces, type AdminTarget } from '../../api/adminTargetSearch
 import { AdminTargetSearch } from './AdminTargetSearch'
 import { typography, adminColors } from '../../styles/theme'
 import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
-import * as Form from '../../pages/placeVerification/PlaceVerificationPage.styles'
+import * as Form from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 
 const Root = styled.div<{ $wide: boolean }>`
   display: grid;

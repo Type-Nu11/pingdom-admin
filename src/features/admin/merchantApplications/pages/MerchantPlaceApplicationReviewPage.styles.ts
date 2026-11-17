@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { typo, adminColors, radius } from '../../../../styles/theme'
-import * as Form from '../../../../pages/placeVerification/PlaceVerificationPage.styles'
+import * as Form from '../../placeVerification/pages/PlaceVerificationPage.styles'
 import { PageContent, PageStack } from '../../../../components/common/ListDetailWorkspace.styles'
 import { ListDetailWorkspace } from '../../../../components/common/ListDetailWorkspace'
 

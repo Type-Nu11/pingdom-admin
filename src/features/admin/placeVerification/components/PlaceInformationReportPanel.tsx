@@ -1,18 +1,18 @@
-import { FeedbackMessage } from '../common/FeedbackMessage'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { AppDialog } from '../common/AppDialog'
-import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
-import { AdminSelect } from '../common/AdminStatusSelect'
-import { AdminStatusFilter } from '../common/AdminStatusFilter'
-import { AdminPagination } from '../common/AdminPagination'
-import type { useAdminPlaceInformationReports } from '../../hooks/useAdminPlaceInformationReports'
+import { AppDialog } from '../../../../components/common/AppDialog'
+import { useUnsavedChanges } from '../../../../hooks/useUnsavedChanges'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import { AdminStatusFilter } from '../../../../components/common/AdminStatusFilter'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import type { useAdminPlaceInformationReports } from '../hooks/useAdminPlaceInformationReports'
 import type {
   PlaceInformationDispute,
   PlaceInformationReportReviewRequest,
   PlaceInformationReportStatus,
-} from '../../types/adminPlaceVerification.types'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
-import * as S from '../../pages/placeVerification/PlaceVerificationPage.styles'
+} from '../types/adminPlaceVerification.types'
+import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as S from '../pages/PlaceVerificationPage.styles'
 import {
   DISPUTE_STATUS_LABELS,
   REASON_TYPE_LABELS,
@@ -20,7 +20,7 @@ import {
   TARGET_TYPE_LABELS,
   formatVerificationDate,
   getStatusTone,
-} from './placeVerificationLabels'
+} from '../model/placeVerificationLabels'
 
 type ReportHook = ReturnType<typeof useAdminPlaceInformationReports>
 

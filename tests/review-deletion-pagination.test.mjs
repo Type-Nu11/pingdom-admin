@@ -10,7 +10,7 @@ const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
-const { useAdminPlaceReviewDeletionRequests } = await server.ssrLoadModule('/src/hooks/useAdminPlaceReviewDeletionRequests.ts')
+const { useAdminPlaceReviewDeletionRequests } = await server.ssrLoadModule('/src/features/admin/placeReviewDeletion/hooks/useAdminPlaceReviewDeletionRequests.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const auth = { clearAuth() {} }
 let root, hook, calls, adapter

@@ -28,6 +28,7 @@ export const browserCases = [
   ['reservation-timezone', 'tests/browser/reservation-timezone.mjs'],
   ['trust-score-history', 'tests/browser/trust-score-history.mjs'],
   ['place-dispute-review', 'tests/browser/place-dispute-review.mjs'],
+  ['place-review-structure', 'tests/browser/admin-place-review-structure.mjs'],
   ['data-quality', 'tests/browser/data-quality.mjs'],
   ['residual-contract', 'tests/browser/residual-contract.mjs'],
 ]

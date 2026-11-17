@@ -1,10 +1,10 @@
 import { getAdminPlaceDuplicateGroups, getAdminPlaceDuplicateReviewCandidates } from './adminPlaceMergeApi'
-import { getAdminPlaceInformationReports } from './adminPlaceVerificationApi'
+import { getAdminPlaceInformationReports } from '../features/admin/placeVerification/api/adminPlaceVerificationApi'
 import { getAdminScoutFieldReports, getAdminScoutProfiles } from './adminScoutApi'
 import { getAdminTrustScoreAnomalies } from './adminTrustScoreApi'
-import { getAdminVisitorVerificationCorrections, getAdminVisitorVerificationReports } from './adminVisitorVerificationApi'
+import { getAdminVisitorVerificationCorrections, getAdminVisitorVerificationReports } from '../features/admin/visitorVerification/api/adminVisitorVerificationApi'
 import { getAdminMerchantPlaceApplications } from '../features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi'
-import { getAdminPlaceReviewDeletionRequests } from './adminPlaceReviewDeletionApi'
+import { getAdminPlaceReviewDeletionRequests } from '../features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi'
 import { getCommunityReports } from './adminCommunityApi'
 
 export interface AdminPendingWorkItem {

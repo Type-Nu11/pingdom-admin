@@ -13,7 +13,7 @@ import * as Admin from '../../src/pages/adminUtility/AdminUtilityPage.styles'
 import * as Place from '../../src/features/admin/places/pages/PlaceManagePage.styles'
 import * as Merge from '../../src/pages/placeMerge/PlaceMergePage.styles'
 import * as Store from '../../src/pages/merchantStore/MerchantStorePage.styles'
-import * as Review from '../../src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.styles'
+import * as Review from '../../src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles'
 
 const title = '테스트 매장 서울역점 본관 지하 1층 예약 전용 공간'
 const address = '서울특별시 중구 테스트로 123 테스트빌딩 본관 지하 1층 안내 데스크 옆'

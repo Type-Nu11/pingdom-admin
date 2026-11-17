@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type MerchantOwnerStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REVOKED'
 export type MerchantOnboardingStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'

@@ -37,9 +37,9 @@ const UserBanPage = lazy(() => import('../../features/admin/userBans/pages/UserB
 const RecommendationMetricsPage = lazy(
   () => import('../../pages/recommendationMetrics/RecommendationMetricsPage'),
 )
-const MerchantOwnerPage = lazy(() => import('../../pages/merchantOwner/MerchantOwnerPage'))
+const MerchantOwnerPage = lazy(() => import('../../features/admin/merchantOwners/pages/MerchantOwnerPage'))
 const AdminReservationReviewPage = lazy(
-  () => import('../../pages/adminReservationReview/AdminReservationReviewPage'),
+  () => import('../../features/admin/reservations/pages/AdminReservationReviewPage'),
 )
 const TrustScorePage = lazy(() => import('../../pages/trustScore/TrustScorePage'))
 const VisitorVerificationPage = lazy(
@@ -51,7 +51,7 @@ const VerifiedBoostProductPage = lazy(
 )
 const UserRolePage = lazy(() => import('../../features/admin/userRoles/pages/UserRolePage'))
 const MerchantPlaceApplicationReviewPage = lazy(
-  () => import('../../pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage'),
+  () => import('../../features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage'),
 )
 const PlaceReviewDeletionPage = lazy(
   () => import('../../pages/placeReviewDeletion/PlaceReviewDeletionPage'),

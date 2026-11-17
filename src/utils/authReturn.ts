@@ -1,5 +1,5 @@
 import type { AuthUser } from '../app/providers/AuthContext'
-import { readReservationReviewContext, writeReservationReviewContext } from './reservationReviewContext'
+import { readReservationReviewContext, writeReservationReviewContext } from '../features/admin/reservations/model/reservationReviewContext'
 import { browserPathToAppPath } from './appBasePath'
 
 export type AuthExitReason = 'expired' | 'session-changed' | 'logout'

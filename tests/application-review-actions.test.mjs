@@ -14,7 +14,7 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { AdminNotificationContext } = await server.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
-const { default: Page } = await server.ssrLoadModule('/src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.tsx')
+const { default: Page } = await server.ssrLoadModule('/src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx')
 let root, adapter
 const calls = []
 const auth = { clearAuth() {}, logout: async () => {}, user: { id: 99, username: 'admin', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }

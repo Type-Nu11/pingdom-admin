@@ -9,7 +9,7 @@ const cacheDir = await mkdtemp(join(tmpdir(), 'pingdom-302-types-'))
 const vite = await createServer({ cacheDir, server: { middlewareMode: true, ws: false }, appType: 'custom' })
 const { default: client } = await vite.ssrLoadModule('/src/api/customAxios.ts')
 const { getAdminNotifications, getAdminNotificationDeliveries } = await vite.ssrLoadModule('/src/api/adminNotificationApi.ts')
-const { approveAdminMerchantOwner, rejectAdminMerchantOwner, replaceAdminMerchantOwnerPlaces } = await vite.ssrLoadModule('/src/api/adminMerchantOwnerApi.ts')
+const { approveAdminMerchantOwner, rejectAdminMerchantOwner, replaceAdminMerchantOwnerPlaces } = await vite.ssrLoadModule('/src/features/admin/merchantOwners/api/adminMerchantOwnerApi.ts')
 const calls = []
 client.defaults.adapter = async config => { calls.push(config); return { config, data: {}, status: 200, headers: {}, statusText: 'Synthetic' } }
 after(() => vite.close())

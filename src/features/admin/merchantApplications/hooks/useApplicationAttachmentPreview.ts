@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { downloadAdminMerchantPlaceApplicationAttachment } from '../api/adminMerchantPlaceApplicationApi'
-import { isApiError } from '../api/customAxios'
+import { isApiError } from '../../../../api/customAxios'
 
 type PreviewState =
   | { status: 'loading' }

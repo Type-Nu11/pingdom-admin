@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
-import { AppDialog } from './AppDialog'
-import { FeedbackMessage } from './FeedbackMessage'
-import { useApplicationAttachmentPreview } from '../../hooks/useApplicationAttachmentPreview'
-import type { AdminMerchantPlaceApplicationAttachment } from '../../types/adminMerchantPlaceApplication.types'
-import { PdfAttachment } from './PdfAttachment'
-import * as S from './AttachmentPreview.styles'
+import { AppDialog } from '../../../../components/common/AppDialog'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
+import { useApplicationAttachmentPreview } from '../hooks/useApplicationAttachmentPreview'
+import type { AdminMerchantPlaceApplicationAttachment } from '../types/adminMerchantPlaceApplication.types'
+import { PdfAttachment } from '../../../../components/common/PdfAttachment'
+import * as S from '../../../../components/common/AttachmentPreview.styles'
 
 interface Props {
   applicationId: number

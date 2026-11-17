@@ -84,7 +84,7 @@ test('notification labels distinguish retrying, failed and final failure without
   assert.equal(notification.DELIVERY_CHANNEL_LABELS.FCM, '앱 푸시')
 })
 test('admin ID examples are ordinary examples, never defaults or real operational data', async () => {
-  for (const path of ['src/pages/adminReservationReview/AdminReservationReviewPage.tsx', 'src/features/admin/userRoles/pages/UserRolePage.tsx', 'src/pages/trustScore/TrustScorePage.tsx']) {
+  for (const path of ['src/features/admin/reservations/pages/AdminReservationReviewPage.tsx', 'src/features/admin/userRoles/pages/UserRolePage.tsx', 'src/pages/trustScore/TrustScorePage.tsx']) {
     const source = await readFile(path, 'utf8')
     assert.ok(source.includes('placeholder="예: 123"'))
   }

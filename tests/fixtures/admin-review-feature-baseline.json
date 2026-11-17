@@ -1,0 +1,593 @@
+{
+  "baseCommit": "19dcd4edbed6a04734371d38b10f1b713cdc464f",
+  "moves": {
+    "src/pages/adminReservationReview/AdminReservationReviewPage.tsx": "src/features/admin/reservations/pages/AdminReservationReviewPage.tsx",
+    "src/pages/adminReservationReview/AdminReservationReviewPage.styles.ts": "src/features/admin/reservations/pages/AdminReservationReviewPage.styles.ts",
+    "src/hooks/useAdminReservations.ts": "src/features/admin/reservations/hooks/useAdminReservations.ts",
+    "src/api/adminReservationApi.ts": "src/features/admin/reservations/api/adminReservationApi.ts",
+    "src/types/adminReservation.types.ts": "src/features/admin/reservations/types/adminReservation.types.ts",
+    "src/utils/reservationReviewContext.ts": "src/features/admin/reservations/model/reservationReviewContext.ts",
+    "src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.tsx": "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx",
+    "src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.styles.ts": "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles.ts",
+    "src/hooks/useAdminMerchantPlaceApplications.ts": "src/features/admin/merchantApplications/hooks/useAdminMerchantPlaceApplications.ts",
+    "src/hooks/useApplicationAttachmentPreview.ts": "src/features/admin/merchantApplications/hooks/useApplicationAttachmentPreview.ts",
+    "src/api/adminMerchantPlaceApplicationApi.ts": "src/features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi.ts",
+    "src/types/adminMerchantPlaceApplication.types.ts": "src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts",
+    "src/components/common/AttachmentPreview.tsx": "src/features/admin/merchantApplications/components/AttachmentPreview.tsx",
+    "src/pages/merchantOwner/MerchantOwnerPage.tsx": "src/features/admin/merchantOwners/pages/MerchantOwnerPage.tsx",
+    "src/hooks/useAdminMerchantOwners.ts": "src/features/admin/merchantOwners/hooks/useAdminMerchantOwners.ts",
+    "src/api/adminMerchantOwnerApi.ts": "src/features/admin/merchantOwners/api/adminMerchantOwnerApi.ts",
+    "src/types/adminMerchantOwner.types.ts": "src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts"
+  },
+  "files": {
+    "src/features/admin/merchantOwners/api/adminMerchantOwnerApi.ts": {
+      "nonImportHash": "565d3233ba7c5bcc408b529a4daa2f333976c2e4981ff5c290066c49564840f1",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminMerchantOnboardingUpdateRequest, AdminMerchantOwnerPageResponse, AdminMerchantOwnerPlace, AdminMerchantOwnerPlaceQualityUpdateRequest, AdminMerchantOwnerPlaceUpdateRequest, AdminMerchantOwnerProfile, AdminMerchantOwnerReviewRequest, MerchantOwnerStatus, }",
+          "target": "src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi.ts": {
+      "nonImportHash": "a41d1d8ccd6b105c7c32e6a8dcbe38533468e318d45a38b95a549dd07dae52a8",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminMerchantPlaceApplication, AdminMerchantPlaceApplicationAttachment, AdminMerchantPlaceApplicationPage, MerchantPlaceApplicationStatus, MerchantPlaceApplicationType, MerchantPlaceApplicationReviewRequest, }",
+          "target": "src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/reservations/api/adminReservationApi.ts": {
+      "nonImportHash": "edcf3b709ff9ec91e6d9c5bf08389d34f2cc52a4f5474ffdfbcca0680695df31",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminReservation, AdminReservationPageResponse, AdminReservationQuery, }",
+          "target": "src/features/admin/reservations/types/adminReservation.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/components/AttachmentPreview.tsx": {
+      "nonImportHash": "8e027b1c7e5d693e360983336d9bad0eb294cdd5d351547fbe93765176b5e555",
+      "imports": [
+        {
+          "clause": "{ useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ AppDialog }",
+          "target": "src/components/common/AppDialog.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useApplicationAttachmentPreview }",
+          "target": "src/features/admin/merchantApplications/hooks/useApplicationAttachmentPreview.ts"
+        },
+        {
+          "clause": "type { AdminMerchantPlaceApplicationAttachment }",
+          "target": "src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts"
+        },
+        {
+          "clause": "{ PdfAttachment }",
+          "target": "src/components/common/PdfAttachment.tsx"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/components/common/AttachmentPreview.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantOwners/hooks/useAdminMerchantOwners.ts": {
+      "nonImportHash": "ab57af06883335d14e2414826c3acc9a0c7e8033b4ec465f4fc50f381dbb42c0",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "{ approveAdminMerchantOwner, getAdminMerchantOwner, getAdminMerchantOwnerPlaces, getAdminMerchantOwners, rejectAdminMerchantOwner, replaceAdminMerchantOwnerPlaces, revokeAdminMerchantOwner, updateAdminMerchantOwnerOnboarding, updateAdminMerchantOwnerPlaceQuality, }",
+          "target": "src/features/admin/merchantOwners/api/adminMerchantOwnerApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminMerchantOnboardingUpdateRequest, AdminMerchantOwnerErrorResponse, AdminMerchantOwnerPlace, AdminMerchantOwnerPlaceQualityUpdateRequest, AdminMerchantOwnerPlaceUpdateRequest, AdminMerchantOwnerProfile, AdminMerchantOwnerReviewRequest, MerchantOwnerStatus, }",
+          "target": "src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/hooks/useAdminMerchantPlaceApplications.ts": {
+      "nonImportHash": "9aeed844d51ead1d060dff5079cce8babbcdf964aa5bf17801ff901e5416941c",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "* as api",
+          "target": "src/features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi.ts"
+        },
+        {
+          "clause": "{ getAdminMerchantOwner }",
+          "target": "src/features/admin/merchantOwners/api/adminMerchantOwnerApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminMerchantPlaceApplication, AdminMerchantPlaceApplicationAttachment, AdminMerchantPlaceApplicationErrorResponse, AdminMerchantPlaceApplicationListItem, MerchantPlaceApplicationStatus, MerchantPlaceApplicationType, }",
+          "target": "src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts"
+        },
+        {
+          "clause": "type { AdminMerchantOwnerProfile }",
+          "target": "src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/reservations/hooks/useAdminReservations.ts": {
+      "nonImportHash": "3be569576ee83ddca05942286ba5ed83f9cd7e98bc1f907fb3db73421551aa71",
+      "imports": [
+        {
+          "clause": "{ useListQueryState, listQueryKey }",
+          "target": "src/hooks/useListQueryState.ts"
+        },
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ getAdminReservation, getAdminReservations, }",
+          "target": "src/features/admin/reservations/api/adminReservationApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminReservation, AdminReservationErrorResponse, AdminReservationQuery, }",
+          "target": "src/features/admin/reservations/types/adminReservation.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ DEFAULT_RESERVATION_QUERY, type ReservationReviewQuery }",
+          "target": "src/features/admin/reservations/model/reservationReviewContext.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/hooks/useApplicationAttachmentPreview.ts": {
+      "nonImportHash": "c197f6540ac8c8ef4becb343f672ade44500ee0d25edd3b9d234efe30509ae1a",
+      "imports": [
+        {
+          "clause": "{ useEffect, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ downloadAdminMerchantPlaceApplicationAttachment }",
+          "target": "src/features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        }
+      ]
+    },
+    "src/features/admin/reservations/pages/AdminReservationReviewPage.styles.ts": {
+      "nonImportHash": "a3750aaf6e50f734adc21024296aee3966a463f54b35662fa893754970653a75",
+      "imports": [
+        {
+          "clause": "styled",
+          "target": "styled-components"
+        },
+        {
+          "clause": "{ SecondaryButton }",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/reservations/pages/AdminReservationReviewPage.tsx": {
+      "nonImportHash": "f2d3da3215ec82166497705d715319e4c5190de77cf91a887d1b3f3cfd98b150",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AdminTargetSearch }",
+          "target": "src/components/common/AdminTargetSearch.tsx"
+        },
+        {
+          "clause": "{ searchAdminPlaces }",
+          "target": "src/api/adminTargetSearchApi.ts"
+        },
+        {
+          "clause": "{ PlaceDetailLink }",
+          "target": "src/features/admin/places/components/PlaceDetailLink.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ ListQueryBoundary }",
+          "target": "src/components/common/ListQueryBoundary.tsx"
+        },
+        {
+          "clause": "{ useCallback, useEffect, useMemo, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useLocation, useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ ListPane }",
+          "target": "src/components/common/ListPane.tsx"
+        },
+        {
+          "clause": "{ ListDetailPage, ListDetailWorkspace }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations }",
+          "target": "src/features/admin/reservations/hooks/useAdminReservations.ts"
+        },
+        {
+          "clause": "{ formatListRange }",
+          "target": "src/utils/listRange.ts"
+        },
+        {
+          "clause": "{ formatReservationSchedule, formatReservationEventTime as formatDate }",
+          "target": "src/utils/reservationTime.ts"
+        },
+        {
+          "clause": "{ listQueryKey }",
+          "target": "src/hooks/useListQueryState.ts"
+        },
+        {
+          "clause": "{ DEFAULT_RESERVATION_QUERY, readReservationReviewContext, reservationReviewOwnerMismatch, writeReservationReviewContext, type ReservationReviewQuery, }",
+          "target": "src/features/admin/reservations/model/reservationReviewContext.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { AdminReservation, AdminReservationStatus, }",
+          "target": "src/features/admin/reservations/types/adminReservation.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as ReviewUI",
+          "target": "src/features/admin/reservations/pages/AdminReservationReviewPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantOwners/pages/MerchantOwnerPage.tsx": {
+      "nonImportHash": "cc5145749146949f79d330990ea9882c00dc3748c70c9eed44ec8b0e35d906a5",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ ListPane }",
+          "target": "src/components/common/ListPane.tsx"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ AdminStatusFilter }",
+          "target": "src/components/common/AdminStatusFilter.tsx"
+        },
+        {
+          "clause": "{ ListDetailPage, ListDetailWorkspace }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        },
+        {
+          "clause": "{ AdminDateTimePicker }",
+          "target": "src/components/common/AdminDateTimePicker.tsx"
+        },
+        {
+          "clause": "{ ADMIN_OWNER_PAGE_SIZE, useAdminMerchantOwners }",
+          "target": "src/features/admin/merchantOwners/hooks/useAdminMerchantOwners.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { AdminMerchantOwnerPlace, MerchantOnboardingStatus, MerchantOperationalQualityStatus, MerchantOwnerStatus, }",
+          "target": "src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles.ts": {
+      "nonImportHash": "d42a75557e6e2e0e5cb8602059483d72433bfa564f06a2735127dabc8daaf454",
+      "imports": [
+        {
+          "clause": "styled",
+          "target": "styled-components"
+        },
+        {
+          "clause": "{ typo, adminColors, radius }",
+          "target": "src/styles/theme.ts"
+        },
+        {
+          "clause": "* as Form",
+          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "{ PageContent, PageStack }",
+          "target": "src/components/common/ListDetailWorkspace.styles.ts"
+        },
+        {
+          "clause": "{ ListDetailWorkspace }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx": {
+      "nonImportHash": "a3a2c9b334a6f7d5c4d558126f25c07a22ed27ca82ce2e6511208b20d857c988",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AccessibleTabList }",
+          "target": "src/components/common/AccessibleTabList.tsx"
+        },
+        {
+          "clause": "{ PlaceDetailLink }",
+          "target": "src/features/admin/places/components/PlaceDetailLink.tsx"
+        },
+        {
+          "clause": "{ AttachmentPreview }",
+          "target": "src/features/admin/merchantApplications/components/AttachmentPreview.tsx"
+        },
+        {
+          "clause": "{ AppDialog }",
+          "target": "src/components/common/AppDialog.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useLocation, useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ AdminDateTimePicker }",
+          "target": "src/components/common/AdminDateTimePicker.tsx"
+        },
+        {
+          "clause": "{ EMPTY_HISTORY_FILTERS, type ApplicationHistoryFilters }",
+          "target": "src/features/admin/merchantApplications/hooks/useAdminMerchantPlaceApplications.ts"
+        },
+        {
+          "clause": "{ ListPane }",
+          "target": "src/components/common/ListPane.tsx"
+        },
+        {
+          "clause": "{ APPLICATION_REVIEW_PAGE_SIZE, useAdminMerchantPlaceApplications }",
+          "target": "src/features/admin/merchantApplications/hooks/useAdminMerchantPlaceApplications.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { AdminMerchantPlaceApplication, AdminMerchantPlaceApplicationAttachment, MerchantPlaceApplicationDocumentType, MerchantPlaceApplicationStatus, MerchantPlaceApplicationType, }",
+          "target": "src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts"
+        },
+        {
+          "clause": "type { MerchantPlaceApplicationNewPlace }",
+          "target": "src/types/merchantPlaceApplication.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as Form",
+          "target": "src/pages/placeVerification/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts": {
+      "nonImportHash": "89d30bcd51def441441d01aff5b2148d25c9b39755551fa480a41111d9b84b9f",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts": {
+      "nonImportHash": "face0e5561dd21175c8aa0c6122ed0797e6b49c8484f5f3d5df81a3339bff88e",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        },
+        {
+          "clause": "type { MerchantPlaceApplicationNewPlace }",
+          "target": "src/types/merchantPlaceApplication.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/reservations/types/adminReservation.types.ts": {
+      "nonImportHash": "48ed1778bb0d0eef0e679a3ca1b1ebc44adc43f9c258090ff43f6f0be2774315",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/reservations/model/reservationReviewContext.ts": {
+      "nonImportHash": "80992f29c424fdbf16d1ee85963835596f31678c96c1e7358b50b51b64115999",
+      "imports": [
+        {
+          "clause": "type { AdminReservationStatus }",
+          "target": "src/features/admin/reservations/types/adminReservation.types.ts"
+        }
+      ]
+    }
+  }
+}

@@ -44,10 +44,10 @@ function members(file, name) {
 test('five residual types match their distinct query/request/response contracts', () => {
   assert.ok(!members('src/types/adminNotification.types.ts', 'AdminNotificationListRequest').includes('userId'))
   assert.ok(members('src/types/adminNotification.types.ts', 'AdminNotificationDeliveryListRequest').includes('userId'))
-  assert.deepEqual(members('src/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerReviewRequest'), ['reason'])
-  assert.ok(members('src/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerPlaceUpdateRequest').includes('placeIds'))
+  assert.deepEqual(members('src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerReviewRequest'), ['reason'])
+  assert.ok(members('src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerPlaceUpdateRequest').includes('placeIds'))
   assert.ok(!members('src/features/admin/places/types/adminPlace.types.ts', 'AdminPlaceDetail').includes('kakaoPlaceId'))
-  assert.ok(members('src/types/adminMerchantPlaceApplication.types.ts', 'AdminMerchantPlaceApplication').includes('businessRegistrationNumber'))
+  assert.ok(members('src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts', 'AdminMerchantPlaceApplication').includes('businessRegistrationNumber'))
   assert.match(readFileSync('src/types/adminS3Orphan.types.ts', 'utf8'), /S3OrphanReport extends Omit<S3OrphanReportStatus, 'completedAt'>/)
 })
 test('reference groups preserve unmodified source bytes and do not invent an old baseline', () => {

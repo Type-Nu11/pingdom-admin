@@ -1,0 +1,355 @@
+{
+  "baseCommit": "ee36f139acc56af379b549bda3ca40a8429cf300",
+  "moves": {
+    "src/pages/community/CommunityContentPage.tsx": "src/features/admin/community/pages/CommunityContentPage.tsx",
+    "src/pages/community/CommunityReportsPage.tsx": "src/features/admin/community/pages/CommunityReportsPage.tsx",
+    "src/pages/community/CommunityShared.tsx": "src/features/admin/community/components/CommunityShared.tsx",
+    "src/pages/community/Community.styles.ts": "src/features/admin/community/components/Community.styles.ts",
+    "src/hooks/useCommunityQuery.ts": "src/features/admin/community/hooks/useCommunityQuery.ts",
+    "src/hooks/useCommunityListQuery.ts": "src/features/admin/community/hooks/useCommunityListQuery.ts",
+    "src/hooks/useCommunityReportDetail.ts": "src/features/admin/community/hooks/useCommunityReportDetail.ts",
+    "src/hooks/useCommunityReview.ts": "src/features/admin/community/hooks/useCommunityReview.ts",
+    "src/api/adminCommunityApi.ts": "src/features/admin/community/api/adminCommunityApi.ts",
+    "src/types/adminCommunity.types.ts": "src/features/admin/community/types/adminCommunity.types.ts",
+    "src/utils/community.ts": "src/features/admin/community/model/community.ts"
+  },
+  "files": {
+    "src/features/admin/community/pages/CommunityContentPage.tsx": {
+      "nonImportHash": "cfd4f710374614141d22e7e02966389c77a68873aa557fa1b8cb5708fdc6435a",
+      "imports": [
+        {
+          "clause": "{ useCallback, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ getCommunityPosts, getCommunityPost, getCommunityComments, getCommunityComment }",
+          "target": "src/features/admin/community/api/adminCommunityApi.ts"
+        },
+        {
+          "clause": "{ useCommunityQuery }",
+          "target": "src/features/admin/community/hooks/useCommunityQuery.ts"
+        },
+        {
+          "clause": "{ useCommunityListQuery }",
+          "target": "src/features/admin/community/hooks/useCommunityListQuery.ts"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ ListDetailWorkspace }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        },
+        {
+          "clause": "{ ListPane }",
+          "target": "src/components/common/ListPane.tsx"
+        },
+        {
+          "clause": "{ CommunityShell, CommunityContentView, CommunityPagination, QueryMessage }",
+          "target": "src/features/admin/community/components/CommunityShared.tsx"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as Form",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/community/components/Community.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/pages/CommunityReportsPage.tsx": {
+      "nonImportHash": "09bf1bd84ae8632141d125ef7d0943083904f5d21fdd4f46a7f1be484ce2579d",
+      "imports": [
+        {
+          "clause": "{ useCallback, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ getCommunityReports }",
+          "target": "src/features/admin/community/api/adminCommunityApi.ts"
+        },
+        {
+          "clause": "{ useCommunityListQuery }",
+          "target": "src/features/admin/community/hooks/useCommunityListQuery.ts"
+        },
+        {
+          "clause": "{ useCommunityReportDetail }",
+          "target": "src/features/admin/community/hooks/useCommunityReportDetail.ts"
+        },
+        {
+          "clause": "{ useCommunityReview }",
+          "target": "src/features/admin/community/hooks/useCommunityReview.ts"
+        },
+        {
+          "clause": "{ canReviewCommunityReport, COMMUNITY_STATUS_LABELS, COMMUNITY_TARGET_LABELS, COMMUNITY_REASON_LABELS, communityDate }",
+          "target": "src/features/admin/community/model/community.ts"
+        },
+        {
+          "clause": "type { CommunityDecision, CommunityReportStatus, CommunityTargetType }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ AppDialog }",
+          "target": "src/components/common/AppDialog.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ ListDetailWorkspace }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        },
+        {
+          "clause": "{ ListPane }",
+          "target": "src/components/common/ListPane.tsx"
+        },
+        {
+          "clause": "{ CommunityShell, CommunityContentView, CommunityPagination, QueryMessage }",
+          "target": "src/features/admin/community/components/CommunityShared.tsx"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as Form",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/community/components/Community.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/components/CommunityShared.tsx": {
+      "nonImportHash": "1e6f23eb0e548043313281d0de4aa9d08b4d9894ce3723904d4f3218f432e6da",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ useLayoutEffect, useRef, type ReactNode }",
+          "target": "react"
+        },
+        {
+          "clause": "{ Link }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ FeedbackMessage }",
+          "target": "src/components/common/FeedbackMessage.tsx"
+        },
+        {
+          "clause": "{ ListDetailPage }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ communityDate }",
+          "target": "src/features/admin/community/model/community.ts"
+        },
+        {
+          "clause": "type { AdminCommunityPost, AdminCommunityComment, CommunityPage }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as Form",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/community/components/Community.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/components/Community.styles.ts": {
+      "nonImportHash": "faf767c7a03b478181ba112ca737a74fdfdbaff66b8bd9e8434f86c892b64094",
+      "imports": [
+        {
+          "clause": "styled",
+          "target": "styled-components"
+        },
+        {
+          "clause": "{ typo, adminColors }",
+          "target": "src/styles/theme.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/hooks/useCommunityQuery.ts": {
+      "nonImportHash": "c7ca538cd84b9c52231fb3b3f680eaeffdc3eb397ddd6eeef25a14d529279f87",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/hooks/useCommunityListQuery.ts": {
+      "nonImportHash": "e759110171ef33225e0c1ad7f2d13405d8b64be954610fe6a7358ba53867e17a",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ shouldClearAuth }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ communityError }",
+          "target": "src/features/admin/community/hooks/useCommunityQuery.ts"
+        },
+        {
+          "clause": "type { CommunityPage }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/hooks/useCommunityReportDetail.ts": {
+      "nonImportHash": "17539582fb9f4665b28cf6d35674356d19daa24d80b3d901447403c80ae615ae",
+      "imports": [
+        {
+          "clause": "{ useCallback }",
+          "target": "react"
+        },
+        {
+          "clause": "{ getCommunityComment, getCommunityPost, getCommunityReport }",
+          "target": "src/features/admin/community/api/adminCommunityApi.ts"
+        },
+        {
+          "clause": "{ reportPostId }",
+          "target": "src/features/admin/community/model/community.ts"
+        },
+        {
+          "clause": "{ communityError, useCommunityQuery }",
+          "target": "src/features/admin/community/hooks/useCommunityQuery.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "type { CommunityReportDetail }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/hooks/useCommunityReview.ts": {
+      "nonImportHash": "0669951945b4499ddae1548ef533e4aaf994667d22e0588b7369d26f93e14416",
+      "imports": [
+        {
+          "clause": "{ useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ reviewCommunityReport }",
+          "target": "src/features/admin/community/api/adminCommunityApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ canReviewCommunityReport }",
+          "target": "src/features/admin/community/model/community.ts"
+        },
+        {
+          "clause": "{ communityError }",
+          "target": "src/features/admin/community/hooks/useCommunityQuery.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "type { CommunityDecision, CommunityReportDetail }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/api/adminCommunityApi.ts": {
+      "nonImportHash": "ca610c4fcea099226ddd167a04d51448c9da06c6b61e4243af27d133d9210d2c",
+      "imports": [
+        {
+          "clause": "client",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminCommunityPost, AdminCommunityComment, AdminCommunityReport, CommunityPostsPage, CommunityCommentsPage, CommunityReportsPage, CommunityReportStatus, CommunityTargetType, CommunityDecision, CommunityReportResult, }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/community/types/adminCommunity.types.ts": {
+      "nonImportHash": "c6074e74666690f52275d1bf8cb0202b0e36c820141782a5b63973cd96e803fb",
+      "imports": []
+    },
+    "src/features/admin/community/model/community.ts": {
+      "nonImportHash": "799b67be4fd9200d84868d407a724dd450f987506925391bd961fbd108f16095",
+      "imports": [
+        {
+          "clause": "type { AdminCommunityReport, CommunityReportDetail }",
+          "target": "src/features/admin/community/types/adminCommunity.types.ts"
+        }
+      ]
+    }
+  },
+  "externalConsumers": [
+    "src/api/adminPendingWorkApi.ts -> src/features/admin/community/api/adminCommunityApi.ts",
+    "src/app/router/Router.tsx -> src/features/admin/community/pages/CommunityContentPage.tsx",
+    "src/app/router/Router.tsx -> src/features/admin/community/pages/CommunityReportsPage.tsx"
+  ],
+  "apiInventoryCount": 202,
+  "apiInventoryHash": "51e8584f2070b85b2dbda2c38d16e4651f5eb704e158d69e84cc95a45131dabb"
+}

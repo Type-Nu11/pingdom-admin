@@ -10,7 +10,7 @@ const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
-const { useAdminMerchantPlaceApplications, EMPTY_HISTORY_FILTERS } = await server.ssrLoadModule('/src/hooks/useAdminMerchantPlaceApplications.ts')
+const { useAdminMerchantPlaceApplications, EMPTY_HISTORY_FILTERS } = await server.ssrLoadModule('/src/features/admin/merchantApplications/hooks/useAdminMerchantPlaceApplications.ts')
 let root, state, handler
 const calls = []
 const auth = { clearAuth() {} }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   approveAdminMerchantOwner,
   getAdminMerchantOwner,
@@ -11,8 +11,8 @@ import {
   updateAdminMerchantOwnerOnboarding,
   updateAdminMerchantOwnerPlaceQuality,
 } from "../api/adminMerchantOwnerApi";
-import { shouldClearAuth, getAuthErrorMessage } from "../api/authError";
-import { isApiError } from "../api/customAxios";
+import { shouldClearAuth, getAuthErrorMessage } from "../../../../api/authError";
+import { isApiError } from "../../../../api/customAxios";
 import type {
   AdminMerchantOnboardingUpdateRequest,
   AdminMerchantOwnerErrorResponse,
@@ -23,8 +23,8 @@ import type {
   AdminMerchantOwnerReviewRequest,
   MerchantOwnerStatus,
 } from "../types/adminMerchantOwner.types";
-import { logDebugError } from "../utils/debugLogger";
-import { useAuth } from "./useAuth";
+import { logDebugError } from "../../../../utils/debugLogger";
+import { useAuth } from "../../../../hooks/useAuth";
 
 export const ADMIN_OWNER_PAGE_SIZE = 10;
 const LIMIT = ADMIN_OWNER_PAGE_SIZE;

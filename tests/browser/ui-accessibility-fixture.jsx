@@ -18,7 +18,7 @@ import * as Verification from '../../src/pages/placeVerification/PlaceVerificati
 import * as Utility from '../../src/pages/adminUtility/AdminUtilityPage.styles'
 import * as Place from '../../src/features/admin/places/pages/PlaceManagePage.styles'
 import * as Merge from '../../src/pages/placeMerge/PlaceMergePage.styles'
-import * as Review from '../../src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.styles'
+import * as Review from '../../src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles'
 import * as Campaign from '../../src/components/merchant/MerchantWorkspace.styles'
 import * as Store from '../../src/components/merchant/MerchantSurface.styles'
 import * as Notices from '../../src/pages/merchantOperatingNotice/MerchantOperatingNoticePage.styles'

@@ -3,7 +3,7 @@ import { getAdminPlaceInformationReports } from './adminPlaceVerificationApi'
 import { getAdminScoutFieldReports, getAdminScoutProfiles } from './adminScoutApi'
 import { getAdminTrustScoreAnomalies } from './adminTrustScoreApi'
 import { getAdminVisitorVerificationCorrections, getAdminVisitorVerificationReports } from './adminVisitorVerificationApi'
-import { getAdminMerchantPlaceApplications } from './adminMerchantPlaceApplicationApi'
+import { getAdminMerchantPlaceApplications } from '../features/admin/merchantApplications/api/adminMerchantPlaceApplicationApi'
 import { getAdminPlaceReviewDeletionRequests } from './adminPlaceReviewDeletionApi'
 import { getCommunityReports } from './adminCommunityApi'
 

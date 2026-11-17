@@ -9,7 +9,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createElement: h, act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
-const { useApplicationAttachmentPreview } = await server.ssrLoadModule('/src/hooks/useApplicationAttachmentPreview.ts')
+const { useApplicationAttachmentPreview } = await server.ssrLoadModule('/src/features/admin/merchantApplications/hooks/useApplicationAttachmentPreview.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const originalCreate = URL.createObjectURL, originalRevoke = URL.revokeObjectURL
 let root, state, adapter, counter = 0

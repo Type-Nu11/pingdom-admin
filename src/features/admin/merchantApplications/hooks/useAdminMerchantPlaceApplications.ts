@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import * as api from '../api/adminMerchantPlaceApplicationApi'
-import { getAdminMerchantOwner } from '../api/adminMerchantOwnerApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { getAdminMerchantOwner } from '../../merchantOwners/api/adminMerchantOwnerApi'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminMerchantPlaceApplication,
   AdminMerchantPlaceApplicationAttachment,
@@ -12,9 +12,9 @@ import type {
   MerchantPlaceApplicationStatus,
   MerchantPlaceApplicationType,
 } from '../types/adminMerchantPlaceApplication.types'
-import type { AdminMerchantOwnerProfile } from '../types/adminMerchantOwner.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import type { AdminMerchantOwnerProfile } from '../../merchantOwners/types/adminMerchantOwner.types'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 const CATEGORY_MESSAGES = {
   unauthorized: '로그인이 필요합니다.',

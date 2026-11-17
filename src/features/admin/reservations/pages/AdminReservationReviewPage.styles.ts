@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { SecondaryButton } from '../placeMerge/PlaceMergePage.styles'
+import { SecondaryButton } from '../../../../pages/placeMerge/PlaceMergePage.styles'
 
 export const FilterGrid = styled.div`
   display: grid;

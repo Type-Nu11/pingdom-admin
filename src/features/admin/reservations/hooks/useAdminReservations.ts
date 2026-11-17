@@ -1,19 +1,19 @@
-import { useListQueryState, listQueryKey } from './useListQueryState'
+import { useListQueryState, listQueryKey } from '../../../../hooks/useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getAdminReservation,
   getAdminReservations,
 } from '../api/adminReservationApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminReservation,
   AdminReservationErrorResponse,
   AdminReservationQuery,
 } from '../types/adminReservation.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
-import { DEFAULT_RESERVATION_QUERY, type ReservationReviewQuery } from '../utils/reservationReviewContext'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
+import { DEFAULT_RESERVATION_QUERY, type ReservationReviewQuery } from '../model/reservationReviewContext'
 
 export const ADMIN_RESERVATION_PAGE_SIZE = 10
 const LIMIT = ADMIN_RESERVATION_PAGE_SIZE

@@ -15,9 +15,9 @@ const { MemoryRouter, Routes, Route, useNavigate, useLocation } = await import('
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { AdminNotificationContext } = await server.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
-const { default: Page } = await server.ssrLoadModule('/src/pages/adminReservationReview/AdminReservationReviewPage.tsx')
+const { default: Page } = await server.ssrLoadModule('/src/features/admin/reservations/pages/AdminReservationReviewPage.tsx')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
-const context = await server.ssrLoadModule('/src/utils/reservationReviewContext.ts')
+const context = await server.ssrLoadModule('/src/features/admin/reservations/model/reservationReviewContext.ts')
 const returns = await server.ssrLoadModule('/src/utils/authReturn.ts')
 const user = { id: 99, username: '합성 QA', role: 'ADMIN' }
 const notifications = { notifications: [], unreadCount: 0, pendingWorkItems: [], pendingWorkCount: 0, status: 'success', pendingWorkStatus: 'success' }
@@ -255,6 +255,6 @@ test('externally changed status is refreshed through GET without an administrato
   assert.ok(calls.every(call => call.method === 'get'))
 })
 test('retired administrator mutation functions are not exported', async () => {
-  const api = await server.ssrLoadModule('/src/api/adminReservationApi.ts')
+  const api = await server.ssrLoadModule('/src/features/admin/reservations/api/adminReservationApi.ts')
   assert.deepEqual(Object.keys(api).filter(name => !name.startsWith('__')).sort(), ['getAdminReservation', 'getAdminReservations'])
 })

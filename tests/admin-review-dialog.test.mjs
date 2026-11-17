@@ -12,7 +12,7 @@ const { MemoryRouter } = await import('react-router-dom')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { AdminNotificationContext } = await server.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
-const { useAdminMerchantPlaceApplications } = await server.ssrLoadModule('/src/hooks/useAdminMerchantPlaceApplications.ts')
+const { useAdminMerchantPlaceApplications } = await server.ssrLoadModule('/src/features/admin/merchantApplications/hooks/useAdminMerchantPlaceApplications.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { AppDialog } = await server.ssrLoadModule('/src/components/common/AppDialog.tsx')
 let root, hook, adapter

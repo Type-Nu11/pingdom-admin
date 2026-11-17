@@ -66,8 +66,8 @@ test('cross-feature place access is explicit and never loads the page through a 
   const allowed = new Map([
     ['src/api/adminTargetSearchApi.ts', ['api/adminPlaceApi.ts']],
     ['src/app/router/Router.tsx', ['pages/PlaceManagePage.tsx']],
-    ['src/pages/adminReservationReview/AdminReservationReviewPage.tsx', ['components/PlaceDetailLink.tsx']],
-    ['src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.tsx', ['components/PlaceDetailLink.tsx']],
+    ['src/features/admin/reservations/pages/AdminReservationReviewPage.tsx', ['components/PlaceDetailLink.tsx']],
+    ['src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx', ['components/PlaceDetailLink.tsx']],
     ['src/pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage.tsx', ['api/adminPlaceApi.ts', 'types/adminPlace.types.ts', 'pages/PlaceManagePage.styles.ts']],
   ])
   const seen = new Set()

@@ -1,26 +1,26 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import { ListPane } from '../../components/common/ListPane'
-import { AdminSelect } from '../../components/common/AdminStatusSelect'
-import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
-import { ListDetailPage, ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
-import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
-import { ADMIN_OWNER_PAGE_SIZE, useAdminMerchantOwners } from '../../hooks/useAdminMerchantOwners'
-import { useAuth } from '../../hooks/useAuth'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import { ListPane } from '../../../../components/common/ListPane'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import { AdminStatusFilter } from '../../../../components/common/AdminStatusFilter'
+import { ListDetailPage, ListDetailWorkspace } from '../../../../components/common/ListDetailWorkspace'
+import { AdminDateTimePicker } from '../../../../components/common/AdminDateTimePicker'
+import { ADMIN_OWNER_PAGE_SIZE, useAdminMerchantOwners } from '../hooks/useAdminMerchantOwners'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminMerchantOwnerPlace,
   MerchantOnboardingStatus,
   MerchantOperationalQualityStatus,
   MerchantOwnerStatus,
-} from '../../types/adminMerchantOwner.types'
-import * as Shell from '../../app/layouts/AdminShell.styles'
-import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as S from '../placeVerification/PlaceVerificationPage.styles'
+} from '../types/adminMerchantOwner.types'
+import * as Shell from '../../../../app/layouts/AdminShell.styles'
+import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as S from '../../../../pages/placeVerification/PlaceVerificationPage.styles'
 
 const OWNER_STATUS: Record<MerchantOwnerStatus, string> = { PENDING: '심사 대기', ACTIVE: '운영 중', REJECTED: '반려', REVOKED: '권한 회수' }
 const ONBOARDING_STATUS: Record<MerchantOnboardingStatus, string> = { NOT_STARTED: '시작 전', IN_PROGRESS: '진행 중', COMPLETED: '완료' }

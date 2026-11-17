@@ -1,36 +1,36 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { AdminTargetSearch } from '../../components/common/AdminTargetSearch'
-import { searchAdminPlaces } from '../../api/adminTargetSearchApi'
-import { PlaceDetailLink } from '../../features/admin/places/components/PlaceDetailLink'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
-import { ListQueryBoundary } from '../../components/common/ListQueryBoundary'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { AdminTargetSearch } from '../../../../components/common/AdminTargetSearch'
+import { searchAdminPlaces } from '../../../../api/adminTargetSearchApi'
+import { PlaceDetailLink } from '../../places/components/PlaceDetailLink'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
+import { ListQueryBoundary } from '../../../../components/common/ListQueryBoundary'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import { AdminSelect } from '../../components/common/AdminStatusSelect'
-import { ListPane } from '../../components/common/ListPane'
-import { ListDetailPage, ListDetailWorkspace } from '../../components/common/ListDetailWorkspace'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations } from '../../hooks/useAdminReservations'
-import { formatListRange } from '../../utils/listRange'
-import { formatReservationSchedule, formatReservationEventTime as formatDate } from '../../utils/reservationTime'
-import { listQueryKey } from '../../hooks/useListQueryState'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import { ListPane } from '../../../../components/common/ListPane'
+import { ListDetailPage, ListDetailWorkspace } from '../../../../components/common/ListDetailWorkspace'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { ADMIN_RESERVATION_PAGE_SIZE, useAdminReservations } from '../hooks/useAdminReservations'
+import { formatListRange } from '../../../../utils/listRange'
+import { formatReservationSchedule, formatReservationEventTime as formatDate } from '../../../../utils/reservationTime'
+import { listQueryKey } from '../../../../hooks/useListQueryState'
 import {
   DEFAULT_RESERVATION_QUERY,
   readReservationReviewContext,
   reservationReviewOwnerMismatch,
   writeReservationReviewContext,
   type ReservationReviewQuery,
-} from '../../utils/reservationReviewContext'
-import { useAuth } from '../../hooks/useAuth'
+} from '../model/reservationReviewContext'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminReservation,
   AdminReservationStatus,
-} from '../../types/adminReservation.types'
-import * as Shell from '../../app/layouts/AdminShell.styles'
-import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as S from '../placeVerification/PlaceVerificationPage.styles'
+} from '../types/adminReservation.types'
+import * as Shell from '../../../../app/layouts/AdminShell.styles'
+import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as S from '../../../../pages/placeVerification/PlaceVerificationPage.styles'
 import * as ReviewUI from './AdminReservationReviewPage.styles'
 
 const STATUS: Record<AdminReservationStatus, { label: string; tone: 'success' | 'warning' | 'danger' }> = {

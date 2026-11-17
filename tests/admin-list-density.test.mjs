@@ -20,7 +20,7 @@ const { formatListRange } = await server.ssrLoadModule('/src/utils/listRange.ts'
 const { ListPane } = await server.ssrLoadModule('/src/components/common/ListPane.tsx')
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { AdminNotificationContext } = await server.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
-const { default: Page } = await server.ssrLoadModule('/src/pages/merchantPlaceApplicationReview/MerchantPlaceApplicationReviewPage.tsx')
+const { default: Page } = await server.ssrLoadModule('/src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx')
 let root, calls
 beforeEach(() => {
   root = createRoot(document.getElementById('root'))

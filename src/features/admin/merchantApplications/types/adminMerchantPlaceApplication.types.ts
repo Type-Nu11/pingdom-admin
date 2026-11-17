@@ -1,5 +1,5 @@
-import type { AuthErrorResponse } from './auth.types'
-import type { MerchantPlaceApplicationNewPlace } from './merchantPlaceApplication.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
+import type { MerchantPlaceApplicationNewPlace } from '../../../../types/merchantPlaceApplication.types'
 
 export type MerchantPlaceApplicationType = 'NEW_PLACE' | 'EXISTING_PLACE_CLAIM'
 export type MerchantPlaceApplicationStatus =

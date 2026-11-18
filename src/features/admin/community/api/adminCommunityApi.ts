@@ -1,4 +1,4 @@
-import client from './customAxios'
+import client from '../../../../api/customAxios'
 import type {
   AdminCommunityPost, AdminCommunityComment, AdminCommunityReport,
   CommunityPostsPage, CommunityCommentsPage, CommunityReportsPage,

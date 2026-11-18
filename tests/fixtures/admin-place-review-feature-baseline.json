@@ -656,6 +656,9 @@
     "src/components/common/AdminPlacePicker.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/components/common/AdminTargetSearch.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/components/recommendation/RecommendationPolicyPanel.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/community/components/CommunityShared.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/community/pages/CommunityContentPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/community/pages/CommunityReportsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles.ts -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/merchantOwners/pages/MerchantOwnerPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
@@ -663,9 +666,6 @@
     "src/features/admin/reservations/pages/AdminReservationReviewPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/userRoles/pages/UserRolePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
-    "src/pages/community/CommunityContentPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
-    "src/pages/community/CommunityReportsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
-    "src/pages/community/CommunityShared.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/dataQuality/DataQualityPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/notificationOperations/NotificationOperationsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/operationHistory/OperationHistoryPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
@@ -677,5 +677,5 @@
     "src/pages/verifiedBoostProduct/VerifiedBoostProductPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
   ],
   "apiInventoryCount": 202,
-  "apiInventoryHash": "5f9e7690ddf6d21174ba67f8a2e745cc38790216f1884ca068a86c54fdcffdc6"
+  "apiInventoryHash": "51e8584f2070b85b2dbda2c38d16e4651f5eb704e158d69e84cc95a45131dabb"
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { shouldClearAuth } from '../api/authError'
-import { useAuth } from './useAuth'
+import { shouldClearAuth } from '../../../../api/authError'
+import { useAuth } from '../../../../hooks/useAuth'
 import { communityError } from './useCommunityQuery'
 import type { CommunityPage } from '../types/adminCommunity.types'
 

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { typo, adminColors } from '../../styles/theme'
+import { typo, adminColors } from '../../../../styles/theme'
 
 export const Filters = styled.form`
   display: flex;

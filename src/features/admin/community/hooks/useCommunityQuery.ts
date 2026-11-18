@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { useAuth } from './useAuth'
-import { isApiError } from '../api/customAxios'
-import type { AuthErrorResponse } from '../types/auth.types'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { useAuth } from '../../../../hooks/useAuth'
+import { isApiError } from '../../../../api/customAxios'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export function communityError(error: unknown) {
   if (!isApiError<AuthErrorResponse>(error)) return '요청을 처리하지 못했습니다. 다시 시도해주세요.'

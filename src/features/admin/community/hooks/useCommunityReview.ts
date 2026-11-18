@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { reviewCommunityReport } from '../api/adminCommunityApi'
-import { shouldClearAuth } from '../api/authError'
-import { canReviewCommunityReport } from '../utils/community'
+import { shouldClearAuth } from '../../../../api/authError'
+import { canReviewCommunityReport } from '../model/community'
 import { communityError } from './useCommunityQuery'
-import { useAuth } from './useAuth'
+import { useAuth } from '../../../../hooks/useAuth'
 import type { CommunityDecision, CommunityReportDetail } from '../types/adminCommunity.types'
 
 export function useCommunityReview() {

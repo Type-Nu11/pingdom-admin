@@ -1,0 +1,553 @@
+{
+  "baseCommit": "775649279367682a23560a618ba6b1980e4ac83e",
+  "moves": {
+    "src/pages/dataQuality/DataQualityPage.tsx": "src/features/admin/dataQuality/pages/DataQualityPage.tsx",
+    "src/hooks/useAdminDataQualityIssues.ts": "src/features/admin/dataQuality/hooks/useAdminDataQualityIssues.ts",
+    "src/api/adminDataQualityApi.ts": "src/features/admin/dataQuality/api/adminDataQualityApi.ts",
+    "src/types/adminDataQuality.types.ts": "src/features/admin/dataQuality/types/adminDataQuality.types.ts",
+    "src/pages/notificationOperations/NotificationOperationsPage.tsx": "src/features/admin/notificationOperations/pages/NotificationOperationsPage.tsx",
+    "src/hooks/useAdminNotificationOperations.ts": "src/features/admin/notificationOperations/hooks/useAdminNotificationOperations.ts",
+    "src/utils/adminNotificationLabels.ts": "src/features/admin/notificationOperations/model/adminNotificationLabels.ts",
+    "src/pages/operationHistory/OperationHistoryPage.tsx": "src/features/admin/operationHistory/pages/OperationHistoryPage.tsx",
+    "src/pages/operationHistory/OperationHistoryPage.styles.ts": "src/features/admin/operationHistory/pages/OperationHistoryPage.styles.ts",
+    "src/hooks/useAdminOperationHistories.ts": "src/features/admin/operationHistory/hooks/useAdminOperationHistories.ts",
+    "src/api/adminOperationHistoryApi.ts": "src/features/admin/operationHistory/api/adminOperationHistoryApi.ts",
+    "src/types/adminOperationHistory.types.ts": "src/features/admin/operationHistory/types/adminOperationHistory.types.ts",
+    "src/pages/s3Orphan/S3OrphanPage.tsx": "src/features/admin/s3Orphans/pages/S3OrphanPage.tsx",
+    "src/hooks/useAdminS3Orphans.ts": "src/features/admin/s3Orphans/hooks/useAdminS3Orphans.ts",
+    "src/api/adminS3OrphanApi.ts": "src/features/admin/s3Orphans/api/adminS3OrphanApi.ts",
+    "src/types/adminS3Orphan.types.ts": "src/features/admin/s3Orphans/types/adminS3Orphan.types.ts",
+    "src/utils/s3ReportState.ts": "src/features/admin/s3Orphans/model/s3ReportState.ts"
+  },
+  "files": {
+    "src/features/admin/dataQuality/pages/DataQualityPage.tsx": {
+      "nonImportHash": "61dde9424bf98bb70f7fbd8ab949dc907fa084645c59e61f05b21447c637db53",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ useEffect, useMemo, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ AdminStatusFilter }",
+          "target": "src/components/common/AdminStatusFilter.tsx"
+        },
+        {
+          "clause": "{ AdminStatusSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ useAdminDataQualityIssues }",
+          "target": "src/features/admin/dataQuality/hooks/useAdminDataQualityIssues.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ formatLocalDateTime as formatDate }",
+          "target": "src/utils/displayFormat.ts"
+        },
+        {
+          "clause": "type { DataQualityIssueSeverity, DataQualityIssueStatus, }",
+          "target": "src/features/admin/dataQuality/types/adminDataQuality.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/dataQuality/hooks/useAdminDataQualityIssues.ts": {
+      "nonImportHash": "24bc74d6a6c9b05eeea115c5d0c6dbce79a1a60596486daa36d25883c747f6dc",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useLayoutEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ getAdminDataQualityIssues }",
+          "target": "src/features/admin/dataQuality/api/adminDataQualityApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminDataQualityErrorResponse, AdminDataQualityIssuePageResponse }",
+          "target": "src/features/admin/dataQuality/types/adminDataQuality.types.ts"
+        },
+        {
+          "clause": "{ getAuthSessionId }",
+          "target": "src/utils/authStorage.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/dataQuality/api/adminDataQualityApi.ts": {
+      "nonImportHash": "016f30266b571cbb78b1549fea4e651abb2bf20a06d3ae69aeff5bab052aabbe",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminDataQualityIssuePageResponse, }",
+          "target": "src/features/admin/dataQuality/types/adminDataQuality.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/dataQuality/types/adminDataQuality.types.ts": {
+      "nonImportHash": "d5ca06359717168c65bc93c2e21e84db40254922d7474f3b92c976a53c441e3f",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/notificationOperations/pages/NotificationOperationsPage.tsx": {
+      "nonImportHash": "10957d1a022237bfc22bee993b70dea3092f3238271f42fd776627a4953381b5",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ AdminStatusFilter }",
+          "target": "src/components/common/AdminStatusFilter.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ useAdminNotificationOperations }",
+          "target": "src/features/admin/notificationOperations/hooks/useAdminNotificationOperations.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ NOTIFICATION_TYPE_LABELS, DELIVERY_STATUS_LABELS, OUTBOX_STATUS_LABELS, DELIVERY_CHANNEL_LABELS }",
+          "target": "src/features/admin/notificationOperations/model/adminNotificationLabels.ts"
+        },
+        {
+          "clause": "{ formatAuditTargetType }",
+          "target": "src/utils/adminAuditPresentation.ts"
+        },
+        {
+          "clause": "type { AdminNotificationDeliveryStatus, AdminOutboxEventItem, AdminOutboxEventStatus, }",
+          "target": "src/types/adminNotification.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/notificationOperations/hooks/useAdminNotificationOperations.ts": {
+      "nonImportHash": "c46981d4682fbb2ad2c9093de26e0224c17b1c8f0c791744290f0ab2ceb58756",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "{ getAdminNotificationDeliveries, getAdminNotifications, getAdminOutboxEvents, markAdminNotificationAsRead, markAllAdminNotificationsAsRead, retryAdminOutboxEvent, }",
+          "target": "src/api/adminNotificationApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminNotificationDeliveryItem, AdminNotificationDeliveryStatus, AdminNotificationItem, AdminOutboxEventItem, AdminOutboxEventStatus, }",
+          "target": "src/types/adminNotification.types.ts"
+        },
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/notificationOperations/model/adminNotificationLabels.ts": {
+      "nonImportHash": "dc0446e562c3ef5526ca41c235f722ba2ed553006301081c3b1124cadb55bf2d",
+      "imports": [
+        {
+          "clause": "type { AdminNotificationType, AdminNotificationDeliveryStatus, AdminOutboxEventStatus, AdminNotificationDeliveryChannel }",
+          "target": "src/types/adminNotification.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/operationHistory/pages/OperationHistoryPage.tsx": {
+      "nonImportHash": "b3959eec63ecabd97772242dc4b4ab0f64ed43e496a11507c260c6689453f853",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ AccessibleTabList }",
+          "target": "src/components/common/AccessibleTabList.tsx"
+        },
+        {
+          "clause": "{ ListQueryBoundary }",
+          "target": "src/components/common/ListQueryBoundary.tsx"
+        },
+        {
+          "clause": "{ useEffect, useState, type FormEvent }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useNavigate }",
+          "target": "react-router-dom"
+        },
+        {
+          "clause": "{ AdminSelect }",
+          "target": "src/components/common/AdminStatusSelect.tsx"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminDateTimePicker }",
+          "target": "src/components/common/AdminDateTimePicker.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ ListPane }",
+          "target": "src/components/common/ListPane.tsx"
+        },
+        {
+          "clause": "{ formatListRange }",
+          "target": "src/utils/listRange.ts"
+        },
+        {
+          "clause": "{ ListDetailWorkspace }",
+          "target": "src/components/common/ListDetailWorkspace.tsx"
+        },
+        {
+          "clause": "{ useAdminOperationHistories }",
+          "target": "src/features/admin/operationHistory/hooks/useAdminOperationHistories.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ AUDIT_ACTION_LABELS, AUDIT_TARGET_TYPE_LABELS, auditActionCode, auditTargetTypeCode, formatAuditAction, formatAuditTargetType, formatAuditReason, isAuditReadOnly, auditApplicationId }",
+          "target": "src/utils/adminAuditPresentation.ts"
+        },
+        {
+          "clause": "type { AdminAuditLogItem, AdminAuditLogRequest, PrivacyProcessingAction, PrivacyProcessingHistoryItem, PrivacyProcessingHistoryRequest, }",
+          "target": "src/features/admin/operationHistory/types/adminOperationHistory.types.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        },
+        {
+          "clause": "* as History",
+          "target": "src/features/admin/operationHistory/pages/OperationHistoryPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/operationHistory/pages/OperationHistoryPage.styles.ts": {
+      "nonImportHash": "368429d9bdf03cac1f34099b37aa09ab8bf815320e481d3f6f01f8b23543efae",
+      "imports": [
+        {
+          "clause": "styled",
+          "target": "styled-components"
+        },
+        {
+          "clause": "{ typo, adminColors, radius }",
+          "target": "src/styles/theme.ts"
+        },
+        {
+          "clause": "{ Panel }",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/operationHistory/hooks/useAdminOperationHistories.ts": {
+      "nonImportHash": "ddb5b17b8821413bc8f002f47c2809a0368444099d6a1f0ef741fafae79ced44",
+      "imports": [
+        {
+          "clause": "{ useListQueryState, listQueryKey }",
+          "target": "src/hooks/useListQueryState.ts"
+        },
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ getAdminAuditLogs, getPrivacyProcessingHistories, }",
+          "target": "src/features/admin/operationHistory/api/adminOperationHistoryApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminAuditLogRequest, AdminAuditLogResponse, PrivacyProcessingHistoryRequest, PrivacyProcessingHistoryResponse, }",
+          "target": "src/features/admin/operationHistory/types/adminOperationHistory.types.ts"
+        },
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/operationHistory/api/adminOperationHistoryApi.ts": {
+      "nonImportHash": "10d71898f42e3f00895469dc70f2dab745123f595feaa5f8db4b826e4c77a392",
+      "imports": [
+        {
+          "clause": "type { AdminAuditLogRequest, AdminAuditLogResponse, PrivacyProcessingHistoryRequest, PrivacyProcessingHistoryResponse, }",
+          "target": "src/features/admin/operationHistory/types/adminOperationHistory.types.ts"
+        },
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        }
+      ]
+    },
+    "src/features/admin/operationHistory/types/adminOperationHistory.types.ts": {
+      "nonImportHash": "f0bb5c87cc8620061abd6f145d4746e44d7d1eb772b6e5a69e09db4a1ca99b04",
+      "imports": []
+    },
+    "src/features/admin/s3Orphans/pages/S3OrphanPage.tsx": {
+      "nonImportHash": "11a0cc2f701cc51fcb36a751ef93961341f1c3149f4a983cbf2633b3137a2048",
+      "imports": [
+        {
+          "clause": "{ AdminLayout }",
+          "target": "src/app/layouts/AdminLayout.tsx"
+        },
+        {
+          "clause": "{ MaterialIcon }",
+          "target": "src/shared/ui/MaterialIcon.ts"
+        },
+        {
+          "clause": "{ useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ AdminNotificationButton }",
+          "target": "src/components/adminNotification/AdminNotificationButton.tsx"
+        },
+        {
+          "clause": "{ AdminPagination }",
+          "target": "src/components/common/AdminPagination.tsx"
+        },
+        {
+          "clause": "{ useAdminS3Orphans }",
+          "target": "src/features/admin/s3Orphans/hooks/useAdminS3Orphans.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        },
+        {
+          "clause": "{ formatLocalDateTime as date }",
+          "target": "src/utils/displayFormat.ts"
+        },
+        {
+          "clause": "* as Shell",
+          "target": "src/app/layouts/AdminShell.styles.ts"
+        },
+        {
+          "clause": "* as Shared",
+          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+        },
+        {
+          "clause": "* as S",
+          "target": "src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
+        }
+      ]
+    },
+    "src/features/admin/s3Orphans/hooks/useAdminS3Orphans.ts": {
+      "nonImportHash": "a29cb407488f8ee22ce611944191b00f4562887b1231e2c5ed6c81fdecfb5f80",
+      "imports": [
+        {
+          "clause": "{ useCallback, useEffect, useRef, useState }",
+          "target": "react"
+        },
+        {
+          "clause": "{ useAutoDismissMessage }",
+          "target": "src/hooks/useAutoDismissMessage.ts"
+        },
+        {
+          "clause": "* as api",
+          "target": "src/features/admin/s3Orphans/api/adminS3OrphanApi.ts"
+        },
+        {
+          "clause": "{ shouldClearAuth, getAuthErrorMessage }",
+          "target": "src/api/authError.ts"
+        },
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminS3OrphanErrorResponse, S3OrphanDeleteResult, S3OrphanDryRun, S3OrphanReport, S3OrphanReportStatus }",
+          "target": "src/features/admin/s3Orphans/types/adminS3Orphan.types.ts"
+        },
+        {
+          "clause": "{ isMissingLatestS3Report }",
+          "target": "src/features/admin/s3Orphans/model/s3ReportState.ts"
+        },
+        {
+          "clause": "{ logDebugError }",
+          "target": "src/utils/debugLogger.ts"
+        },
+        {
+          "clause": "{ useAuth }",
+          "target": "src/hooks/useAuth.ts"
+        }
+      ]
+    },
+    "src/features/admin/s3Orphans/api/adminS3OrphanApi.ts": {
+      "nonImportHash": "5764d53df6d4bae2ad7ba027256eef7239963846ea69ed7d539e8f1905240e70",
+      "imports": [
+        {
+          "clause": "customAxios",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { S3OrphanDeleteResult, S3OrphanDryRun, S3OrphanReport, S3OrphanReportStatus }",
+          "target": "src/features/admin/s3Orphans/types/adminS3Orphan.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/s3Orphans/types/adminS3Orphan.types.ts": {
+      "nonImportHash": "ef48a310d4f93847439d15596a14081fd025781b12111a9ee6faa852b2bd99d2",
+      "imports": [
+        {
+          "clause": "type { AuthErrorResponse }",
+          "target": "src/types/auth.types.ts"
+        }
+      ]
+    },
+    "src/features/admin/s3Orphans/model/s3ReportState.ts": {
+      "nonImportHash": "6832416a02c352db3e71e0803a3d47e5a2d928ca0968f9b18d1b6a8b4799c196",
+      "imports": [
+        {
+          "clause": "{ isApiError }",
+          "target": "src/api/customAxios.ts"
+        },
+        {
+          "clause": "type { AdminS3OrphanErrorResponse }",
+          "target": "src/features/admin/s3Orphans/types/adminS3Orphan.types.ts"
+        }
+      ]
+    }
+  },
+  "externalConsumers": [
+    "src/app/router/Router.tsx -> src/features/admin/dataQuality/pages/DataQualityPage.tsx",
+    "src/app/router/Router.tsx -> src/features/admin/notificationOperations/pages/NotificationOperationsPage.tsx",
+    "src/app/router/Router.tsx -> src/features/admin/operationHistory/pages/OperationHistoryPage.tsx",
+    "src/app/router/Router.tsx -> src/features/admin/s3Orphans/pages/S3OrphanPage.tsx",
+    "src/utils/adminAuditPresentation.ts -> src/features/admin/operationHistory/types/adminOperationHistory.types.ts"
+  ],
+  "apiInventoryCount": 202,
+  "apiInventoryHash": "ea3099aae6e7ce1b165ec618ae627149511e77769cf4d43e8446e7587e465730"
+}

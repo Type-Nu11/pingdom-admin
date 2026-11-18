@@ -2,10 +2,10 @@
   {
     "method": "GET",
     "path": "/admin/data-quality/issues",
-    "file": "src/api/adminDataQualityApi.ts",
+    "file": "src/features/admin/dataQuality/api/adminDataQualityApi.ts",
     "function": "getAdminDataQualityIssues",
     "callers": [
-      "src/hooks/useAdminDataQualityIssues.ts"
+      "src/features/admin/dataQuality/hooks/useAdminDataQualityIssues.ts"
     ],
     "known_contract": {
       "method": "GET",

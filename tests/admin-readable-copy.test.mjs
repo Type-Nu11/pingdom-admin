@@ -6,7 +6,7 @@ import { createServer } from './helpers/isolated-vite.mjs'
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 after(() => server.close())
 const audit = await server.ssrLoadModule('/src/utils/adminAuditPresentation.ts')
-const notification = await server.ssrLoadModule('/src/utils/adminNotificationLabels.ts')
+const notification = await server.ssrLoadModule('/src/features/admin/notificationOperations/model/adminNotificationLabels.ts')
 const view = { action: 'MERCHANT_PLACE_APPLICATION_ATTACHMENT_VIEWED', targetType: 'MERCHANT_PLACE_APPLICATION_ATTACHMENT', targetId: '2',
   reason: '통합 신청 민감 첨부 메타데이터 조회: REPRESENTATIVE_IMAGE', beforeState: '{}', afterState: '{"applicationId":1}' }
 

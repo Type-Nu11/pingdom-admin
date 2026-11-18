@@ -1,10 +1,14 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// Keep the historical Git path while overlaying the regression at its current path.
+const relocated = {
+  'src/hooks/useAdminNotificationOperations.ts': 'src/features/admin/notificationOperations/hooks/useAdminNotificationOperations.ts',
+}
 const cases = [
   [148, 'f21faa6^', 'registration-validation', 'existing draft blocks submission for required field', ['src/pages/merchantPlaceRegistration/MerchantPlaceRegistrationPage.tsx']],
   [149, '6704261^', 'auth-session', 'old-session success response is canceled after account switch', ['src/api/customAxios.ts']],
@@ -34,7 +38,16 @@ try {
       execFileSync('tar', ['-xf', '-', '-C', cwd], { input: archive })
       symlinkSync(join(root, 'node_modules'), join(cwd, 'node_modules'), 'dir')
       if (mode === 'before') {
-        for (const file of files) writeFileSync(join(cwd, file), git('show', `${old}:${file}`))
+        for (const file of files) {
+          const path = relocated[file] ?? file
+          let source = git('show', `${old}:${file}`)
+          if (path !== file) source = source.toString().replace(/(\bfrom\s+['"])(\.[^'"]+)(['"])/g, (_, prefix, specifier, suffix) => {
+            const target = resolve(cwd, dirname(file), specifier)
+            const next = relative(resolve(cwd, dirname(path)), target)
+            return prefix + (next.startsWith('.') ? next : './' + next) + suffix
+          })
+          writeFileSync(join(cwd, path), source)
+        }
       }
       const pattern = `^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`
       const run = spawnSync(process.execPath, ['--test', '--test-reporter=tap', `--test-name-pattern=${pattern}`, `tests/${suite}.test.mjs`], {

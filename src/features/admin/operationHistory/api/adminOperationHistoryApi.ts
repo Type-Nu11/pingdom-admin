@@ -4,7 +4,7 @@ import type {
   PrivacyProcessingHistoryRequest,
   PrivacyProcessingHistoryResponse,
 } from '../types/adminOperationHistory.types'
-import customAxios from './customAxios'
+import customAxios from '../../../../api/customAxios'
 
 export async function getAdminAuditLogs(request: AdminAuditLogRequest = {}) {
   const { data } = await customAxios.get<AdminAuditLogResponse>('/admin/audit-logs', {

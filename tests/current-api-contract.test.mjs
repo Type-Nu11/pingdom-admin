@@ -48,7 +48,7 @@ test('five residual types match their distinct query/request/response contracts'
   assert.ok(members('src/features/admin/merchantOwners/types/adminMerchantOwner.types.ts', 'AdminMerchantOwnerPlaceUpdateRequest').includes('placeIds'))
   assert.ok(!members('src/features/admin/places/types/adminPlace.types.ts', 'AdminPlaceDetail').includes('kakaoPlaceId'))
   assert.ok(members('src/features/admin/merchantApplications/types/adminMerchantPlaceApplication.types.ts', 'AdminMerchantPlaceApplication').includes('businessRegistrationNumber'))
-  assert.match(readFileSync('src/types/adminS3Orphan.types.ts', 'utf8'), /S3OrphanReport extends Omit<S3OrphanReportStatus, 'completedAt'>/)
+  assert.match(readFileSync('src/features/admin/s3Orphans/types/adminS3Orphan.types.ts', 'utf8'), /S3OrphanReport extends Omit<S3OrphanReportStatus, 'completedAt'>/)
 })
 test('reference groups preserve unmodified source bytes and do not invent an old baseline', () => {
   const metadata = JSON.parse(readFileSync('docs/openapi/metadata.json', 'utf8'))

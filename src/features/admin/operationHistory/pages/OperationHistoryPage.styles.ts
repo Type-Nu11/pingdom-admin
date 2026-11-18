@@ -1,6 +1,6 @@
 import styled from 'styled-components'
-import { typo, adminColors, radius } from '../../styles/theme'
-import { Panel } from '../placeMerge/PlaceMergePage.styles'
+import { typo, adminColors, radius } from '../../../../styles/theme'
+import { Panel } from '../../../../pages/placeMerge/PlaceMergePage.styles'
 
 const neutral = adminColors
 

@@ -56,12 +56,12 @@ const MerchantPlaceApplicationReviewPage = lazy(
 const PlaceReviewDeletionPage = lazy(
   () => import('../../features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage'),
 )
-const S3OrphanPage = lazy(() => import('../../pages/s3Orphan/S3OrphanPage'))
+const S3OrphanPage = lazy(() => import('../../features/admin/s3Orphans/pages/S3OrphanPage'))
 const NotificationOperationsPage = lazy(
-  () => import('../../pages/notificationOperations/NotificationOperationsPage'),
+  () => import('../../features/admin/notificationOperations/pages/NotificationOperationsPage'),
 )
 const OperationHistoryPage = lazy(
-  () => import('../../pages/operationHistory/OperationHistoryPage'),
+  () => import('../../features/admin/operationHistory/pages/OperationHistoryPage'),
 )
 const MerchantStorePage = lazy(() => import('../../pages/merchantStore/MerchantStorePage'))
 const MerchantOnboardingPage = lazy(
@@ -107,7 +107,7 @@ const MerchantVerifiedBoostPage = lazy(
   () => import('../../pages/merchantVerifiedBoost/MerchantVerifiedBoostPage'),
 )
 const PlaceEventPage = lazy(() => import('../../pages/placeEvent/PlaceEventPage'))
-const DataQualityPage = lazy(() => import('../../pages/dataQuality/DataQualityPage'))
+const DataQualityPage = lazy(() => import('../../features/admin/dataQuality/pages/DataQualityPage'))
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'

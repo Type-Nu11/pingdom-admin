@@ -20,9 +20,9 @@ const vite = await createServer({ cacheDir, server: { middlewareMode: true, ws: 
 const { AuthContext } = await vite.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { AdminNotificationContext } = await vite.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
 const { default: client } = await vite.ssrLoadModule('/src/api/customAxios.ts')
-const { getAdminDataQualityIssues: getIssues } = await vite.ssrLoadModule('/src/api/adminDataQualityApi.ts')
-const { useAdminDataQualityIssues } = await vite.ssrLoadModule('/src/hooks/useAdminDataQualityIssues.ts')
-const { default: Page } = await vite.ssrLoadModule('/src/pages/dataQuality/DataQualityPage.tsx')
+const { getAdminDataQualityIssues: getIssues } = await vite.ssrLoadModule('/src/features/admin/dataQuality/api/adminDataQualityApi.ts')
+const { useAdminDataQualityIssues } = await vite.ssrLoadModule('/src/features/admin/dataQuality/hooks/useAdminDataQualityIssues.ts')
+const { default: Page } = await vite.ssrLoadModule('/src/features/admin/dataQuality/pages/DataQualityPage.tsx')
 const { clearStoredAuth } = await vite.ssrLoadModule('/src/utils/authStorage.ts')
 const notifications = { notifications: [], unreadCount: 0, pendingWorkItems: [], pendingWorkEntries: [],
   pendingWorkCount: 0, status: 'success', pendingWorkStatus: 'success' }

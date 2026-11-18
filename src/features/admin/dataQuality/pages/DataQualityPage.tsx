@@ -1,21 +1,21 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
-import { AdminStatusSelect } from '../../components/common/AdminStatusSelect'
-import { useAdminDataQualityIssues } from '../../hooks/useAdminDataQualityIssues'
-import { useAuth } from '../../hooks/useAuth'
-import { formatLocalDateTime as formatDate } from '../../utils/displayFormat'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import { AdminStatusFilter } from '../../../../components/common/AdminStatusFilter'
+import { AdminStatusSelect } from '../../../../components/common/AdminStatusSelect'
+import { useAdminDataQualityIssues } from '../hooks/useAdminDataQualityIssues'
+import { useAuth } from '../../../../hooks/useAuth'
+import { formatLocalDateTime as formatDate } from '../../../../utils/displayFormat'
 import type {
   DataQualityIssueSeverity,
   DataQualityIssueStatus,
-} from '../../types/adminDataQuality.types'
-import * as Shell from '../../app/layouts/AdminShell.styles'
-import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as S from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
+} from '../types/adminDataQuality.types'
+import * as Shell from '../../../../app/layouts/AdminShell.styles'
+import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as S from '../../placeVerification/pages/PlaceVerificationPage.styles'
 
 const SEVERITY_LABELS: Record<DataQualityIssueSeverity, string> = {
   INFO: '안내',

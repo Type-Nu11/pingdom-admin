@@ -1,4 +1,4 @@
-import type { AdminAuditLogItem } from '../types/adminOperationHistory.types'
+import type { AdminAuditLogItem } from '../features/admin/operationHistory/types/adminOperationHistory.types'
 
 // Display names only. Keep API codes, request filters and original log data intact.
 export const AUDIT_ACTION_LABELS: Record<string, string> = {

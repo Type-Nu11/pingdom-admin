@@ -1,20 +1,20 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { AdminStatusFilter } from "../../components/common/AdminStatusFilter";
-import { AdminPagination } from "../../components/common/AdminPagination";
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { AdminStatusFilter } from "../../../../components/common/AdminStatusFilter";
+import { AdminPagination } from "../../../../components/common/AdminPagination";
 import { useState } from "react";
-import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
-import { useAdminNotificationOperations } from "../../hooks/useAdminNotificationOperations";
-import { useAuth } from "../../hooks/useAuth";
-import { NOTIFICATION_TYPE_LABELS, DELIVERY_STATUS_LABELS, OUTBOX_STATUS_LABELS, DELIVERY_CHANNEL_LABELS } from '../../utils/adminNotificationLabels';
-import { formatAuditTargetType } from '../../utils/adminAuditPresentation';
+import { AdminNotificationButton } from "../../../../components/adminNotification/AdminNotificationButton";
+import { useAdminNotificationOperations } from "../hooks/useAdminNotificationOperations";
+import { useAuth } from "../../../../hooks/useAuth";
+import { NOTIFICATION_TYPE_LABELS, DELIVERY_STATUS_LABELS, OUTBOX_STATUS_LABELS, DELIVERY_CHANNEL_LABELS } from '../model/adminNotificationLabels';
+import { formatAuditTargetType } from '../../../../utils/adminAuditPresentation';
 import type {
   AdminNotificationDeliveryStatus,
   AdminOutboxEventItem,
   AdminOutboxEventStatus,
-} from "../../types/adminNotification.types";
-import * as Shell from "../../app/layouts/AdminShell.styles";
-import * as Shared from "../placeMerge/PlaceMergePage.styles";
-import * as S from "../../features/admin/placeVerification/pages/PlaceVerificationPage.styles";
+} from "../../../../types/adminNotification.types";
+import * as Shell from "../../../../app/layouts/AdminShell.styles";
+import * as Shared from "../../../../pages/placeMerge/PlaceMergePage.styles";
+import * as S from "../../placeVerification/pages/PlaceVerificationPage.styles";
 type Tab = "inbox" | "delivery" | "outbox";
 const DELIVERY: AdminNotificationDeliveryStatus[] = [
   "SUCCEEDED",

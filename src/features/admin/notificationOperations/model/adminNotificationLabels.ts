@@ -1,4 +1,4 @@
-import type { AdminNotificationType, AdminNotificationDeliveryStatus, AdminOutboxEventStatus, AdminNotificationDeliveryChannel } from '../types/adminNotification.types'
+import type { AdminNotificationType, AdminNotificationDeliveryStatus, AdminOutboxEventStatus, AdminNotificationDeliveryChannel } from '../../../../types/adminNotification.types'
 
 export const NOTIFICATION_TYPE_LABELS: Record<AdminNotificationType, string> = {
   NEW_HOTPLACE: '인기 장소 안내', NEW_LIKE: '새 좋아요',

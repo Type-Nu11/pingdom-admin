@@ -1,20 +1,20 @@
-import { useListQueryState, listQueryKey } from './useListQueryState'
+import { useListQueryState, listQueryKey } from '../../../../hooks/useListQueryState'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getAdminAuditLogs,
   getPrivacyProcessingHistories,
 } from '../api/adminOperationHistoryApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminAuditLogRequest,
   AdminAuditLogResponse,
   PrivacyProcessingHistoryRequest,
   PrivacyProcessingHistoryResponse,
 } from '../types/adminOperationHistory.types'
-import type { AuthErrorResponse } from '../types/auth.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 type HistoryTab = 'audit' | 'privacy'
 

@@ -1,14 +1,14 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
 import { useState } from "react";
-import { AdminNotificationButton } from "../../components/adminNotification/AdminNotificationButton";
-import { AdminPagination } from "../../components/common/AdminPagination";
-import { useAdminS3Orphans } from "../../hooks/useAdminS3Orphans";
-import { useAuth } from "../../hooks/useAuth";
-import { formatLocalDateTime as date } from "../../utils/displayFormat";
-import * as Shell from "../../app/layouts/AdminShell.styles";
-import * as Shared from "../placeMerge/PlaceMergePage.styles";
-import * as S from "../../features/admin/placeVerification/pages/PlaceVerificationPage.styles";
+import { AdminNotificationButton } from "../../../../components/adminNotification/AdminNotificationButton";
+import { AdminPagination } from "../../../../components/common/AdminPagination";
+import { useAdminS3Orphans } from "../hooks/useAdminS3Orphans";
+import { useAuth } from "../../../../hooks/useAuth";
+import { formatLocalDateTime as date } from "../../../../utils/displayFormat";
+import * as Shell from "../../../../app/layouts/AdminShell.styles";
+import * as Shared from "../../../../pages/placeMerge/PlaceMergePage.styles";
+import * as S from "../../placeVerification/pages/PlaceVerificationPage.styles";
 function S3OrphanPage() {
 
   const { user } = useAuth();

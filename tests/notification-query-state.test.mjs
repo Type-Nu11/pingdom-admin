@@ -11,7 +11,7 @@ const { createRoot } = await import('react-dom/client')
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { noExternal: ['styled-components'] } })
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
-const { useAdminNotificationOperations } = await server.ssrLoadModule('/src/hooks/useAdminNotificationOperations.ts')
+const { useAdminNotificationOperations } = await server.ssrLoadModule('/src/features/admin/notificationOperations/hooks/useAdminNotificationOperations.ts')
 const { AdminPagination } = await server.ssrLoadModule('/src/components/common/AdminPagination.tsx')
 let root, state, requests
 let paginationTab = 'outbox'

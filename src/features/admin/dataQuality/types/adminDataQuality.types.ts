@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type DataQualityIssueSeverity = 'INFO' | 'WARNING' | 'ERROR'
 export type DataQualityIssueStatus = 'OPEN' | 'RESOLVED' | 'IGNORED'

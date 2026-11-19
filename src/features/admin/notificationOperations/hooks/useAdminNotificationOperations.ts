@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   getAdminNotificationDeliveries,
   getAdminNotifications,
@@ -7,19 +7,19 @@ import {
   markAdminNotificationAsRead,
   markAllAdminNotificationsAsRead,
   retryAdminOutboxEvent,
-} from "../api/adminNotificationApi";
-import { shouldClearAuth, getAuthErrorMessage } from "../api/authError";
-import { isApiError } from "../api/customAxios";
+} from "../../../../api/adminNotificationApi";
+import { shouldClearAuth, getAuthErrorMessage } from "../../../../api/authError";
+import { isApiError } from "../../../../api/customAxios";
 import type {
   AdminNotificationDeliveryItem,
   AdminNotificationDeliveryStatus,
   AdminNotificationItem,
   AdminOutboxEventItem,
   AdminOutboxEventStatus,
-} from "../types/adminNotification.types";
-import type { AuthErrorResponse } from "../types/auth.types";
-import { logDebugError } from "../utils/debugLogger";
-import { useAuth } from "./useAuth";
+} from "../../../../types/adminNotification.types";
+import type { AuthErrorResponse } from "../../../../types/auth.types";
+import { logDebugError } from "../../../../utils/debugLogger";
+import { useAuth } from "../../../../hooks/useAuth";
 const C = {
   unauthorized: "로그인이 필요합니다.",
   forbidden: "해당 운영 권한이 필요합니다.",

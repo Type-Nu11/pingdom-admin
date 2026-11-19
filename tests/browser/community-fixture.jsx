@@ -6,7 +6,7 @@ import { AuthContext } from '../../src/app/providers/AuthContext'
 import { AdminNotificationContext } from '../../src/app/providers/AdminNotificationContext'
 import Content from '../../src/features/admin/community/pages/CommunityContentPage'
 import Reports from '../../src/features/admin/community/pages/CommunityReportsPage'
-import History from '../../src/pages/operationHistory/OperationHistoryPage'
+import History from '../../src/features/admin/operationHistory/pages/OperationHistoryPage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
 

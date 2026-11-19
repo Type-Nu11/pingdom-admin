@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 export interface S3OrphanDryRun { prefix:string; scanLimit:number; dryRun:boolean; truncated:boolean; dbKeyCount:number; s3ObjectCount:number; orphanObjectCount:number; orphanKeys:string[] }
 export type S3OrphanReportState = 'RUNNING'|'COMPLETED'|'FAILED'|'NOT_FOUND'
 export interface S3OrphanReportStatus { reportId:string; status:S3OrphanReportState; generatedAt:string|null; completedAt:string|null; dbKeyCount:number; s3KeyCount:number; deleteCandidateCount:number; errorMessage:string|null }

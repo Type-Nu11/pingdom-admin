@@ -14,13 +14,13 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
 const { formatMinorAmount, formatLocalDateTime, formatInstantDateTime } = await server.ssrLoadModule('/src/utils/displayFormat.ts')
-const { isMissingLatestS3Report } = await server.ssrLoadModule('/src/utils/s3ReportState.ts')
-const { useAdminS3Orphans } = await server.ssrLoadModule('/src/hooks/useAdminS3Orphans.ts')
+const { isMissingLatestS3Report } = await server.ssrLoadModule('/src/features/admin/s3Orphans/model/s3ReportState.ts')
+const { useAdminS3Orphans } = await server.ssrLoadModule('/src/features/admin/s3Orphans/hooks/useAdminS3Orphans.ts')
 const { useMerchantPayments } = await server.ssrLoadModule('/src/hooks/useMerchantPayments.ts')
 const { useAdminPlaces } = await server.ssrLoadModule('/src/features/admin/places/hooks/useAdminPlaces.ts')
 const { PlaceListPanel } = await server.ssrLoadModule('/src/features/admin/places/components/PlaceListPanel.tsx')
 const { default: PaymentPage } = await server.ssrLoadModule('/src/pages/merchantPayments/MerchantPaymentsPage.tsx')
-const { default: S3Page } = await server.ssrLoadModule('/src/pages/s3Orphan/S3OrphanPage.tsx')
+const { default: S3Page } = await server.ssrLoadModule('/src/features/admin/s3Orphans/pages/S3OrphanPage.tsx')
 const { AdminNotificationProvider } = await server.ssrLoadModule('/src/app/providers/AdminNotificationProvider.tsx')
 
 const statusPath = '/admin/posts/s3/orphans/report/status'

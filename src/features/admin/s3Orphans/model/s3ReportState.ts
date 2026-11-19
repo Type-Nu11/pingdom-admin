@@ -1,4 +1,4 @@
-import { isApiError } from '../api/customAxios'
+import { isApiError } from '../../../../api/customAxios'
 import type { AdminS3OrphanErrorResponse } from '../types/adminS3Orphan.types'
 
 /** The optional-id endpoint's known absence is not the same as an arbitrary 404. */

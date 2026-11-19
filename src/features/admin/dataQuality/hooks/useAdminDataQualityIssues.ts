@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getAdminDataQualityIssues } from '../api/adminDataQualityApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type { AdminDataQualityErrorResponse, AdminDataQualityIssuePageResponse } from '../types/adminDataQuality.types'
-import { getAuthSessionId } from '../utils/authStorage'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { getAuthSessionId } from '../../../../utils/authStorage'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 export const DATA_QUALITY_PAGE_SIZE = 20
 const CATEGORY_MESSAGES = {

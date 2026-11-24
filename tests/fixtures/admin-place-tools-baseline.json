@@ -1,0 +1,29 @@
+{
+  "base": "c3b6e02e4dede7be2414bff643f8806d7b7550a5",
+  "moves": {
+    "src/pages/placeEvent/PlaceEventPage.tsx": "src/features/admin/placeEvents/pages/PlaceEventPage.tsx",
+    "src/hooks/useAdminPlaceEvents.ts": "src/features/admin/placeEvents/hooks/useAdminPlaceEvents.ts",
+    "src/api/adminPlaceEventApi.ts": "src/features/admin/placeEvents/api/adminPlaceEventApi.ts",
+    "src/types/adminPlaceEvent.types.ts": "src/features/admin/placeEvents/types/adminPlaceEvent.types.ts",
+    "src/pages/placeMerge/PlaceMergePage.tsx": "src/features/admin/placeMerge/pages/PlaceMergePage.tsx",
+    "src/pages/placeMerge/PlaceMergePage.styles.ts": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts",
+    "src/pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage.tsx": "src/features/admin/placeMerge/pages/PlaceDuplicateCandidatePage.tsx",
+    "src/hooks/useAdminPlaceMerge.ts": "src/features/admin/placeMerge/hooks/useAdminPlaceMerge.ts",
+    "src/hooks/useAdminPlaceDuplicateCandidates.ts": "src/features/admin/placeMerge/hooks/useAdminPlaceDuplicateCandidates.ts",
+    "src/api/adminPlaceMergeApi.ts": "src/features/admin/placeMerge/api/adminPlaceMergeApi.ts",
+    "src/types/adminPlaceMerge.types.ts": "src/features/admin/placeMerge/types/adminPlaceMerge.types.ts"
+  },
+  "fileHashes": {
+    "src/features/admin/placeEvents/api/adminPlaceEventApi.ts": "c6ff63353d677bd9d3d03efa1a9f440ccd5a672be75f196230ee21983dba614a",
+    "src/features/admin/placeMerge/api/adminPlaceMergeApi.ts": "4a3a324902a303e5d16dcd66e7100828d2a3117ba97f4b1e10bf94ff16756ab9",
+    "src/features/admin/placeMerge/hooks/useAdminPlaceDuplicateCandidates.ts": "6e43dbee6490b23e9eeb6eec5cc20c65b35883d26678ab109c6ad6739400b530",
+    "src/features/admin/placeEvents/hooks/useAdminPlaceEvents.ts": "cd5dd705c7ceb138187eebac9b5faeff1dbdc4cd14cb838c6780172c9061579d",
+    "src/features/admin/placeMerge/hooks/useAdminPlaceMerge.ts": "c8dc7e293805ef4eaf14d9778267fb5683aa513863daa3ec2de1046796afac29",
+    "src/features/admin/placeMerge/pages/PlaceDuplicateCandidatePage.tsx": "e03641bd5b87529c620dc7084d4624430c8df168df955b628097d9c547850527",
+    "src/features/admin/placeEvents/pages/PlaceEventPage.tsx": "74dcc521959c24d703a1b2d6ec1a98d3b0d2050995ec2a9f2af03e6614e6621d",
+    "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts": "0e347e25268b31a2c4be813f6326a6b1bfbef49cb64136ea2907b4c657aab59c",
+    "src/features/admin/placeMerge/pages/PlaceMergePage.tsx": "86ffcf3a51fc4acab0263dbdd9b3f6a8edee0bb0add237ebf8e5ac10bb56c118",
+    "src/features/admin/placeEvents/types/adminPlaceEvent.types.ts": "9e1827670296ebbd5bdec45679f7d2da5c1c1da646b0f92299681e2b8641a972",
+    "src/features/admin/placeMerge/types/adminPlaceMerge.types.ts": "fe01a97ebe54ed9d9fba4c24dafda2a2f3ae7f8fd34064a70300f167839cf0ab"
+  }
+}

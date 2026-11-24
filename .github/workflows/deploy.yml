@@ -106,6 +106,7 @@ jobs:
             VITE_PUBLIC_API_BASE_URL=/api
             VITE_APP_BASE_PATH=${{ steps.platform.outputs.app_base_path }}
             VITE_NAVER_MAP_CLIENT_ID=${{ steps.platform.outputs.maps_client_id }}
+            VITE_ENABLE_PINGDOM_AI=${{ vars.VITE_ENABLE_PINGDOM_AI == 'true' && 'true' || 'false' }}
           labels: |
             org.opencontainers.image.revision=${{ env.RELEASE_SHA }}
             io.pingdom.app-base-path=${{ steps.platform.outputs.app_base_path }}

@@ -464,10 +464,10 @@ function isReservation(value: MerchantReservation) {
       .every(field => field == null || typeof field === 'string')
 }
 
-export async function getMerchantReservations(query: MerchantReservationQuery = {}) {
+export async function getMerchantReservations(query: MerchantReservationQuery = {}, signal?: AbortSignal) {
   const { data } = await customAxios.get<MerchantReservationPageResponse>(
     `${MERCHANT_OWNER_PATH}/reservations`,
-    { params: { page: 1, limit: 20, ...query } },
+    { params: { page: 1, limit: 20, ...query }, signal },
   )
   if (!data || !Array.isArray(data.reservations) || !data.reservations.every(isReservation)
     || !Number.isSafeInteger(data.page) || data.page < 1

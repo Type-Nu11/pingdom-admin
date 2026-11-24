@@ -4,6 +4,7 @@ import { MERCHANT_MAIN_SCROLL_AREA_ID } from '../../constants/layout'
 import { MerchantPlaceProvider } from '../providers/MerchantPlaceProvider'
 import { useAuth } from '../../hooks/useAuth'
 import { WorkspaceFrame } from '../layouts/WorkspaceFrame'
+import { MerchantAssistantWorkspace } from '../../features/assistant/components/AssistantWorkspace'
 import * as S from './MerchantLayout.styles'
 
 const frameParts = { AppShell: S.AppShell, MainArea: S.MainArea, TopBar: S.TopBar }
@@ -58,7 +59,7 @@ export function MerchantLayout() {
             </S.LogoutButton>
           </S.SideFooter>
         </S.SideNav>}>
-        <Outlet />
+        <MerchantAssistantWorkspace><Outlet /></MerchantAssistantWorkspace>
       </WorkspaceFrame>
     </MerchantPlaceProvider>
   )

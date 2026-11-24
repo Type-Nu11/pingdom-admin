@@ -58,7 +58,7 @@ for (const [file, expected] of Object.entries(baseline.files)) test(`${file}: no
   })), expected.imports)
 })
 
-test('cross-feature consumers are limited to existing router, pending-work, auth-return and owner lookup adapters', () => {
+test('cross-feature consumers are limited to the router, read-only assistants and existing adapters', () => {
   const allowed = new Map([
     ['src/app/router/Router.tsx', [
       features[0] + 'pages/AdminReservationReviewPage.tsx',
@@ -66,6 +66,7 @@ test('cross-feature consumers are limited to existing router, pending-work, auth
       features[2] + 'pages/MerchantOwnerPage.tsx',
     ]],
     ['src/api/adminPendingWorkApi.ts', [features[1] + 'api/adminMerchantPlaceApplicationApi.ts']],
+    ['src/features/assistant/model/assistantTools.ts', [features[1] + 'api/adminMerchantPlaceApplicationApi.ts']],
     ['src/utils/authReturn.ts', [features[0] + 'model/reservationReviewContext.ts']],
     [features[1] + 'hooks/useAdminMerchantPlaceApplications.ts', [features[2] + 'api/adminMerchantOwnerApi.ts', features[2] + 'types/adminMerchantOwner.types.ts']],
   ])

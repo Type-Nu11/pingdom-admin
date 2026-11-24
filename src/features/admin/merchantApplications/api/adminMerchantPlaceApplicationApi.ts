@@ -20,9 +20,10 @@ export interface AdminMerchantPlaceApplicationListParams {
   limit?: number
 }
 
-export async function getAdminMerchantPlaceApplications(params: AdminMerchantPlaceApplicationListParams) {
+export async function getAdminMerchantPlaceApplications(params: AdminMerchantPlaceApplicationListParams, signal?: AbortSignal) {
   const { data } = await customAxios.get<AdminMerchantPlaceApplicationPage>(PATH, {
     params,
+    signal,
     paramsSerializer: { indexes: null },
   })
   return data

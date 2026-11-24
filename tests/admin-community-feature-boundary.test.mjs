@@ -57,7 +57,7 @@ for (const [file, expected] of Object.entries(baseline.files)) test(`${file}: no
   })), expected.imports)
 })
 
-test('only the router and existing pending-work adapter consume community modules', () => {
+test('only the router and registered read-only adapters consume community modules', () => {
   const observed = []
   for (const file of files('src')) for (const target of references(file)) {
     const feature = features.find(prefix => target.startsWith(prefix))
@@ -122,7 +122,7 @@ test('active source, tests and scripts do not retain exact old community paths',
   }
 })
 
-test('all API methods, paths, function names and callers match the normalized pre-move inventory', () => {
+test('all API methods, paths, function names and callers match the recorded inventory', () => {
   const inventory = JSON.parse(execFileSync(process.execPath, ['scripts/api-source-inventory.mjs'], { cwd: root, encoding: 'utf8' }))
   const normalized = inventory.map(item => ({ ...item, callers: item.callers.slice().sort() })).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
   assert.equal(normalized.length, baseline.apiInventoryCount)

@@ -10,9 +10,11 @@ COPY public ./public
 ARG VITE_PUBLIC_API_BASE_URL=/api
 ARG VITE_APP_BASE_PATH=/
 ARG VITE_NAVER_MAP_CLIENT_ID
+ARG VITE_ENABLE_PINGDOM_AI=false
 ENV VITE_PUBLIC_API_BASE_URL=${VITE_PUBLIC_API_BASE_URL} \
     VITE_APP_BASE_PATH=${VITE_APP_BASE_PATH} \
-    VITE_NAVER_MAP_CLIENT_ID=${VITE_NAVER_MAP_CLIENT_ID}
+    VITE_NAVER_MAP_CLIENT_ID=${VITE_NAVER_MAP_CLIENT_ID} \
+    VITE_ENABLE_PINGDOM_AI=${VITE_ENABLE_PINGDOM_AI}
 # These values are deliberately public. Secrets must never be passed as VITE_*.
 RUN node -e "if (process.env.VITE_PUBLIC_API_BASE_URL !== '/api') throw new Error('EC2 image requires same-origin /api'); if (!/^[A-Za-z0-9_-]+$/.test(process.env.VITE_NAVER_MAP_CLIENT_ID || '')) throw new Error('Public NAVER Maps Client ID is required')" \
     && npm run build

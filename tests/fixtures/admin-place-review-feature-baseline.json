@@ -496,7 +496,7 @@
       ]
     },
     "src/features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi.ts": {
-      "nonImportHash": "eec054ff5349fe64807cb0bf1cdcbeaf4ed86fea6d7d1d1228e67cae2473447c",
+      "nonImportHash": "ec89d2dad927eb3ff818842fcf3cd37f6ec116ddd18f070789d33abb8a84c020",
       "imports": [
         {
           "clause": "customAxios",
@@ -670,12 +670,13 @@
     "src/features/admin/s3Orphans/pages/S3OrphanPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/userRoles/pages/UserRolePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/assistant/model/assistantTools.ts -> src/features/admin/placeReviewDeletion/api/adminPlaceReviewDeletionApi.ts",
     "src/pages/placeEvent/PlaceEventPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/recommendationMetrics/RecommendationMetricsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/scout/ScoutPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/trustScore/TrustScorePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/verifiedBoostProduct/VerifiedBoostProductPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
   ],
-  "apiInventoryCount": 202,
-  "apiInventoryHash": "ea3099aae6e7ce1b165ec618ae627149511e77769cf4d43e8446e7587e465730"
+  "apiInventoryCount": 203,
+  "apiInventoryHash": "4d8bb14f9c1ddda7cde461a31a99964c7bf0d387e1e4192dbb4dd2a823e7333b"
 }

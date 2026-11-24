@@ -548,6 +548,6 @@
     "src/app/router/Router.tsx -> src/features/admin/s3Orphans/pages/S3OrphanPage.tsx",
     "src/utils/adminAuditPresentation.ts -> src/features/admin/operationHistory/types/adminOperationHistory.types.ts"
   ],
-  "apiInventoryCount": 202,
-  "apiInventoryHash": "ea3099aae6e7ce1b165ec618ae627149511e77769cf4d43e8446e7587e465730"
+  "apiInventoryCount": 203,
+  "apiInventoryHash": "4d8bb14f9c1ddda7cde461a31a99964c7bf0d387e1e4192dbb4dd2a823e7333b"
 }

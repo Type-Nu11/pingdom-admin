@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import type { RefreshTokenResponse } from '../types/auth.types'
+import { AI_CHAT_PATH, isAiProviderAuthFailure } from './aiChatPolicy'
 import { AUTH_API_BASE_URL, requestCookieAccessToken, isAuthRestoring } from './authSessionApi'
 import { withAuthCookieLock } from '../utils/authCookieLock'
 import {
@@ -240,7 +241,8 @@ customAxios.interceptors.response.use(
     if (axios.isCancel(error)) return Promise.reject(error)
     const apiError = enrichApiError(error)
 
-    if (originalRequest && shouldRefreshAccessToken(error, originalRequest)) {
+    const isProviderAuthError = originalRequest?.url === AI_CHAT_PATH && isAiProviderAuthFailure(error.response?.data)
+    if (originalRequest && !isProviderAuthError && shouldRefreshAccessToken(error, originalRequest)) {
       originalRequest._retry = true
 
       const currentAccessToken = getStoredAccessToken()

@@ -57,7 +57,7 @@ for (const [file, expected] of Object.entries(baseline.files)) test(`${file}: no
   })), expected.imports)
 })
 
-test('router, pending-work and legacy style consumers remain exactly the original dependency set', () => {
+test('router, read-only adapters and legacy style consumers match the recorded dependency set', () => {
   const observed = []
   for (const file of files('src')) for (const target of references(file)) {
     const feature = features.find(prefix => target.startsWith(prefix))
@@ -123,7 +123,7 @@ test('active source, tests and scripts do not retain exact old place review path
   }
 })
 
-test('all API methods, paths, function names and callers match the normalized pre-move inventory', () => {
+test('all API methods, paths, function names and callers match the recorded inventory', () => {
   const inventory = JSON.parse(execFileSync(process.execPath, ['scripts/api-source-inventory.mjs'], { cwd: root, encoding: 'utf8' }))
   const normalized = inventory.map(item => ({ ...item, callers: item.callers.slice().sort() })).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
   assert.equal(normalized.length, baseline.apiInventoryCount)

@@ -132,7 +132,7 @@ test('active source, tests and scripts do not retain exact old system paths', ()
   assert.equal(historicalReferences, 2)
 })
 
-test('all API methods, paths, function names and callers match the normalized pre-move inventory', () => {
+test('all API methods, paths, function names and callers match the recorded inventory', () => {
   const inventory = JSON.parse(execFileSync(process.execPath, ['scripts/api-source-inventory.mjs'], { cwd: root, encoding: 'utf8' }))
   const normalized = inventory.map(item => ({ ...item, callers: item.callers.slice().sort() })).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
   assert.equal(normalized.length, baseline.apiInventoryCount)

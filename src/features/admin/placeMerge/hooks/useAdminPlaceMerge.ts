@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   getAdminPlaceDuplicateDetail,
   getAdminPlaceDuplicateGroups,
@@ -7,8 +7,8 @@ import {
   mergeAdminPlaces,
   restoreAdminPlaceMerge,
 } from '../api/adminPlaceMergeApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceMergeErrorResponse,
   AdminPlaceDuplicateDetailResponse,
@@ -19,8 +19,8 @@ import type {
   AdminPlaceMergeResponse,
   AdminPlaceRestoreResponse,
 } from '../types/adminPlaceMerge.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 const ADMIN_PLACE_MERGE_ERROR_MESSAGE =
   '중복 장소 정보를 불러오는 중 오류가 발생했습니다.'

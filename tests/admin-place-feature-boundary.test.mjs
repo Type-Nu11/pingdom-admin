@@ -68,7 +68,7 @@ test('cross-feature place access is explicit and never loads the page through a 
     ['src/app/router/Router.tsx', ['pages/PlaceManagePage.tsx']],
     ['src/features/admin/reservations/pages/AdminReservationReviewPage.tsx', ['components/PlaceDetailLink.tsx']],
     ['src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.tsx', ['components/PlaceDetailLink.tsx']],
-    ['src/pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage.tsx', ['api/adminPlaceApi.ts', 'types/adminPlace.types.ts', 'pages/PlaceManagePage.styles.ts']],
+    ['src/features/admin/placeMerge/pages/PlaceDuplicateCandidatePage.tsx', ['api/adminPlaceApi.ts', 'types/adminPlace.types.ts', 'pages/PlaceManagePage.styles.ts']],
   ])
   const seen = new Set()
   for (const file of files('src').filter(file => !file.startsWith(feature))) {

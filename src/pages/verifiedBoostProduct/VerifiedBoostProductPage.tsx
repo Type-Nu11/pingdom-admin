@@ -9,7 +9,7 @@ import { useAdminVerifiedBoostProducts } from '../../hooks/useAdminVerifiedBoost
 import { useAuth } from '../../hooks/useAuth'
 import type { VerifiedBoostProductStatus } from '../../types/adminVerifiedBoostProduct.types'
 import * as Shell from '../../app/layouts/AdminShell.styles'
-import * as Shared from '../placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../features/admin/placeMerge/pages/PlaceMergePage.styles'
 import * as S from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 
 type Dialog = 'create' | 'activate' | 'deactivate' | null

@@ -241,7 +241,7 @@
         },
         {
           "clause": "{ SecondaryButton }",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         }
       ]
     },
@@ -338,7 +338,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -419,7 +419,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -541,7 +541,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as Form",

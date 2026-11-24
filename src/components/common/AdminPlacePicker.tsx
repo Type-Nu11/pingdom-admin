@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components'
 import { searchAdminPlaces, type AdminTarget } from '../../api/adminTargetSearchApi'
 import { AdminTargetSearch } from './AdminTargetSearch'
 import { typography, adminColors } from '../../styles/theme'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../features/admin/placeMerge/pages/PlaceMergePage.styles'
 import * as Form from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
 
 const Root = styled.div<{ $wide: boolean }>`

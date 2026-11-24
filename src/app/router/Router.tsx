@@ -26,9 +26,9 @@ const CommunityReportsPage = lazy(() => import('../../features/admin/community/p
 const DashboardPage = lazy(() => import('../../pages/dashboard/DashboardPage'))
 const NotFoundPage = lazy(() => import('../../pages/notFound/NotFoundPage'))
 const PlaceManagePage = lazy(() => import('../../features/admin/places/pages/PlaceManagePage'))
-const PlaceMergePage = lazy(() => import('../../pages/placeMerge/PlaceMergePage'))
+const PlaceMergePage = lazy(() => import('../../features/admin/placeMerge/pages/PlaceMergePage'))
 const PlaceDuplicateCandidatePage = lazy(
-  () => import('../../pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage'),
+  () => import('../../features/admin/placeMerge/pages/PlaceDuplicateCandidatePage'),
 )
 const PlaceVerificationPage = lazy(
   () => import('../../features/admin/placeVerification/pages/PlaceVerificationPage'),
@@ -106,7 +106,7 @@ const MerchantPlaceReviewPage = lazy(
 const MerchantVerifiedBoostPage = lazy(
   () => import('../../pages/merchantVerifiedBoost/MerchantVerifiedBoostPage'),
 )
-const PlaceEventPage = lazy(() => import('../../pages/placeEvent/PlaceEventPage'))
+const PlaceEventPage = lazy(() => import('../../features/admin/placeEvents/pages/PlaceEventPage'))
 const DataQualityPage = lazy(() => import('../../features/admin/dataQuality/pages/DataQualityPage'))
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {

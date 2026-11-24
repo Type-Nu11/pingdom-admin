@@ -16,7 +16,7 @@ import type {
   ScoutProfileStatus,
 } from "../../types/adminScout.types";
 import * as Shell from "../../app/layouts/AdminShell.styles";
-import * as Shared from "../placeMerge/PlaceMergePage.styles";
+import * as Shared from "../../features/admin/placeMerge/pages/PlaceMergePage.styles";
 import * as S from "../../features/admin/placeVerification/pages/PlaceVerificationPage.styles";
 
 type Tab = "profiles" | "reports";

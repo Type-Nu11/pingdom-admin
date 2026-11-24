@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useBlocker } from 'react-router-dom'
 import { AppDialog } from './AppDialog'
 import { UnsavedChangesContext, type FormProtection } from './UnsavedChangesContext'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../features/admin/placeMerge/pages/PlaceMergePage.styles'
 
 export function UnsavedChangesProvider({ children }: PropsWithChildren) {
   const forms = useRef(new Map<string, FormProtection>())

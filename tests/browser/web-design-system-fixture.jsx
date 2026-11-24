@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GlobalStyle } from '../../src/styles/globalStyle'
-import * as Admin from '../../src/pages/placeMerge/PlaceMergePage.styles'
+import * as Admin from '../../src/features/admin/placeMerge/pages/PlaceMergePage.styles'
 import * as Merchant from '../../src/components/merchant/MerchantPageShell.styles'
 import * as Workspace from '../../src/components/merchant/MerchantWorkspace.styles'
 import * as Surface from '../../src/components/merchant/MerchantSurface.styles'

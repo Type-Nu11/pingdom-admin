@@ -9,7 +9,7 @@ import { useAuth } from '../../../../hooks/useAuth'
 import { communityDate } from '../model/community'
 import type { AdminCommunityPost, AdminCommunityComment, CommunityPage } from '../types/adminCommunity.types'
 import * as Shell from '../../../../app/layouts/AdminShell.styles'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as Form from '../../placeVerification/pages/PlaceVerificationPage.styles'
 import * as S from './Community.styles'
 

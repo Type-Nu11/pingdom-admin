@@ -1,18 +1,18 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import { useAdminPlaceMerge } from '../../hooks/useAdminPlaceMerge'
-import { useAuth } from '../../hooks/useAuth'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import { useAdminPlaceMerge } from '../hooks/useAdminPlaceMerge'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminPlaceDuplicateCandidateItem,
   AdminPlaceDuplicateGroupItem,
   AdminPlaceMergeHistoryItem,
-} from '../../types/adminPlaceMerge.types'
-import * as Shell from '../../app/layouts/AdminShell.styles'
+} from '../types/adminPlaceMerge.types'
+import * as Shell from '../../../../app/layouts/AdminShell.styles'
 import * as S from './PlaceMergePage.styles'
 
 type ConfirmationState =

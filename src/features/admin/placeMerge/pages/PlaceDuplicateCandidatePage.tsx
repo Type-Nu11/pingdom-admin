@@ -1,25 +1,25 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import * as AdminShell from '../../app/layouts/AdminShell.styles'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import * as AdminShell from '../../../../app/layouts/AdminShell.styles'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAdminPlace } from '../../features/admin/places/api/adminPlaceApi'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminStatusFilter } from '../../components/common/AdminStatusFilter'
-import { AdminPagination } from '../../components/common/AdminPagination'
+import { getAdminPlace } from '../../places/api/adminPlaceApi'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { AdminStatusFilter } from '../../../../components/common/AdminStatusFilter'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
 import {
   useAdminPlaceDuplicateCandidates,
   type AdminPlaceDuplicateReviewAction,
-} from '../../hooks/useAdminPlaceDuplicateCandidates'
-import { useAuth } from '../../hooks/useAuth'
-import type { AdminPlaceDetail } from '../../features/admin/places/types/adminPlace.types'
+} from '../hooks/useAdminPlaceDuplicateCandidates'
+import { useAuth } from '../../../../hooks/useAuth'
+import type { AdminPlaceDetail } from '../../places/types/adminPlace.types'
 import type {
   AdminPlaceDuplicateCandidateStatus,
   AdminPlaceDuplicateReviewCandidate,
-} from '../../types/adminPlaceMerge.types'
-import * as Shell from '../../features/admin/places/pages/PlaceManagePage.styles'
-import * as S from '../placeMerge/PlaceMergePage.styles'
+} from '../types/adminPlaceMerge.types'
+import * as Shell from '../../places/pages/PlaceManagePage.styles'
+import * as S from './PlaceMergePage.styles'
 
 const STATUS_OPTIONS: Array<{
   value: AdminPlaceDuplicateCandidateStatus

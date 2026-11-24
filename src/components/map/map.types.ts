@@ -21,6 +21,7 @@ export interface MapHandle {
 
 export interface MapProps {
   className?: string
+  scaleControlPosition?: 'bottom-left'
   markers?: MapMarker[]
   activeMarkerId?: number | null
   fitBoundsKey?: string

@@ -34,6 +34,7 @@ export function PlaceMapPanel({
     <S.MapPanel ref={panelRef}>
       <S.AdminMap
         ref={mapRef}
+        scaleControlPosition="bottom-left"
         activeMarkerId={selectedPlaceId}
         fitBoundsKey={fitBoundsKey}
         markers={markers}
@@ -51,28 +52,30 @@ export function PlaceMapPanel({
           <span>목록</span>
         </S.MapListToggleButton>
       ) : null}
-      <S.MapControlGroup>
-        <S.MapControlButton
-          type="button"
-          aria-label="지도 확대"
-          onClick={() => mapRef.current?.zoomIn()}
-        >
-          <MaterialIcon aria-hidden="true">add</MaterialIcon>
-        </S.MapControlButton>
-        <S.MapControlButton
-          type="button"
-          aria-label="지도 축소"
-          onClick={() => mapRef.current?.zoomOut()}
-        >
-          <MaterialIcon aria-hidden="true">remove</MaterialIcon>
-        </S.MapControlButton>
-      </S.MapControlGroup>
-      <S.MapInfo>
-        <S.MapInfoDot />
-        <S.MapInfoText>
-          <strong>{displayCount.toLocaleString()}개 장소 표시</strong>
-        </S.MapInfoText>
-      </S.MapInfo>
+      <S.MapTopTools>
+        <S.MapInfo>
+          <S.MapInfoDot />
+          <S.MapInfoText>
+            <strong>{displayCount.toLocaleString()}개 장소 표시</strong>
+          </S.MapInfoText>
+        </S.MapInfo>
+        <S.MapControlGroup>
+          <S.MapControlButton
+            type="button"
+            aria-label="지도 확대"
+            onClick={() => mapRef.current?.zoomIn()}
+          >
+            <MaterialIcon aria-hidden="true">add</MaterialIcon>
+          </S.MapControlButton>
+          <S.MapControlButton
+            type="button"
+            aria-label="지도 축소"
+            onClick={() => mapRef.current?.zoomOut()}
+          >
+            <MaterialIcon aria-hidden="true">remove</MaterialIcon>
+          </S.MapControlButton>
+        </S.MapControlGroup>
+      </S.MapTopTools>
     </S.MapPanel>
   )
 }

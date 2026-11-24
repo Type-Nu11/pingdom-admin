@@ -6,6 +6,31 @@ import { createServer } from 'vite'
 import { chromium } from 'playwright'
 import { installNaverSdk } from '../helpers/naver-sdk.mjs'
 
+const glButtonStep = 0.55
+const waitForZoom = (page, expected) => page.waitForFunction(
+  zoom => Math.abs(window.naverTest.stats.maps[0].getZoom() - zoom) < 1e-6, expected)
+
+async function assertMapFrame(page) {
+  const geometry = await page.getByLabel('네이버 지도').evaluate(canvas => {
+    const panel = canvas.closest('section')
+    const frame = canvas.parentElement.parentElement
+    const panelStyle = getComputedStyle(panel)
+    const frameStyle = getComputedStyle(frame)
+    const corners = ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius']
+    const panelBounds = panel.getBoundingClientRect()
+    const outerBounds = panel.parentElement.getBoundingClientRect()
+    return {
+      margins: [panelStyle.marginTop, panelStyle.marginRight, panelStyle.marginBottom, panelStyle.marginLeft],
+      corners: corners.map(corner => [panelStyle[corner], frameStyle[corner]]),
+      rightGap: outerBounds.right - panelBounds.right,
+      bottomGap: outerBounds.bottom - panelBounds.bottom,
+    }
+  })
+  assert.deepEqual(geometry.margins, Array(4).fill('12px'))
+  assert.deepEqual(geometry.corners, Array(4).fill(['0px', '0px']))
+  assert.ok(Math.abs(geometry.rightGap - 12) <= 1 && Math.abs(geometry.bottomGap - 12) <= 1)
+}
+
 const output = await mkdtemp(join(tmpdir(), 'pingdom-admin-naver-'))
 const server = await createServer({
   cacheDir: join(output, 'cache'),
@@ -45,6 +70,7 @@ try {
     releaseSdk()
     await page.waitForFunction(() => window.naverTest?.stats.centers.some(c => Math.abs(c.lat() - 37.01) < 0.00001))
     await page.waitForFunction(() => document.querySelectorAll('.pingdom-map-marker').length === 2)
+    await assertMapFrame(page)
     await page.waitForFunction(() => {
       const canvas = document.querySelector('[aria-label="네이버 지도"]')
       const detail = document.querySelector('button[aria-label="장소 상세 닫기"]')?.closest('aside')
@@ -64,22 +90,25 @@ try {
     await page.getByRole('button', { name: '장소 상세 닫기' }).click()
     const zoom = await page.evaluate(() => window.naverTest.stats.maps[0].getZoom())
     await page.getByRole('button', { name: '지도 확대' }).click()
-    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z + 0.55, zoom)
-    assert.equal(await page.evaluate(() => window.naverTest.stats.maps[0].getZoom()), zoom + 0.55)
+    await waitForZoom(page, zoom + glButtonStep)
     await page.evaluate(() => {
       const button = document.querySelector('[aria-label="지도 확대"]')
       for (let i = 0; i < 20; i++) button.click()
     })
-    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z + 1, zoom)
+    // A burst inside one frame coalesces to one GL step, just like a single click.
+    await waitForZoom(page, zoom + 2 * glButtonStep)
     await page.getByRole('button', { name: '지도 축소' }).click()
-    await page.waitForFunction(z => window.naverTest.stats.maps[0].getZoom() === z + 0.55, zoom)
+    await waitForZoom(page, zoom + glButtonStep)
     await page.getByRole('button', { name: '장소 목록 접기' }).click()
+    await page.getByRole('button', { name: '장소 목록 열기' }).waitFor()
+    await assertMapFrame(page)
     await page.getByRole('button', { name: '장소 목록 열기' }).click()
     await page.setViewportSize({ width: width - 30, height: 700 })
     await page.waitForFunction(() => {
       const c = document.querySelector('[aria-label="네이버 지도"]')
       return c.clientWidth === c.parentElement.clientWidth && c.clientHeight === c.parentElement.clientHeight
     })
+    await assertMapFrame(page)
     await page.evaluate(async () => {
       const { default: client } = await import('/src/api/customAxios.ts')
       const previous = client.defaults.adapter

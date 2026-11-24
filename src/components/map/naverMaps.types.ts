@@ -26,6 +26,7 @@ export interface NaverOverlay {
   getProjection(): { fromCoordToOffset(coord: NaverLatLng): NaverPoint }
 }
 export interface NaverMaps {
+  Position: { BOTTOM_LEFT: number }
   LatLng: new (latitude: number, longitude: number) => NaverLatLng
   Point: new (x: number, y: number) => NaverPoint
   Map: new (element: HTMLElement, options: {
@@ -33,6 +34,8 @@ export interface NaverMaps {
     scrollWheel: boolean; keyboardShortcuts: boolean
     tileTransition: boolean
     gl?: boolean
+    scaleControl?: boolean
+    scaleControlOptions?: { position: number }
   }) => NaverMapInstance
   OverlayView: new () => NaverOverlay
   Event: {

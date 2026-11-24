@@ -81,6 +81,20 @@ test('policy: canceled and non-API errors never clear auth', () => {
   }
 })
 
+test('AI provider 401 does not refresh or end the web login', async () => {
+  storage.saveLoginAuth({ accessToken: token(1, '-old'), role: 'ADMIN', id: 1, username: 'test' })
+  client.defaults.adapter = async config => {
+    assert.equal(config.url, '/ai/chat')
+    const error = failure(401, config)
+    error.response.data = '{"type":"error","error":{"type":"authentication_error"}}'
+    throw error
+  }
+  axios.defaults.adapter = async () => { assert.fail('provider credentials must not trigger a token refresh') }
+  const { sendAssistantMessage } = await server.ssrLoadModule('/src/features/assistant/api/assistantApi.ts')
+  await assert.rejects(sendAssistantMessage({}, new AbortController().signal), { code: 'unavailable' })
+  assert.equal(storage.getStoredAccessToken(), token(1, '-old'))
+})
+
 for (const [name, useHook] of [['admin', useAdminScouts], ['merchant', useMerchantOnboarding], ['notifications', null]]) {
   for (const refresh of [false, true]) {
     for (const status of [401, 403, 400, 429, 500, undefined]) {

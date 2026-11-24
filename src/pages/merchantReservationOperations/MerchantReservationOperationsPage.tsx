@@ -11,6 +11,7 @@ import { reservationCancellationRestriction } from '../../utils/reservationCondi
 import { formatReservationSchedule, formatReservationEventTime as formatDateTime } from '../../utils/reservationTime'
 import { useMerchantReservationOperations } from '../../hooks/useMerchantReservationOperations'
 import { useMerchantPlaceIdentity } from '../../hooks/useMerchantPlaceIdentity'
+import { useAssistantDetail } from '../../features/assistant/model/AssistantDetailContext'
 import type { MerchantReservation, MerchantReservationDetail, MerchantReservationStatus } from '../../types/merchantStore.types'
 import type { ReservationReviewAction } from '../../utils/reservationReview'
 import { ReservationReviewDialog } from './ReservationReviewDialog'
@@ -43,6 +44,21 @@ function ReservationWorkspace({ initialPlaceId }: { initialPlaceId?: number }) {
   const closeCancelDialog = () => { if (!pending) setCancelTarget(null) }
   const availabilityById = useMemo(() => new Map(operations.availabilities.map(item => [item.id, item])), [operations.availabilities])
   const selected = operations.detail
+  const assistantDetail = useMemo(() => {
+    if (operations.isDetailLoading || operations.detailErrorMessage || !selected
+      || selected.reservation.id !== operations.selectedReservationId) return null
+    const reservation = selected.reservation
+    return {
+      role: 'MERCHANT_OWNER' as const, placeId: selected.placeId,
+      facts: [
+        { label: '예약 시작', value: formatReservationSchedule(reservation.reservationStartsAt ?? reservation.confirmation?.startsAt) },
+        { label: '예약 종료', value: formatReservationSchedule(reservation.reservationEndsAt ?? reservation.confirmation?.endsAt) },
+        { label: '예약 인원', value: `${reservation.quantity}명` },
+        { label: '예약 상태', value: STATUS[reservation.status].label },
+      ],
+    }
+  }, [operations.isDetailLoading, operations.detailErrorMessage, operations.selectedReservationId, selected])
+  useAssistantDetail(assistantDetail)
   const listHeading = useRef<HTMLHeadingElement>(null)
   const detailHeading = useRef<HTMLHeadingElement>(null)
   useEffect(() => {

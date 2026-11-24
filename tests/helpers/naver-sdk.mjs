@@ -1,5 +1,6 @@
 // Deterministic SDK double: verifies adapter behavior, not real NAVER tile rendering.
 export function installNaverSdk() {
+  const Position = { BOTTOM_LEFT: 10 }
   const stats = { maps: [], overlays: [], listeners: new Set(), centers: [], fits: [], sizes: [], destroyed: 0 }
   const emit = (target, name, event) => {
     for (const item of [...stats.listeners]) if (item.target === target && item.name === name) item.handler(event)
@@ -16,6 +17,13 @@ export function installNaverSdk() {
       this.pane = document.createElement('div')
       this.pane.style.cssText = 'position:absolute;inset:0;background:#e9efed'
       element.append(this.pane)
+      if (options.scaleControl && options.scaleControlOptions?.position === Position.BOTTOM_LEFT) {
+        const scale = document.createElement('span')
+        scale.dataset.testNaverScale = 'bottom-left'
+        scale.textContent = '100m'
+        scale.style.cssText = 'position:absolute;bottom:8px;left:12px;border-bottom:1px solid;min-width:60px;text-align:center'
+        this.pane.append(scale)
+      }
       stats.maps.push(this)
       this.click = event => {
         if (event.target.closest('button')) return
@@ -57,7 +65,7 @@ export function installNaverSdk() {
     getProjection() { return this.map.getProjection() }
   }
   window.naver = { maps: {
-    LatLng, Point, Map: MapInstance, OverlayView,
+    LatLng, Point, Map: MapInstance, OverlayView, Position,
     Event: {
       addListener(target, name, handler) { const item = { target, name, handler }; stats.listeners.add(item); return item },
       removeListener(item) { stats.listeners.delete(item) },

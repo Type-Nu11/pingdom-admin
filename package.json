@@ -22,6 +22,7 @@
     "test:community-browser": "node tests/browser/community.mjs",
     "test:admin-target-browser": "node tests/browser/admin-target.mjs",
     "test:dashboard-pending-browser": "node tests/browser/dashboard-pending.mjs",
+    "test:assistant-browser": "node tests/browser/assistant-chat.mjs",
     "test:place-inspector-browser": "node tests/browser/place-inspector.mjs",
     "test:navigation-browser": "node tests/browser/navigation.mjs",
     "test:review-actions-browser": "node tests/browser/review-actions.mjs",

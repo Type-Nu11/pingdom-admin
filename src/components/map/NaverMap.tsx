@@ -8,7 +8,7 @@ import { createNaverMapController, type NaverMapController } from './naverMapCon
 interface Props extends MapProps { clientId?: string }
 
 const NaverMap = forwardRef<MapHandle, Props>(function NaverMap(props, ref) {
-  const { className, clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID ?? '' } = props
+  const { className, scaleControlPosition, clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID ?? '' } = props
   const canvas = useRef<HTMLDivElement>(null)
   const viewport = useRef<HTMLDivElement>(null)
   const controller = useRef<NaverMapController | null>(null)
@@ -43,6 +43,7 @@ const NaverMap = forwardRef<MapHandle, Props>(function NaverMap(props, ref) {
     void loadNaverMaps(clientId).then(maps => {
       if (!mounted || !canvas.current || !viewport.current || hasNaverAuthFailure()) return
       const next = createNaverMapController(maps, canvas.current, viewport.current, {
+        scaleControlPosition,
         onMarkerClick: id => latest.current.onMarkerClick?.(id),
         onMapClick: coordinate => latest.current.onMapClick?.(coordinate),
       })
@@ -60,7 +61,7 @@ const NaverMap = forwardRef<MapHandle, Props>(function NaverMap(props, ref) {
       controller.current?.destroy()
       controller.current = null
     }
-  }, [clientId, attempt])
+  }, [clientId, attempt, scaleControlPosition])
   return <Frame className={className}>
     <Viewport ref={viewport}>
       <Canvas ref={canvas} aria-label="네이버 지도" />

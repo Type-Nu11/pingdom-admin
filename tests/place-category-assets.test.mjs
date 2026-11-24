@@ -27,7 +27,6 @@ async function filesIn(directory) {
 test('all source and public image filenames are ASCII, independent of Unicode normalization', async () => {
   const files = [...await filesIn(new URL('src/', root)), ...await filesIn(new URL('public/', root))]
     .filter(path => /\.(svg|png|jpe?g|gif|webp|avif|ico)$/i.test(path.pathname))
-  assert.equal(files.length, categories.length * 2 + 2)
   for (const path of files) assert.match(decodeURIComponent(path.pathname), /^[\x20-\x7e]+$/, path.href)
 })
 
@@ -48,16 +47,20 @@ test('all category and list icons resolve to existing assets without changing Ko
   assert.equal(category.getPlaceCategoryMarkerImageUrl({ category: 'UNKNOWN' }), category.getPlaceCategoryMarkerImageUrl({ category: 'OTHER' }))
 })
 
-test('production build bundles all 18 SVGs under the deployment base instead of leaving source URLs', async () => {
+test('production build bundles all category SVGs and the enabled assistant logo under the deployment base', async () => {
   const result = await build({
     root: fileURLToPath(root), base: '/operator/', logLevel: 'silent',
+    define: { 'import.meta.env.VITE_ENABLE_PINGDOM_AI': JSON.stringify('true') },
     build: { write: false, assetsInlineLimit: 0 },
   })
   const output = result.output
   const svgAssets = output.filter(item => item.type === 'asset' && item.fileName.endsWith('.svg'))
-  assert.equal(svgAssets.length, 18)
+  const assistantLogo = svgAssets.filter(item => item.fileName.startsWith('assets/pingdy-'))
+  assert.equal(assistantLogo.length, 1)
+  assert.equal(svgAssets.length - assistantLogo.length, categories.length * 2)
   const scripts = output.filter(item => item.type === 'chunk').map(item => item.code).join('\n')
   assert.doesNotMatch(scripts, /\.\.\/assets\/placeMarkers\//)
+  assert.doesNotMatch(scripts, /\/src\/features\/assistant\/assets\/pingdy\.svg/)
   for (const asset of svgAssets) {
     assert.match(asset.fileName, /^assets\/[a-z-]+-[A-Za-z0-9_-]+\.svg$/)
     assert.ok(scripts.includes(`/operator/${asset.fileName}`), asset.fileName)

@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { AdminNotificationProvider } from '../providers/AdminNotificationProvider'
 import { RouteLoadingFallback } from './RouteLoadingFallback'
 import { getRoleHome, rememberGuestReturn } from '../../utils/authReturn'
+import { AdminAssistantWorkspace } from '../../features/assistant/components/AssistantWorkspace'
 
 function LoginRedirect({ role }: { role: 'ADMIN' | 'MERCHANT_OWNER' | 'USER' }) {
   const location = useLocation()
@@ -45,7 +46,7 @@ function RoleProtectedRoute({ expectedRole, withNotifications = false }: { expec
 
   return withNotifications ? (
     <AdminNotificationProvider>
-      <Outlet />
+      <AdminAssistantWorkspace><Outlet /></AdminAssistantWorkspace>
     </AdminNotificationProvider>
   ) : <Outlet />
 }

@@ -6,12 +6,17 @@ import { createNaverGlZoomController, glWheelStep } from './naverGlZoomControlle
 const MIN_ZOOM = 6
 const MAX_ZOOM = 20
 
-export function createNaverMapController(maps: NaverMaps, container: HTMLElement, viewport: HTMLElement, callbacks: Pick<MapProps, 'onMarkerClick' | 'onMapClick'>) {
+export function createNaverMapController(maps: NaverMaps, container: HTMLElement, viewport: HTMLElement,
+  options: Pick<MapProps, 'onMarkerClick' | 'onMapClick' | 'scaleControlPosition'>) {
   const map = new maps.Map(container, {
     center: new maps.LatLng(37.5665, 126.978), zoom: 15,
     minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, scrollWheel: false, keyboardShortcuts: true,
     tileTransition: false,
     gl: true,
+    ...(options.scaleControlPosition === 'bottom-left' ? {
+      scaleControl: true,
+      scaleControlOptions: { position: maps.Position.BOTTOM_LEFT },
+    } : {}),
   })
   let props: MapProps = {}
   let disposed = false
@@ -68,7 +73,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
       const coord = (event as { coord?: { lat(): number; lng(): number } } | undefined)?.coord
       if (!coord) return
       const coordinate = { latitude: coord.lat(), longitude: coord.lng() }
-      if (isValidMapCoordinate(coordinate)) callbacks.onMapClick?.(coordinate)
+      if (isValidMapCoordinate(coordinate)) options.onMapClick?.(coordinate)
     }),
   ]
   const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
@@ -109,7 +114,7 @@ export function createNaverMapController(maps: NaverMaps, container: HTMLElement
       for (const marker of markers) {
         let entry = entries.get(marker.id)
         if (!entry) {
-          const button = createNaverMarkerButton(() => callbacks.onMarkerClick?.(marker.id))
+          const button = createNaverMarkerButton(() => options.onMarkerClick?.(marker.id))
           // OverlayView retains the native button, including focus, between updates.
           class PlaceOverlay extends maps.OverlayView {
             onAdd() { this.getPanes().overlayLayer.append(button) }

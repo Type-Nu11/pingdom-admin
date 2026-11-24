@@ -12,8 +12,8 @@ export async function getAdminPlaceReviewDeletionRequests(params: {
   status?: PlaceReviewDeletionRequestStatus
   page?: number
   limit?: number
-}) {
-  const { data } = await customAxios.get<AdminPlaceReviewDeletionRequestPage>(PATH, { params })
+}, signal?: AbortSignal) {
+  const { data } = await customAxios.get<AdminPlaceReviewDeletionRequestPage>(PATH, { params, signal })
   return data
 }
 

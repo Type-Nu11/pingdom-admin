@@ -348,8 +348,9 @@
   "externalConsumers": [
     "src/api/adminPendingWorkApi.ts -> src/features/admin/community/api/adminCommunityApi.ts",
     "src/app/router/Router.tsx -> src/features/admin/community/pages/CommunityContentPage.tsx",
-    "src/app/router/Router.tsx -> src/features/admin/community/pages/CommunityReportsPage.tsx"
+    "src/app/router/Router.tsx -> src/features/admin/community/pages/CommunityReportsPage.tsx",
+    "src/features/assistant/model/assistantTools.ts -> src/features/admin/community/api/adminCommunityApi.ts"
   ],
-  "apiInventoryCount": 202,
-  "apiInventoryHash": "8964306345cd25e5029d67eaf9549bf2962c6808d6ae5cdda519b48985761372"
+  "apiInventoryCount": 203,
+  "apiInventoryHash": "84cd7b156deb117c07fdd933f2bf1c3afcbcd7f1b55b014866f5e1483f0b565b"
 }

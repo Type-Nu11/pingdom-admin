@@ -5,7 +5,7 @@ import { PlaceDetailLink } from '../../places/components/PlaceDetailLink'
 import { AttachmentPreview } from '../components/AttachmentPreview'
 import { AppDialog } from '../../../../components/common/AppDialog'
 import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
 import { AdminPagination } from '../../../../components/common/AdminPagination'
@@ -15,6 +15,7 @@ import { EMPTY_HISTORY_FILTERS, type ApplicationHistoryFilters } from '../hooks/
 import { ListPane } from '../../../../components/common/ListPane'
 import { APPLICATION_REVIEW_PAGE_SIZE, useAdminMerchantPlaceApplications } from '../hooks/useAdminMerchantPlaceApplications'
 import { useAuth } from '../../../../hooks/useAuth'
+import { useAssistantDetail } from '../../../assistant/model/AssistantDetailContext'
 import type {
   AdminMerchantPlaceApplication,
   AdminMerchantPlaceApplicationAttachment,
@@ -253,6 +254,17 @@ function MerchantPlaceApplicationReviewPage() {
   const visibleDetail = selectedId && !hook.isDetailLoading && !hook.detailErrorMessage && hook.detail?.id === selectedId
     ? hook.detail
     : null
+
+  const assistantDetail = useMemo(() => visibleDetail ? {
+    role: 'ADMIN' as const,
+    facts: [
+      { label: '신청 유형', value: TYPE_LABELS[visibleDetail.applicationType] ?? '확인할 수 없음' },
+      { label: '신청 상태', value: STATUS_LABELS[visibleDetail.status] ?? '확인할 수 없음' },
+      { label: '접수 일시', value: visibleDetail.submittedAt && Number.isFinite(Date.parse(visibleDetail.submittedAt))
+        ? formatDate(visibleDetail.submittedAt) : '시각 정보 없음' },
+    ],
+  } : null, [visibleDetail])
+  useAssistantDetail(assistantDetail)
 
   const emptyDetailTitle = hook.items.length === 0 && !hook.isLoading
     ? (isHistoryView ? '처리 이력이 없습니다.' : '현재 검토할 신청이 없습니다.')

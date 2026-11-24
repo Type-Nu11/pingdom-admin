@@ -984,7 +984,9 @@ export const MapPanel = styled.section`
   grid-column: 2;
   min-width: 0;
   min-height: 0;
+  margin: 12px;
   overflow: hidden;
+  border-radius: 0;
   background: ${neutral.surfaceLow};
 
   @media (max-width: 900px) {
@@ -1003,19 +1005,28 @@ export const AdminMap = styled(NaverMap)`
   border-radius: 0;
 `
 
-export const MapControlGroup = styled.div`
+export const MapTopTools = styled.div`
   position: absolute;
-  right: 32px;
-  bottom: 32px;
+  top: 16px;
+  right: 20px;
   z-index: 6;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  max-width: min(360px, calc(100% - 40px));
+  pointer-events: none;
+
+  @media (max-width: 720px) {
+    right: 12px;
+    max-width: min(340px, calc(100% - 24px));
+  }
+`
+
+export const MapControlGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-
-  @media (max-width: 720px) {
-    right: 16px;
-    bottom: 16px;
-  }
+  pointer-events: auto;
 `
 
 export const MapListToggleButton = styled(PanelCollapseButton)`
@@ -1050,14 +1061,10 @@ export const MapControlButton = styled(PanelCollapseButton)`
 `
 
 export const MapInfo = styled.div`
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: min(360px, calc(100% - 40px));
+  max-width: 100%;
   min-height: 36px;
   padding: 7px 10px;
   border: 1px solid ${neutral.border};
@@ -1067,11 +1074,6 @@ export const MapInfo = styled.div`
   ${typo.caption.bold}
   box-shadow: 0 8px 22px ${neutral.shadow};
 
-  @media (max-width: 720px) {
-    top: 12px;
-    right: 12px;
-    max-width: min(340px, calc(100% - 24px));
-  }
 `
 
 export const MapInfoText = styled.span`

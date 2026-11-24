@@ -13,10 +13,10 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 const { AuthContext } = await server.ssrLoadModule('/src/app/providers/AuthContext.ts')
 const { AdminNotificationContext } = await server.ssrLoadModule('/src/app/providers/AdminNotificationContext.ts')
 const { default: client } = await server.ssrLoadModule('/src/api/customAxios.ts')
-const { useAdminPlaceDuplicateCandidates } = await server.ssrLoadModule('/src/hooks/useAdminPlaceDuplicateCandidates.ts')
-const { useAdminPlaceMerge } = await server.ssrLoadModule('/src/hooks/useAdminPlaceMerge.ts')
-const { default: CandidatePage } = await server.ssrLoadModule('/src/pages/placeDuplicateCandidate/PlaceDuplicateCandidatePage.tsx')
-const { default: MergePage } = await server.ssrLoadModule('/src/pages/placeMerge/PlaceMergePage.tsx')
+const { useAdminPlaceDuplicateCandidates } = await server.ssrLoadModule('/src/features/admin/placeMerge/hooks/useAdminPlaceDuplicateCandidates.ts')
+const { useAdminPlaceMerge } = await server.ssrLoadModule('/src/features/admin/placeMerge/hooks/useAdminPlaceMerge.ts')
+const { default: CandidatePage } = await server.ssrLoadModule('/src/features/admin/placeMerge/pages/PlaceDuplicateCandidatePage.tsx')
+const { default: MergePage } = await server.ssrLoadModule('/src/features/admin/placeMerge/pages/PlaceMergePage.tsx')
 const auth = { clearAuth() {}, logout: async () => {}, user: { username: 'admin', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }
 const notifications = { notifications: [], unreadCount: 0, pendingWorkEntries: [], pendingWorkItems: [], pendingWorkCount: 0, status: 'success', pendingWorkStatus: 'success' }
 let root, requests, total, override, state, gate

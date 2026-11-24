@@ -15,7 +15,7 @@ import type {
   VisitorVerificationStatus,
 } from "../types/adminVisitorVerification.types";
 import * as Shell from "../../../../app/layouts/AdminShell.styles";
-import * as Shared from "../../../../pages/placeMerge/PlaceMergePage.styles";
+import * as Shared from "../../placeMerge/pages/PlaceMergePage.styles";
 import * as S from "../../placeVerification/pages/PlaceVerificationPage.styles";
 
 type Tab = "reports" | "corrections";

@@ -11,7 +11,7 @@ import * as Surface from '../../src/components/merchant/MerchantSurface.styles'
 import * as Workspace from '../../src/components/merchant/MerchantWorkspace.styles'
 import * as Admin from '../../src/pages/adminUtility/AdminUtilityPage.styles'
 import * as Place from '../../src/features/admin/places/pages/PlaceManagePage.styles'
-import * as Merge from '../../src/pages/placeMerge/PlaceMergePage.styles'
+import * as Merge from '../../src/features/admin/placeMerge/pages/PlaceMergePage.styles'
 import * as Store from '../../src/pages/merchantStore/MerchantStorePage.styles'
 import * as Review from '../../src/features/admin/merchantApplications/pages/MerchantPlaceApplicationReviewPage.styles'
 

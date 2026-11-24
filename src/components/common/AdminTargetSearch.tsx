@@ -7,7 +7,7 @@ import type { AdminTarget, AdminTargetPage } from '../../api/adminTargetSearchAp
 import { shouldClearAuth } from '../../api/authError'
 import { useAuth } from '../../hooks/useAuth'
 import * as Form from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../features/admin/placeMerge/pages/PlaceMergePage.styles'
 
 const SearchControls = styled.div`display: flex; gap: 8px; min-width: 0; > input { min-width: 0; flex: 1; }`
 const Results = styled.div`height: min(320px, 40dvh); overflow-y: auto; margin-top: 12px;`

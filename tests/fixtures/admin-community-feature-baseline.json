@@ -51,7 +51,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as Form",
@@ -120,7 +120,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as Form",
@@ -181,7 +181,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as Form",
@@ -351,5 +351,5 @@
     "src/app/router/Router.tsx -> src/features/admin/community/pages/CommunityReportsPage.tsx"
   ],
   "apiInventoryCount": 202,
-  "apiInventoryHash": "ea3099aae6e7ce1b165ec618ae627149511e77769cf4d43e8446e7587e465730"
+  "apiInventoryHash": "8964306345cd25e5029d67eaf9549bf2962c6808d6ae5cdda519b48985761372"
 }

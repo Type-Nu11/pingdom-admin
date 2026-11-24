@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import {
   confirmAdminPlaceDuplicateCandidate,
   getAdminPlaceDuplicateReviewCandidate,
@@ -7,8 +7,8 @@ import {
   mergeAdminPlaceDuplicateCandidate,
   rejectAdminPlaceDuplicateCandidate,
 } from '../api/adminPlaceMergeApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceDuplicateCandidateMergeRequest,
   AdminPlaceDuplicateCandidateStatus,
@@ -17,8 +17,8 @@ import type {
   AdminPlaceDuplicatePagination,
   AdminPlaceMergeErrorResponse,
 } from '../types/adminPlaceMerge.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 export type AdminPlaceDuplicateReviewAction = 'confirm' | 'reject' | 'merge'
 

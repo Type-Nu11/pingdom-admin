@@ -104,7 +104,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -145,7 +145,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -198,7 +198,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -247,7 +247,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -442,7 +442,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as Form",
@@ -578,7 +578,7 @@
         },
         {
           "clause": "* as Shared",
-          "target": "src/pages/placeMerge/PlaceMergePage.styles.ts"
+          "target": "src/features/admin/placeMerge/pages/PlaceMergePage.styles.ts"
         },
         {
           "clause": "* as S",
@@ -665,17 +665,17 @@
     "src/features/admin/merchantOwners/pages/MerchantOwnerPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/notificationOperations/pages/NotificationOperationsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/operationHistory/pages/OperationHistoryPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
+    "src/features/admin/placeEvents/pages/PlaceEventPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/placeReviewDeletion/pages/PlaceReviewDeletionPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/reservations/pages/AdminReservationReviewPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/s3Orphans/pages/S3OrphanPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/userRoles/pages/UserRolePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/features/admin/visitorVerification/pages/VisitorVerificationPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
-    "src/pages/placeEvent/PlaceEventPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/recommendationMetrics/RecommendationMetricsPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/scout/ScoutPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/trustScore/TrustScorePage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts",
     "src/pages/verifiedBoostProduct/VerifiedBoostProductPage.tsx -> src/features/admin/placeVerification/pages/PlaceVerificationPage.styles.ts"
   ],
   "apiInventoryCount": 202,
-  "apiInventoryHash": "ea3099aae6e7ce1b165ec618ae627149511e77769cf4d43e8446e7587e465730"
+  "apiInventoryHash": "8964306345cd25e5029d67eaf9549bf2962c6808d6ae5cdda519b48985761372"
 }

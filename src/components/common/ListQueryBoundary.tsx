@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { useListQueryState } from '../../hooks/useListQueryState'
-import * as Shared from '../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../features/admin/placeMerge/pages/PlaceMergePage.styles'
 
 type Props = {
   state: ReturnType<typeof useListQueryState>

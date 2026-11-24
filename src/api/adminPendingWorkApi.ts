@@ -1,4 +1,4 @@
-import { getAdminPlaceDuplicateGroups, getAdminPlaceDuplicateReviewCandidates } from './adminPlaceMergeApi'
+import { getAdminPlaceDuplicateGroups, getAdminPlaceDuplicateReviewCandidates } from '../features/admin/placeMerge/api/adminPlaceMergeApi'
 import { getAdminPlaceInformationReports } from '../features/admin/placeVerification/api/adminPlaceVerificationApi'
 import { getAdminScoutFieldReports, getAdminScoutProfiles } from './adminScoutApi'
 import { getAdminTrustScoreAnomalies } from './adminTrustScoreApi'

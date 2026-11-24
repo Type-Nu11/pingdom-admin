@@ -11,7 +11,7 @@ import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
 import { ListDetailWorkspace } from '../../../../components/common/ListDetailWorkspace'
 import { ListPane } from '../../../../components/common/ListPane'
 import { CommunityShell, CommunityContentView, CommunityPagination, QueryMessage } from '../components/CommunityShared'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as Form from '../../placeVerification/pages/PlaceVerificationPage.styles'
 import * as S from '../components/Community.styles'
 

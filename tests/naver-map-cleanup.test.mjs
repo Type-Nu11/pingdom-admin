@@ -35,7 +35,7 @@ test('legacy source/merge metadata remain compatible without a nonexistent detai
   const api = await readFile(new URL('src/features/admin/places/api/adminPlaceApi.ts', root), 'utf8')
   assert.doesNotMatch(api, /kakao-place-id|updateAdminPlaceKakaoPlaceId/)
   assert.doesNotMatch(types, /AdminPlaceKakaoPlaceIdUpdate(?:Request|Response)/)
-  const mergeTypes = await readFile(new URL('src/types/adminPlaceMerge.types.ts', root), 'utf8')
+  const mergeTypes = await readFile(new URL('src/features/admin/placeMerge/types/adminPlaceMerge.types.ts', root), 'utf8')
   assert.match(mergeTypes, /kakaoPlaceId:/)
   const files = await sources(new URL('src/', root))
   for (const file of files.filter(file => /\/(?:components|pages|hooks)\//.test(file.pathname))) {

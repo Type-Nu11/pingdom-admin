@@ -24,7 +24,7 @@ import type {
 } from '../types/adminMerchantPlaceApplication.types'
 import type { MerchantPlaceApplicationNewPlace } from '../../../../types/merchantPlaceApplication.types'
 import * as Shell from '../../../../app/layouts/AdminShell.styles'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as Form from '../../placeVerification/pages/PlaceVerificationPage.styles'
 import * as S from './MerchantPlaceApplicationReviewPage.styles'
 

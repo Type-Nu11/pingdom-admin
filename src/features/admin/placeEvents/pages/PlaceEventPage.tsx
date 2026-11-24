@@ -1,26 +1,26 @@
-import { AdminLayout } from '../../app/layouts/AdminLayout'
-import { MaterialIcon } from '../../shared/ui/MaterialIcon'
-import { FeedbackMessage } from '../../components/common/FeedbackMessage'
-import { AdminPlacePicker } from '../../components/common/AdminPlacePicker'
+import { AdminLayout } from '../../../../app/layouts/AdminLayout'
+import { MaterialIcon } from '../../../../shared/ui/MaterialIcon'
+import { FeedbackMessage } from '../../../../components/common/FeedbackMessage'
+import { AdminPlacePicker } from '../../../../components/common/AdminPlacePicker'
 import { useState } from 'react'
-import { useUnsavedChanges } from '../../hooks/useUnsavedChanges'
+import { useUnsavedChanges } from '../../../../hooks/useUnsavedChanges'
 import { useNavigate } from 'react-router-dom'
-import { AdminDateTimePicker } from '../../components/common/AdminDateTimePicker'
-import { AdminSelect } from '../../components/common/AdminStatusSelect'
-import { AdminNotificationButton } from '../../components/adminNotification/AdminNotificationButton'
-import { AdminPagination } from '../../components/common/AdminPagination'
-import { useAdminPlaceEvents } from '../../hooks/useAdminPlaceEvents'
-import { useAuth } from '../../hooks/useAuth'
+import { AdminDateTimePicker } from '../../../../components/common/AdminDateTimePicker'
+import { AdminSelect } from '../../../../components/common/AdminStatusSelect'
+import { AdminNotificationButton } from '../../../../components/adminNotification/AdminNotificationButton'
+import { AdminPagination } from '../../../../components/common/AdminPagination'
+import { useAdminPlaceEvents } from '../hooks/useAdminPlaceEvents'
+import { useAuth } from '../../../../hooks/useAuth'
 import type {
   AdminPlaceEventListItem,
   AdminPlaceEventPublicationStatus,
   AdminPlaceEventRequest,
   AdminPlaceEventScheduleStatus,
   AdminPlaceEventType,
-} from '../../types/adminPlaceEvent.types'
-import * as Shell from '../../app/layouts/AdminShell.styles'
-import * as Shared from '../placeMerge/PlaceMergePage.styles'
-import * as S from '../../features/admin/placeVerification/pages/PlaceVerificationPage.styles'
+} from '../types/adminPlaceEvent.types'
+import * as Shell from '../../../../app/layouts/AdminShell.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
+import * as S from '../../placeVerification/pages/PlaceVerificationPage.styles'
 
 type Dialog =
   | { type: 'create' }

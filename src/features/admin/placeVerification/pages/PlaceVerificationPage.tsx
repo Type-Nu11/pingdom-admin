@@ -14,7 +14,7 @@ import { useAdminPlaceInformationReports } from '../hooks/useAdminPlaceInformati
 import { useAdminPlaceVerification } from '../hooks/useAdminPlaceVerification'
 import { useAuth } from '../../../../hooks/useAuth'
 import * as Shell from '../../../../app/layouts/AdminShell.styles'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as S from './PlaceVerificationPage.styles'
 
 type VerificationTab = 'reports' | 'evidence' | 'reverification'

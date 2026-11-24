@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAutoDismissMessage } from './useAutoDismissMessage'
+import { useAutoDismissMessage } from '../../../../hooks/useAutoDismissMessage'
 import * as api from '../api/adminPlaceEventApi'
-import { shouldClearAuth, getAuthErrorMessage } from '../api/authError'
-import { isApiError } from '../api/customAxios'
+import { shouldClearAuth, getAuthErrorMessage } from '../../../../api/authError'
+import { isApiError } from '../../../../api/customAxios'
 import type {
   AdminPlaceEventActionRequest,
   AdminPlaceEventErrorResponse,
@@ -11,8 +11,8 @@ import type {
   AdminPlaceEventRequest,
   AdminPlaceEventResponse,
 } from '../types/adminPlaceEvent.types'
-import { logDebugError } from '../utils/debugLogger'
-import { useAuth } from './useAuth'
+import { logDebugError } from '../../../../utils/debugLogger'
+import { useAuth } from '../../../../hooks/useAuth'
 
 const DEFAULT_QUERY: Required<Pick<AdminPlaceEventListParams, 'page' | 'limit'>> = {
   page: 1,

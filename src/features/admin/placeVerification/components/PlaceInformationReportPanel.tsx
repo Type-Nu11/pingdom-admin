@@ -11,7 +11,7 @@ import type {
   PlaceInformationReportReviewRequest,
   PlaceInformationReportStatus,
 } from '../types/adminPlaceVerification.types'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as S from '../pages/PlaceVerificationPage.styles'
 import {
   DISPUTE_STATUS_LABELS,

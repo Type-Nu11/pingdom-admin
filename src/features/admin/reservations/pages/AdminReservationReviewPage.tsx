@@ -29,7 +29,7 @@ import type {
   AdminReservationStatus,
 } from '../types/adminReservation.types'
 import * as Shell from '../../../../app/layouts/AdminShell.styles'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as S from '../../placeVerification/pages/PlaceVerificationPage.styles'
 import * as ReviewUI from './AdminReservationReviewPage.styles'
 

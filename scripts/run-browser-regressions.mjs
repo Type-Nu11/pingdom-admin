@@ -29,6 +29,7 @@ export const browserCases = [
   ['trust-score-history', 'tests/browser/trust-score-history.mjs'],
   ['place-dispute-review', 'tests/browser/place-dispute-review.mjs'],
   ['place-review-structure', 'tests/browser/admin-place-review-structure.mjs'],
+  ['place-tools-structure', 'tests/browser/admin-place-tools-structure.mjs'],
   ['data-quality', 'tests/browser/data-quality.mjs'],
   ['residual-contract', 'tests/browser/residual-contract.mjs'],
 ]

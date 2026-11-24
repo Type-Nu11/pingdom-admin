@@ -1,4 +1,4 @@
-import type { AuthErrorResponse } from './auth.types'
+import type { AuthErrorResponse } from '../../../../types/auth.types'
 
 export type AdminPlaceEventType = 'POP_UP' | 'PERFORMANCE' | 'EXHIBITION'
 export type AdminPlaceEventPublicationStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED'

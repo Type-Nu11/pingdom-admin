@@ -19,7 +19,7 @@ import type {
   MerchantOwnerStatus,
 } from '../types/adminMerchantOwner.types'
 import * as Shell from '../../../../app/layouts/AdminShell.styles'
-import * as Shared from '../../../../pages/placeMerge/PlaceMergePage.styles'
+import * as Shared from '../../placeMerge/pages/PlaceMergePage.styles'
 import * as S from '../../placeVerification/pages/PlaceVerificationPage.styles'
 
 const OWNER_STATUS: Record<MerchantOwnerStatus, string> = { PENDING: '심사 대기', ACTIVE: '운영 중', REJECTED: '반려', REVOKED: '권한 회수' }

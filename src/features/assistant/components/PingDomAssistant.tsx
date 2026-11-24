@@ -1,5 +1,6 @@
 import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import pingdyLogo from '../assets/pingdy.svg'
 import { AssistantTransportError, sendAssistantMessage } from '../api/assistantApi'
 import { CHAT_INPUT_LIMIT, ChatProtocolError, prepareUserText, runChatTurn, type ChatTurn } from '../model/chatProtocol'
 import { executeAssistantTool, getAssistantMenu, getAssistantPrompt, getAssistantTools, type AssistantDetail, type AssistantRole } from '../model/assistantTools'
@@ -26,6 +27,19 @@ function errorCopy(error: unknown) {
     network: '답변을 받지 못했어요. 연결을 확인하고 다시 시도해주세요.',
   }[error.code]
   return '답변을 받지 못했어요. 잠시 후 다시 시도해주세요.'
+}
+
+function PingdyLogo() {
+  return <img src={pingdyLogo} width={24} height={24} alt="" />
+}
+
+function AssistantIcon({ name }: { name: 'close' | 'send' | 'stop' }) {
+  return <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"
+    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {name === 'close' ? <path d="m6 6 12 12M18 6 6 18" />
+      : name === 'send' ? <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
+      : <rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none" />}
+  </svg>
 }
 
 export function PingDomAssistant({ role, selectedPlaceId, readDetail }: {
@@ -88,48 +102,67 @@ export function PingDomAssistant({ role, selectedPlaceId, readDetail }: {
   }
 
   return <>
-    <S.Launcher type="button" aria-haspopup="dialog" aria-controls={id} onClick={() => {
-      dialog.current?.showModal()
-      textarea.current?.focus()
-    }}>핑덤 AI</S.Launcher>
+    <S.LauncherAnchor>
+      <S.Launcher type="button" aria-label="핑덤 AI" aria-haspopup="dialog" aria-controls={id} onClick={() => {
+        dialog.current?.showModal()
+        textarea.current?.focus()
+      }}><PingdyLogo /></S.Launcher>
+      <S.LauncherHint aria-hidden="true">핑덤 AI</S.LauncherHint>
+    </S.LauncherAnchor>
     <S.Dialog id={id} ref={dialog} aria-labelledby={titleId} onCancel={event => { event.preventDefault(); dismiss() }}>
       <S.Header>
-        <h2 id={titleId}>핑덤 AI</h2>
+        <S.Brand><PingdyLogo /><h2 id={titleId}>핑덤 AI</h2></S.Brand>
         <S.Actions>
           <S.Button type="button" onClick={() => { cancel(); setHistory([]); setDraft(''); setError(''); textarea.current?.focus() }}>새 대화</S.Button>
-          <S.Button type="button" aria-label="핑덤 AI 닫기" onClick={dismiss}>닫기</S.Button>
+          <S.IconButton type="button" aria-label="핑덤 AI 닫기" onClick={dismiss}><AssistantIcon name="close" /></S.IconButton>
         </S.Actions>
       </S.Header>
       <S.Transcript ref={transcript} role="log" aria-label="핑덤 AI 대화">
-        {!history.length && <S.Line>
-          <p>업무 현황을 확인하거나 필요한 메뉴를 찾아드릴게요.</p>
-          <S.Actions>{examples[role].map(example => <S.Button type="button" key={example} disabled={Boolean(pendingText)}
-            onClick={() => { setDraft(example); textarea.current?.focus() }}>{example}</S.Button>)}</S.Actions>
-        </S.Line>}
+        {!history.length && <S.AssistantRow>
+          <PingdyLogo />
+          <S.Response>
+            <p>업무 현황을 확인하거나 필요한 메뉴를 찾아드릴게요.</p>
+            <S.Suggestions>{examples[role].map(example => <S.Button type="button" key={example} disabled={Boolean(pendingText)}
+              onClick={() => { setDraft(example); textarea.current?.focus() }}>{example}</S.Button>)}</S.Suggestions>
+          </S.Response>
+        </S.AssistantRow>}
         {history.map(turn => <Fragment key={turn.id}>
-          <S.Line $user>
-            <p>{typeof turn.messages[0].content === 'string' ? turn.messages[0].content : ''}</p>
-          </S.Line>
-          <S.Line>
-            <p>{turn.text}</p>
-            {turn.facts.length > 0 && <dl>{turn.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>}
-            {turn.targets.map(key => {
-              const menu = getAssistantMenu(role, key)
-              return menu && <Link key={key} to={menu.path} onClick={dismiss}>{menu.label} 열기</Link>
-            })}
-          </S.Line>
+          <S.UserBubble>{typeof turn.messages[0].content === 'string' ? turn.messages[0].content : ''}</S.UserBubble>
+          <S.AssistantRow>
+            <PingdyLogo />
+            <S.Response>
+              <p>{turn.text}</p>
+              {turn.facts.length > 0 && <S.Facts>{turn.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</S.Facts>}
+              {turn.targets.length > 0 && <S.Suggestions>{turn.targets.map(key => {
+                const menu = getAssistantMenu(role, key)
+                return menu && <Link key={key} to={menu.path} onClick={dismiss}>{menu.label} 열기</Link>
+              })}</S.Suggestions>}
+            </S.Response>
+          </S.AssistantRow>
         </Fragment>)}
-        {pendingText && <><S.Line $user><p>{pendingText}</p></S.Line><S.Hints role="status">답변을 준비하고 있어요.</S.Hints></>}
+        {pendingText && <>
+          <S.UserBubble>{pendingText}</S.UserBubble>
+          <S.AssistantRow><PingdyLogo />
+            <S.Pending role="status"><S.TypingDots aria-hidden="true"><span /><span /><span /></S.TypingDots>답변을 준비하고 있어요.</S.Pending>
+          </S.AssistantRow>
+        </>}
         {error && <S.ErrorText role="alert">{error}</S.ErrorText>}
       </S.Transcript>
       <S.Form onSubmit={event => { event.preventDefault(); void submit(draft) }}>
-        <label htmlFor={inputId}>질문</label>
-        <textarea ref={textarea} id={inputId} aria-describedby={hintId} maxLength={CHAT_INPUT_LIMIT} rows={2}
-          value={draft} onChange={event => setDraft(event.target.value)} readOnly={Boolean(pendingText)}
-          placeholder="예: 처리 대기 업무 알려줘" />
-        {pendingText
-          ? <S.Button type="button" onClick={() => { cancel(); textarea.current?.focus() }}>요청 취소</S.Button>
-          : <S.Button type="submit" disabled={!draft.trim()}>보내기</S.Button>}
+        <S.InputLabel htmlFor={inputId}>질문</S.InputLabel>
+        <S.Composer>
+          <textarea ref={textarea} id={inputId} aria-describedby={hintId} maxLength={CHAT_INPUT_LIMIT} rows={1}
+            value={draft} onChange={event => setDraft(event.target.value)} readOnly={Boolean(pendingText)}
+            onKeyDown={event => {
+              if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) return
+              event.preventDefault()
+              if (!pendingText && draft.trim()) event.currentTarget.form?.requestSubmit()
+            }}
+            placeholder="업무에 대해 물어보세요" />
+          {pendingText
+            ? <S.SendButton type="button" aria-label="요청 취소" title="요청 취소" onClick={() => { cancel(); textarea.current?.focus() }}><AssistantIcon name="stop" /></S.SendButton>
+            : <S.SendButton type="submit" aria-label="보내기" title="보내기" disabled={!draft.trim()}><AssistantIcon name="send" /></S.SendButton>}
+        </S.Composer>
         <S.Hints id={hintId}>질문과 조회에 필요한 일부 정보가 AI로 전송됩니다. 개인정보는 입력하지 마세요.</S.Hints>
       </S.Form>
     </S.Dialog>

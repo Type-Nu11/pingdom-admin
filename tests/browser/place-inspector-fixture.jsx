@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthContext } from '../../src/app/providers/AuthContext'
 import { AdminNotificationContext } from '../../src/app/providers/AdminNotificationContext'
+import { AdminAssistantWorkspace } from '../../src/features/assistant/components/AssistantWorkspace'
 import Page from '../../src/features/admin/places/pages/PlaceManagePage'
 import { GlobalStyle } from '../../src/styles/globalStyle'
 import client from '../../src/api/customAxios'
@@ -28,4 +29,5 @@ client.defaults.adapter = async config => {
 }
 const auth = { clearAuth() {}, user: { id: 99, username: 'synthetic', role: 'ADMIN' }, isAuthenticated: true, isAuthReady: true }
 const notifications = { notifications: [], unreadCount: 0, pendingWorkItems: [], pendingWorkCount: 0, status: 'success', pendingWorkStatus: 'success' }
-createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><AdminNotificationContext.Provider value={notifications}><MemoryRouter><GlobalStyle /><Page /></MemoryRouter></AdminNotificationContext.Provider></AuthContext.Provider>)
+const showAssistant = new URLSearchParams(location.search).has('assistant')
+createRoot(document.getElementById('root')).render(<AuthContext.Provider value={auth}><AdminNotificationContext.Provider value={notifications}><MemoryRouter initialEntries={showAssistant ? ['/places'] : ['/']}><GlobalStyle />{showAssistant ? <AdminAssistantWorkspace><Page /></AdminAssistantWorkspace> : <Page />}</MemoryRouter></AdminNotificationContext.Provider></AuthContext.Provider>)
